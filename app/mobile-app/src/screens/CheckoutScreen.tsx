@@ -12,6 +12,7 @@ import {
   ProcessingOverlay,
   RazorpayWebView,
 } from '@/components/checkout';
+import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
@@ -68,6 +69,12 @@ export function CheckoutScreen() {
   // gateway is only a local fallback.
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
+  // What an agent needs if a payment times out and a ticket has to be opened.
+  const paymentFailure = usePaymentFailure(() => ({
+    description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
+    amount: breakup?.total ?? amount,
+    paymentDocId: order?.payment_doc_id ?? null,
+  }));
   const appliedCode = coupon?.ok ? coupon.code : null;
   // The coupon discounts the whole pod bill, so coins redeem against its result.
   const payableAfterCoupon = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
@@ -211,9 +218,22 @@ export function CheckoutScreen() {
         order={order}
         open={!!order}
         onSuccess={finishVerify}
-        onDismiss={() => {
+        onFailure={(error) => {
+          // Close the sheet, then say what actually happened — every failure
+          // used to be reported as the buyer's own cancellation.
           setOrder(null);
-          setError('Payment was cancelled.');
+          void paymentFailure.report(error);
+        }}
+      />
+      <PaymentFailureDialog
+        failure={paymentFailure.failure}
+        ticketNo={paymentFailure.ticketNo}
+        ticketPending={paymentFailure.ticketPending}
+        ticketFailed={paymentFailure.ticketFailed}
+        onClose={paymentFailure.dismiss}
+        onRetry={() => {
+          paymentFailure.dismiss();
+          setError('');
         }}
       />
       <ProcessingOverlay open={submitting} />

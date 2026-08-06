@@ -49,5 +49,7 @@ export async function createTicket(
     },
     { auth: true },
   );
-  return data.createTicket.id;
+  // The number is part of what a ticket IS to a caller now — the payment
+  // failure dialog quotes it back to the buyer as their reference.
+  return { id: data.createTicket.id, ticketNo: data.createTicket.ticket_no ?? null };
 }

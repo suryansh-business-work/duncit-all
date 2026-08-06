@@ -20,6 +20,7 @@ import {
   type CheckoutState,
 } from './queries';
 import { openRazorpayCheckout, type RazorpayOrderData, type RazorpaySignature } from './razorpayCheckout';
+import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
 import { parseApiError } from '../../utils/parseApiError';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
@@ -55,6 +56,12 @@ export default function CheckoutPage() {
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
   // The coupon discounts the whole pod bill, so coins redeem against its result.
   const coins = useCoinRedemption(session, session.coupon?.ok ? session.coupon.final_total : amount);
+  // What an agent needs if a payment times out and a ticket has to be opened.
+  const payment = usePaymentFailure(() => ({
+    description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
+    amount: breakup?.total ?? amount,
+    currencySymbol: breakup?.currency,
+  }));
 
   const onCheckout = async (values: CheckoutForm) => {
     session.setError(null);
@@ -90,7 +97,8 @@ export default function CheckoutPage() {
         session.setSubmitting(false);
         await openRazorpayCheckout(order as RazorpayOrderData, {
           onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
-          onDismiss: () => session.setError('Payment was cancelled.'),
+          // Every failure used to be reported as the buyer's own cancellation.
+          onFailure: (error) => void payment.report(error),
         });
         return;
       }
@@ -169,6 +177,17 @@ export default function CheckoutPage() {
           />
         </Stack>
       </Box>
+      <PaymentFailureDialog
+        failure={payment.failure}
+        ticketNo={payment.ticketNo}
+        ticketPending={payment.ticketPending}
+        ticketFailed={payment.ticketFailed}
+        onClose={payment.dismiss}
+        onRetry={() => {
+          payment.dismiss();
+          session.setError(null);
+        }}
+      />
       <ProcessingBackdrop open={session.submitting} />
     </Box>
   );

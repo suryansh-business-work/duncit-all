@@ -35,9 +35,9 @@ describe('buildRazorpayHtml', () => {
 describe('RazorpayWebView', () => {
   it('forwards a successful payment signature', () => {
     const onSuccess = jest.fn();
-    const onDismiss = jest.fn();
+    const onFailure = jest.fn();
     renderWithProviders(
-      <RazorpayWebView order={order} open onSuccess={onSuccess} onDismiss={onDismiss} />,
+      <RazorpayWebView order={order} open onSuccess={onSuccess} onFailure={onFailure} />,
     );
     message({
       type: 'success',
@@ -50,32 +50,32 @@ describe('RazorpayWebView', () => {
       razorpay_payment_id: 'pay_1',
       razorpay_signature: 'sig_1',
     });
-    expect(onDismiss).not.toHaveBeenCalled();
+    expect(onFailure).not.toHaveBeenCalled();
   });
 
   it('treats a dismiss message as a cancel', () => {
-    const onDismiss = jest.fn();
+    const onFailure = jest.fn();
     renderWithProviders(
-      <RazorpayWebView order={order} open onSuccess={jest.fn()} onDismiss={onDismiss} />,
+      <RazorpayWebView order={order} open onSuccess={jest.fn()} onFailure={onFailure} />,
     );
     message({ type: 'dismiss' });
-    expect(onDismiss).toHaveBeenCalled();
+    expect(onFailure).toHaveBeenCalled();
   });
 
   it('ignores malformed messages', () => {
     const onSuccess = jest.fn();
-    const onDismiss = jest.fn();
+    const onFailure = jest.fn();
     renderWithProviders(
-      <RazorpayWebView order={order} open onSuccess={onSuccess} onDismiss={onDismiss} />,
+      <RazorpayWebView order={order} open onSuccess={onSuccess} onFailure={onFailure} />,
     );
     message('not-json');
     expect(onSuccess).not.toHaveBeenCalled();
-    expect(onDismiss).not.toHaveBeenCalled();
+    expect(onFailure).not.toHaveBeenCalled();
   });
 
   it('renders nothing without an order', () => {
     renderWithProviders(
-      <RazorpayWebView order={null} open={false} onSuccess={jest.fn()} onDismiss={jest.fn()} />,
+      <RazorpayWebView order={null} open={false} onSuccess={jest.fn()} onFailure={jest.fn()} />,
     );
     expect(screen.queryByTestId('razorpay-webview-frame')).toBeNull();
   });

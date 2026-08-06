@@ -17,6 +17,7 @@ import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
 import { useCoinRedemption } from '../checkout-page/useCoinRedemption';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
+import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
 import { useProductPayment } from './useProductPayment';
 import { useProductShippingQuote } from './useProductShippingQuote';
 
@@ -54,7 +55,13 @@ export default function ProductCheckoutPage() {
   const payableAfterCoupon = session.coupon?.ok ? session.coupon.final_total + shippingTotal : amount;
   const coins = useCoinRedemption(session, payableAfterCoupon);
 
-  const onCheckout = useProductPayment({ session, items, coins });
+  // What an agent needs if a payment times out and a ticket has to be opened.
+  const payment = usePaymentFailure(() => ({
+    description: `Products (${items.length} line${items.length === 1 ? '' : 's'})`,
+    amount: breakup?.total ?? amount,
+    currencySymbol: breakup?.currency,
+  }));
+  const onCheckout = useProductPayment({ session, items, coins, onPaymentFailure: payment.report });
   const submit = session.handleSubmit(onCheckout);
 
   if (session.success) {
@@ -129,6 +136,17 @@ export default function ProductCheckoutPage() {
         </Stack>
       </Box>
       <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
+      <PaymentFailureDialog
+        failure={payment.failure}
+        ticketNo={payment.ticketNo}
+        ticketPending={payment.ticketPending}
+        ticketFailed={payment.ticketFailed}
+        onClose={payment.dismiss}
+        onRetry={() => {
+          payment.dismiss();
+          session.setError(null);
+        }}
+      />
       <ProcessingBackdrop open={session.submitting} />
     </Box>
   );

@@ -116,6 +116,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       rateAspect: 'Rate {aspect} {stars} out of 5',
       failed: 'That could not be sent. Please try again.',
     },
+    // What to say when a payment does not complete. Three outcomes, three
+    // answers — a buyer whose money may have left their account must not be
+    // told their payment was "cancelled".
+    payment: {
+      cancelledTitle: 'Payment cancelled',
+      cancelledBody: 'You closed the payment before it went through. Nothing has been charged.',
+      failedTitle: 'Payment did not go through',
+      failedBody: 'Your bank did not approve this payment, so nothing has been charged.',
+      timeoutTitle: 'We did not hear back in time',
+      timeoutBody:
+        'The payment gateway stopped responding, so we cannot confirm whether this went through.',
+      // The reassurance, and the reference to hold us to it.
+      moneySafe:
+        'Your money is safe. If it was deducted it will be refunded within 7–10 business days.',
+      ticketRaised: 'Your support ticket is {ticket}',
+      ticketPending: 'Opening a support ticket…',
+      ticketFailed:
+        'We could not open a support ticket automatically — please contact support with this payment.',
+      gatewaySaid: 'The gateway said: {reason}',
+      retry: 'Retry payment',
+      close: 'Close',
+    },
     // Plurals ship as explicit One/Many pairs: the key-verification gate needs
     // every leaf rendered via a literal t('…'), which the translator's
     // `.one/.other` siblings would fail.

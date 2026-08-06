@@ -21,6 +21,7 @@ export const CreateTicketDocument = gql(`
   mutation MobileCreateTicket($input: CreateTicketInput!) {
     createTicket(input: $input) {
       id
+      ticket_no
       subject
       status
       category

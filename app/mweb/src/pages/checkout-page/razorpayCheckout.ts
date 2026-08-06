@@ -3,11 +3,13 @@
  * opens the hosted payment sheet for an order created by the server. The key id
  * comes from the server (Tech-portal managed) — never hardcoded here.
  */
+import type { RazorpayErrorLike } from '@duncit/utils';
+
 const SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
 type RazorpayConstructor = new (options: Record<string, unknown>) => {
   open: () => void;
-  on: (event: string, cb: () => void) => void;
+  on: (event: string, cb: (response: { error?: RazorpayErrorLike }) => void) => void;
 };
 
 declare global {
@@ -54,13 +56,30 @@ export function loadRazorpay(): Promise<RazorpayConstructor> {
   });
 }
 
-/** Open the Razorpay sheet for a created order. `onSuccess` fires with the
- * signature triple to verify server-side; `onDismiss` fires on cancel/failure. */
+/**
+ * Open the Razorpay sheet for a created order. `onSuccess` fires with the
+ * signature triple to verify server-side; `onFailure` fires once with whatever
+ * Razorpay said went wrong — or `null` when the buyer simply closed the sheet.
+ *
+ * ONCE is the point. Razorpay fires `payment.failed` and THEN `ondismiss` when
+ * the sheet closes after a failure, so a naive wiring reports the failure and
+ * immediately overwrites it with "cancelled" — which is how a gateway timeout
+ * came to be shown as the buyer's own doing.
+ */
 export async function openRazorpayCheckout(
   order: RazorpayOrderData,
-  handlers: { onSuccess: (sig: RazorpaySignature) => void; onDismiss: () => void }
+  handlers: {
+    onSuccess: (sig: RazorpaySignature) => void;
+    onFailure: (error: RazorpayErrorLike | null) => void;
+  }
 ): Promise<void> {
   const Razorpay = await loadRazorpay();
+  let reported = false;
+  const report = (error: RazorpayErrorLike | null) => {
+    if (reported) return;
+    reported = true;
+    handlers.onFailure(error);
+  };
   const rzp = new Razorpay({
     key: order.key_id,
     amount: order.amount,
@@ -76,8 +95,9 @@ export async function openRazorpayCheckout(
         razorpay_order_id: res.razorpay_order_id,
         razorpay_signature: res.razorpay_signature,
       }),
-    modal: { ondismiss: () => handlers.onDismiss() },
+    // No error object here: the buyer closed it.
+    modal: { ondismiss: () => report(null) },
   });
-  rzp.on('payment.failed', () => handlers.onDismiss());
+  rzp.on('payment.failed', (response) => report(response?.error ?? null));
   rzp.open();
 }

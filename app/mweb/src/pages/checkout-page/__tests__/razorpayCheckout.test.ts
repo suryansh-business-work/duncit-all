@@ -99,8 +99,8 @@ describe('openRazorpayCheckout', () => {
     (globalThis as any).Razorpay = ctor;
 
     const onSuccess = vi.fn();
-    const onDismiss = vi.fn();
-    await openRazorpayCheckout(order, { onSuccess, onDismiss });
+    const onFailure = vi.fn();
+    await openRazorpayCheckout(order, { onSuccess, onFailure });
 
     expect(ctor).toHaveBeenCalledTimes(1);
     expect(capturedOptions.key).toBe(order.key_id);
@@ -132,7 +132,7 @@ describe('openRazorpayCheckout', () => {
     });
   });
 
-  it('invokes onDismiss on modal dismiss and on payment.failed', async () => {
+  it('reports the failure ONCE, keeping the gateway error over the dismiss', async () => {
     const on = vi.fn();
     let capturedOptions: Record<string, unknown> = {};
     const ctor = vi.fn().mockImplementation((options: Record<string, unknown>) => {
@@ -142,19 +142,36 @@ describe('openRazorpayCheckout', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).Razorpay = ctor;
 
-    const onDismiss = vi.fn();
-    await openRazorpayCheckout(order, { onSuccess: vi.fn(), onDismiss });
+    const onFailure = vi.fn();
+    await openRazorpayCheckout(order, { onSuccess: vi.fn(), onFailure });
 
-    const modal = capturedOptions.modal as { ondismiss: () => void };
-    modal.ondismiss();
-    expect(onDismiss).toHaveBeenCalledTimes(1);
-
-    // Trigger the payment.failed callback registered via on().
+    // Razorpay fires payment.failed and THEN ondismiss as the sheet closes.
+    // Reporting both is how a gateway timeout came to be shown as the buyer's
+    // own cancellation, so the second call must be ignored.
     const [, failedCb] = on.mock.calls.find(([evt]) => evt === 'payment.failed') as [
       string,
-      () => void,
+      (response: { error: { description: string } }) => void,
     ];
-    failedCb();
-    expect(onDismiss).toHaveBeenCalledTimes(2);
+    failedCb({ error: { description: 'Request timed out' } });
+    const modal = capturedOptions.modal as { ondismiss: () => void };
+    modal.ondismiss();
+
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    expect(onFailure).toHaveBeenCalledWith({ description: 'Request timed out' });
+  });
+
+  it('reports a plain dismiss with no error — the buyer closed the sheet', async () => {
+    let capturedOptions: Record<string, unknown> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).Razorpay = vi.fn().mockImplementation((options: Record<string, unknown>) => {
+      capturedOptions = options;
+      return { open: vi.fn(), on: vi.fn() };
+    });
+
+    const onFailure = vi.fn();
+    await openRazorpayCheckout(order, { onSuccess: vi.fn(), onFailure });
+    (capturedOptions.modal as { ondismiss: () => void }).ondismiss();
+
+    expect(onFailure).toHaveBeenCalledWith(null);
   });
 });

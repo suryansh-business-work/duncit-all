@@ -5,6 +5,7 @@
 // where this site's branding comes from.
 import SharedBrandLogo from '@duncit/brand/BrandLogo.astro';
 import { fetchBranding } from '../lib/site-data';
+import { urlConfigs } from '../config/url-configs';
 
 interface Props {
   class?: string;
@@ -19,4 +20,5 @@ const branding = await fetchBranding();
   name={branding.app_name}
   height={height}
   class={className}
+  graphqlUrl={urlConfigs.graphqlUrl}
 />

@@ -7,10 +7,15 @@
  * logo was a different size on every domain and the "no logo uploaded yet"
  * state existed in only one of them.
  *
- * The admin's uploaded logo (Branding → Website Logos) is what renders. There
- * is deliberately NO network call here: every site already fetches branding for
- * its favicon and footer, and a component that fetched again would double every
- * page's build-time requests. The caller passes the URL it already has.
+ * The admin's uploaded logo (Branding → Website Logos) is what renders, and the
+ * caller passes the URL it already fetched — no second build-time request.
+ *
+ * BUT the build is not the only chance to get it. A deployed build runs inside
+ * a container that may not reach the API at all, and when that happened the
+ * site shipped the wordmark while the same page rendered the real logo locally.
+ * So when the build came back empty the mark asks the browser, once, and swaps
+ * itself for the image. `graphqlUrl` is what makes that possible; without it the
+ * wordmark simply stays, which is the old behaviour.
  */
 interface Props {
   /** The admin's logo URL. Empty or missing renders the wordmark instead. */
@@ -24,6 +29,10 @@ interface Props {
   class?: string;
   /** `eager` on the mark in the header — it is above the fold on every page. */
   loading?: 'eager' | 'lazy';
+  /** Lets an empty mark fetch branding in the browser. Omit and it will not. */
+  graphqlUrl?: string | null;
+  /** Which admin logo to ask for when it does. */
+  variant?: 'header' | 'footer';
 }
 
 const {
@@ -33,6 +42,8 @@ const {
   href = '/',
   class: className = '',
   loading = 'eager',
+  graphqlUrl = null,
+  variant = 'header',
 } = Astro.props;
 
 // The wordmark scales off the height so one number controls the whole mark.
@@ -49,6 +60,11 @@ const fontSize = Math.round(height * 0.5);
         <span
           class="duncit-wordmark"
           style={`height:${height}px; padding-inline:${padding}px`}
+          data-brand-fallback={graphqlUrl ? '' : undefined}
+          data-graphql={graphqlUrl ?? undefined}
+          data-variant={variant}
+          data-height={String(height)}
+          data-name={name}
         >
           <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
             duncit
@@ -64,6 +80,11 @@ const fontSize = Math.round(height * 0.5);
         <span
           class="duncit-wordmark"
           style={`height:${height}px; padding-inline:${padding}px`}
+          data-brand-fallback={graphqlUrl ? '' : undefined}
+          data-graphql={graphqlUrl ?? undefined}
+          data-variant={variant}
+          data-height={String(height)}
+          data-name={name}
         >
           <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
             duncit
@@ -99,3 +120,56 @@ const fontSize = Math.round(height * 0.5);
     line-height: 1;
   }
 </style>
+
+<script>
+  // The build's last chance was the build. This is the page's.
+  //
+  // A deployed image builds inside a container that may not reach the API, and
+  // when that happens every site ships the wordmark while the same page renders
+  // the real logo locally — which is exactly what was reported. So a wordmark
+  // that was left as a stand-in asks the browser for branding ONCE, and every
+  // stand-in on the page swaps together.
+  const stubs = [...document.querySelectorAll<HTMLElement>('[data-brand-fallback]')];
+  if (stubs.length > 0) {
+    const endpoint = stubs[0].dataset.graphql ?? '';
+
+    const swap = (stub: HTMLElement, url: string) => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = stub.dataset.name ?? 'Duncit';
+      img.style.height = `${stub.dataset.height ?? 56}px`;
+      img.style.width = 'auto';
+      img.loading = 'lazy';
+      stub.replaceWith(img);
+    };
+
+    if (endpoint) {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query:
+            'query WebsiteBrandingMark { branding { website_header_logo_url website_footer_logo_url } }',
+        }),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          const branding = json?.data?.branding;
+          if (!branding) return;
+          for (const stub of stubs) {
+            // The footer prefers its own logo, then the header's — the same
+            // rule FooterLogo applies at build time.
+            const url =
+              stub.dataset.variant === 'footer'
+                ? branding.website_footer_logo_url || branding.website_header_logo_url
+                : branding.website_header_logo_url;
+            if (url) swap(stub, url);
+          }
+        })
+        .catch(() => {
+          // No branding reachable from here either: the wordmark stays, which
+          // is a real Duncit mark and not a broken image.
+        });
+    }
+  }
+</script>

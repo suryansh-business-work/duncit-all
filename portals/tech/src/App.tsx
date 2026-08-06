@@ -39,9 +39,10 @@ export default function App() {
         <Route path="/emails/templates" element={authed(<EmailTemplatesPage />)} />
         <Route path="/emails/fragments" element={authed(<EmailFragmentsPage />)} />
         <Route path="/emails/logs" element={authed(<EmailLogsPage />)} />
-        <Route path="/emails/docs" element={authed(<PackagesDocsPage />)} />
+        <Route path="/package-docs" element={authed(<PackagesDocsPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />
+        <Route path="/emails/docs" element={<Navigate to="/package-docs" replace />} />
         <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
         <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
         <Route path="/telemetry/bugs" element={authed(<BugsPage />)} />

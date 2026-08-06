@@ -121,8 +121,3 @@ export const PACKAGE_DOCS: PackageDoc[] = Object.entries(RAW)
   .map(([path, raw]) => toDoc(path, raw))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-/**
- * The one this page opens on. It is reached from the Emails section, and it is
- * the package every email in the product goes through.
- */
-export const DEFAULT_PACKAGE_SLUG = 'communication';

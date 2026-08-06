@@ -23,16 +23,19 @@ import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
  * suppression, reporting and consent are decided on, and it is what makes
  * "how many marketing emails did we send" answerable.
  */
-export type EmailCategory =
-  | 'transactional'
-  | 'authentication'
-  | 'marketing'
-  | 'service'
-  | 'notification'
-  | 'support'
-  | 'billing'
-  | 'legal'
-  | 'internal';
+export const EMAIL_CATEGORIES = [
+  'transactional',
+  'authentication',
+  'marketing',
+  'service',
+  'notification',
+  'support',
+  'billing',
+  'legal',
+  'internal',
+] as const;
+
+export type EmailCategory = (typeof EMAIL_CATEGORIES)[number];
 
 /** A file on the message: inline bytes, or a URL the provider fetches. */
 export interface PreparedAttachment {

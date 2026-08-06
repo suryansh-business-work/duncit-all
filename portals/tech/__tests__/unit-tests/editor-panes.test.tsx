@@ -75,6 +75,7 @@ describe('TemplateEditorPanel', () => {
         previewHtml=""
         previewErrors={[]}
         detected={[]}
+        fragmentOptions={[]}
         varsJson="{}"
         setVarsJson={vi.fn()}
         onValidate={vi.fn()}

@@ -139,6 +139,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   upload: CloudUploadIcon,
   wallet: AccountBalanceWalletIcon,
   warehouse: WarehouseIcon,
+  widgets: WidgetsIcon,
   'user-search': PersonSearchIcon,
   whatsapp: WhatsAppIcon,
   work: WorkIcon,

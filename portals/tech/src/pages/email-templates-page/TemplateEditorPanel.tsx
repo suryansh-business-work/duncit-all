@@ -1,8 +1,9 @@
 import { Stack, TextField } from '@mui/material';
-import type { Tpl } from './queries';
+import type { FragmentOption, Tpl } from './queries';
 import MjmlEditorPane from './MjmlEditorPane';
 import PreviewVariablesPane from './PreviewVariablesPane';
 import EditorActionsBar from './EditorActionsBar';
+import FragmentPicker from './FragmentPicker';
 
 interface Props {
   draft: Tpl;
@@ -14,6 +15,8 @@ interface Props {
   previewHtml: string;
   previewErrors: string[];
   detected: string[];
+  /** The nine header/footer fragments, fetched once by the page's hook. */
+  fragmentOptions: FragmentOption[];
   varsJson: string;
   setVarsJson: (v: string) => void;
   onValidate: () => void;
@@ -34,6 +37,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     previewHtml,
     previewErrors,
     detected,
+    fragmentOptions,
     varsJson,
     setVarsJson,
     onValidate,
@@ -68,6 +72,11 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
           onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
           sx={{ flex: '2 1 320px' }}
           helperText="Variables {{ name }} are interpolated."
+        />
+        <FragmentPicker
+          value={draft.fragment_category}
+          options={fragmentOptions}
+          onChange={(fragment_category) => setDraft({ ...draft, fragment_category })}
         />
       </Stack>
 

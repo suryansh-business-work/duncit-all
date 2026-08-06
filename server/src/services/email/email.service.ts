@@ -5,7 +5,7 @@ import { emailTranslationVars, recipientLocale } from './email-i18n';
 import { emailTemplateService } from '@modules/content/emailTemplate/emailTemplate.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
-import { getMailConfigs } from '../../config/url-configs';
+import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import {
   SmtpProvider,
   resolveEmailProvider,
@@ -69,6 +69,41 @@ function swapLegacyLogo(html: string, brandLogoUrl: string): string {
   // Global literal replace without ES2021 `replaceAll` (tsconfig lib) and
   // without regex-escaping the URL's `/` and `.`.
   return html.split(LEGACY_LOGO_URL).join(brandLogoUrl);
+}
+
+/**
+ * The values every header/footer fragment needs — the brand's name, where to
+ * write for help, where the site lives, and the year on the copyright line.
+ * Supplied on every send so a fragment is self-sufficient and no call site has
+ * to know it exists.
+ */
+async function chromeVars(): Promise<Record<string, string>> {
+  const [{ supportEmail, websiteUrl }, branding] = await Promise.all([
+    getUrlConfigs(),
+    settingsService.getBranding().catch(() => null),
+  ]);
+  return {
+    support_email: supportEmail,
+    website_url: websiteUrl,
+    app_name: branding?.app_name || 'Duncit',
+    year: String(new Date().getFullYear()),
+  };
+}
+
+/**
+ * The variables a real send supplies, for the editor's preview.
+ *
+ * Without these a preview shows raw `{{t:email.fragment.help}}` and an empty
+ * logo, which is not what anyone is about to send — and a header/footer
+ * fragment is made almost entirely of them.
+ */
+export async function emailPreviewVars(): Promise<Record<string, string>> {
+  const [logo, chrome, translations] = await Promise.all([
+    getBrandLogoUrl(),
+    chromeVars(),
+    emailTranslationVars(null),
+  ]);
+  return { brand_logo_url: logo, ...chrome, ...translations };
 }
 
 /**
@@ -153,7 +188,14 @@ export async function sendEmail(opts: {
   // stay last so an explicit value always wins.
   const locale = opts.locale ?? (await recipientLocale(opts.to));
   const translations = await emailTranslationVars(locale);
-  const vars = { brand_logo_url: brandLogoUrl, ...translations, ...opts.vars };
+  const vars = {
+    brand_logo_url: brandLogoUrl,
+    // Supplied on every send so a header/footer fragment never has to be told
+    // them, and no call site has to remember to pass them.
+    ...(await chromeVars()),
+    ...translations,
+    ...opts.vars,
+  };
   const rendered = await renderTemplate(opts.template, vars);
   const html = swapLegacyLogo(rendered.html, brandLogoUrl);
   const info = await deliver({

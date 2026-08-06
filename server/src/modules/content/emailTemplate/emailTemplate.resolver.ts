@@ -1,9 +1,9 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { emailTemplateService, renderMjml, detectVariables } from './emailTemplate.service';
-import nodemailer from 'nodemailer';
+import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
+import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { GraphQLError } from 'graphql';
-import { getMailConfigs } from '@config/url-configs';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -33,18 +33,25 @@ export const emailTemplateResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return emailTemplateService.bySlug(args.slug);
     },
-    renderEmailTemplate: (
+    renderEmailTemplate: async (
       _p: unknown,
-      args: { mjml: string; vars?: string | null },
+      args: { mjml: string; vars?: string | null; fragment_category?: string | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      const vars = parseVars(args.vars);
-      const { html, errors } = renderMjml(args.mjml, vars);
+      // A send's own variables underneath the caller's, so the preview shows
+      // the real logo and real localized copy rather than raw {{t:…}} keys.
+      const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
+      // The preview shows what will actually be sent, wrap included — an editor
+      // that previews only the body is how a broken footer reaches production.
+      const source = await emailFragmentService.wrap(args.mjml, args.fragment_category);
+      const { html, errors } = renderMjml(source, vars);
       return {
         subject: '',
         html,
         errors,
+        // Only the body's own variables: the fragment's are supplied by the
+        // send path, so listing them would ask an admin to fill them in.
         detected_variables: detectVariables(args.mjml),
       };
     },
@@ -107,28 +114,22 @@ export const emailTemplateResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       const tpl = await emailTemplateService.byId(args.template_id);
       if (!tpl) return { ok: false, message: 'Template not found' };
-      const vars = parseVars(args.vars);
-      const rendered = renderMjml(tpl.mjml, vars);
-      if (rendered.errors.length)
-        return { ok: false, message: rendered.errors.join('; ') };
-      const mailConfigs = await getMailConfigs();
-      const transporter = mailConfigs.host
-        ? nodemailer.createTransport({
-            host: mailConfigs.host,
-            port: mailConfigs.port,
-            secure: mailConfigs.port === 465,
-            auth:
-              mailConfigs.user && mailConfigs.pass
-                ? { user: mailConfigs.user, pass: mailConfigs.pass }
-                : undefined,
-          })
-        : nodemailer.createTransport({ jsonTransport: true });
+      // Same variables a real send has, so the test email is the real email.
+      const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
+      // Wrapped, like a real send. A test that skips the header and footer is
+      // exactly the test that lets a broken footer reach production.
+      const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_category);
+      const rendered = renderMjml(source, vars);
+      if (rendered.errors.length) return { ok: false, message: rendered.errors.join('; ') };
       try {
-        await transporter.sendMail({
-          from: mailConfigs.from,
+        // Through the shared provider layer, so a test goes out the same way a
+        // real email does — this used to build a third nodemailer transport of
+        // its own beside the two that were already consolidated.
+        await sendHtmlEmail({
           to: args.to,
           subject: tpl.subject,
           html: rendered.html,
+          category: 'internal',
         });
         return { ok: true, message: 'Test email sent' };
       } catch (e: any) {

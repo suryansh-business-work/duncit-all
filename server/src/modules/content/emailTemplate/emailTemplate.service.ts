@@ -5,6 +5,7 @@ import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { EmailTemplateModel } from './emailTemplate.model';
+import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
 
 const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
   'email-verification-otp': 'Verify your Duncit email',
@@ -144,11 +145,18 @@ export const emailTemplateService = {
     }
   },
 
-  /** Render a stored template by slug for use from email.service. */
+  /**
+   * Render a stored template by slug for use from email.service.
+   *
+   * The body is wrapped in its category's header/footer fragment first, when it
+   * names one. A template that names none renders exactly as it did before
+   * fragments existed — which is why `fragment_category` defaults to null.
+   */
   async render(slug: string, vars: Record<string, string> = {}) {
     const tpl = await loadTemplate(slug);
     if (!tpl) throw new GraphQLError(`Email template '${slug}' not found`);
-    const { html, errors } = renderMjml(tpl.mjml, vars);
+    const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_category);
+    const { html, errors } = renderMjml(source, vars);
     return {
       subject: applyVars(tpl.subject, vars),
       html,

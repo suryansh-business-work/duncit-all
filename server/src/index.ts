@@ -97,6 +97,12 @@ async function bootstrap() {
   });
   await safeSeed('emailTemplates', async () => {
     const { emailTemplateService } = await import('@modules/content/emailTemplate/emailTemplate.service');
+    // Fragments first: a template imported on this same boot may already name
+    // one, and a missing fragment would render it unwrapped.
+    const { emailFragmentService } = await import(
+      '@modules/content/emailFragment/emailFragment.service'
+    );
+    await emailFragmentService.seedDefaults();
     await emailTemplateService.seedDefaults();
   });
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());

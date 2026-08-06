@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { FollowingPeopleDocument } from '@/graphql/following';
@@ -48,11 +48,16 @@ export function useFollowing() {
     () => (data?.clubs ?? []).filter((club) => followedClubIds.has(club.id)),
     [data?.clubs, followedClubIds],
   );
+  // Stable, for the same reason `useSupport.reload` is: a fresh arrow every
+  // render becomes a changing dependency in a caller's effect, and an effect
+  // that refetches then loops. See the ~35,000-request incident in useSupport.
+
+  const refetch = useCallback(() => fetch(true), [fetch]);
 
   return {
     people,
     followedClubs,
     isLoading,
-    refetch: () => fetch(true),
+    refetch,
   };
 }

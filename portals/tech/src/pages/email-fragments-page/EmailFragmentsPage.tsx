@@ -1,5 +1,9 @@
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
-import FragmentList from './FragmentList';
+import { useState } from 'react';
+import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import EmailSidebarList from '../../components/EmailSidebarList';
+import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';
 import { useEmailFragments } from './useEmailFragments';
 
@@ -11,6 +15,8 @@ import { useEmailFragments } from './useEmailFragments';
  */
 export default function EmailFragmentsPage() {
   const f = useEmailFragments();
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState('');
 
   if (f.loading && !f.hasData) {
     return (
@@ -21,19 +27,35 @@ export default function EmailFragmentsPage() {
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
-          Email Fragments
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          One header and footer per email category. A template picks its category on the Templates
-          page, and its body is rendered between the two.
-        </Typography>
-      </Box>
+    <FillViewport>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>
+            Email Fragments
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            A header and a footer, wrapped around a template's body. Nine ship with Duncit, one per
+            email category; add as many of your own as you need.
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddOpen(true)}>
+          New fragment
+        </Button>
+      </Stack>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <FragmentList list={f.list} selected={f.selected} onSelect={f.setSelected} />
+        <EmailSidebarList
+          items={f.list.map((fragment) => ({
+            key: fragment.key,
+            primary: fragment.name,
+            secondary: fragment.key,
+            off: !fragment.is_active,
+          }))}
+          selected={f.selected}
+          onSelect={f.setSelected}
+          searchPlaceholder="Search category"
+          emptyText="No fragments yet."
+        />
 
         {f.draft ? (
           <FragmentEditorPanel
@@ -45,6 +67,7 @@ export default function EmailFragmentsPage() {
             busy={f.busy}
             onSave={f.save}
             onReset={f.reset}
+            onDelete={f.remove}
           />
         ) : (
           <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
@@ -52,6 +75,37 @@ export default function EmailFragmentsPage() {
           </Box>
         )}
       </Stack>
+
+      <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>New fragment</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            label="Name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Weekend banner"
+            helperText="Its key is made from the name. Add the header and footer next."
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            disabled={!newName.trim() || f.busy}
+            onClick={async () => {
+              await f.create(newName.trim());
+              setNewName('');
+              setAddOpen(false);
+            }}
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {f.snack && (
         <Alert
@@ -62,6 +116,6 @@ export default function EmailFragmentsPage() {
           {f.snack.msg}
         </Alert>
       )}
-    </Box>
+    </FillViewport>
   );
 }

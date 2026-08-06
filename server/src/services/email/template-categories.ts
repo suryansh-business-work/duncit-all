@@ -3,7 +3,7 @@ import type { EmailCategory } from './email.provider';
 /**
  * Which header/footer fragment wraps each template.
  *
- * This is the map the migration writes into `EmailTemplate.fragment_category`,
+ * This is the map the migration writes into `EmailTemplate.fragment_key` (the nine that ship use their category name as the key),
  * and it is the only place the assignment is decided. Deliberate rather than
  * defaulted: `authentication` is anything carrying a code or a credential,
  * `billing` is money, `internal` never reaches a customer, `marketing` can be

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
@@ -64,6 +64,11 @@ export function useExplore() {
 
   const commentCountFor = (pod: ExplorePod): number =>
     pod.comment_count + (commentDelta[pod.id] ?? 0);
+  // Stable, for the same reason `useSupport.reload` is: a fresh arrow every
+  // render becomes a changing dependency in a caller's effect, and an effect
+  // that refetches then loops. See the ~35,000-request incident in useSupport.
+
+  const refetch = useCallback(() => fetch(true), [fetch]);
 
   return {
     pods,
@@ -79,6 +84,6 @@ export function useExplore() {
     bumpComment,
     toggleSave,
     toggleLike,
-    refetch: () => fetch(true),
+    refetch,
   };
 }

@@ -17,8 +17,8 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String!
     mjml: String!
-    "Which header/footer fragment wraps this body. Null renders it bare."
-    fragment_category: EmailCategory
+    "The key of the header/footer fragment wrapping this body. Null renders it bare."
+    fragment_key: String
     "This template's own footer sentence. Blank uses the category's generic one."
     footer_note: String
     variables: [EmailTemplateVariable!]!
@@ -33,7 +33,7 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String!
     mjml: String!
-    fragment_category: EmailCategory
+    fragment_key: String
     footer_note: String
     variables: [EmailTemplateVariableInput!]
     is_active: Boolean
@@ -44,7 +44,7 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String
     mjml: String
-    fragment_category: EmailCategory
+    fragment_key: String
     footer_note: String
     variables: [EmailTemplateVariableInput!]
     is_active: Boolean
@@ -74,7 +74,7 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
       mjml: String!
       vars: String
       "Preview the body wrapped in this category's header and footer."
-      fragment_category: EmailCategory
+      fragment_key: String
     ): EmailTemplateRender!
   }
 

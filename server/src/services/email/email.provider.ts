@@ -69,6 +69,12 @@ export interface EmailDelivery {
    */
   accepted: string[];
   rejected: string[];
+  /**
+   * True when the send was deliberately not made — today only because the
+   * template is switched off. Distinguishes "we chose not to" from "it went to
+   * nobody", which look identical in an empty `accepted`.
+   */
+  skipped?: boolean;
 }
 
 export interface EmailProvider {

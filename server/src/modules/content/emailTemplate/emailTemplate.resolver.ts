@@ -35,7 +35,7 @@ export const emailTemplateResolvers = {
     },
     renderEmailTemplate: async (
       _p: unknown,
-      args: { mjml: string; vars?: string | null; fragment_category?: string | null },
+      args: { mjml: string; vars?: string | null; fragment_key?: string | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -44,7 +44,7 @@ export const emailTemplateResolvers = {
       const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
       // The preview shows what will actually be sent, wrap included — an editor
       // that previews only the body is how a broken footer reaches production.
-      const source = await emailFragmentService.wrap(args.mjml, args.fragment_category);
+      const source = await emailFragmentService.wrap(args.mjml, args.fragment_key);
       const { html, errors } = renderMjml(source, vars);
       return {
         subject: '',
@@ -118,7 +118,7 @@ export const emailTemplateResolvers = {
       const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
       // Wrapped, like a real send. A test that skips the header and footer is
       // exactly the test that lets a broken footer reach production.
-      const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_category);
+      const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_key);
       const rendered = renderMjml(source, vars);
       if (rendered.errors.length) return { ok: false, message: rendered.errors.join('; ') };
       try {

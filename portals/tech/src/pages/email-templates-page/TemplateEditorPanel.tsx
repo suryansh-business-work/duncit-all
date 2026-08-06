@@ -1,4 +1,4 @@
-import { Stack, TextField } from '@mui/material';
+import { FormControlLabel, Stack, Switch, TextField, Tooltip } from '@mui/material';
 import type { FragmentOption, Tpl } from './queries';
 import MjmlEditorPane from './MjmlEditorPane';
 import PreviewVariablesPane from './PreviewVariablesPane';
@@ -17,6 +17,8 @@ interface Props {
   detected: string[];
   /** The nine header/footer fragments, fetched once by the page's hook. */
   fragmentOptions: FragmentOption[];
+  fragmentsLoading?: boolean;
+  fragmentsError?: string | null;
   varsJson: string;
   setVarsJson: (v: string) => void;
   onValidate: () => void;
@@ -38,6 +40,8 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     previewErrors,
     detected,
     fragmentOptions,
+    fragmentsLoading,
+    fragmentsError,
     varsJson,
     setVarsJson,
     onValidate,
@@ -74,11 +78,26 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
           helperText="Variables {{ name }} are interpolated."
         />
         <FragmentPicker
-          value={draft.fragment_category}
+          value={draft.fragment_key}
           options={fragmentOptions}
-          onChange={(fragment_category) => setDraft({ ...draft, fragment_category })}
+          loading={fragmentsLoading}
+          error={fragmentsError}
+          onChange={(fragment_key) => setDraft({ ...draft, fragment_key })}
         />
       </Stack>
+
+      <Tooltip title="A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.">
+        <FormControlLabel
+          sx={{ alignSelf: 'flex-start' }}
+          control={
+            <Switch
+              checked={draft.is_active}
+              onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
+            />
+          }
+          label={draft.is_active ? 'Active — this template sends' : 'Disabled — nothing will send'}
+        />
+      </Tooltip>
 
       <TextField
         size="small"

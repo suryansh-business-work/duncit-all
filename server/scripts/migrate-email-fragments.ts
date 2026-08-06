@@ -177,7 +177,7 @@ function migrateDisk(): Row[] {
 function planDocument(doc: {
   slug: string;
   mjml: string;
-  fragment_category?: string | null;
+  fragment_key?: string | null;
   footer_note?: string;
 }): { row: Row; changes?: { mjml: string; category: string; note?: string } } {
   const category = TEMPLATE_CATEGORIES[doc.slug];
@@ -192,7 +192,7 @@ function planDocument(doc: {
     };
   }
 
-  const needsCategory = doc.fragment_category !== category;
+  const needsCategory = doc.fragment_key !== category;
   const needsNote = !doc.footer_note && !!result.footerNote;
   if (!touched && !needsCategory && !needsNote) {
     return { row: { slug: doc.slug, category, note: doc.footer_note ?? '', action: 'already' } };
@@ -221,7 +221,7 @@ async function migrateDatabase(): Promise<Row[]> {
     rows.push(row);
     if (!changes || DRY) continue;
     doc.mjml = changes.mjml;
-    doc.fragment_category = changes.category;
+    doc.fragment_key = changes.category;
     if (changes.note !== undefined) doc.footer_note = changes.note;
     await doc.save();
   }

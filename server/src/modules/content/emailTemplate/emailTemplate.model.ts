@@ -10,12 +10,12 @@ export interface IEmailTemplate extends Document {
   /** MJML source. Rendered to HTML at send time. */
   mjml: string;
   /**
-   * Which header/footer fragment wraps this template's body. Null means none —
+   * Which header/footer fragment wraps this body, by its `key`. Null means none —
    * and null is the DEFAULT, because every template that shipped before
    * fragments existed already draws its own header and footer, and turning
    * them all on at once would double every logo.
    */
-  fragment_category?: string | null;
+  fragment_key?: string | null;
   /**
    * The template's own "you're receiving this because…" line, rendered by the
    * fragment's footer. Each template had a different one baked into its MJML;
@@ -47,6 +47,12 @@ const EmailTemplateSchema = new Schema<IEmailTemplate>(
     description: String,
     subject: { type: String, required: true },
     mjml: { type: String, required: true },
+    // Both of these MUST be declared here, not only on the interface above:
+    // mongoose runs strict by default, so a `$set` of a path the schema does
+    // not know is dropped without a word — the picker saved, the response
+    // looked fine, and nothing was ever written.
+    fragment_key: { type: String, default: null },
+    footer_note: { type: String, default: '' },
     variables: { type: [VariableSchema], default: [] },
     is_active: { type: Boolean, default: true },
   },

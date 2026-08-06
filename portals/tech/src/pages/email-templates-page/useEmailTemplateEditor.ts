@@ -18,7 +18,11 @@ export function useEmailTemplateEditor() {
   const { data, loading, refetch } = useQuery<{ emailTemplates: Tpl[] }>(TEMPLATES, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data: fragmentData } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
+  const {
+    data: fragmentData,
+    loading: fragmentsLoading,
+    error: fragmentsError,
+  } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
   const [updateTpl] = useMutation(UPDATE);
   const [deleteTpl] = useMutation(DELETE);
   const client = useApolloClient();
@@ -63,7 +67,7 @@ export function useEmailTemplateEditor() {
     try {
       const res = await client.query({
         query: RENDER,
-        variables: { mjml: draft.mjml, vars: varsJson, fragment: draft.fragment_category ?? null },
+        variables: { mjml: draft.mjml, vars: varsJson, fragment: draft.fragment_key ?? null },
         fetchPolicy: 'network-only',
       });
       const errors = res.data?.renderEmailTemplate?.errors ?? [];
@@ -83,7 +87,7 @@ export function useEmailTemplateEditor() {
     const id = setTimeout(renderPreview, 600);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.mjml, draft?.fragment_category, varsJson]);
+  }, [draft?.mjml, draft?.fragment_key, varsJson]);
 
   const save = async () => {
     if (!draft) return;
@@ -97,7 +101,7 @@ export function useEmailTemplateEditor() {
             description: draft.description,
             subject: draft.subject,
             mjml: draft.mjml,
-            fragment_category: draft.fragment_category ?? null,
+            fragment_key: draft.fragment_key ?? null,
             footer_note: draft.footer_note ?? '',
             variables: draft.variables.map(({ key, description, sample }) => ({
               key,
@@ -164,6 +168,8 @@ export function useEmailTemplateEditor() {
     previewErrors,
     detected,
     fragmentOptions,
+    fragmentsLoading,
+    fragmentsError: fragmentsError?.message ?? null,
     varsJson,
     setVarsJson,
     busy,

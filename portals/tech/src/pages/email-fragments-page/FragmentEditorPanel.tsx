@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FragmentCodePane from './FragmentCodePane';
 import type { Fragment } from './queries';
 
@@ -23,10 +24,11 @@ interface Props {
   busy: boolean;
   onSave: () => void;
   onReset: () => void;
+  onDelete: () => void;
 }
 
 export default function FragmentEditorPanel(p: Readonly<Props>) {
-  const { draft, setDraft, previewHtml, previewErrors, dirty, busy, onSave, onReset } = p;
+  const { draft, setDraft, previewHtml, previewErrors, dirty, busy, onSave, onReset, onDelete } = p;
 
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
@@ -38,7 +40,8 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           sx={{ flex: '1 1 200px' }}
         />
-        <Chip size="small" label={draft.category} sx={{ fontFamily: 'monospace' }} />
+        <Chip size="small" label={draft.key} sx={{ fontFamily: 'monospace' }} />
+        {draft.is_system && <Chip size="small" variant="outlined" label="ships with Duncit" />}
         <FormControlLabel
           control={
             <Switch
@@ -111,17 +114,20 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
         >
           Save
         </Button>
-        <Button
-          color="warning"
-          startIcon={<RestartAltIcon />}
-          disabled={busy}
-          onClick={onReset}
-        >
-          Reset to shipped
-        </Button>
+        {draft.is_system ? (
+          <Button color="warning" startIcon={<RestartAltIcon />} disabled={busy} onClick={onReset}>
+            Reset to shipped
+          </Button>
+        ) : (
+          <Button color="error" startIcon={<DeleteForeverIcon />} disabled={busy} onClick={onDelete}>
+            Delete
+          </Button>
+        )}
         <Box sx={{ flex: 1 }} />
         <Typography variant="caption" color="text.secondary">
-          Fragments cannot be added or deleted — there is one per email category.
+          {draft.is_system
+            ? 'One of the nine that ship with Duncit — editable and switchable, never deletable.'
+            : 'Your own fragment. Any template can pick it.'}
         </Typography>
       </Stack>
     </Stack>

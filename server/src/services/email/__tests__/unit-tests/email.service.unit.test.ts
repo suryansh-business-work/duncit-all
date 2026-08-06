@@ -11,9 +11,15 @@
 const renderMock = jest.fn();
 const sendMailMock = jest.fn().mockResolvedValue({ messageId: 'm1' });
 const getBrandingMock = jest.fn();
+// An active template by default; the disabled path is exercised separately.
+const bySlugMock = jest.fn().mockResolvedValue({ is_active: true });
 
 jest.mock('@modules/content/emailTemplate/emailTemplate.service', () => ({
-  emailTemplateService: { render: (slug: string, vars: Record<string, string>) => renderMock(slug, vars) },
+  emailTemplateService: {
+    render: (slug: string, vars: Record<string, string>) => renderMock(slug, vars),
+    // Every send now reads the template first, to refuse a disabled one.
+    bySlug: (slug: string) => bySlugMock(slug),
+  },
 }));
 
 jest.mock('@modules/platform/settings/settings.service', () => ({
@@ -71,6 +77,7 @@ describe('email.service dynamic logo', () => {
     renderMock.mockReset();
     sendMailMock.mockClear();
     getBrandingMock.mockReset();
+    bySlugMock.mockResolvedValue({ is_active: true });
   });
 
   it('injects brand_logo_url from branding into the rendered vars', async () => {

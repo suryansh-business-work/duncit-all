@@ -4,7 +4,9 @@ export const FRAGMENTS = gql`
   query EmailFragments {
     emailFragments {
       fragment_id
+      key
       category
+      is_system
       name
       description
       header_mjml
@@ -16,16 +18,16 @@ export const FRAGMENTS = gql`
 `;
 
 export const UPDATE_FRAGMENT = gql`
-  mutation UpdateFragment($category: EmailCategory!, $input: UpdateEmailFragmentInput!) {
-    updateEmailFragment(category: $category, input: $input) {
+  mutation UpdateFragment($key: String!, $input: UpdateEmailFragmentInput!) {
+    updateEmailFragment(key: $key, input: $input) {
       fragment_id
     }
   }
 `;
 
 export const RESET_FRAGMENT = gql`
-  mutation ResetFragment($category: EmailCategory!) {
-    resetEmailFragment(category: $category) {
+  mutation ResetFragment($key: String!) {
+    resetEmailFragment(key: $key) {
       fragment_id
     }
   }
@@ -43,7 +45,9 @@ export const RENDER = gql`
 
 export interface Fragment {
   fragment_id: string;
-  category: string;
+  key: string;
+  category?: string | null;
+  is_system: boolean;
   name: string;
   description?: string | null;
   header_mjml: string;
@@ -80,3 +84,17 @@ ${footer}
   </mj-body>
 </mjml>`;
 }
+
+export const CREATE_FRAGMENT = gql`
+  mutation CreateFragment($input: CreateEmailFragmentInput!) {
+    createEmailFragment(input: $input) {
+      key
+    }
+  }
+`;
+
+export const DELETE_FRAGMENT = gql`
+  mutation DeleteFragment($key: String!) {
+    deleteEmailFragment(key: $key)
+  }
+`;

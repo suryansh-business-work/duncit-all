@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { CreateTicketDocument, MyTicketsDocument } from '@/graphql/support';
@@ -25,7 +25,18 @@ export function useTickets() {
     };
   }, [reloadKey]);
 
-  return { tickets, isLoading, error, reload: () => setReloadKey((k) => k + 1) };
+  /**
+   * STABLE on purpose. A fresh arrow function here is returned to every caller
+   * on every render, and `MyTicketsList` feeds it to `useFocusEffect` as a
+   * dependency — so each reload re-rendered, minted a new `reload`, re-ran the
+   * focus effect and reloaded again. That loop fired ~35,000 requests until the
+   * browser ran out of sockets with ERR_INSUFFICIENT_RESOURCES, which then took
+   * down every OTHER query on the page: creating a ticket, loading the list,
+   * loading the filters.
+   */
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  return { tickets, isLoading, error, reload };
 }
 
 /** Opens a new support ticket and returns its id (for the details redirect). */

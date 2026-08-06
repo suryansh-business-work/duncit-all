@@ -36,9 +36,16 @@ export default function App() {
         <Route path="/emails/fragments" element={authed(<EmailFragmentsPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />
-        <Route path="/telemetry" element={authed(<TelemetryDashboardPage />)} />
-        <Route path="/bugs" element={authed(<BugsPage />)} />
-        <Route path="/telemetry-logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
+        <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
+        <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
+        <Route path="/telemetry/bugs" element={authed(<BugsPage />)} />
+        <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
+        {/* The old paths, kept working for bookmarks. */}
+        <Route path="/bugs" element={<Navigate to="/telemetry/bugs" replace />} />
+        <Route
+          path="/telemetry-logs-settings"
+          element={<Navigate to="/telemetry/logs-settings" replace />}
+        />
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />

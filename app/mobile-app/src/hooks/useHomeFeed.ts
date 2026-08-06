@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
@@ -235,11 +235,16 @@ export function useHomeData() {
       pods: (data?.pods ?? []).filter((p) => matchClubIds.has(p.club_id) && byLocation(p)),
     };
   }, [data, selectedSuperId, selectedLocationId]);
+  // Stable, for the same reason `useSupport.reload` is: a fresh arrow every
+  // render becomes a changing dependency in a caller's effect, and an effect
+  // that refetches then loops. See the ~35,000-request incident in useSupport.
+
+  const refetch = useCallback(() => fetch(true), [fetch]);
 
   return {
     isLoading,
     hasData: !!data,
-    refetch: () => fetch(true),
+    refetch,
     clubs,
     pods,
     categories: data?.categories ?? [],
@@ -276,5 +281,8 @@ export function useHomeFeed(
     [data, selectedCategoryId, selectedSuperId, selectedLocationId, filters, showAllVibes],
   );
 
-  return { isLoading, error, hasData: !!data, refetch: () => fetch(true), ...derived };
+  // Stable, for the same reason `useSupport.reload` is — see the note above.
+  const refetch = useCallback(() => fetch(true), [fetch]);
+
+  return { isLoading, error, hasData: !!data, refetch, ...derived };
 }

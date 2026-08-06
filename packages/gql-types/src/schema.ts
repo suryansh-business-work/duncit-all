@@ -2113,10 +2113,17 @@ export type CreateCrmServiceOfferedInput = {
   titles: Array<Scalars['String']['input']>;
 };
 
+export type CreateEmailFragmentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  footer_mjml?: InputMaybe<Scalars['String']['input']>;
+  header_mjml?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
 export type CreateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   footer_note?: InputMaybe<Scalars['String']['input']>;
-  fragment_category?: InputMaybe<EmailCategory>;
+  fragment_key?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -3109,7 +3116,7 @@ export type EditAdjustmentInput = {
   remark?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Why an email is being sent. Decides which header/footer wraps it. */
+/** Why an email is being sent. The nine fragments that ship map one-to-one onto these. */
 export type EmailCategory =
   | 'authentication'
   | 'billing'
@@ -3122,13 +3129,16 @@ export type EmailCategory =
   | 'transactional';
 
 /**
- * The header and footer that wrap a template's body, one pair per category.
- * There are exactly nine and they cannot be created or deleted — only edited,
- * switched off, or reset to what they shipped with.
+ * The header and footer that wrap a template's body.
+ *
+ * Nine ship with Duncit, one per email category, and cannot be deleted — a
+ * template that lost its header mid-flight would send bare. Beyond those an
+ * admin adds their own and removes them again.
  */
 export type EmailFragment = {
   __typename?: 'EmailFragment';
-  category: EmailCategory;
+  /** Set for the nine that ship; null for one an admin added. */
+  category?: Maybe<EmailCategory>;
   created_at?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   /** MJML injected at the bottom of the template's mj-body. */
@@ -3136,8 +3146,12 @@ export type EmailFragment = {
   fragment_id: Scalars['ID']['output'];
   /** MJML injected at the top of the template's mj-body. */
   header_mjml: Scalars['String']['output'];
-  /** Off means templates in this category render without the wrap. */
+  /** Off means templates naming it render without the wrap. */
   is_active: Scalars['Boolean']['output'];
+  /** True for the nine. Editable and switchable, never deletable. */
+  is_system: Scalars['Boolean']['output'];
+  /** Stable, immutable identity. A template stores this. */
+  key: Scalars['String']['output'];
   name: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
 };
@@ -3148,8 +3162,8 @@ export type EmailTemplate = {
   description?: Maybe<Scalars['String']['output']>;
   /** This template's own footer sentence. Blank uses the category's generic one. */
   footer_note?: Maybe<Scalars['String']['output']>;
-  /** Which header/footer fragment wraps this body. Null renders it bare. */
-  fragment_category?: Maybe<EmailCategory>;
+  /** The key of the header/footer fragment wrapping this body. Null renders it bare. */
+  fragment_key?: Maybe<Scalars['String']['output']>;
   is_active: Scalars['Boolean']['output'];
   mjml: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -5077,6 +5091,8 @@ export type Mutation = {
   createCrmService: CrmService;
   createCrmServicesOffered: Array<CrmServiceOffered>;
   createEcommLead: EcommLead;
+  /** Add a fragment of your own. It belongs to no category and can be deleted. */
+  createEmailFragment: EmailFragment;
   createEmailTemplate: EmailTemplate;
   createEnvEntry: EnvEntry;
   createExpense: Expense;
@@ -5156,6 +5172,11 @@ export type Mutation = {
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products. */
   deleteEcommBrand: Scalars['Boolean']['output'];
   deleteEcommLead: Scalars['Boolean']['output'];
+  /**
+   * Delete a fragment you added. Refused for the nine that ship. Templates
+   * naming it are released rather than left pointing at nothing.
+   */
+  deleteEmailFragment: Scalars['Boolean']['output'];
   deleteEmailTemplate: Scalars['Boolean']['output'];
   deleteEnvEntry: Scalars['Boolean']['output'];
   deleteExpense: Scalars['Boolean']['output'];
@@ -5371,7 +5392,7 @@ export type Mutation = {
   rescheduleMyMeeting: OnboardingMeeting;
   /** Restore a system prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
-  /** Restore one fragment's header and footer to what they shipped with. */
+  /** Restore one of the nine to the header and footer it shipped with. */
   resetEmailFragment: EmailFragment;
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   resolveBouncerSos: BouncerSosAlert;
@@ -6142,6 +6163,11 @@ export type MutationCreateEcommLeadArgs = {
 };
 
 
+export type MutationCreateEmailFragmentArgs = {
+  input: CreateEmailFragmentInput;
+};
+
+
 export type MutationCreateEmailTemplateArgs = {
   input: CreateEmailTemplateInput;
 };
@@ -6463,6 +6489,11 @@ export type MutationDeleteEcommBrandArgs = {
 
 export type MutationDeleteEcommLeadArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteEmailFragmentArgs = {
+  key: Scalars['String']['input'];
 };
 
 
@@ -7193,7 +7224,7 @@ export type MutationResetAiPromptArgs = {
 
 
 export type MutationResetEmailFragmentArgs = {
-  category: EmailCategory;
+  key: Scalars['String']['input'];
 };
 
 
@@ -7962,8 +7993,8 @@ export type MutationUpdateEcommLeadArgs = {
 
 
 export type MutationUpdateEmailFragmentArgs = {
-  category: EmailCategory;
   input: UpdateEmailFragmentInput;
+  key: Scalars['String']['input'];
 };
 
 
@@ -10303,7 +10334,7 @@ export type Query = {
   ecommLeads: Array<EcommLead>;
   ecommLeadsTable: EcommLeadTablePage;
   emailFragment?: Maybe<EmailFragment>;
-  /** All nine, in category order. */
+  /** Every fragment — the nine first, then the custom ones. */
   emailFragments: Array<EmailFragment>;
   emailTemplate?: Maybe<EmailTemplate>;
   emailTemplateBySlug?: Maybe<EmailTemplate>;
@@ -11311,7 +11342,7 @@ export type QueryEcommLeadsTableArgs = {
 
 
 export type QueryEmailFragmentArgs = {
-  category: EmailCategory;
+  key: Scalars['String']['input'];
 };
 
 
@@ -12205,7 +12236,7 @@ export type QueryRenderCrmEmailTemplateArgs = {
 
 
 export type QueryRenderEmailTemplateArgs = {
-  fragment_category?: InputMaybe<EmailCategory>;
+  fragment_key?: InputMaybe<Scalars['String']['input']>;
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
 };
@@ -14204,7 +14235,7 @@ export type UpdateEmailFragmentInput = {
 export type UpdateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   footer_note?: InputMaybe<Scalars['String']['input']>;
-  fragment_category?: InputMaybe<EmailCategory>;
+  fragment_key?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;

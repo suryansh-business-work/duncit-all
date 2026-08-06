@@ -33,6 +33,7 @@ export const EMAIL_FALLBACK: Record<string, string> = {
     "The slot is on hold and the host is waiting on you — the pod only goes live once you approve it.",
   "email.venueSlotRequest.pod": "Pod",
   "email.venueSlotRequest.slot": "Requested slot",
+  "email.eventTicket.admits": "Admits",
   "email.venueSlotRequest.approve": "Approve booking",
   "email.venueSlotRequest.decline": "Decline",
   "email.venueSlotRequest.earningsNote":

@@ -59,11 +59,37 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     joined_at: String
   }
 
+  "One extra person admitted on someone else's booking, recorded at the door."
+  type PodCompanion {
+    name: String!
+    phone_extension: String
+    phone_number: String!
+    "When the host recorded them (ISO)."
+    added_at: String!
+  }
+
+  "Details for one of the other people a multi-seat ticket admits."
+  input PodCompanionInput {
+    name: String!
+    phone_extension: String
+    phone_number: String!
+  }
+
   type HostTicketScanResult {
     ok: Boolean!
     message: String!
     "True when the ticket had already been checked in before this scan."
     already_checked_in: Boolean!
+    """
+    True when this ticket admits more people than the buyer and their details
+    have not been recorded yet. The ticket is NOT checked in — scan again with
+    the companions argument filled to mark the group present.
+    """
+    requires_companions: Boolean!
+    "How many more people still need a name and phone number (0 when none do)."
+    companions_required: Int!
+    "The other people on this booking, once recorded."
+    companions: [PodCompanion!]!
     ticket: EventTicket
     attendee: ScannedAttendee
   }
@@ -85,6 +111,11 @@ export const eventTicketTypeDefs = /* GraphQL */ `
   input CheckInEventTicketInput {
     token: String
     ticket_doc_id: ID
+    """
+    The other people this ticket admits. Required the first time a multi-seat
+    ticket is checked in — exactly one entry per seat beyond the buyer's own.
+    """
+    companions: [PodCompanionInput!]
   }
 
   extend type Query {
@@ -105,6 +136,11 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     Authorised by the same host/co-host rule as hostUpdatePod — a host never
     holds an admin role, so the admin check-in mutations are closed to them.
     """
-    hostScanPodTicket(pod_doc_id: ID!, token: String!): HostTicketScanResult!
+    hostScanPodTicket(
+      pod_doc_id: ID!
+      token: String!
+      "Details for the other people the ticket admits — send on the second scan."
+      companions: [PodCompanionInput!]
+    ): HostTicketScanResult!
   }
 `;

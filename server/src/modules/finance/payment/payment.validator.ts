@@ -1,7 +1,8 @@
 import * as yup from 'yup';
+import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 
-const phoneNumberRegex = /^\d{6,15}$/;
-const phoneExtensionRegex = /^\+?\d{1,5}$/;
+const phoneNumberRegex = PHONE_NUMBER_REGEX;
+const phoneExtensionRegex = PHONE_EXTENSION_REGEX;
 const gstinRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]{2}$/;
 
 // Only the buyer's email is mandatory at checkout: a half-filled profile must
@@ -53,9 +54,26 @@ export const checkoutBillingSchema = optionalCheckoutBillingSchema.shape({
   pincode: yup.string().trim().matches(/^\d{4,10}$/, 'Enter a valid pincode').required('Pincode is required'),
 });
 
+/**
+ * Seats and coins are LENIENT on purpose, but they must be DECLARED.
+ *
+ * `validate()` runs yup with `stripUnknown: true`, so a field the schema does
+ * not name is deleted before the service ever sees it — silently. That is what
+ * charged a 4-seat booking for one seat and made coin redemption a no-op: the
+ * client sent both, the GraphQL input declared both, and yup dropped both.
+ *
+ * The real limits stay where they belong — `clampSeatsForPod` knows the pod's
+ * remaining capacity and `applyCoins` knows the live balance — so these only
+ * assert the shape.
+ */
+const optionalSeats = yup.number().integer('Seats must be a whole number').min(1).nullable().default(1);
+const optionalRedeemCoins = yup.number().integer('Coins must be a whole number').min(0).nullable().default(0);
+
 export const dummyCheckoutSchema = yup.object({
   pod_id: yup.string().trim().nullable().default(null),
   amount: yup.number().typeError('Amount must be a number').moreThan(0).required(),
+  seats: optionalSeats,
+  redeem_coins: optionalRedeemCoins,
   description: yup.string().trim().max(300).default('Booking'),
   contact_name: yup.string().trim().max(160).optional(),
   contact_email: yup.string().trim().email().required('Email is required'),
@@ -102,6 +120,7 @@ const pincodeRegex = /^\d{4,10}$/;
 // enforced by the GraphQL input type; the array itself just can't be empty.
 export const dummyProductCheckoutSchema = yup.object({
   items: yup.array().min(1, 'Your cart is empty').required('Items are required'),
+  redeem_coins: optionalRedeemCoins,
   description: yup.string().trim().max(300).default('Product order'),
   contact_name: yup.string().trim().max(160).optional(),
   contact_email: yup.string().trim().email().required('Email is required'),

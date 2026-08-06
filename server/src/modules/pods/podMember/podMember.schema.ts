@@ -35,6 +35,11 @@ export const podMemberTypeDefs = /* GraphQL */ `
     status: MembershipStatus!
     "Seats this booking holds — one ticket admits this many. 1 for every legacy booking."
     seats: Int!
+    """
+    The other people this booking admits, captured at check-in. Empty until the
+    host scans the ticket; one entry per seat beyond the buyer's own afterwards.
+    """
+    companions: [PodCompanion!]!
     joined_at: String!
     backed_out_at: String
     payment_id: ID
@@ -150,10 +155,21 @@ export const podMemberTypeDefs = /* GraphQL */ `
     filled_at: String!
   }
 
+  "How many seats one JOINED member holds — the +N other members label."
+  type PodAttendeeSeats {
+    user_id: ID!
+    "Seats this person's booking holds (always at least 1)."
+    seats: Int!
+  }
+
   "Admin/Finance: one person on a pod — host, attendee or backed-out member."
   type AdminPodAttendee {
     "PodMember row id — null for people without a membership row (host seat)."
     member_id: ID
+    "Seats this booking holds — one ticket admits this many. 1 for a legacy booking."
+    seats: Int!
+    "The other people on this booking, recorded at the door."
+    companions: [PodCompanion!]!
     user_id: ID!
     full_name: String
     email: String
@@ -202,6 +218,11 @@ export const podMemberTypeDefs = /* GraphQL */ `
     myPodMemberships(status: MembershipStatus): [PodMember!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
+    """
+    Seats each JOINED member of a pod holds. Powers the "+N other members" label
+    on the attendee list — one face per person, the group size beside their name.
+    """
+    podAttendeeSeats(pod_doc_id: ID!): [PodAttendeeSeats!]!
     "Every filled Backout seat of a pod — struck-through attendee rows (public)."
     podSpotFills(pod_doc_id: ID!): [PodSpotFill!]!
     "Admin/Finance: everyone on a pod with contact info and replacement links."

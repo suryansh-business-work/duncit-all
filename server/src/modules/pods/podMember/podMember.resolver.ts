@@ -41,6 +41,11 @@ export const podMemberResolvers = {
     },
     podMembers: async (_p: unknown, args: { pod_doc_id: string; status?: string }) =>
       podMemberService.listForPod(args.pod_doc_id, args.status),
+    // Public pod information, like the attendee list it labels. Deliberately NOT
+    // served off `podMembers`, which returns payment ids, referral tokens and
+    // refund state that nobody rendering an avatar row should receive.
+    podAttendeeSeats: async (_p: unknown, args: { pod_doc_id: string }) =>
+      podMemberService.listAttendeeSeats(args.pod_doc_id),
     podSpotFills: async (_p: unknown, args: { pod_doc_id: string }) =>
       podMemberService.listSpotFills(args.pod_doc_id),
     adminPodAttendees: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {

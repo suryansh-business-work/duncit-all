@@ -21,6 +21,7 @@ import {
   podSeatsAvailable,
   podSeatsTaken,
 } from '@modules/pods/pod/pod.seats';
+import { claimSeats, releaseSeats } from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
@@ -55,12 +56,21 @@ async function backoutDeductionPct(): Promise<number> {
   return clampPct(settings.default_backout_deduction_pct);
 }
 
+/** One extra person on a booking, as the apps and the admin roster read them. */
+const toPubCompanion = (c: any) => ({
+  name: c.name ?? '',
+  phone_extension: c.phone_extension ?? null,
+  phone_number: c.phone_number ?? '',
+  added_at: c.added_at?.toISOString?.() ?? new Date(0).toISOString(),
+});
+
 const toPub = (m: IPodMember) => ({
   id: String(m._id),
   pod_id: String(m.pod_id),
   user_id: String(m.user_id),
   status: m.status,
   seats: m.seats ?? 1,
+  companions: (m.companions ?? []).map(toPubCompanion),
   joined_at: m.joined_at?.toISOString?.() ?? null,
   backed_out_at: m.backed_out_at ? m.backed_out_at.toISOString() : null,
   payment_id: m.payment_id ? String(m.payment_id) : null,
@@ -94,30 +104,23 @@ async function ensureSeatsAvailable(pod: any, want = 1) {
   }
 }
 
-/** Add the person once and record whatever seats they hold beyond their own. */
+/**
+ * Add the person once and record whatever seats they hold beyond their own.
+ *
+ * The write is atomic and re-checks capacity (see `claimSeats`), so it can throw
+ * POD_FULL when the seats went between the caller's gate and here. The caller's
+ * loaded pod is refreshed from the result because the code after a join reads
+ * occupancy straight off it.
+ */
 async function addAttendee(pod: any, userId: string, seats = 1) {
-  const uid = new Types.ObjectId(userId);
-  let changed = false;
-  if (!pod.pod_attendees.some((u: any) => String(u) === userId)) {
-    pod.pod_attendees.push(uid as any);
-    changed = true;
-  }
-  const extra = Math.max(seats - 1, 0);
-  if (extra > 0) {
-    pod.extra_seats = (pod.extra_seats ?? 0) + extra;
-    changed = true;
-  }
-  if (changed) await pod.save();
+  const fresh = await claimSeats(pod._id, userId, seats);
+  pod.pod_attendees = fresh.pod_attendees;
+  pod.extra_seats = fresh.extra_seats;
 }
 
 /** Release the person and every seat they held. */
 async function removeAttendee(pod: any, userId: string, seats = 1) {
-  const before = pod.pod_attendees.length;
-  pod.pod_attendees = pod.pod_attendees.filter((u: any) => String(u) !== userId);
-  const extra = Math.max(seats - 1, 0);
-  const hadExtra = extra > 0 && (pod.extra_seats ?? 0) > 0;
-  if (hadExtra) pod.extra_seats = Math.max((pod.extra_seats ?? 0) - extra, 0);
-  if (pod.pod_attendees.length !== before || hadExtra) await pod.save();
+  await releaseSeats(pod._id, userId, seats);
 }
 
 /** Callers must not join while their own backout is still in process. */
@@ -235,6 +238,13 @@ async function markSpotFilled(pod: any, member: IPodMember, replacementUserId: s
  * released seats the join consumed. A backout counts as filled only when seat
  * demand actually needed it: taken + in-process > total spots. Pods with
  * unlimited spots (0) have no seat scarcity, so nothing to fill.
+ *
+ * Both sides of that comparison are SEATS, not people. Backing out releases the
+ * whole booking (`removeAttendee` above drops the id and every extra seat), so
+ * an in-process member reserves `seats` of them while "Keep My Spot" is still
+ * open — and the joiner who displaces them may have taken several at once.
+ * Counting people here left a multi-seat pod short of the threshold, so the
+ * backers-out stayed in BACKOUT_IN_PROCESS and never became refund-eligible.
  */
 async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   const spots = pod.no_of_spots ?? 0;
@@ -242,11 +252,13 @@ async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   const inProcess = await PodMemberModel.find({ pod_id: pod._id, status: 'BACKOUT_IN_PROCESS' }).sort({
     backed_out_at: 1,
   });
-  let overflow = (pod.pod_attendees?.length ?? 0) + inProcess.length - spots;
+  const reserved = inProcess.reduce((sum, m) => sum + normalizeSeats(m.seats ?? 1), 0);
+  let overflow = podSeatsTaken(pod) + reserved - spots;
   for (const member of inProcess) {
     if (overflow <= 0) break;
     await markSpotFilled(pod, member, joiningUserId);
-    overflow -= 1;
+    // Filling a booking releases every seat it reserved, not one.
+    overflow -= normalizeSeats(member.seats ?? 1);
   }
 }
 
@@ -488,6 +500,26 @@ export const podMemberService = {
     return docs.map(toPub);
   },
 
+  /**
+   * Seats per JOINED member — just the pair, nothing else.
+   *
+   * The attendee list shows one face per person; this is what turns a face into
+   * "Asha +3 other members" without the client having to guess from a count it
+   * cannot break down.
+   */
+  async listAttendeeSeats(podDocId: string) {
+    const docs = await PodMemberModel.find({
+      pod_id: new Types.ObjectId(podDocId),
+      status: 'JOINED',
+    })
+      .select('user_id seats')
+      .lean();
+    return docs.map((m: any) => ({
+      user_id: String(m.user_id),
+      seats: normalizeSeats(m.seats ?? 1),
+    }));
+  },
+
   async lookupReferral(token: string) {
     const m = await PodMemberModel.findOne({ referral_token: token });
     return m ? toPub(m) : null;
@@ -525,18 +557,28 @@ export const podMemberService = {
       }
     }
 
-    const doc = await PodMemberModel.create({
-      pod_id: pod._id,
-      user_id: uid,
-      status: 'JOINED',
-      seats,
-      joined_at: new Date(),
-      source,
-      referred_by: referredBy,
-      refund_status: 'NONE',
-    });
-
+    // Claim the seats BEFORE the membership row exists. The claim is the gate
+    // that can still fail (someone else took the last seat while we got here),
+    // and a membership written for seats we never held is the harder mess to
+    // unwind — so if the row cannot be created, the seats go back.
     await addAttendee(pod, userId, seats);
+    let doc;
+    try {
+      doc = await PodMemberModel.create({
+        pod_id: pod._id,
+        user_id: uid,
+        status: 'JOINED',
+        seats,
+        joined_at: new Date(),
+        source,
+        referred_by: referredBy,
+        refund_status: 'NONE',
+      });
+    } catch (e) {
+      await removeAttendee(pod, userId, seats);
+      throw e;
+    }
+
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {
@@ -901,6 +943,9 @@ export const podMemberService = {
     const hostRows = extraIds.map((id) => ({
       ...personFields(id),
       member_id: null,
+      // The host's own seat: one person, nobody brought along.
+      seats: 1,
+      companions: [],
       status: null,
       joined_at: null,
       backed_out_at: null,
@@ -917,6 +962,10 @@ export const podMemberService = {
       return {
         ...personFields(String(m.user_id)),
         member_id: String(m._id),
+        // Without these a 4-seat booking and a 1-seat booking were the same row,
+        // which is a large part of why the under-billing went unnoticed.
+        seats: m.seats ?? 1,
+        companions: (m.companions ?? []).map(toPubCompanion),
         status: m.status,
         joined_at: iso(m.joined_at),
         backed_out_at: iso(m.backed_out_at),

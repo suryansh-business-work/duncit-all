@@ -20,6 +20,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import StoreIcon from '@mui/icons-material/Store';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import InsightsIcon from '@mui/icons-material/Insights';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -46,6 +47,9 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   venue: <StoreIcon />,
   ecomm: <Inventory2Icon />,
   insights: <InsightsIcon />,
+  // A slot request is a booking waiting on a decision, so it wears a calendar
+  // rather than the venue's own storefront icon.
+  calendar: <EventAvailableIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

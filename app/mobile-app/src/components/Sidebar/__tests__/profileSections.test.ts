@@ -65,6 +65,8 @@ describe('profileSections', () => {
 
     expect(buildPartnerMenus(['VENUE_OWNER'], 'VENUE')[0]?.items.map((i) => i.route)).toEqual([
       'VenueManage',
+      // Slot Requests sits above earnings: a request is the thing waiting on you.
+      'VenueSlotRequests',
       'VenueEarnings',
       'Wallet',
     ]);

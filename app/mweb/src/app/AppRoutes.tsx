@@ -31,6 +31,7 @@ const VerificationPage = lazy(() => import('../pages/verification-page'));
 const WalletPage = lazy(() => import('../pages/wallet-page'));
 const VenueManagePage = lazy(() => import('../pages/VenueManagePage'));
 const VenueEarningsPage = lazy(() => import('../pages/venue-earnings-page'));
+const VenueSlotRequestsPage = lazy(() => import('../pages/venue-slot-requests-page'));
 const VenueDetailsPage = lazy(() => import('../pages/VenueDetailsPage'));
 const VenuesPage = lazy(() => import('../pages/venues-page'));
 const FaqsPage = lazy(() => import('../pages/FaqsPage'));
@@ -151,6 +152,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/products/manage" element={withAuth(<ProductsManagePage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
+        <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />

@@ -39,7 +39,7 @@ describe('envEntry interactive tests', () => {
   });
 
   it('imagekit: uploads and returns a url', async () => {
-    const entry = await envEntryService.create({ name: 'IK', category: 'IMAGEKIT', config: cfg({ private_key: 'k' }) });
+    const entry = await envEntryService.create({ name: 'IK', category: 'IMAGEKIT', config: cfg({ private_key: 'k', public_key: 'public_k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'https://ik.io/test.jpg' }) });
     const res = await envEntryTests.imagekitUpload(entry!.id, 'data:image/png;base64,QQ==', 'x.png');
     expect(res.ok).toBe(true);
@@ -47,7 +47,7 @@ describe('envEntry interactive tests', () => {
   });
 
   it('imagekit: fails on empty file and upstream error', async () => {
-    const entry = await envEntryService.create({ name: 'IK2', category: 'IMAGEKIT', config: cfg({ private_key: 'k' }) });
+    const entry = await envEntryService.create({ name: 'IK2', category: 'IMAGEKIT', config: cfg({ private_key: 'k', public_key: 'public_k' }) });
     expect((await envEntryTests.imagekitUpload(entry!.id, '', 'x.png')).ok).toBe(false);
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, statusText: 'Bad', json: async () => ({ message: 'nope' }) });
     const res = await envEntryTests.imagekitUpload(entry!.id, 'QQ==', 'x.png');

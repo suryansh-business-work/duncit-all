@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
@@ -57,6 +57,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
   const [debounced, setDebounced] = useState('');
   const [role, setRole] = useState('');
   const [peer, setPeer] = useState<Coworker | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -153,9 +154,13 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
   const attach = (file: File) => {
     // Straight to ImageKit, like every other upload in the product — the file
     // is then in the file manager too, rather than somewhere only chat knows.
+    //
+    // The failure is SHOWN. An upload that fails silently looks exactly like one
+    // that is still running, and the person tries again instead of reading what
+    // ImageKit said.
     upload(file, UPLOAD_FOLDER)
       .then((url) => send('', { url, name: file.name, type: file.type }))
-      .catch(() => undefined);
+      .catch((err: Error) => setError(err.message));
   };
 
   const exportChat = async () => {
@@ -206,6 +211,12 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
+
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ m: 1 }}>
+          {error}
+        </Alert>
+      )}
 
       <CallPanel
         phase={call.phase}

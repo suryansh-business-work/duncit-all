@@ -215,7 +215,8 @@ describe('upload unit', () => {
       const auth = await getImagekitAuth();
       expect(auth.publicKey).toBe('public_abc');
       expect(auth.urlEndpoint).toBe('https://ik.imagekit.io/duncit');
-      expect(auth.token).toMatch(/^[0-9a-f]{32}$/);
+      // A UUID, like ImageKit's own SDK sends — see imagekitSignature.unit.test.ts.
+      expect(auth.token).toMatch(/^[0-9a-f-]{36}$/);
       expect(auth.signature).toMatch(/^[0-9a-f]{40}$/);
       expect(auth.expire).toBeGreaterThan(Math.floor(Date.now() / 1000));
     });

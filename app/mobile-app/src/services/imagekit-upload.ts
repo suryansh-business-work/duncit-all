@@ -27,8 +27,16 @@ function postForm(form: FormData, onProgress?: (pct: number) => void): Promise<s
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', IMAGEKIT_UPLOAD_URL);
+    // Clamped, and guarded against a zero total.
+    //
+    // A progress event is the transport's own accounting: React Native reports
+    // `total` as the body size it knows about, which for a multipart body built
+    // from a file URI can be smaller than what actually goes out — so the ratio
+    // walks past 1 and the bar reads "137%". A percentage above 100 is never
+    // meaningful, and a zero total divides to NaN.
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+      if (!e.lengthComputable || e.total <= 0) return;
+      onProgress?.(Math.min(100, Math.max(0, Math.round((e.loaded / e.total) * 100))));
     };
     xhr.onload = () => {
       let json: any = {};

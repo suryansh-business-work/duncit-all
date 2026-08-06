@@ -67,29 +67,49 @@ function assertImagekitConfig(config: {
 }
 
 /**
+ * The signature a browser upload carries.
+ *
+ * Per ImageKit: HMAC-SHA1(privateKey, token + expire), hex digest, where expire
+ * is a Unix timestamp at most an hour ahead.
+ *
+ * The token is a UUID because that is what ImageKit's own client SDK sends, and
+ * therefore the only shape their endpoint is known to accept. It was hex here,
+ * on a guess about "HTTP clients mangling hyphens" that cannot apply to a
+ * browser FormData field — and an upload rejected for its token reports exactly
+ * the same "invalid signature parameter" as a wrong key, which is why the guess
+ * survived so long.
+ *
+ * It must also be unique per upload, so this is called per request and never
+ * cached.
+ *
+ * Exported so the Tech portal's ImageKit test signs the way production does.
+ * A test that authenticates some other way is a test that can pass while every
+ * real upload fails.
+ */
+export function signImagekitUpload(privateKey: string, expireSeconds = 30 * 60) {
+  const token = crypto.randomUUID();
+  // Clamped here rather than trusted from the caller: ImageKit refuses an
+  // expiry more than an hour out, and it refuses it with the same "invalid
+  // signature parameter" as everything else, so the mistake would be invisible.
+  const window = Math.min(Math.max(60, expireSeconds), 60 * 60);
+  const expire = Math.floor(Date.now() / 1000) + window;
+  const signature = crypto
+    .createHmac('sha1', privateKey)
+    .update(`${token}${expire}`)
+    .digest('hex');
+  return { token, expire, signature };
+}
+
+/**
  * Generate the auth params required by the ImageKit browser-side upload SDK.
  * The browser uses this to upload directly to ImageKit without ever seeing
  * the private key.
- *
- * Per ImageKit docs the signature must equal:
- *   HMAC-SHA1(privateKey, token + expire)  (hex digest)
- * where expire is a Unix timestamp (seconds), at most 1 hour ahead of now.
  */
 export async function getImagekitAuth(expireSeconds = 30 * 60) {
   const config = await getImagekitConfig();
   assertImagekitConfig(config);
-  // Hex-only token — some HTTP clients mangle UUID hyphens or padding chars.
-  const token = crypto.randomBytes(16).toString('hex');
-  const expire = Math.floor(Date.now() / 1000) + expireSeconds;
-  // The string concatenation here is what ImageKit re-derives on its side.
-  const signature = crypto
-    .createHmac('sha1', config.privateKey)
-    .update(`${token}${expire}`)
-    .digest('hex');
   return {
-    token,
-    expire,
-    signature,
+    ...signImagekitUpload(config.privateKey, expireSeconds),
     publicKey: config.publicKey,
     urlEndpoint: config.urlEndpoint,
   };

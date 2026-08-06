@@ -69,13 +69,23 @@ describe('directUploadToImagekit', () => {
 
     xhr.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 200 });
     xhr.upload.onprogress?.({ lengthComputable: false, loaded: 0, total: 0 });
+    // A transport that under-reports `total` walks the ratio past 1 — the bar
+    // read "137%" before this was clamped. A zero total would divide to NaN.
+    xhr.upload.onprogress?.({ lengthComputable: true, loaded: 274, total: 200 });
+    xhr.upload.onprogress?.({ lengthComputable: true, loaded: 10, total: 0 });
     xhr.status = 200;
     xhr.responseText = JSON.stringify({ url: 'https://ik.io/out.mp4' });
     xhr.onload?.();
 
     await expect(pending).resolves.toBe('https://ik.io/out.mp4');
     expect(onProgress).toHaveBeenCalledWith(25);
-    expect(onProgress).toHaveBeenCalledTimes(1);
+    expect(onProgress).toHaveBeenCalledWith(100);
+    expect(onProgress).toHaveBeenCalledTimes(2);
+    // Nothing above 100, and nothing that is not a number.
+    for (const [pct] of onProgress.mock.calls) {
+      expect(pct).toBeGreaterThanOrEqual(0);
+      expect(pct).toBeLessThanOrEqual(100);
+    }
   });
 
   it('rejects with the ImageKit error message on a non-2xx response', async () => {

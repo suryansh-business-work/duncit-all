@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { GraphQLError } from 'graphql';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
+import { signImagekitUpload } from '@modules/platform/upload/upload.service';
 import { EnvEntryModel, type EnvCategory } from './envEntry.model';
 import type { EnvEntryConfig } from './envEntry.service';
 
@@ -116,7 +117,9 @@ const impl = {
   async imagekitUpload(id: string, fileBase64: string, fileName: string): Promise<EnvTestRichResult> {
     const config = await rawConfig(id, 'IMAGEKIT');
     const privateKey = str(config, 'private_key');
+    const publicKey = str(config, 'public_key');
     if (!privateKey) return { ok: false, message: 'ImageKit private key is not configured' };
+    if (!publicKey) return { ok: false, message: 'ImageKit public key is not configured' };
     const raw = fileBase64.includes(',') ? fileBase64.split(',').pop() || '' : fileBase64;
     const bytes = Buffer.from(raw, 'base64');
     if (!bytes.length) return { ok: false, message: 'No file provided' };
@@ -126,16 +129,35 @@ const impl = {
       form.append('fileName', fileName || `tech-test-${Date.now()}`);
       form.append('useUniqueFileName', 'true');
       form.append('folder', '/tech-tests');
-      const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');
+      // SIGNED, exactly the way a browser uploads — not Basic auth with the
+      // private key.
+      //
+      // Basic auth proves only that the private key works. Every real upload in
+      // the product is signed with the private key and sent with the PUBLIC one,
+      // so a pair from two different ImageKit accounts passes a Basic-auth test
+      // and fails every actual upload with "invalid signature parameter". This
+      // test used to be that false green.
+      const { token, expire, signature } = signImagekitUpload(privateKey);
+      form.append('publicKey', publicKey);
+      form.append('token', token);
+      form.append('expire', String(expire));
+      form.append('signature', signature);
       const res = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
         method: 'POST',
-        headers: { Authorization: auth },
         body: form as any,
       });
       const json: any = await res.json().catch(() => ({}));
-      if (!res.ok) return { ok: false, message: `ImageKit upload failed: ${json?.message || res.statusText}` };
+      if (!res.ok) {
+        const detail = json?.message || res.statusText;
+        // The one failure worth naming, because its message says nothing about
+        // its cause.
+        const hint = /signature/i.test(String(detail))
+          ? ' — the public and private keys are almost certainly from different ImageKit accounts.'
+          : '';
+        return { ok: false, message: `ImageKit upload failed: ${detail}${hint}` };
+      }
       await touch(id);
-      return { ok: true, message: 'Uploaded to ImageKit', url: json.url };
+      return { ok: true, message: 'Uploaded to ImageKit (signed, as the browser does)', url: json.url };
     } catch (err: any) {
       return { ok: false, message: err?.message || 'ImageKit upload failed' };
     }

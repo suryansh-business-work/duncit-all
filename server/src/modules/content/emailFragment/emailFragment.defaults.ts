@@ -34,8 +34,12 @@ const LABELS: Record<EmailCategory, string> = {
   internal: 'Internal',
 };
 
-/** What each category's footer says about why the email arrived. */
-const NOTE_KEY: Record<EmailCategory, string> = {
+/**
+ * The generic "why did I get this" line per category — the fallback for a
+ * template with no sentence of its own. A translation key, so the fallback is
+ * localized like everything else.
+ */
+export const CATEGORY_NOTE_KEY: Record<EmailCategory, string> = {
   transactional: 'email.fragment.transactional.note',
   authentication: 'email.fragment.authentication.note',
   marketing: 'email.fragment.marketing.note',
@@ -69,13 +73,19 @@ const header = () => `    <mj-section padding="24px 0 8px 0">
 
 /**
  * The footer: why this arrived, where to get help, and the copyright line.
+ *
+ * The first line is `{{footer_note}}` — the TEMPLATE's own sentence, because
+ * every template had a different one ("you made a booking", "you backed out of
+ * this pod") and collapsing fifteen of those into nine generic ones would be a
+ * downgrade nobody asked for. The render path falls back to the category's
+ * note when a template has none.
  * `support_email`, `website_url`, `app_name` and `year` are supplied by
  * `sendEmail` on every send, so a fragment never has to be told them.
  */
-const footer = (noteKey: string) => `    <mj-section padding="8px 0 28px 0">
+const footer = () => `    <mj-section padding="8px 0 28px 0">
       <mj-column>
         <mj-divider border-width="1px" border-color="#e5e7eb" padding="0 0 16px 0" />
-        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">{{t:${noteKey}}}</mj-text>
+        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">{{footer_note}}</mj-text>
         <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">
           {{t:email.fragment.help}} <a href="mailto:{{support_email}}" style="color:#2563eb;text-decoration:none">{{support_email}}</a>
         </mj-text>
@@ -90,7 +100,7 @@ export const FRAGMENT_DEFAULTS: FragmentDefault[] = EMAIL_CATEGORIES.map((catego
   name: LABELS[category],
   description: DESCRIPTIONS[category],
   header_mjml: header(),
-  footer_mjml: footer(NOTE_KEY[category]),
+  footer_mjml: footer(),
 }));
 
 export const FRAGMENT_LABELS = LABELS;

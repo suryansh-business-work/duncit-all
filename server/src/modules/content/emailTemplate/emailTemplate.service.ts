@@ -6,6 +6,8 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { EmailTemplateModel } from './emailTemplate.model';
 import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
+import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.defaults';
+import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
 
 const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
   'email-verification-otp': 'Verify your Duncit email',
@@ -85,9 +87,33 @@ async function loadTemplate(slug: string) {
     name: slug.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
     mjml,
+    // The on-disk file is a BODY now — its header and footer live in the
+    // fragment. Without these two a fresh install would render every email
+    // with no logo and no footer at all.
+    fragment_category: TEMPLATE_CATEGORIES[slug] ?? null,
+    footer_note: TEMPLATE_FOOTER_NOTES[slug] ?? '',
     variables: detectVariables(mjml).map((key) => ({ key })),
   });
   return created;
+}
+
+/**
+ * The sentence the fragment's footer renders.
+ *
+ * The template's own — every one of them had a different line baked into its
+ * MJML, and "you backed out of this pod" is worth more to a reader than "there
+ * was activity on your account". Falling back to the category's localized note
+ * only when a template has nothing of its own.
+ */
+function withFooterNote(
+  tpl: { footer_note?: string; fragment_category?: string | null },
+  vars: Record<string, string>
+): Record<string, string> {
+  if (vars.footer_note) return vars;
+  const own = (tpl.footer_note ?? '').trim();
+  if (own) return { ...vars, footer_note: own };
+  const key = CATEGORY_NOTE_KEY[tpl.fragment_category as keyof typeof CATEGORY_NOTE_KEY];
+  return { ...vars, footer_note: (key && vars[`t:${key}`]) || '' };
 }
 
 export const emailTemplateService = {
@@ -156,7 +182,7 @@ export const emailTemplateService = {
     const tpl = await loadTemplate(slug);
     if (!tpl) throw new GraphQLError(`Email template '${slug}' not found`);
     const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_category);
-    const { html, errors } = renderMjml(source, vars);
+    const { html, errors } = renderMjml(source, withFooterNote(tpl, vars));
     return {
       subject: applyVars(tpl.subject, vars),
       html,

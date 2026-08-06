@@ -10,6 +10,7 @@ export const TEMPLATES = gql`
       subject
       mjml
       fragment_category
+      footer_note
       variables {
         key
         description
@@ -80,6 +81,8 @@ export interface Tpl {
   mjml: string;
   /** Which header/footer fragment wraps this body. Null renders it bare. */
   fragment_category?: string | null;
+  /** This template's own footer sentence, rendered inside the fragment. */
+  footer_note?: string;
   variables: { key: string; description?: string; sample?: string }[];
   is_active: boolean;
 }

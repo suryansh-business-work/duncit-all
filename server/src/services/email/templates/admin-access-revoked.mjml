@@ -7,21 +7,11 @@
     </mj-attributes>
   </mj-head>
   <mj-body background-color="#f4f4f4">
-    <mj-section padding="20px 0 0 0">
-      <mj-column>
-        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
-      </mj-column>
-    </mj-section>
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
         <mj-text font-size="22px" font-weight="bold" color="#222222">Admin access removed</mj-text>
         <mj-text color="#555555">Hi {{name}}, your <strong>Admin</strong> access to Duncit has been revoked. You no longer have access to the admin console.</mj-text>
         <mj-text color="#555555">Your Duncit account itself is unchanged — you can still use the Duncit app as usual. If you believe this was a mistake, please contact your administrator.</mj-text>
-      </mj-column>
-    </mj-section>
-    <mj-section padding="16px 0 24px 0">
-      <mj-column>
-        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because your Duncit admin access changed.</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

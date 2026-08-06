@@ -4,20 +4,50 @@ import { siteConfig } from '../config/site-config';
  * safe fallback so an unreachable API can never break a deploy — the site
  * simply renders its bundled defaults. */
 
+/**
+ * How long the build waits for the API before giving up on one call.
+ *
+ * "Unreachable" is instant — the connection is refused and the fallback renders.
+ * "Slow" is not: a fetch with no signal waits forever, and a build that waits
+ * forever is a CI job cancelled at its 15-minute timeout with no error to read.
+ * That is what happened to the main website twice.
+ */
+const FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * One request per distinct query for the whole build.
+ *
+ * Every page asks for the same branding, and a static build renders many pages
+ * — so without this the same POST goes out dozens of times. Each one is another
+ * chance to hit the timeout above, and none of them can return anything new:
+ * a build is a single moment in time.
+ */
+const inFlight = new Map<string, Promise<unknown>>();
+
 async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
-  try {
-    const res = await fetch(siteConfig.graphqlUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json.errors?.length) return null;
-    return json.data as T;
-  } catch {
-    return null;
-  }
+  const key = query + JSON.stringify(variables ?? {});
+  const cached = inFlight.get(key);
+  if (cached) return cached as Promise<T | null>;
+
+  const request = (async (): Promise<T | null> => {
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json.errors?.length) return null;
+      return json.data as T;
+    } catch {
+      return null;
+    }
+  })();
+
+  inFlight.set(key, request);
+  return request;
 }
 
 export interface SiteBranding {

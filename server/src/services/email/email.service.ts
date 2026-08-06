@@ -36,28 +36,37 @@ export type { EmailCategory } from './email.provider';
 const LEGACY_LOGO_URL = 'https://duncit.com/duncit-logo.svg';
 /** Short TTL so we don't hit the branding singleton on every send. */
 const BRAND_LOGO_TTL_MS = 60_000;
-let brandLogoCache: { url: string; at: number } | null = null;
+let brandCache: { logoUrl: string; appName: string; at: number } | null = null;
 
 /**
- * Resolve the transactional-email logo from branding settings, cached for a
- * short TTL. Best-effort: any failure (or empty logo) falls back to the legacy
- * Duncit logo so emails always render an image.
+ * Branding for one email, cached for a short TTL.
+ *
+ * The logo AND the brand name come from one read. They used to be two — the
+ * footer fragment needed a name and asked for it separately — which quietly
+ * doubled the singleton lookups on every send and defeated the cache this was
+ * built around.
+ *
+ * Best-effort: any failure (or an empty logo) falls back to the legacy Duncit
+ * logo, so an email always renders an image.
  */
-async function getBrandLogoUrl(): Promise<string> {
+async function getBrand(): Promise<{ logoUrl: string; appName: string }> {
   const now = Date.now();
-  if (brandLogoCache && now - brandLogoCache.at < BRAND_LOGO_TTL_MS) {
-    return brandLogoCache.url;
-  }
-  let url = LEGACY_LOGO_URL;
+  if (brandCache && now - brandCache.at < BRAND_LOGO_TTL_MS) return brandCache;
+
+  let logoUrl = LEGACY_LOGO_URL;
+  let appName = 'Duncit';
   try {
     const branding = await settingsService.getBranding();
-    url = branding.logo_url || LEGACY_LOGO_URL;
+    logoUrl = branding.logo_url || LEGACY_LOGO_URL;
+    appName = branding.app_name || appName;
   } catch {
-    url = LEGACY_LOGO_URL;
+    logoUrl = LEGACY_LOGO_URL;
   }
-  brandLogoCache = { url, at: now };
-  return url;
+  brandCache = { logoUrl, appName, at: now };
+  return brandCache;
 }
+
+const getBrandLogoUrl = async (): Promise<string> => (await getBrand()).logoUrl;
 
 /**
  * Replace any leftover hardcoded legacy logo URL with the resolved brand logo.
@@ -78,14 +87,11 @@ function swapLegacyLogo(html: string, brandLogoUrl: string): string {
  * to know it exists.
  */
 async function chromeVars(): Promise<Record<string, string>> {
-  const [{ supportEmail, websiteUrl }, branding] = await Promise.all([
-    getUrlConfigs(),
-    settingsService.getBranding().catch(() => null),
-  ]);
+  const [{ supportEmail, websiteUrl }, brand] = await Promise.all([getUrlConfigs(), getBrand()]);
   return {
     support_email: supportEmail,
     website_url: websiteUrl,
-    app_name: branding?.app_name || 'Duncit',
+    app_name: brand.appName,
     year: String(new Date().getFullYear()),
   };
 }

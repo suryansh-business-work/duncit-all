@@ -19,6 +19,8 @@ interface Props {
   height?: number;
   href?: string | null;
   class?: string;
+  /** Lets a mark the build could not fill ask the browser instead. */
+  graphqlUrl?: string | null;
 }
 
 const {
@@ -28,6 +30,7 @@ const {
   height = 96,
   href = '/',
   class: className = '',
+  graphqlUrl = null,
 } = Astro.props;
 ---
 
@@ -38,6 +41,8 @@ const {
   href={href}
   loading="lazy"
   class={className}
+  graphqlUrl={graphqlUrl}
+  variant="footer"
 />
 
 <style>

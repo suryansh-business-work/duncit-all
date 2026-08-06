@@ -31,6 +31,7 @@ import jwt from 'jsonwebtoken';
 import { policyService } from '@modules/content/policy/policy.service';
 import { initSocketServer } from './realtime/io';
 import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
+import { attachStaffChatHandlers } from '@modules/engagement/staffChat/staffChat.socket';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
@@ -338,6 +339,7 @@ async function bootstrap() {
   // each feature attaches its own handlers + rooms.
   initSocketServer(httpServer);
   attachChatHandlers();
+  attachStaffChatHandlers();
   attachBouncerHandlers();
   attachSupportChatHandlers();
   attachCallHandlers();

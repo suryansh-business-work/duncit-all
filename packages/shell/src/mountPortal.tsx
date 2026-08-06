@@ -20,6 +20,7 @@ import { configureLogs, httpTransport } from '@duncit/logs';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { loadGoogleClientId } from './lib/google-client-id';
+import { ShellRuntimeProvider } from './lib/runtime';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
@@ -104,15 +105,17 @@ export function mountPortal(opts: MountPortalOptions): void {
     ReactDOM.createRoot(mountNode).render(
       <React.StrictMode>
         <ApolloProvider client={apolloClient}>
-          <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
-            <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
-              <AppLocaleProvider fallback={fallback}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                {withGoogle}
-              </LocalizationProvider>
-              </AppLocaleProvider>
-            </DuncitThemeProvider>
-          </UserProvider>
+          <ShellRuntimeProvider graphqlUrl={graphqlUrl} tokenKey={config.tokenKey}>
+            <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
+              <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
+                <AppLocaleProvider fallback={fallback}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  {withGoogle}
+                </LocalizationProvider>
+                </AppLocaleProvider>
+              </DuncitThemeProvider>
+            </UserProvider>
+          </ShellRuntimeProvider>
         </ApolloProvider>
       </React.StrictMode>,
     );

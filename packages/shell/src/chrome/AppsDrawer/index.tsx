@@ -15,6 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { FileManagerDialog } from '../../file-manager';
+import { StaffChatDrawer } from '../../staff-chat';
 import { matchesTool, SHELL_TOOLS, type ShellTool } from './tools';
 
 interface Props {
@@ -24,6 +25,8 @@ interface Props {
   extraTools?: ShellTool[];
   /** The signed-in user's roles, for tools that gate on them. */
   roles?: readonly string[] | null;
+  /** Your own id, for the chat tool. */
+  meId?: string | null;
 }
 
 /**
@@ -33,7 +36,7 @@ interface Props {
  * in, so reaching for the file manager mid-form does not cost you the form.
  * The sidebar stays the place for this portal's own pages.
  */
-export function AppsDrawer({ open, onClose, extraTools, roles }: Readonly<Props>) {
+export function AppsDrawer({ open, onClose, extraTools, roles, meId }: Readonly<Props>) {
   const [search, setSearch] = useState('');
   const [openTool, setOpenTool] = useState<string | null>(null);
 
@@ -103,6 +106,10 @@ export function AppsDrawer({ open, onClose, extraTools, roles }: Readonly<Props>
 
       {openTool === 'file-manager' && (
         <FileManagerDialog open roles={roles} onClose={() => setOpenTool(null)} />
+      )}
+
+      {openTool === 'staff-chat' && (
+        <StaffChatDrawer open meId={meId ?? ''} onClose={() => setOpenTool(null)} />
       )}
     </>
   );

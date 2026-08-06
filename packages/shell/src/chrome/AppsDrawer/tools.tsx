@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 
 /**
@@ -29,6 +30,13 @@ export const SHELL_TOOLS: ShellTool[] = [
     description: 'Everything uploaded to ImageKit — upload, search, crop, copy a link.',
     icon: <FolderOpenIcon />,
     keywords: ['files', 'media', 'images', 'upload', 'imagekit', 'assets', 'gallery', 'photos'],
+  },
+  {
+    key: 'staff-chat',
+    name: 'Chat with a coworker',
+    description: 'Message anyone with a staff console — admin, tech, finance, support and the rest.',
+    icon: <ChatBubbleOutlineIcon />,
+    keywords: ['chat', 'message', 'dm', 'colleague', 'coworker', 'team', 'talk', 'staff'],
   },
 ];
 

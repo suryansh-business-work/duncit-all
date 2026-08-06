@@ -9,6 +9,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import { tokens, useColorMode } from '@duncit/theme';
 import type { AppNavItem, SearchItem } from '../types';
+import { StaffChatButton } from '../staff-chat/StaffChatButton';
+import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppsDrawer } from './AppsDrawer';
 import type { ShellTool } from './AppsDrawer/tools';
 import { HeaderSearch } from './HeaderSearch';
@@ -46,6 +48,9 @@ export function AppHeader({
   const colorMode = useColorMode();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
+  // Only people who can sign into a staff console have coworkers to chat with,
+  // and the server refuses the query to anyone else — so it is not asked.
+  const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
 
   return (
     <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -93,6 +98,7 @@ export function AppHeader({
             >
               <SearchIcon fontSize="small" />
             </IconButton>
+            {isStaff && <StaffChatButton meId={user?.id} />}
             <Tooltip title="Apps">
               <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
                 <AppsIcon fontSize="small" />
@@ -112,6 +118,7 @@ export function AppHeader({
         onClose={() => setAppsOpen(false)}
         extraTools={tools}
         roles={user?.roles}
+        meId={user?.id}
       />
     </AppBar>
   );

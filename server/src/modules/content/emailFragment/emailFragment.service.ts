@@ -58,14 +58,22 @@ export function composeFragment(
   return { mjml: composed, wrapped: true };
 }
 
-/** A url-safe key from a display name, e.g. "Weekend Banner" → weekend-banner. */
+/**
+ * A url-safe key from a display name, e.g. "Weekend Banner" → weekend-banner.
+ *
+ * A single left-to-right pass: `/^-+|-+$/` on arbitrary admin input is the
+ * shape that backtracks superlinearly (S8786), and a fragment name is typed by
+ * a person into a text box.
+ */
 function slugify(name: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
-  return base || 'fragment';
+  let out = '';
+  for (const char of name.toLowerCase()) {
+    const safe = /[a-z0-9]/.test(char);
+    if (safe) out += char;
+    else if (out.length > 0 && !out.endsWith('-')) out += '-';
+  }
+  while (out.endsWith('-')) out = out.slice(0, -1);
+  return out.slice(0, 48) || 'fragment';
 }
 
 /** The first free key in the `base`, `base-2`, `base-3` … sequence. */
@@ -78,6 +86,39 @@ async function uniqueKey(name: string): Promise<string> {
   // Two hundred fragments named the same thing is not a naming collision, it is
   // a mistake — but a send must never be what discovers it.
   return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+/**
+ * Give a fragment written before `key` existed one.
+ *
+ * The nine were originally keyed by `category` alone. A database seeded by that
+ * version has nine rows with no `key`, and `key` is non-nullable in the schema —
+ * so the very first read of `emailFragments` fails with "Cannot return null for
+ * non-nullable field EmailFragment.key" and the whole page is empty. It also
+ * blocks the unique index on `key`, since nine nulls collide.
+ *
+ * Runs at the top of `seedDefaults`, i.e. on boot, before anything reads them.
+ * Written through the raw collection so mongoose's own casting cannot re-apply
+ * the defaults that hid the problem.
+ */
+async function backfillKeys(): Promise<void> {
+  const collection = EmailFragmentModel.collection;
+  const legacy = await collection
+    .find({ $or: [{ key: { $exists: false } }, { key: null }, { key: '' }] })
+    .toArray();
+  if (legacy.length === 0) return;
+
+  for (const doc of legacy) {
+    // The nine take their category as their key, which is what they were
+    // identified by; anything else falls back to its name so no row is left
+    // unreadable.
+    const key = (doc.category as string) || slugify((doc.name as string) ?? 'fragment');
+    await collection.updateOne(
+      { _id: doc._id },
+      { $set: { key, is_system: Boolean(doc.category) } }
+    );
+  }
+  logs.server.info('emailFragment', 'backfillKeys', { updated: legacy.length });
 }
 
 /** The nine first, in the code's category order, then the custom ones by name. */
@@ -181,6 +222,7 @@ export const emailFragmentService = {
    * touches an existing row — an admin's edits survive every deploy.
    */
   async seedDefaults(): Promise<void> {
+    await backfillKeys();
     for (const seed of FRAGMENT_DEFAULTS) {
       await EmailFragmentModel.updateOne(
         { key: seed.category },

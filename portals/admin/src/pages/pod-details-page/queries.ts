@@ -46,6 +46,12 @@ export const POD_ATTENDEES_ADMIN = gql`
   query AdminPodAttendees($id: ID!) {
     adminPodAttendees(pod_doc_id: $id) {
       member_id
+      seats
+      companions {
+        name
+        phone_extension
+        phone_number
+      }
       user_id
       full_name
       email
@@ -132,8 +138,18 @@ export const POD_PAYMENTS_TABLE = gql`
   }
 `;
 
+/** One extra person on a booking, recorded at the door. */
+export interface AdminPodCompanion {
+  name: string;
+  phone_extension: string | null;
+  phone_number: string;
+}
+
 export interface AdminPodAttendeeRow {
   member_id: string | null;
+  /** Seats this booking holds — one ticket admits this many. */
+  seats: number;
+  companions: AdminPodCompanion[];
   user_id: string;
   full_name: string | null;
   email: string | null;

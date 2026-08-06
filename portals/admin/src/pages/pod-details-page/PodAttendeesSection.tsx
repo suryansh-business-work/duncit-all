@@ -59,6 +59,7 @@ export default function PodAttendeesSection({ rows, loading, errorText }: Readon
             <TableHead>
               <TableRow>
                 <TableCell>Attendee</TableCell>
+                <TableCell>Seats</TableCell>
                 <TableCell>Contact</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Source</TableCell>
@@ -108,6 +109,24 @@ export default function PodAttendeesSection({ rows, loading, errorText }: Readon
                           )}
                         </Stack>
                       </Stack>
+                    </TableCell>
+                    <TableCell>
+                      {/* A four-seat booking and a one-seat booking were the
+                          same row, which is a large part of why the under-
+                          billing went unnoticed for as long as it did. */}
+                      <Typography variant="body2" sx={{ fontWeight: (row.seats ?? 1) > 1 ? 700 : 400 }}>
+                        {row.seats ?? 1}
+                      </Typography>
+                      {(row.companions ?? []).map((companion) => (
+                        <Typography
+                          key={`${companion.name}-${companion.phone_number}`}
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          {companion.name} · {companion.phone_extension ?? ''} {companion.phone_number}
+                        </Typography>
+                      ))}
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">{row.email ?? '—'}</Typography>

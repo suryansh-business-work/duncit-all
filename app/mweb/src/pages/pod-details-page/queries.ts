@@ -37,6 +37,8 @@ export const POD_DETAILS = gql`
       pod_amount
       pod_occurrence
       no_of_spots
+      seats_taken
+      seats_available
       zone_name
       club_id
       club_slug
@@ -85,6 +87,8 @@ export const POD_DETAILS = gql`
       backout_attempts_max
       backout_deduction_pct
       backout_refund_amount
+      backout_refund_per_seat
+      released_seats_pending
       membership {
         id
         status
@@ -235,6 +239,16 @@ export const POD_PEOPLE = gql`
   }
 `;
 
+/** Seats each attendee's booking holds — the "+N other members" label. */
+export const POD_ATTENDEE_SEATS = gql`
+  query PodAttendeeSeats($id: ID!) {
+    podAttendeeSeats(pod_doc_id: $id) {
+      user_id
+      seats
+    }
+  }
+`;
+
 export const POD_SPOT_FILLS = gql`
   query PodSpotFills($id: ID!) {
     podSpotFills(pod_doc_id: $id) {
@@ -274,8 +288,8 @@ export const JOIN_FREE = gql`
 `;
 
 export const BACKOUT = gql`
-  mutation BackoutPod($id: ID!) {
-    backoutPod(pod_doc_id: $id) { id status referral_token refund_status }
+  mutation BackoutPod($id: ID!, $seats: Int) {
+    backoutPod(pod_doc_id: $id, seats: $seats) { id status seats referral_token refund_status }
   }
 `;
 

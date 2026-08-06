@@ -15,10 +15,20 @@ export interface ScannedAttendee {
   joined_at: string | null;
 }
 
+/** One extra person a multi-seat ticket admits, recorded at the door. */
+export interface PodCompanionInput {
+  name: string;
+  phone_number: string;
+}
+
 export interface HostTicketScanResult {
   ok: boolean;
   message: string;
   already_checked_in: boolean;
+  /** True when the ticket admits more people whose details are not on file yet. */
+  requires_companions: boolean;
+  /** How many still need a name and phone number. */
+  companions_required: number;
   ticket: {
     id: string;
     ticket_code: string;
@@ -31,11 +41,17 @@ export interface HostTicketScanResult {
 }
 
 export const HOST_SCAN_POD_TICKET = gql`
-  mutation HostScanPodTicket($pod_doc_id: ID!, $token: String!) {
-    hostScanPodTicket(pod_doc_id: $pod_doc_id, token: $token) {
+  mutation HostScanPodTicket(
+    $pod_doc_id: ID!
+    $token: String!
+    $companions: [PodCompanionInput!]
+  ) {
+    hostScanPodTicket(pod_doc_id: $pod_doc_id, token: $token, companions: $companions) {
       ok
       message
       already_checked_in
+      requires_companions
+      companions_required
       ticket {
         id
         ticket_code

@@ -96,11 +96,17 @@ export const HostDeletePodDocument = gql(`
 /** Host scans an attendee's ticket QR at the door: marks attendance and answers
  * with who walked in. Twin of mWeb's HostScanPodTicket (rule 27). */
 export const HostScanPodTicketDocument = gql(`
-  mutation MobileHostScanPodTicket($pod_doc_id: ID!, $token: String!) {
-    hostScanPodTicket(pod_doc_id: $pod_doc_id, token: $token) {
+  mutation MobileHostScanPodTicket(
+    $pod_doc_id: ID!
+    $token: String!
+    $companions: [PodCompanionInput!]
+  ) {
+    hostScanPodTicket(pod_doc_id: $pod_doc_id, token: $token, companions: $companions) {
       ok
       message
       already_checked_in
+      requires_companions
+      companions_required
       ticket {
         id
         ticket_code

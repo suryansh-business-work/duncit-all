@@ -16,6 +16,21 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n/useTranslation';
 
+type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
+
+/**
+ * "+3 other members" — the people a booking covers who are not on the app.
+ *
+ * The list renders one face per person however many seats they hold, so this
+ * label is the only place the rest of their party is visible. Rendering an
+ * avatar each would count the same booking twice on screen.
+ */
+export function otherMembersLabel(seats: number, t: Translate): string {
+  const others = Math.max(0, Math.floor(seats) - 1);
+  if (others === 1) return t('mweb.podDetails.otherMembersOne');
+  return t('mweb.podDetails.otherMembersMany', { vars: { count: others } });
+}
+
 export interface AttendeePerson {
   user_id: string;
   full_name?: string | null;
@@ -100,7 +115,21 @@ export default function PodAttendeesDialog({
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={person.full_name || 'Attendee'}
+                  primary={
+                    <>
+                      {person.full_name || 'Attendee'}
+                      {(person.seats ?? 1) > 1 && (
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 0.75 }}
+                        >
+                          {otherMembersLabel(person.seats ?? 1, t)}
+                        </Typography>
+                      )}
+                    </>
+                  }
                   secondary="View profile"
                   primaryTypographyProps={{ fontWeight: person.is_host ? 700 : 600, fontSize: 14 }}
                   secondaryTypographyProps={{ fontSize: 12 }}

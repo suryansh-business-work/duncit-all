@@ -10,6 +10,7 @@ export const MyPodMembershipsDocument = gql(`
       id
       pod_id
       status
+      seats
       joined_at
       backed_out_at
       payment_id
@@ -56,10 +57,11 @@ export const PodHistoryCategoriesDocument = gql(`
 
 /** Back out of a joined pod — mWeb's BACKOUT_POD_HISTORY. */
 export const BackoutPodDocument = gql(`
-  mutation MobileBackoutPod($pod_doc_id: ID!) {
-    backoutPod(pod_doc_id: $pod_doc_id) {
+  mutation MobileBackoutPod($pod_doc_id: ID!, $seats: Int) {
+    backoutPod(pod_doc_id: $pod_doc_id, seats: $seats) {
       id
       status
+      seats
       backed_out_at
       refund_status
       refund_payment_id

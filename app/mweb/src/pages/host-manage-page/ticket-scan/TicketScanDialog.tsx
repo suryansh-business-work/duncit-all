@@ -13,9 +13,14 @@ import {
   Typography,
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import CompanionsForm from './CompanionsForm';
 import ScannedAttendeeCard from './ScannedAttendeeCard';
 import ScannerViewport from './ScannerViewport';
-import { HOST_SCAN_POD_TICKET, type HostTicketScanResult } from './queries';
+import {
+  HOST_SCAN_POD_TICKET,
+  type HostTicketScanResult,
+  type PodCompanionInput,
+} from './queries';
 
 export interface ScanTarget {
   id: string;
@@ -38,10 +43,17 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   // screen — otherwise every frame re-submits the same ticket.
   const scanning = !!pod && !result && !scanState.loading;
 
-  const submit = async (token: string) => {
+  // The token of the ticket on screen, so the second call — the one carrying
+  // the group's details — scans the same ticket without another QR read.
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+
+  const submit = async (token: string, companions?: PodCompanionInput[]) => {
     setFailure(null);
     try {
-      const res = await scan({ variables: { pod_doc_id: pod?.id, token } });
+      const res = await scan({
+        variables: { pod_doc_id: pod?.id, token, companions: companions ?? null },
+      });
+      setPendingToken(token);
       setResult(res.data?.hostScanPodTicket ?? null);
     } catch (e: any) {
       setFailure(e?.message ?? 'Could not read that ticket');
@@ -51,6 +63,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   const close = () => {
     setResult(null);
     setFailure(null);
+    setPendingToken(null);
     onClose();
   };
 
@@ -93,6 +106,14 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   alreadyCheckedIn={result.already_checked_in}
                   ticketCode={result.ticket?.ticket_code}
                   seats={result.ticket?.seats ?? 1}
+                />
+              )}
+              {result.requires_companions && pendingToken && (
+                <CompanionsForm
+                  seats={result.ticket?.seats ?? 1}
+                  required={result.companions_required}
+                  busy={scanState.loading}
+                  onSubmit={(companions) => submit(pendingToken, companions)}
                 />
               )}
             </>

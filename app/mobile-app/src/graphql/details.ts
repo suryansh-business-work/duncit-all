@@ -50,6 +50,8 @@ export const PodDetailsDocument = gql(`
       pod_type
       pod_amount
       no_of_spots
+      seats_taken
+      seats_available
       zone_name
       club_id
       club_slug
@@ -111,6 +113,8 @@ export const PodDetailsDocument = gql(`
       backout_attempts_max
       backout_deduction_pct
       backout_refund_amount
+      backout_refund_per_seat
+      released_seats_pending
       membership {
         id
         status
@@ -280,6 +284,17 @@ export const PodPeopleDocument = gql(`
   }
 `);
 
+/** Seats each attendee's booking holds — the "+N other members" label. Mirrors
+ * mWeb's POD_ATTENDEE_SEATS (rule 27). */
+export const PodAttendeeSeatsDocument = gql(`
+  query MobilePodAttendeeSeats($podId: ID!) {
+    podAttendeeSeats(pod_doc_id: $podId) {
+      user_id
+      seats
+    }
+  }
+`);
+
 /** Filled Backout seats — struck-through attendees. Mirrors mWeb's POD_SPOT_FILLS. */
 export const PodSpotFillsDocument = gql(`
   query MobilePodSpotFills($podId: ID!) {
@@ -445,6 +460,8 @@ export const ClubDetailsDocument = gql(`
       pod_amount
       pod_attendees
       no_of_spots
+      seats_taken
+      seats_available
       host_names
       pod_images_and_videos {
         url

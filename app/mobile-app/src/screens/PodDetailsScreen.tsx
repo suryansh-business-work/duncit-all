@@ -50,6 +50,7 @@ export function PodDetailsScreen() {
     membershipState,
     people,
     spotFills,
+    seatsByUser,
     categoryCrumbs,
     isLoading,
     refetch,
@@ -109,11 +110,11 @@ export function PodDetailsScreen() {
     }, [refetch]),
   );
 
-  const onConfirmBackout = async () => {
+  const onConfirmBackout = async (seats?: number) => {
     /* istanbul ignore next -- the dialog only mounts when `pod` exists */
     if (!pod) return;
     try {
-      await backout(pod.id);
+      await backout(pod.id, seats);
       setBackoutOpen(false);
       await refetch();
     } catch {
@@ -224,6 +225,7 @@ export function PodDetailsScreen() {
             pod={pod}
             people={people}
             spotFills={spotFills}
+            seatsByUser={seatsByUser}
             categoryCrumbs={categoryCrumbs}
             isFree={isFree}
             gstPct={finance.gstPct}
@@ -316,6 +318,8 @@ export function PodDetailsScreen() {
           onClose={() => setBackoutOpen(false)}
           onConfirm={onConfirmBackout}
           refundAmount={membershipState?.backout_refund_amount ?? null}
+          refundPerSeat={membershipState?.backout_refund_per_seat ?? null}
+          mySeats={membershipState?.my_seats ?? 1}
           deductionPct={membershipState?.backout_deduction_pct ?? 0}
           onViewTerms={() => {
             setBackoutOpen(false);

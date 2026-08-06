@@ -74,6 +74,7 @@ export function PodAccordions({
   pod,
   people,
   spotFills = [],
+  seatsByUser,
   categoryCrumbs,
   isFree,
   gstPct,
@@ -85,6 +86,8 @@ export function PodAccordions({
   people: PodPerson[];
   /** Filled Backout seats — struck-through rows in the attendees section. */
   spotFills?: PodSpotFill[];
+  /** Seats per attendee id, from podAttendeeSeats. */
+  seatsByUser?: Record<string, number>;
   categoryCrumbs: readonly string[];
   isFree: boolean;
   gstPct: number;
@@ -97,7 +100,12 @@ export function PodAccordions({
   const sections: Section[] = useMemo(() => {
     const charges = pod.place_charges ?? [];
     const terms = pod.payment_terms?.trim();
-    const attendeePeople = buildAttendeePeople(people, pod.pod_attendees, pod.pod_hosts_id);
+    const attendeePeople = buildAttendeePeople(
+      people,
+      pod.pod_attendees,
+      pod.pod_hosts_id,
+      seatsByUser,
+    );
     const hostPeople = buildHostPeople(people, pod.pod_hosts_id);
     const list: Section[] = [
       { id: 'about', title: 'About this pod', icon: 'info', content: <AboutSection pod={pod} /> },
@@ -152,6 +160,7 @@ export function PodAccordions({
             spots={pod.no_of_spots}
             expired={isPodExpired(pod.pod_date_time)}
             spotFills={spotFills}
+            seatsTaken={pod.seats_taken ?? undefined}
             onOpenProfile={onOpenProfile}
           />
         ),
@@ -207,6 +216,7 @@ export function PodAccordions({
     pod,
     people,
     spotFills,
+    seatsByUser,
     categoryCrumbs,
     isFree,
     gstPct,

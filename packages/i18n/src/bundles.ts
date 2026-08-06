@@ -98,9 +98,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // avatars, or the same booking gets counted twice on screen.
       otherMembersOne: '+1 other member',
       otherMembersMany: '+{count} other members',
-      seatsTaken: '{taken} of {total} seats taken',
-      seatsLeftOne: '1 seat left',
-      seatsLeftMany: '{count} seats left',
     },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —

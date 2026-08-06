@@ -51,8 +51,8 @@ export const POD_HISTORY_CATEGORIES = gql`
 `;
 
 export const BACKOUT_POD_HISTORY = gql`
-  mutation BackoutPodFromHistory($pod_doc_id: ID!) {
-    backoutPod(pod_doc_id: $pod_doc_id) {
+  mutation BackoutPodFromHistory($pod_doc_id: ID!, $seats: Int) {
+    backoutPod(pod_doc_id: $pod_doc_id, seats: $seats) {
       id
       status
       seats

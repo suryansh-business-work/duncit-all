@@ -17,6 +17,10 @@ export interface HostTicketScanResult {
   ok: boolean;
   message: string;
   already_checked_in: boolean;
+  /** True when the ticket admits more people whose details are not on file yet. */
+  requires_companions: boolean;
+  /** How many still need a name and phone number. */
+  companions_required: number;
   ticket: {
     id: string;
     ticket_code: string;

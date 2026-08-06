@@ -15,6 +15,7 @@ export function buildAttendeePeople(
   people: PodPerson[],
   attendeeIds: string[],
   hostIds: string[],
+  seatsByUser: Record<string, number> = {},
 ): AttendeePerson[] {
   const byId = new Map(people.map((p) => [p.user_id, p]));
   const hosts = new Set(hostIds);
@@ -25,6 +26,7 @@ export function buildAttendeePeople(
       full_name: person?.full_name ?? null,
       profile_photo: person?.profile_photo ?? null,
       is_host: hosts.has(id),
+      seats: seatsByUser[id] ?? 1,
     };
   });
   return [...list.filter((p) => p.is_host), ...list.filter((p) => !p.is_host)];
@@ -103,10 +105,13 @@ export function AttendeesSection({
   expired,
   spotFills = [],
   showCount = true,
+  seatsTaken,
   onOpenProfile,
 }: Readonly<{
   people: AttendeePerson[];
   spots: number;
+  /** Occupancy from the server (people + the seats they bought beyond their own). */
+  seatsTaken?: number;
   /** Past pods show "attended" instead of "going". */
   expired?: boolean;
   /** Filled Backout seats — old attendee struck through, filler named. */
@@ -118,7 +123,9 @@ export function AttendeesSection({
 }>) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
-  const going = people.length;
+  // Seats, not faces: one person can be bringing three more, and the number
+  // beside "of N spots" has to mean the same thing the capacity does.
+  const going = seatsTaken ?? people.reduce((sum, person) => sum + (person.seats ?? 1), 0);
   const pct = spots > 0 ? Math.min(100, Math.round((going / spots) * 100)) : 0;
   const previews = people.slice(0, MAX_AVATAR_PREVIEW);
   const extra = going - previews.length;

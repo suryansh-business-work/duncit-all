@@ -23,10 +23,10 @@ export default function PodHistoryDetailsPage() {
   const items = useMemo(() => data?.myPodMemberships ?? [], [data]);
   const selected = items.find((item) => item.id === membershipId) ?? null;
 
-  const confirmBackout = async () => {
+  const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
     try {
-      await backoutPod({ variables: { pod_doc_id: selected.pod.id } });
+      await backoutPod({ variables: { pod_doc_id: selected.pod.id, seats: seats ?? null } });
       notify('Backout request recorded', 'success');
       setBackoutOpen(false);
       await refetch();
@@ -69,7 +69,7 @@ export default function PodHistoryDetailsPage() {
         onBackout={() => setBackoutOpen(true)}
         onRejoin={() => setRejoinOpen(true)}
       />
-      <BackoutConfirmDialog open={backoutOpen} onClose={() => setBackoutOpen(false)} busy={backoutState.loading} onConfirm={confirmBackout} />
+      <BackoutConfirmDialog open={backoutOpen} onClose={() => setBackoutOpen(false)} busy={backoutState.loading} mySeats={selected?.seats ?? 1} onConfirm={confirmBackout} />
       <RejoinConfirmDialog open={rejoinOpen} onClose={() => setRejoinOpen(false)} busy={rejoinState.loading} onConfirm={confirmRejoin} />
     </Stack>
   );

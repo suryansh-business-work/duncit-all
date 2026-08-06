@@ -17,6 +17,8 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String!
     mjml: String!
+    "Which header/footer fragment wraps this body. Null renders it bare."
+    fragment_category: EmailCategory
     variables: [EmailTemplateVariable!]!
     is_active: Boolean!
     created_at: String
@@ -29,6 +31,7 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String!
     mjml: String!
+    fragment_category: EmailCategory
     variables: [EmailTemplateVariableInput!]
     is_active: Boolean
   }
@@ -38,6 +41,7 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     description: String
     subject: String
     mjml: String
+    fragment_category: EmailCategory
     variables: [EmailTemplateVariableInput!]
     is_active: Boolean
   }
@@ -62,7 +66,12 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     Render the given MJML with sample variables, returning the HTML and any
     MJML compile errors. Used for the right-hand preview in the editor.
     """
-    renderEmailTemplate(mjml: String!, vars: String): EmailTemplateRender!
+    renderEmailTemplate(
+      mjml: String!
+      vars: String
+      "Preview the body wrapped in this category's header and footer."
+      fragment_category: EmailCategory
+    ): EmailTemplateRender!
   }
 
   extend type Mutation {

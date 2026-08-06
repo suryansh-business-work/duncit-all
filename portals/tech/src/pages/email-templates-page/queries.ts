@@ -9,6 +9,7 @@ export const TEMPLATES = gql`
       description
       subject
       mjml
+      fragment_category
       variables {
         key
         description
@@ -21,8 +22,8 @@ export const TEMPLATES = gql`
 `;
 
 export const RENDER = gql`
-  query RenderTpl($mjml: String!, $vars: String) {
-    renderEmailTemplate(mjml: $mjml, vars: $vars) {
+  query RenderTpl($mjml: String!, $vars: String, $fragment: EmailCategory) {
+    renderEmailTemplate(mjml: $mjml, vars: $vars, fragment_category: $fragment) {
       html
       errors
       detected_variables
@@ -77,6 +78,25 @@ export interface Tpl {
   description?: string;
   subject: string;
   mjml: string;
+  /** Which header/footer fragment wraps this body. Null renders it bare. */
+  fragment_category?: string | null;
   variables: { key: string; description?: string; sample?: string }[];
+  is_active: boolean;
+}
+
+/** The nine categories, for the template's fragment picker. */
+export const FRAGMENT_OPTIONS = gql`
+  query FragmentOptions {
+    emailFragments {
+      category
+      name
+      is_active
+    }
+  }
+`;
+
+export interface FragmentOption {
+  category: string;
+  name: string;
   is_active: boolean;
 }

@@ -61,6 +61,7 @@ export default function EmailTemplatesPage() {
             previewHtml={editor.previewHtml}
             previewErrors={editor.previewErrors}
             detected={editor.detected}
+            fragmentOptions={editor.fragmentOptions}
             varsJson={editor.varsJson}
             setVarsJson={editor.setVarsJson}
             onValidate={editor.validateMjml}

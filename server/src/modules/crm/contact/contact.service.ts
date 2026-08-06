@@ -84,6 +84,7 @@ export const contactService = {
         to: payload.email,
         subject: `We received your message — ${branding?.app_name || 'Duncit'}`,
         template: 'contact-received',
+        category: 'support',
         vars: {
           name: payload.name,
           subject: payload.subject || '(no subject)',

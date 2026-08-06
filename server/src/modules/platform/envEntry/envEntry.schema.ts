@@ -2,14 +2,60 @@ import gql from 'graphql-tag';
 import { ENV_CATEGORIES } from './envEntry.model';
 
 /**
- * The enum values are interpolated from ENV_CATEGORIES, not repeated here. A
- * category added to the model but forgotten in this list failed `envCategories`
- * at request time with "Enum EnvCategory cannot represent value" — and no
- * typecheck can catch it, because the SDL is just a string.
+ * The values are SPELLED OUT, not interpolated from ENV_CATEGORIES.
+ *
+ * They used to be interpolated, and it silently cost the whole module its
+ * generated types: graphql-codegen's code-file loader plucks these template
+ * literals WITHOUT evaluating them, so an interpolated enum body leaves a
+ * document it cannot parse and every `Env*` type vanishes from
+ * `@duncit/gql-types`. Nothing failed, because the committed copy predated the
+ * interpolation — the next person to re-run codegen would simply have deleted
+ * twenty types.
+ *
+ * The cost of spelling them out is drift, which is what the guard below is for:
+ * a category added to the model and forgotten here throws the moment this
+ * module is imported, so `check:schema` catches it rather than a request.
  */
+const SDL_CATEGORIES = [
+  'EMAIL',
+  'IMAGEKIT',
+  'PEXELS',
+  'GOOGLE_OAUTH',
+  'GOOGLE_MAPS',
+  'TWILIO',
+  'OPENAI',
+  'GEMINI',
+  'SERVAM',
+  'RAZORPAY',
+  'SHIPROCKET',
+  'SLACK',
+  'AISENSY',
+  'RESEND',
+];
+
+if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
+  throw new Error(
+    `EnvCategory drift: the SDL enum lists [${SDL_CATEGORIES.join(', ')}] but ENV_CATEGORIES ` +
+      `is [${ENV_CATEGORIES.join(', ')}]. Update envEntry.schema.ts to match.`
+  );
+}
+
 export const envEntryTypeDefs = gql`
   enum EnvCategory {
-    ${ENV_CATEGORIES.join('\n    ')}
+    EMAIL
+    IMAGEKIT
+    PEXELS
+    GOOGLE_OAUTH
+    GOOGLE_MAPS
+    TWILIO
+    OPENAI
+    GEMINI
+    SERVAM
+    RAZORPAY
+    SHIPROCKET
+    SLACK
+    AISENSY
+    RESEND
   }
 
   type EnvConfigPair {

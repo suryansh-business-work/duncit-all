@@ -21,6 +21,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   SHIPROCKET: 'ShipRocket',
   SLACK: 'Slack',
   AISENSY: 'AiSensy (WhatsApp)',
+  RESEND: 'Resend (Email API)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

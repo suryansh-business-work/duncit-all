@@ -68,6 +68,31 @@ export type AdPricing = {
   venue_list_per_day: Scalars['Float']['output'];
 };
 
+/**
+ * The advertising rate card, readable WITHOUT signing in — it is what the
+ * marketing site quotes, so a price on that page can never be a stale copy of
+ * one Marketing has since changed.
+ */
+export type AdRateCard = {
+  __typename?: 'AdRateCard';
+  currency_symbol: Scalars['String']['output'];
+  entries: Array<AdRateCardEntry>;
+  /** The cheapest and dearest placement — lets a page headline a starting price. */
+  from_per_day: Scalars['Float']['output'];
+  max_days: Scalars['Int']['output'];
+  /** The booking window a campaign must fall inside, in days. */
+  min_days: Scalars['Int']['output'];
+  to_per_day: Scalars['Float']['output'];
+};
+
+/** One placement on the public rate card: what it is, and what a day of it costs. */
+export type AdRateCardEntry = {
+  __typename?: 'AdRateCardEntry';
+  label: Scalars['String']['output'];
+  position: AdPosition;
+  price_per_day: Scalars['Float']['output'];
+};
+
 export type AdRequest = {
   __typename?: 'AdRequest';
   ad_description: Scalars['String']['output'];
@@ -272,6 +297,45 @@ export type AiPromptFilter = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   is_system?: InputMaybe<Scalars['Boolean']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** An API campaign as AiSensy has it — read through the Project API, not stored here. */
+export type AisensyCampaign = {
+  __typename?: 'AisensyCampaign';
+  name: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  /** The WhatsApp template this campaign sends. */
+  template_name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type AisensySendResult = {
+  __typename?: 'AisensySendResult';
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  /** AiSensy's queued-message id, echoed back so a delivery can be traced. */
+  submitted_message_id: Scalars['String']['output'];
+};
+
+export type AisensyStatus = {
+  __typename?: 'AisensyStatus';
+  /** Whether an AiSensy API key is configured (Tech portal → Environment Variables → AiSensy). */
+  configured: Scalars['Boolean']['output'];
+  /** Campaign name sends default to, from the AiSensy entry. Empty when unset. */
+  default_campaign: Scalars['String']['output'];
+};
+
+/** A WhatsApp message template as AiSensy has it. */
+export type AisensyTemplate = {
+  __typename?: 'AisensyTemplate';
+  /** The template's BODY text, with its {{1}} placeholders intact. */
+  body: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** How many variables the body expects — the number of params a send must fill. */
+  param_count: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
 };
 
 export type AnalyticsGranularity =
@@ -741,6 +805,17 @@ export type BouncerActor = {
   phone?: Maybe<Scalars['String']['output']>;
 };
 
+export type BouncerAspectRating = {
+  __typename?: 'BouncerAspectRating';
+  aspect: BouncerFeedbackAspect;
+  rating: Scalars['Int']['output'];
+};
+
+export type BouncerAspectRatingInput = {
+  aspect: BouncerFeedbackAspect;
+  rating: Scalars['Int']['input'];
+};
+
 export type BouncerCallbackRequest = {
   __typename?: 'BouncerCallbackRequest';
   /** How the call concluded, recorded by the agent. */
@@ -781,11 +856,28 @@ export type BouncerFeedback = {
   id: Scalars['ID']['output'];
   message: Scalars['String']['output'];
   pod: BouncerPodInfo;
+  /** The OVERALL score. Every rating has one, including the oldest. */
   rating: Scalars['Int']['output'];
+  /** Host, venue, club admin, safety, food — whichever the guest scored. */
+  ratings: Array<BouncerAspectRating>;
   user: BouncerActor;
 };
 
+/**
+ * The parts of a pod a guest is asked to score. OVERALL is the headline; the
+ * rest are asked only when the pod has them (no venue, no venue rating).
+ */
+export type BouncerFeedbackAspect =
+  | 'CLUB_ADMIN'
+  | 'FOOD'
+  | 'HOST'
+  | 'OTHER'
+  | 'OVERALL'
+  | 'SAFETY'
+  | 'VENUE';
+
 export type BouncerFeedbackCategory =
+  | 'CLUB_ADMIN'
   | 'FOOD'
   | 'HOST'
   | 'OTHER'
@@ -809,6 +901,11 @@ export type BouncerPodInfo = {
   __typename?: 'BouncerPodInfo';
   club_id?: Maybe<Scalars['ID']['output']>;
   club_name?: Maybe<Scalars['String']['output']>;
+  /**
+   * Which parts of THIS pod can be rated, in the order to ask them. The server
+   * decides, so the app, mWeb and the admin panel cannot disagree.
+   */
+  feedback_aspects: Array<BouncerFeedbackAspect>;
   id: Scalars['ID']['output'];
   starts_at?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
@@ -1951,6 +2048,7 @@ export type CreateCrmServiceOfferedInput = {
 
 export type CreateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  fragment_category?: InputMaybe<EmailCategory>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -2943,10 +3041,45 @@ export type EditAdjustmentInput = {
   remark?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Why an email is being sent. Decides which header/footer wraps it. */
+export type EmailCategory =
+  | 'authentication'
+  | 'billing'
+  | 'internal'
+  | 'legal'
+  | 'marketing'
+  | 'notification'
+  | 'service'
+  | 'support'
+  | 'transactional';
+
+/**
+ * The header and footer that wrap a template's body, one pair per category.
+ * There are exactly nine and they cannot be created or deleted — only edited,
+ * switched off, or reset to what they shipped with.
+ */
+export type EmailFragment = {
+  __typename?: 'EmailFragment';
+  category: EmailCategory;
+  created_at?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  /** MJML injected at the bottom of the template's mj-body. */
+  footer_mjml: Scalars['String']['output'];
+  fragment_id: Scalars['ID']['output'];
+  /** MJML injected at the top of the template's mj-body. */
+  header_mjml: Scalars['String']['output'];
+  /** Off means templates in this category render without the wrap. */
+  is_active: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 export type EmailTemplate = {
   __typename?: 'EmailTemplate';
   created_at?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
+  /** Which header/footer fragment wraps this body. Null renders it bare. */
+  fragment_category?: Maybe<EmailCategory>;
   is_active: Scalars['Boolean']['output'];
   mjml: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -2985,6 +3118,7 @@ export type EmailTestResult = {
 };
 
 export type EnvCategory =
+  | 'AISENSY'
   | 'EMAIL'
   | 'GEMINI'
   | 'GOOGLE_MAPS'
@@ -2993,6 +3127,7 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
+  | 'RESEND'
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
@@ -4830,6 +4965,8 @@ export type Mutation = {
   cancelMeeting: OnboardingMeeting;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
+  /** Call off a scheduled send before it runs. */
+  cancelWaCampaign: WaCampaign;
   /** Auth-required: confirm the OTP and set the new password. */
   changePasswordWithOtp: Scalars['Boolean']['output'];
   checkInEventTicket: EventTicket;
@@ -4898,6 +5035,7 @@ export type Mutation = {
   createUser: User;
   createVenueLead: VenueLead;
   createVenueSlots: Array<VenueSlot>;
+  createWaCampaignName: WaCampaignNameOption;
   createWebsiteContent: WebsiteContentItem;
   createWebsiteNavItem: WebsiteNavItem;
   crmDeleteWebsitePage: Scalars['Boolean']['output'];
@@ -4990,6 +5128,8 @@ export type Mutation = {
   deleteVenue: Scalars['Boolean']['output'];
   deleteVenueLead: Scalars['Boolean']['output'];
   deleteVenueSlot: Scalars['Boolean']['output'];
+  deleteWaCampaign: Scalars['Boolean']['output'];
+  deleteWaCampaignName: Scalars['Boolean']['output'];
   deleteWebsiteContent: Scalars['Boolean']['output'];
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
   /** Admin denies a request. */
@@ -5147,6 +5287,8 @@ export type Mutation = {
   rescheduleMyMeeting: OnboardingMeeting;
   /** Restore a system prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
+  /** Restore one fragment's header and footer to what they shipped with. */
+  resetEmailFragment: EmailFragment;
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   resolveBouncerSos: BouncerSosAlert;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
@@ -5156,6 +5298,8 @@ export type Mutation = {
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
   restoreInventoryProduct: InventoryProduct;
+  /** Re-attempt only the people this campaign did not reach. Returns immediately. */
+  retryWaCampaign: WaCampaign;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
   reviewPaymentReleaseRequest: PaymentReleaseRequest;
@@ -5182,6 +5326,8 @@ export type Mutation = {
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   seedSuperAdmin: SeedAdminResult;
+  /** Send a WhatsApp template campaign message through AiSensy. */
+  sendAisensyCampaign: AisensySendResult;
   /**
    * Emails the mobile-app release distribution list an APK download link plus an
    * OpenAI-summarised changelog built from the supplied git commits. Tech/Super
@@ -5195,6 +5341,10 @@ export type Mutation = {
   sendSlackMessage: SlackSendResult;
   sendSupportChatMessage: SupportChatMessage;
   sendTestEmail: EmailTestResult;
+  /** Start or schedule a WhatsApp send. Returns immediately; the walk continues in the background. */
+  sendWaCampaign: WaCampaign;
+  /** Send one test message to one number, through the same path a campaign uses. */
+  sendWaTestMessage: WaTestSendResult;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   setDefaultBrandPickupLocation: BrandPickupLocation;
@@ -5329,6 +5479,7 @@ export type Mutation = {
   updateCrmService: CrmService;
   updateCrmServiceOffered: CrmServiceOffered;
   updateEcommLead: EcommLead;
+  updateEmailFragment: EmailFragment;
   updateEmailTemplate: EmailTemplate;
   updateEnvEntry: EnvEntry;
   updateExpense: Expense;
@@ -5742,6 +5893,11 @@ export type MutationCancelMyMeetingArgs = {
 };
 
 
+export type MutationCancelWaCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
 export type MutationChangePasswordWithOtpArgs = {
   input: ChangePasswordInput;
 };
@@ -6039,6 +6195,11 @@ export type MutationCreateVenueLeadArgs = {
 
 export type MutationCreateVenueSlotsArgs = {
   input: BulkCreateVenueSlotsInput;
+};
+
+
+export type MutationCreateWaCampaignNameArgs = {
+  input: WaCampaignNameInput;
 };
 
 
@@ -6430,6 +6591,16 @@ export type MutationDeleteVenueLeadArgs = {
 
 export type MutationDeleteVenueSlotArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteWaCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteWaCampaignNameArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6908,6 +7079,11 @@ export type MutationResetAiPromptArgs = {
 };
 
 
+export type MutationResetEmailFragmentArgs = {
+  category: EmailCategory;
+};
+
+
 export type MutationResetPasswordWithOtpArgs = {
   input: ResetPasswordInput;
 };
@@ -6936,6 +7112,11 @@ export type MutationRespondToCoHostInviteArgs = {
 
 export type MutationRestoreInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryWaCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
 };
 
 
@@ -7050,6 +7231,11 @@ export type MutationSavePushSubscriptionArgs = {
 };
 
 
+export type MutationSendAisensyCampaignArgs = {
+  input: SendAisensyCampaignInput;
+};
+
+
 export type MutationSendAppReleaseEmailArgs = {
   input: SendAppReleaseEmailInput;
 };
@@ -7091,6 +7277,16 @@ export type MutationSendTestEmailArgs = {
   template_id: Scalars['ID']['input'];
   to: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSendWaCampaignArgs = {
+  input: SendWaCampaignInput;
+};
+
+
+export type MutationSendWaTestMessageArgs = {
+  input: SendWaTestInput;
 };
 
 
@@ -7631,6 +7827,12 @@ export type MutationUpdateCrmServiceOfferedArgs = {
 export type MutationUpdateEcommLeadArgs = {
   id: Scalars['ID']['input'];
   input: EcommLeadInput;
+};
+
+
+export type MutationUpdateEmailFragmentArgs = {
+  category: EmailCategory;
+  input: UpdateEmailFragmentInput;
 };
 
 
@@ -8588,6 +8790,13 @@ export type Pod = {
   zone_name?: Maybe<Scalars['String']['output']>;
 };
 
+export type PodAspectRating = {
+  __typename?: 'PodAspectRating';
+  aspect: BouncerFeedbackAspect;
+  average: Scalars['Float']['output'];
+  count: Scalars['Int']['output'];
+};
+
 /** What kind of pod action was recorded. */
 export type PodAuditAction =
   | 'COMPLETE'
@@ -8725,6 +8934,74 @@ export type PodComment = {
   text: Scalars['String']['output'];
 };
 
+export type PodDashboard = {
+  __typename?: 'PodDashboard';
+  created_trend: Array<PodDashboardDay>;
+  /** The window the money, ratings and trend cover. Counts are always live. */
+  days: Scalars['Int']['output'];
+  money: PodDashboardMoney;
+  /** Rated pods that scored below four — what to look at first. */
+  needs_attention: Array<PodDashboardPod>;
+  ratings: PodDashboardRatings;
+  seats: PodDashboardSeats;
+  top_rated: Array<PodDashboardPod>;
+  totals: PodDashboardTotals;
+  upcoming: Array<PodDashboardPod>;
+};
+
+export type PodDashboardDay = {
+  __typename?: 'PodDashboardDay';
+  count: Scalars['Int']['output'];
+  date: Scalars['String']['output'];
+};
+
+export type PodDashboardMoney = {
+  __typename?: 'PodDashboardMoney';
+  average_ticket: Scalars['Float']['output'];
+  payments_count: Scalars['Int']['output'];
+  refunded_total: Scalars['Float']['output'];
+  revenue_total: Scalars['Float']['output'];
+};
+
+export type PodDashboardPod = {
+  __typename?: 'PodDashboardPod';
+  filled: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  pod_id: Scalars['String']['output'];
+  rating_average?: Maybe<Scalars['Float']['output']>;
+  rating_count: Scalars['Int']['output'];
+  spots: Scalars['Int']['output'];
+  starts_at?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+/** What guests scored pods on in the window — reuses the rating aspects. */
+export type PodDashboardRatings = {
+  __typename?: 'PodDashboardRatings';
+  aspects: Array<PodAspectRating>;
+  overall_average: Scalars['Float']['output'];
+  total: Scalars['Int']['output'];
+};
+
+/** Seats sold against seats offered. */
+export type PodDashboardSeats = {
+  __typename?: 'PodDashboardSeats';
+  occupancy_pct: Scalars['Float']['output'];
+  seats_filled: Scalars['Int']['output'];
+  spots_total: Scalars['Int']['output'];
+};
+
+/** How many pods there are and what state they are in, right now. */
+export type PodDashboardTotals = {
+  __typename?: 'PodDashboardTotals';
+  awaiting_venue: Scalars['Int']['output'];
+  cancelled: Scalars['Int']['output'];
+  completed: Scalars['Int']['output'];
+  live_today: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  upcoming: Scalars['Int']['output'];
+};
+
 export type PodDraft = {
   __typename?: 'PodDraft';
   created_at?: Maybe<Scalars['String']['output']>;
@@ -8750,6 +9027,16 @@ export type PodEarningsProjection = {
   /** Spots the host entered (physical capacity, including the host's own seat). */
   total_spots: Scalars['Int']['output'];
   waterfall: PodFinanceWaterfall;
+};
+
+/** Everything guests said about one pod — averages, plus the ratings themselves. */
+export type PodFeedbackSummary = {
+  __typename?: 'PodFeedbackSummary';
+  aspects: Array<PodAspectRating>;
+  overall_average: Scalars['Float']['output'];
+  pod_id: Scalars['ID']['output'];
+  recent: Array<BouncerFeedback>;
+  total: Scalars['Int']['output'];
 };
 
 export type PodFilterInput = {
@@ -9716,6 +10003,14 @@ export type Query = {
   adminVenueSlots: Array<VenueSlot>;
   aiPrompt?: Maybe<AiPrompt>;
   aiPrompts: Array<AiPrompt>;
+  /** The API campaigns AiSensy has for this project. */
+  aisensyCampaigns: Array<AisensyCampaign>;
+  /** Whether the Tech portal holds the AiSensy Project credentials that read campaigns and templates. */
+  aisensyProjectConfigured: Scalars['Boolean']['output'];
+  /** AiSensy configuration state for the Tech portal. */
+  aisensyStatus: AisensyStatus;
+  /** The WhatsApp message templates AiSensy has for this project. */
+  aisensyTemplates: Array<AisensyTemplate>;
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
   appSettings: AppSettings;
@@ -9871,6 +10166,9 @@ export type Query = {
   ecommLead?: Maybe<EcommLead>;
   ecommLeads: Array<EcommLead>;
   ecommLeadsTable: EcommLeadTablePage;
+  emailFragment?: Maybe<EmailFragment>;
+  /** All nine, in category order. */
+  emailFragments: Array<EmailFragment>;
   emailTemplate?: Maybe<EmailTemplate>;
   emailTemplateBySlug?: Maybe<EmailTemplate>;
   emailTemplates: Array<EmailTemplate>;
@@ -10116,6 +10414,10 @@ export type Query = {
   podCancellationStats: PodCancellationStats;
   podCancellations: Array<PodCancellation>;
   podComments: Array<PodComment>;
+  /** The Admin panel's Pods dashboard, in one read. */
+  podDashboard: PodDashboard;
+  /** Ratings for one pod, rolled up — backs the admin pod page. */
+  podFeedbackSummary: PodFeedbackSummary;
   podFinanceBreakdown: PodFinanceBreakdown;
   podIdea?: Maybe<PodIdea>;
   podIdeas: Array<PodIdea>;
@@ -10158,6 +10460,8 @@ export type Query = {
   productReviews: Array<ProductReview>;
   /** Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout). */
   productShippingQuote: ProductShippingQuote;
+  /** The same prices, public, for the advertising site's cost calculator. */
+  publicAdRateCard: AdRateCard;
   publicAppSettings: PublicAppSettings;
   publicClientConfig: PublicClientConfig;
   /** Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side). */
@@ -10171,6 +10475,14 @@ export type Query = {
   /** Active locales only — the language switcher on every surface. */
   publicLocales: Array<Locale>;
   publicPartnerFaqs: Array<Faq>;
+  /**
+   * The same projection for a signed-OUT visitor — the marketing site's earnings
+   * estimator. Runs at the platform's DEFAULT rates (there is no host to
+   * personalise for) and takes the venue's cost as a plain amount, so it is an
+   * estimate at standard rates rather than a quote. Public on purpose: it
+   * exposes the same percentages the pricing page states, and no user data.
+   */
+  publicPodEarningsEstimate: PodEarningsProjection;
   publicPodPlans: Array<PodPlan>;
   publicPolicies: Array<Policy>;
   publicRoles: Array<PublicRole>;
@@ -10312,6 +10624,21 @@ export type Query = {
   venuesTable: VenueTablePage;
   /** Poll a running FFmpeg compression job for its real progress percentage. */
   videoCompressionJob: VideoCompressionJob;
+  /** One campaign in full — the detail view behind a table row. */
+  waCampaign: WaCampaign;
+  /** Whether the Tech portal's AiSensy API key is configured. */
+  waCampaignConfigured: Scalars['Boolean']['output'];
+  /** The AiSensy campaign names marketing may send. */
+  waCampaignNames: Array<WaCampaignNameOption>;
+  /** How many people this audience reaches on WhatsApp right now. */
+  waCampaignReach: Scalars['Int']['output'];
+  /** Everyone that campaign walked over, with what happened to each. */
+  waCampaignRecipients: WaCampaignRecipientPage;
+  /** The whole recipient list as CSV — every row, not one page. */
+  waCampaignRecipientsCsv: Scalars['String']['output'];
+  /** Variables a template parameter may use. */
+  waCampaignVariables: Array<WaCampaignVariable>;
+  waCampaignsTable: WaCampaignTablePage;
   /** Cached communities (paginated + searchable). */
   waCommunities: WaCommunityPage;
   /** Stored gateway config + last-known status (no network call). */
@@ -10828,6 +11155,11 @@ export type QueryEcommLeadsArgs = {
 
 export type QueryEcommLeadsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryEmailFragmentArgs = {
+  category: EmailCategory;
 };
 
 
@@ -11459,6 +11791,17 @@ export type QueryPodCommentsArgs = {
 };
 
 
+export type QueryPodDashboardArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPodFeedbackSummaryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodFinanceBreakdownArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -11647,6 +11990,13 @@ export type QueryPublicPartnerFaqsArgs = {
 };
 
 
+export type QueryPublicPodEarningsEstimateArgs = {
+  no_of_spots: Scalars['Int']['input'];
+  pod_amount: Scalars['Float']['input'];
+  venue_amount?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
 export type QueryPublicTranslationsArgs = {
   locale: Scalars['String']['input'];
 };
@@ -11703,6 +12053,7 @@ export type QueryRenderCrmEmailTemplateArgs = {
 
 
 export type QueryRenderEmailTemplateArgs = {
+  fragment_category?: InputMaybe<EmailCategory>;
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
 };
@@ -12024,6 +12375,33 @@ export type QueryVenuesTableArgs = {
 
 export type QueryVideoCompressionJobArgs = {
   job_id: Scalars['String']['input'];
+};
+
+
+export type QueryWaCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
+export type QueryWaCampaignReachArgs = {
+  audience: WaCampaignAudience;
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryWaCampaignRecipientsArgs = {
+  campaign_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWaCampaignRecipientsCsvArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
+export type QueryWaCampaignsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -12360,6 +12738,18 @@ export type SeedAdminResult = {
   emailed: Scalars['Boolean']['output'];
 };
 
+/** One WhatsApp template campaign message. Every template parameter must be filled. */
+export type SendAisensyCampaignInput = {
+  /** API campaign name exactly as it appears in AiSensy — falls back to the configured default. */
+  campaign_name?: InputMaybe<Scalars['String']['input']>;
+  /** Country code + number, digits only (e.g. 919582998897). */
+  destination: Scalars['String']['input'];
+  /** Ordered template variables ({{1}}, {{2}}, …). */
+  template_params: Array<Scalars['String']['input']>;
+  /** Name AiSensy records for the contact. */
+  user_name: Scalars['String']['input'];
+};
+
 export type SendAppReleaseEmailInput = {
   apk_size_mb: Scalars['Float']['input'];
   apk_url: Scalars['String']['input'];
@@ -12392,6 +12782,29 @@ export type SendSlackMessageInput = {
   unfurl_links?: InputMaybe<Scalars['Boolean']['input']>;
   unfurl_media?: InputMaybe<Scalars['Boolean']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SendWaCampaignInput = {
+  audience: WaCampaignAudience;
+  /** AUDIENCE_LIST audience only — the saved Target Audience list. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Internal name for this send. */
+  name: Scalars['String']['input'];
+  /** ISO time to send at. Absent, or already past, sends immediately. */
+  scheduled_at?: InputMaybe<Scalars['String']['input']>;
+  /** Ordered template variables — literal text, or {{first_name}} style tokens. */
+  template_params: Array<Scalars['String']['input']>;
+  /** Must be one of the saved WhatsApp campaign names. */
+  wa_campaign_name: Scalars['String']['input'];
+};
+
+/** One test message to one number — the check before pointing a template at an audience. */
+export type SendWaTestInput = {
+  /** Country code + number, digits only (e.g. 919582998897). */
+  destination: Scalars['String']['input'];
+  template_params: Array<Scalars['String']['input']>;
+  user_name: Scalars['String']['input'];
+  wa_campaign_name: Scalars['String']['input'];
 };
 
 export type ShipRocketInfo = {
@@ -12745,10 +13158,17 @@ export type SubmitAdRequestInput = {
 };
 
 export type SubmitBouncerFeedbackInput = {
-  category: BouncerFeedbackCategory;
+  /**
+   * Left out by the apps: the server reads it from the weakest score, so the
+   * guest is not asked to triage their own feedback.
+   */
+  category?: InputMaybe<BouncerFeedbackCategory>;
   message?: InputMaybe<Scalars['String']['input']>;
   pod_id: Scalars['ID']['input'];
+  /** The OVERALL score, 1-5. The only one that is required. */
   rating: Scalars['Int']['input'];
+  /** Per-part scores. Anything the pod does not have is ignored. */
+  ratings?: InputMaybe<Array<BouncerAspectRatingInput>>;
 };
 
 export type SubmitContactInput = {
@@ -13611,8 +14031,17 @@ export type UpdateCrmServiceOfferedInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateEmailFragmentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  footer_mjml?: InputMaybe<Scalars['String']['input']>;
+  header_mjml?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  fragment_category?: InputMaybe<EmailCategory>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -14690,6 +15119,100 @@ export type VideoCompressionJob = {
   url?: Maybe<Scalars['String']['output']>;
 };
 
+export type WaCampaign = {
+  __typename?: 'WaCampaign';
+  audience: WaCampaignAudience;
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
+  campaign_id: Scalars['ID']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  failed_count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  /** How many people the audience resolved to at send time. */
+  recipient_count: Scalars['Int']['output'];
+  /** When a scheduled send is due. Null for one that went out immediately. */
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  sent_at?: Maybe<Scalars['String']['output']>;
+  sent_count: Scalars['Int']['output'];
+  /** Matched the audience but had no usable number or an empty variable. */
+  skipped_count: Scalars['Int']['output'];
+  status: WaCampaignStatus;
+  template_params: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  /** The AiSensy campaign/template this send used. */
+  wa_campaign_name: Scalars['String']['output'];
+};
+
+/** Who a WhatsApp campaign goes to. A newsletter subscriber has no phone number, so it is not an option here. */
+export type WaCampaignAudience =
+  | 'ALL_USERS'
+  | 'AUDIENCE_LIST';
+
+export type WaCampaignNameInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
+/** An AiSensy campaign name marketing may pick. AiSensy cannot list these, so the list is maintained here. */
+export type WaCampaignNameOption = {
+  __typename?: 'WaCampaignNameOption';
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** One person the send walked over — the answer to who it reached and who it did not. */
+export type WaCampaignRecipient = {
+  __typename?: 'WaCampaignRecipient';
+  /** How many times the send has been attempted for this person (a retry updates the row). */
+  attempts: Scalars['Int']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  destination: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Why they were skipped, or the reason AiSensy refused. Empty when sent. */
+  reason: Scalars['String']['output'];
+  status: WaRecipientStatus;
+  /** AiSensy's own id for the queued message — the trace back to their side. */
+  submitted_message_id: Scalars['String']['output'];
+  /** The template variables as they were filled for this person. */
+  template_params: Array<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type WaCampaignRecipientPage = {
+  __typename?: 'WaCampaignRecipientPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<WaCampaignRecipient>;
+  total: Scalars['Int']['output'];
+};
+
+export type WaCampaignStatus =
+  /** Called off before it ran — never the same fact as one that ran and failed. */
+  | 'CANCELLED'
+  | 'FAILED'
+  /** Waiting for its hour — still cancellable. */
+  | 'SCHEDULED'
+  | 'SENDING'
+  | 'SENT';
+
+export type WaCampaignTablePage = {
+  __typename?: 'WaCampaignTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<WaCampaign>;
+  total: Scalars['Int']['output'];
+};
+
+/** A variable a template parameter may carry, resolved per recipient. */
+export type WaCampaignVariable = {
+  __typename?: 'WaCampaignVariable';
+  description: Scalars['String']['output'];
+  /** Write it as {{name}} inside a template parameter. */
+  name: Scalars['String']['output'];
+};
+
 /** Result of a database-level cleanup. */
 export type WaCleanResult = {
   __typename?: 'WaCleanResult';
@@ -14840,6 +15363,12 @@ export type WaQr = {
   status: WaStatus;
 };
 
+/** What happened to one person in a send. SKIPPED means nothing was attempted for them. */
+export type WaRecipientStatus =
+  | 'FAILED'
+  | 'SENT'
+  | 'SKIPPED';
+
 export type WaSourceRef = {
   __typename?: 'WaSourceRef';
   jid: Scalars['String']['output'];
@@ -14861,6 +15390,14 @@ export type WaSyncResult = {
   invalid: Scalars['Int']['output'];
   leads: Scalars['Int']['output'];
   valid: Scalars['Int']['output'];
+};
+
+export type WaTestSendResult = {
+  __typename?: 'WaTestSendResult';
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  /** AiSensy's own id for the queued message. */
+  submitted_message_id: Scalars['String']['output'];
 };
 
 export type WaUpdateUserLeadInput = {

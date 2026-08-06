@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { DELETE, RENDER, TEMPLATES, Tpl, UPDATE } from './queries';
+import {
+  DELETE,
+  FRAGMENT_OPTIONS,
+  RENDER,
+  TEMPLATES,
+  UPDATE,
+  type FragmentOption,
+  type Tpl,
+} from './queries';
 import { useConfirm } from '@duncit/dialogs';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
@@ -10,6 +18,7 @@ export function useEmailTemplateEditor() {
   const { data, loading, refetch } = useQuery<{ emailTemplates: Tpl[] }>(TEMPLATES, {
     fetchPolicy: 'cache-and-network',
   });
+  const { data: fragmentData } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
   const [updateTpl] = useMutation(UPDATE);
   const [deleteTpl] = useMutation(DELETE);
   const client = useApolloClient();
@@ -25,6 +34,7 @@ export function useEmailTemplateEditor() {
   const [snack, setSnack] = useState<Snack | null>(null);
 
   const list = data?.emailTemplates ?? [];
+  const fragmentOptions = fragmentData?.emailFragments ?? [];
 
   useEffect(() => {
     if (!selected && list.length) setSelected(list[0].template_id);
@@ -53,7 +63,7 @@ export function useEmailTemplateEditor() {
     try {
       const res = await client.query({
         query: RENDER,
-        variables: { mjml: draft.mjml, vars: varsJson },
+        variables: { mjml: draft.mjml, vars: varsJson, fragment: draft.fragment_category ?? null },
         fetchPolicy: 'network-only',
       });
       const errors = res.data?.renderEmailTemplate?.errors ?? [];
@@ -73,7 +83,7 @@ export function useEmailTemplateEditor() {
     const id = setTimeout(renderPreview, 600);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.mjml, varsJson]);
+  }, [draft?.mjml, draft?.fragment_category, varsJson]);
 
   const save = async () => {
     if (!draft) return;
@@ -87,6 +97,7 @@ export function useEmailTemplateEditor() {
             description: draft.description,
             subject: draft.subject,
             mjml: draft.mjml,
+            fragment_category: draft.fragment_category ?? null,
             variables: draft.variables.map(({ key, description, sample }) => ({
               key,
               description,
@@ -151,6 +162,7 @@ export function useEmailTemplateEditor() {
     previewHtml,
     previewErrors,
     detected,
+    fragmentOptions,
     varsJson,
     setVarsJson,
     busy,

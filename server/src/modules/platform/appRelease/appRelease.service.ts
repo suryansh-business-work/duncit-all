@@ -110,7 +110,13 @@ export async function sendAppReleaseEmail(
   const attachments = await maybeAttachApk(input.apk_url, input.apk_size_mb, input.build_name);
   const subject = `📱 ${appName} v${input.version} — new build ready to test`;
 
-  const info = await sendHtmlEmail({ to: recipients, subject, html, attachments });
+  const info = await sendHtmlEmail({
+    to: recipients,
+    subject,
+    html,
+    attachments,
+    category: 'internal',
+  });
 
   return {
     ok: true,

@@ -1,15 +1,30 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
+import { postJson } from './aisensy.transport';
 
 /**
- * AiSensy gateway — thin wrapper over the WhatsApp campaign API. The API key is
- * owned by the Tech portal (AISENSY env category), never `.env`, and is read
- * fresh per call via {@link getRuntimeEnvValue} so a rotated key applies without
- * a restart. AiSensy answers 200 with `success: "true"` (a STRING) and echoes
- * the queued message id; failures carry a `message`/`errorMessage` reason.
+ * AiSensy — the WhatsApp provider, and the only file in the server that knows
+ * AiSensy's field names.
+ *
+ * The split mirrors `@duncit/communication`: `aisensy.transport.ts` owns the
+ * wire (retries, timeouts, redaction), this file owns one vendor's payload and
+ * its idea of success, and `aisensy.service.ts` owns what a valid message is.
+ * A second provider would be a sibling of this file and nothing else would
+ * move. See that package's docs for why the server mirrors rather than imports.
+ *
+ * Two AiSensy quirks decide the shape here:
+ *  - the API key travels in the BODY, so it is redacted by the transport rather
+ *    than by a header allow-list;
+ *  - success is reported as `success: "true"` — the STRING — alongside HTTP
+ *    200, so a `res.ok` check on its own reports rejections as sends.
+ *
+ * The key is owned by the Tech portal (AISENSY env category), never `.env`, and
+ * is read fresh per call via {@link getRuntimeEnvValue} so a rotated key applies
+ * without a restart.
  */
 const DEFAULT_BASE_URL = 'https://backend.aisensy.com';
+const CAMPAIGN_PATH = '/campaign/t1/api/v2';
 
 async function apiKey(): Promise<string> {
   const key = await getRuntimeEnvValue('AISENSY_API_KEY');
@@ -32,6 +47,7 @@ export async function defaultCampaign(): Promise<string> {
 
 export interface CampaignMessage {
   campaign_name: string;
+  /** Country code + number, digits only — the shape AiSensy expects. */
   destination: string;
   user_name: string;
   template_params: string[];
@@ -56,26 +72,39 @@ async function failureMessage(body: any, status: number): Promise<string> {
   return `AiSensy rejected the API key from ${source} (HTTP ${status}: ${reason})`;
 }
 
+/** Trailing slashes off the configured host, without a backtracking regex (S8786). */
+function withoutTrailingSlash(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+}
+
+/** The message in AiSensy's own field names. */
+function toPayload(message: CampaignMessage, key: string): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    apiKey: key,
+    campaignName: message.campaign_name,
+    destination: message.destination,
+    userName: message.user_name,
+    templateParams: message.template_params,
+  };
+  return payload;
+}
+
 /** Send one campaign message; resolves to AiSensy's submitted_message_id. */
 export async function sendCampaign(message: CampaignMessage): Promise<string> {
   const key = await apiKey();
-  const base = ((await getRuntimeEnvValue('AISENSY_BASE_URL')) || DEFAULT_BASE_URL).replace(/\/$/, '');
-  const res = await fetch(`${base}/campaign/t1/api/v2`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      apiKey: key,
-      campaignName: message.campaign_name,
-      destination: message.destination,
-      userName: message.user_name,
-      templateParams: message.template_params,
-    }),
-  });
-  const data: any = await res.json().catch(() => ({}));
-  if (!res.ok || String(data.success) !== 'true') {
-    throw new GraphQLError(await failureMessage(data, res.status), {
+  const base = withoutTrailingSlash(
+    (await getRuntimeEnvValue('AISENSY_BASE_URL')) || DEFAULT_BASE_URL
+  );
+
+  const res = await postJson(`${base}${CAMPAIGN_PATH}`, toPayload(message, key));
+
+  const succeeded = res.data.success === true || res.data.success === 'true';
+  if (!res.ok || !succeeded) {
+    throw new GraphQLError(await failureMessage(res.data, res.status), {
       extensions: { code: 'BAD_GATEWAY' },
     });
   }
-  return String(data.submitted_message_id ?? '');
+  return String(res.data.submitted_message_id ?? '');
 }

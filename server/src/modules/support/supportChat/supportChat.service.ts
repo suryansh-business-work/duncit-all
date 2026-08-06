@@ -532,6 +532,7 @@ export const supportChatService = {
     const artifact = await buildTranscriptArtifact(data, format);
     await sendHtmlEmail({
       to: addr,
+      category: 'support',
       subject: `Your Duncit support chat transcript (${data.no})`,
       html: `<p>Hi,</p><p>Your Duncit support chat <b>${data.no}</b> transcript is attached.</p><p>— Team Duncit</p>`,
       attachments: [

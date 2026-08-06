@@ -855,6 +855,7 @@ export const venueService = {
           to: v.owner_email,
           subject: active ? 'Your venue is now active' : 'Your venue has been deactivated',
           template: slug,
+          category: 'notification',
           vars: {
             owner_name: v.owner_name ?? '',
             venue_name: v.venue_name ?? '',

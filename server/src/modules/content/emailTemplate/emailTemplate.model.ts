@@ -9,6 +9,13 @@ export interface IEmailTemplate extends Document {
   subject: string;
   /** MJML source. Rendered to HTML at send time. */
   mjml: string;
+  /**
+   * Which header/footer fragment wraps this template's body. Null means none —
+   * and null is the DEFAULT, because every template that shipped before
+   * fragments existed already draws its own header and footer, and turning
+   * them all on at once would double every logo.
+   */
+  fragment_category?: string | null;
   /** Declared variables for documentation / autocompletion. */
   variables: { key: string; description?: string; sample?: string }[];
   is_active: boolean;

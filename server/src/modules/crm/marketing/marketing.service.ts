@@ -297,7 +297,13 @@ async function sendCampaign(campaign_id: string) {
     // here, it goes to the envelope sender's mailbox.
     const delivery = { accepted: 0, rejected: 0, rejected_addresses: [] as string[] };
     for (const batch of chunk(recipients, 50)) {
-      const info = await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: tracked.html });
+      const info = await sendHtmlEmail({
+        to: campaignTo,
+        bcc: batch,
+        subject: rendered.subject,
+        html: tracked.html,
+        category: 'marketing',
+      });
       delivery.accepted += info.accepted?.length ?? 0;
       delivery.rejected += info.rejected?.length ?? 0;
       delivery.rejected_addresses.push(...(info.rejected ?? []).map(String));

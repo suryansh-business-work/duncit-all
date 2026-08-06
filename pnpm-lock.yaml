@@ -639,6 +639,21 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
+  packages/communication:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.19.41
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
+
   packages/datetime:
     devDependencies:
       '@vitest/coverage-v8':

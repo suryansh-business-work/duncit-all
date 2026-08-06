@@ -170,6 +170,7 @@ async function emailHost(h: IHostRequest, slug: string, subject: string) {
       to: h.contact_email,
       subject,
       template: slug,
+      category: 'notification',
       vars: {
         host_name: h.contact_name,
         request_no: h.request_no,

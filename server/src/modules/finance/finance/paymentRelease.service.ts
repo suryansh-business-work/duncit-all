@@ -272,6 +272,7 @@ async function notifyApproval(doc: IPaymentRelease) {
       to: doc.beneficiary_email,
       subject: `Payout approved · ${doc.pod_title}`,
       template: 'payout-statement',
+      category: 'billing',
       vars: {
         name: doc.beneficiary_name,
         pod_title: doc.pod_title,

@@ -40,6 +40,29 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.venueSlotRequest.reviewAll": "See all pending requests",
   "email.venueSlotRequest.footer":
     "You're receiving this because a host requested one of your venue's availability slots.",
+
+  // The header/footer fragments (Tech portal > Emails > Fragments). One note
+  // per category, because "why did I get this?" has a different answer for a
+  // receipt than for a campaign.
+  "email.fragment.help": "Need help? Write to",
+  "email.fragment.rights": "All rights reserved.",
+  "email.fragment.transactional.note":
+    "This is a record of something you did on Duncit.",
+  "email.fragment.authentication.note":
+    "Never share this code. Duncit will never ask you for it.",
+  "email.fragment.marketing.note":
+    "You're receiving this because you opted in to Duncit updates.",
+  "email.fragment.service.note":
+    "Reply to this email and it reaches our team.",
+  "email.fragment.notification.note":
+    "You're receiving this because of activity on your Duncit account.",
+  "email.fragment.support.note":
+    "This message is part of your support conversation with Duncit.",
+  "email.fragment.billing.note": "Keep this email for your records.",
+  "email.fragment.legal.note":
+    "This is a notice about your Duncit account that we are required to send.",
+  "email.fragment.internal.note":
+    "Internal Duncit message. Please do not forward it outside the team.",
 };
 
 const PREFIX = "t:";

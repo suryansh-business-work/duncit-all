@@ -98,6 +98,7 @@ export function useEmailTemplateEditor() {
             subject: draft.subject,
             mjml: draft.mjml,
             fragment_category: draft.fragment_category ?? null,
+            footer_note: draft.footer_note ?? '',
             variables: draft.variables.map(({ key, description, sample }) => ({
               key,
               description,

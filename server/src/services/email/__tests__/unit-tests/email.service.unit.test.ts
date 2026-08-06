@@ -37,6 +37,10 @@ jest.mock('@modules/access/user/user.model', () => ({
 
 jest.mock('../../../../config/url-configs', () => ({
   getMailConfigs: jest.fn().mockResolvedValue({ from: 'noreply@test', host: '', port: 587 }),
+  // Every send now also reads the values a header/footer fragment needs.
+  getUrlConfigs: jest
+    .fn()
+    .mockResolvedValue({ supportEmail: 'support@test', websiteUrl: 'https://test' }),
 }));
 
 jest.mock('nodemailer', () => ({

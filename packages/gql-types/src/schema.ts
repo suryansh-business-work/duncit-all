@@ -2048,6 +2048,7 @@ export type CreateCrmServiceOfferedInput = {
 
 export type CreateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  footer_note?: InputMaybe<Scalars['String']['input']>;
   fragment_category?: InputMaybe<EmailCategory>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml: Scalars['String']['input'];
@@ -3078,6 +3079,8 @@ export type EmailTemplate = {
   __typename?: 'EmailTemplate';
   created_at?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
+  /** This template's own footer sentence. Blank uses the category's generic one. */
+  footer_note?: Maybe<Scalars['String']['output']>;
   /** Which header/footer fragment wraps this body. Null renders it bare. */
   fragment_category?: Maybe<EmailCategory>;
   is_active: Scalars['Boolean']['output'];
@@ -14041,6 +14044,7 @@ export type UpdateEmailFragmentInput = {
 
 export type UpdateEmailTemplateInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  footer_note?: InputMaybe<Scalars['String']['input']>;
   fragment_category?: InputMaybe<EmailCategory>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   mjml?: InputMaybe<Scalars['String']['input']>;

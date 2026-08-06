@@ -16,6 +16,13 @@ export interface IEmailTemplate extends Document {
    * them all on at once would double every logo.
    */
   fragment_category?: string | null;
+  /**
+   * The template's own "you're receiving this because…" line, rendered by the
+   * fragment's footer. Each template had a different one baked into its MJML;
+   * the chrome around it is shared, the sentence is not. Empty falls back to
+   * the category's generic note.
+   */
+  footer_note?: string;
   /** Declared variables for documentation / autocompletion. */
   variables: { key: string; description?: string; sample?: string }[];
   is_active: boolean;

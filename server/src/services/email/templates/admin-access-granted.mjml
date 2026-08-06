@@ -8,11 +8,6 @@
     </mj-attributes>
   </mj-head>
   <mj-body background-color="#f4f4f4">
-    <mj-section padding="20px 0 0 0">
-      <mj-column>
-        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
-      </mj-column>
-    </mj-section>
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
         <mj-text font-size="22px" font-weight="bold" color="#222222">Welcome to Duncit as an Admin, {{name}}</mj-text>
@@ -24,11 +19,6 @@
       <mj-column>
         <mj-text font-size="15px" font-weight="bold" color="#9a3412">⚠️ Keep your account safe</mj-text>
         <mj-text color="#7c2d12">Do not give your account access to anyone. Never share your password or login link. Admin access carries full control of the platform, so sharing it is risky and can compromise every Duncit user. If you ever suspect your account is compromised, contact the team immediately.</mj-text>
-      </mj-column>
-    </mj-section>
-    <mj-section padding="16px 0 24px 0">
-      <mj-column>
-        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because your Duncit account was granted admin access.</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

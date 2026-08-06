@@ -80,6 +80,16 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
         />
       </Stack>
 
+      <TextField
+        size="small"
+        label="Footer note"
+        value={draft.footer_note ?? ''}
+        onChange={(e) => setDraft({ ...draft, footer_note: e.target.value })}
+        placeholder="You're receiving this because…"
+        helperText="The one line in the footer that is this template's own. Blank uses the category's generic note."
+        fullWidth
+      />
+
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <MjmlEditorPane
           value={draft.mjml}

@@ -57,6 +57,10 @@ describe('CreateTemplateDialog', () => {
   });
 });
 
+/** The dialog reads the template, not just its id: it builds a field per
+ * declared variable, so a bare id could not tell it what to ask for. */
+const tpl = { template_id: 't1', slug: 'welcome', name: 'Welcome', subject: 'Hi', variables: [] } as never;
+
 const typeEmail = async (value: string) => {
   const input = screen.getByLabelText(/^To/);
   fireEvent.change(input, { target: { value } });
@@ -68,7 +72,7 @@ describe('SendTestDialog', () => {
     const onResult = vi.fn();
     const onClose = vi.fn();
     m.run.mockResolvedValue({ data: { sendTestEmail: { ok: true, message: 'Delivered' } } });
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={onClose} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={onClose} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(onResult).toHaveBeenCalledWith('success', 'Delivered'));
@@ -78,7 +82,7 @@ describe('SendTestDialog', () => {
   it('uses the default success message when none is returned', async () => {
     const onResult = vi.fn();
     m.run.mockResolvedValue({ data: { sendTestEmail: { ok: true, message: '' } } });
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(onResult).toHaveBeenCalledWith('success', 'Sent'));
@@ -87,7 +91,7 @@ describe('SendTestDialog', () => {
   it('shows the server failure message inline', async () => {
     const onResult = vi.fn();
     m.run.mockResolvedValue({ data: { sendTestEmail: { ok: false, message: 'Bounced' } } });
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     expect(await screen.findByText('Bounced')).toBeInTheDocument();
@@ -97,7 +101,7 @@ describe('SendTestDialog', () => {
   it('uses the default failure message when the server omits one', async () => {
     const onResult = vi.fn();
     m.run.mockResolvedValue({ data: { sendTestEmail: { ok: false, message: '' } } });
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(onResult).toHaveBeenCalledWith('error', 'Failed'));
@@ -106,7 +110,7 @@ describe('SendTestDialog', () => {
   it('handles a thrown Error', async () => {
     const onResult = vi.fn();
     m.run.mockRejectedValue(new Error('smtp down'));
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(onResult).toHaveBeenCalledWith('error', 'smtp down'));
@@ -115,7 +119,7 @@ describe('SendTestDialog', () => {
   it('handles a non-Error rejection with a generic message', async () => {
     const onResult = vi.fn();
     m.run.mockRejectedValue('boom');
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(onResult).toHaveBeenCalledWith('error', 'Failed to send test email'));
@@ -123,7 +127,7 @@ describe('SendTestDialog', () => {
 
   it('early-returns from submit when there is no template id', async () => {
     const onResult = vi.fn();
-    render(<SendTestDialog open templateId={null} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
+    render(<SendTestDialog open template={null} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
     fireEvent.submit(screen.getByLabelText(/^To/).closest('form')!);
     await new Promise((r) => setTimeout(r, 0));
@@ -132,7 +136,7 @@ describe('SendTestDialog', () => {
   });
 
   it('does not send with an invalid email (validation blocks submit)', async () => {
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
     await typeEmail('not-an-email');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await new Promise((r) => setTimeout(r, 0));
@@ -141,7 +145,7 @@ describe('SendTestDialog', () => {
 
   it('shows the in-flight state (disabled close + Sending… button)', () => {
     m.loading = true;
-    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
+    render(<SendTestDialog open template={tpl} detected={[]} varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Sending…' })).toBeDisabled();
   });

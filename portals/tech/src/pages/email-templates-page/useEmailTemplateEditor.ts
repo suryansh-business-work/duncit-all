@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useSearchParams } from 'react-router-dom';
 import {
   DELETE,
   FRAGMENT_OPTIONS,
@@ -40,9 +41,16 @@ export function useEmailTemplateEditor() {
   const list = data?.emailTemplates ?? [];
   const fragmentOptions = fragmentData?.emailFragments ?? [];
 
+  // `?slug=` opens a named template — how an email log row links back to the
+  // template it came from. Only on the first selection: once someone has picked
+  // a template themselves, a stale slug in the URL must not drag them back.
+  const wantedSlug = useSearchParams()[0].get('slug');
+
   useEffect(() => {
-    if (!selected && list.length) setSelected(list[0].template_id);
-  }, [list, selected]);
+    if (selected || !list.length) return;
+    const wanted = wantedSlug ? list.find((t) => t.slug === wantedSlug) : undefined;
+    setSelected((wanted ?? list[0]).template_id);
+  }, [list, selected, wantedSlug]);
 
   useEffect(() => {
     const t = list.find((x) => x.template_id === selected);

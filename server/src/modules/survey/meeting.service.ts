@@ -187,19 +187,25 @@ async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
   const inApp = MEETING_EVENT_INAPP[event](kindLabel, slot);
   await notifyUserInApp(String(doc.user_id), inApp.title, inApp.body, MEETING_DEEP_LINK);
 
-  if (!who?.email) return;
+  // The applicant's address, missing or not. Guarding on it used to skip the
+  // whole block, which cost two things: the send never recorded why nobody was
+  // emailed, and the ADMIN notice below — which needs no applicant address at
+  // all — was suppressed along with it.
+  const to = who?.email ?? '';
+  const name = who?.name ?? 'there';
+
   if (event === 'scheduled') {
-    await sendMeetingScheduledEmail({ to: who.email, name: who.name, kind: kindLabel, slot, link, notes });
     const adminTo = await onboardingAdminEmails();
     if (adminTo.length > 0) {
-      await sendMeetingScheduledAdminEmail({ to: adminTo.join(','), name: who.name, email: who.email, kind: kindLabel, slot, link, notes });
+      await sendMeetingScheduledAdminEmail({ to: adminTo.join(','), name, email: to, kind: kindLabel, slot, link, notes });
     }
+    await sendMeetingScheduledEmail({ to, name, kind: kindLabel, slot, link, notes });
   } else if (event === 'rescheduled' || event === 'updated') {
-    await sendMeetingRescheduledEmail({ to: who.email, name: who.name, kind: kindLabel, slot, link, notes, change: event });
+    await sendMeetingRescheduledEmail({ to, name, kind: kindLabel, slot, link, notes, change: event });
   } else if (event === 'approved') {
-    await sendMeetingApprovedEmail({ to: who.email, name: who.name, kind: kindLabel });
+    await sendMeetingApprovedEmail({ to, name, kind: kindLabel });
   } else {
-    await sendMeetingRejectedEmail({ to: who.email, name: who.name, kind: kindLabel });
+    await sendMeetingRejectedEmail({ to, name, kind: kindLabel });
   }
 }
 
@@ -387,10 +393,11 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
   try {
     const [names, av] = await Promise.all([userMap([String(doc.user_id)]), MeetingAvailabilityModel.findOne()]);
     const who = names.get(String(doc.user_id));
-    if (!who?.email) return;
+    // Sent regardless — an applicant with no address becomes a FAILED log row
+    // instead of a booking nobody was told about.
     const opts = {
-      to: who.email,
-      name: who.name,
+      to: who?.email ?? '',
+      name: who?.name ?? 'there',
       kind: MEETING_KIND_LABELS[doc.kind] ?? 'Host',
       slot: slotLabelTz(iso(doc.scheduled_at ?? doc.requested_at), av?.timezone_offset_minutes ?? 330),
       notes: doc.notes || '',

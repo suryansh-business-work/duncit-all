@@ -3156,6 +3156,59 @@ export type EmailFragment = {
   updated_at?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * One attempt to send an email — including the ones that never left.
+ *
+ * A provider's dashboard can only show what reached it. The rows that matter
+ * most here are the ones that did not: a switched-off template, a recipient with
+ * no address, a refusal. Those have no other record anywhere.
+ */
+export type EmailLog = {
+  __typename?: 'EmailLog';
+  bcc: Array<Scalars['String']['output']>;
+  category: Scalars['String']['output'];
+  cc: Array<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  duration_ms: Scalars['Int']['output'];
+  /** The header/footer fragment the template named, if any. */
+  fragment_key?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The provider's own id, for tracing a delivery complaint back to them. */
+  message_id: Scalars['String']['output'];
+  /** smtp, resend, or none when it never left. */
+  provider: Scalars['String']['output'];
+  /** Why, in one line, whenever the status is not SENT. */
+  reason: Scalars['String']['output'];
+  /** Which surface caused it: SERVER, NATIVE, MWEB, WEBSITE, PORTAL, CRM, TEST. */
+  source: Scalars['String']['output'];
+  /** The exact host or portal, when known. */
+  source_detail: Scalars['String']['output'];
+  /** SENT, SKIPPED (deliberately not sent) or FAILED. */
+  status: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  /** The template slug, or empty for a raw-HTML send. */
+  template: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+};
+
+/** Headline counts for the page's summary strip. */
+export type EmailLogStats = {
+  __typename?: 'EmailLogStats';
+  days: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  sent: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type EmailLogTablePage = {
+  __typename?: 'EmailLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EmailLog>;
+  total: Scalars['Int']['output'];
+};
+
 export type EmailTemplate = {
   __typename?: 'EmailTemplate';
   created_at?: Maybe<Scalars['String']['output']>;
@@ -10336,6 +10389,9 @@ export type Query = {
   emailFragment?: Maybe<EmailFragment>;
   /** Every fragment — the nine first, then the custom ones. */
   emailFragments: Array<EmailFragment>;
+  emailLogStats: EmailLogStats;
+  /** Every email attempt, newest first. Filter by status, category, source, template. */
+  emailLogsTable: EmailLogTablePage;
   emailTemplate?: Maybe<EmailTemplate>;
   emailTemplateBySlug?: Maybe<EmailTemplate>;
   emailTemplates: Array<EmailTemplate>;
@@ -11346,6 +11402,16 @@ export type QueryEmailFragmentArgs = {
 };
 
 
+export type QueryEmailLogStatsArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryEmailLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryEmailTemplateArgs = {
   template_id: Scalars['ID']['input'];
 };
@@ -12236,6 +12302,7 @@ export type QueryRenderCrmEmailTemplateArgs = {
 
 
 export type QueryRenderEmailTemplateArgs = {
+  footer_note?: InputMaybe<Scalars['String']['input']>;
   fragment_key?: InputMaybe<Scalars['String']['input']>;
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;

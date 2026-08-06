@@ -34,10 +34,10 @@ vi.mock('../../src/pages/email-templates-page/CreateTemplateDialog', () => ({
     ) : null,
 }));
 vi.mock('../../src/pages/email-templates-page/SendTestDialog', () => ({
-  default: (p: { open: boolean; templateId: string | null; onClose: () => void; onResult: (k: 'success' | 'error', msg: string) => void }) =>
+  default: (p: { open: boolean; template: { template_id: string } | null; onClose: () => void; onResult: (k: 'success' | 'error', msg: string) => void }) =>
     p.open ? (
       <div data-testid="send-dialog">
-        <span>tid:{p.templateId ?? 'none'}</span>
+        <span>tid:{p.template?.template_id ?? 'none'}</span>
         <button type="button" onClick={() => p.onResult('success', 'sent')}>send-result</button>
         <button type="button" onClick={p.onClose}>send-close</button>
       </div>

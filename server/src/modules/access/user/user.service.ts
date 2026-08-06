@@ -378,11 +378,12 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
     const email = target.auth?.email ?? '';
     for (const role of partnerRoles) {
       const label = PARTNER_ROLE_LABELS[role];
-      if (email) {
-        sendPartnerAccessGrantedEmail({ to: email, name, partner_type: label, portal_url: partnersUrl }).catch(
-          (e) => logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: e, msg: 'partner access email failed', userId, role })
-        );
-      }
+      // No `if (email)`: the send records a FAILED row for a missing address,
+      // and "we granted them partner access and never told them" is exactly
+      // the kind of silence the email log exists to break.
+      sendPartnerAccessGrantedEmail({ to: email, name, partner_type: label, portal_url: partnersUrl }).catch(
+        (e) => logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: e, msg: 'partner access email failed', userId, role })
+      );
       const { notificationService } = await import('@modules/engagement/notification/notification.service');
       await notificationService.create({
         title: `You're now a Duncit ${label} 🎉`,
@@ -844,11 +845,11 @@ export const userService = {
       throw e;
     }
 
-    if (created.auth?.email) {
-      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        logs.server.error('user.service', 'register', { error: e, msg: 'Email send failed' })
-      );
-    }
+    // Unconditional: an account with no address records a FAILED welcome row
+    // rather than vanishing, which is the one place it can still be noticed.
+    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
+      logs.server.error('user.service', 'register', { error: e, msg: 'Email send failed' })
+    );
     return authPayload(created);
   },
 
@@ -992,11 +993,11 @@ export const userService = {
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
-    if (created.auth?.email) {
-      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        logs.server.error('user.service', 'signupWithGoogle', { error: e, msg: 'Email send failed' })
-      );
-    }
+    // Unconditional: an account with no address records a FAILED welcome row
+    // rather than vanishing, which is the one place it can still be noticed.
+    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
+      logs.server.error('user.service', 'signupWithGoogle', { error: e, msg: 'Email send failed' })
+    );
     await UserModel.updateOne(
       { _id: created._id },
       {
@@ -2091,11 +2092,11 @@ export const userService = {
       assignedCity: input.assigned_city ?? null,
     });
 
-    if (created.auth?.email) {
-      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        logs.server.error('user.service', 'create', { error: e, msg: 'Email send failed' })
-      );
-    }
+    // Unconditional: an account with no address records a FAILED welcome row
+    // rather than vanishing, which is the one place it can still be noticed.
+    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
+      logs.server.error('user.service', 'create', { error: e, msg: 'Email send failed' })
+    );
     const fresh = await UserModel.findById(created._id);
     return toPublic(fresh);
   },
@@ -2181,12 +2182,11 @@ export const userService = {
         assignedZones: target.metadata?.assigned_zones ?? [],
         assignedCity: target.profile?.assigned_city ?? null,
       });
-      const email = target.auth?.email;
-      if (email) {
-        sendAdminAccessGrantedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
-          (e) => logs.server.error('user.service', 'grantAdmin', { error: e, msg: 'Admin granted email failed', userId: user_id })
-        );
-      }
+      // Unconditional — see the welcome sends above. A missing address is a
+      // FAILED log row, not silence.
+      sendAdminAccessGrantedEmail({ to: target.auth?.email ?? '', name: target.profile?.first_name || 'there' }).catch(
+        (e) => logs.server.error('user.service', 'grantAdmin', { error: e, msg: 'Admin granted email failed', userId: user_id })
+      );
     }
     const fresh = await UserModel.findById(user_id);
     return toPublic(fresh);
@@ -2210,12 +2210,11 @@ export const userService = {
         assignedZones: target.metadata?.assigned_zones ?? [],
         assignedCity: target.profile?.assigned_city ?? null,
       });
-      const email = target.auth?.email;
-      if (email) {
-        sendAdminAccessRevokedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
-          (e) => logs.server.error('user.service', 'revokeAdmin', { error: e, msg: 'Admin revoked email failed', userId: user_id })
-        );
-      }
+      // Unconditional — see the welcome sends above. A missing address is a
+      // FAILED log row, not silence.
+      sendAdminAccessRevokedEmail({ to: target.auth?.email ?? '', name: target.profile?.first_name || 'there' }).catch(
+        (e) => logs.server.error('user.service', 'revokeAdmin', { error: e, msg: 'Admin revoked email failed', userId: user_id })
+      );
     }
     const fresh = await UserModel.findById(user_id);
     return toPublic(fresh);

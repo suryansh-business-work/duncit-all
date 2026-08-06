@@ -2,7 +2,11 @@ import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { CrmEmailTemplateModel } from './crmEmailTemplate.model';
 // Reuse the pure MJML helpers (no DB access) from the core module.
-import { renderMjml, applyVars, detectVariables } from '@modules/content/emailTemplate/emailTemplate.service';
+import {
+  applyVars,
+  detectVariables,
+  renderTemplateBody,
+} from '@modules/content/emailTemplate/emailTemplate.service';
 import { commsService } from '@services/comms/comms.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -87,8 +91,16 @@ export const crmEmailTemplateService = {
     return pub(await CrmEmailTemplateModel.findOne({ template_id }));
   },
 
-  render(mjml: string, varsJson?: string | null) {
-    const { html, errors } = renderMjml(mjml, parseVars(varsJson));
+  async render(mjml: string, varsJson?: string | null) {
+    // Wrapped in the SERVICE fragment — a lead email is a person writing to a
+    // person, and that fragment's footer is the one that invites a reply. The
+    // preview and the send now render the same way, so what an operator checks
+    // is what a lead receives.
+    const { html, errors } = await renderTemplateBody({
+      mjml,
+      fragment_key: 'service',
+      vars: parseVars(varsJson),
+    });
     return { html, errors, detected_variables: detectVariables(mjml) };
   },
 
@@ -157,7 +169,12 @@ export const crmEmailTemplateService = {
     const tpl = await CrmEmailTemplateModel.findOne({ template_id });
     if (!tpl) throw new GraphQLError('CRM template not found', { extensions: { code: 'NOT_FOUND' } });
     const vars = parseVars(varsJson);
-    const { html, errors } = renderMjml(tpl.mjml, vars);
+    // The same wrap the preview shows and a real lead email carries.
+    const { html, errors } = await renderTemplateBody({
+      mjml: tpl.mjml,
+      fragment_key: 'service',
+      vars,
+    });
     if (!html) return { ok: false, message: errors[0] || 'Could not render template' };
     const result = await commsService.sendEmail({
       to,

@@ -333,27 +333,28 @@ export const ecommBrandService = {
     brand.is_active = active;
     await brand.save();
 
-    if (brand.contact_email) {
-      const slug = active ? 'brand-activated' : 'brand-deactivated';
-      try {
-        await sendEmail({
-          to: brand.contact_email,
-          subject: active ? 'Your brand is now active' : 'Your brand has been deactivated',
-          template: slug,
-          category: 'notification',
-          vars: {
-            contact_person: brand.contact_person ?? '',
-            brand_name: brand.brand_name ?? '',
-            status: active ? 'active' : 'deactivated',
-          },
-        });
-      } catch (err) {
-        logs.server.warn('ecommBrand', 'setActive', {
-          error: err,
-          slug,
-          msg: `email failed for ${slug}`,
-        });
-      }
+    // Sent whether or not there is an address: sendEmail records a FAILED row
+    // for an empty recipient, so a status change nobody was told about is
+    // visible in Emails > Logs instead of leaving no trace at all.
+    const slug = active ? 'brand-activated' : 'brand-deactivated';
+    try {
+      await sendEmail({
+        to: brand.contact_email ?? '',
+        subject: active ? 'Your brand is now active' : 'Your brand has been deactivated',
+        template: slug,
+        category: 'notification',
+        vars: {
+          contact_person: brand.contact_person ?? '',
+          brand_name: brand.brand_name ?? '',
+          status: active ? 'active' : 'deactivated',
+        },
+      });
+    } catch (err) {
+      logs.server.warn('ecommBrand', 'setActive', {
+        error: err,
+        slug,
+        msg: `email failed for ${slug}`,
+      });
     }
 
     return toPub(brand);

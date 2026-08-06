@@ -848,28 +848,29 @@ export const venueService = {
     v.is_active = active;
     await v.save();
 
-    if (v.owner_email) {
-      const slug = active ? 'venue-activated' : 'venue-deactivated';
-      try {
-        await sendEmail({
-          to: v.owner_email,
-          subject: active ? 'Your venue is now active' : 'Your venue has been deactivated',
-          template: slug,
-          category: 'notification',
-          vars: {
-            owner_name: v.owner_name ?? '',
-            venue_name: v.venue_name ?? '',
-            status: active ? 'active' : 'deactivated',
-          },
-        });
-      } catch (err) {
-        logs.server.warn('venue', 'setActive', {
-          error: err,
-          slug,
-          venue_id: String(v._id),
-          msg: 'venue status-change email failed',
-        });
-      }
+    // Sent whether or not there is an address: sendEmail records a FAILED row
+    // for an empty recipient, so a status change nobody was told about is
+    // visible in Emails > Logs instead of leaving no trace at all.
+    const slug = active ? 'venue-activated' : 'venue-deactivated';
+    try {
+      await sendEmail({
+        to: v.owner_email ?? '',
+        subject: active ? 'Your venue is now active' : 'Your venue has been deactivated',
+        template: slug,
+        category: 'notification',
+        vars: {
+          owner_name: v.owner_name ?? '',
+          venue_name: v.venue_name ?? '',
+          status: active ? 'active' : 'deactivated',
+        },
+      });
+    } catch (err) {
+      logs.server.warn('venue', 'setActive', {
+        error: err,
+        slug,
+        venue_id: String(v._id),
+        msg: 'venue status-change email failed',
+      });
     }
 
     return toPub(v);

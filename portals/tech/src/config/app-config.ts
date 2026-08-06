@@ -32,6 +32,7 @@ export const appConfig = {
       children: [
         { label: 'Templates', to: '/emails/templates', icon: 'description' },
         { label: 'Fragments', to: '/emails/fragments', icon: 'widgets' },
+        { label: 'Logs', to: '/emails/logs', icon: 'article' },
       ],
     },
     {

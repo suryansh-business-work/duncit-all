@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { GraphQLError } from 'graphql';
+import { emailLogService } from '@modules/content/emailLog/emailLog.service';
 import { EnvEntryModel, type EnvCategory } from './envEntry.model';
 import type { EnvEntryConfig } from './envEntry.service';
 
@@ -38,13 +39,42 @@ async function tracked(id: string, fn: () => Promise<EnvTestRichResult>): Promis
   return result;
 }
 
+const SMTP_TEST_SUBJECT = 'Duncit Tech — SMTP test email';
+
 const impl = {
-  /** Send a real email through the entry's SMTP config. */
+  /**
+   * Send a real email through the entry's SMTP config.
+   *
+   * This keeps its own transport on purpose, unlike every other send in the
+   * product. `resolveRuntime` honours an explicit entry only while it is
+   * active and otherwise falls back to the category default — so routing a
+   * connection test through the shared send would quietly test a DIFFERENT
+   * mailbox and report the credentials you were checking as good.
+   *
+   * Every outcome still reaches the email log, because an SMTP misconfiguration
+   * is exactly when someone opens Emails > Logs, and an empty table there was
+   * the wrong answer.
+   */
   async email(id: string, to: string): Promise<EnvTestRichResult> {
+    const logged = (result: EnvTestRichResult, reason?: string) => {
+      void emailLogService.record({
+        to: to.trim(),
+        subject: SMTP_TEST_SUBJECT,
+        category: 'internal',
+        status: result.ok ? 'SENT' : 'FAILED',
+        reason,
+        provider: 'smtp',
+        message_id: result.data ?? undefined,
+        source: 'TEST',
+        source_detail: 'SMTP connection test',
+      });
+      return result;
+    };
+
     const config = await rawConfig(id, 'EMAIL');
     const host = str(config, 'host');
-    if (!host) return { ok: false, message: 'SMTP host is not configured' };
-    if (!to.trim()) return { ok: false, message: 'Recipient is required' };
+    if (!host) return logged({ ok: false, message: 'SMTP host is not configured' }, 'SMTP host is not configured');
+    if (!to.trim()) return logged({ ok: false, message: 'Recipient is required' }, 'No recipient address');
     const port = Number(str(config, 'port')) || 587;
     const user = str(config, 'user');
     const pass = str(config, 'password');
@@ -60,13 +90,25 @@ const impl = {
         from: str(config, 'from_name') ? `${str(config, 'from_name')} <${from}>` : from,
         to: to.trim(),
         replyTo: str(config, 'reply_to') || undefined,
-        subject: 'Duncit Tech — SMTP test email',
+        subject: SMTP_TEST_SUBJECT,
         html: '<p>This is a <strong>test email</strong> sent from the Duncit Tech portal to verify your SMTP entry.</p>',
       });
       await touch(id);
-      return { ok: true, message: `Test email sent to ${to.trim()}`, data: String(info.messageId ?? '') };
+      const rejected = (info.rejected ?? []).map(String);
+      if (rejected.length && !(info.accepted ?? []).length) {
+        return logged(
+          { ok: false, message: `${host} refused ${rejected.join(', ')}` },
+          `Refused by the mail server: ${rejected.join(', ')}`
+        );
+      }
+      return logged({
+        ok: true,
+        message: `Test email sent to ${to.trim()}`,
+        data: String(info.messageId ?? ''),
+      });
     } catch (err: any) {
-      return { ok: false, message: err?.message || 'Failed to send test email' };
+      const message = err?.message || 'Failed to send test email';
+      return logged({ ok: false, message }, message);
     }
   },
 

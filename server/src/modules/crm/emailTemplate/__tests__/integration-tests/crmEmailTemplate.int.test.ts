@@ -21,8 +21,10 @@ describe('crmEmailTemplateService integration', () => {
     expect(list.find((t) => t!.template_id === created!.template_id)).toBeTruthy();
   });
 
-  it('renders MJML with vars + detects variables', () => {
-    const r = crmEmailTemplateService.render(MJML, JSON.stringify({ name: 'Sury' }));
+  // Async since the render started going through the shared body renderer,
+  // which reads the SERVICE header/footer fragment from the database.
+  it('renders MJML with vars + detects variables', async () => {
+    const r = await crmEmailTemplateService.render(MJML, JSON.stringify({ name: 'Sury' }));
     expect(r.detected_variables).toContain('name');
     expect(r.html).toContain('Sury');
     expect(r.errors).toEqual([]);

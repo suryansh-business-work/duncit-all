@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useSearchParams } from 'react-router-dom';
 import { useConfirm } from '@duncit/dialogs';
 import {
   CREATE_FRAGMENT,
@@ -40,9 +41,16 @@ export function useEmailFragments() {
 
   const list = useMemo(() => data?.emailFragments ?? [], [data]);
 
+  // `?key=` opens a named fragment — how an email log row links back to the
+  // header/footer its email carried. First selection only, so a stale key in
+  // the URL never overrides what someone has since clicked.
+  const wantedKey = useSearchParams()[0].get('key');
+
   useEffect(() => {
-    if (!selected && list.length) setSelected(list[0].key);
-  }, [list, selected]);
+    if (selected || !list.length) return;
+    const wanted = wantedKey ? list.find((f) => f.key === wantedKey) : undefined;
+    setSelected((wanted ?? list[0]).key);
+  }, [list, selected, wantedKey]);
 
   useEffect(() => {
     const found = list.find((f) => f.key === selected);

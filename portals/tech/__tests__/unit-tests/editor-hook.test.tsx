@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeTpl } from '../mocks/email-template.mock';
 
@@ -40,9 +41,18 @@ beforeEach(() => {
   m.confirmMock.mockReset();
 });
 
+/**
+ * The hook reads `?slug=` to open a named template — how an email log row
+ * links back to the template it came from — so it needs a router around it.
+ */
+const mount = (url = '/emails/templates') =>
+  renderHook(() => useEmailTemplateEditor(), {
+    wrapper: ({ children }) => <MemoryRouter initialEntries={[url]}>{children}</MemoryRouter>,
+  });
+
 describe('useEmailTemplateEditor — empty state', () => {
   it('exposes empty list + null draft and guards save/delete/import', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     expect(result.current.list).toEqual([]);
     expect(result.current.draft).toBeNull();
     expect(result.current.hasData).toBe(false);
@@ -73,22 +83,37 @@ describe('useEmailTemplateEditor — with data', () => {
   });
 
   it('auto-selects the first template and derives the vars JSON', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.selected).toBe('t1'));
     await waitFor(() => expect(result.current.draft?.template_id).toBe('t1'));
     const vars = JSON.parse(result.current.varsJson);
     expect(vars).toEqual({ name: 'Ana', code: '{{code}}' });
   });
 
+  it('opens the template named by ?slug=, which is how a log row links back', async () => {
+    const other = makeTpl({ template_id: 't2', slug: 'password-reset', name: 'Reset' });
+    m.data = { emailTemplates: [tpl, other] };
+
+    const { result } = mount('/emails/templates?slug=password-reset');
+
+    // Not the first in the list — the one the link asked for.
+    await waitFor(() => expect(result.current.selected).toBe('t2'));
+  });
+
+  it('falls back to the first template when the slug matches nothing', async () => {
+    const { result } = mount('/emails/templates?slug=does-not-exist');
+    await waitFor(() => expect(result.current.selected).toBe('t1'));
+  });
+
   it('becomes dirty when the draft diverges', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
     act(() => result.current.setDraft({ ...result.current.draft!, name: 'Changed' }));
     await waitFor(() => expect(result.current.dirty).toBe(true));
   });
 
   it('validates MJML: success then error, and handles a render throw', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
 
     await act(async () => {
@@ -113,7 +138,7 @@ describe('useEmailTemplateEditor — with data', () => {
 
   it('handles a render response missing optional fields', async () => {
     m.clientQuery.mockResolvedValue({ data: { renderEmailTemplate: {} } });
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
     await act(async () => {
       await result.current.validateMjml();
@@ -125,7 +150,7 @@ describe('useEmailTemplateEditor — with data', () => {
   it('runs the debounced preview after the draft settles', async () => {
     vi.useFakeTimers();
     try {
-      renderHook(() => useEmailTemplateEditor());
+      mount();
       act(() => {
         vi.advanceTimersByTime(700);
       });
@@ -136,7 +161,7 @@ describe('useEmailTemplateEditor — with data', () => {
   });
 
   it('saves successfully and on error', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
 
     await act(async () => {
@@ -153,7 +178,7 @@ describe('useEmailTemplateEditor — with data', () => {
   });
 
   it('deletes after confirm and skips when declined', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
 
     m.confirmMock.mockResolvedValueOnce(false);
@@ -171,7 +196,7 @@ describe('useEmailTemplateEditor — with data', () => {
   });
 
   it('imports detected variables not already present', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
     await act(async () => {
       await result.current.validateMjml();
@@ -183,7 +208,7 @@ describe('useEmailTemplateEditor — with data', () => {
   });
 
   it('exposes setters for snack and vars JSON', async () => {
-    const { result } = renderHook(() => useEmailTemplateEditor());
+    const { result } = mount();
     await waitFor(() => expect(result.current.draft).not.toBeNull());
     act(() => result.current.setSnack({ kind: 'error', msg: 'x' }));
     expect(result.current.snack).toEqual({ kind: 'error', msg: 'x' });

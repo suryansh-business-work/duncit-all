@@ -116,6 +116,29 @@ function withFooterNote(
   return { ...vars, footer_note: (key && vars[`t:${key}`]) || '' };
 }
 
+/**
+ * The ONE way a template body becomes an email.
+ *
+ * Wrap in the fragment, fill the footer sentence, substitute the variables.
+ * Every path goes through this — the send, the editor's preview, the test send,
+ * and the disk fallback — because when they each did it themselves they drifted:
+ * the preview and the test send forgot `footer_note` and rendered a literal
+ * `{{footer_note}}` into the footer of every message an admin looked at.
+ */
+export async function renderTemplateBody(input: {
+  mjml: string;
+  fragment_key?: string | null;
+  footer_note?: string;
+  vars?: Record<string, string>;
+}): Promise<{ html: string; errors: string[] }> {
+  const vars = input.vars ?? {};
+  const source = await emailFragmentService.wrap(input.mjml, input.fragment_key);
+  return renderMjml(
+    source,
+    withFooterNote({ footer_note: input.footer_note, fragment_key: input.fragment_key }, vars)
+  );
+}
+
 export const emailTemplateService = {
   list: () => EmailTemplateModel.find().sort({ slug: 1 }).exec(),
   byId: (template_id: string) => EmailTemplateModel.findOne({ template_id }).exec(),
@@ -181,8 +204,12 @@ export const emailTemplateService = {
   async render(slug: string, vars: Record<string, string> = {}) {
     const tpl = await loadTemplate(slug);
     if (!tpl) throw new GraphQLError(`Email template '${slug}' not found`);
-    const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_key);
-    const { html, errors } = renderMjml(source, withFooterNote(tpl, vars));
+    const { html, errors } = await renderTemplateBody({
+      mjml: tpl.mjml,
+      fragment_key: tpl.fragment_key,
+      footer_note: tpl.footer_note,
+      vars,
+    });
     return {
       subject: applyVars(tpl.subject, vars),
       html,

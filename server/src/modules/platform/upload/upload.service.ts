@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
 import {
   getUploadSettingsSafe,
@@ -12,17 +13,50 @@ import {
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
-/** The one place the ImageKit credentials are read. Also the media library's. */
+/**
+ * The one place the ImageKit credentials are read. Also the media library's.
+ *
+ * ONE read for all three values, from ONE entry.
+ *
+ * They used to be three independent lookups — a separate
+ * `findOne({ category, is_active, is_default })` per key. Three queries with
+ * the same filter are only guaranteed to return the same document while
+ * exactly one matches it; with two entries left active and default, Mongo may
+ * answer them from different records, and the public key of one account gets
+ * signed with the private key of another. ImageKit calls that an "invalid
+ * signature parameter", which says nothing about where it came from — and the
+ * Tech portal's test, which reads a single entry by id, could never reproduce
+ * it.
+ *
+ * A signed request has to carry one credential set. This reads one record.
+ */
 export async function getImagekitConfig() {
-  const [publicKey, privateKey, urlEndpoint] = await Promise.all([
-    getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY'),
-    getRuntimeEnvValue('IMAGEKIT_PRIVATE_KEY'),
-    getRuntimeEnvValue('IMAGEKIT_URL_ENDPOINT'),
-  ]);
+  const entries = await EnvEntryModel.find({
+    category: 'IMAGEKIT',
+    is_active: true,
+    is_default: true,
+  }).lean();
+
+  if (entries.length > 1) {
+    const names = entries.map((entry: any) => entry.name).join(', ');
+    logs.server.error('upload', 'getImagekitConfig', {
+      error: `Multiple default ImageKit entries: ${names}`,
+    });
+    throw new GraphQLError(
+      `More than one ImageKit entry is marked active and default (${names}). Uploads sign with one entry's private key and send another's public key, which ImageKit rejects as an invalid signature. Leave exactly one default in Tech portal → Environment Variables → ImageKit.`,
+      { extensions: { code: 'CONFIG_ERROR' } }
+    );
+  }
+
+  const config = (entries[0]?.config ?? {}) as Record<string, unknown>;
+  const read = (field: string) => {
+    const value = config[field];
+    return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+  };
   return {
-    publicKey: publicKey.trim(),
-    privateKey: privateKey.trim(),
-    urlEndpoint: urlEndpoint.trim(),
+    publicKey: read('public_key'),
+    privateKey: read('private_key'),
+    urlEndpoint: read('url_endpoint'),
   };
 }
 

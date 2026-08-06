@@ -1,5 +1,13 @@
 import crypto from 'node:crypto';
-import { signImagekitUpload } from '../../upload.service';
+
+jest.mock('@modules/platform/envEntry/envEntry.model', () => ({
+  ...jest.requireActual('@modules/platform/envEntry/envEntry.model'),
+  EnvEntryModel: { find: () => ({ lean: async () => entries }) },
+}));
+
+let entries: { name: string; config: Record<string, string> }[] = [];
+
+import { getImagekitAuth, signImagekitUpload } from '../../upload.service';
 
 /**
  * The ImageKit client-upload contract, pinned.
@@ -10,6 +18,31 @@ import { signImagekitUpload } from '../../upload.service';
  * for four different causes is why this has been guessed at twice, so the three
  * parts we control are asserted here rather than reasoned about again.
  */
+describe('ImageKit credentials come from one entry', () => {
+  it('refuses to sign when two entries are both active and default', async () => {
+    // The failure this replaces: three independent lookups for three fields
+    // could answer from two records, signing one account's public key with the
+    // other's private key. ImageKit calls that an invalid signature and says
+    // nothing else, so it has to be caught here.
+    entries = [
+      { name: 'ImageKit A', config: { public_key: 'public_a', private_key: 'private_a', url_endpoint: 'https://ik.imagekit.io/a' } },
+      { name: 'ImageKit B', config: { public_key: 'public_b', private_key: 'private_b', url_endpoint: 'https://ik.imagekit.io/b' } },
+    ];
+    await expect(getImagekitAuth()).rejects.toThrow(/ImageKit A, ImageKit B/);
+  });
+
+  it('signs with the pair from the single default entry', async () => {
+    entries = [
+      { name: 'ImageKit', config: { public_key: 'public_one', private_key: 'private_one', url_endpoint: 'https://ik.imagekit.io/one' } },
+    ];
+    const auth = await getImagekitAuth();
+    expect(auth.publicKey).toBe('public_one');
+    expect(auth.signature).toBe(
+      crypto.createHmac('sha1', 'private_one').update(`${auth.token}${auth.expire}`).digest('hex')
+    );
+  });
+});
+
 describe('ImageKit upload signature', () => {
   it('is HMAC-SHA1 of token + expire, hex, keyed by the private key', () => {
     const key = 'private_test_key';

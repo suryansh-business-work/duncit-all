@@ -5,6 +5,32 @@ jest.mock('@config/runtimeEnv', () => ({
   getRuntimeEnvValue: jest.fn(async () => 'test-value'),
 }));
 
+/**
+ * The ImageKit credentials come from ONE EnvEntry, so the model is the seam.
+ *
+ * It used to be three `getRuntimeEnvValue` calls, which is exactly the defect
+ * this now guards: three lookups can answer from three records.
+ */
+jest.mock('@modules/platform/envEntry/envEntry.model', () => ({
+  // Only the model: this module also exports ENV_CATEGORIES, which the SDL's
+  // drift guard reads at import time and throws without.
+  ...jest.requireActual('@modules/platform/envEntry/envEntry.model'),
+  EnvEntryModel: { find: () => ({ lean: async () => imagekitEntries }) },
+}));
+
+const WORKING_IMAGEKIT = [
+  {
+    name: 'ImageKit',
+    config: {
+      public_key: 'public_test',
+      private_key: 'private_test',
+      url_endpoint: 'https://ik.imagekit.io/duncit',
+    },
+  },
+];
+
+let imagekitEntries: { name: string; config: Record<string, string> }[] = [...WORKING_IMAGEKIT];
+
 // getUploadSettingsSafe is the seam that decides whether the admin size/format
 // caps apply. Default = null (no DB, matches the un-mocked runtime); individual
 // tests override it with a fake row to exercise the setting-present branches.
@@ -20,13 +46,11 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 const mockSettings = getUploadSettingsSafe as jest.Mock;
 const mockEnv = getRuntimeEnvValue as jest.Mock;
 
-const setImagekitKeys = (pub: string, priv: string, url: string) =>
-  mockEnv.mockImplementation(async (key: string) => {
-    if (key === 'IMAGEKIT_PUBLIC_KEY') return pub;
-    if (key === 'IMAGEKIT_PRIVATE_KEY') return priv;
-    if (key === 'IMAGEKIT_URL_ENDPOINT') return url;
-    return 'test-value';
-  });
+const setImagekitKeys = (pub: string, priv: string, url: string) => {
+  imagekitEntries = [
+    { name: 'ImageKit', config: { public_key: pub, private_key: priv, url_endpoint: url } },
+  ];
+};
 
 const MB = 1024 * 1024;
 const videoBase64 = (bytes: number) => Buffer.alloc(bytes).toString('base64');
@@ -55,6 +79,10 @@ const mockImagekitOk = () =>
     ok: true,
     json: async () => ({ url: 'https://cdn/out', fileId: 'f1' }),
   } as any);
+
+beforeEach(() => {
+  imagekitEntries = [...WORKING_IMAGEKIT];
+});
 
 describe('upload unit', () => {
   it('getImagekitAuth requires authentication', async () => {

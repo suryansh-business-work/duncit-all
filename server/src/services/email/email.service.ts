@@ -218,6 +218,20 @@ export interface SendResult extends EmailDelivery {
 }
 
 /**
+ * How a completed delivery should be filed. SMTP accepts a message and refuses
+ * individual recipients in the same reply, so "the send did not throw" is not
+ * the same as "everyone got it" — a bad address inside a batch used to be
+ * recorded as SENT with nothing to show it was dropped.
+ */
+function deliveryOutcome(info: EmailDelivery): { status: 'SENT' | 'FAILED'; reason?: string } {
+  if (!info.rejected.length) return { status: 'SENT' };
+  const refused = `Refused by the mail server: ${info.rejected.join(', ')}`;
+  // Nobody accepted = nothing was delivered, whatever the provider returned.
+  if (!info.accepted.length) return { status: 'FAILED', reason: refused };
+  return { status: 'SENT', reason: refused };
+}
+
+/**
  * Send a templated email. THE method for anything with a template.
  *
  * Every outcome is recorded in the email log — sent, deliberately skipped, or
@@ -265,13 +279,18 @@ export async function sendEmail(opts: {
   // reaches a renderer or a provider — and is still on the record.
   if (!opts.to?.trim()) return notSent('No recipient address', 'FAILED');
 
-  const template = await emailTemplateService.bySlug(opts.template);
-  if (!template) return notSent(`Template "${opts.template}" does not exist`, 'FAILED');
-  if (template.is_active === false) {
-    return notSent(`Template "${opts.template}" is not active`, 'SKIPPED');
-  }
-
   try {
+    // Inside the try, not above it. `bySlug` reads Mongo and CREATES the row on
+    // a slug's first use, so it throws on an outage and on two sends racing the
+    // same new slug — and a throw here escaped the whole function, taking both
+    // the log row and the "does not throw" promise below with it. A password
+    // reset then failed as a GraphQL error after the OTP was already stored.
+    const template = await emailTemplateService.bySlug(opts.template);
+    if (!template) return notSent(`Template "${opts.template}" does not exist`, 'FAILED');
+    if (template.is_active === false) {
+      return notSent(`Template "${opts.template}" is not active`, 'SKIPPED');
+    }
+
     const brandLogoUrl = await getBrandLogoUrl();
     // Localized copy arrives as `t:<key>` vars, so templates pick it up through
     // the SAME {{ }} substitution as every other variable (rule 38). Caller vars
@@ -296,13 +315,15 @@ export async function sendEmail(opts: {
       attachments: opts.attachments,
     });
 
+    const outcome = deliveryOutcome(info);
     void emailLogService.record({
       to: opts.to,
       subject: rendered.subject || opts.subject,
       template: opts.template,
       fragment_key: template.fragment_key ?? null,
       category,
-      status: 'SENT',
+      status: outcome.status,
+      reason: outcome.reason,
       provider: info.provider,
       message_id: info.messageId,
       duration_ms: Date.now() - startedAt,
@@ -314,7 +335,9 @@ export async function sendEmail(opts: {
       provider: info.provider,
       messageId: info.messageId,
     });
-    return info;
+    // A send everyone refused is not a send. Callers read `skipped` to decide
+    // whether to tell a user their email is on the way.
+    return { ...info, skipped: outcome.status === 'FAILED' };
   } catch (error: any) {
     return notSent(error?.message || 'Send failed', 'FAILED');
   }
@@ -342,6 +365,13 @@ export async function sendHtmlEmail(opts: {
   category?: EmailCategory;
   /** A specific Tech-portal mailbox, for the CRM's "send as" picker. */
   provider_id?: string | null;
+  /**
+   * The template this HTML came from, when it came from one. A test send is
+   * raw HTML by the time it reaches here, and a log row that cannot say WHICH
+   * template was tested is a row nobody can use.
+   */
+  template?: string;
+  fragment_key?: string | null;
   /** Overrides the request's surface in the log (e.g. CRM, TEST). */
   source?: EmailLogSource;
   source_detail?: string;
@@ -353,6 +383,8 @@ export async function sendHtmlEmail(opts: {
   const failed = (reason: string): SendResult => {
     logs.server.warn('email', 'not-sent', { to: recipients.join(', '), reason });
     void emailLogService.record({
+      template: opts.template,
+      fragment_key: opts.fragment_key,
       to: recipients,
       bcc: opts.bcc,
       subject: opts.subject,
@@ -385,12 +417,16 @@ export async function sendHtmlEmail(opts: {
       opts.provider_id
     );
 
+    const outcome = deliveryOutcome(info);
     void emailLogService.record({
+      template: opts.template,
+      fragment_key: opts.fragment_key,
       to: recipients,
       bcc: opts.bcc,
       subject: opts.subject,
       category,
-      status: 'SENT',
+      status: outcome.status,
+      reason: outcome.reason,
       provider: info.provider,
       message_id: info.messageId,
       source: opts.source,
@@ -402,7 +438,9 @@ export async function sendHtmlEmail(opts: {
       provider: info.provider,
       messageId: info.messageId,
     });
-    return info;
+    // A send everyone refused is not a send. Callers read `skipped` to decide
+    // whether to tell a user their email is on the way.
+    return { ...info, skipped: outcome.status === 'FAILED' };
   } catch (error: any) {
     return failed(error?.message || 'Send failed');
   }

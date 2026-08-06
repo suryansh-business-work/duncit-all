@@ -12,7 +12,11 @@ import { EmailLogModel, type EmailLogSource, type EmailLogStatus } from './email
  */
 
 const EMAIL_LOG_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['to', 'subject', 'template', 'reason', 'message_id'],
+  // `bcc` is searched too, and it is not a nicety: a campaign goes out as one
+  // message per 50-recipient batch, addressed to the sending mailbox with the
+  // audience in bcc. Without it, "did this person get the campaign?" — the
+  // question the log exists to answer — has no answer for any bulk send.
+  searchFields: ['to', 'bcc', 'subject', 'template', 'reason', 'message_id'],
   sortFields: {
     to: 'to',
     subject: 'subject',

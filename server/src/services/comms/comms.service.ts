@@ -1,6 +1,5 @@
 import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
 import type { EnvCategory } from '@modules/platform/envEntry/envEntry.model';
-import { resolveEmailProvider } from '@services/email/email.provider';
 import { sendHtmlEmail } from '@services/email/email.service';
 
 /**
@@ -53,17 +52,10 @@ export const commsService = {
     // to call `provider.send()` directly, which skipped the shared logo swap,
     // the from-address fallback, the audit log line and — once it existed — the
     // email log. `provider_id` is what made that shortcut look necessary.
-    const resolved = await resolveEmailProvider(input.provider_id);
-    if (!resolved) return notConfigured('email', 'email');
-    if (!resolved.config.from) {
-      return {
-        ok: false,
-        provider: resolved.provider.name,
-        provider_id: resolved.entryId,
-        message: `${resolved.entryName} has no From address configured`,
-      };
-    }
-
+    //
+    // The entry is NOT resolved here first. It was, purely to name it in the
+    // result a lead row stores — a second read of the same document for a
+    // string the send already knows and now hands back.
     const attachments = (input.attachments ?? [])
       .filter((a) => a?.url)
       .map((a) => ({ filename: a.name || a.url.split('/').pop() || 'attachment', path: a.url }));
@@ -77,25 +69,26 @@ export const commsService = {
       provider_id: input.provider_id,
       attachments: attachments.length ? attachments : undefined,
       source: 'CRM',
-      source_detail: resolved.entryName,
+      source_detail: input.provider_id ?? '',
     });
 
-    // sendHtmlEmail never throws; it reports. Mirror that into CommsResult so
-    // a lead row records the failure rather than a green tick.
+    // sendHtmlEmail reports rather than throws, so a refusal has to be read
+    // off the result or a lead row would show a green tick for a send that
+    // never happened.
     if (info.skipped) {
       return {
         ok: false,
-        provider: resolved.provider.name,
-        provider_id: resolved.entryId,
-        message: `${resolved.entryName} email failed`,
+        provider: info.provider,
+        provider_id: info.entryId ?? null,
+        message: `${info.entryName || 'Email'} could not send to ${input.to} — see Emails > Logs`,
       };
     }
     return {
       ok: true,
       provider: info.provider,
-      provider_id: resolved.entryId,
+      provider_id: info.entryId ?? null,
       external_id: info.messageId || null,
-      message: `Email sent to ${input.to} via ${resolved.entryName}`,
+      message: `Email sent to ${input.to} via ${info.entryName || info.provider}`,
     };
   },
   /** Place a call via the selected/default TWILIO env entry. */

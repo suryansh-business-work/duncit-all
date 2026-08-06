@@ -1,4 +1,4 @@
-import mjml2html from 'mjml';
+import { renderTemplateBody } from '@modules/content/emailTemplate/emailTemplate.service';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -97,10 +97,9 @@ export async function sendAppReleaseEmail(
     deletions: input.deletions,
   });
 
-  const { html, errors } = mjml2html(mjml, { validationLevel: 'soft' }) as unknown as {
-    html: string;
-    errors: unknown[];
-  };
+  // Through the shared renderer, wrapped in the INTERNAL fragment: this goes to
+  // staff testers, and it was the last MJML in the server rendered its own way.
+  const { html, errors } = await renderTemplateBody({ mjml, fragment_key: 'internal' });
   if (errors?.length)
     logs.server.warn('appRelease', 'sendAppReleaseEmail', {
       msg: 'Release MJML warnings',

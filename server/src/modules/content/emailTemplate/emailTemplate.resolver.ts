@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import {
   emailTemplateService,
+  applyVars,
   detectVariables,
   renderTemplateBody,
 } from './emailTemplate.service';
@@ -144,12 +145,27 @@ export const emailTemplateResolvers = {
         // Through the shared provider layer, so a test goes out the same way a
         // real email does — this used to build a third nodemailer transport of
         // its own beside the two that were already consolidated.
-        await sendHtmlEmail({
+        const sent = await sendHtmlEmail({
           to: args.to,
-          subject: tpl.subject,
+          // Through applyVars, like a real send. A subject left raw showed a
+          // literal {{pod_title}} in every test email while the real one showed
+          // the value — the one line of an email you see before opening it.
+          subject: applyVars(tpl.subject, vars),
           html: rendered.html,
           category: 'internal',
+          // Named in the log, and filed as a TEST so someone checking their
+          // own work is never mistaken for a real send to a customer.
+          template: tpl.slug,
+          fragment_key: tpl.fragment_key,
+          source: 'TEST',
+          source_detail: tpl.slug,
         });
+        // sendHtmlEmail reports rather than throws, so a refusal has to be
+        // read off the result or this would claim success for a send that
+        // never happened.
+        if (sent.skipped) {
+          return { ok: false, message: 'Test email was not sent — see Emails > Logs' };
+        }
         return { ok: true, message: 'Test email sent' };
       } catch (e: any) {
         return { ok: false, message: e.message || 'Send failed' };

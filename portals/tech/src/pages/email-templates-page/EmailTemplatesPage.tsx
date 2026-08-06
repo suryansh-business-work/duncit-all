@@ -101,7 +101,8 @@ export default function EmailTemplatesPage() {
 
       <SendTestDialog
         open={testOpen}
-        templateId={editor.draft?.template_id ?? null}
+        template={editor.draft}
+        detected={editor.detected}
         varsJson={editor.varsJson}
         onClose={() => setTestOpen(false)}
         onResult={(kind, msg) => editor.setSnack({ kind, msg })}

@@ -170,15 +170,15 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
       'Your spot was filled',
       `A replacement booked your spot in "${pod.pod_title}". ${tail}`,
     );
-    const email = (user as any)?.auth?.email;
-    if (email) {
-      await sendBackoutSpotFilledEmail({
-        to: email,
-        name: fullName(user) || 'there',
-        pod_title: pod.pod_title ?? 'your pod',
-        refund_line: refundLine,
-      });
-    }
+    // Sent unconditionally: an empty address is recorded as a FAILED row
+    // naming this template, which is what tells someone the notice went
+    // nowhere. Guarding here made that invisible.
+    await sendBackoutSpotFilledEmail({
+      to: (user as any)?.auth?.email ?? '',
+      name: fullName(user) || 'there',
+      pod_title: pod.pod_title ?? 'your pod',
+      refund_line: refundLine,
+    });
   } catch (err) {
     logs.server.error('podMember', 'notifySpotFilled', { error: err, msg: '[backout] spot-filled notify failed' });
   }
@@ -197,16 +197,15 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
       'Refund processed',
       `Your backout refund of ${amount} for "${pod?.pod_title ?? 'your pod'}" has been processed.`,
     );
-    const email = (user as any)?.auth?.email;
-    if (email) {
-      await sendPodRefundEmail({
-        to: email,
-        name: fullName(user) || 'there',
-        pod_title: pod?.pod_title ?? 'your pod',
-        amount,
-        reason: `Backout ${request.backout_no} — spot filled`,
-      });
-    }
+    // Unconditional for the same reason as the spot-filled notice above: money
+    // moved, and "we could not tell them" belongs in the log.
+    await sendPodRefundEmail({
+      to: (user as any)?.auth?.email ?? '',
+      name: fullName(user) || 'there',
+      pod_title: pod?.pod_title ?? 'your pod',
+      amount,
+      reason: `Backout ${request.backout_no} — spot filled`,
+    });
   } catch (err) {
     logs.server.error('podMember', 'notifyRefundProcessed', { error: err, msg: '[backout] refund-processed notify failed' });
   }

@@ -416,29 +416,30 @@ export const hostService = {
 
     // Notify the host via the dynamic /email-templates system.
     // The template slug is conventional; admin can edit copy from the admin UI.
-    if (h.email) {
-      const slug = active ? 'host-activated' : 'host-deactivated';
-      try {
-        await sendEmail({
-          to: h.email,
-          subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
-          template: slug,
-          category: 'notification',
-          vars: {
-            host_name: h.full_name ?? '',
-            host_email: h.email ?? '',
-            status: active ? 'active' : 'deactivated',
-          },
-        });
-      } catch (err) {
-        // Email failures should not block the status change.
-        logs.server.warn('host.service', 'setActive', {
-          error: err,
-          slug,
-          host_email: h.email,
-          msg: `email failed for ${slug}`,
-        });
-      }
+    // Sent whether or not there is an address: sendEmail records a FAILED row
+    // for an empty recipient, so a status change nobody was told about is
+    // visible in Emails > Logs instead of leaving no trace at all.
+    const slug = active ? 'host-activated' : 'host-deactivated';
+    try {
+      await sendEmail({
+        to: h.email ?? '',
+        subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
+        template: slug,
+        category: 'notification',
+        vars: {
+          host_name: h.full_name ?? '',
+          host_email: h.email ?? '',
+          status: active ? 'active' : 'deactivated',
+        },
+      });
+    } catch (err) {
+      // Email failures should not block the status change.
+      logs.server.warn('host.service', 'setActive', {
+        error: err,
+        slug,
+        host_email: h.email,
+        msg: `email failed for ${slug}`,
+      });
     }
 
     return toPub(h);

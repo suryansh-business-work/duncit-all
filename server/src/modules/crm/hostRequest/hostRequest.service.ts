@@ -164,10 +164,11 @@ async function notifyHost(hostUserId: string, title: string, body: string) {
 
 /** Best-effort transactional email to the host for a lifecycle event. */
 async function emailHost(h: IHostRequest, slug: string, subject: string) {
-  if (!h.contact_email) return;
+  // No address check: sendEmail files an empty recipient as FAILED against this
+  // template, so an applicant we could not reach shows up in Emails > Logs.
   try {
     await sendEmail({
-      to: h.contact_email,
+      to: h.contact_email ?? '',
       subject,
       template: slug,
       category: 'notification',

@@ -377,8 +377,11 @@ async function podAudience(doc: any, excludeUserId: string) {
       user_id: String(u._id),
       email: u.auth?.email ?? '',
       name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'there',
-    }))
-    .filter((u: { email: string }) => !!u.email);
+    }));
+  // Attendees with no address are NOT filtered out. This audience is only ever
+  // used to email, and dropping them here meant a cancelled pod left no trace
+  // that someone was never told. The send records a FAILED row naming the
+  // template instead, which is the answer to "why didn't they hear from us?".
 }
 
 /** Who cancelled a pod — doubles as the refund metadata tag and the audit source. */
@@ -557,8 +560,9 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
     const owner = await UserModel.findById(venue.owner_user_id)
       .select('profile.first_name profile.last_name auth.email')
       .lean();
+    // No early return on a missing address: the send logs it as FAILED, and a
+    // venue nobody can reach about a slot request is worth seeing in the log.
     const to = (venue.owner_email || (owner as any)?.auth?.email || '').trim();
-    if (!to) return;
     const ownerName =
       (venue.owner_name ?? '').trim() ||
       `${(owner as any)?.profile?.first_name ?? ''} ${(owner as any)?.profile?.last_name ?? ''}`.trim() ||

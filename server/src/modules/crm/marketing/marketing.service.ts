@@ -11,7 +11,11 @@ import { NewsletterSubscriberModel } from '@modules/crm/newsletter/newsletter.mo
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import { applyVars, detectVariables, renderMjml } from '@modules/content/emailTemplate/emailTemplate.service';
+import {
+  applyVars,
+  detectVariables,
+  renderTemplateBody,
+} from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getMailConfigs, getUrlConfigs } from '@config/url-configs';
@@ -194,7 +198,10 @@ async function renderCampaign(input: {
 }) {
   const card = await findPreviewCard(input.card_type, input.card_ref_id);
   const vars = await campaignVars(card);
-  const rendered = renderMjml(input.mjml, vars);
+  // Wrapped in the MARKETING fragment — the one that carries the unsubscribe
+  // line. Campaigns rendered bare, which is the one category where a missing
+  // footer is a compliance problem rather than a cosmetic one.
+  const rendered = await renderTemplateBody({ mjml: input.mjml, fragment_key: 'marketing', vars });
   return {
     subject: applyVars(input.subject, vars),
     html: rendered.html,
@@ -296,13 +303,18 @@ async function sendCampaign(campaign_id: string) {
     // delivery signal plain SMTP gives us — a later bounce never comes back
     // here, it goes to the envelope sender's mailbox.
     const delivery = { accepted: 0, rejected: 0, rejected_addresses: [] as string[] };
-    for (const batch of chunk(recipients, 50)) {
+    const batches = chunk(recipients, 50);
+    for (const [index, batch] of batches.entries()) {
       const info = await sendHtmlEmail({
         to: campaignTo,
         bcc: batch,
         subject: rendered.subject,
         html: tracked.html,
         category: 'marketing',
+        // Named in the log. A campaign is the one send with no template slug,
+        // so without this its rows say only "marketing" and nobody can tell
+        // which campaign — or which batch of it — a refusal came from.
+        source_detail: `${doc.name || doc.campaign_id} (batch ${index + 1}/${batches.length})`,
       });
       delivery.accepted += info.accepted?.length ?? 0;
       delivery.rejected += info.rejected?.length ?? 0;

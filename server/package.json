@@ -43,7 +43,9 @@
     "migrate:drop-whatsapp-campaigns": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-whatsapp-campaigns.ts",
     "migrate:drop-whatsapp-campaigns:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-whatsapp-campaigns.ts --dry-run",
     "migrate:email-fragments": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-fragments.ts",
-    "migrate:email-fragments:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-fragments.ts --dry-run"
+    "migrate:email-fragments:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-fragments.ts --dry-run",
+    "migrate:club-admins": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-admin-profiles.ts",
+    "migrate:club-admins:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-admin-profiles.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

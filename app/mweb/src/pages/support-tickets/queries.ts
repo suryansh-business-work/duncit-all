@@ -60,6 +60,7 @@ export const CREATE_TICKET = gql`
   mutation CreateMyTicket($input: CreateTicketInput!) {
     createTicket(input: $input) {
       id
+      ticket_no
     }
   }
 `;

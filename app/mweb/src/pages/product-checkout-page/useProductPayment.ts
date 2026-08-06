@@ -13,12 +13,16 @@ import {
 import { parseApiError } from '../../utils/parseApiError';
 import type { CheckoutSession } from '../checkout-page/useCheckoutSession';
 import type { CoinRedemption } from '../checkout-page/useCoinRedemption';
+import type { RazorpayErrorLike } from '@duncit/utils';
+
 import { buildProductCheckoutInput } from './productCheckoutInput';
 
 interface Args {
   session: CheckoutSession;
   items: ProductCartItemInput[];
   coins: CoinRedemption;
+  /** Told what Razorpay said, so the page can explain it and open a ticket. */
+  onPaymentFailure: (error: RazorpayErrorLike | null) => void;
 }
 
 /**
@@ -26,7 +30,7 @@ interface Args {
  * gateway when configured (create order → hosted sheet → shared verify); the
  * dummy gateway is the local fallback. Never touches the pod-join engine.
  */
-export function useProductPayment({ session, items, coins }: Args) {
+export function useProductPayment({ session, items, coins, onPaymentFailure }: Args) {
   const [doDummy] = useMutation(DUMMY_PRODUCT_CHECKOUT);
   const [doRazorpay] = useMutation(CREATE_RAZORPAY_PRODUCT_ORDER);
 
@@ -57,7 +61,8 @@ export function useProductPayment({ session, items, coins }: Args) {
         session.setSubmitting(false);
         await openRazorpayCheckout(order as RazorpayOrderData, {
           onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
-          onDismiss: () => session.setError('Payment was cancelled.'),
+          // Every failure used to be reported as the buyer's own cancellation.
+          onFailure: onPaymentFailure,
         });
         return;
       }

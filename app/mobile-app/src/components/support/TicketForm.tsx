@@ -53,7 +53,7 @@ export function TicketForm({
     setSubmitting(true);
     setError('');
     try {
-      const id = await createTicket(
+      const { id } = await createTicket(
         subject.trim(),
         message.trim(),
         toServerCategory(category),

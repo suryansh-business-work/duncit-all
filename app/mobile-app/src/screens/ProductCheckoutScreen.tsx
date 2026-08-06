@@ -16,6 +16,7 @@ import {
   SavedAddressPicker,
 } from '@/components/checkout';
 import { ProductDetailSheet } from '@/components/details/ProductDetailSheet';
+import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import { MyAddressesDocument } from '@/graphql/address-book';
@@ -142,6 +143,12 @@ export function ProductCheckoutScreen() {
   const shippingTotal = quote?.total ?? 0;
   const amount = subtotal + shippingTotal;
   const breakup = buildBreakup(amount, finance);
+  // What an agent needs if a payment times out and a ticket has to be opened.
+  const paymentFailure = usePaymentFailure(() => ({
+    description: `Products (${items.length} line${items.length === 1 ? '' : 's'})`,
+    amount: breakup?.total ?? amount,
+    currencySymbol: breakup?.currency,
+  }));
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? (coupon.code ?? null) : null;
@@ -314,9 +321,22 @@ export function ProductCheckoutScreen() {
         order={order}
         open={!!order}
         onSuccess={finishVerify}
-        onDismiss={() => {
+        onFailure={(error) => {
+          // Close the sheet, then say what actually happened — every failure
+          // used to be reported as the buyer's own cancellation.
           setOrder(null);
-          setError('Payment was cancelled.');
+          void paymentFailure.report(error);
+        }}
+      />
+      <PaymentFailureDialog
+        failure={paymentFailure.failure}
+        ticketNo={paymentFailure.ticketNo}
+        ticketPending={paymentFailure.ticketPending}
+        ticketFailed={paymentFailure.ticketFailed}
+        onClose={paymentFailure.dismiss}
+        onRetry={() => {
+          paymentFailure.dismiss();
+          setError(null);
         }}
       />
       <ProcessingOverlay open={submitting} />

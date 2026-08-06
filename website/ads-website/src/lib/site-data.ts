@@ -31,7 +31,7 @@ async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): 
 
   const request = (async (): Promise<T | null> => {
     try {
-      const res = await fetch(urlConfigs.graphqlUrl, {
+      const res = await fetch(siteConfig.graphqlUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, variables }),

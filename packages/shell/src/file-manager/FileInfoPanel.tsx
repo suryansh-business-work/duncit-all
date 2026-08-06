@@ -1,6 +1,8 @@
-import { Box, Chip, Divider, Link, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Divider, Link, Stack, Typography } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import { formatBytes } from '@duncit/media-picker';
 import type { MediaItem } from './queries';
+import { downloadUrl, thumbUrl } from './transform';
 
 const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 
@@ -18,15 +20,54 @@ function Row({ label, value }: Readonly<{ label: string; value: string }>) {
 }
 
 /**
- * Everything ImageKit records about the file.
+ * Everything ImageKit records about the file, under a look at the file itself.
  *
  * The fileId and version are here because they are what a support conversation
  * with ImageKit actually needs, and there is nowhere else in the product to
  * read them.
  */
 export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
+  const isImage = file.fileType === 'image';
+
   return (
     <Stack spacing={1}>
+      {isImage && (
+        <Box
+          sx={{
+            height: 160,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'action.hover',
+            borderRadius: 1,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            component="img"
+            src={thumbUrl(file.url, 480)}
+            alt={file.name}
+            sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+          />
+        </Box>
+      )}
+
+      {/* ImageKit's own attachment flag rather than the `download` attribute,
+          which browsers ignore across origins — the file would open in a tab
+          instead of saving. */}
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<DownloadIcon />}
+        href={downloadUrl(file.url)}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Download
+      </Button>
+
+      <Divider sx={{ my: 0.5 }} />
+
       <Row label="Name" value={file.name} />
       <Row label="Path" value={file.filePath} />
       <Row label="Type" value={`${file.fileType ?? file.type}${file.mime ? ` · ${file.mime}` : ''}`} />

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
+  Autocomplete,
   Box,
   Button,
+  Chip,
   Divider,
   IconButton,
   Stack,
@@ -16,10 +18,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import CustomizePanel from './CustomizePanel';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
-import { EMPTY_TRANSFORM, type Transform } from './transform';
 
 interface Props {
   file: MediaItem;
@@ -42,7 +42,7 @@ interface Props {
   onNavigate?: (file: MediaItem) => void;
 }
 
-type TabKey = 'info' | 'customize' | 'edit';
+type TabKey = 'info' | 'edit';
 
 /**
  * One file, opened INSIDE the dialog rather than in a drawer over it.
@@ -52,9 +52,9 @@ type TabKey = 'info' | 'customize' | 'edit';
  * reading. This is a narrow column beside the grid instead, so the file you
  * came from is still on screen while you read the one you opened.
  *
- * Info is first because the commonest visit is "what is this and where is it";
- * Customize builds a link at the size you need; Edit is the only tab that
- * changes anything stored, and it is not shown to someone who cannot use it.
+ * Info is first because the commonest visit is "what is this and where is it".
+ * Edit is the only tab that changes anything stored, and it is not shown to
+ * someone who cannot use it.
  */
 export default function FileDetailsView({
   file,
@@ -68,19 +68,15 @@ export default function FileDetailsView({
   onNavigate,
 }: Readonly<Props>) {
   const [tab, setTab] = useState<TabKey>('info');
-  const [transform, setTransform] = useState<Transform>(EMPTY_TRANSFORM);
   const [name, setName] = useState(file.name);
-  const [tags, setTags] = useState(file.tags.join(', '));
+  const [tags, setTags] = useState<string[]>(file.tags);
   const [rename, renameState] = useMutation(RENAME_MEDIA_FILE);
   const [update, updateState] = useMutation(UPDATE_MEDIA_FILE);
 
   useEffect(() => {
-    // A different file means a fresh panel: carrying the previous file's crop
-    // over would hand someone a link to dimensions they never asked for.
-    setTransform(EMPTY_TRANSFORM);
     setTab('info');
     setName(file.name);
-    setTags(file.tags.join(', '));
+    setTags(file.tags);
   }, [file]);
 
   const busy = renameState.loading || updateState.loading;
@@ -105,9 +101,8 @@ export default function FileDetailsView({
   };
 
   const saveTags = async () => {
-    const next = tags.split(',').map((tag) => tag.trim()).filter(Boolean);
     try {
-      const res = await update({ variables: { fileId: file.fileId, tags: next } });
+      const res = await update({ variables: { fileId: file.fileId, tags } });
       onChanged(res.data.updateMediaFile);
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not save tags');
@@ -178,15 +173,11 @@ export default function FileDetailsView({
         sx={{ minHeight: 36 }}
       >
         <Tab value="info" label="Info" sx={{ minHeight: 36, minWidth: 0, px: 1 }} />
-        <Tab value="customize" label="Customize" sx={{ minHeight: 36, minWidth: 0, px: 1 }} />
         {canWrite && <Tab value="edit" label="Edit" sx={{ minHeight: 36, minWidth: 0, px: 1 }} />}
       </Tabs>
       <Divider sx={{ mb: 2 }} />
 
       {tab === 'info' && <FileInfoPanel file={file} />}
-      {tab === 'customize' && (
-        <CustomizePanel url={file.url} value={transform} onChange={setTransform} onCopy={onCopy} />
-      )}
       {tab === 'edit' && canWrite && (
         <Stack spacing={2}>
           <Stack spacing={1} alignItems="flex-start">
@@ -203,13 +194,29 @@ export default function FileDetailsView({
             </Button>
           </Stack>
           <Stack spacing={1} alignItems="flex-start">
-            <TextField
+            <Autocomplete
+              multiple
+              freeSolo
               fullWidth
               size="small"
-              label="Tags"
+              options={[]}
               value={tags}
-              onChange={(event) => setTags(event.target.value)}
-              helperText="Comma separated. Tags are searchable in ImageKit."
+              onChange={(_event, next) => setTags(next.map((tag) => String(tag).trim()).filter(Boolean))}
+              renderTags={(value, getTagProps) =>
+                value.map((tag, index) => {
+                  // getTagProps supplies the key; spreading it after an explicit
+                  // one would let React's own win and break deletion.
+                  const { key, ...rest } = getTagProps({ index });
+                  return <Chip key={key} size="small" label={tag} {...rest} />;
+                })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Tags"
+                  helperText="Type and press Enter. Tags are searchable in ImageKit."
+                />
+              )}
             />
             <Button size="small" onClick={saveTags} disabled={busy}>
               Save

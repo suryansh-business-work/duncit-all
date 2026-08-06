@@ -40,6 +40,24 @@ const show = (active: MediaItem, siblings: MediaItem[], onNavigate = vi.fn()) =>
   return onNavigate;
 };
 
+describe('FileDetailsView info', () => {
+  it('shows the image and a download that actually saves it', () => {
+    show(file(1), []);
+    expect(screen.getByAltText('photo-1.jpg')).toBeInTheDocument();
+    // ImageKit's attachment flag, not the download attribute — that one is
+    // ignored across origins and the file would open in a tab instead.
+    expect(screen.getByRole('link', { name: /download/i })).toHaveAttribute(
+      'href',
+      'https://ik.test/photo-1.jpg?ik-attachment=true'
+    );
+  });
+
+  it('has no Customize tab', () => {
+    show(file(1), []);
+    expect(screen.queryByRole('tab', { name: 'Customize' })).not.toBeInTheDocument();
+  });
+});
+
 describe('FileDetailsView stepper', () => {
   it('walks the ticked files without going back to the grid', () => {
     const files = [file(1), file(2), file(3)];
@@ -69,5 +87,22 @@ describe('FileDetailsView stepper', () => {
     const only = file(1);
     show(only, [only]);
     expect(screen.queryByRole('button', { name: 'Next selected file' })).not.toBeInTheDocument();
+  });
+});
+
+describe('FileDetailsView tags', () => {
+  it('edits tags as chips, so dropping one does not mean retyping the rest', () => {
+    const tagged = { ...file(1), tags: ['hero', 'banner'] };
+    render(
+      <MockedProvider mocks={[]}>
+        <FileDetailsView {...props} canWrite file={tagged} />
+      </MockedProvider>
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Edit' }));
+
+    // Each tag is its own chip with its own delete, not one comma-joined string.
+    expect(screen.getByText('hero')).toBeInTheDocument();
+    expect(screen.getByText('banner')).toBeInTheDocument();
+    expect(screen.getAllByTestId('CancelIcon')).toHaveLength(2);
   });
 });

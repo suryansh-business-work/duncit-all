@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -124,7 +125,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
           onRefresh={() => void manager.refetch()}
         />
 
-        {manager.uploading && <LinearProgress sx={{ mb: 2 }} />}
+        {(manager.uploading || manager.loading) && <LinearProgress sx={{ mb: 2 }} />}
         {manager.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {manager.error}
@@ -136,7 +137,13 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
             {manager.search ? `Nothing matches “${manager.search}”.` : 'Nothing uploaded yet.'}
           </Typography>
         ) : (
-          <Box sx={GRID_SX}>
+          <Box
+            sx={{
+              ...GRID_SX,
+              opacity: manager.loading ? 0.5 : 1,
+              transition: (theme) => theme.transitions.create('opacity'),
+            }}
+          >
             {manager.files.map((file) => (
               <FileCard
                 key={file.fileId}
@@ -150,20 +157,32 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
           </Box>
         )}
 
-        <Stack direction="row" spacing={1} justifyContent="center" sx={{ pt: 3 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ pt: 3 }}
+        >
           <Button
             size="small"
-            disabled={manager.page === 0}
+            disabled={manager.page === 0 || manager.loading}
             onClick={() => manager.setPage(manager.page - 1)}
           >
             Previous
           </Button>
-          <Typography variant="body2" sx={{ alignSelf: 'center' }}>
-            {manager.page * PAGE_SIZE + 1}–{manager.page * PAGE_SIZE + manager.files.length}
-          </Typography>
+          {/* The spinner sits in the pager, where the click was — a bar at the
+              top of a scrolled dialog is somewhere nobody is looking. */}
+          {manager.loading ? (
+            <CircularProgress size={18} />
+          ) : (
+            <Typography variant="body2">
+              {manager.page * PAGE_SIZE + 1}–{manager.page * PAGE_SIZE + manager.files.length}
+            </Typography>
+          )}
           <Button
             size="small"
-            disabled={!manager.hasMore}
+            disabled={!manager.hasMore || manager.loading}
             onClick={() => manager.setPage(manager.page + 1)}
           >
             Next

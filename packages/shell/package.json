@@ -14,6 +14,7 @@
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",

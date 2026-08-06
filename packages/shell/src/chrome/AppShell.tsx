@@ -5,6 +5,7 @@ import { tokens } from '@duncit/theme';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import type { AppNavItem, SearchItem } from '../types';
 import { AppHeader } from './AppHeader';
+import type { ShellTool } from './AppsDrawer/tools';
 import { AppSidebar } from './AppSidebar';
 import type { ShellUser } from './user-display';
 
@@ -35,6 +36,8 @@ export interface AppShellProps {
   onDenied?: () => void;
   /** Route-segment → label overrides for the breadcrumbs. */
   breadcrumbLabelMap?: Record<string, string>;
+  /** Extra entries for the header's apps drawer, beside the platform's own. */
+  tools?: ShellTool[];
   children: ReactNode;
 }
 
@@ -50,6 +53,7 @@ export function AppShell({
   loading,
   onDenied,
   breadcrumbLabelMap,
+  tools,
   children,
 }: Readonly<AppShellProps>) {
   const navigate = useNavigate();
@@ -124,6 +128,7 @@ export function AppShell({
           profileTo={profileTo}
           onLogout={onLogout}
           onOpenMobileNav={() => setMobileOpen(true)}
+          tools={tools}
         />
         <BreadcrumbProvider>
           <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />

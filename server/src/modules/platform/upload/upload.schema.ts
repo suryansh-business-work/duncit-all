@@ -81,6 +81,33 @@ export const uploadTypeDefs = /* GraphQL */ `
     error: String
   }
 
+
+  """
+  One file (or folder) in the ImageKit media library.
+
+  Nothing about it is stored here — it is ImageKit's record, read through the
+  private key, which is why the browser cannot ask for it directly.
+  """
+  type MediaItem {
+    fileId: ID!
+    name: String!
+    filePath: String!
+    url: String!
+    thumbnail: String
+    "file or folder."
+    type: String!
+    "image or non-image, as ImageKit classifies it."
+    fileType: String
+    mime: String
+    size: Int!
+    width: Int
+    height: Int
+    tags: [String!]!
+    createdAt: String
+    updatedAt: String
+    versionId: String
+  }
+
   extend type Query {
     pexelsSearch(query: String, page: Int, perPage: Int, orientation: String): PexelsSearchResult!
     pexelsSearchVideos(
@@ -89,6 +116,21 @@ export const uploadTypeDefs = /* GraphQL */ `
       perPage: Int
       orientation: String
     ): PexelsVideoSearchResult!
+    """
+    A page of the media library. Search matches the file name, fileType is
+    image or non-image, and sort takes ImageKit's own values (DESC_CREATED
+    by default).
+    """
+    mediaFiles(
+      search: String
+      path: String
+      fileType: String
+      skip: Int
+      limit: Int
+      sort: String
+    ): [MediaItem!]!
+    "Everything ImageKit knows about one file — the details panel."
+    mediaFile(fileId: ID!): MediaItem!
     "Poll a running FFmpeg compression job for its real progress percentage."
     videoCompressionJob(job_id: String!): VideoCompressionJob!
   }
@@ -100,6 +142,16 @@ export const uploadTypeDefs = /* GraphQL */ `
     the server.
     """
     getImagekitAuth: ImagekitAuth!
+
+    "Delete files by id. Returns how many ImageKit actually removed."
+    deleteMediaFiles(fileIds: [ID!]!): Int!
+    "Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in."
+    renameMediaFile(fileId: ID!, newFileName: String!, purgeCache: Boolean): MediaItem!
+    "Tags, and the focus rectangle a smart crop uses."
+    updateMediaFile(fileId: ID!, tags: [String!], customCoordinates: String): MediaItem!
+    "Drop a URL from ImageKit's CDN cache, after replacing what sits behind it."
+    purgeMediaCache(url: String!): String!
+
 
     """
     Server-side import of a remote image (e.g. a Pexels stock photo) into our

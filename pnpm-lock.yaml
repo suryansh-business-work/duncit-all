@@ -1087,6 +1087,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../media-picker
       '@duncit/theme':
         specifier: workspace:*
         version: link:../theme

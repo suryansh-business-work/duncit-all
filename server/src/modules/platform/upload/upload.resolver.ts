@@ -9,7 +9,16 @@ import {
 import { getVideoCompressionJob, startVideoCompression } from './videoCompression';
 import type { CropRect } from './mediaProcessing';
 import type { GraphQLContext } from '@context';
-import { requireAuth } from '@middleware/rbac';
+import { requireAuth, requireRole } from '@middleware/rbac';
+import { mediaLibraryService } from './mediaLibrary.service';
+
+/**
+ * Anyone signed in may browse and upload — the file manager is a shared drawer
+ * in every portal's header. Changing or destroying what is already there is a
+ * different act: a file is used by whoever linked it, and its URL does not say
+ * who that is.
+ */
+const MEDIA_WRITE_ROLES = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
 export const uploadResolvers = {
   Query: {
@@ -39,6 +48,25 @@ export const uploadResolvers = {
         orientation: args.orientation,
       });
     },
+    mediaFiles: (
+      _p: unknown,
+      args: {
+        search?: string | null;
+        path?: string | null;
+        fileType?: string | null;
+        skip?: number | null;
+        limit?: number | null;
+        sort?: string | null;
+      },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return mediaLibraryService.list(args);
+    },
+    mediaFile: (_p: unknown, args: { fileId: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return mediaLibraryService.byId(args.fileId);
+    },
     videoCompressionJob: (_p: unknown, args: { job_id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return getVideoCompressionJob(args.job_id);
@@ -48,6 +76,30 @@ export const uploadResolvers = {
     getImagekitAuth: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return getImagekitAuth();
+    },
+    deleteMediaFiles: (_p: unknown, args: { fileIds: string[] }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, MEDIA_WRITE_ROLES);
+      return mediaLibraryService.remove(args.fileIds ?? [], user);
+    },
+    renameMediaFile: (
+      _p: unknown,
+      args: { fileId: string; newFileName: string; purgeCache?: boolean | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, MEDIA_WRITE_ROLES);
+      return mediaLibraryService.rename(args.fileId, args.newFileName, args.purgeCache === true);
+    },
+    updateMediaFile: (
+      _p: unknown,
+      args: { fileId: string; tags?: string[] | null; customCoordinates?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, MEDIA_WRITE_ROLES);
+      return mediaLibraryService.update(args.fileId, args);
+    },
+    purgeMediaCache: (_p: unknown, args: { url: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, MEDIA_WRITE_ROLES);
+      return mediaLibraryService.purge(args.url);
     },
     importRemoteImageToImagekit: (
       _p: unknown,

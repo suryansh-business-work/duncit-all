@@ -33,6 +33,7 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 # packages by design. The install is frozen-lockfile across the WHOLE
 # workspace though, so its manifest still has to exist here.
 COPY packages/brand/package.json ./packages/brand/
+COPY packages/communication/package.json ./packages/communication/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

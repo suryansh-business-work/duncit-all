@@ -1,0 +1,225 @@
+---
+name: '@duncit/communication'
+summary: 'Provider-agnostic messaging. One typed WhatsApp API — AiSensy today, Meta Cloud API or Twilio tomorrow — with validation, retries and redacted logging built in.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'server (mirrored, see "Why the server does not import this")'
+exports:
+  - 'createCommunication'
+  - 'createWhatsAppChannel'
+  - 'assertValidSendOptions'
+  - 'AiSensyProvider'
+  - 'HttpTransport'
+  - 'DEFAULT_RETRY'
+  - 'isRetryableStatus'
+  - 'redact'
+  - 'CommunicationError'
+  - 'CommunicationValidationError'
+  - 'CommunicationConfigError'
+  - 'CommunicationProviderError'
+---
+
+# @duncit/communication
+
+Sending a WhatsApp message is one line. Which vendor carries it is a config
+detail, and swapping that vendor must not touch a single call site.
+
+```ts
+import { createCommunication } from '@duncit/communication';
+
+const communication = createCommunication({
+  whatsapp: { aisensy: { apiKey: process.env.AISENSY_API_KEY! } },
+});
+
+await communication.whatsapp.utility.send({
+  campaign: 'booking_confirmation',
+  to: '+919876543210',
+  name: 'Suryansh',
+  variables: ['POD-1021', '₹299'],
+});
+```
+
+## The shape
+
+Three layers, and each one only knows about the one below it:
+
+| Layer     | File                   | Knows about                                                 |
+| --------- | ---------------------- | ----------------------------------------------------------- |
+| Channel   | `whatsapp.ts`          | What a valid message is. Nothing about HTTP or any vendor.  |
+| Provider  | `providers/aisensy.ts` | One vendor's field names and its idea of success.           |
+| Transport | `transport.ts`         | HTTP, retries, timeouts, redaction. Nothing about WhatsApp. |
+
+That split is the whole point. `whatsapp.ts` has no `fetch` in it, so a new
+provider is a new file in `providers/` and nothing else moves.
+
+## The four categories
+
+Meta prices and rate-limits WhatsApp by template category, so the API says which
+one a message is:
+
+```ts
+await communication.whatsapp.utility.send({ … });        // order updates, tickets
+await communication.whatsapp.marketing.send({ … });      // offers, launches
+await communication.whatsapp.authentication.send({ … }); // OTPs
+await communication.whatsapp.service.send({ … });        // replies inside a 24h window
+```
+
+Each is the same `send`, with `category` filled in. `communication.whatsapp.send()`
+is there for a caller that carries its own category — or none.
+
+## Every option
+
+```ts
+interface WhatsAppSendOptions {
+  campaign: string; // required — the approved template/campaign name
+  to: string; // required — E.164, e.g. '+919876543210'
+  name?: string; // defaults to `to`; AiSensy rejects a blank one
+  variables?: (string | number)[]; // positional template placeholders
+  media?: { url: string; filename?: string };
+  source?: string; // where the send came from, for the vendor's reporting
+  tags?: string[];
+  attributes?: Record<string, string | number | boolean>;
+  category?: WhatsAppCategory;
+}
+```
+
+## What it refuses to send
+
+Validation runs before the provider is ever reached, so a bad message costs
+nothing and the error names the field:
+
+- a blank `campaign` or `to`
+- a `to` that is not E.164 — **`'9876543210'` is the common mistake**, it needs
+  the `+91`
+- a `variables` entry that is empty or null. WhatsApp renders a blank
+  placeholder as a gap in the customer's message; catching it here is the
+  difference between "Your pod is confirmed" and an error in a log.
+- `media` with no `url`
+
+```ts
+try {
+  await communication.whatsapp.send({ campaign: 'c', to: '9876543210' });
+} catch (error) {
+  if (error instanceof CommunicationValidationError) {
+    error.field; // 'to'
+  }
+}
+```
+
+## The errors
+
+| Class                          | When                                 | `retryable` |
+| ------------------------------ | ------------------------------------ | ----------- |
+| `CommunicationValidationError` | the message was never sendable       | `false`     |
+| `CommunicationConfigError`     | no provider, or no API key           | `false`     |
+| `CommunicationProviderError`   | the vendor refused or never answered | depends     |
+
+`retryable` is the field to branch on. A rejected key or an unapproved template
+returns `false` — sending it again just burns the rate limit. A 429 or a 5xx
+returns `true`.
+
+## Retries and timeouts
+
+The transport retries on its own for 408, 429 and 5xx, and for a thrown network
+error. Backoff doubles from 300 ms and is capped:
+
+```ts
+createCommunication({
+  whatsapp: {
+    aisensy: {
+      apiKey: key,
+      retry: { attempts: 5, backoffMs: 500, maxBackoffMs: 8000 },
+      timeoutMs: 20_000, // per attempt, not for the whole call
+    },
+  },
+});
+```
+
+A 4xx is never retried — the same request fails the same way.
+
+## Logging
+
+Pass a `logger` and you get a `request`, a `response` and an `error` event per
+attempt, with the duration. **Secrets are redacted before the event is built**,
+which matters here because AiSensy carries its API key in the request _body_,
+not a header:
+
+```ts
+createCommunication({
+  whatsapp: {
+    aisensy: {
+      apiKey: key,
+      logger: (event) => logs.server.info('aisensy', event.phase, { ...event }),
+      // event.detail.body → { apiKey: '[redacted]', campaignName: 'welcome' }
+    },
+  },
+});
+```
+
+A logger that throws is swallowed. Losing a log line must never lose a message.
+
+## A key that rotates
+
+`apiKey` and `baseUrl` each take a value **or a getter**. The getter form is
+what lets a key rotated in the Tech portal apply without a restart:
+
+```ts
+createCommunication({
+  whatsapp: {
+    aisensy: {
+      apiKey: () => getRuntimeEnvValue('AISENSY_API_KEY'),
+      baseUrl: () => getRuntimeEnvValue('AISENSY_BASE_URL'),
+    },
+  },
+});
+```
+
+## Adding a provider
+
+Implement three members. Nothing else in the package changes, and no call site
+changes:
+
+```ts
+import type { WhatsAppProvider } from '@duncit/communication';
+
+export class MetaCloudProvider implements WhatsAppProvider {
+  readonly name = 'meta-cloud';
+  async isConfigured() {
+    return Boolean(this.token);
+  }
+  async send(options) {
+    /* map options → Meta's payload, return { messageId, provider, raw } */
+  }
+}
+
+const communication = createCommunication({
+  whatsapp: { provider: new MetaCloudProvider(config) },
+});
+```
+
+An injected `provider` wins over `aisensy` when both are given — which is also
+how a test swaps in a fake without touching the network.
+
+## Two things AiSensy does that cost people a day
+
+1. **Success is the string `"true"`.** AiSensy answers HTTP 200 with
+   `{ success: "false", message: "Template not approved" }`. Checking `res.ok`
+   alone reports every rejected template as a delivered message. The provider
+   checks the flag.
+2. **No `+` on the destination.** The package's contract is E.164 everywhere;
+   the provider strips the plus on the way out, so the vendor's quirk never
+   leaks into a call site.
+
+## Why the server does not import this
+
+`server/src` imports zero `@duncit/*` packages by design (project rule 40) — it
+runs compiled `dist` on plain Node, where a source-only workspace package does
+not resolve. `server/src/modules/platform/aisensy/` is a self-contained mirror
+of this design: the same provider/transport split, the same retry rules, the
+same "success is a string" check, in the server's own idioms and errors. Same
+precedent as `@duncit/slack`.
+
+**Change one, change the other.** The pair is small on purpose.

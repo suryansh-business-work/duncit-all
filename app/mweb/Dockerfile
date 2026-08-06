@@ -55,6 +55,7 @@ COPY packages/onboarding/package.json ./packages/onboarding/
 COPY packages/tours/package.json ./packages/tours/
 COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
 COPY packages/brand/package.json ./packages/brand/
+COPY packages/communication/package.json ./packages/communication/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

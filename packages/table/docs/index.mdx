@@ -295,6 +295,7 @@ await fetchRows(payoutQuery);
 | `searchPlaceholder` | `string` | no | — | Search box placeholder. |
 | `refetchRef` | `MutableRefObject<(() => void) \| null>` | no | — | Filled with the table's `refetch` so a parent can reload after a mutation. |
 | `externalFilters` | `ReadonlyArray<TableFilterValue>` | no | — | Page-driven filters (tab/URL/select). Compared by value, reset to page 1, **no chip**. |
+| `selection` | `{ onChange: (rows: T[]) => void; clearRef?: MutableRefObject<(() => void) \| null> }` | no | — | Opt in to a checkbox column. Absent means no selection config reaches AG Grid at all. `onChange` gets the rows ticked **right now** (and `[]` when a page change wipes them); `clearRef` is filled with a fn that unticks the grid. See [Selection is per page, and it is a mirror](#selection-is-per-page-and-it-is-a-mirror). |
 
 ### Data types
 
@@ -370,6 +371,61 @@ Both narrow the query, and picking the wrong one produces a UI the user cannot e
 `ApolloTableFetchOptions.extraFilters` is the third variant: pinned filters applied inside the
 fetch bridge, invisible to the table entirely. Use it for scoping the user must never see or
 alter (tenant, ownership).
+
+## Selection is per page, and it is a mirror
+
+Passing `selection` adds AG Grid's own checkbox column. Leaving it off is the default and
+costs the other tables nothing: with no prop, no `rowSelection` and no `onSelectionChanged`
+reach the grid at all.
+
+```tsx
+const clearRef = useRef<(() => void) | null>(null);
+const [selected, setSelected] = useState<EmailLogRow[]>([]);
+
+<DuncitTable<EmailLogRow>
+  …
+  selection={{ onChange: setSelected, clearRef }}
+/>;
+
+// after a bulk delete:
+await deleteEmailLogs({ variables: { ids: selected.map((row) => row.id) } });
+clearRef.current?.();
+refetchRef.current?.();
+```
+
+`onChange` hands you **the rows ticked right now**, and `useState` is the whole of the
+correct parent state. Do not accumulate ids into a `Set` across pages. `DuncitTable` always
+sets `getRowId`, so AG Grid runs its immutable update path and retention is BY ID: when new
+rows arrive it deletes the nodes whose ids are gone, deselects those, and fires
+`selectionChanged` with source `rowDataChanged`. A page turn drops the ticks and calls
+`onChange` again — with `[]` when nothing survived. A `refetch()` that returns the same ids
+keeps them ticked and fires nothing at all, so the objects you are holding are the
+pre-refetch ones: act on their ids, not on the rest of their fields. An
+accumulator would keep reporting "47 selected" while the grid shows 25 rows, and the bulk
+action would hit rows the operator never saw. Selection is per page; if you need to act on
+more, filter down and act page by page.
+
+`clearRef` mirrors `refetchRef`: the table fills it, the parent calls it. It calls
+`deselectAll()` on the grid, which is the only thing that actually unticks the checkboxes —
+resetting the parent's array on its own leaves them checked. The deselect fires
+`selectionChanged` too, so the parent's array empties through `onChange` and needs no second
+reset. Like `refetchRef` it is nulled on unmount.
+
+The header checkbox is **not** "select all". AG Grid's client-side row model only holds the
+rows the server returned for the current page, so every `SelectAllMode` ticks that page.
+Label it accordingly on screen.
+
+Row clicks and ticks coexist: `enableClickSelection` stays at AG Grid's default `false`, and
+`onRowClick` ignores anything inside the selection column. The checkbox stops propagation on
+its own, but it is a 16px input in a 50px cell — without the column-level guard, aiming at
+the tick box and missing would open your drawer with nothing selected.
+
+Do not hand-roll a checkbox as a `DuncitColumn.cellRenderer`. `buildColDefs` marks renderer
+columns never-equal to force repaints, so a checkbox driven by parent React state renders
+stale ticks; AG Grid's generated selection column (`ag-Grid-SelectionColumn`) repaints off the
+row node's own `rowSelected` event and is immune. Note also that AG Grid 34 removed
+`rowSelection="multiple"`, `colDef.checkboxSelection` and `headerCheckboxSelection` — the
+object form is the only API left.
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

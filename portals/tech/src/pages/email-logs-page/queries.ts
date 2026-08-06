@@ -90,7 +90,28 @@ export const EMAIL_LOG_STATS = gql`
       skipped
       failed
       total
+      all_time_total
     }
+  }
+`;
+
+export const DELETE_EMAIL_LOGS = gql`
+  mutation DeleteEmailLogs($ids: [ID!]!) {
+    deleteEmailLogs(ids: $ids)
+  }
+`;
+
+/**
+ * Deletes the whole collection, not the filtered view.
+ *
+ * The table's filters live inside the table, the search box is debounced behind
+ * what is being typed, and the row count on screen came from an earlier fetch —
+ * a filter-scoped wipe would name one number in its confirm and remove another.
+ * Deleting by ticked id is the scoped half of this; this half is all of it.
+ */
+export const DELETE_ALL_EMAIL_LOGS = gql`
+  mutation DeleteAllEmailLogs {
+    deleteAllEmailLogs
   }
 `;
 

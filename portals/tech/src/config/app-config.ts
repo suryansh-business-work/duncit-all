@@ -30,6 +30,9 @@ export const appConfig = {
       label: 'Emails',
       icon: 'email',
       children: [
+        // First, like Telemetry's: the board is where you look before you know
+        // which template or which row you are after.
+        { label: 'Dashboard', to: '/emails/dashboard', icon: 'dashboard' },
         { label: 'Templates', to: '/emails/templates', icon: 'description' },
         { label: 'Fragments', to: '/emails/fragments', icon: 'widgets' },
         { label: 'Logs', to: '/emails/logs', icon: 'article' },

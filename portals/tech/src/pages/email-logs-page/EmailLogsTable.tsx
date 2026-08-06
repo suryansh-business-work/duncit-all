@@ -1,4 +1,4 @@
-import { useMemo, type MutableRefObject } from 'react';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import {
@@ -14,6 +14,17 @@ interface Props {
   refetchRef: MutableRefObject<(() => void) | null>;
   /** Opens the row's drawer — the body it sent, and what filled it in. */
   onRowClick: (row: EmailLogRow) => void;
+  /**
+   * @duncit/table's selection contract: `onChange` is handed the rows ticked on
+   * this page, and `clearRef` is filled with a "drop the ticks" fn. AG Grid's own
+   * checkbox stops the click before the row handler sees it, so ticking a row
+   * never also opens the drawer above.
+   */
+  selection: {
+    onChange: (rows: EmailLogRow[]) => void;
+    clearRef: MutableRefObject<(() => void) | null>;
+  };
+  toolbarActions?: ReactNode;
 }
 
 const getRowId = (row: EmailLogRow) => row.id;
@@ -68,7 +79,13 @@ const renderSource = (row: EmailLogRow) => (
   </Tooltip>
 );
 
-export default function EmailLogsTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
+export default function EmailLogsTable({
+  fetchRows,
+  refetchRef,
+  onRowClick,
+  selection,
+  toolbarActions,
+}: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<EmailLogRow>[]>(
     () => [
       dateColumn<EmailLogRow>({
@@ -161,6 +178,8 @@ export default function EmailLogsTable({ fetchRows, refetchRef, onRowClick }: Re
       searchPlaceholder="Search recipient, subject, template or reason"
       refetchRef={refetchRef}
       onRowClick={onRowClick}
+      selection={selection}
+      toolbarActions={toolbarActions}
     />
   );
 }

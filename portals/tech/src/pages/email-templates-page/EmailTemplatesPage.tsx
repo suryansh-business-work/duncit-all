@@ -70,6 +70,8 @@ export default function EmailTemplatesPage() {
             previewErrors={editor.previewErrors}
             detected={editor.detected}
             fragmentOptions={editor.fragmentOptions}
+            fragmentsLoading={editor.fragmentsLoading}
+            fragmentsError={editor.fragmentsError}
             varsJson={editor.varsJson}
             setVarsJson={editor.setVarsJson}
             onValidate={editor.validateMjml}

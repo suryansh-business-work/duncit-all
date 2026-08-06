@@ -18,7 +18,11 @@ export function useEmailTemplateEditor() {
   const { data, loading, refetch } = useQuery<{ emailTemplates: Tpl[] }>(TEMPLATES, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data: fragmentData } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
+  const {
+    data: fragmentData,
+    loading: fragmentsLoading,
+    error: fragmentsError,
+  } = useQuery<{ emailFragments: FragmentOption[] }>(FRAGMENT_OPTIONS);
   const [updateTpl] = useMutation(UPDATE);
   const [deleteTpl] = useMutation(DELETE);
   const client = useApolloClient();
@@ -164,6 +168,8 @@ export function useEmailTemplateEditor() {
     previewErrors,
     detected,
     fragmentOptions,
+    fragmentsLoading,
+    fragmentsError: fragmentsError?.message ?? null,
     varsJson,
     setVarsJson,
     busy,

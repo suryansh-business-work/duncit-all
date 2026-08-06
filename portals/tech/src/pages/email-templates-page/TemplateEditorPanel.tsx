@@ -17,6 +17,8 @@ interface Props {
   detected: string[];
   /** The nine header/footer fragments, fetched once by the page's hook. */
   fragmentOptions: FragmentOption[];
+  fragmentsLoading?: boolean;
+  fragmentsError?: string | null;
   varsJson: string;
   setVarsJson: (v: string) => void;
   onValidate: () => void;
@@ -38,6 +40,8 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
     previewErrors,
     detected,
     fragmentOptions,
+    fragmentsLoading,
+    fragmentsError,
     varsJson,
     setVarsJson,
     onValidate,
@@ -76,6 +80,8 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
         <FragmentPicker
           value={draft.fragment_key}
           options={fragmentOptions}
+          loading={fragmentsLoading}
+          error={fragmentsError}
           onChange={(fragment_key) => setDraft({ ...draft, fragment_key })}
         />
       </Stack>

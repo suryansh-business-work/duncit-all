@@ -80,13 +80,21 @@ export const podMemberResolvers = {
       const uid = requireUser(ctx);
       return podMemberService.joinFree(args.pod_doc_id, uid, args.referral_token, args.seats ?? 1);
     },
-    backoutPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+    backoutPod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; seats?: number | null },
+      ctx: GraphQLContext
+    ) => {
       const uid = requireUser(ctx);
-      return podMemberService.backout(args.pod_doc_id, uid);
+      return podMemberService.backout(args.pod_doc_id, uid, args.seats);
     },
-    cancelBackoutPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+    cancelBackoutPod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; backout_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const uid = requireUser(ctx);
-      return podMemberService.cancelBackout(args.pod_doc_id, uid);
+      return podMemberService.cancelBackout(args.pod_doc_id, uid, args.backout_id);
     },
     redeemPodReferral: async (_p: unknown, args: { token: string }, ctx: GraphQLContext) => {
       const uid = requireUser(ctx);

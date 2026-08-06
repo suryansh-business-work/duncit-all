@@ -70,7 +70,10 @@ export {
   payableSpots,
   seatOptions,
   payingAttendees,
+  podSeatsTaken,
+  podSpotsLeft,
   spotsBounds,
+  type PodSeatCounts,
   type SpotsBounds,
 } from './pod-spots';
 export {

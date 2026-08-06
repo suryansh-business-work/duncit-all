@@ -51,7 +51,13 @@ export default function CheckoutPage() {
   // Seats ride in from Pod Details. The ticket price multiplies; the server
   // re-prices and re-checks capacity, so this is a preview, never the charge.
   const seats = Math.max(1, Number(state.seats ?? search.get('seats') ?? 1) || 1);
-  const unitAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  // The link carries the MULTIPLIED total — it always has — so dividing it by
+  // the same seat count recovers the unit price. Reading it as a unit price and
+  // multiplying again previewed a three-seat booking at nine times the ticket,
+  // and the page still renders a working Pay button when the pod query fails,
+  // so that fallback was reachable.
+  const linkTotal = Number(state.amount ?? search.get('amount') ?? 0);
+  const unitAmount = Number(pod?.pod_amount ?? 0) || linkTotal / seats;
   const amount = Math.round(unitAmount * seats * 100) / 100;
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
   // The coupon discounts the whole pod bill, so coins redeem against its result.

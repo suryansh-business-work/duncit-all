@@ -21,7 +21,12 @@ import {
   podSeatsAvailable,
   podSeatsTaken,
 } from '@modules/pods/pod/pod.seats';
-import { claimSeats, releaseSeats } from '@modules/pods/pod/pod.seats.service';
+import {
+  claimExtraSeats,
+  claimSeats,
+  releaseExtraSeats,
+  releaseSeats,
+} from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
@@ -49,6 +54,83 @@ const clampPct = (pct: unknown) => Math.max(0, Math.min(100, Number(pct) || 0));
 /** Refund payable after the global Backouts deduction is applied. */
 const refundAfterDeduction = (amount: number, pct: number) =>
   round2(Math.max(0, amount - (amount * pct) / 100));
+
+/**
+ * Seats a backout gives back: what was asked for, never more than the booking
+ * holds and never fewer than one. Omitting the count means the whole booking,
+ * which is what every backout was before a booking could cover several people.
+ */
+function clampReleaseSeats(requested: number | null | undefined, held: number): number {
+  if (requested == null) return held;
+  const want = Math.floor(Number(requested) || 0);
+  if (want < 1) {
+    throw new GraphQLError('Choose at least one seat to release', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (want > held) {
+    throw new GraphQLError(
+      `Your booking holds ${held} seat${held === 1 ? '' : 's'} — you cannot release more than that`,
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+  return want;
+}
+
+/**
+ * The open release a "Keep My Spot" refers to.
+ *
+ * Named explicitly when the member has several outstanding (one per partial
+ * release); otherwise the newest one, which is what a single button means.
+ */
+async function findCancellableRequest(
+  podId: Types.ObjectId,
+  uid: Types.ObjectId,
+  backoutId?: string | null
+): Promise<IBackoutRequest> {
+  const scope = { pod_id: podId, user_id: uid };
+  if (backoutId) {
+    const byId = await BackoutRequestModel.findOne({ ...scope, _id: backoutId });
+    if (!byId) {
+      throw new GraphQLError('That backout is not yours', { extensions: { code: 'NOT_FOUND' } });
+    }
+    if (byId.status !== 'IN_PROCESS') {
+      throw new GraphQLError(REPLACEMENT_CONFIRMED_MESSAGE, { extensions: { code: 'CONFLICT' } });
+    }
+    return byId;
+  }
+  const open = await BackoutRequestModel.findOne({ ...scope, status: 'IN_PROCESS' }).sort({
+    created_at: -1,
+  });
+  if (open) return open;
+  const latest = await BackoutRequestModel.findOne(scope).sort({ created_at: -1 });
+  if (latest?.status === 'SPOT_FILLED') {
+    throw new GraphQLError(REPLACEMENT_CONFIRMED_MESSAGE, { extensions: { code: 'CONFLICT' } });
+  }
+  throw new GraphQLError('You have no backout in process for this pod', {
+    extensions: { code: 'NOT_FOUND' },
+  });
+}
+
+/**
+ * Keep the ticket honest after a partial release.
+ *
+ * One ticket admits the booking's seats, so giving two of them back has to
+ * shrink what the QR lets through the door — otherwise the party walks in on
+ * seats that are back on sale. The scanner re-reads this from the membership
+ * too, but the row is what a re-download prints.
+ */
+async function syncTicketSeats(membership: IPodMember) {
+  try {
+    const { TicketModel } = await import('@modules/pods/ticket/ticket.model');
+    await TicketModel.updateOne(
+      { membership_id: membership._id },
+      { $set: { seats: normalizeSeats(membership.seats ?? 1) } }
+    );
+  } catch (e) {
+    logs.server.warn('podMember', 'syncTicketSeats', { error: e, msg: 'Ticket seat sync failed' });
+  }
+}
 
 /** Current Backouts deduction % (Finance → Default Deductions → Backouts). */
 async function backoutDeductionPct(): Promise<number> {
@@ -214,15 +296,23 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
   }
 }
 
-/** Terminal transition: a replacement consumed the released seat. */
-async function markSpotFilled(pod: any, member: IPodMember, replacementUserId: string) {
-  const request = member.active_backout_id
-    ? await BackoutRequestModel.findById(member.active_backout_id)
-    : null;
-  member.status = 'BACKED_OUT';
-  member.active_backout_id = null;
-  await member.save();
-  if (request?.status === 'IN_PROCESS') {
+/**
+ * Terminal transition: a replacement consumed the released seats.
+ *
+ * Driven by the REQUEST, not the membership. A booking can give back some of
+ * its seats and keep the rest, so one membership can have more than one release
+ * outstanding and the membership alone cannot say which of them was filled.
+ * Only a request that gave back the WHOLE booking ends the membership.
+ */
+async function markSpotFilled(pod: any, request: IBackoutRequest, replacementUserId: string) {
+  const member = await PodMemberModel.findById(request.member_id);
+  const wholeBooking = (request.seats ?? 1) >= (request.seats_before ?? 1);
+  if (member && wholeBooking) {
+    member.status = 'BACKED_OUT';
+    member.active_backout_id = null;
+    await member.save();
+  }
+  if (request.status === 'IN_PROCESS') {
     request.status = 'SPOT_FILLED';
     // Who Finance can point at when the refund is questioned. Recorded with
     // the transition so it can never disagree with the SPOT_FILLED event.
@@ -230,7 +320,7 @@ async function markSpotFilled(pod: any, member: IPodMember, replacementUserId: s
     request.events.push({ status: 'SPOT_FILLED', backout_count: request.attempt_no, at: new Date() });
     await request.save();
   }
-  await notifySpotFilled(pod, member, request);
+  if (member) await notifySpotFilled(pod, member, request);
 }
 
 /**
@@ -249,16 +339,20 @@ async function markSpotFilled(pod: any, member: IPodMember, replacementUserId: s
 async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   const spots = pod.no_of_spots ?? 0;
   if (spots <= 0) return;
-  const inProcess = await PodMemberModel.find({ pod_id: pod._id, status: 'BACKOUT_IN_PROCESS' }).sort({
-    backed_out_at: 1,
-  });
-  const reserved = inProcess.reduce((sum, m) => sum + normalizeSeats(m.seats ?? 1), 0);
+  // The open REQUESTS are what is reserved. A partial backout leaves its member
+  // JOINED — they are still coming, with fewer seats — so looking for members in
+  // BACKOUT_IN_PROCESS would miss every partial release entirely.
+  const requests = await BackoutRequestModel.find({
+    pod_id: pod._id,
+    status: 'IN_PROCESS',
+  }).sort({ created_at: 1 });
+  const reserved = requests.reduce((sum, r) => sum + normalizeSeats(r.seats ?? 1), 0);
   let overflow = podSeatsTaken(pod) + reserved - spots;
-  for (const member of inProcess) {
+  for (const request of requests) {
     if (overflow <= 0) break;
-    await markSpotFilled(pod, member, joiningUserId);
-    // Filling a booking releases every seat it reserved, not one.
-    overflow -= normalizeSeats(member.seats ?? 1);
+    await markSpotFilled(pod, request, joiningUserId);
+    // Filling a release gives up every seat it held open, not one.
+    overflow -= normalizeSeats(request.seats ?? 1);
   }
 }
 
@@ -298,6 +392,11 @@ const toBackoutRefund = (
   status: member?.status ?? MEMBER_STATUS_BY_REQUEST[request.status],
   backout_status: request.status,
   attempt_no: request.attempt_no,
+  // Finance refunds the seats this request gave back, not the whole booking —
+  // a partial backout leaves the member attending on the seats they kept.
+  seats: normalizeSeats(request.seats ?? 1),
+  seats_before: normalizeSeats(request.seats_before ?? request.seats ?? 1),
+  is_partial: normalizeSeats(request.seats ?? 1) < normalizeSeats(request.seats_before ?? 1),
   backout_attempts_used: attemptsUsed,
   max_backout_attempts: maxAttempts,
   replacement_confirmed: request.status === 'SPOT_FILLED',
@@ -395,11 +494,29 @@ async function hydrateBackoutRequests(requests: IBackoutRequest[]) {
 }
 
 /** Estimated refund for a membership's join payment after deduction. */
-async function previewRefundAmount(membership: IPodMember | null, pct: number): Promise<number | null> {
-  if (!membership?.payment_id) return null;
-  const payment = await PaymentModel.findById(membership.payment_id).select('total');
-  if (!payment) return null;
-  return refundAfterDeduction(payment.total, pct);
+/**
+ * What a backout would pay back — per seat, and for everything still held.
+ *
+ * Divided by the seats the PAYMENT covered, not the seats the booking holds
+ * today: a partial backout reduces the booking, and dividing by the smaller
+ * number would inflate the value of every remaining seat. The per-seat figure
+ * is what lets the apps price any number the buyer picks without a round trip.
+ */
+async function previewRefund(
+  membership: IPodMember | null,
+  pct: number
+): Promise<{ perSeat: number | null; total: number | null }> {
+  const none = { perSeat: null, total: null };
+  if (!membership?.payment_id) return none;
+  const payment = await PaymentModel.findById(membership.payment_id).select('total metadata');
+  if (!payment) return none;
+  const paidSeats = normalizeSeats((payment.metadata as any)?.seats ?? membership.seats ?? 1);
+  const held = normalizeSeats(membership.seats ?? 1);
+  const perSeatPaid = payment.total / paidSeats;
+  return {
+    perSeat: refundAfterDeduction(perSeatPaid, pct),
+    total: refundAfterDeduction(round2(perSeatPaid * held), pct),
+  };
 }
 
 export const podMemberService = {
@@ -426,7 +543,18 @@ export const podMemberService = {
         ? BackoutRequestModel.countDocuments({ pod_id: pod._id, user_id: new Types.ObjectId(userId) })
         : Promise.resolve(0),
     ]);
-    const refundAmount = await previewRefundAmount(membership, deductionPct);
+    const refund = await previewRefund(membership, deductionPct);
+    const refundAmount = refund.total;
+    // Seats this member has already released and is still waiting to have
+    // filled. A partial release leaves them JOINED, so nothing else on this
+    // state object would reveal that a Keep My Spot is available.
+    const openRequests = membership
+      ? await BackoutRequestModel.find({
+          pod_id: pod._id,
+          member_id: membership._id,
+          status: 'IN_PROCESS',
+        }).select('seats')
+      : [];
     return {
       pod_id: String(pod._id),
       is_member: isMember,
@@ -443,11 +571,15 @@ export const podMemberService = {
       can_join: !!userId && !membership && !full,
       refund_threshold_pct: REFUND_THRESHOLD_PCT,
       backout_in_process: inProcess,
-      can_cancel_backout: inProcess && !full,
+      // A partial release keeps the member JOINED, so "something is open" is
+      // no longer the same question as "are they backing out".
+      can_cancel_backout: (inProcess || openRequests.length > 0) && !full,
       backout_attempts_used: attemptsUsed,
       backout_attempts_max: maxAttempts,
       backout_deduction_pct: deductionPct,
       backout_refund_amount: refundAmount,
+      backout_refund_per_seat: refund.perSeat,
+      released_seats_pending: openRequests.reduce((sum, r) => sum + normalizeSeats(r.seats ?? 1), 0),
     };
   },
 
@@ -591,13 +723,19 @@ export const podMemberService = {
   },
 
   /**
-   * Confirm Backout — the booking moves to 'Backout in process' and the seat
-   * is released for public booking immediately. No refund is initiated here:
-   * the refund becomes eligible only when a replacement fills the seat. Every
-   * request is a NEW immutable BackoutRequest with a fresh, permanent
-   * Backout ID; attempts are capped per user per pod (Admin > Pod Settings).
+   * Confirm Backout — the released seats go back on public sale immediately.
+   * No refund is initiated here: it becomes eligible only when a replacement
+   * fills them. Every request is a NEW immutable BackoutRequest with a fresh,
+   * permanent Backout ID; attempts are capped per user per pod (Admin > Pod
+   * Settings).
+   *
+   * `seats` releases only PART of a booking. Somebody who bought four and had
+   * two friends drop out should give back two, not lose the evening — so a
+   * partial release leaves them JOINED with fewer seats and refunds only the
+   * seats they gave up, at the same deduction. Omitting `seats` (or passing the
+   * whole booking) is the original all-or-nothing backout, unchanged.
    */
-  async backout(podDocId: string, userId: string) {
+  async backout(podDocId: string, userId: string, requestedSeats?: number | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
@@ -628,8 +766,15 @@ export const podMemberService = {
       throw new GraphQLError(BACKOUT_LIMIT_MESSAGE, { extensions: { code: 'BACKOUT_LIMIT_REACHED' } });
     }
 
+    const held = normalizeSeats(membership.seats ?? 1);
+    const release = clampReleaseSeats(requestedSeats, held);
+    const wholeBooking = release >= held;
+
     const payment = membership.payment_id ? await PaymentModel.findById(membership.payment_id) : null;
-    const paymentAmount = payment ? payment.total : null;
+    // The refund is for the seats given back, so the request records that share
+    // of what was paid — not the whole payment, which would refund a partial
+    // backout for seats the buyer is still using.
+    const paymentAmount = payment ? round2((payment.total * release) / held) : null;
     const attemptNo = attemptsUsed + 1;
     const now = new Date();
     const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);
@@ -640,6 +785,8 @@ export const podMemberService = {
       member_id: membership._id,
       payment_id: membership.payment_id,
       attempt_no: attemptNo,
+      seats: release,
+      seats_before: held,
       status: 'IN_PROCESS',
       payment_amount: paymentAmount,
       deduction_pct: deductionPct,
@@ -647,14 +794,24 @@ export const podMemberService = {
       events: [{ status: 'IN_PROCESS', backout_count: attemptNo, at: now }],
     });
 
-    membership.status = 'BACKOUT_IN_PROCESS';
-    membership.backed_out_at = now;
     membership.backout_count = attemptNo;
-    membership.active_backout_id = request._id as Types.ObjectId;
-    membership.refund_status = membership.payment_id ? 'PENDING' : 'NOT_ELIGIBLE';
     if (!membership.referral_token) membership.referral_token = newToken();
-    await membership.save();
-    await removeAttendee(pod, userId, membership.seats ?? 1);
+    if (wholeBooking) {
+      membership.status = 'BACKOUT_IN_PROCESS';
+      membership.backed_out_at = now;
+      membership.active_backout_id = request._id as Types.ObjectId;
+      membership.refund_status = membership.payment_id ? 'PENDING' : 'NOT_ELIGIBLE';
+      await membership.save();
+      await removeAttendee(pod, userId, held);
+    } else {
+      // Still going, just with a smaller party: the id stays in the identity
+      // list (their chat, their permissions, their own ticket) and only the
+      // seat counter moves.
+      membership.seats = held - release;
+      await membership.save();
+      await releaseExtraSeats(pod._id, userId, release);
+      await syncTicketSeats(membership);
+    }
 
     return toPub(membership);
   },
@@ -664,24 +821,17 @@ export const podMemberService = {
    * Only possible while the released seat has not been rebooked; once a
    * replacement is confirmed the request is terminal (SPOT_FILLED).
    */
-  async cancelBackout(podDocId: string, userId: string) {
+  async cancelBackout(podDocId: string, userId: string, backoutId?: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
     const uid = new Types.ObjectId(userId);
-    const membership = await PodMemberModel.findOne({
-      pod_id: pod._id,
-      user_id: uid,
-      status: 'BACKOUT_IN_PROCESS',
-    });
+    // The REQUEST is what gets kept, not the membership: after a partial release
+    // the member is still JOINED, so there is no BACKOUT_IN_PROCESS row to find.
+    const request = await findCancellableRequest(pod._id, uid, backoutId);
+    const membership = await PodMemberModel.findById(request.member_id);
     if (!membership) {
-      const latest = await BackoutRequestModel.findOne({ pod_id: pod._id, user_id: uid }).sort({
-        created_at: -1,
-      });
-      if (latest?.status === 'SPOT_FILLED') {
-        throw new GraphQLError(REPLACEMENT_CONFIRMED_MESSAGE, { extensions: { code: 'CONFLICT' } });
-      }
-      throw new GraphQLError('You have no backout in process for this pod', {
+      throw new GraphQLError('You are not a member of this pod', {
         extensions: { code: 'NOT_FOUND' },
       });
     }
@@ -689,21 +839,31 @@ export const podMemberService = {
       throw new GraphQLError(REPLACEMENT_CONFIRMED_MESSAGE, { extensions: { code: 'CONFLICT' } });
     }
 
-    const request = membership.active_backout_id
-      ? await BackoutRequestModel.findById(membership.active_backout_id)
-      : null;
-    if (request?.status === 'IN_PROCESS') {
-      request.status = 'CANCELLED';
-      request.events.push({ status: 'CANCELLED', backout_count: request.attempt_no, at: new Date() });
-      await request.save();
+    const seats = normalizeSeats(request.seats ?? 1);
+    const wholeBooking = seats >= (request.seats_before ?? 1);
+    // Take the seats back BEFORE the request is closed — if they have gone, the
+    // claim throws and the backout stays open rather than leaving the member
+    // "kept" with nothing to sit on.
+    if (wholeBooking) {
+      await addAttendee(pod, userId, seats);
+    } else {
+      await claimExtraSeats(pod._id, userId, seats);
     }
 
-    membership.status = 'JOINED';
-    membership.backed_out_at = null;
-    membership.refund_status = 'NONE';
-    membership.active_backout_id = null;
+    request.status = 'CANCELLED';
+    request.events.push({ status: 'CANCELLED', backout_count: request.attempt_no, at: new Date() });
+    await request.save();
+
+    if (wholeBooking) {
+      membership.status = 'JOINED';
+      membership.backed_out_at = null;
+      membership.refund_status = 'NONE';
+      membership.active_backout_id = null;
+    } else {
+      membership.seats = normalizeSeats(membership.seats ?? 1) + seats;
+    }
     await membership.save();
-    await addAttendee(pod, userId, membership.seats ?? 1);
+    if (!wholeBooking) await syncTicketSeats(membership);
 
     return toPub(membership);
   },
@@ -833,15 +993,33 @@ export const podMemberService = {
       });
     }
 
-    await ensureSeatsAvailable(pod, membership.seats ?? 1);
+    const seats = normalizeSeats(membership.seats ?? 1);
+    await ensureSeatsAvailable(pod, seats);
+    // Claim before the membership flips. The claim re-checks capacity against
+    // the live document and can still fail, and a JOINED row holding seats
+    // nobody granted is the worse of the two outcomes.
+    await addAttendee(pod, userId, seats);
 
     membership.status = 'JOINED';
     membership.joined_at = new Date();
     membership.backed_out_at = null;
     membership.refund_status = 'NONE';
+    membership.active_backout_id = null;
     await membership.save();
 
-    await addAttendee(pod, userId, membership.seats ?? 1);
+    // The release that took them out of the pod is over — they are back in it.
+    // Leaving it open would let a later join mark it Spot Filled and refund
+    // somebody who is attending.
+    if (latestRequest?.status === 'IN_PROCESS') {
+      latestRequest.status = 'CANCELLED';
+      latestRequest.events.push({
+        status: 'CANCELLED',
+        backout_count: latestRequest.attempt_no,
+        at: new Date(),
+      });
+      await latestRequest.save();
+    }
+
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {

@@ -27,6 +27,20 @@ export interface IBackoutRequest extends Document {
   payment_id: Types.ObjectId | null;
   /** 1-based backout attempt for this user+pod (each request = one attempt). */
   attempt_no: number;
+  /**
+   * Seats this request releases. A booking can cover several people and a buyer
+   * may only need to give some of them back, so the request — not the
+   * membership — is the unit of release: the refund, the "spot filled" trigger
+   * and the Finance row are all per-request.
+   */
+  seats: number;
+  /**
+   * Seats the booking held BEFORE this request. `seats < seats_before` is a
+   * PARTIAL backout: the member is still going, with fewer seats. Stored rather
+   * than derived because the membership keeps changing and these rows are
+   * immutable audit.
+   */
+  seats_before: number;
   status: BackoutStatus;
   /**
    * The member whose join closed this request (set once, with SPOT_FILLED).
@@ -62,6 +76,10 @@ const backoutRequestSchema = new Schema<IBackoutRequest>(
     member_id: { type: Schema.Types.ObjectId, ref: 'PodMember', required: true, index: true },
     payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     attempt_no: { type: Number, required: true, min: 1 },
+    // Every request written before partial backout existed released the whole
+    // booking, and every one of those bookings was a single seat.
+    seats: { type: Number, default: 1, min: 1 },
+    seats_before: { type: Number, default: 1, min: 1 },
     status: { type: String, enum: BACKOUT_STATUSES, default: 'IN_PROCESS', index: true },
     replacement_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     payment_amount: { type: Number, default: null },

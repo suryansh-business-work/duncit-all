@@ -4,6 +4,9 @@ import { PodModel } from './pod.model';
 import { normalizeSeats } from './pod.seats';
 import { logs } from '@observability/log';
 
+/** A pod or user id, however the caller happens to be holding it. */
+type PodRef = string | Types.ObjectId;
+
 /**
  * The only writer of `pod_attendees` + `extra_seats`.
  *
@@ -36,9 +39,9 @@ const NEEDED_SEATS = (seats: number) => ({
  *
  * @throws POD_FULL when the seats are gone — the caller must not book.
  */
-export async function claimSeats(podId: unknown, userId: unknown, seats = 1) {
+export async function claimSeats(podId: PodRef, userId: PodRef, seats = 1) {
   const want = normalizeSeats(seats);
-  const uid = new Types.ObjectId(String(userId));
+  const uid = new Types.ObjectId(userId.toString());
   const pod = await PodModel.findOneAndUpdate(
     {
       _id: podId,
@@ -76,6 +79,49 @@ export async function claimSeats(podId: unknown, userId: unknown, seats = 1) {
 }
 
 /**
+ * Take MORE seats for someone already in the pod — restoring a partial backout.
+ *
+ * Same capacity gate as `claimSeats`, but it never touches the identity list:
+ * the person never left, only their seats did.
+ *
+ * @throws POD_FULL when those seats have since been taken.
+ */
+export async function claimExtraSeats(podId: PodRef, userId: PodRef, count: number) {
+  const want = Math.max(0, Math.floor(Number(count) || 0));
+  if (want === 0) return null;
+  const pod = await PodModel.findOneAndUpdate(
+    {
+      _id: podId,
+      $expr: {
+        $or: [
+          { $lte: [{ $ifNull: ['$no_of_spots', 0] }, 0] },
+          {
+            $lte: [
+              {
+                $add: [
+                  { $size: { $ifNull: ['$pod_attendees', []] } },
+                  { $ifNull: ['$extra_seats', 0] },
+                  want,
+                ],
+              },
+              '$no_of_spots',
+            ],
+          },
+        ],
+      },
+    },
+    { $inc: { extra_seats: want } },
+    { new: true }
+  );
+  if (!pod) {
+    throw new GraphQLError('Those seats have already been taken', {
+      extensions: { code: 'POD_FULL' },
+    });
+  }
+  return pod;
+}
+
+/**
  * Give back the person and every seat they held.
  *
  * The counter is clamped at zero inside the update rather than after it, so a
@@ -83,33 +129,58 @@ export async function claimSeats(podId: unknown, userId: unknown, seats = 1) {
  * the counter had already drifted from the memberships — that is a real defect,
  * so it is logged rather than silently absorbed the way the old helper did.
  */
-export async function releaseSeats(podId: unknown, userId: unknown, seats = 1) {
-  const extra = Math.max(normalizeSeats(seats) - 1, 0);
-  const uid = new Types.ObjectId(String(userId));
+export async function releaseSeats(podId: PodRef, userId: PodRef, seats = 1) {
+  const uid = new Types.ObjectId(userId.toString());
+  return giveBack(podId, Math.max(normalizeSeats(seats) - 1, 0), uid, userId.toString());
+}
+
+/**
+ * Give back SOME of a booking's seats while the buyer keeps the rest.
+ *
+ * A partial backout is not a smaller version of leaving — the person is still
+ * coming, so their id must stay in the identity list (chat, permissions, their
+ * own ticket) and only the counter moves.
+ */
+export async function releaseExtraSeats(podId: PodRef, userId: PodRef, count: number) {
+  const give = Math.max(0, Math.floor(Number(count) || 0));
+  if (give === 0) return null;
+  return giveBack(podId, give, null, userId.toString());
+}
+
+/** The one write both releases share: drop the id (or not) and the seats. */
+async function giveBack(
+  podId: PodRef,
+  extra: number,
+  removeUid: Types.ObjectId | null,
+  userId: string
+) {
+  const nextAttendees = removeUid
+    ? {
+        $filter: {
+          input: { $ifNull: ['$pod_attendees', []] },
+          cond: { $ne: ['$$this', removeUid] },
+        },
+      }
+    : { $ifNull: ['$pod_attendees', []] };
   const before = await PodModel.findOneAndUpdate(
     { _id: podId },
     [
       {
         $set: {
-          pod_attendees: {
-            $filter: {
-              input: { $ifNull: ['$pod_attendees', []] },
-              cond: { $ne: ['$$this', uid] },
-            },
-          },
+          pod_attendees: nextAttendees,
           extra_seats: {
             $max: [0, { $subtract: [{ $ifNull: ['$extra_seats', 0] }, extra] }],
           },
         },
       },
     ],
-    { new: false },
+    { new: false }
   );
   if (before && (before.extra_seats ?? 0) - extra < 0) {
     logs.server.error('pods', 'releaseSeats', {
       msg: 'extra_seats would have gone negative — the counter has drifted from the memberships',
-      podId: String(podId),
-      userId: String(userId),
+      podId: podId.toString(),
+      userId,
       extra_seats: before.extra_seats ?? 0,
       releasing: extra,
     });

@@ -93,6 +93,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spotFilledBy: 'Spot filled by {name}',
       formerAttendee: 'Former attendee',
       newAttendee: 'A new attendee',
+      // One booking can cover several people. The list still shows one face per
+      // person — the group size is a label beside their name, never extra
+      // avatars, or the same booking gets counted twice on screen.
+      otherMembersOne: '+1 other member',
+      otherMembersMany: '+{count} other members',
+      seatsTaken: '{taken} of {total} seats taken',
+      seatsLeftOne: '1 seat left',
+      seatsLeftMany: '{count} seats left',
     },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
@@ -162,6 +170,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     hostScan: {
       personOnTicket: 'person on this ticket',
       peopleOnTicket: 'people on this ticket',
+      // Collecting the rest of the group. A multi-seat ticket is a number until
+      // someone writes down who it covers, and the scan is the one moment they
+      // are all standing there — so the ticket does not check in until they are.
+      companionsTitle: 'Who else is coming in?',
+      companionsBody: 'This ticket admits {seats}. Add the other {count} to mark attendance.',
+      companionName: 'Full name',
+      companionPhone: 'Phone number',
+      companionsSubmit: 'Mark attendance',
+      companionsIncomplete: 'Fill in every name and phone number.',
+      companionsHeading: 'Person {index}',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

@@ -1,5 +1,6 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
-import FragmentList from './FragmentList';
+import EmailSidebarList from '../../components/EmailSidebarList';
+import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';
 import { useEmailFragments } from './useEmailFragments';
 
@@ -21,7 +22,7 @@ export default function EmailFragmentsPage() {
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <FillViewport>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" fontWeight={700}>
           Email Fragments
@@ -33,7 +34,18 @@ export default function EmailFragmentsPage() {
       </Box>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <FragmentList list={f.list} selected={f.selected} onSelect={f.setSelected} />
+        <EmailSidebarList
+          items={f.list.map((fragment) => ({
+            key: fragment.category,
+            primary: fragment.name,
+            secondary: fragment.category,
+            off: !fragment.is_active,
+          }))}
+          selected={f.selected}
+          onSelect={f.setSelected}
+          searchPlaceholder="Search category"
+          emptyText="No fragments yet."
+        />
 
         {f.draft ? (
           <FragmentEditorPanel
@@ -62,6 +74,6 @@ export default function EmailFragmentsPage() {
           {f.snack.msg}
         </Alert>
       )}
-    </Box>
+    </FillViewport>
   );
 }

@@ -10,7 +10,10 @@ vi.mock('../../src/pages/email-templates-page/useEmailTemplateEditor', () => ({
   useEmailTemplateEditor: () => m.editor,
 }));
 
-vi.mock('../../src/pages/email-templates-page/TemplateList', () => ({
+vi.mock('../../src/components/FillViewport', () => ({
+  default: (p: { children: React.ReactNode }) => <div>{p.children}</div>,
+}));
+vi.mock('../../src/components/EmailSidebarList', () => ({
   default: (p: { onSelect: (id: string) => void }) => (
     <button type="button" onClick={() => p.onSelect('picked')}>list-select</button>
   ),

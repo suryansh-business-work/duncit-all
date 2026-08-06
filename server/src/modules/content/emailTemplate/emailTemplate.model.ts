@@ -47,6 +47,12 @@ const EmailTemplateSchema = new Schema<IEmailTemplate>(
     description: String,
     subject: { type: String, required: true },
     mjml: { type: String, required: true },
+    // Both of these MUST be declared here, not only on the interface above:
+    // mongoose runs strict by default, so a `$set` of a path the schema does
+    // not know is dropped without a word — the picker saved, the response
+    // looked fine, and nothing was ever written.
+    fragment_category: { type: String, default: null },
+    footer_note: { type: String, default: '' },
     variables: { type: [VariableSchema], default: [] },
     is_active: { type: Boolean, default: true },
   },

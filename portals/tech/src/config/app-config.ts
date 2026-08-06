@@ -34,9 +34,15 @@ export const appConfig = {
         { label: 'Fragments', to: '/emails/fragments', icon: 'widgets' },
       ],
     },
-    { label: 'Telemetry Dashboard', to: '/telemetry', icon: 'insights' },
-    { label: 'Bugs', to: '/bugs', icon: 'bug' },
-    { label: 'Telemetry Logs Settings', to: '/telemetry-logs-settings', icon: 'tune' },
+    {
+      label: 'Telemetry',
+      icon: 'insights',
+      children: [
+        { label: 'Dashboard', to: '/telemetry/dashboard', icon: 'dashboard' },
+        { label: 'Bugs', to: '/telemetry/bugs', icon: 'bug' },
+        { label: 'Logs Settings', to: '/telemetry/logs-settings', icon: 'tune' },
+      ],
+    },
     {
       label: 'Server',
       icon: 'dns',

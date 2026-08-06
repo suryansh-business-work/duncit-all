@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TemplateEditorPanel from './TemplateEditorPanel';
-import TemplateList from './TemplateList';
+import EmailSidebarList from '../../components/EmailSidebarList';
+import FillViewport from '../../components/FillViewport';
 import CreateTemplateDialog from './CreateTemplateDialog';
 import SendTestDialog from './SendTestDialog';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';
@@ -27,7 +28,7 @@ export default function EmailTemplatesPage() {
     );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <FillViewport>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Box>
           <Typography variant="h5" fontWeight={700}>
@@ -44,10 +45,17 @@ export default function EmailTemplatesPage() {
       </Stack>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <TemplateList
-          list={editor.list}
+        <EmailSidebarList
+          items={editor.list.map((t) => ({
+            key: t.template_id,
+            primary: t.name,
+            secondary: t.slug,
+            off: !t.is_active,
+          }))}
           selected={editor.selected}
           onSelect={editor.setSelected}
+          searchPlaceholder="Search name or slug"
+          emptyText="No templates yet."
         />
 
         {editor.draft ? (
@@ -106,6 +114,6 @@ export default function EmailTemplatesPage() {
           {editor.snack.msg}
         </Alert>
       )}
-    </Box>
+    </FillViewport>
   );
 }

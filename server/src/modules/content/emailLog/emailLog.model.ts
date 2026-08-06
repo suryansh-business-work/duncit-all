@@ -67,9 +67,23 @@ export interface IEmailLog extends Document {
   source_detail: string;
   /** Milliseconds spent on the attempt, so a slow provider is visible. */
   duration_ms: number;
+  /**
+   * The exact body handed to the provider, for the row's preview.
+   *
+   * Stored rendered, not as a template reference: a template is edited, and the
+   * point of looking at a two-week-old row is to see what THAT person received,
+   * not what the template says today. Capped, because a campaign body is
+   * measured in tens of kilobytes and there is one row per batch.
+   */
+  html: string;
+  /** The variables it rendered with, as JSON. Empty for a raw-HTML send. */
+  vars: string;
   created_at: Date;
   updated_at: Date;
 }
+
+/** Past this the body is truncated — a preview, not an archive. */
+export const EMAIL_LOG_HTML_LIMIT = 256_000;
 
 const emailLogSchema = new Schema<IEmailLog>(
   {
@@ -87,6 +101,8 @@ const emailLogSchema = new Schema<IEmailLog>(
     source: { type: String, enum: EMAIL_LOG_SOURCES, default: 'SERVER', index: true },
     source_detail: { type: String, default: '' },
     duration_ms: { type: Number, default: 0 },
+    html: { type: String, default: '' },
+    vars: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

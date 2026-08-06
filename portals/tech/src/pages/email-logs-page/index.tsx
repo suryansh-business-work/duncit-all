@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
+import EmailLogDrawer from './EmailLogDrawer';
 import EmailLogsTable from './EmailLogsTable';
 import { EMAIL_LOGS_TABLE, EMAIL_LOG_STATS, type EmailLogRow } from './queries';
 
@@ -25,6 +26,10 @@ export default function EmailLogsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useApolloTableFetch<EmailLogRow>(client, EMAIL_LOGS_TABLE, 'emailLogsTable');
+  const [openId, setOpenId] = useState<string | null>(null);
+  // Stable, so the table does not re-register its row handler on every render.
+  const openRow = useCallback((row: EmailLogRow) => setOpenId(row.id), []);
+  const closeRow = useCallback(() => setOpenId(null), []);
   const { data } = useQuery<{ emailLogStats: Stats }>(EMAIL_LOG_STATS, {
     variables: { days: 7 },
     fetchPolicy: 'cache-and-network',
@@ -55,7 +60,8 @@ export default function EmailLogsPage() {
         )}
       </Stack>
 
-      <EmailLogsTable fetchRows={fetchRows} refetchRef={refetchRef} />
+      <EmailLogsTable fetchRows={fetchRows} refetchRef={refetchRef} onRowClick={openRow} />
+      <EmailLogDrawer logId={openId} onClose={closeRow} />
     </Box>
   );
 }

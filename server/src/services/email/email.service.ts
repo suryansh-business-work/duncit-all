@@ -326,6 +326,11 @@ export async function sendEmail(opts: {
       reason: outcome.reason,
       provider: info.provider,
       message_id: info.messageId,
+      // What this person actually received, and what it was filled in with.
+      // A template is edited; a row from two weeks ago has to keep showing the
+      // email as it went out, not as the template reads today.
+      html,
+      vars: opts.vars,
       duration_ms: Date.now() - startedAt,
     });
     logs.server.info('email', 'send', {
@@ -375,6 +380,12 @@ export async function sendHtmlEmail(opts: {
   /** Overrides the request's surface in the log (e.g. CRM, TEST). */
   source?: EmailLogSource;
   source_detail?: string;
+  /**
+   * The variables the HTML was rendered with. This path receives finished HTML,
+   * so it cannot work them out — but the log row is far more use with them, and
+   * a test send is exactly the row someone opens to ask "what did it fill in?".
+   */
+  vars?: Record<string, string>;
 }): Promise<SendResult> {
   const startedAt = Date.now();
   const category = opts.category ?? 'marketing';
@@ -431,6 +442,8 @@ export async function sendHtmlEmail(opts: {
       message_id: info.messageId,
       source: opts.source,
       source_detail: opts.source_detail,
+      html,
+      vars: opts.vars,
       duration_ms: Date.now() - startedAt,
     });
     logs.server.info('email', 'send-html', {

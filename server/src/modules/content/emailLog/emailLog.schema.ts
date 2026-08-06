@@ -31,6 +31,15 @@ export const emailLogTypeDefs = /* GraphQL */ `
     source_detail: String!
     duration_ms: Int!
     created_at: String
+    """
+    The body exactly as it was handed to the provider.
+
+    Only the single-row query fills this in — a page of campaign rows would
+    otherwise carry a megabyte of HTML nobody opened. Empty on the table.
+    """
+    html: String
+    "The variables it rendered with, as a JSON object. Single-row query only."
+    vars: String
   }
 
   type EmailLogTablePage {
@@ -52,6 +61,8 @@ export const emailLogTypeDefs = /* GraphQL */ `
   extend type Query {
     "Every email attempt, newest first. Filter by status, category, source, template."
     emailLogsTable(query: TableQueryInput): EmailLogTablePage!
+    "One attempt with its rendered body and variables — what the drawer opens."
+    emailLog(id: ID!): EmailLog
     emailLogStats(days: Int): EmailLogStats!
   }
 `;

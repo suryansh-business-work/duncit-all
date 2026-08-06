@@ -159,6 +159,10 @@ export const emailTemplateResolvers = {
           fragment_key: tpl.fragment_key,
           source: 'TEST',
           source_detail: tpl.slug,
+          // Only what the admin typed. The send's own vars — the logo, the
+          // localized copy — are the same on every row and would bury the two
+          // or three values anyone opens this row to check.
+          vars: parseVars(args.vars),
         });
         // sendHtmlEmail reports rather than throws, so a refusal has to be
         // read off the result or this would claim success for a send that

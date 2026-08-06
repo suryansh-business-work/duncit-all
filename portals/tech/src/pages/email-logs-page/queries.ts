@@ -45,6 +45,43 @@ export const EMAIL_LOGS_TABLE = gql`
   }
 `;
 
+/**
+ * One row with its body and variables.
+ *
+ * A separate query from the table on purpose: `html` is the heavy field, and a
+ * page of twenty-five campaign rows would carry a megabyte of it before anyone
+ * clicked a thing.
+ */
+export interface EmailLogDetail extends EmailLogRow {
+  html?: string | null;
+  vars?: string | null;
+}
+
+export const EMAIL_LOG_ONE = gql`
+  query EmailLog($id: ID!) {
+    emailLog(id: $id) {
+      id
+      to
+      cc
+      bcc
+      subject
+      template
+      fragment_key
+      category
+      status
+      reason
+      provider
+      message_id
+      source
+      source_detail
+      duration_ms
+      created_at
+      html
+      vars
+    }
+  }
+`;
+
 export const EMAIL_LOG_STATS = gql`
   query EmailLogStats($days: Int) {
     emailLogStats(days: $days) {

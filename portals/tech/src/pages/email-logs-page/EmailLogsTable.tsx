@@ -12,6 +12,8 @@ import {
 interface Props {
   fetchRows: TableFetch<EmailLogRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  /** Opens the row's drawer — the body it sent, and what filled it in. */
+  onRowClick: (row: EmailLogRow) => void;
 }
 
 const getRowId = (row: EmailLogRow) => row.id;
@@ -66,7 +68,7 @@ const renderSource = (row: EmailLogRow) => (
   </Tooltip>
 );
 
-export default function EmailLogsTable({ fetchRows, refetchRef }: Readonly<Props>) {
+export default function EmailLogsTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<EmailLogRow>[]>(
     () => [
       dateColumn<EmailLogRow>({
@@ -158,6 +160,7 @@ export default function EmailLogsTable({ fetchRows, refetchRef }: Readonly<Props
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search recipient, subject, template or reason"
       refetchRef={refetchRef}
+      onRowClick={onRowClick}
     />
   );
 }

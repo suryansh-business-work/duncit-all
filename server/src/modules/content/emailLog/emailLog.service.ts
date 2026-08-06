@@ -1,7 +1,13 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { isValidObjectId } from 'mongoose';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { EmailLogModel, type EmailLogSource, type EmailLogStatus } from './emailLog.model';
+import {
+  EMAIL_LOG_HTML_LIMIT,
+  EmailLogModel,
+  type EmailLogSource,
+  type EmailLogStatus,
+} from './emailLog.model';
 
 /**
  * The email log — one row per attempt, sent or not.
@@ -119,7 +125,43 @@ export interface EmailLogEntry {
   /** Overrides the request's surface — used by the CRM and by test sends. */
   source?: EmailLogSource;
   source_detail?: string;
+  /** The rendered body, for the row's preview. Truncated past the cap. */
+  html?: string;
+  /** The variables it rendered with. */
+  vars?: Record<string, string>;
 }
+
+/**
+ * A body big enough to read, small enough to store thousands of.
+ *
+ * The marker is left inside the HTML on purpose: the preview shows the email
+ * cut off rather than looking complete when it is not.
+ */
+function cappedHtml(html?: string): string {
+  if (!html) return '';
+  if (html.length <= EMAIL_LOG_HTML_LIMIT) return html;
+  return `${html.slice(0, EMAIL_LOG_HTML_LIMIT)}\n<!-- truncated: the body was ${html.length} characters -->`;
+}
+
+/** One row as the API returns it. Without the body — see `byId` for that. */
+const pub = (doc: any) => ({
+  id: String(doc._id),
+  to: doc.to,
+  cc: doc.cc ?? [],
+  bcc: doc.bcc ?? [],
+  subject: doc.subject,
+  template: doc.template,
+  fragment_key: doc.fragment_key,
+  category: doc.category,
+  status: doc.status,
+  reason: doc.reason,
+  provider: doc.provider,
+  message_id: doc.message_id,
+  source: doc.source,
+  source_detail: doc.source_detail,
+  duration_ms: doc.duration_ms,
+  created_at: doc.created_at?.toISOString() ?? null,
+});
 
 export const emailLogService = {
   /** Record one attempt. Never throws; a lost log line is not worth a lost email. */
@@ -141,6 +183,8 @@ export const emailLogService = {
         source: entry.source ?? surface.source,
         source_detail: entry.source_detail ?? surface.detail,
         duration_ms: entry.duration_ms ?? 0,
+        html: cappedHtml(entry.html),
+        vars: entry.vars ? JSON.stringify(entry.vars) : '',
       });
     } catch (error) {
       logs.server.warn('emailLog', 'record', { error, subject: entry.subject });
@@ -156,28 +200,24 @@ export const emailLogService = {
       EMAIL_LOG_TABLE_CONFIG
     );
     return {
-      rows: docs.map((doc: any) => ({
-        id: String(doc._id),
-        to: doc.to,
-        cc: doc.cc ?? [],
-        bcc: doc.bcc ?? [],
-        subject: doc.subject,
-        template: doc.template,
-        fragment_key: doc.fragment_key,
-        category: doc.category,
-        status: doc.status,
-        reason: doc.reason,
-        provider: doc.provider,
-        message_id: doc.message_id,
-        source: doc.source,
-        source_detail: doc.source_detail,
-        duration_ms: doc.duration_ms,
-        created_at: doc.created_at?.toISOString() ?? null,
-      })),
+      rows: docs.map(pub),
       total,
       page,
       page_size,
     };
+  },
+
+  /**
+   * One row WITH its body and variables — what the drawer opens.
+   *
+   * Separate from the table on purpose: the body is the heavy field, and a
+   * page of rows carries twenty-five of them nobody asked to see.
+   */
+  async byId(id: string) {
+    if (!isValidObjectId(id)) return null;
+    const doc: any = await EmailLogModel.findById(id).lean();
+    if (!doc) return null;
+    return { ...pub(doc), html: doc.html ?? '', vars: doc.vars ?? '' };
   },
 
   /** Headline counts for the page's summary strip. */

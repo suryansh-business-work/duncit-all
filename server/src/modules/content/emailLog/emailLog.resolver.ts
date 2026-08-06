@@ -16,6 +16,10 @@ export const emailLogResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return emailLogService.table(args.query);
     },
+    emailLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailLogService.byId(args.id);
+    },
     emailLogStats: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return emailLogService.stats(args.days ?? 7);

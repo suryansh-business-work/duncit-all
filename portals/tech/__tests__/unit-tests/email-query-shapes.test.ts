@@ -5,6 +5,7 @@ import {
   TEMPLATES,
 } from '../../src/pages/email-templates-page/queries';
 import { FRAGMENTS } from '../../src/pages/email-fragments-page/queries';
+import { EMAIL_LOG_ONE } from '../../src/pages/email-logs-page/queries';
 
 /**
  * The tech portal has no GraphQL codegen, so `useQuery<{ x: Shape[] }>` is an
@@ -57,6 +58,15 @@ describe('email query selection sets match what the code reads', () => {
       'footer_note',
       'is_active',
     ]) {
+      expect(fields).toContain(required);
+    }
+  });
+
+  it('the log drawer asks for the body, the variables and the way back to the template', () => {
+    const fields = fieldsUnder(EMAIL_LOG_ONE, 'emailLog');
+    // `html` and `vars` are the whole reason this query exists beside the
+    // table's; `template` and `fragment_key` are what its links navigate by.
+    for (const required of ['html', 'vars', 'template', 'fragment_key']) {
       expect(fields).toContain(required);
     }
   });

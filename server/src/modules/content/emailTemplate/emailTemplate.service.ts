@@ -90,7 +90,7 @@ async function loadTemplate(slug: string) {
     // The on-disk file is a BODY now — its header and footer live in the
     // fragment. Without these two a fresh install would render every email
     // with no logo and no footer at all.
-    fragment_category: TEMPLATE_CATEGORIES[slug] ?? null,
+    fragment_key: TEMPLATE_CATEGORIES[slug] ?? null,
     footer_note: TEMPLATE_FOOTER_NOTES[slug] ?? '',
     variables: detectVariables(mjml).map((key) => ({ key })),
   });
@@ -106,13 +106,13 @@ async function loadTemplate(slug: string) {
  * only when a template has nothing of its own.
  */
 function withFooterNote(
-  tpl: { footer_note?: string; fragment_category?: string | null },
+  tpl: { footer_note?: string; fragment_key?: string | null },
   vars: Record<string, string>
 ): Record<string, string> {
   if (vars.footer_note) return vars;
   const own = (tpl.footer_note ?? '').trim();
   if (own) return { ...vars, footer_note: own };
-  const key = CATEGORY_NOTE_KEY[tpl.fragment_category as keyof typeof CATEGORY_NOTE_KEY];
+  const key = CATEGORY_NOTE_KEY[tpl.fragment_key as keyof typeof CATEGORY_NOTE_KEY];
   return { ...vars, footer_note: (key && vars[`t:${key}`]) || '' };
 }
 
@@ -176,12 +176,12 @@ export const emailTemplateService = {
    *
    * The body is wrapped in its category's header/footer fragment first, when it
    * names one. A template that names none renders exactly as it did before
-   * fragments existed — which is why `fragment_category` defaults to null.
+   * fragments existed — which is why `fragment_key` defaults to null.
    */
   async render(slug: string, vars: Record<string, string> = {}) {
     const tpl = await loadTemplate(slug);
     if (!tpl) throw new GraphQLError(`Email template '${slug}' not found`);
-    const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_category);
+    const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_key);
     const { html, errors } = renderMjml(source, withFooterNote(tpl, vars));
     return {
       subject: applyVars(tpl.subject, vars),

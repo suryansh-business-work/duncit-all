@@ -188,6 +188,22 @@ export async function sendEmail(opts: {
    * not a user account. Omitted = looked up from `to`, then the default. */
   locale?: string | null;
 }) {
+  // A switched-off template stops the send here, before anything is rendered
+  // or any provider is reached. Deliberately NOT an exception: a disabled
+  // receipt template must not take a checkout down with it. The warning is what
+  // makes it visible — it lands in Telemetry > Logs, so "the customer never got
+  // the email" has an answer instead of a silence.
+  const template = await emailTemplateService.bySlug(opts.template);
+  if (template?.is_active === false) {
+    logs.server.warn('email', 'template-inactive', {
+      to: opts.to,
+      template: opts.template,
+      category: opts.category ?? 'transactional',
+      msg: `Mail not sent: template "${opts.template}" is not active`,
+    });
+    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
+  }
+
   const brandLogoUrl = await getBrandLogoUrl();
   // Localized copy arrives as `t:<key>` vars, so templates pick it up through
   // the SAME {{ }} substitution as every other variable (rule 38). Caller vars

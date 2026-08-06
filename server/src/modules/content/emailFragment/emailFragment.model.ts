@@ -7,15 +7,26 @@ import { EMAIL_CATEGORIES } from '@services/email/email.provider';
  * one carries a tax line, the other an unsubscribe — and that difference
  * belongs in one editable place, not copied into every template.
  *
- * There are exactly nine, one per category, and there is no way to add or
- * remove one: the categories are a closed set in the code, so a tenth fragment
- * would never be reached and a missing one would leave sends unwrapped. The
- * service seeds all nine on boot and exposes only an update.
+ * Nine ship with the product, one per email category, and those nine cannot be
+ * deleted: a template that lost its header mid-flight would send bare, and the
+ * category list is closed in code so a replacement could never be seeded back.
+ * Beyond those, an admin can add as many of their own as they like — a seasonal
+ * banner, a footer for one campaign — and delete them again.
+ *
+ * Identity is `key`, not `category`: a custom fragment belongs to no category,
+ * and a template names the fragment it wants by key.
  */
 export interface IEmailFragment extends Document {
   fragment_id: string;
-  /** One of EMAIL_CATEGORIES. Unique — a category has exactly one fragment. */
-  category: string;
+  /** Stable, immutable identity. A template stores this. */
+  key: string;
+  /**
+   * One of EMAIL_CATEGORIES for the nine that ship; null for one an admin
+   * added. A category has at most one fragment.
+   */
+  category: string | null;
+  /** True for the nine. They can be edited and switched off, never deleted. */
+  is_system: boolean;
   name: string;
   description?: string;
   /** MJML injected at the TOP of the template's `<mj-body>`. */
@@ -31,7 +42,10 @@ export interface IEmailFragment extends Document {
 const EmailFragmentSchema = new Schema<IEmailFragment>(
   {
     fragment_id: { type: String, required: true, unique: true, index: true },
-    category: { type: String, required: true, unique: true, index: true, enum: EMAIL_CATEGORIES },
+    key: { type: String, required: true, unique: true, index: true, trim: true },
+    // No `index: true` here — the partial unique index below is the only one.
+    category: { type: String, default: null, enum: [...EMAIL_CATEGORIES, null] },
+    is_system: { type: Boolean, default: false },
     name: { type: String, required: true },
     description: String,
     header_mjml: { type: String, default: '' },
@@ -39,6 +53,18 @@ const EmailFragmentSchema = new Schema<IEmailFragment>(
     is_active: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+/**
+ * At most one fragment per category — but only among the ones that HAVE a
+ * category. A `sparse` unique index is the obvious answer and the wrong one:
+ * sparse skips documents where the field is ABSENT, and every custom fragment
+ * stores an explicit `null`, so the second one collides with the first. A
+ * partial index on "is a string" is what actually means "ignore the nulls".
+ */
+EmailFragmentSchema.index(
+  { category: 1 },
+  { unique: true, partialFilterExpression: { category: { $type: 'string' } } }
 );
 
 export const EmailFragmentModel =

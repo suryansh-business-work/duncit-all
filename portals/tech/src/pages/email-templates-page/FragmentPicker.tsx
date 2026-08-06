@@ -20,7 +20,7 @@ interface Props {
  * all on at once would show two logos.
  */
 export default function FragmentPicker({ value, options, onChange }: Readonly<Props>) {
-  const chosen = options.find((o) => o.category === value);
+  const chosen = options.find((o) => o.key === value);
 
   const helper = () => {
     if (!value) return 'Renders exactly as written, with nothing added.';
@@ -40,7 +40,7 @@ export default function FragmentPicker({ value, options, onChange }: Readonly<Pr
     >
       <MenuItem value="">None</MenuItem>
       {options.map((o) => (
-        <MenuItem key={o.category} value={o.category}>
+        <MenuItem key={o.key} value={o.key}>
           {o.name}
           {!o.is_active && ' (off)'}
         </MenuItem>

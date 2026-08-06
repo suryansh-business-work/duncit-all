@@ -11,23 +11,35 @@ export const emailFragmentResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return emailFragmentService.list();
     },
-    emailFragment: (_p: unknown, args: { category: string }, ctx: GraphQLContext) => {
+    emailFragment: (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return emailFragmentService.byCategory(args.category);
+      return emailFragmentService.byKey(args.key);
     },
   },
   Mutation: {
-    updateEmailFragment: (
+    createEmailFragment: (
       _p: unknown,
-      args: { category: string; input: Record<string, unknown> },
+      args: { input: Record<string, any> },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return emailFragmentService.update(args.category, args.input);
+      return emailFragmentService.create(args.input as any);
     },
-    resetEmailFragment: (_p: unknown, args: { category: string }, ctx: GraphQLContext) => {
+    updateEmailFragment: (
+      _p: unknown,
+      args: { key: string; input: Record<string, unknown> },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return emailFragmentService.reset(args.category);
+      return emailFragmentService.update(args.key, args.input);
+    },
+    deleteEmailFragment: (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailFragmentService.remove(args.key);
+    },
+    resetEmailFragment: (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return emailFragmentService.reset(args.key);
     },
   },
 };

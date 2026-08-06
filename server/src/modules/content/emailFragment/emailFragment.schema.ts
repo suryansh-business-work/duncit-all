@@ -7,8 +7,7 @@ import { EMAIL_CATEGORIES } from '@services/email/email.provider';
  * graphql-codegen's code-file loader plucks these template literals WITHOUT
  * evaluating them, so an interpolated enum body leaves the loader with an enum
  * it cannot parse — and every other file that names `EmailCategory` then fails
- * with "Unknown type: EmailCategory". `EnvCategory` gets away with
- * interpolation only because nothing outside its own file refers to it.
+ * with "Unknown type: EmailCategory".
  *
  * The cost of spelling them out is drift, which is what the guard below is for:
  * a category added to the code and forgotten here throws the moment this module
@@ -35,7 +34,7 @@ if (SDL_CATEGORIES.join(',') !== EMAIL_CATEGORIES.join(',')) {
 }
 
 export const emailFragmentTypeDefs = gql`
-  "Why an email is being sent. Decides which header/footer wraps it."
+  "Why an email is being sent. The nine fragments that ship map one-to-one onto these."
   enum EmailCategory {
     transactional
     authentication
@@ -49,23 +48,37 @@ export const emailFragmentTypeDefs = gql`
   }
 
   """
-  The header and footer that wrap a template's body, one pair per category.
-  There are exactly nine and they cannot be created or deleted — only edited,
-  switched off, or reset to what they shipped with.
+  The header and footer that wrap a template's body.
+
+  Nine ship with Duncit, one per email category, and cannot be deleted — a
+  template that lost its header mid-flight would send bare. Beyond those an
+  admin adds their own and removes them again.
   """
   type EmailFragment {
     fragment_id: ID!
-    category: EmailCategory!
+    "Stable, immutable identity. A template stores this."
+    key: String!
+    "Set for the nine that ship; null for one an admin added."
+    category: EmailCategory
+    "True for the nine. Editable and switchable, never deletable."
+    is_system: Boolean!
     name: String!
     description: String
     "MJML injected at the top of the template's mj-body."
     header_mjml: String!
     "MJML injected at the bottom of the template's mj-body."
     footer_mjml: String!
-    "Off means templates in this category render without the wrap."
+    "Off means templates naming it render without the wrap."
     is_active: Boolean!
     created_at: String
     updated_at: String
+  }
+
+  input CreateEmailFragmentInput {
+    name: String!
+    description: String
+    header_mjml: String
+    footer_mjml: String
   }
 
   input UpdateEmailFragmentInput {
@@ -77,14 +90,21 @@ export const emailFragmentTypeDefs = gql`
   }
 
   extend type Query {
-    "All nine, in category order."
+    "Every fragment — the nine first, then the custom ones."
     emailFragments: [EmailFragment!]!
-    emailFragment(category: EmailCategory!): EmailFragment
+    emailFragment(key: String!): EmailFragment
   }
 
   extend type Mutation {
-    updateEmailFragment(category: EmailCategory!, input: UpdateEmailFragmentInput!): EmailFragment!
-    "Restore one fragment's header and footer to what they shipped with."
-    resetEmailFragment(category: EmailCategory!): EmailFragment!
+    "Add a fragment of your own. It belongs to no category and can be deleted."
+    createEmailFragment(input: CreateEmailFragmentInput!): EmailFragment!
+    updateEmailFragment(key: String!, input: UpdateEmailFragmentInput!): EmailFragment!
+    """
+    Delete a fragment you added. Refused for the nine that ship. Templates
+    naming it are released rather than left pointing at nothing.
+    """
+    deleteEmailFragment(key: String!): Boolean!
+    "Restore one of the nine to the header and footer it shipped with."
+    resetEmailFragment(key: String!): EmailFragment!
   }
 `;

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useConfirm } from '@duncit/dialogs';
 import {
+  CREATE_FRAGMENT,
+  DELETE_FRAGMENT,
   FRAGMENTS,
   RENDER,
   RESET_FRAGMENT,
@@ -25,6 +27,8 @@ export function useEmailFragments() {
   });
   const [updateFragment] = useMutation(UPDATE_FRAGMENT);
   const [resetFragment] = useMutation(RESET_FRAGMENT);
+  const [createFragment] = useMutation(CREATE_FRAGMENT);
+  const [deleteFragment] = useMutation(DELETE_FRAGMENT);
   const client = useApolloClient();
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -37,16 +41,16 @@ export function useEmailFragments() {
   const list = useMemo(() => data?.emailFragments ?? [], [data]);
 
   useEffect(() => {
-    if (!selected && list.length) setSelected(list[0].category);
+    if (!selected && list.length) setSelected(list[0].key);
   }, [list, selected]);
 
   useEffect(() => {
-    const found = list.find((f) => f.category === selected);
+    const found = list.find((f) => f.key === selected);
     if (found) setDraft({ ...found });
   }, [selected, list]);
 
   const dirty = useMemo(() => {
-    const saved = list.find((f) => f.category === selected);
+    const saved = list.find((f) => f.key === selected);
     return !!draft && !!saved && JSON.stringify(saved) !== JSON.stringify(draft);
   }, [draft, list, selected]);
 
@@ -74,7 +78,7 @@ export function useEmailFragments() {
     try {
       await updateFragment({
         variables: {
-          category: draft.category,
+          key: draft.key,
           input: {
             name: draft.name,
             description: draft.description,
@@ -105,7 +109,7 @@ export function useEmailFragments() {
     if (!ok) return;
     setBusy(true);
     try {
-      await resetFragment({ variables: { category: draft.category } });
+      await resetFragment({ variables: { key: draft.key } });
       await refetch();
       setSnack({ kind: 'success', msg: 'Reset to the shipped version' });
     } catch (e: any) {
@@ -115,8 +119,49 @@ export function useEmailFragments() {
     }
   };
 
+  /** Add a fragment of your own, then select it so it can be filled in. */
+  const create = async (name: string) => {
+    setBusy(true);
+    try {
+      const { data } = await createFragment({ variables: { input: { name } } });
+      await refetch();
+      const key = data?.createEmailFragment?.key;
+      if (key) setSelected(key);
+      setSnack({ kind: 'success', msg: 'Fragment added' });
+    } catch (e: any) {
+      setSnack({ kind: 'error', msg: e.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Only a fragment you added. The nine that ship refuse, loudly. */
+  const remove = async () => {
+    if (!draft) return;
+    const ok = await confirm({
+      title: 'Delete fragment',
+      message: `Delete "${draft.name}"? Templates using it go back to no header and footer. This cannot be undone.`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await deleteFragment({ variables: { key: draft.key } });
+      setSelected(null);
+      await refetch();
+      setSnack({ kind: 'success', msg: 'Fragment deleted' });
+    } catch (e: any) {
+      setSnack({ kind: 'error', msg: e.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return {
     list,
+    create,
+    remove,
     loading,
     hasData: !!data,
     selected,

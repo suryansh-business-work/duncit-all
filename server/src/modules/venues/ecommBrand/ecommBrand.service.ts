@@ -340,6 +340,7 @@ export const ecommBrandService = {
           to: brand.contact_email,
           subject: active ? 'Your brand is now active' : 'Your brand has been deactivated',
           template: slug,
+          category: 'notification',
           vars: {
             contact_person: brand.contact_person ?? '',
             brand_name: brand.brand_name ?? '',

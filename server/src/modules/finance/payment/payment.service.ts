@@ -795,6 +795,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       to: doc.user_email,
       subject: `Payment Receipt — ${doc.invoice_no}`,
       template: 'payment-receipt',
+      category: 'billing',
       vars: {
         name: doc.user_name,
         summary:

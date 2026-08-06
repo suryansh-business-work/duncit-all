@@ -83,7 +83,7 @@ export class AiSensyProvider implements WhatsAppProvider {
     if (!apiKey) {
       throw new CommunicationConfigError(
         'AiSensy has no API key configured. Set it before sending.',
-        this.name
+        this.name,
       );
     }
 
@@ -111,7 +111,7 @@ export class AiSensyProvider implements WhatsAppProvider {
           // A key or a template problem repeats identically; a 429 or a 5xx may not.
           retryable: status === 429 || status >= 500,
           cause: response.data,
-        }
+        },
       );
     }
 

@@ -412,6 +412,7 @@ export const ticketService = {
     const artifact = await buildTranscriptArtifact(data, format);
     await sendHtmlEmail({
       to: addr,
+      category: 'support',
       subject: `Your Duncit support ticket transcript (${data.no})`,
       html: `<p>Hi,</p><p>Your Duncit support ticket <b>${data.no}</b> transcript is attached.</p><p>— Team Duncit</p>`,
       attachments: [

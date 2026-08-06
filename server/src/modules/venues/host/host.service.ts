@@ -423,6 +423,7 @@ export const hostService = {
           to: h.email,
           subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
           template: slug,
+          category: 'notification',
           vars: {
             host_name: h.full_name ?? '',
             host_email: h.email ?? '',

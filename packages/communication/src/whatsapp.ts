@@ -50,7 +50,7 @@ export function assertValidSendOptions(options: WhatsAppSendOptions): void {
   if (!campaign) {
     throw new CommunicationValidationError(
       'campaign is required — it names the approved template at the provider.',
-      'campaign'
+      'campaign',
     );
   }
 
@@ -61,25 +61,25 @@ export function assertValidSendOptions(options: WhatsAppSendOptions): void {
   if (!E164.test(to)) {
     throw new CommunicationValidationError(
       `to must be in E.164 format, like +919876543210 (received "${to}").`,
-      'to'
+      'to',
     );
   }
 
   if (options.variables !== undefined && !Array.isArray(options.variables)) {
     throw new CommunicationValidationError(
       'variables must be an array, in the order the template declares them.',
-      'variables'
+      'variables',
     );
   }
   // A null or undefined inside the array silently becomes the string "null" at
   // the provider and ships to the customer that way.
   const blank = (options.variables ?? []).findIndex(
-    (v) => v === null || v === undefined || v === ''
+    (v) => v === null || v === undefined || v === '',
   );
   if (blank >= 0) {
     throw new CommunicationValidationError(
       `variables[${blank}] is empty — a template placeholder cannot be blank.`,
-      'variables'
+      'variables',
     );
   }
 
@@ -93,7 +93,7 @@ export function createWhatsAppChannel(provider: WhatsAppProvider | null): WhatsA
   const send = async (options: WhatsAppSendOptions): Promise<WhatsAppSendResult> => {
     if (!provider) {
       throw new CommunicationConfigError(
-        'No WhatsApp provider is configured. Pass one to createCommunication().'
+        'No WhatsApp provider is configured. Pass one to createCommunication().',
       );
     }
     assertValidSendOptions(options);

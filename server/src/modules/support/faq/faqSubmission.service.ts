@@ -83,6 +83,7 @@ export const faqSubmissionService = {
           to: payload.email,
           subject: `We received your question — ${branding?.app_name || 'Duncit'}`,
           template: 'faq-received',
+          category: 'support',
           vars: {
             question: payload.question,
             app_name: branding?.app_name || 'Duncit',

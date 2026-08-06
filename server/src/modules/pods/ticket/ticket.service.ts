@@ -213,6 +213,7 @@ export const ticketService = {
       to: t.snapshot?.user_email,
       subject: `Your ticket — ${t.snapshot?.pod_title}`,
       template: 'event-ticket',
+      category: 'transactional',
       vars: {
         name: t.snapshot?.user_name ?? 'there',
         event_title: t.snapshot?.pod_title ?? 'Event',

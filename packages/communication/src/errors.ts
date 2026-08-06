@@ -24,7 +24,7 @@ export class CommunicationError extends Error {
       provider?: string;
       retryable?: boolean;
       cause?: unknown;
-    }
+    },
   ) {
     super(message);
     this.name = new.target.name;
@@ -65,7 +65,7 @@ export class CommunicationProviderError extends CommunicationError {
       status?: number;
       retryable?: boolean;
       cause?: unknown;
-    }
+    },
   ) {
     super(message, {
       code: 'PROVIDER_FAILED',

@@ -1,6 +1,6 @@
 ---
 name: '@duncit/communication'
-summary: 'Provider-agnostic messaging. One typed WhatsApp API — AiSensy today, Meta Cloud API or Twilio tomorrow — with validation, retries and redacted logging built in.'
+summary: 'Provider-agnostic messaging. One typed API per channel — WhatsApp via AiSensy, email via Resend — with validation, retries, middleware and redacted logging built in. Swapping vendor is config, not a rewrite.'
 category: 'domain'
 zeroDeps: true
 frameworkFree: true
@@ -20,9 +20,41 @@ exports:
   - 'CommunicationValidationError'
   - 'CommunicationConfigError'
   - 'CommunicationProviderError'
+  - 'createEmailChannel'
+  - 'ResendProvider'
+  - 'MockEmailProvider'
+  - 'InMemoryTemplateRenderer'
+  - 'composeMiddleware'
+  - 'assertValidEmailOptions'
+  - 'htmlToText'
+  - 'EmailValidationError'
+  - 'EmailProviderError'
+  - 'EmailConfigurationError'
+  - 'EmailTemplateError'
+  - 'EmailRateLimitError'
 ---
 
 # @duncit/communication
+
+Two channels, one idea: **which vendor carries a message is a config detail.**
+
+```ts
+await communication.whatsapp.utility.send({
+  campaign: 'booking_confirmation',
+  to: '+919876543210',
+});
+await communication.email.send({
+  category: 'transactional',
+  to: 'user@example.com',
+  subject: '…',
+  html: '…',
+});
+```
+
+Both channels are built the same way — channel, provider, transport — so what
+you learn about one is true of the other.
+
+## WhatsApp
 
 Sending a WhatsApp message is one line. Which vendor carries it is a config
 detail, and swapping that vendor must not touch a single call site.
@@ -213,13 +245,188 @@ how a test swaps in a fake without touching the network.
    the provider strips the plus on the way out, so the vendor's quirk never
    leaks into a call site.
 
+## Email
+
+One method. Everything is decided by what is in the options — including _why_
+the email is being sent:
+
+```ts
+await communication.email.send({
+  category: 'transactional',
+  template: 'booking-confirmation',
+  to: 'user@example.com',
+  subject: 'Booking Confirmed',
+  variables: { bookingId: 'POD-1021', amount: '₹299' },
+});
+```
+
+There is deliberately **no** `email.transactional.send()`. WhatsApp gets
+category helpers because Meta enforces the category per template; email does
+not, so one method keeps one code path to test and one place to add a rule.
+
+### The nine categories
+
+`transactional` · `authentication` · `marketing` · `service` · `notification` ·
+`support` · `billing` · `legal` · `internal`
+
+They are metadata, not routing. What reads them: suppression (marketing can be
+unsubscribed from, a receipt cannot), reporting, and the provider's dashboard —
+the category ships as a tag on every send.
+
+### Every option
+
+```ts
+interface EmailSendOptions {
+  category: EmailCategory; // required — why this is being sent
+  to: string | string[]; // required
+  cc?: string[];
+  bcc?: string[];
+  subject: string; // required; a template may override it
+  template?: string; // rendered with `variables`
+  html?: string; // used when there is no template
+  text?: string; // derived from the HTML when omitted
+  variables?: Record<string, any>;
+  attachments?: Array<{ filename: string; content: Uint8Array | string; contentType?: string }>;
+  replyTo?: string;
+  from?: string; // falls back to the channel's `from`
+  tags?: string[];
+  metadata?: Record<string, string>;
+  headers?: Record<string, string>;
+  idempotencyKey?: string; // derived from the message when omitted
+}
+```
+
+### The layers
+
+| Layer                   | Knows about                                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `email.ts`              | the ORDER of a send: validate → render → normalise → middleware → hooks → provider                                                |
+| `providers/resend.ts`   | one vendor's field names                                                                                                          |
+| `transport.ts`          | HTTP, retries, timeouts, redaction — shared with WhatsApp                                                                         |
+| `templates/renderer.ts` | an interface. The default holds templates in memory; a server that renders MJML out of a database implements the same three lines |
+
+### What it refuses to send
+
+- an address that is not an address, in `to`, `cc`, `bcc`, `from` or `replyTo`
+- a blank `category`, `to` or `subject`
+- **a subject with nothing under it** — no `template`, no `html`, no `text`. That
+  is the worst outcome available: it looks like a real message and says nothing.
+- an attachment with no filename or no content
+
+The error names the field:
+
+```ts
+catch (error) {
+  if (error instanceof EmailValidationError) error.field; // 'to'
+}
+```
+
+### The errors
+
+| Class                     | When                                       | `retryable` |
+| ------------------------- | ------------------------------------------ | ----------- |
+| `EmailValidationError`    | the message was never sendable             | `false`     |
+| `EmailConfigurationError` | no provider, no key, or no from address    | `false`     |
+| `EmailTemplateError`      | template missing or unrenderable           | `false`     |
+| `EmailProviderError`      | the vendor refused or could not be reached | depends     |
+| `EmailRateLimitError`     | throttled — carries `retryAfterSeconds`    | `true`      |
+
+`EmailRateLimitError` is its own class because the answer is different: wait and
+send again, rather than fix and redeploy.
+
+### Sending once
+
+Every message carries an idempotency key — yours, or one derived from the
+category, recipients, subject and body. Resend de-duplicates on it, so **the
+transport's own retry cannot put a second invoice in someone's inbox.** Pass
+your own when a queue may redeliver the job:
+
+```ts
+await communication.email.send({ …, idempotencyKey: 'invoice-INV-2291' });
+```
+
+### The text part
+
+Never optional. A message with no text part scores worse with spam filters and
+is what a screen reader shows. If you do not write one it is derived from the
+HTML — block ends become newlines, and `<script>` / `<style>` contents are
+dropped rather than pasted in as source code.
+
+### Middleware, and why it is not a hook
+
+Middleware can **change** the message. Hooks only **watch**. Keeping those apart
+is what stops a metrics counter from silently rewriting a customer's email.
+
+```ts
+// Nothing sent from staging may reach a real customer.
+const redirect: EmailMiddleware = (email, _ctx, next) =>
+  next({ ...email, to: ['qa@duncit.com'], cc: [], bcc: [] });
+
+// An unsubscribe applies to marketing. A booking receipt is not optional.
+const suppress: EmailMiddleware = async (email, _ctx, next) => {
+  if (email.category === 'marketing' && email.to.some(isUnsubscribed)) {
+    return { messageId: null, provider: 'suppressed', accepted: [], raw: {} };
+  }
+  return next(email);
+};
+
+createCommunication({ email: { …, middleware: [redirect, suppress] } });
+```
+
+They run outermost-first in registration order. A middleware that calls `next()`
+twice is rejected — that would send the email twice.
+
+### Testing
+
+```ts
+const provider = new MockEmailProvider();
+const communication = createCommunication({ email: { provider, from: 'noreply@duncit.com' } });
+
+await sendBookingConfirmation();
+
+expect(provider.last?.category).toBe('transactional');
+expect(provider.last?.to).toEqual(['user@example.com']);
+```
+
+`MockEmailProvider` is shipped rather than left in a test file because every
+consumer needs it. It also takes `{ failWith, retryable }` for the unhappy path.
+
+### Adding a provider
+
+Two members. Nothing else in the package changes, and no call site changes:
+
+```ts
+class SesProvider implements EmailProvider {
+  readonly name = 'ses';
+  async isConfigured() {
+    return Boolean(this.credentials);
+  }
+  async send(email: PreparedEmail) {
+    /* map to SES, return { messageId, provider, accepted, raw } */
+  }
+}
+
+createCommunication({ email: { provider: new SesProvider(config), from: '…' } });
+```
+
+`PreparedEmail` arrives validated, rendered and normalised, so a provider is
+only ever a field-name translation. That is the same shape SendGrid, Postmark,
+Brevo and Mailgun would take.
+
 ## Why the server does not import this
 
 `server/src` imports zero `@duncit/*` packages by design (project rule 40) — it
 runs compiled `dist` on plain Node, where a source-only workspace package does
-not resolve. `server/src/modules/platform/aisensy/` is a self-contained mirror
-of this design: the same provider/transport split, the same retry rules, the
-same "success is a string" check, in the server's own idioms and errors. Same
-precedent as `@duncit/slack`.
+not resolve. `server/src/modules/platform/aisensy/` and
+`server/src/services/email/email.provider.ts` are self-contained mirrors of
+this design: the same provider split, the same categories, the same
+"success is a string" check on AiSensy, in the server's own idioms and errors.
+Same precedent as `@duncit/slack`.
+
+On the server the provider is chosen by the Tech portal's active default entry
+— an **EMAIL** entry sends over SMTP, a **RESEND** entry sends over the API —
+so switching vendor is one click and no deploy. Both the transactional service
+and the CRM's lead emails come through that one layer; they used to keep a
+nodemailer transport each, which meant a fix to one was a fix to only one.
 
 **Change one, change the other.** The pair is small on purpose.

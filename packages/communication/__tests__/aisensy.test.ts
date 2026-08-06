@@ -124,7 +124,7 @@ describe('AiSensyProvider', () => {
       new AiSensyProvider({ apiKey: 'k', fetchImpl: impl }).send({
         campaign: 'c',
         to: '+919876543210',
-      })
+      }),
     ).rejects.toThrow(/Template not approved/);
   });
 
@@ -205,7 +205,7 @@ describe('AiSensyProvider', () => {
       fetchImpl: impl,
     });
     await expect(provider.send({ campaign: 'c', to: '+919876543210' })).rejects.toBeInstanceOf(
-      CommunicationConfigError
+      CommunicationConfigError,
     );
     await expect(provider.isConfigured()).resolves.toBe(false);
   });

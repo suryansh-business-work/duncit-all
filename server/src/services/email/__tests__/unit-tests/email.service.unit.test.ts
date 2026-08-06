@@ -43,6 +43,12 @@ jest.mock('nodemailer', () => ({
   createTransport: () => ({ sendMail: sendMailMock }),
 }));
 
+// The provider layer asks the Tech portal which mailbox to use. No entry means
+// the json transport, which is exactly the no-network path this test wants.
+jest.mock('@modules/platform/envEntry/envEntry.service', () => ({
+  envEntryService: { resolveRuntime: jest.fn().mockResolvedValue(null) },
+}));
+
 const LEGACY = 'https://duncit.com/duncit-logo.svg';
 
 type EmailModule = typeof import('../../email.service');

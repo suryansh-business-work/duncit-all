@@ -84,6 +84,7 @@ export const newsletterService = {
         to: payload.email,
         subject: `Welcome to ${branding?.app_name || 'Duncit'}`,
         template: 'newsletter-welcome',
+        category: 'marketing',
         vars: {
           email: payload.email,
           app_name: branding?.app_name || 'Duncit',

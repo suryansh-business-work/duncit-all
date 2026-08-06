@@ -5,6 +5,7 @@ import {
   CommunicationProviderError,
   CommunicationValidationError,
   createWhatsAppChannel,
+  EmailProviderError,
 } from '../src/index';
 import type { WhatsAppProvider } from '../src/types';
 
@@ -53,6 +54,16 @@ describe('the error types', () => {
   });
 });
 
+describe('the email errors', () => {
+  it('defaults a provider failure to not-retryable, with no status', () => {
+    const error = new EmailProviderError('refused', { provider: 'resend' });
+    expect(error.retryable).toBe(false);
+    expect(error.status).toBeUndefined();
+    expect(error.code).toBe('EMAIL_PROVIDER_FAILED');
+    expect(error.name).toBe('EmailProviderError');
+  });
+});
+
 describe('validation edges', () => {
   const provider: WhatsAppProvider = {
     name: 'fake',
@@ -63,10 +74,10 @@ describe('validation edges', () => {
   it('rejects a non-string campaign and a non-string destination', async () => {
     const whatsapp = createWhatsAppChannel(provider);
     await expect(whatsapp.send({ campaign: 42 as never, to: '+919876543210' })).rejects.toThrow(
-      /campaign is required/
+      /campaign is required/,
     );
     await expect(whatsapp.send({ campaign: 'c', to: 42 as never })).rejects.toThrow(
-      /to is required/
+      /to is required/,
     );
   });
 });

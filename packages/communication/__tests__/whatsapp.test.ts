@@ -30,7 +30,7 @@ describe('validation', () => {
 
   it('requires a campaign', () => {
     expect(() => assertValidSendOptions({ campaign: '   ', to: '+919876543210' })).toThrow(
-      /campaign is required/
+      /campaign is required/,
     );
   });
 
@@ -59,7 +59,7 @@ describe('validation', () => {
         campaign: 'c',
         to: '+919876543210',
         variables: 'POD' as never,
-      })
+      }),
     ).toThrow(/variables must be an array/);
   });
 
@@ -69,14 +69,14 @@ describe('validation', () => {
         campaign: 'c',
         to: '+919876543210',
         variables: ['a', '', 'b'],
-      })
+      }),
     ).toThrow(/variables\[1\] is empty/);
     expect(() =>
       assertValidSendOptions({
         campaign: 'c',
         to: '+919876543210',
         variables: ['a', null as never],
-      })
+      }),
     ).toThrow(/variables\[1\] is empty/);
   });
 
@@ -86,7 +86,7 @@ describe('validation', () => {
         campaign: 'c',
         to: '+919876543210',
         media: {} as never,
-      })
+      }),
     ).toThrow(/media.url is required/);
   });
 
@@ -98,7 +98,7 @@ describe('validation', () => {
         name: 'Suryansh',
         variables: ['POD-1021', 299],
         media: { url: 'https://x/y.pdf', filename: 'ticket.pdf' },
-      })
+      }),
     ).not.toThrow();
   });
 });
@@ -149,7 +149,7 @@ describe('the channel', () => {
       createWhatsAppChannel(provider).marketing.send({
         campaign: '',
         to: '+919876543210',
-      })
+      }),
     ).rejects.toBeInstanceOf(CommunicationValidationError);
     expect(send).not.toHaveBeenCalled();
   });
@@ -157,7 +157,7 @@ describe('the channel', () => {
   it('throws a config error when there is no provider at all', async () => {
     const whatsapp = createWhatsAppChannel(null);
     await expect(whatsapp.send({ campaign: 'c', to: '+919876543210' })).rejects.toBeInstanceOf(
-      CommunicationConfigError
+      CommunicationConfigError,
     );
     expect(whatsapp.provider).toBe('none');
     await expect(whatsapp.isConfigured()).resolves.toBe(false);
@@ -191,7 +191,7 @@ describe('createCommunication', () => {
   it('still returns a client with no config — sends fail loudly, not silently', async () => {
     const communication = createCommunication();
     await expect(
-      communication.whatsapp.send({ campaign: 'c', to: '+919876543210' })
+      communication.whatsapp.send({ campaign: 'c', to: '+919876543210' }),
     ).rejects.toBeInstanceOf(CommunicationConfigError);
   });
 });

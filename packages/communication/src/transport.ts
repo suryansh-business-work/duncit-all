@@ -37,6 +37,11 @@ export interface HttpResponse<T = unknown> {
   status: number;
   ok: boolean;
   data: T;
+  /**
+   * Lower-cased response headers. Carried because a 429 says how long to wait
+   * in `retry-after`, and that answer is not in the body.
+   */
+  headers: Record<string, string>;
 }
 
 export interface TransportOptions {
@@ -79,6 +84,21 @@ export function isRetryableStatus(status: number): boolean {
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Response headers as a plain lower-cased object. A stubbed fetch in a test
+ * rarely bothers with a `Headers` instance, and a missing header set must not
+ * be the thing that breaks a send.
+ */
+function readHeaders(res: { headers?: unknown }): Record<string, string> {
+  const source = res.headers;
+  const out: Record<string, string> = {};
+  if (!source || typeof (source as Headers).forEach !== 'function') return out;
+  (source as Headers).forEach((value, key) => {
+    out[key.toLowerCase()] = value;
+  });
+  return out;
+}
 
 export class HttpTransport {
   private readonly fetchImpl: typeof fetch;
@@ -170,7 +190,7 @@ export class HttpTransport {
     // Every attempt threw before the provider answered.
     throw new CommunicationProviderError(
       `${this.provider} could not be reached after ${this.retry.attempts} attempt(s): ${String(lastError)}`,
-      { provider: this.provider, retryable: true, cause: lastError }
+      { provider: this.provider, retryable: true, cause: lastError },
     );
   }
 
@@ -190,7 +210,7 @@ export class HttpTransport {
       });
       // A provider that answers with HTML on an outage must not crash the parse.
       const data = (await res.json().catch(() => ({}))) as T;
-      return { status: res.status, ok: res.ok, data };
+      return { status: res.status, ok: res.ok, data, headers: readHeaders(res) };
     } finally {
       clearTimeout(timer);
     }

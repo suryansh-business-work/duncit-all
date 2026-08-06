@@ -91,6 +91,7 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
         to: email,
         subject: `${tmpl.label} · ${pod.pod_title}`,
         template: 'payout-statement',
+        category: 'billing',
         vars: {
           name,
           pod_title: pod.pod_title,

@@ -16,7 +16,7 @@ describe('redact', () => {
         apiKey: 'secret',
         nested: { token: 't', keep: 1 },
         list: [{ password: 'p' }],
-      })
+      }),
     ).toEqual({
       apiKey: '[redacted]',
       nested: { token: '[redacted]', keep: 1 },
@@ -48,7 +48,9 @@ describe('HttpTransport', () => {
 
     const res = await transport.request({ url: 'https://x', body: { a: 1 } });
 
-    expect(res).toEqual({ status: 400, ok: false, data: { message: 'nope' } });
+    // A stub with no Headers instance still yields an object, never undefined —
+    // a provider reading `headers['retry-after']` must not crash on a mock.
+    expect(res).toEqual({ status: 400, ok: false, data: { message: 'nope' }, headers: {} });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
@@ -110,7 +112,7 @@ describe('HttpTransport', () => {
           json: async () => {
             throw new Error('<html>');
           },
-        }) as unknown as Response
+        }) as unknown as Response,
     );
     const res = await new HttpTransport({
       provider: 'p',
@@ -178,7 +180,7 @@ describe('HttpTransport', () => {
       (_url: string, init: RequestInit) =>
         new Promise<Response>((_resolve, reject) => {
           init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
-        })
+        }),
     );
     await expect(
       new HttpTransport({
@@ -186,7 +188,7 @@ describe('HttpTransport', () => {
         fetchImpl: fetchImpl as unknown as typeof fetch,
         timeoutMs: 5,
         retry: { attempts: 1 },
-      }).request({ url: 'https://x' })
+      }).request({ url: 'https://x' }),
     ).rejects.toBeInstanceOf(CommunicationProviderError);
   });
 

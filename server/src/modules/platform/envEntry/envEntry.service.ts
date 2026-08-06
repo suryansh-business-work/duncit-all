@@ -236,6 +236,37 @@ async function probeAisensy(str: ConfigStr): Promise<TestResult> {
   return { ok: true, message: `Campaign API key is set — run a test campaign to verify delivery. ${projectNote}` };
 }
 
+/**
+ * Resend's domain list is the cheapest authenticated call there is, and it
+ * answers the question that actually breaks sends: a valid key with no VERIFIED
+ * domain is rejected on every message, so the probe reports the domains too
+ * rather than just "the key works".
+ */
+async function probeResend(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const res = await fetch('https://api.resend.com/domains', {
+    headers: { Authorization: `Bearer ${str('api_key')}` },
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    data?: { name?: string; status?: string }[];
+    message?: string;
+  };
+  if (!res.ok) {
+    const reason = data.message ?? `HTTP ${res.status}`;
+    return { ok: false, message: `Resend rejected the key: ${reason}` };
+  }
+  const verified = (data.data ?? []).filter((d) => d.status === 'verified').map((d) => d.name);
+  if (verified.length === 0) {
+    return { ok: false, message: 'Key works, but no verified sending domain — every send would be rejected' };
+  }
+  const from = str('from_address');
+  const domain = from.split('@')[1] ?? '';
+  if (domain && !verified.includes(domain)) {
+    return { ok: false, message: `"${from}" is not on a verified domain (verified: ${verified.join(', ')})` };
+  }
+  return { ok: true, message: `Resend connected — verified domain(s): ${verified.join(', ')}` };
+}
+
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
@@ -249,6 +280,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   SHIPROCKET: probeShiprocket,
   SLACK: probeSlack,
   AISENSY: probeAisensy,
+  RESEND: probeResend,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

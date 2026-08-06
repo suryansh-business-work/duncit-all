@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ChatParticipantsDocument, PodMessagesDocument } from '@/graphql/chat';
@@ -18,12 +18,17 @@ export function useChatRooms() {
   useEffect(() => {
     fetch();
   }, [fetch]);
+  // Stable, for the same reason `useSupport.reload` is: a fresh arrow every
+  // render becomes a changing dependency in a caller's effect, and an effect
+  // that refetches then loops. See the ~35,000-request incident in useSupport.
+
+  const refetch = useCallback(() => fetch(true), [fetch]);
 
   return {
     rooms: data?.myChatRooms ?? [],
     isLoading,
     hasData: !!data,
-    refetch: () => fetch(true),
+    refetch,
   };
 }
 

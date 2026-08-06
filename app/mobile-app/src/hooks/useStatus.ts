@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { isStoryLive } from '@duncit/utils';
 
 import { useStatusStore, type StatusFeed } from '@/stores/status.store';
@@ -108,5 +108,8 @@ export function useStatus() {
     [data?.myStories],
   );
 
-  return { statuses, clubStories, mine, isLoading, refetch: () => fetch(true) };
+  // Stable, for the same reason `useSupport.reload` is — see the note there.
+  const refetch = useCallback(() => fetch(true), [fetch]);
+
+  return { statuses, clubStories, mine, isLoading, refetch };
 }

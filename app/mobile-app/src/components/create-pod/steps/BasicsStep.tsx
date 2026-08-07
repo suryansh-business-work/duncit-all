@@ -4,6 +4,7 @@ import { YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
+import { hostCategoryKeyOf } from '../create-pod.form';
 import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelUploadField } from '../ReelUploadField';
@@ -18,7 +19,14 @@ interface Props {
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks). */
 export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
-  const { control } = form;
+  const { control, watch } = form;
+  // The host picks the category above the media field, and the server already
+  // denormalised its name onto the host record — so the cover picker can open on
+  // a search for it without another query.
+  const categoryKey = watch('host_category_key');
+  const subCategoryName = hostCategories.find(
+    (category) => hostCategoryKeyOf(category) === categoryKey,
+  )?.sub_category_name;
   return (
     <YStack gap={14}>
       {/* First field of the form: the category scopes the clubs on step 2 AND
@@ -49,6 +57,7 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             onChange={field.onChange}
             error={fieldState.error?.message}
             required
+            subCategoryName={subCategoryName}
           />
         )}
       />

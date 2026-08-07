@@ -40,6 +40,24 @@ export interface MediaPickerDialogProps {
   open: boolean;
   onClose: () => void;
   onPicked: (url: string) => void;
+  /**
+   * How many images ONE open may return. 1 (the default) is the single-pick
+   * behaviour every existing caller relies on — the dialog closes on the first
+   * pick. Above 1 the picks collect in a tray and come back together through
+   * `onPickedMany`, so a cover can be chosen from Pexels and the device in the
+   * same visit.
+   */
+  max?: number;
+  /** Called with every picked URL at once. Required when `max` is above 1. */
+  onPickedMany?: (urls: string[]) => void;
+  /**
+   * What to search Pexels for before the user types anything — the pod's
+   * sub-category, say. A cover picker that opens on a blank search makes the
+   * user do work the form already knows the answer to.
+   */
+  seedQuery?: string;
+  /** Pexels orientation to start on. A cover is wide, so callers pass 'landscape'. */
+  orientation?: Orientation;
   /** ImageKit folder e.g. "/users", "/posts", "/branding" */
   folder?: string;
   title?: string;

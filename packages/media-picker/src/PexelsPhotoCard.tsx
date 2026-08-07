@@ -1,8 +1,11 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface Props {
   photo: any;
   importing: boolean;
+  /** Already in the tray — shown ticked so the grid says what was chosen. */
+  picked?: boolean;
   anyImporting: boolean;
   onPick: (photo: any) => void;
 }
@@ -10,6 +13,7 @@ interface Props {
 export default function PexelsPhotoCard({
   photo,
   importing,
+  picked,
   anyImporting,
   onPick,
 }: Readonly<Props>) {
@@ -21,6 +25,9 @@ export default function PexelsPhotoCard({
         overflow: 'hidden',
         opacity: anyImporting && !importing ? 0.5 : 1,
         position: 'relative',
+        outline: picked ? '3px solid' : 'none',
+        outlineColor: 'primary.main',
+        outlineOffset: '-3px',
         '&:hover img': { transform: 'scale(1.04)' },
       }}
       onClick={() => !anyImporting && onPick(photo)}
@@ -37,6 +44,19 @@ export default function PexelsPhotoCard({
           background: photo.avg_color || '#eee',
         }}
       />
+      {picked && (
+        <CheckCircleIcon
+          color="primary"
+          sx={{
+            position: 'absolute',
+            right: 6,
+            top: 6,
+            fontSize: 22,
+            bgcolor: '#fff',
+            borderRadius: '50%',
+          }}
+        />
+      )}
       <ImageListItemBar
         title={photo.photographer}
         subtitle="Pexels"

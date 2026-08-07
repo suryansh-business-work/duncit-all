@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { MAX_COVER_IMAGES, addToSelection, coverSearchTerm, coverSlotsLeft } from '@duncit/utils';
 
 import { FieldLabel } from '@/components/Field';
 import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useUploadSettings } from '@/hooks/useUploadSettings';
+import { CoverPickerDialog } from './cover-picker';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
@@ -30,6 +33,12 @@ interface Props {
   label?: string;
   required?: boolean;
   folder?: string;
+  /**
+   * The sub-category the host already picked. The picker opens on a Pexels
+   * search for it instead of a blank box — the form knows the answer, so making
+   * the user type it is work for nothing.
+   */
+  subCategoryName?: string | null;
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
@@ -41,14 +50,33 @@ export function MediaUploadField({
   label = 'Cover image (at least one image)',
   required,
   folder = '/pods',
+  subCategoryName,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const urls = splitLines(value ?? '');
   const settings = useUploadSettings();
-  const addUrl = (url: string) => onChange([...urls, url].join('\n'));
-  const upload = useMediaUpload(folder, addUrl);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // What this visit has gathered, across both tabs. It lives here rather than in
+  // the dialog because a device upload lands through the crop sheet, which is a
+  // sibling modal — the field is what both paths report to.
+  const [tray, setTray] = useState<string[]>([]);
+  const slotsLeft = coverSlotsLeft(urls.length);
+  const addToTray = (url: string) => setTray((current) => addToSelection(current, url, slotsLeft));
+  const upload = useMediaUpload(folder, addToTray);
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
   const busy = upload.uploading;
+  const full = slotsLeft === 0;
+
+  const openPicker = () => {
+    setTray([]);
+    setPickerOpen(true);
+  };
+  const commit = () => {
+    const fresh = tray.filter((url) => !urls.includes(url));
+    if (fresh.length > 0) onChange([...urls, ...fresh].join('\n'));
+    setTray([]);
+    setPickerOpen(false);
+  };
 
   return (
     <YStack gap={8}>
@@ -100,8 +128,8 @@ export function MediaUploadField({
         testID="media-upload-add"
         role="button"
         aria-label="Add media"
-        aria-disabled={busy}
-        onPress={busy ? undefined : () => void upload.pick()}
+        aria-disabled={busy || full}
+        onPress={busy || full ? undefined : openPicker}
         alignItems="center"
         justifyContent="center"
         gap={8}
@@ -128,10 +156,12 @@ export function MediaUploadField({
           <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
         </YStack>
         <Text fontSize={14} fontWeight="600" color="$color">
-          Upload an image or video
+          {full ? 'That is the maximum' : 'Add photos or a video'}
         </Text>
         <Text fontSize={12} color="$muted">
-          {uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
+          {full
+            ? `Up to ${MAX_COVER_IMAGES} — remove one to add another`
+            : uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
         </Text>
       </YStack>
       {upload.error && !upload.pending ? (
@@ -144,6 +174,20 @@ export function MediaUploadField({
           {error}
         </Text>
       ) : null}
+      <CoverPickerDialog
+        open={pickerOpen}
+        seed={coverSearchTerm(subCategoryName)}
+        max={slotsLeft}
+        tray={tray}
+        busy={busy}
+        hint={uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
+        onPickDevice={() => void upload.pick(slotsLeft - tray.length)}
+        onPexelsPicked={addToTray}
+        onRemove={(url) => setTray((current) => current.filter((item) => item !== url))}
+        onDone={commit}
+        onClose={() => setPickerOpen(false)}
+      />
+      {/* Mounted after the picker so the crop sheet renders ON TOP of it. */}
       <MediaCropDialog
         media={upload.pending}
         settings={settings}

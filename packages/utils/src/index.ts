@@ -107,3 +107,9 @@ export {
   type StatementLine,
   type StatementSection,
 } from './earnings-statement';
+export {
+  MAX_COVER_IMAGES,
+  addToSelection,
+  coverSearchTerm,
+  coverSlotsLeft,
+} from './cover-image';

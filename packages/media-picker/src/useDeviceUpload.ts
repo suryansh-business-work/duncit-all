@@ -21,6 +21,12 @@ interface Args extends FilePolicy {
   surface: UploadSurface;
   onPicked: (url: string) => void;
   onClose: () => void;
+  /**
+   * Let go of the uploaded file instead of relying on the dialog closing.
+   * Multi-pick keeps the dialog open, and a tab still holding the last file
+   * would upload it a second time on the next press of the same button.
+   */
+  clearAfterUpload?: boolean;
   setError: (msg: string | null) => void;
 }
 
@@ -33,6 +39,7 @@ export function useDeviceUpload({
   allowDocuments,
   onPicked,
   onClose,
+  clearAfterUpload,
   setError,
 }: Args) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -126,6 +133,13 @@ export function useDeviceUpload({
         url = uploaded.url;
       }
       onPicked(url);
+      if (clearAfterUpload) {
+        setPicked(null);
+        setCropRect(null);
+        // The input keeps its value, so re-choosing the SAME file would fire no
+        // change event and the tab would look dead.
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
       onClose();
     } catch (e: any) {
       setError(e.message);

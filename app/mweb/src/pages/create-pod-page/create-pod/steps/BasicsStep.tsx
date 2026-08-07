@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
+import { hostCategoryKeyOf } from '../create-pod.form';
 import PodReelAccordion from '../fields/PodReelAccordion';
 import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
@@ -21,8 +22,17 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const {
     register,
     control,
+    watch,
     formState: { errors },
   } = form;
+
+  // The host picks the category above the media field, and the server already
+  // denormalised its name onto the host record — so the cover picker can open
+  // on a search for it without another query.
+  const categoryKey = watch('host_category_key');
+  const subCategoryName = hostCategories.find(
+    (category) => hostCategoryKeyOf(category) === categoryKey,
+  )?.sub_category_name;
 
   return (
     <Stack spacing={2.25}>
@@ -56,6 +66,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            subCategoryName={subCategoryName}
           />
         )}
       />

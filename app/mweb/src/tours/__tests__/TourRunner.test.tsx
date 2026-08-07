@@ -8,6 +8,17 @@ import { TourRunner } from '../TourRunner';
 
 const store = { getItem: vi.fn(() => null), setItem: vi.fn() };
 
+/** Every anchor the Home tour names, so nothing is left to wait for. */
+const HOME_ANCHORS = [
+  'home-pods',
+  'home-clubs',
+  'home-search',
+  'home-categories',
+  'home-filters',
+  'home-notifications',
+  'home-profile',
+];
+
 /** Starts a tour from inside the provider, like the Tour Guide centre does. */
 function Starter() {
   const { startTour } = useTours();
@@ -41,13 +52,31 @@ beforeEach(() => {
 });
 
 describe('TourRunner', () => {
-  it('renders the walkthrough once a tour is started and its anchors exist', async () => {
-    mount(['home-pods', 'home-clubs']);
+  it('starts at once when the whole screen is already there', async () => {
+    mount(HOME_ANCHORS);
     act(() => {
       screen.getByRole('button', { name: 'start' }).click();
     });
-    // The first Home step's copy is what the user should actually see.
+    // Every anchor resolved, so there is nothing to wait for — and the tour
+    // opens on its FIRST step, not on whichever one happened to be mounted.
     expect(await screen.findByText('What are Pods?')).toBeInTheDocument();
+  });
+
+  it('waits for the rest of the screen rather than starting on the header', async () => {
+    // The header is up before the feed is. Taking that first answer opened the
+    // Home tour on "Notifications" — five steps in, with the rest dropped.
+    const { container } = mount(['home-notifications', 'home-profile']);
+    act(() => {
+      screen.getByRole('button', { name: 'start' }).click();
+    });
+
+    const late = globalThis.document.createElement('div');
+    late.setAttribute('data-tour', 'home-pods');
+    act(() => {
+      container.append(late);
+    });
+
+    expect(await screen.findByText('What are Pods?', undefined, { timeout: 4000 })).toBeInTheDocument();
   });
 
   it('waits for late-arriving content instead of giving up', async () => {
@@ -64,7 +93,7 @@ describe('TourRunner', () => {
     act(() => {
       container.append(late);
     });
-    expect(await screen.findByText('What are Pods?')).toBeInTheDocument();
+    expect(await screen.findByText('What are Pods?', undefined, { timeout: 4000 })).toBeInTheDocument();
   });
 
   it('renders nothing while no tour is active', () => {

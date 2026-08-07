@@ -39,8 +39,14 @@ export default function PodPaymentDetailsSection({
       </Stack>
       <Divider sx={{ my: 1 }} />
       <Stack direction="row" justifyContent="space-between" sx={{ py: 0.5 }}>
+        {/*
+          Per SEAT, and it has to say so. This prices one ticket, while the
+          button on the same screen prices however many the seat picker holds —
+          calling this "Total payable" put two different totals in front of the
+          buyer and only one of them was what they would be charged.
+        */}
         <Typography variant="subtitle2" fontWeight={700}>
-          Total payable
+          Price per seat
         </Typography>
         <Typography variant="subtitle2" fontWeight={700}>
           {p.currency}

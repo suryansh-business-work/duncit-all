@@ -1,4 +1,5 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface Props {
@@ -17,6 +18,7 @@ export default function PexelsPhotoCard({
   anyImporting,
   onPick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <ImageListItem
       sx={{
@@ -59,7 +61,7 @@ export default function PexelsPhotoCard({
       )}
       <ImageListItemBar
         title={photo.photographer}
-        subtitle="Pexels"
+        subtitle={t('media.pexels.credit')}
         sx={{ background: 'linear-gradient(rgba(0,0,0,.6), transparent)' }}
       />
       {importing && (
@@ -77,7 +79,7 @@ export default function PexelsPhotoCard({
           }}
         >
           <CircularProgress size={28} sx={{ color: 'white' }} />
-          <Typography variant="caption">Importing…</Typography>
+          <Typography variant="caption">{t('media.pexels.importing')}</Typography>
         </Box>
       )}
     </ImageListItem>

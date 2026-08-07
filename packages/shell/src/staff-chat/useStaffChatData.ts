@@ -14,6 +14,7 @@ import {
   PIN_STAFF_MESSAGE,
   REACT_TO_STAFF_MESSAGE,
   SEND_STAFF_MESSAGE,
+  STAFF_CALL_ICE,
   STAFF_CALLS,
   STAFF_MESSAGES,
   STAFF_PRESENCE,
@@ -58,6 +59,8 @@ export interface Attachment {
  * changes when the design does; this is the part that changes when the API
  * does, and they had no business being edited in the same file.
  */
+const NO_ICE_SERVERS: RTCIceServer[] = [];
+
 export function useStaffChatData({ open, peer, meId, meName, search, role }: Options) {
   const runtime = useShellRuntime();
   const client = useApolloClient();
@@ -86,6 +89,14 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     skip: !peer,
     fetchPolicy: 'cache-and-network',
   });
+  // A stable empty list while the query is in flight: a fresh [] each render
+  // would give useCall a new dependency every time and rebuild its callbacks.
+  // Fetched once and kept: the answer changes only when the platform is
+  // reconfigured, and a call must not wait on a round trip to start.
+  const iceQuery = useQuery<{ staffCallIceServers: RTCIceServer[] }>(STAFF_CALL_ICE, {
+    fetchPolicy: 'cache-first',
+  });
+
   const presenceQuery = useQuery<{
     staffPresence: { user_id: string; status: PresenceStatus; last_seen?: string | null }[];
   }>(
@@ -414,6 +425,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     threads: threadsQuery.data?.staffThreads ?? [],
     coworkers: coworkersQuery.data?.coworkers ?? [],
     calls: callsQuery.data?.staffCalls ?? [],
+    iceServers: iceQuery.data?.staffCallIceServers ?? NO_ICE_SERVERS,
     refetchCalls: callsQuery.refetch,
     messagesLoading: messagesQuery.loading,
     visibleMessages,

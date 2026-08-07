@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
@@ -47,6 +48,7 @@ export default function PexelsPhotosTab({
   onClose,
   setError,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [pquery, setPquery] = useState(seedQuery ?? '');
   const [porientation, setPorientation] = useState<Orientation>(defaultOrientation ?? '');
   // Which cards are already in the tray. Pexels ids, not ImageKit URLs — the
@@ -132,7 +134,7 @@ export default function PexelsPhotosTab({
 
   const resultsContent =
     photos.length === 0 ? (
-      <Alert severity="info">No results — try a different query.</Alert>
+      <Alert severity="info">{t('media.pexels.noPhotos')}</Alert>
     ) : (
       <ImageList cols={3} gap={8} rowHeight={160}>
         {photos.map((p: any) => (
@@ -156,7 +158,7 @@ export default function PexelsPhotosTab({
         <TextField
           fullWidth
           size="small"
-          placeholder="Search Pexels (e.g. coffee, sunset, basketball)…"
+          placeholder={t('media.pexels.searchPhotos')}
           value={pquery}
           onChange={(e) => setPquery(e.target.value)}
           onKeyDown={(e) => {
@@ -182,9 +184,9 @@ export default function PexelsPhotosTab({
         sx={{ mb: 2, flexWrap: 'wrap' }}
       >
         <ToggleButton value="">All</ToggleButton>
-        <ToggleButton value="landscape">Landscape</ToggleButton>
-        <ToggleButton value="portrait">Portrait</ToggleButton>
-        <ToggleButton value="square">Square</ToggleButton>
+        <ToggleButton value="landscape">{t('media.pexels.landscape')}</ToggleButton>
+        <ToggleButton value="portrait">{t('media.pexels.portrait')}</ToggleButton>
+        <ToggleButton value="square">{t('media.pexels.square')}</ToggleButton>
       </ToggleButtonGroup>
       {psearching && photos.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 6 }}>

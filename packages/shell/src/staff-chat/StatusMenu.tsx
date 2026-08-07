@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import { Button, Menu, MenuItem } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import PresenceDot from './PresenceDot';
 import type { PresenceStatus } from './usePresence';
-
-const OPTIONS: { value: PresenceStatus; label: string; hint: string }[] = [
-  { value: 'ONLINE', label: 'Online', hint: 'At your desk' },
-  { value: 'AWAY', label: 'Away', hint: 'Connected, not looking' },
-  { value: 'BUSY', label: 'Busy', hint: 'Please do not disturb' },
-  { value: 'OFFLINE', label: 'Appear offline', hint: 'Still connected, shown as away' },
-];
 
 /**
  * Your own status.
@@ -20,8 +14,35 @@ export default function StatusMenu({
   status,
   onChange,
 }: Readonly<{ status: PresenceStatus; onChange: (next: PresenceStatus) => void }>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const current = OPTIONS.find((option) => option.value === status) ?? OPTIONS[0];
+
+  // Built here rather than at module scope so each label is a literal t() call
+  // — the key-verification gate reads the source, and a key assembled from a
+  // status value would look unshipped to it.
+  const options: { value: PresenceStatus; label: string; hint: string }[] = [
+    {
+      value: 'ONLINE',
+      label: t('shell.chat.presence.online'),
+      hint: t('shell.chat.presence.onlineHint'),
+    },
+    {
+      value: 'AWAY',
+      label: t('shell.chat.presence.away'),
+      hint: t('shell.chat.presence.awayHint'),
+    },
+    {
+      value: 'BUSY',
+      label: t('shell.chat.presence.busy'),
+      hint: t('shell.chat.presence.busyHint'),
+    },
+    {
+      value: 'OFFLINE',
+      label: t('shell.chat.presence.appearOffline'),
+      hint: t('shell.chat.presence.appearOfflineHint'),
+    },
+  ];
+  const current = options.find((option) => option.value === status) ?? options[0];
 
   return (
     <>
@@ -38,7 +59,7 @@ export default function StatusMenu({
         {current.label}
       </Button>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
-        {OPTIONS.map((option) => (
+        {options.map((option) => (
           <MenuItem
             key={option.value}
             selected={option.value === status}

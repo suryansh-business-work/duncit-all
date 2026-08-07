@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
@@ -36,6 +37,7 @@ export default function PexelsVideosTab({
   onClose,
   setError,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [vquery, setVquery] = useState('');
   const [vorientation, setVorientation] = useState<Orientation>('');
   const [vsearching, setVsearching] = useState(false);
@@ -107,7 +109,7 @@ export default function PexelsVideosTab({
 
   const resultsContent =
     videos.length === 0 ? (
-      <Alert severity="info">No videos — try a different query.</Alert>
+      <Alert severity="info">{t('media.pexels.noVideos')}</Alert>
     ) : (
       <ImageList cols={3} gap={8} rowHeight={160}>
         {videos.map((v: any) => (
@@ -133,7 +135,7 @@ export default function PexelsVideosTab({
         <TextField
           fullWidth
           size="small"
-          placeholder="Search Pexels videos…"
+          placeholder={t('media.pexels.searchVideos')}
           value={vquery}
           onChange={(e) => setVquery(e.target.value)}
           onKeyDown={(e) => {
@@ -154,9 +156,9 @@ export default function PexelsVideosTab({
           onChange={(_e, v) => setVorientation(v ?? '')}
         >
           <ToggleButton value="">All</ToggleButton>
-          <ToggleButton value="landscape">Landscape</ToggleButton>
-          <ToggleButton value="portrait">Portrait</ToggleButton>
-          <ToggleButton value="square">Square</ToggleButton>
+          <ToggleButton value="landscape">{t('media.pexels.landscape')}</ToggleButton>
+          <ToggleButton value="portrait">{t('media.pexels.portrait')}</ToggleButton>
+          <ToggleButton value="square">{t('media.pexels.square')}</ToggleButton>
         </ToggleButtonGroup>
         <Button variant="contained" onClick={() => runPexelsVideos(vquery, 1, false)}>
           Search

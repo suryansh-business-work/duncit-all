@@ -1,4 +1,5 @@
 import type { MutableRefObject, ChangeEvent } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -23,23 +24,30 @@ interface Props {
   onPickFile: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
+/** Just the translate function, so the helpers below stay at module scope. */
+type Translate = ReturnType<typeof useTranslation>['t'];
+
 // Copy + hint derived from the accepted MIME list so a PDF-only picker never
 // claims "image" and a video-only picker (pod reels) never claims "image".
-function dropHints(accept: string, settings: UploadSettings | null): { label: string; hint: string } {
+function dropHints(
+  accept: string,
+  settings: UploadSettings | null,
+  t: Translate,
+): { label: string; hint: string } {
   const imageMb = settings?.max_image_mb ?? 15;
   const videoMb = settings?.max_video_mb ?? 100;
   if (/pdf/i.test(accept) && !/image\//i.test(accept)) {
-    return { label: 'Click to choose a PDF', hint: 'PDF only · max 50 MB · uploads to ImageKit' };
+    return { label: t('media.device.choosePdf'), hint: t('media.device.hintPdf') };
   }
   if (/video\//i.test(accept) && !/image\//i.test(accept)) {
     return {
-      label: 'Click to choose a video',
-      hint: `MP4, MOV or WebM · max ${videoMb} MB · uploads to ImageKit`,
+      label: t('media.device.chooseVideo'),
+      hint: t('media.device.hintVideo', { vars: { mb: videoMb } }),
     };
   }
   return {
-    label: 'Click to choose an image',
-    hint: `PNG, JPG, WebP, GIF · max ${imageMb} MB · uploads to ImageKit`,
+    label: t('media.device.chooseImage'),
+    hint: t('media.device.hintImage', { vars: { mb: imageMb } }),
   };
 }
 
@@ -49,10 +57,10 @@ function mediaKind(picked: File | null): 'image' | 'video' | 'other' {
   return 'other';
 }
 
-const STAGE_LABELS: Record<UploadStage, string> = {
-  uploading: 'Uploading',
-  compressing: 'Compressing',
-  processing: 'Cropping & compressing',
+const STAGE_KEYS: Record<UploadStage, string> = {
+  uploading: 'media.device.uploading',
+  compressing: 'media.device.compressing',
+  processing: 'media.device.croppingAndCompressing',
 };
 
 export default function DeviceUploadTab({
@@ -69,15 +77,16 @@ export default function DeviceUploadTab({
   onCropComplete,
   onPickFile,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isPdf = picked?.type === 'application/pdf';
   const kind = mediaKind(picked);
-  const { label, hint } = dropHints(accept, settings);
+  const { label, hint } = dropHints(accept, settings, t);
   const dims = useMediaDimensions(previewUrl, kind);
   const suggestedKey =
     kind === 'image' && dims
       ? suggestPresetKey(dims.width, dims.height, settings?.crop_presets ?? [])
       : null;
-  const stageLabel = STAGE_LABELS[stage];
+  const stageLabel = t(STAGE_KEYS[stage]);
 
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
@@ -150,7 +159,7 @@ export default function DeviceUploadTab({
         <Stack spacing={1} alignItems="center" sx={{ width: '100%' }}>
           <FileDetails file={picked} dims={dims} />
           <Button size="small" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-            Change
+            {t('media.device.change')}
           </Button>
         </Stack>
       )}

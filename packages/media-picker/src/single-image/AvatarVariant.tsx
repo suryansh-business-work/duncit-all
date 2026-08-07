@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import {
   Alert,
   Avatar,
@@ -45,6 +46,7 @@ export default function AvatarVariant({
   openPicker,
   fileInput,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const remove = () => {
     onChange('');
     setError(null);
@@ -77,7 +79,7 @@ export default function AvatarVariant({
               color: 'text.secondary',
             })}
           >
-            <Typography variant="caption">No image</Typography>
+            <Typography variant="caption">{t('media.picker.noImage')}</Typography>
           </Box>
         )}
         <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
@@ -100,7 +102,7 @@ export default function AvatarVariant({
               {busy ? 'Uploading…' : idleLabel}
             </Button>
             {value && (
-              <Tooltip title="Remove image">
+              <Tooltip title={t('media.picker.removeImage')}>
                 <IconButton
                   size="small"
                   color="error"

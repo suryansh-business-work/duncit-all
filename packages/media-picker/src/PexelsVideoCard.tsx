@@ -1,4 +1,5 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 import { pickBestVideoFile } from './utils';
 
 interface Props {
@@ -14,6 +15,7 @@ export default function PexelsVideoCard({
   anyImporting,
   onPick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const best = pickBestVideoFile(video);
   return (
     <ImageListItem
@@ -75,7 +77,7 @@ export default function PexelsVideoCard({
           }}
         >
           <CircularProgress size={28} sx={{ color: 'white' }} />
-          <Typography variant="caption">Importing…</Typography>
+          <Typography variant="caption">{t('media.pexels.importing')}</Typography>
         </Box>
       )}
     </ImageListItem>

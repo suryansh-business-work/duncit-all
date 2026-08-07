@@ -13,10 +13,13 @@ import {
   Typography,
 } from '@mui/material';
 import RichTextEditor from '../../components/RichTextEditor';
+import PolicyTypeSelect from '../../components/PolicyTypeSelect';
 
 export interface PolicyFormState {
   slug: string;
   title: string;
+  /** Groups this policy on the dashboard. Blank counts as "Other". */
+  policy_type: string;
   content: string;
   is_active: boolean;
   sort_order: number;
@@ -25,6 +28,7 @@ export interface PolicyFormState {
 export const EMPTY_POLICY_FORM: PolicyFormState = {
   slug: '',
   title: '',
+  policy_type: '',
   content: '',
   is_active: true,
   sort_order: 0,
@@ -72,6 +76,10 @@ export default function PolicyFormDialog({
               helperText="lowercase letters, numbers and dashes"
             />
           </Stack>
+          <PolicyTypeSelect
+            value={form.policy_type}
+            onChange={(policy_type) => onChange({ policy_type })}
+          />
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
               label="Sort order"

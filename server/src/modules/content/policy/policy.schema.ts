@@ -3,11 +3,31 @@ export const policyTypeDefs = /* GraphQL */ `
     id: ID!
     slug: String!
     title: String!
+    "What kind of policy this is — the grouping the dashboard counts by."
+    policy_type: String!
     content: String!
     is_active: Boolean!
     sort_order: Int!
     created_at: String!
     updated_at: String!
+  }
+
+  type PolicyTypeCount {
+    policy_type: String!
+    count: Int!
+  }
+
+  type PolicyStats {
+    total: Int!
+    by_type: [PolicyTypeCount!]!
+  }
+
+  "Server-side table page over the by-type aggregate (policyStatsTable)."
+  type PolicyTypeCountTablePage {
+    rows: [PolicyTypeCount!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
   }
 
   "Server-side table page for the shared table engine (policiesTable)."
@@ -26,6 +46,7 @@ export const policyTypeDefs = /* GraphQL */ `
   input CreatePolicyInput {
     slug: String!
     title: String!
+    policy_type: String
     content: String
     is_active: Boolean
     sort_order: Int
@@ -34,6 +55,7 @@ export const policyTypeDefs = /* GraphQL */ `
   input UpdatePolicyInput {
     slug: String
     title: String
+    policy_type: String
     content: String
     is_active: Boolean
     sort_order: Int
@@ -42,6 +64,8 @@ export const policyTypeDefs = /* GraphQL */ `
   extend type Query {
     policies(filter: PolicyFilterInput): [Policy!]!
     policiesTable(query: TableQueryInput): PolicyTablePage!
+    policyStats: PolicyStats!
+    policyStatsTable(query: TableQueryInput): PolicyTypeCountTablePage!
     policy(policy_doc_id: ID!): Policy
     policyBySlug(slug: String!): Policy
     publicPolicies: [Policy!]!

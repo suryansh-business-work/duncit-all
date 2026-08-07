@@ -19,6 +19,7 @@ import {
   type LegalDocumentStats,
   type LegalDocumentTypeCount,
 } from '../graphql/documents';
+import { POLICY_STATS_TABLE, type PolicyTypeCount } from '../graphql/policies';
 
 // Aggregate rows are keyed by document_type (no id field on the server type).
 const getStatsRowId = (r: LegalDocumentTypeCount) => r.document_type;
@@ -31,6 +32,16 @@ const CARD_SX = { flex: '1 1 220px', minWidth: 220 } as const;
 const STATS_COLUMNS: DuncitColumn<LegalDocumentTypeCount>[] = [
   { field: 'document_type', headerName: 'Document type', flex: 1, minWidth: 220, filter: { type: 'text' } },
   { field: 'count', headerName: 'Count', width: 110, filter: { type: 'number' } },
+];
+
+// The policy aggregate has no id either — a row IS its type.
+const getPolicyStatsRowId = (r: PolicyTypeCount) => r.policy_type;
+
+// Same shape as the document columns, against POLICY_STATS_TABLE_CONFIG's
+// allowlist: sort policy_type/count; filter policy_type (text) + count (number).
+const POLICY_STATS_COLUMNS: DuncitColumn<PolicyTypeCount>[] = [
+  { field: 'policy_type', headerName: 'Policy type', flex: 1, minWidth: 220, filter: { type: 'text' } },
+  { field: 'count', headerName: 'Total policies', width: 140, filter: { type: 'number' } },
 ];
 
 export default function DashboardPage() {
@@ -48,9 +59,18 @@ export default function DashboardPage() {
     'legalDocumentStatsTable',
   );
 
+  const fetchPolicyRows = useApolloTableFetch<PolicyTypeCount>(
+    client,
+    POLICY_STATS_TABLE,
+    'policyStatsTable',
+  );
+
   return (
     <Stack spacing={2.5}>
-      <PageHeader title="Legal Dashboard" subtitle="An overview of your legal documents by type." />
+      <PageHeader
+        title="Legal Dashboard"
+        subtitle="An overview of your legal documents and policies by type."
+      />
 
       {loading && !stats ? (
         <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -112,6 +132,25 @@ export default function DashboardPage() {
               emptyText="No documents yet. Create one from the Documents section."
               defaultSort={{ field: 'count', dir: 'desc' }}
               searchPlaceholder="Search document type"
+            />
+          </Box>
+
+          {/* The same section, one module along. Counted from the policies
+              themselves, so creating, retyping or deleting one moves these
+              numbers on the next read — and a type nobody has used does not
+              appear, exactly as an unused document type does not. */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+              Policies by type
+            </Typography>
+            <DuncitTable<PolicyTypeCount>
+              tableId="legal-policies-by-type"
+              columns={POLICY_STATS_COLUMNS}
+              fetchRows={fetchPolicyRows}
+              getRowId={getPolicyStatsRowId}
+              emptyText="No policies yet. Create one from the Policies section."
+              defaultSort={{ field: 'count', dir: 'desc' }}
+              searchPlaceholder="Search policy type"
             />
           </Box>
         </>

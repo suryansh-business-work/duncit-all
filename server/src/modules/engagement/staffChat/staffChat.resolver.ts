@@ -123,6 +123,7 @@ export const staffChatResolvers = {
         attachment_name?: string | null;
         attachment_type?: string | null;
         attachment_size?: number | null;
+        attachment_peaks?: number[] | null;
         reply_to_id?: string | null;
       },
       ctx: GraphQLContext
@@ -137,6 +138,7 @@ export const staffChatResolvers = {
           name: args.attachment_name,
           type: args.attachment_type,
           size: args.attachment_size,
+          peaks: args.attachment_peaks ?? [],
         },
         { replyToId: args.reply_to_id }
       );

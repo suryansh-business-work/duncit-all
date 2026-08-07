@@ -1,17 +1,22 @@
 import { useRef, useState } from 'react';
-import { Box, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import SendIcon from '@mui/icons-material/Send';
-import EmojiPicker from './EmojiPicker';
-import ComposerMenu from './ComposerMenu';
+import { Box, Typography } from '@mui/material';
+import VoiceRecorderBar from './voice/VoiceRecorderBar';
+import { useVoiceNote } from './voice/useVoiceNote';
+import ComposerRow from './ComposerRow';
+import MentionPopup from './MentionPopup';
+import { applyMention, mentionQuery } from './mentions';
 
 interface Props {
   sending: boolean;
   uploading: boolean;
+  /** Who can be mentioned here — the other person, in a one-to-one thread. */
+  mentionNames: string[];
   /** False puts Enter on a new line and Ctrl/Cmd+Enter on send. */
   enterToSend: boolean;
   onSend: (text: string) => void;
   onAttach: (file: File) => void;
+  /** A finished voice note, with the waveform sampled while it recorded. */
+  onVoiceNote: (file: File, peaks: number[], seconds: number) => void;
   onTyping: () => void;
   /** Share a place, from the menu beside the box. */
   onShareLocation: () => void;
@@ -27,25 +32,87 @@ interface Props {
 export default function ChatComposer({
   sending,
   uploading,
+  mentionNames,
   enterToSend,
   onSend,
   onAttach,
+  onVoiceNote,
   onTyping,
   onShareLocation,
 }: Readonly<Props>) {
+  const voice = useVoiceNote();
   const [draft, setDraft] = useState('');
   const [dragging, setDragging] = useState(false);
-  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [query, setQuery] = useState<string | null>(null);
+  const [active, setActive] = useState(0);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /** Stop, keep, and post it with the waveform sampled while it recorded. */
+  const sendVoiceNote = () => {
+    voice
+      .stop(true)
+      .then((note) => {
+        if (!note) return;
+        // The duration goes in the NAME because a webm from MediaRecorder
+        // carries none in its header — see MessageAttachment.
+        const name = `voice-note-${note.seconds}s.webm`;
+        onVoiceNote(
+          new File([note.blob], name, { type: note.blob.type }),
+          note.peaks,
+          note.seconds
+        );
+      })
+      .catch(() => undefined);
+  };
+
+  const matches =
+    query === null
+      ? []
+      : mentionNames.filter((name) => name.toLowerCase().startsWith(query.toLowerCase()));
 
   const send = () => {
     const text = draft.trim();
     if (!text || sending) return;
     onSend(text);
     setDraft('');
+    setQuery(null);
+  };
+
+  /** Put the chosen name in, and leave the caret after it. */
+  const pick = (name: string) => {
+    const caret = inputRef.current?.selectionStart ?? draft.length;
+    const next = applyMention(draft, caret, name);
+    setDraft(next.text);
+    setQuery(null);
+    // After React has written the new value, or the caret snaps to the end.
+    globalThis.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(next.caret, next.caret);
+    });
   };
 
   /** Enter sends, or Ctrl/Cmd+Enter does — whichever this person chose. */
   const onKeyDown = (event: React.KeyboardEvent) => {
+    // The mention list owns the arrows and Enter while it is open, or picking
+    // somebody would send the half-typed message instead.
+    if (matches.length > 0) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const step = event.key === 'ArrowDown' ? 1 : matches.length - 1;
+        setActive((index) => (index + step) % matches.length);
+        return;
+      }
+      if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+        pick(matches[active] ?? matches[0]);
+        return;
+      }
+      if (event.key === 'Escape') {
+        setQuery(null);
+        return;
+      }
+    }
+
     const withModifier = event.ctrlKey || event.metaKey;
     const shouldSend = enterToSend ? event.key === 'Enter' && !event.shiftKey : event.key === 'Enter' && withModifier;
     if (shouldSend) {
@@ -81,6 +148,14 @@ export default function ChatComposer({
         outlineOffset: -4,
       }}
     >
+      <MentionPopup names={matches} active={active} onPick={pick} />
+
+      {voice.error && (
+        <Typography variant="caption" color="error" sx={{ px: 1 }}>
+          {voice.error}
+        </Typography>
+      )}
+
       {dragging && (
         <Typography
           variant="caption"
@@ -91,62 +166,33 @@ export default function ChatComposer({
         </Typography>
       )}
 
-      {/* Centred, not bottom-aligned: on a one-line box — which is almost
-          always — bottom alignment drops the icons a few pixels below the text
-          and the whole row reads as crooked. */}
-      <Stack direction="row" spacing={0.5} alignItems="center">
-        <Tooltip title="Attach a file">
-          <IconButton
-            size="small"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            aria-label="Attach a file"
-          >
-            <AttachFileIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        {/* Any file, not only images — a chat where you cannot send a PDF is a
-            chat people leave to send the PDF. */}
-        <input
-          ref={fileRef}
-          type="file"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onAttach(file);
-            event.target.value = '';
-          }}
+      {voice.recording ? (
+        <VoiceRecorderBar
+          seconds={voice.seconds}
+          level={voice.level}
+          onCancel={() => voice.stop(false).catch(() => undefined)}
+          onSend={sendVoiceNote}
         />
-
-        <EmojiPicker disabled={sending} onPick={(emoji) => setDraft((text) => text + emoji)} />
-        <ComposerMenu onShareLocation={onShareLocation} />
-
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          // Grows with the message, then scrolls — a composer that can eat the
-          // whole panel is a composer that hides the conversation.
-          maxRows={6}
-          placeholder="Write a message"
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value);
+      ) : (
+        <ComposerRow
+          draft={draft}
+          sending={sending}
+          uploading={uploading}
+          inputRef={inputRef}
+          onDraft={(value, caret) => {
+            setDraft(value);
+            setQuery(mentionQuery(value, caret));
+            setActive(0);
             onTyping();
           }}
           onKeyDown={onKeyDown}
-          inputProps={{ 'aria-label': 'Write a message' }}
+          onBlur={() => setQuery(null)}
+          onSend={send}
+          onAttach={onAttach}
+          onRecord={() => voice.start().catch(() => undefined)}
+          onShareLocation={onShareLocation}
         />
-
-        <IconButton
-          color="primary"
-          onClick={send}
-          disabled={!draft.trim() || sending}
-          aria-label="Send message"
-        >
-          <SendIcon />
-        </IconButton>
-      </Stack>
+      )}
     </Box>
   );
 }

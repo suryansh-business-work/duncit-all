@@ -44,6 +44,7 @@ const pubMessage = (doc: any) => ({
   attachment_name: doc.deleted_at ? '' : (doc.attachment_name ?? ''),
   attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
   attachment_size: doc.deleted_at ? 0 : (doc.attachment_size ?? 0),
+  attachment_peaks: doc.deleted_at ? [] : (doc.attachment_peaks ?? []),
   read_at: doc.read_at?.toISOString() ?? null,
   edited_at: doc.edited_at?.toISOString() ?? null,
   // A deleted message keeps no reactions either — there is nothing left to
@@ -202,6 +203,8 @@ export const staffChatService = {
       name?: string | null;
       type?: string | null;
       size?: number | null;
+      /** Loudness per slice, for a voice note's waveform. */
+      peaks?: number[] | null;
     } | null,
     extra?: { replyToId?: string | null; forwardedFrom?: string | null } | null
   ) {
@@ -233,6 +236,11 @@ export const staffChatService = {
       attachment_name: attachment?.name?.trim() ?? '',
       attachment_type: attachment?.type?.trim() ?? '',
       attachment_size: Math.max(0, Math.floor(Number(attachment?.size) || 0)),
+      // Clamped and capped: this is drawn as bars, and a caller sending ten
+      // thousand of them would be sending a payload, not a waveform.
+      attachment_peaks: (attachment?.peaks ?? [])
+        .slice(0, 128)
+        .map((value) => Math.min(1, Math.max(0, Number(value) || 0))),
       reply_to_id: extra?.replyToId ?? null,
       forwarded_from: extra?.forwardedFrom ?? null,
       // Only the person on the other end can be mentioned in a one-to-one

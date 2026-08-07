@@ -1,6 +1,27 @@
 import { Chip, Divider, Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
+/**
+ * Skip the work of laying out what is off screen.
+ *
+ * This is the virtualisation, and it is deliberately the browser's rather than a
+ * windowing library's. A chat has variable-height rows — a one-word reply and a
+ * fenced code block with an image under it — so react-window would need every
+ * height measured or guessed, and windowing also breaks the three things people
+ * actually do in a thread: select text across several messages, use the
+ * browser's own find, and jump to a search hit that is not currently rendered.
+ *
+ * `content-visibility: auto` skips rendering and painting for off-screen rows
+ * while leaving them in the DOM, so all three keep working. The intrinsic size
+ * is `auto`, which means the browser remembers each row's last real height
+ * instead of guessing one — that is what stops the scrollbar jumping when you
+ * scroll back up through a long conversation.
+ */
+export const OFFSCREEN_SKIP = {
+  contentVisibility: 'auto',
+  containIntrinsicSize: 'auto 72px',
+} as const;
+
 /** Today, Yesterday, or the date — above the first entry of each day. */
 export function DaySeparator({ label }: Readonly<{ label: string }>) {
   return (

@@ -7,7 +7,19 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import VoiceNotePlayer from './voice/VoiceNotePlayer';
 import type { StaffMessage } from './queries';
+
+/**
+ * How long the note ran, read off the name the recorder gave it.
+ *
+ * The audio element reports its own duration eventually, but a webm written by
+ * MediaRecorder carries no duration in its header — browsers report Infinity
+ * until the whole thing has been played through, which is exactly the number
+ * you cannot show before somebody presses play.
+ */
+const secondsFromName = (name: string): number =>
+  Number(/voice-note-(\d+)s/.exec(name)?.[1] ?? 0);
 
 /** Bytes as something a person reads, not a number they have to divide. */
 export function humanSize(bytes?: number | null): string {
@@ -50,6 +62,13 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
   const isImage = type.startsWith('image');
   const isVideo = type.startsWith('video');
   const size = humanSize(message.attachment_size);
+
+  // A voice note is audio that arrived with a waveform. Audio WITHOUT one is a
+  // file somebody attached, and belongs in the named row below like any other.
+  const peaks = message.attachment_peaks ?? [];
+  if (type.startsWith('audio') && peaks.length > 0) {
+    return <VoiceNotePlayer url={url} peaks={peaks} seconds={secondsFromName(name)} />;
+  }
 
   if (isImage || isVideo) {
     return (

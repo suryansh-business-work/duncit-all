@@ -39,6 +39,8 @@ export interface StaffMessage {
   attachment_type?: string;
   /** Bytes — so a reader can judge before downloading. */
   attachment_size?: number;
+  /** Loudness per slice, 0-1, for a voice note waveform. */
+  attachment_peaks?: number[];
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
@@ -98,6 +100,7 @@ const MESSAGE = `
   attachment_name
   attachment_type
   attachment_size
+  attachment_peaks
   read_at
   edited_at
   deleted_at
@@ -157,6 +160,8 @@ export const SEND_STAFF_MESSAGE = gql`
     $attachmentUrl: String
     $attachmentName: String
     $attachmentType: String
+    $attachmentSize: Int
+    $attachmentPeaks: [Float!]
   ) {
     sendStaffMessage(
       to_user_id: $toUserId
@@ -164,6 +169,8 @@ export const SEND_STAFF_MESSAGE = gql`
       attachment_url: $attachmentUrl
       attachment_name: $attachmentName
       attachment_type: $attachmentType
+      attachment_size: $attachmentSize
+      attachment_peaks: $attachmentPeaks
     ) {
       ${MESSAGE}
     }

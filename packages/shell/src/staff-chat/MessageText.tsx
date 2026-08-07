@@ -1,11 +1,41 @@
+import { Children, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import { Box, Link, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CodeBlock from './CodeBlock';
 import LinkCard from './LinkCard';
+import { splitMentions } from './mentions';
 
 /** A bare URL in running text, so it can be linked without markdown syntax. */
 const BARE_URL = /(https?:\/\/[^\s<>()]+)/g;
+
+/**
+ * Paint the @names inside a rendered paragraph.
+ *
+ * Applied to the STRING children markdown produced, so a mention inside bold
+ * or a list item is still a mention, and one inside a code span is left alone —
+ * code is where an @ means something else entirely.
+ */
+function withMentions(children: ReactNode): ReactNode {
+  return Children.map(children, (child, index) => {
+    if (typeof child !== 'string') return child;
+    return splitMentions(child).map((part, partIndex) =>
+      part.mention ? (
+        <Box
+          component="span"
+          // Index is stable here: the parts come from splitting one immutable
+          // string, so nothing can reorder between renders.
+          key={`m-${index}-${partIndex}`}
+          sx={{ fontWeight: 700, color: 'primary.main' }}
+        >
+          {part.text}
+        </Box>
+      ) : (
+        part.text
+      )
+    );
+  });
+}
 
 interface Props {
   text: string;
@@ -78,7 +108,7 @@ export default function MessageText({ text, fontSize, onNavigate }: Readonly<Pro
           pre: ({ children }) => <>{children}</>,
           p: ({ children }) => (
             <Typography variant="body2" sx={{ fontSize: 'inherit', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {children}
+              {withMentions(children)}
             </Typography>
           ),
         }}

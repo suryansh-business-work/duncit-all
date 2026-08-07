@@ -6,6 +6,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -19,6 +20,8 @@ interface Props {
   onForward: () => void;
   onPin: () => void;
   onCopy: () => void;
+  /** Turn on selection mode, with this message already picked. */
+  onStartSelect: () => void;
   onEdit: () => void;
   /** True deletes it for both people; false only hides it for you. */
   onDelete: (forEveryone: boolean) => void;
@@ -38,6 +41,7 @@ export default function MessageActions({
   onForward,
   onPin,
   onCopy,
+  onStartSelect,
   onEdit,
   onDelete,
 }: Readonly<Props>) {
@@ -72,6 +76,12 @@ export default function MessageActions({
             <ContentCopyIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Copy text</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={run(onStartSelect)}>
+          <ListItemIcon>
+            <ChecklistIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Select messages</ListItemText>
         </MenuItem>
         <MenuItem onClick={run(onForward)}>
           <ListItemIcon>

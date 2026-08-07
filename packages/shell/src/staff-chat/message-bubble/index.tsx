@@ -22,6 +22,8 @@ export interface MessageBubbleProps {
   /** Bulk selection — undefined when selection mode is off. */
   selected?: boolean;
   onSelect?: (id: string) => void;
+  /** Turn selection mode on, starting with this message. */
+  onStartSelect?: (id: string) => void;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string, forEveryone: boolean) => void;
   onReact: (id: string, emoji: string) => void;
@@ -53,6 +55,7 @@ export default function MessageBubble({
   repliedTo,
   selected,
   onSelect,
+  onStartSelect,
   onEdit,
   onDelete,
   onReact,
@@ -148,6 +151,7 @@ export default function MessageBubble({
           onCopy={() => {
             globalThis.navigator.clipboard?.writeText(message.text).catch(() => undefined);
           }}
+          onStartSelect={() => onStartSelect?.(message.id)}
           onEdit={() => {
             setDraft(message.text);
             setEditing(true);

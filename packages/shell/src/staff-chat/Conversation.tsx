@@ -6,6 +6,8 @@ import ConversationHeader from './ConversationHeader';
 import LocationDialog from './LocationDialog';
 import MessageThread from './MessageThread';
 import ReplyStrip from './ReplyStrip';
+import SelectionBar from './SelectionBar';
+import { useMessageSelection } from './useMessageSelection';
 import TypingIndicator from './TypingIndicator';
 import type { Coworker, StaffCall, StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
@@ -24,6 +26,7 @@ interface Props {
   onBack: () => void;
   onSend: (text: string) => void;
   onAttach: (file: File) => void;
+  onVoiceNote: (file: File, peaks: number[], seconds: number) => void;
   loading: boolean;
   hasMore: boolean;
   loadingMore: boolean;
@@ -63,6 +66,7 @@ export default function Conversation({
   onBack,
   onSend,
   onAttach,
+  onVoiceNote,
   loading,
   hasMore,
   loadingMore,
@@ -89,22 +93,33 @@ export default function Conversation({
   const [locationOpen, setLocationOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [jumpToId, setJumpToId] = useState<string | null>(null);
+  const selection = useMessageSelection({ messages, meId, nameOf, onDelete });
 
   // What the thread can actually scroll to, so a hit outside it can say so.
   const loadedIds = useMemo(() => new Set(messages.map((message) => message.id)), [messages]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <ConversationHeader
-        peer={peer}
-        status={status}
-        searchOpen={searchOpen}
-        onBack={onBack}
-        onToggleSearch={() => setSearchOpen((open) => !open)}
-        onCall={onCall}
-        onShareScreen={onShareScreen}
-        onExport={onExport}
-      />
+      {selection.active ? (
+        <SelectionBar
+          count={selection.selected.length}
+          allMine={selection.allMine}
+          onCopy={selection.copy}
+          onDelete={selection.remove}
+          onClear={selection.clear}
+        />
+      ) : (
+        <ConversationHeader
+          peer={peer}
+          status={status}
+          searchOpen={searchOpen}
+          onBack={onBack}
+          onToggleSearch={() => setSearchOpen((open) => !open)}
+          onCall={onCall}
+          onShareScreen={onShareScreen}
+          onExport={onExport}
+        />
+      )}
 
       {searchOpen && (
         <ChatSearchPanel
@@ -125,6 +140,10 @@ export default function Conversation({
         messages={messages}
         calls={calls}
         onPlayRecording={onPlayRecording}
+        selectedIds={selection.ids}
+        // Only while the mode is on — see useMessageSelection.
+        onSelect={selection.active ? selection.toggle : undefined}
+        onStartSelect={selection.start}
         meId={meId}
         loading={loading}
         hasMore={hasMore}
@@ -150,9 +169,13 @@ export default function Conversation({
       <ChatComposer
         sending={sending}
         uploading={uploading}
+        // One name, because a one-to-one thread has one other person in it.
+        // The server agrees: any @ in the body mentions them.
+        mentionNames={[peer.name]}
         enterToSend={settings.enterToSend}
         onSend={onSend}
         onAttach={onAttach}
+        onVoiceNote={onVoiceNote}
         onTyping={onTyping}
         onShareLocation={() => setLocationOpen(true)}
       />

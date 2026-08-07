@@ -1,6 +1,6 @@
 import { Box, Chip, Divider } from '@mui/material';
 import MessageBubble from './message-bubble';
-import { DaySeparator } from './ThreadChrome';
+import { DaySeparator, OFFSCREEN_SKIP } from './ThreadChrome';
 import type { StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 
@@ -19,6 +19,7 @@ interface Props {
   highlighted: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
+  onStartSelect?: (id: string) => void;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string, forEveryone: boolean) => void;
   onReact: (id: string, emoji: string) => void;
@@ -50,6 +51,7 @@ export default function ThreadItem({
   highlighted,
   selected,
   onSelect,
+  onStartSelect,
   onEdit,
   onDelete,
   onReact,
@@ -60,13 +62,24 @@ export default function ThreadItem({
   onNavigate,
   onNode,
 }: Readonly<Props>) {
+  // Their message, naming you — your own outgoing @them is not a mention of you.
+  const mentionsMe = message.from_user_id !== meId && (message.mentions ?? []).includes(meId);
+
   return (
     <Box
       ref={(node: HTMLDivElement | null) => onNode(message.id, node)}
       sx={{
+        ...OFFSCREEN_SKIP,
         borderRadius: 1,
         transition: 'background-color 600ms ease-out',
         bgcolor: highlighted ? 'action.selected' : 'transparent',
+        // Something addressed to you reads differently from something said near
+        // you. A rule down the edge says which this was without another badge.
+        ...(mentionsMe && {
+          borderLeft: 3,
+          borderColor: 'primary.main',
+          pl: 1,
+        }),
       }}
     >
       {dayLabel && <DaySeparator label={dayLabel} />}
@@ -85,6 +98,7 @@ export default function ThreadItem({
         repliedTo={repliedTo}
         selected={selected}
         onSelect={onSelect}
+        onStartSelect={onStartSelect}
         onEdit={onEdit}
         onDelete={onDelete}
         onReact={onReact}

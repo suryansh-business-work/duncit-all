@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { withAttribution } from '@duncit/utils';
 import { gql, useQuery } from '@apollo/client';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from '../i18n/useTranslation';
 import { Box, Button, IconButton, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
@@ -29,6 +30,22 @@ const ACTION_SX = { flex: 1, height: 44, fontWeight: 600 } as const;
 const isMobileUa = () => /android/i.test(navigator.userAgent) || IOS_RX.test(navigator.userAgent);
 
 /**
+ * The Android package id, out of the Play listing the admin already configures.
+ *
+ * Read from the store URL rather than written down here: the URL is
+ * `…/details?id=<package>` by construction, so the one value an admin edits
+ * stays the only place it lives.
+ */
+function packageFromStoreUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).searchParams.get('id');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Mobile-only "open in app" bar: a shared mWeb link opens the installed app via
  * the duncit:// deep link (same path — native linking mirrors mWeb routes);
  * without the app the store link downloads it. Dismissal is deliberately NOT
@@ -36,6 +53,7 @@ const isMobileUa = () => /android/i.test(navigator.userAgent) || IOS_RX.test(nav
  * load, so the install prompt keeps reaching users who never chose the app.
  */
 export default function OpenInAppBanner() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [dismissed, setDismissed] = useState(false);
   const paperRef = useRef<HTMLDivElement | null>(null);
@@ -72,13 +90,36 @@ export default function OpenInAppBanner() {
   const dismiss = () => setDismissed(true);
 
   const openInApp = () => {
-    // Deep-link into the installed app at the same path; a missing app is a
-    // silent no-op and the user stays on mWeb. Decorated with the stored
-    // attribution — location.search is empty after in-app navigation, and
-    // this hop is exactly where the tags would otherwise be lost.
-    globalThis.location.href = withAttribution(
-      `duncit:/${location.pathname}${location.search}`,
+    /*
+      Same path, in the app.
+
+      Decorated with the stored attribution — location.search is empty after
+      in-app navigation, and this hop is exactly where the tags would
+      otherwise be lost.
+
+      Android goes through an intent: URL rather than the duncit: scheme. Both
+      open the app, but a plain scheme that nothing handles leaves Chrome on
+      an error page, while an intent carries the address to fall back to and
+      Chrome simply stays put. It also works before Android has finished
+      verifying the App Link, which can take a day after an install.
+    */
+    const target = withAttribution(
+      `${globalThis.location.origin}${location.pathname}${location.search}`,
     );
+    const deepLink = withAttribution(`duncit:/${location.pathname}${location.search}`);
+
+    if (IOS_RX.test(navigator.userAgent)) {
+      globalThis.location.href = deepLink;
+      return;
+    }
+    const androidPackage = packageFromStoreUrl(storeUrl);
+    if (!androidPackage) {
+      globalThis.location.href = deepLink;
+      return;
+    }
+    const withoutScheme = target.replace(/^https?:\/\//, '');
+    const fallback = encodeURIComponent(storeUrl ?? target);
+    globalThis.location.href = `intent://${withoutScheme}#Intent;scheme=https;package=${androidPackage};S.browser_fallback_url=${fallback};end`;
   };
 
   return (
@@ -100,19 +141,19 @@ export default function OpenInAppBanner() {
         <InstallMobileIcon color="primary" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="body2" fontWeight={600}>
-            Duncit is better in the app
+            {t('mweb.openInApp.title')}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">
-            Open this page in the app or get it free.
+            {t('mweb.openInApp.subtitle')}
           </Typography>
         </Box>
-        <IconButton size="small" aria-label="Dismiss" onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }}>
+        <IconButton size="small" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
         <Button size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
-          Open
+          {t('mweb.openInApp.open')}
         </Button>
         {storeUrl && (
           <Button
@@ -123,7 +164,7 @@ export default function OpenInAppBanner() {
             rel="noopener"
             sx={ACTION_SX}
           >
-            Get app
+            {t('mweb.openInApp.getApp')}
           </Button>
         )}
       </Stack>

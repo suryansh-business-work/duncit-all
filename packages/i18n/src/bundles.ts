@@ -73,6 +73,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       savePod: 'Save pod',
       savedPod: 'Remove from saved',
     },
+    // The bar offering the app. Shown only when the OS did not already hand
+    // the link over — a verified App Link never reaches this code at all.
+    openInApp: {
+      title: 'Duncit is better in the app',
+      subtitle: 'Open this page in the app, or get it free.',
+      open: 'Open',
+      getApp: 'Get app',
+      dismiss: 'Dismiss',
+    },
     nav: {
       home: 'Home',
       explore: 'Explore',

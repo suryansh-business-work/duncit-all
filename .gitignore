@@ -29,3 +29,8 @@ package-lock.json
 # Local SonarQube issue dumps (pnpm sonar:issues)
 sonar-issues.json
 sonar-issues.md
+
+# Generated at build time from signing credentials (scripts/generate-app-links.mjs).
+# Never committed: the fingerprints are per signing key, and a stale one makes
+# Android cache a FAILED verification.
+app/mweb/public/.well-known/

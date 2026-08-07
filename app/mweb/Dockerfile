@@ -9,6 +9,14 @@ ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
 ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 ENV VITE_GOOGLE_MAP_API=${VITE_GOOGLE_MAP_API}
 
+# Signing identity for the app-link association files (scripts/generate-app-links.mjs),
+# written into public/.well-known during the build. Unset means those files are
+# not written at all, and an mWeb link opens the browser instead of the app.
+ARG MWEB_ANDROID_CERT_SHA256
+ARG MWEB_IOS_TEAM_ID
+ENV MWEB_ANDROID_CERT_SHA256=${MWEB_ANDROID_CERT_SHA256}
+ENV MWEB_IOS_TEAM_ID=${MWEB_IOS_TEAM_ID}
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/
 COPY app/mweb/package.json ./app/mweb/
@@ -61,8 +69,11 @@ COPY packages/communication/package.json ./packages/communication/
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
-# The build chain runs scripts/verify-fallback-icons.mjs (rule 39).
+# The build chain runs scripts/verify-fallback-icons.mjs (rule 39) and
+# scripts/generate-app-links.mjs, which reads the app's package name and bundle
+# id out of app.json so the association files cannot drift from the app itself.
 COPY scripts ./scripts
+COPY app/mobile-app/app.json ./app/mobile-app/app.json
 COPY packages ./packages
 COPY app/mweb ./app/mweb
 RUN pnpm --filter mweb-app build

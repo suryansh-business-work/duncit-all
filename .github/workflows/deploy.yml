@@ -517,6 +517,8 @@ jobs:
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
+              --build-arg MWEB_ANDROID_CERT_SHA256=${{ secrets.MWEB_ANDROID_CERT_SHA256 }} \
+              --build-arg MWEB_IOS_TEAM_ID=${{ secrets.MWEB_IOS_TEAM_ID }} \
               --cache-from type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }},mode=max \
               --push .

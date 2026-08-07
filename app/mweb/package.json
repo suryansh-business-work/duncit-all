@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.39.4",
+  "version": "1.39.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:force": "vite --force",
-    "build": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && tsc -b && vite build",
+    "build": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && node ../../scripts/generate-app-links.mjs && tsc -b && vite build",
     "build:e2e": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && tsc -b && vite build --mode e2e",
     "preview": "vite preview",
     "test:forms": "vitest run",

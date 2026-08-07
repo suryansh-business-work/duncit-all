@@ -20,8 +20,47 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     updated_by_name: String!
     version_count: Int!
     versions: [LegalDocumentVersion!]!
+    "UNSIGNED until every required signatory has signed, then SIGNED."
+    signing_status: SigningStatus!
+    signed_at: String
+    "A signed contract is closed to edits — the lock IS the signature."
+    is_locked: Boolean!
+    signatories: [LegalDocumentSignatory!]!
     created_at: String!
     updated_at: String!
+  }
+
+  enum SigningStatus {
+    UNSIGNED
+    SIGNED
+  }
+
+  enum SignatureMethod {
+    DRAW
+    TYPE
+    UPLOAD
+  }
+
+  "One person who must sign, and their signature once they have."
+  type LegalDocumentSignatory {
+    id: ID!
+    full_name: String!
+    designation: String!
+    email: String!
+    initials: String!
+    "A data URL for a drawn or typed signature, or the uploaded image URL."
+    signature_image: String!
+    signature_method: SignatureMethod
+    signed_at: String
+  }
+
+  input SignLegalDocumentInput {
+    full_name: String!
+    designation: String!
+    initials: String!
+    "Data URL or hosted image. Must be under 5 MB."
+    signature_image: String!
+    signature_method: SignatureMethod!
   }
 
   type LegalDocumentTypeCount {
@@ -75,6 +114,13 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     legalDocument(id: ID!): LegalDocument
     legalDocumentStats: LegalDocumentStats!
     legalDocumentStatsTable(query: TableQueryInput): LegalDocumentTypeCountTablePage!
+    """
+    The contract as a PDF (base64) — the same document before and after
+    signing, with a signature block appended once it has been signed.
+    """
+    legalDocumentPdfBase64(id: ID!): String!
+    "Which signing methods this platform allows, from the feature flags."
+    legalSignatureMethods: [SignatureMethod!]!
   }
 
   extend type Mutation {
@@ -82,5 +128,9 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     updateLegalDocument(id: ID!, input: UpdateLegalDocumentInput!): LegalDocument!
     deleteLegalDocument(id: ID!): Boolean!
     cloneLegalDocument(id: ID!): LegalDocument!
+    "Sign as the acting user. Locks the contract once nobody is left to sign."
+    signLegalDocument(id: ID!, input: SignLegalDocumentInput!): LegalDocument!
+    "Email the signed contract, with the PDF attached."
+    shareLegalDocument(id: ID!, to: String!, message: String): Boolean!
   }
 `;

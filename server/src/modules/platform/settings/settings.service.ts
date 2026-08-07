@@ -269,6 +269,24 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    key: "legal_sign_draw",
+    name: "Contract Signing — Draw",
+    description: "Allow signing a contract by drawing the signature.",
+    enabled: true,
+  },
+  {
+    key: "legal_sign_type",
+    name: "Contract Signing — Type",
+    description: "Allow signing a contract by typing the signature.",
+    enabled: true,
+  },
+  {
+    key: "legal_sign_upload",
+    name: "Contract Signing — Upload",
+    description: "Allow signing a contract by uploading a signature image.",
+    enabled: true,
+  },
+  {
     key: "pod_plans_section",
     name: "Pod Plans Section",
     description: "Show the Pod Plans nav entry in the mobile web app.",

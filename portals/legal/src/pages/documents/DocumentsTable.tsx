@@ -1,5 +1,9 @@
-import type { MutableRefObject, ReactNode } from 'react';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import DrawIcon from '@mui/icons-material/Draw';
 import { formatDistanceToNow } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { LegalDocumentListItem } from '../../graphql/documents';
@@ -9,6 +13,8 @@ interface Props {
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
   onOpen: (doc: LegalDocumentListItem) => void;
+  /** Open the signing workflow for this contract. */
+  onSign: (doc: LegalDocumentListItem) => void;
 }
 
 const getDocumentRowId = (d: LegalDocumentListItem) => d.id;
@@ -20,6 +26,22 @@ const renderName = (d: LegalDocumentListItem) => (
 );
 
 const updatedByValue = (d: LegalDocumentListItem) => d.updated_by_name || '—';
+
+const statusValue = (d: LegalDocumentListItem) =>
+  d.signing_status === 'SIGNED' ? 'Signed' : 'Unsigned';
+
+/** The one thing an operator scans this column for: is it executed yet. */
+const renderStatus = (d: LegalDocumentListItem) => {
+  const signed = d.signing_status === 'SIGNED';
+  return (
+    <Chip
+      size="small"
+      variant={signed ? 'filled' : 'outlined'}
+      color={signed ? 'success' : 'default'}
+      label={signed ? 'Signed' : 'Unsigned'}
+    />
+  );
+};
 
 const lastUpdatedValue = (d: LegalDocumentListItem) =>
   formatDistanceToNow(new Date(d.updated_at), { addSuffix: true });
@@ -54,11 +76,49 @@ export default function DocumentsTable({
   refetchRef,
   toolbarActions,
   onOpen,
+  onSign,
 }: Readonly<Props>) {
+  const columns = useMemo<DuncitColumn<LegalDocumentListItem>[]>(() => {
+    const renderActions = (d: LegalDocumentListItem) => (
+      <Tooltip title={d.signing_status === 'SIGNED' ? 'View signed contract' : 'Sign'}>
+        {/* Stop the row's own click: opening the editor underneath the signing
+            dialog would leave two things open on one press. */}
+        <IconButton
+          size="small"
+          onClick={(event) => {
+            event.stopPropagation();
+            onSign(d);
+          }}
+        >
+          <DrawIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    );
+
+    return [
+      ...COLUMNS,
+      {
+        field: 'signing_status',
+        headerName: 'Status',
+        width: 120,
+        sortable: false,
+        cellRenderer: renderStatus,
+        valueGetter: statusValue,
+      },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        sortable: false,
+        width: 100,
+        cellRenderer: renderActions,
+      },
+    ];
+  }, [onSign]);
+
   return (
     <DuncitTable<LegalDocumentListItem>
       tableId="legal-documents"
-      columns={COLUMNS}
+      columns={columns}
       fetchRows={fetchRows}
       getRowId={getDocumentRowId}
       onRowClick={onOpen}

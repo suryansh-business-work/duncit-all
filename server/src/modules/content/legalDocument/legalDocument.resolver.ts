@@ -26,6 +26,15 @@ export const legalDocumentResolvers = {
       requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.statsTable(args.query);
     },
+    legalDocumentPdfBase64: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      const pdf = await legalDocumentService.pdf(args.id);
+      return pdf.toString('base64');
+    },
+    legalSignatureMethods: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.signatureMethods();
+    },
   },
   Mutation: {
     createLegalDocument: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -43,6 +52,18 @@ export const legalDocumentResolvers = {
     cloneLegalDocument: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.clone(user.id, args.id);
+    },
+    signLegalDocument: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.sign(user.id, args.id, args.input);
+    },
+    shareLegalDocument: (
+      _p: unknown,
+      args: { id: string; to: string; message?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.share(user.id, args.id, args.to, args.message ?? '');
     },
   },
 };

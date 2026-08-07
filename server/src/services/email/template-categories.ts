@@ -34,6 +34,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // Staff only — never reaches a customer.
   internal: [
+    'signed-contract',
     'admin-access-granted',
     'admin-access-revoked',
     'interview-admin',
@@ -121,6 +122,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'partner-access-granted': "You're receiving this because your Duncit account was granted partner access.",
   'password-change-otp': "You're receiving this because you use Duncit.",
   'password-reset-otp': "You're receiving this because you use Duncit.",
+  'signed-contract': "You're receiving this because a Duncit contract was shared with this address.",
   'portal-login-otp': "You're receiving this because somebody asked to sign in to a Duncit console with this address.",
   'payment-receipt': "You're receiving this because you made a Duncit booking.",
   'payment-release-approved': "You're receiving this because you use Duncit.",

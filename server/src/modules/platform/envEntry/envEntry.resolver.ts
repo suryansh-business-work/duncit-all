@@ -11,6 +11,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   EMAIL: 'Email (SMTP)',
   IMAGEKIT: 'ImageKit',
   PEXELS: 'Pexels',
+  LIVEKIT: 'LiveKit (screen share & remote control)',
   GOOGLE_OAUTH: 'Google OAuth',
   GOOGLE_MAPS: 'Google Map',
   TWILIO: 'Twilio',

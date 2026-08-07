@@ -31,6 +31,7 @@ import {
 import { useCall } from './useCall';
 import { useChatSettings } from './useChatSettings';
 import ChatSettingsMenu from './ChatSettingsMenu';
+import ScreenSharePanel from './remote-control/ScreenSharePanel';
 import { usePresence, type PresenceStatus } from './usePresence';
 import { useStaffSocket } from './useStaffSocket';
 
@@ -112,6 +113,8 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
    * page so an arriving message cannot renumber what is already on screen.
    */
   const [older, setOlder] = useState<StaffMessage[]>([]);
+  /** Whether the screen-share panel is open for this conversation. */
+  const [sharingWith, setSharingWith] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [reachedStart, setReachedStart] = useState(false);
 
@@ -302,6 +305,17 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         </Alert>
       )}
 
+      {/* Screen sharing is its own panel, above the call: a shared screen with
+          a pointer on it is the thing being looked at, and burying it inside
+          the call strip would make it the smallest element on screen. */}
+      {sharingWith && peer && (
+        <ScreenSharePanel
+          peerId={peer.id}
+          peerName={peer.name}
+          onClose={() => setSharingWith(false)}
+        />
+      )}
+
       <CallPanel
         phase={call.phase}
         kind={call.kind}
@@ -366,6 +380,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
             onTyping={() => typing(peer.id)}
             onCall={(kind) => void call.call(peer.id, kind)}
             onExport={() => void exportChat()}
+            onShareScreen={() => setSharingWith(true)}
           />
         ) : (
           <CoworkerList

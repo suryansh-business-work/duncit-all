@@ -390,6 +390,51 @@ What it does, and the reasoning worth keeping:
 - **Deleted messages keep their row** and lose their words. A line that vanishes
   from the middle of a conversation reads as a bug.
 
+## Screen sharing and remote control
+
+LiveKit carries the screen and the data channel beside it. Credentials live in
+**Tech → Environment Variables → LiveKit** (url, api key, api secret); with none
+set the feature says so and stays off — it never falls back to anything.
+
+The **API secret never leaves the server**. `staffScreenShareGrant` mints a
+LiveKit access token — an ordinary JWT with a `video` grant, signed with the
+`jsonwebtoken` the server already has rather than pulling in the LiveKit server
+SDK for one signature. The room name is derived from the pair of people, so two
+colleagues always land in the same room and nobody can ask for a token to
+somebody else's.
+
+`livekit-client` is imported with `await import()` inside the join, not at
+module scope: it is a large dependency, every portal loads this shell, and
+almost nobody shares a screen.
+
+### What "remote control" means here — the boundary
+
+A browser **cannot** move another machine's mouse, type into another tab, or
+touch the browser's own chrome. No library changes that, LiveKit included; it is
+the sandbox, not a missing feature. Anything claiming otherwise in a browser is
+an extension or a native agent.
+
+What this does instead: both people are inside OUR portals, which is code we
+control, so a granted click is **replayed** inside the receiving app —
+dispatched at the document position under it — a keystroke goes to whatever that
+page has focused, and a scroll offset moves that window. Inside a Duncit console
+that is indistinguishable from being driven. At the edge of the page it stops,
+and the UI says so rather than pretending.
+
+Everything visual is an overlay: live cursor, laser, freehand annotation and a
+ripple where the other person clicked. Positions travel as **fractions of the
+viewport, never pixels** — the two ends are different sizes at different zooms,
+and a pixel coordinate would land somewhere else while somebody is driving.
+
+Control is asked for, granted and revoked explicitly, and only the SHARER
+decides. That rule is enforced in `useRemoteControl`, not in the toolbar,
+because a UI check is a suggestion.
+
+Cursor, drawing and scroll frames go out **lossy** (`reliable: false`): they are
+only useful while current, and a reliable channel would replay stale ones after
+a hiccup, so the cursor would crawl through where it used to be. Control
+handover is the exception and is sent reliably.
+
 ## Coverage gate
 
 100% statements / functions / lines, with `branches: -3`. That negative threshold caps the number of

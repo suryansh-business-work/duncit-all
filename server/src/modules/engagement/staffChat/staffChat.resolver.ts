@@ -3,7 +3,9 @@ import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
 import { statusOf } from './staffPresence';
+import { GraphQLError } from 'graphql';
 import { previewLink } from './staffChat.links';
+import { liveKitGrant } from './staffChat.livekit';
 import { emitStaffMessage } from './staffChat.socket';
 import { snapshot } from './staffPresence';
 
@@ -36,6 +38,20 @@ export const staffChatResolvers = {
     ) => {
       const me = requireRole(ctx, ROLES);
       return staffChatService.messages(me.id, args.peer_id, args.limit ?? 50, args.before);
+    },
+    staffScreenShareGrant: async (
+      _p: unknown,
+      args: { peer_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      // The peer has to be a coworker, or this becomes a way to open a room
+      // with anybody whose id you happen to know.
+      const peers = await staffChatService.coworkers(me.id);
+      if (!peers.some((person) => person.id === args.peer_id)) {
+        throw new GraphQLError('That person is not a coworker', { extensions: { code: 'NOT_FOUND' } });
+      }
+      return liveKitGrant(me.id, me.email ?? 'Coworker', args.peer_id);
     },
     staffLinkPreview: (_p: unknown, args: { url: string }, ctx: GraphQLContext) => {
       const me = requireRole(ctx, ROLES);

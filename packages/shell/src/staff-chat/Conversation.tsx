@@ -12,6 +12,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
+import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import CallIcon from '@mui/icons-material/Call';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
@@ -56,6 +57,8 @@ interface Props {
   onTyping: () => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
+  /** Opens portal-to-portal screen sharing with this person. */
+  onShareScreen: () => void;
 }
 
 export default function Conversation({
@@ -88,6 +91,7 @@ export default function Conversation({
   onTyping,
   onCall,
   onExport,
+  onShareScreen,
 }: Readonly<Props>) {
   const [locationOpen, setLocationOpen] = useState(false);
 
@@ -121,6 +125,11 @@ export default function Conversation({
         <Tooltip title="Video call">
           <IconButton size="small" onClick={() => onCall('VIDEO')} aria-label="Start video call">
             <VideocamIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Share your screen">
+          <IconButton size="small" onClick={onShareScreen} aria-label="Share your screen">
+            <ScreenShareIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title="Export this conversation">

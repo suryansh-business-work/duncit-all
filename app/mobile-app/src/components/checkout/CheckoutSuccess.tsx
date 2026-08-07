@@ -1,9 +1,11 @@
 import { useState } from 'react';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
 import { formatMoney } from '@/utils/checkout-math';
@@ -33,6 +35,7 @@ export function CheckoutSuccess({
   onProfile,
   profileLabel = 'My bookings',
 }: Readonly<CheckoutSuccessProps>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
@@ -106,10 +109,10 @@ export function CheckoutSuccess({
       {onDownloadTicket ? (
         <ActionButton
           testID="download-ticket"
-          ariaLabel="Download ticket"
+          ariaLabel={t('mweb.ticket.download')}
           busy={ticketBusy}
           onPress={() => void downloadTicket()}
-          label="Download ticket"
+          label={t('mweb.ticket.download')}
           iconName="confirmation-number"
           variant="filled"
         />

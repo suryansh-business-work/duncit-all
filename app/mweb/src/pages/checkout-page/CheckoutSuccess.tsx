@@ -1,4 +1,5 @@
 import { gql, useLazyQuery } from '@apollo/client';
+import { useTranslation } from '../../i18n/useTranslation';
 import { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -53,6 +54,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery(INVOICE_PDF, { fetchPolicy: 'network-only' });
   const [loadTicketForPod] = useLazyQuery(MY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
   const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery(TICKET_PDF, { fetchPolicy: 'network-only' });
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const paidAt = payment.paid_at || payment.created_at;
   const venueCharges: Array<{ amount: number }> = pod?.place_charges ?? [];
@@ -70,7 +72,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
       if (!b64) throw new Error('Ticket not available');
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
-      link.download = `ticket-${ticket.ticket_code}.pdf`;
+      link.download = `ticket-and-invoice-${ticket.ticket_code}.pdf`;
       link.click();
     } catch (error) {
       setInvoiceError(parseApiError(error));
@@ -156,7 +158,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
           <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
             {pod?.id && (
-              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>Ticket</Button>
+              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{t('mweb.ticket.download')}</Button>
             )}
             <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
             <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>

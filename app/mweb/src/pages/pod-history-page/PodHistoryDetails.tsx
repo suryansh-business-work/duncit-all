@@ -1,4 +1,5 @@
 import { useLazyQuery } from '@apollo/client';
+import { useTranslation } from '../../i18n/useTranslation';
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -56,6 +57,7 @@ const makeSupportPath = (item: PodHistoryItem) => {
 };
 
 export default function PodHistoryDetails({ item, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { format, backoutDeductionPct } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
@@ -95,7 +97,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
       if (!b64) throw new Error('Ticket not available');
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
-      link.download = `ticket-${ticket.ticket_code}.pdf`;
+      link.download = `ticket-and-invoice-${ticket.ticket_code}.pdf`;
       link.click();
     } catch (error) {
       notify(parseApiError(error), 'error');
@@ -164,7 +166,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
                 </Button>
                 {item.status === 'JOINED' && (
                   <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 700 }}>
-                    {ticketState.loading ? 'Downloading...' : 'Ticket'}
+                    {ticketState.loading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
                   </Button>
                 )}
               </>

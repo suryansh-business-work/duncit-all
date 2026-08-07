@@ -85,6 +85,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       getApp: 'Get app',
       dismiss: 'Dismiss',
     },
+    // The booking document. One file: the ticket, then the invoice for what
+    // paid for it — a free pod has no payment, so that one is the ticket alone.
+    ticket: {
+      download: 'Ticket & invoice',
+      downloading: 'Downloading…',
+    },
     nav: {
       home: 'Home',
       explore: 'Explore',

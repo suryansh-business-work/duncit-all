@@ -185,7 +185,7 @@ export function usePodTicket() {
       const data = await graphqlRequest(EventTicketPdfDocument, { id: ticket.id }, { auth: true });
       const base64 = data.eventTicketPdfBase64;
       if (!base64) throw new Error('Ticket not available');
-      const uri = `${FileSystem.cacheDirectory}ticket-${ticket.ticket_code}.pdf`;
+      const uri = `${FileSystem.cacheDirectory}ticket-and-invoice-${ticket.ticket_code}.pdf`;
       await FileSystem.writeAsStringAsync(uri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });

@@ -1,5 +1,15 @@
 export { getOrCreateDuid } from './duid';
 export { copyToClipboard } from './clipboard';
+export {
+  clampSomethingForYouTitle,
+  SOMETHING_FOR_YOU_TITLE_LINES,
+  SOMETHING_FOR_YOU_TITLE_MAX,
+  resolveSomethingForYouTarget,
+  SOMETHING_FOR_YOU_ROUTES,
+  type SomethingForYouAction,
+  type SomethingForYouItem,
+  type SomethingForYouTarget,
+} from './something-for-you';
 export { playNotificationBeep } from './notification-beep';
 export {
   SHORT_LINK_CLICK_KEY,

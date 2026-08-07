@@ -14,6 +14,7 @@ import HostCtaBanner from './HostCtaBanner';
 import ClubRecommendationRow from './ClubRecommendationRow';
 import ClubSection from './ClubSection';
 import PreviousPodsRail from './PreviousPodsRail';
+import SomethingForYouRail from './SomethingForYouRail';
 import AdSlot from '../../components/ads/AdSlot';
 import { useSavedPodHearts } from '../../hooks/useSavedPodHearts';
 import { useHomeData } from './useHomeData';
@@ -174,6 +175,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           </Box>
         )}
         <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} filtered={railsFiltered} />
+        <SomethingForYouRail />
         <AdSlot position="HOME_BOTTOM" variant="banner" />
         {isHost && (
           <Fab

@@ -31,6 +31,7 @@ import TranslationsPage from './pages/localization-page/TranslationsPage';
 import FaqsPage from './pages/FaqsPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
+import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="/faqs" element={<FaqsPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
+                <Route path="/something-for-you" element={<SomethingForYouPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />

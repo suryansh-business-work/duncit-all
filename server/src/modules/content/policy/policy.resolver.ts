@@ -58,5 +58,9 @@ export const policyResolvers = {
       requireRole(ctx, ADMIN_RW);
       return policyService.remove(args.policy_doc_id);
     },
+    backfillPolicyIds: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return policyService.backfillIds();
+    },
   },
 };

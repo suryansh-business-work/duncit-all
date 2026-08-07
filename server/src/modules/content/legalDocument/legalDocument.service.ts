@@ -7,6 +7,7 @@ import {
   type SignatureMethod,
 } from './legalDocument.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import {
   applyTableQueryInMemory,
   runTableQuery,
@@ -44,7 +45,9 @@ async function actorName(userId: string): Promise<string> {
 function toPub(doc: ILegalDocument) {
   return {
     id: String(doc._id),
+    document_no: doc.document_no ?? '',
     name: doc.name,
+    is_active: doc.is_active !== false,
     document_type: doc.document_type,
     description: doc.description ?? '',
     content: doc.content ?? '',
@@ -96,15 +99,19 @@ function snapshot(doc: ILegalDocument, userId: string, name: string) {
 
 /** Allowlists for the shared table engine (legalDocumentsTable — DUNCIT TABLE CONTRACT v1). */
 const LEGAL_DOCUMENT_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['name', 'description', 'document_type'],
+  searchFields: ['document_no', 'name', 'description', 'document_type'],
   sortFields: {
+    document_no: 'document_no',
     name: 'name',
+    is_active: 'is_active',
     document_type: 'document_type',
     updated_by_name: 'updated_by_name',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
   filterFields: {
+    document_no: { type: 'string' },
+    is_active: { type: 'boolean' },
     document_type: { type: 'string' },
     updated_by_name: { type: 'string' },
     created_at: { type: 'date' },
@@ -197,7 +204,13 @@ export const legalDocumentService = {
   async update(
     userId: string,
     id: string,
-    input: { name?: string; document_type?: string; description?: string; content?: string }
+    input: {
+      name?: string;
+      document_type?: string;
+      description?: string;
+      content?: string;
+      is_active?: boolean;
+    }
   ) {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const doc = await LegalDocumentModel.findById(id);
@@ -207,6 +220,12 @@ export const legalDocumentService = {
     if (doc!.signed_at) {
       fail('FORBIDDEN', 'This contract is signed and can no longer be edited.');
     }
+    // Guard before the snapshot: a rejected edit must not leave a version
+    // behind, and Mongoose's own required-error is not a sentence anyone wants
+    // to read in a dialog.
+    if (input.name !== undefined && !input.name.trim()) {
+      fail('BAD_USER_INPUT', 'Title is required');
+    }
     const who = await actorName(userId);
     // Snapshot the current state into history before applying the edit.
     snapshot(doc, userId, who);
@@ -214,6 +233,7 @@ export const legalDocumentService = {
     if (input.document_type !== undefined) doc!.document_type = input.document_type.trim();
     if (input.description !== undefined) doc!.description = input.description.trim();
     if (input.content !== undefined) doc!.content = input.content;
+    if (input.is_active !== undefined) doc!.is_active = !!input.is_active;
     doc!.updated_by = new Types.ObjectId(userId);
     doc!.updated_by_name = who;
     await doc!.save();
@@ -224,6 +244,25 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const res = await LegalDocumentModel.findByIdAndDelete(id);
     return !!res;
+  },
+
+
+  /**
+   * Give an id to any record that has none.
+   *
+   * The hook that mints them fires on INSERT, so anything written before the
+   * id existed keeps a blank one for good — a dash in the column meant to be
+   * its permanent handle. Idempotent, and it only looks for the missing.
+   */
+  async backfillIds(): Promise<{ repaired: number }> {
+    const idless = await LegalDocumentModel.find({
+      $or: [{ document_no: null }, { document_no: { $exists: false } }, { document_no: '' }],
+    }).select('_id');
+    for (const doc of idless) {
+      doc.document_no = await nextEntityNo('DOC', 'legal_document');
+      await doc.save();
+    }
+    return { repaired: idless.length };
   },
 
   async clone(userId: string, id: string) {

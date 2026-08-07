@@ -10,6 +10,7 @@ export {
   actionsColumn,
   activeChipColumn,
   dateColumn,
+  entityIdColumn,
   formatDateCell,
   DEFAULT_DATE_FORMAT,
   EM_DASH,
@@ -18,6 +19,7 @@ export type {
   ActionsColumnOptions,
   ActiveChipColumnOptions,
   DateColumnOptions,
+  EntityIdColumnOptions,
   RowActionOptions,
 } from './cells';
 export type {

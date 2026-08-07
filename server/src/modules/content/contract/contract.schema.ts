@@ -56,10 +56,6 @@ export const contractTypeDefs = /* GraphQL */ `
     effective_to: String
   }
 
-  type ContractBackfillResult {
-    repaired: Int!
-  }
-
   extend type Query {
     contractsTable(query: TableQueryInput): ContractTablePage!
     contract(id: ID!): Contract
@@ -72,6 +68,6 @@ export const contractTypeDefs = /* GraphQL */ `
     archiveContract(id: ID!): Contract!
     deleteContract(id: ID!): Boolean!
     "One-time repair: give an id to any contract that has none."
-    backfillContractIds: ContractBackfillResult!
+    backfillContractIds: EntityIdBackfillResult!
   }
 `;

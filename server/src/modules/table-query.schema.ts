@@ -36,4 +36,15 @@ export const tableQueryTypeDefs = /* GraphQL */ `
     sort_dir: TableSortDir
     filters: [TableFilterInput!]
   }
+
+  """
+  What a one-time entity-id repair did.
+
+  Every entity whose id is minted on insert (contracts, documents, policies …)
+  needs the same one-off pass for rows written before that id existed, and each
+  one answers the same single question: how many did it have to fix.
+  """
+  type EntityIdBackfillResult {
+    repaired: Int!
+  }
 `;

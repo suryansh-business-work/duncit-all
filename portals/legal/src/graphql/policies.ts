@@ -6,6 +6,7 @@ export const POLICIES = gql`
   query LegalPolicies($filter: PolicyFilterInput) {
     policies(filter: $filter) {
       id
+      policy_no
       slug
       title
       policy_type
@@ -24,6 +25,7 @@ export const POLICIES_TABLE = gql`
       total
       rows {
         id
+        policy_no
         slug
         title
         policy_type
@@ -60,6 +62,8 @@ export const DELETE_POLICY = gql`
 
 export interface Policy {
   id: string;
+  /** Permanent handle, POL-000001. Never edited, never reused. */
+  policy_no: string;
   slug: string;
   title: string;
   /** Groups this policy on the dashboard. Blank counts as "Other". */

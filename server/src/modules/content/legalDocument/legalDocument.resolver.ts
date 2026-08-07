@@ -53,6 +53,10 @@ export const legalDocumentResolvers = {
       const user = requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.clone(user.id, args.id);
     },
+    backfillLegalDocumentIds: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.backfillIds();
+    },
     signLegalDocument: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.sign(user.id, args.id, args.input);

@@ -23,6 +23,7 @@ import {
 import DocumentTypeSelect from '../../components/DocumentTypeSelect';
 import RichTextEditor from '../../components/RichTextEditor';
 import DocumentsTable from './DocumentsTable';
+import EditDocumentDialog from './EditDocumentDialog';
 import SignContractDialog from './SignContractDialog';
 
 export default function DocumentsListPage() {
@@ -38,6 +39,7 @@ export default function DocumentsListPage() {
 
   const [open, setOpen] = useState(false);
   const [signing, setSigning] = useState<LegalDocumentListItem | null>(null);
+  const [editing, setEditing] = useState<LegalDocumentListItem | null>(null);
   const [name, setName] = useState('');
   const [docType, setDocType] = useState('');
   const [description, setDescription] = useState('');
@@ -72,12 +74,19 @@ export default function DocumentsListPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         onOpen={(d) => navigate(`/documents/${d.id}`)}
+        onEdit={setEditing}
         onSign={setSigning}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
             New Document
           </Button>
         }
+      />
+
+      <EditDocumentDialog
+        doc={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => refetchRef.current?.()}
       />
 
       <SignContractDialog

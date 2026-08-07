@@ -12,7 +12,11 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
 
   type LegalDocument {
     id: ID!
+    "Permanent, globally unique handle (DOC-000001). Never edited, never reused."
+    document_no: String!
     name: String!
+    "Off hides the document from the app without deleting it."
+    is_active: Boolean!
     document_type: String!
     description: String!
     content: String!
@@ -106,6 +110,8 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     document_type: String
     description: String
     content: String
+    "Off hides the document from the app without deleting it."
+    is_active: Boolean
   }
 
   extend type Query {
@@ -132,5 +138,7 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     signLegalDocument(id: ID!, input: SignLegalDocumentInput!): LegalDocument!
     "Email the signed contract, with the PDF attached."
     shareLegalDocument(id: ID!, to: String!, message: String): Boolean!
+    "One-time repair: give an id to any document that has none."
+    backfillLegalDocumentIds: EntityIdBackfillResult!
   }
 `;

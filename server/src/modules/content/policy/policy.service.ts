@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { PolicyModel, type IPolicy } from './policy.model';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import {
   applyTableQueryInMemory,
   runTableQuery,
@@ -11,6 +12,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const toPub = (p: IPolicy) => ({
   id: String(p._id),
+  policy_no: p.policy_no ?? '',
   slug: p.slug,
   title: p.title,
   policy_type: p.policy_type || '',
@@ -40,8 +42,9 @@ function assertSlug(slug: string) {
 
 /** Allowlists for the shared table engine (policiesTable — DUNCIT TABLE CONTRACT v1). */
 const POLICY_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['title', 'slug', 'policy_type'],
+  searchFields: ['policy_no', 'title', 'slug', 'policy_type'],
   sortFields: {
+    policy_no: 'policy_no',
     title: 'title',
     slug: 'slug',
     policy_type: 'policy_type',
@@ -52,6 +55,7 @@ const POLICY_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    policy_no: { type: 'string' },
     slug: { type: 'string' },
     policy_type: { type: 'string' },
     sort_order: { type: 'number' },
@@ -188,6 +192,25 @@ export const policyService = {
     if (input.sort_order !== undefined) doc.sort_order = Number(input.sort_order) || 0;
     await doc.save();
     return toPub(doc);
+  },
+
+
+  /**
+   * Give an id to any record that has none.
+   *
+   * The hook that mints them fires on INSERT, so anything written before the
+   * id existed keeps a blank one for good — a dash in the column meant to be
+   * its permanent handle. Idempotent, and it only looks for the missing.
+   */
+  async backfillIds(): Promise<{ repaired: number }> {
+    const idless = await PolicyModel.find({
+      $or: [{ policy_no: null }, { policy_no: { $exists: false } }, { policy_no: '' }],
+    }).select('_id');
+    for (const doc of idless) {
+      doc.policy_no = await nextEntityNo('POL', 'policy');
+      await doc.save();
+    }
+    return { repaired: idless.length };
   },
 
   async remove(id: string) {

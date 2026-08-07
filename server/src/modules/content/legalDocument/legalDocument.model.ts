@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export interface ILegalDocumentVersion {
   _id: Types.ObjectId;
@@ -64,10 +65,18 @@ const signatorySchema = new Schema<ILegalDocumentSignatory>(
 );
 
 export interface ILegalDocument extends Document {
+  /**
+   * The permanent handle: DOC-000001. Minted on insert, never edited, and
+   * never reused — the counter behind it only counts up, so a deleted
+   * document does not hand its id to the next one.
+   */
+  document_no: string | null;
   name: string;
   document_type: string;
   description: string;
   content: string;
+  /** Off hides the document from the app without deleting it. */
+  is_active: boolean;
   /** Everyone who must sign. Empty means nobody has been asked yet. */
   signatories: Types.DocumentArray<ILegalDocumentSignatory>;
   /**
@@ -86,7 +95,9 @@ export interface ILegalDocument extends Document {
 
 const legalDocumentSchema = new Schema<ILegalDocument>(
   {
+    document_no: { type: String, default: null, unique: true, sparse: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 200, index: true },
+    is_active: { type: Boolean, default: true, index: true },
     document_type: { type: String, required: true, trim: true, index: true },
     description: { type: String, default: '', trim: true, maxlength: 1000 },
     content: { type: String, default: '' },
@@ -102,5 +113,13 @@ const legalDocumentSchema = new Schema<ILegalDocument>(
 );
 
 legalDocumentSchema.index({ document_type: 1, updated_at: -1 });
+
+// Minted on insert only, so an id never changes once anyone has seen it.
+legalDocumentSchema.pre('save', async function (next) {
+  if (this.isNew && !this.document_no) {
+    this.document_no = await nextEntityNo('DOC', 'legal_document');
+  }
+  next();
+});
 
 export const LegalDocumentModel = model<ILegalDocument>('LegalDocument', legalDocumentSchema);

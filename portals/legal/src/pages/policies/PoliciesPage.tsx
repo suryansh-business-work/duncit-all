@@ -32,6 +32,9 @@ export default function PoliciesPage() {
     setIsNew(true);
     setEditing({
       id: '',
+      // Blank until the server mints it on insert — the same contract every
+      // entity id carries.
+      policy_no: '',
       slug: '',
       title: '',
       policy_type: '',

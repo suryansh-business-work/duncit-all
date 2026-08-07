@@ -3,7 +3,9 @@ import { gql } from '@apollo/client';
 export const LEGAL_DOCUMENT_FIELDS = gql`
   fragment LegalDocumentFields on LegalDocument {
     id
+    document_no
     name
+    is_active
     document_type
     description
     created_by_name
@@ -94,11 +96,10 @@ export const CREATE_LEGAL_DOCUMENT = gql`
 export const UPDATE_LEGAL_DOCUMENT = gql`
   mutation UpdateLegalDocument($id: ID!, $input: UpdateLegalDocumentInput!) {
     updateLegalDocument(id: $id, input: $input) {
-      id
-      version_count
-      updated_at
+      ...LegalDocumentFields
     }
   }
+  ${LEGAL_DOCUMENT_FIELDS}
 `;
 
 export const DELETE_LEGAL_DOCUMENT = gql`
@@ -141,7 +142,11 @@ export interface LegalDocumentSignatory {
 
 export interface LegalDocumentListItem {
   id: string;
+  /** Permanent handle, DOC-000001. Never edited, never reused. */
+  document_no: string;
   name: string;
+  /** Off hides the document from the app without deleting it. */
+  is_active: boolean;
   document_type: string;
   description: string;
   created_by_name: string;

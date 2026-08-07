@@ -3,7 +3,13 @@ import { Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  dateColumn,
+  entityIdColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import {
   CONTRACT_STATUS_OPTIONS,
   contractStatusLabel,
@@ -23,13 +29,6 @@ interface Props {
 }
 
 const getRowId = (c: Contract) => c.id;
-
-/** Monospace, because an id is read character by character when it is quoted. */
-const renderId = (c: Contract) => (
-  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-    {c.contract_no || '—'}
-  </Typography>
-);
 
 const renderTitle = (c: Contract) => (
   <Typography variant="body2" fontWeight={700} component="span">
@@ -102,14 +101,7 @@ export default function ContractsTable({
     // (CONTRACT_TABLE_CONFIG): sort contract_no/title/status/counterparty/
     // created_at/updated_at; filter the same as text, status as a select.
     return [
-      {
-        field: 'contract_no',
-        headerName: 'Contract ID',
-        width: 150,
-        filter: { type: 'text' },
-        cellRenderer: renderId,
-        valueGetter: (c) => c.contract_no || '—',
-      },
+      entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' }),
       {
         field: 'title',
         headerName: 'Title',

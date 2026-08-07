@@ -95,7 +95,17 @@ const podMemberSchema = new Schema<IPodMember>(
 podMemberSchema.index({ pod_id: 1, user_id: 1, status: 1 });
 // One booking per payment. The capture path is replayable (webhook retries), and
 // booking seats twice for one payment oversells the pod by the whole seat count.
-// Sparse, because a free join has no payment.
-podMemberSchema.index({ payment_id: 1 }, { unique: true, sparse: true });
+//
+// PARTIAL, not sparse. `payment_id` is declared `default: null`, so a free join
+// writes the field as null rather than leaving it out — and a sparse index skips
+// only MISSING fields, not null ones. Sparse would therefore index every free
+// join under the same null key: the second free join in the whole system would
+// fail with a duplicate-key error, and on a database that already holds those
+// rows the index would simply refuse to build, quietly taking the replay
+// protection with it.
+podMemberSchema.index(
+  { payment_id: 1 },
+  { unique: true, partialFilterExpression: { payment_id: { $type: 'objectId' } } }
+);
 
 export const PodMemberModel = model<IPodMember>('PodMember', podMemberSchema);

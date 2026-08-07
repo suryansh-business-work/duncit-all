@@ -774,7 +774,16 @@ export const podMemberService = {
     // The refund is for the seats given back, so the request records that share
     // of what was paid — not the whole payment, which would refund a partial
     // backout for seats the buyer is still using.
-    const paymentAmount = payment ? round2((payment.total * release) / held) : null;
+    //
+    // Divided by the seats the PAYMENT covered, never by the seats the booking
+    // holds today. A partial release shrinks the booking, so dividing by what is
+    // left re-values every remaining seat upward: release 1 of 4, then 1 of the
+    // remaining 3, and the second seat is refunded at a third of the bill
+    // instead of a quarter. Releasing one at a time would pay out more than was
+    // ever collected. `previewRefund` uses the same divisor, so the number the
+    // buyer was shown is the number Finance is told to pay.
+    const paidSeats = normalizeSeats((payment?.metadata as any)?.seats ?? held);
+    const paymentAmount = payment ? round2((payment.total * release) / paidSeats) : null;
     const attemptNo = attemptsUsed + 1;
     const now = new Date();
     const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);
@@ -841,6 +850,19 @@ export const podMemberService = {
 
     const seats = normalizeSeats(request.seats ?? 1);
     const wholeBooking = seats >= (request.seats_before ?? 1);
+    // The membership has to be in the state this request implies. Keeping a
+    // PARTIAL release after the member has since left entirely would hand the
+    // seats back to somebody who is no longer in `pod_attendees` — the counter
+    // would climb, the pod would show seats occupied by nobody, and that
+    // inflated occupancy would start marking other people's backouts filled
+    // with no replacement behind them. The request id is a public argument, so
+    // this is reachable, not theoretical.
+    const expected = wholeBooking ? 'BACKOUT_IN_PROCESS' : 'JOINED';
+    if (membership.status !== expected) {
+      throw new GraphQLError('That backout can no longer be cancelled', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
     // Take the seats back BEFORE the request is closed — if they have gone, the
     // claim throws and the backout stays open rather than leaving the member
     // "kept" with nothing to sit on.
@@ -889,16 +911,26 @@ export const podMemberService = {
 
     await ensureSeatsAvailable(pod, 1);
 
-    const doc = await PodMemberModel.create({
-      pod_id: pod._id,
-      user_id: uid,
-      status: 'JOINED',
-      joined_at: new Date(),
-      source: 'REFERRAL',
-      referred_by: refDoc.user_id,
-      refund_status: 'NONE',
-    });
+    // Claim the seat BEFORE the membership row exists — the claim re-checks
+    // capacity against the live pod and can throw where the old read-modify-write
+    // could not, and a JOINED row holding a seat nobody granted is the harder
+    // mess to unwind. Same ordering as joinFree and rejoin.
     await addAttendee(pod, userId);
+    let doc;
+    try {
+      doc = await PodMemberModel.create({
+        pod_id: pod._id,
+        user_id: uid,
+        status: 'JOINED',
+        joined_at: new Date(),
+        source: 'REFERRAL',
+        referred_by: refDoc.user_id,
+        refund_status: 'NONE',
+      });
+    } catch (e) {
+      await removeAttendee(pod, userId);
+      throw e;
+    }
     // The vacated seat is consumed like any other join — the oldest in-process
     // backout (usually the referrer's) flips to Spot Filled and becomes
     // refund-eligible for Finance to process. The joiner is the redeemer, not
@@ -1212,24 +1244,41 @@ export const podMemberService = {
       });
     }
     const payment = await PaymentModel.findById(request.payment_id);
+    // A partial release leaves the payment SUCCESS on purpose (below), so a
+    // later release on the same booking has to be refundable too.
+    const partial = normalizeSeats(request.seats ?? 1) < normalizeSeats(request.seats_before ?? 1);
     if (payment?.status !== 'SUCCESS') {
       throw new GraphQLError('The linked payment cannot be refunded', {
         extensions: { code: 'CONFLICT' },
       });
     }
 
-    payment.status = 'REFUNDED';
+    // Only a release of the WHOLE booking ends the payment. Marking a payment
+    // REFUNDED for a partial release said the pod collected nothing from a
+    // buyer who is still attending on the seats they kept — `collectedForPod`
+    // counts SUCCESS payments only, so the host and the venue would have
+    // settled on a booking that never left. It also made the payment
+    // un-refundable, so a second released seat could never be paid back.
+    const refundedSoFar = round2(
+      Number((payment.metadata as any)?.refunded_amount ?? 0) + Number(request.refund_amount ?? 0)
+    );
     (payment.metadata as any) = {
       ...payment.metadata,
       refund_reason: 'backout_spot_filled',
       refunded_at: new Date().toISOString(),
       backout_no: request.backout_no,
+      // What has gone back across every release on this booking, so Finance can
+      // see a part-refunded payment for what it is.
+      refunded_amount: refundedSoFar,
     };
+    if (!partial) payment.status = 'REFUNDED';
     await payment.save();
     request.refund_processed_at = new Date();
     await request.save();
     const member = await PodMemberModel.findById(request.member_id);
-    if (member) {
+    // A partially-refunded member is still going, so their membership-level
+    // refund state must not read as settled.
+    if (member && !partial) {
       member.refund_status = 'PROCESSED';
       member.refund_payment_id = payment._id;
       await member.save();

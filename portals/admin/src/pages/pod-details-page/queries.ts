@@ -16,6 +16,8 @@ export const POD_DETAIL = gql`
       pod_amount
       pod_occurrence
       no_of_spots
+      seats_taken
+      seats_available
       pod_attendees
       pod_hosts_id
       host_names

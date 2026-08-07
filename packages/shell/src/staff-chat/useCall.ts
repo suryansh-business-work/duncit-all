@@ -17,6 +17,9 @@ const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:1
 
 interface Signal {
   from: string;
+  /** Carried on the offer, so a ringing window can name the caller even
+   *  when the chat is closed and nothing has loaded. */
+  from_name?: string;
   kind?: CallKind;
   sdp?: RTCSessionDescriptionInit;
   candidate?: RTCIceCandidateInit;
@@ -51,6 +54,8 @@ export function useCall(socket: Socket | null, meId: string) {
   const [peerId, setPeerId] = useState<string | null>(null);
   /** The row the last finished call was written to, for a late recording. */
   const [lastCallId, setLastCallId] = useState<string | null>(null);
+  /** Who is on the other end, by name — set from the offer or by the caller. */
+  const [peerName, setPeerName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   /** Which microphone and camera to open. '' means whatever the OS defaults to. */
   const [micId, setMicId] = useState('');
@@ -364,6 +369,7 @@ export function useCall(socket: Socket | null, meId: string) {
       pendingOffer.current = signal.sdp ?? null;
       setKind(signal.kind ?? 'AUDIO');
       setPeerId(signal.from);
+      setPeerName(signal.from_name ?? 'Coworker');
       setPhase('incoming');
       stopRing.current = startRinging();
     };
@@ -412,6 +418,8 @@ export function useCall(socket: Socket | null, meId: string) {
   return {
     phase,
     lastCallId,
+    peerName,
+    setPeerName,
     kind,
     peerId,
     error,

@@ -12,6 +12,14 @@ export interface FloatingWindowProps {
   initial: WindowRect;
   /** Shown before closing. Absent means close without asking. */
   closeWarning?: { title: string; message: string; confirmLabel: string };
+  /**
+   * The content manages its own height instead of scrolling.
+   *
+   * For a call: the controls belong on a fixed floor with the picture taking
+   * whatever is left, and a scrolling body would let the hang-up button drift
+   * off the bottom the moment somebody turned their camera on.
+   */
+  fill?: boolean;
   onClose: () => void;
   children: React.ReactNode;
 }
@@ -35,6 +43,7 @@ export default function FloatingWindow({
   subtitle,
   initial,
   closeWarning,
+  fill,
   onClose,
   children,
 }: Readonly<FloatingWindowProps>) {
@@ -92,7 +101,14 @@ export default function FloatingWindow({
             Still running — this window is minimised.
           </Typography>
         ) : (
-          <Stack sx={{ flex: 1, minHeight: 0, overflow: 'auto', overscrollBehavior: 'contain' }}>
+          <Stack
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: fill ? 'hidden' : 'auto',
+              overscrollBehavior: 'contain',
+            }}
+          >
             {children}
           </Stack>
         )}

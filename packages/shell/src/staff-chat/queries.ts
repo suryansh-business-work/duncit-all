@@ -6,6 +6,12 @@ export interface Coworker {
   email: string;
   photo: string;
   roles: string[];
+  /** Reachable off-chat. Empty when they have not given one. */
+  phone: string;
+  city: string;
+  /** Their IANA zone, so the card can say what time it is where they are. */
+  timezone: string;
+  bio: string;
 }
 
 /** The six the bar offers. Any other emoji is allowed — these are just close. */
@@ -89,6 +95,10 @@ const COWORKER = `
   email
   photo
   roles
+  phone
+  city
+  timezone
+  bio
 `;
 
 const MESSAGE = `
@@ -278,6 +288,44 @@ export const STAFF_CALLS = gql`
 export const ATTACH_CALL_RECORDING = gql`
   mutation AttachStaffCallRecording($callId: ID!, $url: String!) {
     attachStaffCallRecording(call_id: $callId, url: $url)
+  }
+`;
+
+export interface StaffChatState {
+  panel_open: boolean;
+  role_filter: string;
+  open_peer_id: string | null;
+  density: string;
+  bubble_color: string;
+  font_size: number;
+  time_zone: string;
+  enter_to_send: boolean;
+}
+
+const CHAT_STATE = `
+  panel_open
+  role_filter
+  open_peer_id
+  density
+  bubble_color
+  font_size
+  time_zone
+  enter_to_send
+`;
+
+export const STAFF_CHAT_STATE = gql`
+  query StaffChatState {
+    staffChatState {
+      ${CHAT_STATE}
+    }
+  }
+`;
+
+export const SAVE_STAFF_CHAT_STATE = gql`
+  mutation SaveStaffChatState($input: StaffChatStateInput!) {
+    saveStaffChatState(input: $input) {
+      ${CHAT_STATE}
+    }
   }
 `;
 

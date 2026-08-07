@@ -104,8 +104,20 @@ export const staffChatResolvers = {
       const me = requireRole(ctx, ROLES);
       return staffChatService.calls(me.id, args.peer_id, args.limit ?? 50);
     },
+    staffChatState: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.chatState(me.id);
+    },
   },
   Mutation: {
+    saveStaffChatState: (
+      _p: unknown,
+      args: { input: Record<string, unknown> },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.saveChatState(me.id, args.input ?? {});
+    },
     attachStaffCallRecording: (
       _p: unknown,
       args: { call_id: string; url: string },

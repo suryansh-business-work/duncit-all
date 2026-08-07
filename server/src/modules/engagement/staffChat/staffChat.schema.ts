@@ -10,6 +10,12 @@ export const staffChatTypeDefs = /* GraphQL */ `
     photo: String!
     "Only their staff roles — the ones that put them in this directory."
     roles: [String!]!
+    "Reachable off-chat. Empty when they have not given one."
+    phone: String!
+    city: String!
+    "Their IANA zone, so you can see whether it is a reasonable hour to call."
+    timezone: String!
+    bio: String!
   }
 
 "One person's reaction to one message. At most one per person per message."
@@ -107,6 +113,40 @@ export const staffChatTypeDefs = /* GraphQL */ `
     created_at: String
   }
 
+  """
+  How one person has staff chat set up — what was open and how it looks.
+
+  On the server rather than in localStorage because the same panel renders in
+  all seventeen consoles: "per browser" meant it forgot everything the moment
+  you moved to a different portal, and knew nothing at all on a second machine.
+  """
+  type StaffChatState {
+    panel_open: Boolean!
+    "The team filter, or '' for everyone."
+    role_filter: String!
+    "The conversation that was open, so a refresh returns to it."
+    open_peer_id: ID
+    "COMPACT or COMFORTABLE."
+    density: String!
+    bubble_color: String!
+    font_size: Int!
+    "IANA zone for every timestamp, or '' to follow the machine."
+    time_zone: String!
+    enter_to_send: Boolean!
+  }
+
+  "Every field optional: the panel saves the one thing that changed."
+  input StaffChatStateInput {
+    panel_open: Boolean
+    role_filter: String
+    open_peer_id: ID
+    density: String
+    bubble_color: String
+    font_size: Int
+    time_zone: String
+    enter_to_send: Boolean
+  }
+
   "Whether someone is at their desk. Held for as long as their socket is."
   type StaffPresence {
     user_id: ID!
@@ -170,6 +210,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     staffPresence: [StaffPresence!]!
     "Every call on this line, newest first."
     staffCalls(peer_id: ID!, limit: Int): [StaffCall!]!
+    "Your own chat setup, with defaults when you have never changed it."
+    staffChatState: StaffChatState!
   }
 
   extend type Mutation {
@@ -209,5 +251,7 @@ export const staffChatTypeDefs = /* GraphQL */ `
     pinStaffMessage(id: ID!): StaffMessage!
     "Mark what they sent you as read. Returns how many that was."
     markStaffThreadRead(peer_id: ID!): Int!
+    "Save part of your chat setup. Anything omitted is left as it was."
+    saveStaffChatState(input: StaffChatStateInput!): StaffChatState!
   }
 `;

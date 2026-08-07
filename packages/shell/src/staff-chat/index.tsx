@@ -5,21 +5,16 @@ import ChatWindows from './ChatWindows';
 import PanelHeader from './PanelHeader';
 import { useCall } from './useCall';
 import { useCallRecorder } from './useCallRecorder';
-import { useChatSettings } from './useChatSettings';
+import { useChatState } from './useChatState';
+import { usePanelRestore } from './usePanelRestore';
+import { useRecordingAttach } from './useRecordingAttach';
 import { useStaffChatData } from './useStaffChatData';
 import type { Coworker, StaffMessage } from './queries';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /**
-   * Show the panel — a call arrived while it was closed.
-   *
-   * The panel stays MOUNTED whether or not it is on screen, because the socket
-   * that carries an incoming call lives inside it: a chat that only listens
-   * while its sidebar is open is a phone that only rings while you are holding
-   * it.
-   */
+  /** Show the panel — a call arrived, or it was open when they last left. */
   onRequestOpen?: () => void;
   /** Your own id, so the conversation can tell your lines from theirs. */
   meId: string;
@@ -32,8 +27,12 @@ interface Props {
  *
  * A docked panel, not a drawer: no backdrop, and the page beside it is pushed
  * rather than covered. The reason to message someone is almost always something
- * on the screen you are already looking at, so a chat that greys that screen out
- * is a chat you close before you can quote it.
+ * on the screen you are already looking at, so a chat that greys that screen
+ * out is a chat you close before you can quote it.
+ *
+ * It stays MOUNTED whether or not it is showing, because the socket that
+ * carries an incoming call lives inside it — a chat that only listens while its
+ * sidebar is open is a phone that only rings while you are holding it.
  *
  * Reading and writing live in useStaffChatData; what is on screen lives here.
  */
@@ -46,7 +45,6 @@ export function StaffChatPanel({
 }: Readonly<Props>) {
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [role, setRole] = useState('');
   const [peer, setPeer] = useState<Coworker | null>(null);
   const [replyTo, setReplyTo] = useState<StaffMessage | null>(null);
   const [sharingWith, setSharingWith] = useState(false);
@@ -57,8 +55,36 @@ export function StaffChatPanel({
     return () => clearTimeout(id);
   }, [search]);
 
-  const { settings, update: updateSettings, formats, spacing } = useChatSettings();
-  const data = useStaffChatData({ open, peer, meId, meName, search: debounced, role });
+  const chat = useChatState();
+  const { settings, update: updateSettings, formats, spacing, panel } = chat;
+  const data = useStaffChatData({
+    open,
+    peer,
+    meId,
+    meName,
+    search: debounced,
+    role: panel.role,
+  });
+
+  usePanelRestore({
+    ready: chat.ready,
+    wasOpen: panel.panelOpen,
+    savedPeerId: panel.openPeerId,
+    open,
+    peer,
+    threads: data.threads,
+    coworkers: data.coworkers,
+    onRequestOpen,
+    // Restoring is not a change worth saving — it IS the saved value.
+    onPeer: setPeer,
+    onPanelOpen: chat.setPanelOpen,
+  });
+
+  /** Opening or leaving a conversation is state worth keeping. */
+  const openPeer = (next: Coworker | null) => {
+    setPeer(next);
+    chat.setOpenPeerId(next?.id ?? null);
+  };
 
   const call = useCall(data.socket, meId);
   const recorder = useCallRecorder({
@@ -74,23 +100,12 @@ export function StaffChatPanel({
     if (incoming) onRequestOpen?.();
   }, [incoming, onRequestOpen]);
 
-  /**
-   * A finished recording belongs to the call it came from.
-   *
-   * Attached automatically rather than waiting for somebody to press "send to
-   * chat": a recording nobody remembered to post is a recording nobody can
-   * find. The call row in the thread then carries it, and the chat message is
-   * an extra, not the only copy.
-   */
-  const readyUrl = recorder.stage === 'READY' ? recorder.url : null;
-  const { lastCallId } = call;
-  const { attachRecording, refetchCalls } = data;
-  useEffect(() => {
-    if (!readyUrl || !lastCallId) return;
-    attachRecording({ variables: { callId: lastCallId, url: readyUrl } })
-      .then(() => refetchCalls())
-      .catch(() => undefined);
-  }, [readyUrl, lastCallId, attachRecording, refetchCalls]);
+  useRecordingAttach({
+    readyUrl: recorder.stage === 'READY' ? recorder.url : null,
+    callId: call.lastCallId,
+    attach: data.attachRecording,
+    onAttached: data.refetchCalls,
+  });
 
   /** The call window is up for anything that is not "nothing happening". */
   const callWindowOpen =
@@ -158,17 +173,22 @@ export function StaffChatPanel({
             data={data}
             meId={meId}
             peer={peer}
-            onOpenPeer={setPeer}
+            onOpenPeer={openPeer}
             search={search}
             onSearch={setSearch}
-            role={role}
-            onRole={setRole}
+            role={panel.role}
+            onRole={chat.setRole}
             settings={settings}
             formats={formats}
             spacing={spacing}
             replyTo={replyTo}
             onReplyTo={setReplyTo}
-            onCall={(kind) => peer && call.call(peer.id, kind).catch(() => undefined)}
+            onCall={(kind) => {
+              if (!peer) return;
+              // The window reads this while it rings, before any answer.
+              call.setPeerName(peer.name);
+              call.call(peer.id, kind).catch(() => undefined);
+            }}
             onShareScreen={() => setSharingWith(true)}
             onPlayRecording={setPlayingRecording}
           />

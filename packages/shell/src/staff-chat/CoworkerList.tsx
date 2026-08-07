@@ -68,11 +68,24 @@ export default function CoworkerList({
   statusOf,
   onOpen,
 }: Readonly<Props>) {
+  const searching = search.trim().length > 0;
+
+  /*
+    The team filter has to reach the CONVERSATIONS too.
+
+    It only ever narrowed the directory, which is the half of this list that
+    renders while you are searching — so picking a team left every existing
+    thread in place and the filter looked broken. The roles are already on each
+    thread's peer, so this needs no second query.
+  */
+  const shownThreads = searching
+    ? []
+    : threads.filter((thread) => !role || thread.peer.roles.includes(role));
+
   // Nobody appears twice: a thread already says everything the directory row
   // would, plus what was last said.
-  const inThreads = new Set(threads.map((thread) => thread.peer.id));
+  const inThreads = new Set(shownThreads.map((thread) => thread.peer.id));
   const others = coworkers.filter((person) => !inThreads.has(person.id));
-  const searching = search.trim().length > 0;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -104,8 +117,7 @@ export default function CoworkerList({
         dense
         sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', pt: 0 }}
       >
-        {!searching &&
-          threads.map((thread) => (
+        {shownThreads.map((thread) => (
             <ListItem
               key={thread.peer.id}
               disablePadding
@@ -162,7 +174,7 @@ export default function CoworkerList({
           </ListItem>
         ))}
 
-        {threads.length === 0 && others.length === 0 && (
+        {shownThreads.length === 0 && others.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 3 }}>
             Nobody matches that.
           </Typography>

@@ -1,6 +1,13 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
-import type { Coworker } from '../queries';
 import type { CallKind, CallPhase } from '../useCall';
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
 const LABEL: Record<CallPhase, string> = {
   idle: '',
@@ -12,7 +19,8 @@ const LABEL: Record<CallPhase, string> = {
 interface Props {
   phase: CallPhase;
   kind: CallKind;
-  peer: Coworker | null;
+  peerName: string;
+  peerPhoto: string;
   sharing: boolean;
 }
 
@@ -25,7 +33,13 @@ interface Props {
  * ::after on a wrapper rather than a box-shadow on the avatar, so the pulse
  * cannot resize anything around it.
  */
-export default function CallHeader({ phase, kind, peer, sharing }: Readonly<Props>) {
+export default function CallHeader({
+  phase,
+  kind,
+  peerName,
+  peerPhoto,
+  sharing,
+}: Readonly<Props>) {
   const ringing = phase === 'ringing' || phase === 'incoming';
 
   return (
@@ -55,11 +69,13 @@ export default function CallHeader({ phase, kind, peer, sharing }: Readonly<Prop
           }),
         }}
       >
-        <Avatar src={peer?.photo || undefined} sx={{ width: 32, height: 32 }} />
+        <Avatar src={peerPhoto || undefined} sx={{ width: 32, height: 32 }}>
+          {initials(peerName)}
+        </Avatar>
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="subtitle2" noWrap>
-          {peer?.name ?? 'Coworker'}
+          {peerName}
         </Typography>
         <Typography variant="caption" color="text.secondary">
           {kind === 'VIDEO' ? 'Video' : 'Audio'} · {LABEL[phase]}

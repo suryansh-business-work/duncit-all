@@ -38,7 +38,18 @@ export default function CallWindow({
   recorder,
   onSendRecording,
 }: Readonly<Props>) {
-  const name = peer?.name ?? 'Coworker';
+  /*
+    Whose call this is.
+
+    The open CONVERSATION is not the answer: a call can arrive while the chat
+    is closed or while a different thread is on screen, and this window is the
+    only thing on the page at that moment. The name travels with the offer
+    itself, so it is right even before anything has loaded; `peer` is only the
+    fallback for a call you placed from a thread you are already looking at.
+  */
+  const onCall = peer?.id === call.peerId ? peer : null;
+  const name = call.peerName || onCall?.name || 'Coworker';
+  const photo = onCall?.photo ?? '';
   const live = call.phase !== 'idle';
 
   return (
@@ -47,6 +58,7 @@ export default function CallWindow({
       title={call.kind === 'VIDEO' ? `Video with ${name}` : `Call with ${name}`}
       subtitle={SUBTITLE[call.phase]}
       initial={{ x: 80, y: 80, width: 520, height: 460 }}
+      fill
       closeWarning={
         live
           ? {
@@ -64,7 +76,8 @@ export default function CallWindow({
       <CallPanel
         phase={call.phase}
         kind={call.kind}
-        peer={peer}
+        peerName={name}
+        peerPhoto={photo}
         error={call.error}
         localStream={call.localStream}
         remoteStream={call.remoteStream}

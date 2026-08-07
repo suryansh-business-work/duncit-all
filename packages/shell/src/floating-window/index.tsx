@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { ResizeGrip, TitleBar } from './WindowChrome';
 import { useWindowDrag, type WindowRect } from './useWindowDrag';
@@ -62,9 +62,18 @@ export default function FloatingWindow({
     onClose();
   };
 
-  const box = maximised
+  /*
+    Minimised wins over maximised.
+
+    Otherwise minimising a full-screen window leaves the whole screen covered
+    by one line of text, which is the opposite of what the button says. Rolled
+    up to its bar in its own corner is what minimise means here — there is no
+    taskbar to go to.
+  */
+  const spread = maximised
     ? { left: 0, top: 0, width: '100vw', height: '100dvh' }
-    : { left: rect.x, top: rect.y, width: rect.width, height: minimised ? 'auto' : rect.height };
+    : { left: rect.x, top: rect.y, width: rect.width, height: rect.height };
+  const box = minimised ? { ...spread, height: 'auto' } : spread;
 
   return (
     <>
@@ -113,10 +122,11 @@ export default function FloatingWindow({
           </Stack>
         )}
 
+        {/* Anchored to the Paper, which is already positioned. It used to sit
+            in a wrapper of its own height — zero — so the grip floated above
+            the corner it was meant to be. */}
         {!maximised && !minimised && (
-          <Box sx={{ position: 'relative' }}>
-            <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={end} />
-          </Box>
+          <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={end} />
         )}
       </Paper>
 

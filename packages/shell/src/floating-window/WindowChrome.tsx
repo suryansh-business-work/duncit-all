@@ -33,23 +33,38 @@ export function TitleBar({
       direction="row"
       alignItems="center"
       spacing={1}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
       sx={{
         px: 1,
         py: 0.5,
         borderBottom: 1,
         borderColor: 'divider',
-        cursor: maximised ? 'default' : 'move',
-        // Or dragging selects the title text instead of moving the window.
-        userSelect: 'none',
-        touchAction: 'none',
         bgcolor: 'action.hover',
       }}
     >
-      <Box sx={{ minWidth: 0, flex: 1 }}>
+      {/*
+        The drag handle is the TITLE, not the whole bar.
+
+        It used to be the bar, which meant a pointerdown on minimise or close
+        also began a drag — and a drag calls preventDefault and takes pointer
+        capture, so the button never saw the pointerup that would have become
+        its click. The three buttons did nothing at all. Flex-1 keeps every
+        pixel left of them draggable, which is what a title bar is anyway.
+      */}
+      <Box
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          alignSelf: 'stretch',
+          cursor: maximised ? 'default' : 'move',
+          // Or dragging selects the title text instead of moving the window.
+          userSelect: 'none',
+          touchAction: 'none',
+        }}
+      >
         <Typography variant="subtitle2" noWrap>
           {title}
         </Typography>

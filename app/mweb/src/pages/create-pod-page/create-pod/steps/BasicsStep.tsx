@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
+import { MAX_COVER_IMAGES } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import PodReelAccordion from '../fields/PodReelAccordion';
 import ChipArrayField from '../fields/ChipArrayField';
@@ -67,6 +68,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             onChange={field.onChange}
             error={fieldState.error?.message}
             subCategoryName={subCategoryName}
+            maxImages={MAX_COVER_IMAGES}
           />
         )}
       />

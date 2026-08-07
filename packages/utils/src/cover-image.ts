@@ -40,6 +40,20 @@ export function coverSlotsLeft(alreadyChosen: number, max = MAX_COVER_IMAGES): n
 }
 
 /**
+ * How many one OPEN of the picker may return, for a field that is not a cover.
+ *
+ * The five is a batch size, not a lifetime limit. The same media field also
+ * collects a host's edit-time media and the photos they post after the pod
+ * happened, and neither of those was ever capped — capping them because the
+ * cover is capped would quietly take a feature away. `totalMax` is what turns
+ * the batch into a real ceiling, and only the cover field passes it.
+ */
+export function pickerBatchSize(alreadyChosen: number, totalMax?: number | null): number {
+  if (totalMax == null) return MAX_COVER_IMAGES;
+  return Math.min(MAX_COVER_IMAGES, coverSlotsLeft(alreadyChosen, totalMax));
+}
+
+/**
  * Add a URL to a selection, refusing duplicates and anything past the cap.
  * Returns the SAME array when nothing changed, so React skips the re-render.
  */

@@ -4,6 +4,7 @@ import { YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
+import { MAX_COVER_IMAGES } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
@@ -58,6 +59,7 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             error={fieldState.error?.message}
             required
             subCategoryName={subCategoryName}
+            maxImages={MAX_COVER_IMAGES}
           />
         )}
       />

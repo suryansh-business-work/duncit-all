@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { MAX_COVER_IMAGES, addToSelection, coverSearchTerm, coverSlotsLeft } from '@duncit/utils';
+import { addToSelection, coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 
 import { FieldLabel } from '@/components/Field';
 import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
@@ -39,6 +39,12 @@ interface Props {
    * the user type it is work for nothing.
    */
   subCategoryName?: string | null;
+  /**
+   * Hard ceiling on the field. Only the COVER sets one — the edit-time media
+   * list and the post-pod photo list were never capped, and capping them
+   * because the cover is capped would take a feature away.
+   */
+  maxImages?: number;
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
@@ -51,6 +57,7 @@ export function MediaUploadField({
   required,
   folder = '/pods',
   subCategoryName,
+  maxImages,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const urls = splitLines(value ?? '');
@@ -60,7 +67,9 @@ export function MediaUploadField({
   // the dialog because a device upload lands through the crop sheet, which is a
   // sibling modal — the field is what both paths report to.
   const [tray, setTray] = useState<string[]>([]);
-  const slotsLeft = coverSlotsLeft(urls.length);
+  // How many ONE open may return. Five is a batch size everywhere; it only
+  // becomes a ceiling on a field that asked for one.
+  const slotsLeft = pickerBatchSize(urls.length, maxImages);
   const addToTray = (url: string) => setTray((current) => addToSelection(current, url, slotsLeft));
   const upload = useMediaUpload(folder, addToTray);
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
@@ -160,7 +169,7 @@ export function MediaUploadField({
         </Text>
         <Text fontSize={12} color="$muted">
           {full
-            ? `Up to ${MAX_COVER_IMAGES} — remove one to add another`
+            ? `Up to ${maxImages} — remove one to add another`
             : uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
         </Text>
       </YStack>

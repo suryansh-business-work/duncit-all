@@ -4,7 +4,7 @@ import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternate
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
-import { MAX_COVER_IMAGES, coverSearchTerm, coverSlotsLeft } from '@duncit/utils';
+import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 
@@ -29,6 +29,12 @@ interface Props {
    * making the user type it is work for nothing.
    */
   subCategoryName?: string | null;
+  /**
+   * Hard ceiling on the field. Only the COVER sets one — the edit-time media
+   * list and the post-pod photo list were never capped, and capping them
+   * because the cover is capped would take a feature away.
+   */
+  maxImages?: number;
 }
 
 /** Pod media — a dashed upload dropzone (empty state) that opens the shared
@@ -43,6 +49,7 @@ export default function MediaUrlsField({
   required = true,
   folder = '/pods',
   subCategoryName,
+  maxImages,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const urls = splitLines(value ?? '');
@@ -52,8 +59,9 @@ export default function MediaUrlsField({
     if (fresh.length === 0) return;
     onChange([...urls, ...fresh].join('\n'));
   };
-  // What is left of the cap, so a field already holding three offers two.
-  const slotsLeft = coverSlotsLeft(urls.length);
+  // How many ONE open may return. Five is a batch size everywhere; it only
+  // becomes a ceiling on a field that asked for one.
+  const slotsLeft = pickerBatchSize(urls.length, maxImages);
   const full = slotsLeft === 0;
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
   const openPicker = () => setPickerOpen(true);
@@ -137,7 +145,7 @@ export default function MediaUrlsField({
       {error && <FormHelperText error>{error}</FormHelperText>}
       {full && (
         <FormHelperText>
-          {`That is the maximum of ${MAX_COVER_IMAGES} — remove one to add another.`}
+          {`That is the maximum of ${maxImages} — remove one to add another.`}
         </FormHelperText>
       )}
       <MediaPickerDialog

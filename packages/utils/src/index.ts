@@ -112,4 +112,5 @@ export {
   addToSelection,
   coverSearchTerm,
   coverSlotsLeft,
+  pickerBatchSize,
 } from './cover-image';

@@ -91,7 +91,10 @@ export default function ChatComposer({
         </Typography>
       )}
 
-      <Stack direction="row" spacing={0.5} alignItems="flex-end">
+      {/* Centred, not bottom-aligned: on a one-line box — which is almost
+          always — bottom alignment drops the icons a few pixels below the text
+          and the whole row reads as crooked. */}
+      <Stack direction="row" spacing={0.5} alignItems="center">
         <Tooltip title="Attach a file">
           <IconButton
             size="small"

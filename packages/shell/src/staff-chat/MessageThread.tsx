@@ -143,7 +143,9 @@ export default function MessageThread({
         ref={scroller}
         onScroll={onScroll}
         spacing={spacing}
-        sx={{ height: '100%', overflowY: 'auto', px: 1.5, py: 1 }}
+        // `contain` keeps a wheel that hits the top or bottom of the thread from
+        // carrying on into the page behind the panel.
+        sx={{ height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', px: 1.5, py: 1 }}
       >
         {hasMore && (
           <Box sx={{ textAlign: 'center' }}>

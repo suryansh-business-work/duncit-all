@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Alert, Paper, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import { STAFF_SCREEN_SHARE_GRANT } from '../queries';
 import ShareStage, { type PointerTool } from './ShareStage';
 import ShareToolbar from './ShareToolbar';
@@ -98,7 +98,7 @@ export default function ScreenSharePanel({ peerId, peerName, onClose }: Readonly
   };
 
   return (
-    <Paper variant="outlined" sx={{ m: 1, p: 1.5 }} ref={stageRef}>
+    <Box sx={{ p: 1.5 }} ref={stageRef}>
       <Stack spacing={1}>
         {room.error && <Alert severity="error">{room.error}</Alert>}
 
@@ -151,6 +151,6 @@ export default function ScreenSharePanel({ peerId, peerName, onClose }: Readonly
           }}
         />
       </Stack>
-    </Paper>
+    </Box>
   );
 }

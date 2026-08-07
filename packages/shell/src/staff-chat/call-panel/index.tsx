@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Alert, Box, Paper, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import CallWaveform from '../CallWaveform';
 import CallControls from '../call-controls';
 import CallRecorder from '../CallRecorder';
@@ -102,8 +102,10 @@ export default function CallPanel({
     }
   };
 
+  // No frame of its own: this lives inside a FloatingWindow, and a bordered
+  // card inside a window is two frames drawing the same box.
   return (
-    <Paper variant="outlined" sx={{ m: 1, p: 1.5 }}>
+    <Box sx={{ p: 1.5 }}>
       {error && (
         <Alert severity="error" sx={{ mb: 1 }}>
           {error}
@@ -165,6 +167,6 @@ export default function CallPanel({
           onDismiss={onDismissRecording}
         />
       </Box>
-    </Paper>
+    </Box>
   );
 }

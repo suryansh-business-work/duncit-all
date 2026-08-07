@@ -4,7 +4,8 @@ import { Alert, Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
-import CallPanel from './call-panel';
+import FloatingWindow from '../floating-window';
+import CallWindow from './CallWindow';
 import { useCallRecorder } from './useCallRecorder';
 import Conversation from './Conversation';
 import CoworkerList from './CoworkerList';
@@ -39,6 +40,15 @@ import { useStaffSocket } from './useStaffSocket';
 interface Props {
   open: boolean;
   onClose: () => void;
+  /**
+   * Show the panel — a call arrived while it was closed.
+   *
+   * The panel stays MOUNTED whether or not it is on screen, because the socket
+   * that carries an incoming call lives inside it: a chat that only listens
+   * while its sidebar is open is a phone that only rings while you are holding
+   * it.
+   */
+  onRequestOpen?: () => void;
   /** Your own id, so the conversation can tell your lines from theirs. */
   meId: string;
   /** Your own name, for the export's header. */
@@ -56,7 +66,13 @@ const UPLOAD_FOLDER = '/staff-chat';
  * on the screen you are already looking at, so a chat that greys that screen out
  * is a chat you close before you can quote it.
  */
-export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>) {
+export function StaffChatPanel({
+  open,
+  onClose,
+  onRequestOpen,
+  meId,
+  meName,
+}: Readonly<Props>) {
   const runtime = useShellRuntime();
   const client = useApolloClient();
   const { upload, uploading } = useImagekitDirectUpload();
@@ -163,6 +179,17 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
     localStream: call.localStream,
     remoteStream: call.remoteStream,
   });
+
+  // A call arriving is a reason to show the panel. Only on the way IN: opening
+  // it every render while ringing would fight anyone who closed it deliberately.
+  const incoming = call.phase === 'incoming';
+  useEffect(() => {
+    if (incoming) onRequestOpen?.();
+  }, [incoming, onRequestOpen]);
+
+  /** The call window is up for anything that is not "nothing happening". */
+  const callWindowOpen =
+    call.phase !== 'idle' || Boolean(call.error) || recorder.stage !== 'IDLE';
 
   // The socket only reports CHANGES; the first paint needs the snapshot.
   const statusOf = useCallback(
@@ -281,136 +308,134 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
   };
 
   return (
-    <Box
-      sx={{
-        width: { xs: '100%', sm: 380 },
-        flexShrink: 0,
-        borderLeft: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        minHeight: 0,
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
-        <Typography variant="subtitle1" sx={{ flex: 1 }}>
-          Coworkers
-        </Typography>
-        <ChatSettingsMenu settings={settings} onChange={updateSettings} />
-        <StatusMenu status={presence.mine} onChange={presence.choose} />
-        <IconButton size="small" onClick={onClose} aria-label="Close chat">
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ m: 1 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Screen sharing is its own panel, above the call: a shared screen with
-          a pointer on it is the thing being looked at, and burying it inside
-          the call strip would make it the smallest element on screen. */}
-      {sharingWith && peer && (
-        <ScreenSharePanel
-          peerId={peer.id}
-          peerName={peer.name}
-          onClose={() => setSharingWith(false)}
-        />
-      )}
-
-      <CallPanel
-        phase={call.phase}
-        kind={call.kind}
+    <>
+      <CallWindow
+        open={callWindowOpen}
         peer={peer}
-        error={call.error}
-        localStream={call.localStream}
-        remoteStream={call.remoteStream}
-        onAnswer={() => void call.answer()}
-        onDecline={call.decline}
-        onHangUp={call.hangUp}
-        micId={call.micId}
-        camId={call.camId}
-        onMic={call.setMicId}
-        onCam={call.setCamId}
-        sharing={call.sharing}
-        onShare={() => call.shareScreen().catch(() => undefined)}
-        onStopSharing={() => call.stopSharing().catch(() => undefined)}
-        muted={call.muted}
-        cameraOff={call.cameraOff}
-        onToggleMute={call.toggleMute}
-        onToggleCamera={call.toggleCamera}
-        recordStage={recorder.stage}
-        recordPct={recorder.pct}
-        recordUrl={recorder.url}
-        recordError={recorder.error}
-        onToggleRecord={recorder.toggle}
+        call={call}
+        recorder={recorder}
         onSendRecording={(url) => {
           send('', { url, name: 'Call recording.mp4', type: 'video/mp4' });
           recorder.reset();
         }}
-        onDismissRecording={recorder.reset}
       />
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
-        {peer ? (
-          <Conversation
-            peer={peer}
-            meId={meId}
-            status={statusOf(peer.id)}
-            messages={visibleMessages}
-            sending={sendState.loading}
-            uploading={uploading}
-            onBack={() => setPeer(null)}
-            onSend={send}
-            onAttach={attach}
-            onEdit={(id, text) => change(editMessage, { id, text })}
-            onDelete={(id, forEveryone) => {
-              if (forEveryone) {
-                change(deleteMessage, { id });
-                return;
-              }
-              setHiddenIds((current) => new Set(current).add(id));
-            }}
-            onReact={(id, emoji) => change(reactToMessage, { id, emoji })}
-            onReply={setReplyTo}
-            onCancelReply={() => setReplyTo(null)}
-            replyTo={replyTo}
-            onForward={(message) => {
-              // One-to-one threads: forwarding goes to whoever you open next,
-              // so it lands as a normal message in that conversation.
-              if (peer) change(forwardMessage, { id: message.id, toUserId: peer.id });
-            }}
-            onPin={(id) => change(pinMessage, { id })}
-            loading={messagesQuery.loading}
-            hasMore={!reachedStart && visibleMessages.length > 0}
-            loadingMore={loadingMore}
-            onLoadMore={loadOlder}
-            settings={settings}
-            formats={formats}
-            spacing={spacing}
-            nameOf={nameOf}
-            onTyping={() => typing(peer.id)}
-            onCall={(kind) => void call.call(peer.id, kind)}
-            onExport={() => void exportChat()}
-            onShareScreen={() => setSharingWith(true)}
+      {/* Its own window, not a strip inside the call: a shared screen with a
+          pointer on it is the thing being looked at, and it needs to be
+          resizable independently of the call it belongs to. */}
+      {sharingWith && peer && (
+        <FloatingWindow
+          open
+          title={`Screen with ${peer.name}`}
+          subtitle="Drag to move · pull the corner to resize"
+          initial={{ x: 120, y: 120, width: 720, height: 520 }}
+          closeWarning={{
+            title: 'Stop sharing your screen?',
+            message: `${peer.name} will stop seeing your screen, and any control you gave them ends.`,
+            confirmLabel: 'Stop sharing',
+          }}
+          onClose={() => setSharingWith(false)}
+        >
+          <ScreenSharePanel
+            peerId={peer.id}
+            peerName={peer.name}
+            onClose={() => setSharingWith(false)}
           />
-        ) : (
-          <CoworkerList
-            search={search}
-            onSearch={setSearch}
-            role={role}
-            onRole={setRole}
-            threads={threadsQuery.data?.staffThreads ?? []}
-            coworkers={coworkersQuery.data?.coworkers ?? []}
-            statusOf={statusOf}
-            onOpen={setPeer}
-          />
-        )}
-      </Box>
-    </Box>
+        </FloatingWindow>
+      )}
+
+      {open && (
+        <Box
+          sx={{
+            width: { xs: '100%', sm: 380 },
+            flexShrink: 0,
+            borderLeft: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            flexDirection: 'column',
+            // The shell pins itself to the viewport, so 100% here is the space
+            // under the header and nothing more — which is what gives the
+            // thread inside a scrollbar of its own.
+            height: '100%',
+            minHeight: 0,
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+            <Typography variant="subtitle1" sx={{ flex: 1 }}>
+              Coworkers
+            </Typography>
+            <ChatSettingsMenu settings={settings} onChange={updateSettings} />
+            <StatusMenu status={presence.mine} onChange={presence.choose} />
+            <IconButton size="small" onClick={onClose} aria-label="Close chat">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+
+          {error && (
+            <Alert severity="error" onClose={() => setError(null)} sx={{ m: 1 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box sx={{ flex: 1, minHeight: 0 }}>
+            {peer ? (
+              <Conversation
+                peer={peer}
+                meId={meId}
+                status={statusOf(peer.id)}
+                messages={visibleMessages}
+                sending={sendState.loading}
+                uploading={uploading}
+                onBack={() => setPeer(null)}
+                onSend={send}
+                onAttach={attach}
+                onEdit={(id, text) => change(editMessage, { id, text })}
+                onDelete={(id, forEveryone) => {
+                  if (forEveryone) {
+                    change(deleteMessage, { id });
+                    return;
+                  }
+                  setHiddenIds((current) => new Set(current).add(id));
+                }}
+                onReact={(id, emoji) => change(reactToMessage, { id, emoji })}
+                onReply={setReplyTo}
+                onCancelReply={() => setReplyTo(null)}
+                replyTo={replyTo}
+                onForward={(message) => {
+                  // One-to-one threads: forwarding goes to whoever you open
+                  // next, so it lands as a normal message in that conversation.
+                  if (peer) change(forwardMessage, { id: message.id, toUserId: peer.id });
+                }}
+                onPin={(id) => change(pinMessage, { id })}
+                loading={messagesQuery.loading}
+                hasMore={!reachedStart && visibleMessages.length > 0}
+                loadingMore={loadingMore}
+                onLoadMore={loadOlder}
+                settings={settings}
+                formats={formats}
+                spacing={spacing}
+                nameOf={nameOf}
+                onTyping={() => typing(peer.id)}
+                onCall={(kind) => call.call(peer.id, kind).catch(() => undefined)}
+                onExport={() => exportChat().catch(() => undefined)}
+                onShareScreen={() => setSharingWith(true)}
+              />
+            ) : (
+              <CoworkerList
+                search={search}
+                onSearch={setSearch}
+                role={role}
+                onRole={setRole}
+                threads={threadsQuery.data?.staffThreads ?? []}
+                coworkers={coworkersQuery.data?.coworkers ?? []}
+                statusOf={statusOf}
+                onOpen={setPeer}
+              />
+            )}
+          </Box>
+        </Box>
+      )}
+    </>
   );
 }

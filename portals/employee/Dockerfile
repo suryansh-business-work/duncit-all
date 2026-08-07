@@ -35,6 +35,7 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
+COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/

@@ -82,7 +82,15 @@ export function AppShell({
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>
+    /*
+      A FIXED viewport, not a growing page.
+      With minHeight the document itself scrolled, so nothing inside could have
+      a scrollbar of its own: the chat panel was as tall as the page and rode up
+      and down with it, and the header went with it. Pinning the shell to the
+      viewport gives the page body and the chat one scroller each, which is the
+      only way the two can move independently.
+    */
+    <Box sx={{ display: 'flex', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default' }}>
       <Box
         component="a"
         href={`#${MAIN_ID}`}
@@ -143,17 +151,37 @@ export function AppShell({
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <BreadcrumbProvider>
               <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
-              <Box component="main" id={MAIN_ID} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
+              {/* The page's own scroller. `contain` stops a wheel that reaches
+                  the end of this box from carrying on into the chat beside it —
+                  scroll chaining is what made the two feel welded together. */}
+              <Box
+                component="main"
+                id={MAIN_ID}
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  minHeight: 0,
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  p: { xs: 1.5, sm: 2.25, md: 3 },
+                }}
+              >
                 {children}
               </Box>
             </BreadcrumbProvider>
           </Box>
-          {isStaff && chatOpen && (
+          {/* Mounted whether or not it is showing: the socket that carries an
+              incoming call lives inside it, and a chat that only listens while
+              its sidebar is open is a phone that only rings while you hold it.
+              `open` decides what is on screen; the call window is separate and
+              appears over the page either way. */}
+          {isStaff && (
             <StaffChatPanel
-              open
+              open={chatOpen}
               meId={user?.id ?? ''}
               meName={user?.full_name ?? user?.first_name ?? undefined}
               onClose={() => setChatOpen(false)}
+              onRequestOpen={() => setChatOpen(true)}
             />
           )}
         </Box>

@@ -1078,6 +1078,9 @@ importers:
       '@duncit/breadcrumb':
         specifier: workspace:*
         version: link:../breadcrumb
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../fallback-icons

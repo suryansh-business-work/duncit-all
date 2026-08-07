@@ -100,7 +100,10 @@ export default function CoworkerList({
         </TextField>
       </Stack>
 
-      <List dense sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pt: 0 }}>
+      <List
+        dense
+        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', pt: 0 }}
+      >
         {!searching &&
           threads.map((thread) => (
             <ListItem

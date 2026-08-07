@@ -1,12 +1,30 @@
 import { GraphQLError } from 'graphql';
-import { SomethingForYouModel, type ISomethingForYouItem } from './somethingForYou.model';
+import {
+  SomethingForYouModel,
+  type ISomethingForYouItem,
+  type SomethingForYouAction,
+} from './somethingForYou.model';
+
+/**
+ * What a row saved before this field existed meant.
+ *
+ * Rows written by the first version carry a path and no action, so reading
+ * them as NONE would silently switch off every card already live. The stored
+ * path is the answer they gave, just in the older shape.
+ */
+const actionOf = (doc: ISomethingForYouItem): SomethingForYouAction => {
+  if (doc.action_type) return doc.action_type;
+  return doc.link_path ? 'ROUTE' : 'NONE';
+};
 
 const toPub = (doc: ISomethingForYouItem) => ({
   id: String(doc._id),
   title: doc.title,
   image_url: doc.image_url ?? '',
   bottom_text: doc.bottom_text ?? '',
+  action_type: actionOf(doc),
   link_path: doc.link_path ?? '',
+  link_url: doc.link_url ?? '',
   sort_order: doc.sort_order ?? 0,
   is_active: doc.is_active !== false,
   created_at: doc.created_at?.toISOString?.() ?? '',
@@ -15,6 +33,8 @@ const toPub = (doc: ISomethingForYouItem) => ({
 
 interface Input {
   title?: string;
+  action_type?: SomethingForYouAction;
+  link_url?: string;
   image_url?: string;
   bottom_text?: string;
   link_path?: string;
@@ -26,7 +46,9 @@ const normalize = (input: Input) => ({
   title: String(input.title ?? '').trim(),
   image_url: String(input.image_url ?? '').trim(),
   bottom_text: String(input.bottom_text ?? '').trim(),
+  action_type: (input.action_type ?? 'NONE') as SomethingForYouAction,
   link_path: String(input.link_path ?? '').trim(),
+  link_url: String(input.link_url ?? '').trim(),
   sort_order: Number(input.sort_order ?? 0),
   is_active: input.is_active !== false,
 });

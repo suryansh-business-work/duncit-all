@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
+import CallToActionSection from './CallToActionSection';
 import { TITLE_MAX, type SomethingForYouForm } from './queries';
 
 interface Props {
@@ -63,14 +64,7 @@ export default function ItemFormDialog({
             fullWidth
             helperText="The label on the strip along the bottom, e.g. Refer and Earn"
           />
-          <TextField
-            label="Opens (optional)"
-            value={form.link_path}
-            onChange={(event) => setForm({ ...form, link_path: event.target.value })}
-            fullWidth
-            placeholder="/referral"
-            helperText="An in-app path. Both mWeb and the app route it themselves. Leave empty for a card that does nothing."
-          />
+          <CallToActionSection form={form} setForm={setForm} />
           <TextField
             label="Sort order"
             type="number"

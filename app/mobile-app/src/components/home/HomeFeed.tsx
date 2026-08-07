@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, type ScrollView as RNScrollView } from 'react-native';
 import * as Linking from 'expo-linking';
+import type { SomethingForYouTarget } from '@duncit/utils';
+
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -73,14 +75,20 @@ export function HomeFeed() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   /**
-   * Open one of our own paths, through our own deep link.
+   * Carry out what a promo card was set to do.
    *
-   * The linking config already maps every mWeb path to a screen, so routing
-   * an admin-entered path through it reuses that map instead of keeping a
-   * second copy here that would drift the first time a route moved.
+   * A ROUTE goes through our own deep link, so the linking config decides which
+   * screen it is — one map, not a second copy here that would drift the first
+   * time a route moved. A URL is handed to the browser, which leaves the app:
+   * that is precisely the distinction the admin toggle exists to make, and
+   * guessing it from the string would get it wrong for our own domain.
    */
-  const openInAppPath = useCallback((path: string) => {
-    fireAndForget(Linking.openURL(Linking.createURL(path)));
+  const openCardTarget = useCallback((target: SomethingForYouTarget) => {
+    if (target.kind === 'route') {
+      fireAndForget(Linking.openURL(Linking.createURL(target.path)));
+      return;
+    }
+    if (target.kind === 'url') fireAndForget(Linking.openURL(target.url));
   }, []);
   const isHost = meData?.me?.roles?.includes('HOST') ?? false;
 
@@ -204,7 +212,7 @@ export function HomeFeed() {
               />
             </Reveal>
             <Reveal index={6}>
-              <SomethingForYouRail onOpenPath={openInAppPath} />
+              <SomethingForYouRail onOpen={openCardTarget} />
             </Reveal>
             <Reveal index={7}>
               <YStack paddingHorizontal={16}>

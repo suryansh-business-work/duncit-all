@@ -7,17 +7,66 @@
  * that knows about a view stays with the view (rule 40).
  */
 
+/**
+ * What pressing a card does.
+ *
+ * Two genuinely different actions, not one with a fallback. A ROUTE stays
+ * inside the product — the app pushes a screen, mWeb pushes a history entry —
+ * and a URL leaves it, which on a phone means handing over to the browser. The
+ * difference is invisible in the stored string (`/referral` and
+ * `https://…/referral` look alike to a validator and nothing alike to a user),
+ * so the admin says which one they meant rather than the renderer guessing.
+ */
+export type SomethingForYouAction = 'NONE' | 'ROUTE' | 'URL';
+
 /** One card, exactly as the server returns it. */
 export interface SomethingForYouItem {
   id: string;
   title: string;
   image_url: string;
   bottom_text: string;
-  /** In-app path, e.g. `/referral`. Empty means the card is decorative. */
+  action_type: SomethingForYouAction;
+  /** In-app path, e.g. `/referral`. Used when action_type is ROUTE. */
   link_path: string;
+  /** An address outside the product. Used when action_type is URL. */
+  link_url: string;
   sort_order: number;
   is_active: boolean;
 }
+
+/**
+ * The in-app destinations an admin may point a card at.
+ *
+ * A labelled menu, not a copy of a router: mWeb's routes and the app's linking
+ * config already hold these paths, but neither holds a name a person would
+ * recognise, and neither is reachable from the admin panel. Kept deliberately
+ * short — the places a promotion sends somebody — rather than every route that
+ * exists. Adding one means adding it here AND confirming both surfaces route
+ * it (app/mweb/src/App.tsx, app/mobile-app/src/navigation/linking.ts).
+ */
+export const SOMETHING_FOR_YOU_ROUTES: readonly { label: string; path: string }[] = [
+  { label: 'Home', path: '/' },
+  { label: 'Explore', path: '/explore' },
+  { label: 'Clubs', path: '/clubs' },
+  { label: 'Pod Shop', path: '/shop' },
+  { label: 'Cart', path: '/cart' },
+  { label: 'Orders', path: '/orders' },
+  { label: 'Saved pods', path: '/saved' },
+  { label: 'Pod history', path: '/pod-history' },
+  { label: 'Refer and earn', path: '/referral' },
+  { label: 'Duncit Coin', path: '/duncit-coin' },
+  { label: 'Earn with Duncit', path: '/earn' },
+  { label: 'Become a host', path: '/become-host' },
+  { label: 'Create a pod', path: '/create-pod' },
+  { label: 'Register a venue', path: '/register-venue' },
+  { label: 'Pod ideas', path: '/pod-ideas' },
+  { label: 'Share feedback', path: '/support/feedback' },
+  { label: 'Support', path: '/support' },
+  { label: 'FAQs', path: '/faqs' },
+  { label: 'Pod plans', path: '/pod-plans' },
+  { label: 'Account', path: '/account' },
+  { label: 'Profile', path: '/profile' },
+];
 
 /**
  * Thirty characters, and never more than three lines.
@@ -28,6 +77,48 @@ export interface SomethingForYouItem {
  */
 export const SOMETHING_FOR_YOU_TITLE_MAX = 30;
 export const SOMETHING_FOR_YOU_TITLE_LINES = 3;
+
+/** A card's destination, already decided — the renderers only carry it out. */
+export type SomethingForYouTarget =
+  | { kind: 'none' }
+  | { kind: 'route'; path: string }
+  | { kind: 'url'; url: string };
+
+/**
+ * What pressing this card should do, resolved once for both surfaces.
+ *
+ * The two renderers act on it differently — mWeb pushes a history entry or
+ * opens a tab, the app pushes a screen or hands over to the browser — but they
+ * must not disagree about WHICH of those a card is. A card whose action names a
+ * destination it does not carry (URL with no address) resolves to nothing
+ * rather than to a button that fails when pressed.
+ */
+export function resolveSomethingForYouTarget(
+  item: Pick<SomethingForYouItem, 'action_type' | 'link_path' | 'link_url'>
+): SomethingForYouTarget {
+  if (item.action_type === 'ROUTE' && item.link_path) {
+    return { kind: 'route', path: item.link_path };
+  }
+  if (item.action_type === 'URL' && item.link_url) {
+    return { kind: 'url', url: item.link_url };
+  }
+  return { kind: 'none' };
+}
+
+/** Characters that read as debris immediately before an ellipsis. */
+const TRAILING = new Set([' ', '\t', '\n', '.', ',', ';', ':', '!', '-']);
+
+/**
+ * Walk back over the debris rather than matching it.
+ *
+ * A trailing `[…]+$` pattern backtracks over the whole string on a miss, which
+ * is a cost with no upside here: the answer is always the last few characters.
+ */
+function stripTrailingPunctuation(value: string): string {
+  let end = value.length;
+  while (end > 0 && TRAILING.has(value[end - 1] ?? '')) end -= 1;
+  return value.slice(0, end);
+}
 
 /**
  * A headline that fits, with an ellipsis when it did not.
@@ -47,5 +138,5 @@ export function clampSomethingForYouTitle(
   // Only honour a word boundary in the last third; earlier than that and the
   // headline loses more than the ellipsis costs.
   const body = lastSpace > max * 0.66 ? cut.slice(0, lastSpace) : cut;
-  return `${body.replace(/[\s.,;:!-]+$/, '')}…`;
+  return `${stripTrailingPunctuation(body)}…`;
 }

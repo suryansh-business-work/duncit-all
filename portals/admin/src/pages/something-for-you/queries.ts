@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { SomethingForYouAction } from '@duncit/utils';
 
 const FIELDS = gql`
   fragment SomethingForYouFields on SomethingForYouItem {
@@ -6,7 +7,9 @@ const FIELDS = gql`
     title
     image_url
     bottom_text
+    action_type
     link_path
+    link_url
     sort_order
     is_active
   }
@@ -59,7 +62,9 @@ export interface SomethingForYouForm {
   title: string;
   image_url: string;
   bottom_text: string;
+  action_type: SomethingForYouAction;
   link_path: string;
+  link_url: string;
   sort_order: number;
   is_active: boolean;
 }
@@ -68,7 +73,9 @@ export const emptyItem: SomethingForYouForm = {
   title: '',
   image_url: '',
   bottom_text: '',
+  action_type: 'NONE',
   link_path: '',
+  link_url: '',
   sort_order: 0,
   is_active: true,
 };

@@ -2,7 +2,9 @@ import { Image, Pressable } from 'react-native';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import {
   clampSomethingForYouTitle,
+  resolveSomethingForYouTarget,
   SOMETHING_FOR_YOU_TITLE_LINES,
+  type SomethingForYouTarget,
 } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -13,8 +15,12 @@ const CARD_WIDTH = 168;
 const CARD_HEIGHT = 232;
 
 interface Props {
-  /** Opens an in-app path, e.g. /referral. Cards without one are decorative. */
-  onOpenPath: (path: string) => void;
+  /**
+   * Carry out a card's action. A route goes through the app's own linking
+   * config; an address is handed to the browser, which leaves the app — the
+   * distinction the admin toggle exists to make.
+   */
+  onOpen: (target: SomethingForYouTarget) => void;
 }
 
 /**
@@ -24,7 +30,7 @@ interface Props {
  * headline. Only the drawing differs — the rows, the limits and the ordering
  * are shared, which is what stops the two surfaces from drifting (rule 27).
  */
-export function SomethingForYouRail({ onOpenPath }: Readonly<Props>) {
+export function SomethingForYouRail({ onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const items = useSomethingForYou();
   if (items.length === 0) return null;
@@ -50,7 +56,7 @@ export function SomethingForYouRail({ onOpenPath }: Readonly<Props>) {
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
       >
         {items.map((item) => (
-          <SomethingForYouTile key={item.id} item={item} onOpenPath={onOpenPath} />
+          <SomethingForYouTile key={item.id} item={item} onOpen={onOpen} />
         ))}
       </ScrollView>
     </YStack>
@@ -61,13 +67,14 @@ export function SomethingForYouRail({ onOpenPath }: Readonly<Props>) {
  * every render, and this one holds an image. */
 function SomethingForYouTile({
   item,
-  onOpenPath,
-}: Readonly<{ item: SomethingForYouCard; onOpenPath: (path: string) => void }>) {
-  const opens = item.link_path;
+  onOpen,
+}: Readonly<{ item: SomethingForYouCard; onOpen: (target: SomethingForYouTarget) => void }>) {
+  const target = resolveSomethingForYouTarget(item);
+  const opens = target.kind !== 'none';
   return (
     <Pressable
       accessibilityRole={opens ? 'button' : 'image'}
-      onPress={opens ? () => onOpenPath(opens) : undefined}
+      onPress={opens ? () => onOpen(target) : undefined}
       style={{
         width: CARD_WIDTH,
         height: CARD_HEIGHT,

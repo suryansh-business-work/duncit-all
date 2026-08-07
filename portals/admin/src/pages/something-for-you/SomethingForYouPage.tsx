@@ -47,7 +47,9 @@ export default function SomethingForYouPage() {
       title: item.title,
       image_url: item.image_url,
       bottom_text: item.bottom_text,
+      action_type: item.action_type,
       link_path: item.link_path,
+      link_url: item.link_url,
       sort_order: item.sort_order,
       is_active: item.is_active,
     });

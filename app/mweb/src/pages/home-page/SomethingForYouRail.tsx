@@ -3,8 +3,10 @@ import { Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
   clampSomethingForYouTitle,
+  resolveSomethingForYouTarget,
   SOMETHING_FOR_YOU_TITLE_LINES,
   type SomethingForYouItem,
+  type SomethingForYouTarget,
 } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -15,7 +17,9 @@ const SOMETHING_FOR_YOU = gql`
       title
       image_url
       bottom_text
+      action_type
       link_path
+      link_url
     }
   }
 `;
@@ -44,6 +48,19 @@ export default function SomethingForYouRail() {
   const items = data?.publicSomethingForYou ?? [];
   if (items.length === 0) return null;
 
+  /*
+    A route stays in the app; an address leaves it.
+
+    `navigate` keeps mWeb's history and its scroll position, so a card that
+    points at one of our own screens never costs the visitor their place on
+    Home. An outside address opens in a new tab for the same reason — this row
+    sits at the BOTTOM of Home, which somebody has already scrolled to reach.
+  */
+  const open = (target: SomethingForYouTarget) => {
+    if (target.kind === 'route') navigate(target.path);
+    if (target.kind === 'url') globalThis.open(target.url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <Stack spacing={1.25}>
       <Typography variant="overline" fontWeight={800} color="text.secondary" sx={{ px: 0.25 }}>
@@ -65,12 +82,13 @@ export default function SomethingForYouRail() {
         }}
       >
         {items.map((item) => {
-          const opens = item.link_path;
+          const target = resolveSomethingForYouTarget(item);
+          const opens = target.kind !== 'none';
           return (
             <Box
               key={item.id}
               component={opens ? 'button' : 'div'}
-              onClick={opens ? () => navigate(opens) : undefined}
+              onClick={opens ? () => open(target) : undefined}
               sx={{
                 all: opens ? 'unset' : undefined,
                 flex: `0 0 ${CARD_WIDTH}px`,

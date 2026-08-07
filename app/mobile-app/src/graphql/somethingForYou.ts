@@ -15,7 +15,9 @@ export const PublicSomethingForYouDocument = gql(`
       title
       image_url
       bottom_text
+      action_type
       link_path
+      link_url
     }
   }
 `);

@@ -3,6 +3,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { SomethingForYouForm } from './queries';
 
+/** What the card does, in one phrase — the reason to open the editor. */
+const describeAction = (item: SomethingForYouForm): string => {
+  if (item.action_type === 'ROUTE') return item.link_path ? `opens ${item.link_path}` : 'screen not chosen';
+  if (item.action_type === 'URL') return item.link_url ? `opens ${item.link_url}` : 'address not set';
+  return 'does nothing';
+};
+
 interface Props {
   item: SomethingForYouForm & { id: string };
   onEdit: (item: SomethingForYouForm & { id: string }) => void;
@@ -46,7 +53,7 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
               {item.bottom_text || '—'}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              {item.link_path ? `opens ${item.link_path}` : 'no link'} · order {item.sort_order}
+              {describeAction(item)} · order {item.sort_order}
             </Typography>
           </Box>
 

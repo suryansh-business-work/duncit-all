@@ -33,6 +33,7 @@ exports:
   - 'actionsColumn'
   - 'activeChipColumn'
   - 'dateColumn'
+  - 'entityIdColumn'
   - 'formatDateCell'
   - 'DEFAULT_DATE_FORMAT'
   - 'EM_DASH'
@@ -323,6 +324,7 @@ await fetchRows(payoutQuery);
 | `dateColumn` | `<T>(options?: DateColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'created_at'`, `headerName 'Created'`, `hide true`, `width 130`, `filterable true`, `format 'd MMM yyyy'`. `formatDate` wins over `format`. |
 | `activeChipColumn` | `<T>(options?: ActiveChipColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'is_active'`, `headerName 'Status'`, `width 110`, labels `Active`/`Inactive`, `filterable true`. |
 | `actionsColumn` | `<T>(options: ActionsColumnOptions<T>) => DuncitColumn<T>` | Edit/Delete icon buttons; each side takes `RowActionOptions` (`title`, `ariaLabel`, `color`, `icon`, `disabled`, `disabledTitle`), all accepting a `(row) => string`. |
+| `entityIdColumn` | `<T>(options: EntityIdColumnOptions<T>) => DuncitColumn<T>` | Requires `field` + `headerName`. Defaults: `width 150`, `filterable true`. Monospace, non-wrapping, `EM_DASH` when the record predates its id. |
 | `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty. |
 | `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |
 | `DEFAULT_DATE_FORMAT` / `EM_DASH` | `'d MMM yyyy'` / `'—'` | The shared date pattern and empty-cell character. |
@@ -458,6 +460,23 @@ reshaping the state.
 same formatting on its own, and `EM_DASH` is the empty-value character every table uses so
 blanks look identical across portals. `actionsColumn()` and `activeChipColumn()` cover the two
 cell shapes that repeated most.
+
+`entityIdColumn()` is the permanent-handle cell — `DOC-000001`, `CTR-000042`, `POL-000003`.
+It renders monospace and non-wrapping, because an id is read character by character when
+someone quotes it back to you, and falls back to `EM_DASH` for a record written before its
+id existed rather than leaving the cell blank (which reads as a loading bug):
+
+```ts
+entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' });
+// { field: 'contract_no', headerName: 'Contract ID', width: 150,
+//   filter: { type: 'text' }, cellRenderer: [Function], valueGetter: [Function] }
+
+col.valueGetter({ contract_no: 'CTR-000042' }); // 'CTR-000042'
+col.valueGetter({ contract_no: null });        // '—'
+```
+
+The matching server field must be in that entity's `searchFields`, `sortFields` and
+`filterFields` allowlists, or the column renders but the toolbar cannot reach it.
 
 Dates go through `date-fns` (a peer dependency), never `toLocaleDateString` — rule 11.
 

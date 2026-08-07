@@ -1,6 +1,8 @@
 export const policyTypeDefs = /* GraphQL */ `
   type Policy {
     id: ID!
+    "Permanent, globally unique handle (POL-000001). Never edited, never reused."
+    policy_no: String!
     slug: String!
     title: String!
     "What kind of policy this is — the grouping the dashboard counts by."
@@ -77,5 +79,7 @@ export const policyTypeDefs = /* GraphQL */ `
     createPolicy(input: CreatePolicyInput!): Policy!
     updatePolicy(policy_doc_id: ID!, input: UpdatePolicyInput!): Policy!
     deletePolicy(policy_doc_id: ID!): Boolean!
+    "One-time repair: give an id to any policy that has none."
+    backfillPolicyIds: EntityIdBackfillResult!
   }
 `;

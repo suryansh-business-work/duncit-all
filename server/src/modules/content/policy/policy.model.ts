@@ -1,6 +1,9 @@
 import { Schema, model, type Document } from 'mongoose';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export interface IPolicy extends Document {
+  /** The permanent handle: POL-000001. Minted on insert, never reused. */
+  policy_no: string | null;
   slug: string;
   title: string;
   /**
@@ -21,6 +24,7 @@ export interface IPolicy extends Document {
 
 const policySchema = new Schema<IPolicy>(
   {
+    policy_no: { type: String, default: null, unique: true, sparse: true, index: true },
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true, index: true },
     title: { type: String, required: true, trim: true },
     policy_type: { type: String, default: '', trim: true, index: true },
@@ -30,5 +34,13 @@ const policySchema = new Schema<IPolicy>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Minted on insert only — the same contract every other entity id carries.
+policySchema.pre('save', async function (next) {
+  if (this.isNew && !this.policy_no) {
+    this.policy_no = await nextEntityNo('POL', 'policy');
+  }
+  next();
+});
 
 export const PolicyModel = model<IPolicy>('Policy', policySchema);

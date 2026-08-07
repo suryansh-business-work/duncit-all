@@ -104,6 +104,29 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'clubAdminBackfill', result);
     });
   }
+
+  /*
+    Give an id to every legal record written before that id existed.
+
+    Contracts are new, so there it repairs nothing on most databases. Documents
+    and policies are not: each one already in the collection predates its id and
+    would otherwise show a dash forever where its permanent handle belongs. All
+    three are idempotent and cheap — they only look for the missing.
+  */
+  await safeSeed('legalEntityIds', async () => {
+    const [{ contractService }, { legalDocumentService }, { policyService }] = await Promise.all([
+      import('@modules/content/contract/contract.service'),
+      import('@modules/content/legalDocument/legalDocument.service'),
+      import('@modules/content/policy/policy.service'),
+    ]);
+    const contracts = await contractService.backfillIds();
+    const documents = await legalDocumentService.backfillIds();
+    const policies = await policyService.backfillIds();
+    const repaired = contracts.repaired + documents.repaired + policies.repaired;
+    if (repaired > 0) {
+      logs.server.info('bootstrap', 'legalEntityIds', { contracts, documents, policies });
+    }
+  });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

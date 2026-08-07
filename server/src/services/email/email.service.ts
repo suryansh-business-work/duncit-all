@@ -564,6 +564,41 @@ export function sendPasswordResetOtpEmail(opts: {
  * belongs to the tab they are looking at — and a code only works for the portal
  * it was asked from.
  */
+/**
+ * Send a signed contract to somebody, with the PDF attached.
+ *
+ * The attachment is the point: a link would need the recipient to hold a
+ * Legal-portal account, and the people a contract goes to are usually the
+ * counter-party.
+ */
+export function sendSignedContractEmail(opts: {
+  to: string;
+  contract_name: string;
+  sender_name: string;
+  message: string;
+  pdf: Buffer;
+}) {
+  const safeName = opts.contract_name.replaceAll(/[^\w.-]+/g, '-');
+  return sendEmail({
+    to: opts.to,
+    subject: `Signed contract: ${opts.contract_name}`,
+    template: 'signed-contract',
+    category: 'internal',
+    vars: {
+      contract_name: opts.contract_name,
+      sender_name: opts.sender_name,
+      message: opts.message,
+    },
+    attachments: [
+      {
+        filename: `${safeName}.pdf`,
+        content: opts.pdf,
+        contentType: 'application/pdf',
+      },
+    ],
+  });
+}
+
 export function sendPortalLoginOtpEmail(opts: {
   to: string;
   name: string;

@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { Policy } from '../../graphql/policies';
 
 interface Props {
@@ -36,8 +36,9 @@ export default function PoliciesTable({
   onRemove,
 }: Readonly<Props>) {
   // Only server-allowlisted fields are sortable/filterable (POLICY_TABLE_CONFIG):
-  // sort title/slug/policy_type/sort_order/is_active/created_at/updated_at; filter is_active
-  // (boolean), slug + policy_type (text), sort_order (number), created_at/updated_at (date).
+  // sort policy_no/title/slug/policy_type/sort_order/is_active/created_at/updated_at; filter
+  // is_active (boolean), policy_no + slug + policy_type (text), sort_order (number),
+  // created_at/updated_at (date).
   const columns = useMemo<DuncitColumn<Policy>[]>(() => {
     const renderActions = (p: Policy) => (
       <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
@@ -50,6 +51,7 @@ export default function PoliciesTable({
       </Stack>
     );
     return [
+      entityIdColumn<Policy>({ field: 'policy_no', headerName: 'Policy ID' }),
       { field: 'title', headerName: 'Title', flex: 1, minWidth: 200, cellRenderer: renderTitle },
       { field: 'slug', headerName: 'Slug', minWidth: 180, filter: { type: 'text' } },
       {
@@ -83,7 +85,7 @@ export default function PoliciesTable({
       toolbarActions={toolbarActions}
       emptyText="No policies yet."
       defaultSort={{ field: 'sort_order', dir: 'asc' }}
-      searchPlaceholder="Search title or slug"
+      searchPlaceholder="Search policy ID, title or slug"
       refetchRef={refetchRef}
     />
   );

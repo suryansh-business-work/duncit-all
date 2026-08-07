@@ -29,6 +29,16 @@ const CARD_WIDTH = 168;
 const CARD_HEIGHT = 232;
 
 /**
+ * Written in px, not as a multiplier.
+ *
+ * `borderRadius: 3` in an `sx` block is not three pixels — MUI multiplies it by
+ * `theme.shape.borderRadius`, which is 16 here, so the cards were rendering at
+ * 48px and looked like lozenges. A string with a unit means what it says, and
+ * the native twin uses the same number so the two rails match.
+ */
+const CARD_RADIUS = '4px';
+
+/**
  * The row that scrolls sideways at the bottom of Home.
  *
  * Every card is the same size and carries its own picture, which is what lets
@@ -95,7 +105,7 @@ export default function SomethingForYouRail() {
                 width: CARD_WIDTH,
                 height: CARD_HEIGHT,
                 position: 'relative',
-                borderRadius: 3,
+                borderRadius: CARD_RADIUS,
                 overflow: 'hidden',
                 scrollSnapAlign: 'start',
                 cursor: opens ? 'pointer' : 'default',

@@ -10,9 +10,11 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSomethingForYou, type SomethingForYouCard } from '@/hooks/useSomethingForYou';
 
-/** One card's footprint. Matches mWeb so the two look like one product. */
+/** One card's footprint, and its corner. Matches mWeb so the two look like
+ * one product — the radius is px on both sides, never a theme multiplier. */
 const CARD_WIDTH = 168;
 const CARD_HEIGHT = 232;
+const CARD_RADIUS = 4;
 
 interface Props {
   /**
@@ -78,7 +80,7 @@ function SomethingForYouTile({
       style={{
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
-        borderRadius: 16,
+        borderRadius: CARD_RADIUS,
         overflow: 'hidden',
       }}
     >

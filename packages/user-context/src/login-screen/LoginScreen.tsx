@@ -19,6 +19,7 @@ export default function LoginScreen({
   loading,
   errorMessage,
   onSubmit,
+  altSlot,
   footerSlot,
 }: Readonly<LoginScreenProps>) {
   const [snack, setSnack] = useState<string | null>(null);
@@ -99,6 +100,10 @@ export default function LoginScreen({
                 onSubmit={onSubmit}
                 onForgotPassword={() => setSnack('Contact your administrator to reset your password.')}
               />
+              {/* Directly under the password button, because it is the other
+                  way through the same door — not an afterthought below the
+                  legal links. */}
+              {altSlot && <Box sx={{ mt: 2 }}>{altSlot}</Box>}
               {footerSlot && <Box sx={{ mt: 2 }}>{footerSlot}</Box>}
 
               <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ mt: 2.5 }}>

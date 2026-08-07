@@ -1,0 +1,21 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Duncit sign-in code</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">Your sign-in code</mj-text>
+        <mj-text color="#555555">Hi {{name}}, use this code to sign in to <strong>{{portal}}</strong>.</mj-text>
+        <mj-text align="center" font-size="32px" line-height="40px" font-weight="bold" letter-spacing="6px" color="#222222">{{otp}}</mj-text>
+        <mj-text align="center" color="#555555">This code expires in {{expiresMinutes}} minutes and works only for {{portal}}.</mj-text>
+        <mj-text font-size="12px" color="#888888">If you did not try to sign in, ignore this email — the code is useless on its own and nobody has been let in. Tell your administrator if you keep receiving these.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

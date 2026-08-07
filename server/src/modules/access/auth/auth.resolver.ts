@@ -3,6 +3,8 @@ import {
   loginSchema,
   registerSchema,
   requestPasswordResetSchema,
+  requestPortalLoginOtpSchema,
+  portalLoginOtpSchema,
   resetPasswordSchema,
   requestPasswordChangeSchema,
   changePasswordSchema,
@@ -26,6 +28,14 @@ export const authResolvers = {
     login: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(loginSchema, args.input);
       return userService.login(data);
+    },
+    requestPortalLoginOtp: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(requestPortalLoginOtpSchema, args.input);
+      return userService.requestPortalLoginOtp(data);
+    },
+    loginWithPortalOtp: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(portalLoginOtpSchema, args.input);
+      return userService.loginWithPortalOtp(data);
     },
     requestPasswordResetOtp: async (_p: unknown, args: { email: string }) => {
       const data = await validate(requestPasswordResetSchema, { email: args.email });

@@ -34,6 +34,20 @@ export const requestPasswordResetSchema = yup.object({
   email: yup.string().email().required(),
 });
 
+export const requestPortalLoginOtpSchema = yup.object({
+  email: yup.string().email().required(),
+  portal_key: yup.string().max(64).optional(),
+});
+
+export const portalLoginOtpSchema = yup.object({
+  email: yup.string().email().required(),
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/, 'Enter the 6 digit code')
+    .required(),
+  portal_key: yup.string().max(64).optional(),
+});
+
 export const resetPasswordSchema = yup.object({
   email: yup.string().email().required(),
   otp: yup

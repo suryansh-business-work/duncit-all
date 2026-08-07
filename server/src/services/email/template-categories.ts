@@ -26,6 +26,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'email-verification-otp',
     'password-change-otp',
     'password-reset-otp',
+    'portal-login-otp',
   ],
 
   // Money.
@@ -120,6 +121,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'partner-access-granted': "You're receiving this because your Duncit account was granted partner access.",
   'password-change-otp': "You're receiving this because you use Duncit.",
   'password-reset-otp': "You're receiving this because you use Duncit.",
+  'portal-login-otp': "You're receiving this because somebody asked to sign in to a Duncit console with this address.",
   'payment-receipt': "You're receiving this because you made a Duncit booking.",
   'payment-release-approved': "You're receiving this because you use Duncit.",
   'payout-statement': "You're receiving this because you host or partner with Duncit.",

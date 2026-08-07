@@ -49,6 +49,17 @@ const authSchema = new Schema(
     password_change_otp_expires_at: { type: Date, select: false },
     account_deletion_otp_hash: { type: String, select: false },
     account_deletion_otp_expires_at: { type: Date, select: false },
+    portal_login_otp_hash: { type: String, select: false },
+    portal_login_otp_expires_at: { type: Date, select: false },
+    /**
+     * The console the code was issued for.
+     *
+     * Stored because the check that matters happens at REQUEST time — the
+     * account must already hold a role for that portal before an email goes
+     * out. Without it, a code minted for the portal somebody can reach would
+     * open the one they cannot.
+     */
+    portal_login_otp_portal: { type: String, select: false },
     password: { type: String, select: false },
     google_id: { type: String },
     last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },

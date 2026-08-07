@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  LinearProgress,
   ImageList,
   InputAdornment,
   Stack,
@@ -125,7 +126,12 @@ export default function PexelsVideosTab({
     );
 
   return (
-    <Box>
+    <Box sx={{ position: 'relative' }}>
+      {/* A re-search over results already on screen changed nothing visible —
+          the old photos simply sat there until new ones replaced them. */}
+      {vsearching && (
+        <LinearProgress sx={{ position: 'sticky', top: 0, zIndex: 2, mb: 1 }} />
+      )}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
@@ -160,7 +166,11 @@ export default function PexelsVideosTab({
           <ToggleButton value="portrait">{t('media.pexels.portrait')}</ToggleButton>
           <ToggleButton value="square">{t('media.pexels.square')}</ToggleButton>
         </ToggleButtonGroup>
-        <Button variant="contained" onClick={() => runPexelsVideos(vquery, 1, false)}>
+        <Button
+          variant="contained" onClick={() => runPexelsVideos(vquery, 1, false)}
+          disabled={vsearching}
+          startIcon={vsearching ? <CircularProgress size={14} color="inherit" /> : null}
+        >
           Search
         </Button>
       </Stack>

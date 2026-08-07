@@ -12,7 +12,9 @@ import {
   IconButton,
   Tab,
   Tabs,
+  useMediaQuery,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeviceUploadTab from './DeviceUploadTab';
@@ -25,6 +27,9 @@ import type { MediaPickerDialogProps } from './types';
 
 /** A close that does nothing — multi-pick stays open between picks. */
 const noop = () => {};
+
+/** Comfortable on a laptop, and free to be shorter on a phone. */
+const PANEL_MIN_HEIGHT = { xs: 220, sm: 380 };
 
 export default function MediaPickerDialog({
   open,
@@ -41,6 +46,7 @@ export default function MediaPickerDialog({
   orientation,
 }: Readonly<MediaPickerDialogProps>) {
   const { t } = useTranslation();
+  const onPhone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   // Resolved in the body, not as a default parameter: a hook cannot run in
   // the parameter list, and a caller-supplied heading must still win.
   const heading = title ?? t('media.picker.title');
@@ -91,7 +97,16 @@ export default function MediaPickerDialog({
   }, [open]);
 
   return (
-    <Dialog open={open} onClose={device.uploading ? undefined : onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={device.uploading ? undefined : onClose}
+      fullWidth
+      maxWidth="md"
+      // Full screen on a phone. A picker is a whole task, not a card over the
+      // page, and it is the only layout where the row that finishes the pick
+      // cannot end up below the fold.
+      fullScreen={onPhone}
+    >
       <DialogTitle sx={{ pr: 6 }}>
         {heading}
         <IconButton
@@ -112,7 +127,12 @@ export default function MediaPickerDialog({
         <Tab label={t('media.picker.pexelsPhotos')} disabled={!allowImage} />
         <Tab label={t('media.picker.pexelsVideos')} disabled={!allowVideo} />
       </Tabs>
-      <DialogContent dividers sx={{ minHeight: 380 }}>
+      {/* Free to SHRINK. A hard minHeight here is a floor on a flex child of the
+          dialog's column, so on a short screen the paper grew past the viewport
+          and took the actions row — the button that finishes the pick — off the
+          bottom of it. The comfortable height lives on the panels, where it only
+          lengthens the scroll. */}
+      <DialogContent dividers sx={{ minHeight: 0, overscrollBehavior: 'contain' }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
@@ -123,7 +143,7 @@ export default function MediaPickerDialog({
           <SelectionTray urls={selection.urls} max={max} onRemove={selection.remove} />
         )}
 
-        <Box sx={{ display: tab === 0 ? 'block' : 'none' }}>
+        <Box sx={{ display: tab === 0 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <DeviceUploadTab
             accept={accept}
             fileInputRef={device.fileInputRef}
@@ -140,7 +160,7 @@ export default function MediaPickerDialog({
           />
         </Box>
 
-        <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
+        <Box sx={{ display: tab === 1 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <PexelsPhotosTab
             active={tab === 1 && allowImage}
             open={open}
@@ -155,7 +175,7 @@ export default function MediaPickerDialog({
           />
         </Box>
 
-        <Box sx={{ display: tab === 2 ? 'block' : 'none' }}>
+        <Box sx={{ display: tab === 2 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <PexelsVideosTab
             active={tab === 2 && allowVideo}
             open={open}

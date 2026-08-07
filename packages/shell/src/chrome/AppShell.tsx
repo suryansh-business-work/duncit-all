@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Drawer } from '@mui/material';
 import { tokens } from '@duncit/theme';
@@ -64,6 +64,18 @@ export function AppShell({
   // the button: the panel is a sibling of the main content, and opening it
   // narrows that content instead of covering it.
   const [chatOpen, setChatOpen] = useState(false);
+
+  /*
+    Stable identities, not inline arrows.
+
+    The panel keys effects off these — restoring what was open, and showing
+    itself when a call arrives. An arrow rebuilt on every render makes those
+    effects run on every render, which turns "reopen it if it was open" into
+    "reopen it, always", and the close button cannot win.
+  */
+  const openChat = useCallback(() => setChatOpen(true), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
+  const toggleChat = useCallback(() => setChatOpen((current) => !current), []);
   const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
 
   useEffect(() => {
@@ -145,7 +157,7 @@ export function AppShell({
           onOpenMobileNav={() => setMobileOpen(true)}
           tools={tools}
           chatOpen={chatOpen}
-          onToggleChat={() => setChatOpen((current) => !current)}
+          onToggleChat={toggleChat}
         />
         <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -181,8 +193,8 @@ export function AppShell({
               meId={user?.id ?? ''}
               meName={user?.full_name ?? user?.first_name ?? undefined}
               meRoles={user?.roles ?? []}
-              onClose={() => setChatOpen(false)}
-              onRequestOpen={() => setChatOpen(true)}
+              onClose={closeChat}
+              onRequestOpen={openChat}
             />
           )}
         </Box>

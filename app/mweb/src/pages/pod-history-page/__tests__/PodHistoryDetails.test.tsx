@@ -13,6 +13,7 @@ import {
 } from '../queries';
 import { MY_PRODUCT_ORDERS_FOR_POD } from '../productOrders';
 import { gql } from '@apollo/client';
+import type { PodBackoutRequestInput, PodParticipationFields } from '@duncit/utils';
 
 const notifyMock = vi.fn();
 vi.mock('../../../components/notify', () => ({
@@ -81,6 +82,33 @@ const basePod = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** A booking with one backout on it, in whatever state the case needs. */
+const participationWith = (
+  backout: Partial<PodBackoutRequestInput>,
+): PodParticipationFields => ({
+  joined_at: '2026-01-01T10:00:00.000Z',
+  attended: false,
+  attendance_recorded: false,
+  pod_cancelled_by: null,
+  pod_cancelled_at: null,
+  cancel_refund_status: 'NONE',
+  backouts: [
+    {
+      backout_no: 'DUN-BKO-000001',
+      status: 'IN_PROCESS',
+      attempt_no: 1,
+      seats: 1,
+      seats_before: 1,
+      refund_amount: 450,
+      refund_status: 'NONE',
+      refund_processed_at: null,
+      created_at: '2026-01-02T10:00:00.000Z',
+      events: [],
+      ...backout,
+    },
+  ],
+});
+
 const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
   ({
     id: 'mem-1',
@@ -129,13 +157,14 @@ describe('PodHistoryDetails', () => {
     renderIt(baseItem());
     expect(screen.getByText('Sunset Yoga')).toBeInTheDocument();
     expect(screen.getByText('Joined')).toBeInTheDocument();
-    expect(screen.getByText('Refund: Not started')).toBeInTheDocument();
+    // Nobody asked for a refund on this booking, so it has none to report.
+    expect(screen.queryByText('Refund: Not started')).not.toBeInTheDocument();
     expect(screen.getByText(/Paid pod/)).toBeInTheDocument();
     // Go to Pod Details points at the SEO url
     const podLink = screen.getByText('Go to Pod Details').closest('a');
     expect(podLink).toHaveAttribute('href', '/club/club-x/pod/pod-1');
     // Ticket button shows for JOINED
-    expect(screen.getByText('Ticket')).toBeInTheDocument();
+    expect(screen.getByText('Ticket & invoice')).toBeInTheDocument();
     // Timeline + terms
     expect(screen.getByText('Timeline')).toBeInTheDocument();
     expect(screen.getByText(/Backout Terms/)).toBeInTheDocument();
@@ -194,14 +223,38 @@ describe('PodHistoryDetails', () => {
   });
 
   it('shows the pending-refund alert for a backed-out booking awaiting criteria', () => {
-    renderIt(baseItem({ status: 'BACKED_OUT', refund_status: 'PENDING', pod: basePod({ pod_date_time: '2000-01-01T10:00:00.000Z', pod_end_date_time: '2000-01-01T11:00:00.000Z' }) }));
+    renderIt(
+      baseItem({
+        status: 'BACKED_OUT',
+        // The refund lives on the request now, not on the booking — the server
+        // never writes the booking's copy for a partial backout.
+        participation: participationWith({ status: 'SPOT_FILLED', refund_status: 'PENDING' }),
+      })
+    );
     expect(screen.getByText(/Refund is waiting for criteria completion/)).toBeInTheDocument();
-    // Ended pod => no rejoin
+  });
+
+  it('drops every backout-lifecycle control once the pod has happened', () => {
+    renderIt(
+      baseItem({
+        pod: basePod({
+          pod_date_time: '2000-01-01T10:00:00.000Z',
+          pod_end_date_time: '2000-01-01T11:00:00.000Z',
+        }),
+      })
+    );
+    expect(screen.getByText('Visited')).toBeInTheDocument();
     expect(screen.queryByText('Rejoin Pod')).not.toBeInTheDocument();
+    expect(screen.queryByText('Backout Pod')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Refund Status/)).not.toBeInTheDocument();
   });
 
   it('notifies the refund status when the Refund Status button is clicked', () => {
-    renderIt(baseItem({ refund_status: 'PROCESSED' }));
+    renderIt(
+      baseItem({
+        participation: participationWith({ status: 'SPOT_FILLED', refund_status: 'PROCESSED' }),
+      })
+    );
     fireEvent.click(screen.getByText(/Refund Status: Refund initiated/));
     expect(notifyMock).toHaveBeenCalledWith('Refund status: Refund initiated', 'info');
   });
@@ -251,9 +304,9 @@ describe('PodHistoryDetails', () => {
       result: { data: { eventTicketPdfBase64: 'VElDS0VU' } },
     };
     renderIt(baseItem(), [ticketForPodMock, ticketPdfMock]);
-    fireEvent.click(screen.getByText('Ticket'));
+    fireEvent.click(screen.getByText('Ticket & invoice'));
     await waitFor(() => expect(clickSpy).toHaveBeenCalled());
-    expect(downloadName).toBe('ticket-ABC123.pdf');
+    expect(downloadName).toBe('ticket-and-invoice-ABC123.pdf');
     clickSpy.mockRestore();
   });
 
@@ -263,7 +316,7 @@ describe('PodHistoryDetails', () => {
       result: { data: { myEventTicketForPod: null } },
     };
     renderIt(baseItem(), [ticketForPodMock]);
-    fireEvent.click(screen.getByText('Ticket'));
+    fireEvent.click(screen.getByText('Ticket & invoice'));
     await waitFor(() =>
       expect(notifyMock).toHaveBeenCalledWith('Ticket not available for this booking', 'error'),
     );

@@ -1,8 +1,13 @@
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import {
+  isPodPast,
+  participationInputFrom,
+  podParticipationActions,
+  type PodRefundStatus,
+} from '@duncit/utils';
 
 import type { MyPodMembershipsDocument, PodHistoryCategoriesDocument } from '@/graphql/pod-history';
 import { makeCategoryMatcher } from '@/utils/category-match';
-import { isPodActive } from '@/utils/pod-format';
 
 export type PodMembership = ResultOf<typeof MyPodMembershipsDocument>['myPodMemberships'][number];
 export type RefundStatus = PodMembership['refund_status'];
@@ -103,7 +108,7 @@ export const activePodHistoryFilterCount = (filters: PodHistoryFilters): number 
   (filters.superId ? 1 : 0) + (filters.categoryId ? 1 : 0);
 
 /** Human labels for each refund status — mirrors mWeb's refundLabel map. */
-export const REFUND_LABEL: Record<RefundStatus, string> = {
+export const REFUND_LABEL: Record<PodRefundStatus, string> = {
   NONE: 'Not started',
   PENDING: 'Criteria pending',
   PROCESSED: 'Refund initiated',
@@ -111,21 +116,21 @@ export const REFUND_LABEL: Record<RefundStatus, string> = {
 };
 
 /** Refund label for a status, defaulting to the NONE label for unknown values. */
-export function refundLabel(status: RefundStatus): string {
+export function refundLabel(status: PodRefundStatus): string {
   return REFUND_LABEL[status] ?? REFUND_LABEL.NONE;
 }
 
 /**
  * True when a membership qualifies for a free rejoin: the caller backed out, the
- * pod still exists (not deleted) and has not completed/ended yet. Mirrors mWeb.
+ * pod still exists (not deleted) and has not STARTED yet. Mirrors mWeb.
+ *
+ * The pod's start rather than its end, because that is where the server closes
+ * rejoin — an end-time window kept offering a button whose every press failed.
  */
 export function canRejoin(item: PodMembership): boolean {
   const pod = item.pod;
   return (
-    item.status === 'BACKED_OUT' &&
-    !pod?.is_deleted &&
-    !!pod?.id &&
-    isPodActive(pod?.pod_date_time, pod?.pod_end_date_time)
+    item.status === 'BACKED_OUT' && !pod?.is_deleted && !!pod?.id && !isPodPast(pod?.pod_date_time)
   );
 }
 
@@ -144,82 +149,16 @@ export function dedupeByPod(items: PodMembership[]): PodMembership[] {
   return Array.from(byPod.values());
 }
 
-export type TimelineState = 'done' | 'current';
-export type TimelineIcon = 'join' | 'backout' | 'refund' | 'wait';
-
-export interface TimelineEvent {
-  title: string;
-  date?: string | null;
-  detail: string;
-  state: TimelineState;
-  icon: TimelineIcon;
-  tag: string;
-}
-
 /**
- * Build the membership timeline — RN port of mWeb's buildTimeline. Join is always
- * done; backout/refund steps depend on status + refund_status.
+ * What this booking may still be offered, and what it may claim about itself.
+ *
+ * The rules live in @duncit/utils so this screen and mWeb's cannot drift: a pod
+ * that has already happened has nothing left to back out of, a booking nobody
+ * asked a refund for has no refund state to report, and after the date the word
+ * is Visited rather than Joined.
  */
-export function buildTimeline(item: PodMembership): TimelineEvent[] {
-  const backedOut = item.status === 'BACKED_OUT' || item.status === 'BACKOUT_IN_PROCESS';
-  const refundProcessed = item.refund_status === 'PROCESSED';
-  const refundPending = item.refund_status === 'PENDING';
-
-  const events: TimelineEvent[] = [
-    {
-      title: 'Pod Joined',
-      date: item.joined_at,
-      detail: 'Your spot was confirmed for this pod.',
-      state: 'done',
-      icon: 'join',
-      tag: 'Completed',
-    },
-  ];
-
-  if (!backedOut) {
-    events.push({
-      title: 'Backout requested',
-      detail: 'No backout request yet. Use Backout Pod from actions when needed.',
-      state: 'current',
-      icon: 'backout',
-      tag: 'Available',
-    });
-    return events;
-  }
-
-  events.push(
-    {
-      title: 'Backout requested',
-      date: item.backed_out_at,
-      detail: 'Backout request was recorded.',
-      state: 'done',
-      icon: 'backout',
-      tag: 'Completed',
-    },
-    {
-      title: 'Refund criteria',
-      detail: refundPending
-        ? 'Waiting for refund criteria to be completed.'
-        : 'Refund criteria was checked for this backout.',
-      state: refundPending ? 'current' : 'done',
-      icon: 'wait',
-      tag: refundPending ? 'Waiting' : 'Checked',
-    },
-    refundProcessed
-      ? {
-          title: 'Refund initiated',
-          detail: 'Refund has been initiated for this membership.',
-          state: 'done',
-          icon: 'refund',
-          tag: 'Initiated',
-        }
-      : {
-          title: 'Refund not initiated',
-          detail: 'Refund has not been initiated for this backout yet.',
-          state: 'current',
-          icon: 'refund',
-          tag: 'Not initiated',
-        },
+export function podHistoryGate(item: PodMembership) {
+  return podParticipationActions(
+    participationInputFrom(item.participation, item.pod?.pod_date_time),
   );
-  return events;
 }

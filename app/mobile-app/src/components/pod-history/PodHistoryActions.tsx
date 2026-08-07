@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { canRejoin, refundLabel, type PodMembership } from '@/utils/pod-history';
+import { canRejoin, podHistoryGate, refundLabel, type PodMembership } from '@/utils/pod-history';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -57,6 +57,90 @@ function ActionButton({
   );
 }
 
+interface LiveActionsProps {
+  item: PodMembership;
+  /** From the shared participation rules — computed once by the parent. */
+  canBackout: boolean;
+  showRefundState: boolean;
+  /** The refund word, from the request rather than the booking's stale copy. */
+  refundText: string;
+  showRejoin: boolean;
+  backingOut: boolean;
+  rejoining: boolean;
+  ticketBusy: boolean;
+  onPodDetails: () => void;
+  onBackout: () => void;
+  onRejoin: () => void;
+  onRefundStatus: () => void;
+  onTicket: () => void;
+}
+
+/** The buttons a pod that still exists offers, over and above Invoice + Support. */
+function LivePodActions({
+  item,
+  canBackout,
+  showRefundState,
+  refundText,
+  showRejoin,
+  backingOut,
+  rejoining,
+  ticketBusy,
+  onPodDetails,
+  onBackout,
+  onRejoin,
+  onRefundStatus,
+  onTicket,
+}: Readonly<LiveActionsProps>) {
+  return (
+    <>
+      <ActionButton
+        testID="ph-pod-details"
+        icon="arrow-forward"
+        label="Go to Pod Details"
+        variant="contained"
+        disabled={!item.pod?.id}
+        onPress={onPodDetails}
+      />
+      {canBackout ? (
+        <ActionButton
+          testID="ph-backout"
+          icon="restart-alt"
+          label={backingOut ? 'Backing out…' : 'Backout Pod'}
+          variant="danger"
+          disabled={item.status !== 'JOINED' || backingOut}
+          onPress={onBackout}
+        />
+      ) : null}
+      {showRejoin ? (
+        <ActionButton
+          testID="ph-rejoin"
+          icon="replay"
+          label={rejoining ? 'Rejoining…' : 'Rejoin Pod'}
+          variant="contained"
+          disabled={rejoining}
+          onPress={onRejoin}
+        />
+      ) : null}
+      {showRefundState ? (
+        <ActionButton
+          testID="ph-refund"
+          icon="receipt-long"
+          label={`Refund: ${refundText}`}
+          onPress={onRefundStatus}
+        />
+      ) : null}
+      <ActionButton
+        testID="ph-ticket"
+        icon="confirmation-number"
+        label={ticketBusy ? 'Downloading…' : 'Ticket'}
+        variant="contained"
+        disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
+        onPress={onTicket}
+      />
+    </>
+  );
+}
+
 export interface PodHistoryActionsProps {
   item: PodMembership;
   backingOut: boolean;
@@ -72,7 +156,16 @@ export interface PodHistoryActionsProps {
   onSupport: () => void;
 }
 
-/** Action buttons for a membership — RN twin of mWeb's PodHistoryDetails actions. */
+/**
+ * Everything this booking can still have done to it — RN twin of mWeb's
+ * PodHistoryActions.
+ *
+ * Two of these are gated by the participation rules rather than by the
+ * membership status, and both are absent rather than disabled when they do not
+ * apply: a pod that has already happened cannot be backed out of, and a booking
+ * nobody asked a refund for has no refund status to report. A disabled control
+ * invites the question of how to enable it; an absent one does not.
+ */
 export function PodHistoryActions({
   item,
   backingOut,
@@ -90,51 +183,25 @@ export function PodHistoryActions({
   // A deleted pod keeps its booking record but only allows Invoice + Support.
   const isDeleted = !!item.pod?.is_deleted;
   const showRejoin = canRejoin(item);
+  const gate = podHistoryGate(item);
   return (
     <XStack flexWrap="wrap" gap={8}>
       {isDeleted ? null : (
-        <>
-          <ActionButton
-            testID="ph-pod-details"
-            icon="arrow-forward"
-            label="Go to Pod Details"
-            variant="contained"
-            disabled={!item.pod?.id}
-            onPress={onPodDetails}
-          />
-          <ActionButton
-            testID="ph-backout"
-            icon="restart-alt"
-            label={backingOut ? 'Backing out…' : 'Backout Pod'}
-            variant="danger"
-            disabled={item.status !== 'JOINED' || backingOut}
-            onPress={onBackout}
-          />
-          {showRejoin ? (
-            <ActionButton
-              testID="ph-rejoin"
-              icon="replay"
-              label={rejoining ? 'Rejoining…' : 'Rejoin Pod'}
-              variant="contained"
-              disabled={rejoining}
-              onPress={onRejoin}
-            />
-          ) : null}
-          <ActionButton
-            testID="ph-refund"
-            icon="receipt-long"
-            label={`Refund: ${refundLabel(item.refund_status)}`}
-            onPress={onRefundStatus}
-          />
-          <ActionButton
-            testID="ph-ticket"
-            icon="confirmation-number"
-            label={ticketBusy ? 'Downloading…' : 'Ticket'}
-            variant="contained"
-            disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
-            onPress={onTicket}
-          />
-        </>
+        <LivePodActions
+          item={item}
+          canBackout={gate.canBackout}
+          showRefundState={gate.showRefundState}
+          refundText={refundLabel(gate.refundStatus)}
+          showRejoin={showRejoin}
+          backingOut={backingOut}
+          rejoining={rejoining}
+          ticketBusy={ticketBusy}
+          onPodDetails={onPodDetails}
+          onBackout={onBackout}
+          onRejoin={onRejoin}
+          onRefundStatus={onRefundStatus}
+          onTicket={onTicket}
+        />
       )}
       <ActionButton
         testID="ph-invoice"

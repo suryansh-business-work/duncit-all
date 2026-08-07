@@ -136,10 +136,10 @@ export function podScheduleLabel(start?: string | null, end?: string | null): st
   if (!start) return 'Date pending';
   const startDate = new Date(start);
   if (Number.isNaN(startDate.getTime())) return 'Date pending';
-  let label = format(startDate, "EEEE, d MMMM yyyy 'at' HH:mm");
+  let label = format(startDate, "EEEE, d MMMM yyyy 'at' h:mm a");
   if (end) {
     const endDate = new Date(end);
-    if (!Number.isNaN(endDate.getTime())) label += ` → ${format(endDate, 'HH:mm')}`;
+    if (!Number.isNaN(endDate.getTime())) label += ` → ${format(endDate, 'h:mm a')}`;
   }
   return label;
 }

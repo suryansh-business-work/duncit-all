@@ -9,6 +9,8 @@ export const referralTypeDefs = /* GraphQL */ `
   type MyReferral {
     code: String!
     gift_description: String!
+    "Coins the referrer earns for each person they bring in."
+    coins_per_referral: Int!
     referred: [ReferralEntry!]!
     "Name of whoever referred this user; null when nobody has."
     referred_by_name: String
@@ -34,6 +36,8 @@ export const referralTypeDefs = /* GraphQL */ `
 
   type ReferralSettings {
     gift_description: String!
+    "Coins the referrer earns for each person they bring in."
+    coins_per_referral: Int!
   }
 
   extend type Query {
@@ -49,6 +53,6 @@ export const referralTypeDefs = /* GraphQL */ `
     "Redeem someone's referral code (once per account, not your own)."
     applyReferralCode(code: String!): MyReferral!
     "Admin: set the gift shown to users for referring friends."
-    updateReferralGift(gift_description: String!): ReferralSettings!
+    updateReferralGift(gift_description: String!, coins_per_referral: Int): ReferralSettings!
   }
 `;

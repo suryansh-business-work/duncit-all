@@ -11,6 +11,17 @@ export type TicketCategory =
   | 'OTHER';
 export type TicketAuthorRole = 'USER' | 'AGENT' | 'SYSTEM';
 
+/**
+ * Where the request came from.
+ *
+ * The main website can be written to by somebody with no account at all, so
+ * an agent looking at a queue needs to know which of two very different
+ * conversations they are in: one where they can open the account behind it,
+ * and one where an email address is everything they have.
+ */
+export type TicketSource = 'APP' | 'WEBSITE';
+export const TICKET_SOURCES: TicketSource[] = ['APP', 'WEBSITE'];
+
 export interface ITicketMessage {
   _id: Types.ObjectId;
   author_id: Types.ObjectId;
@@ -37,7 +48,12 @@ const messageSchema = new Schema<ITicketMessage>(
 );
 
 export interface ITicket extends Document {
-  user_id: Types.ObjectId;
+  /** Null only for a website message from somebody with no account. */
+  user_id: Types.ObjectId | null;
+  source: TicketSource;
+  /** Who wrote in, when there is no account to read it from. */
+  guest_name: string;
+  guest_email: string;
   subject: string;
   category: TicketCategory;
   /** Optional pod this ticket is about (attached from "Contact Support" on a pod). */
@@ -63,7 +79,11 @@ export interface ITicket extends Document {
 
 const ticketSchema = new Schema<ITicket>(
   {
-    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    // Not required: a message from the website may have no account behind it.
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    source: { type: String, enum: TICKET_SOURCES, default: 'APP', index: true },
+    guest_name: { type: String, default: '', trim: true, maxlength: 120 },
+    guest_email: { type: String, default: '', trim: true, lowercase: true, maxlength: 160 },
     subject: { type: String, required: true, trim: true, maxlength: 200 },
     category: {
       type: String,

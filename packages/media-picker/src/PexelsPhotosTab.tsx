@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  LinearProgress,
   ImageList,
   InputAdornment,
   Stack,
@@ -14,7 +15,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import PexelsSearchBar from './PexelsSearchBar';
 import { IMPORT_REMOTE, PEXELS_SEARCH } from './queries';
 import PexelsPhotoCard from './PexelsPhotoCard';
 import type { Orientation } from './types';
@@ -84,9 +85,21 @@ export default function PexelsPhotosTab({
     }
   };
 
+  /*
+    Closing throws the results away.
+
+    They used to survive, so reopening the picker for a DIFFERENT sub-category
+    showed the last search: the seed effect below set the query but could not
+    run it (the dialog opens on the device tab, so this one is not active yet),
+    and by the time it became active there were already photos and nothing
+    asked for more. An empty grid is what makes the seeded search happen.
+  */
   useEffect(() => {
     if (!open) {
       setPickedIds([]);
+      setPhotos([]);
+      setPage(1);
+      setHasMore(false);
       return;
     }
     if (active && photos.length === 0) {
@@ -101,7 +114,10 @@ export default function PexelsPhotosTab({
     if (!open) return;
     const next = seedQuery ?? '';
     setPquery(next);
+    // Not active yet — leave an empty grid behind so switching to this tab
+    // searches the seed rather than showing whatever was here before.
     if (active) runPexels(next, 1, false).catch(console.error);
+    else setPhotos([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seedQuery, open]);
 
@@ -153,29 +169,19 @@ export default function PexelsPhotosTab({
     );
 
   return (
-    <Box>
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('media.pexels.searchPhotos')}
-          value={pquery}
-          onChange={(e) => setPquery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') runPexels(pquery, 1, false).catch(console.error);
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button variant="contained" onClick={() => runPexels(pquery, 1, false)}>
-          Search
-        </Button>
-      </Stack>
+    <Box sx={{ position: 'relative' }}>
+      {/* A re-search over results already on screen changed nothing visible —
+          the old photos simply sat there until new ones replaced them. */}
+      {psearching && (
+        <LinearProgress sx={{ position: 'sticky', top: 0, zIndex: 2, mb: 1 }} />
+      )}
+      <PexelsSearchBar
+        value={pquery}
+        placeholder={t('media.pexels.searchPhotos')}
+        searching={psearching}
+        onChange={setPquery}
+        onSearch={() => runPexels(pquery, 1, false).catch(console.error)}
+      />
       <ToggleButtonGroup
         size="small"
         exclusive

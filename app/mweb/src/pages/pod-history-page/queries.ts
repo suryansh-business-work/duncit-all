@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PodParticipationFields } from '@duncit/utils';
 
 export const MY_POD_MEMBERSHIPS = gql`
   query MyPodMembershipsForHistory {
@@ -13,6 +14,31 @@ export const MY_POD_MEMBERSHIPS = gql`
       refund_payment_id
       referral_token
       source
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
+          status
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
+        }
+      }
       pod {
         id
         pod_id
@@ -110,6 +136,11 @@ export interface PodHistoryItem {
   payment_id?: string | null;
   refund_status: 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
   refund_payment_id?: string | null;
+  /**
+   * Backouts, attendance and cancellation in one object — the timeline and the
+   * action gates both read it, and nothing else does.
+   */
+  participation?: PodParticipationFields | null;
   referral_token?: string | null;
   source: string;
   pod?: {

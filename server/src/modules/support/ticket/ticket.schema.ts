@@ -55,11 +55,23 @@ export const ticketTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  """
+  Where the request came from. WEBSITE is the contact form on duncit.com,
+  which anyone can use without an account.
+  """
+  enum TicketSource {
+    APP
+    WEBSITE
+  }
+
   type Ticket {
     id: ID!
     "Human-readable support ticket number, e.g. ST-A1B2C3 (derived from the id)."
     ticket_no: String!
     user: TicketActor!
+    source: TicketSource!
+    "The address to reply to when there is no account behind the ticket."
+    guest_email: String
     subject: String!
     category: TicketCategory!
     "The pod this ticket is about, if it was raised from a pod."

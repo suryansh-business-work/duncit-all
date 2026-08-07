@@ -104,6 +104,7 @@ export default function PodDetailsPage() {
           <PodAttendeesSection
             rows={attendeeRows}
             loading={attendeesQuery.loading}
+            podDateTime={pod.pod_date_time}
             errorText={attendeesQuery.error?.message}
           />
           <PodPaymentsSection podId={pod.id} />

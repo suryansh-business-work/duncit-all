@@ -12,6 +12,13 @@ export const TICKET_STATUS_COLORS: StatusColorMap = {
   CLOSED: 'default',
 };
 
+/** Keyed on the LABEL the table renders, not the stored enum: an agent reads
+ * 'Duncit Website', and the chip has to colour what it is showing. */
+export const TICKET_SOURCE_COLORS: StatusColorMap = {
+  'Duncit App': 'primary',
+  'Duncit Website': 'info',
+};
+
 export const TICKET_PRIORITY_COLORS: StatusColorMap = {
   HIGH: 'error',
   MEDIUM: 'warning',

@@ -82,7 +82,7 @@ export default function TicketDetailPage() {
           <Chip size="small" variant="outlined" label={ticket.category} />
         </Stack>
 
-        <TicketUserDetails user={ticket.user} />
+        <TicketUserDetails user={ticket.user} guestEmail={ticket.guest_email} />
 
         <TicketThread ticket={ticket} />
 

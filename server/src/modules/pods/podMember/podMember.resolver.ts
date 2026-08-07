@@ -1,13 +1,27 @@
 import { GraphQLError } from 'graphql';
+import { participationForMembership } from './membershipTimeline.service';
 import { podMemberService } from './podMember.service';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { hasRole, requireRole } from '@middleware/rbac';
 
 // Finance/admin roles that may view the Backout Refunds list.
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 // Roles that may read a pod's attendee contact list (Admin + Finance portals).
 const ATTENDEE_ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
+
+/**
+ * Whose story a caller may read.
+ *
+ * Their own, or anybody's if they run the place. PodMember is returned by
+ * queries that accept no token at all, so without this the DUN-BKO ids and
+ * refund amounts of every attendee on any pod were one query away.
+ */
+function mayReadParticipation(ctx: GraphQLContext, ownerId: string): boolean {
+  if (!ctx.user) return false;
+  if (String(ctx.user.id) === String(ownerId)) return true;
+  return hasRole(ctx.user, ATTENDEE_ADMIN_ROLES);
+}
 
 function requireUser(ctx: GraphQLContext) {
   if (!ctx.user) {
@@ -21,11 +35,70 @@ export const podMemberResolvers = {
     // Pod History must still show a booking whose pod was soft-deleted.
     pod: async (parent: { pod_id: string }) =>
       podService.getById(parent.pod_id, { includeDeleted: true }),
+    /*
+      Resolved per booking, not folded into the row.
+
+      A list of bookings needs none of this; a timeline needs all of it. Keeping
+      it as one field means only the screen that draws a timeline pays for it,
+      and it pays once — asking for the ticket and the pod per sub-field cost a
+      few hundred round trips on a long history.
+
+      Guarded, because PodMember is reachable from queries that take no token
+      (podMembers, referralLookup) and this object carries DUN-BKO ids, refund
+      amounts and door-scan attendance for whoever asks.
+    */
+    participation: async (
+      parent: { id: string; pod_id: string; user_id: string; joined_at?: string; payment_id?: string | null },
+      _args: unknown,
+      ctx: GraphQLContext,
+    ) => {
+      if (!mayReadParticipation(ctx, parent.user_id)) return null;
+      return participationForMembership({
+        memberId: parent.id,
+        podId: parent.pod_id,
+        joinedAt: parent.joined_at ?? null,
+        paymentId: parent.payment_id ?? null,
+      });
+    },
   },
   BackoutRefundRequest: {
     // The pod may have been soft-deleted after the backout — still show it.
     pod: async (parent: { pod_id: string }) =>
       podService.getById(parent.pod_id, { includeDeleted: true }),
+    /*
+      The booking this request belongs to, not just the request.
+
+      Finance reads one branch of a longer story — a second attempt only makes
+      sense next to the first, and a partial backout only makes sense next to
+      the seats that stayed. Resolved as a field so the list, which draws none
+      of it, does not pay for it.
+    */
+    participation: async (parent: {
+      member_id?: string | null;
+      pod_id: string;
+      joined_at: string | null;
+      payment_id?: string | null;
+    }) =>
+      participationForMembership({
+        memberId: parent.member_id,
+        podId: parent.pod_id,
+        joinedAt: parent.joined_at,
+        paymentId: parent.payment_id,
+      }),
+  },
+  AdminPodAttendee: {
+    participation: async (parent: {
+      member_id?: string | null;
+      pod_id: string;
+      joined_at: string | null;
+      payment_id?: string | null;
+    }) =>
+      participationForMembership({
+        memberId: parent.member_id,
+        podId: parent.pod_id,
+        joinedAt: parent.joined_at,
+        paymentId: parent.payment_id,
+      }),
   },
   Query: {
     myPodMemberships: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {

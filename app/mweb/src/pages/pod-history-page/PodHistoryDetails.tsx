@@ -1,19 +1,19 @@
 import { useLazyQuery } from '@apollo/client';
+import {
+  isPodPast,
+  participationInputFrom,
+  podParticipationActions,
+  type PodRefundStatus,
+} from '@duncit/utils';
+import PodHistoryActions from './PodHistoryActions';
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import EventIcon from '@mui/icons-material/Event';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ReplayIcon from '@mui/icons-material/Replay';
 import RuleIcon from '@mui/icons-material/Rule';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
 import { parseApiError } from '../../utils/parseApiError';
 import { podUrl } from '../../utils/seoUrls';
-import { isPodActive } from '../../utils/podStatus';
 import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
 import PodProductOrdersCard from './PodProductOrdersCard';
@@ -34,19 +34,19 @@ interface Props {
   onRejoin: () => void;
 }
 
-const refundLabel: Record<PodHistoryItem['refund_status'], string> = {
+const refundLabel: Record<PodRefundStatus, string> = {
   NONE: 'Not started',
   PENDING: 'Criteria pending',
   PROCESSED: 'Refund initiated',
   NOT_ELIGIBLE: 'Not initiated',
 };
 
-const makeSupportPath = (item: PodHistoryItem) => {
+const makeSupportPath = (item: PodHistoryItem, refundStatus: PodRefundStatus) => {
   const title = item.pod?.pod_title ?? 'Pod';
   const params = new URLSearchParams({
     category: 'PAYMENT',
     subject: `Support - ${title}`,
-    message: `I need help with my pod booking. Pod: ${title}. Membership: ${item.id}. Refund status: ${refundLabel[item.refund_status]}.`,
+    message: `I need help with my pod booking. Pod: ${title}. Membership: ${item.id}. Refund status: ${refundLabel[refundStatus]}.`,
   });
   if (item.pod?.id) {
     params.set('podId', item.pod.id);
@@ -56,6 +56,17 @@ const makeSupportPath = (item: PodHistoryItem) => {
 };
 
 export default function PodHistoryDetails({ item, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
+  /*
+    What this booking may still be offered, and what it may claim.
+
+    From the shared rules rather than from the membership status: a pod that
+    has already happened has nothing left to back out of, a booking with no
+    refund in play has no refund to report, and after the date the word is
+    Visited rather than Joined.
+  */
+  const gate = podParticipationActions(
+    participationInputFrom(item.participation, item.pod?.pod_date_time)
+  );
   const { formatDateTime } = useDateFormat();
   const { format, backoutDeductionPct } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
@@ -65,9 +76,12 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
   const isDeleted = !!pod?.is_deleted;
   const imageUrl = pod?.pod_images_and_videos?.[0]?.url;
   const podDetailsPath = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : '';
-  // Rejoin is offered only for a backed-out booking whose pod is still active (not
-  // completed/ended) and not deleted — the free, no-payment path back in.
-  const canRejoin = item.status === 'BACKED_OUT' && !isDeleted && !!pod?.id && isPodActive(pod?.pod_date_time, pod?.pod_end_date_time);
+  // The pod's own start time, which is where the server closes rejoin too — an
+  // end-time window offered the button for hours after rejoin had stopped working.
+  const podPast = isPodPast(pod?.pod_date_time);
+  // Rejoin is offered only for a backed-out booking whose pod has not started
+  // and is not deleted — the free, no-payment path back in.
+  const canRejoin = item.status === 'BACKED_OUT' && !isDeleted && !!pod?.id && !podPast;
 
   const downloadInvoice = async () => {
     if (!item.payment_id) return;
@@ -95,7 +109,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
       if (!b64) throw new Error('Ticket not available');
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
-      link.download = `ticket-${ticket.ticket_code}.pdf`;
+      link.download = `ticket-and-invoice-${ticket.ticket_code}.pdf`;
       link.click();
     } catch (error) {
       notify(parseApiError(error), 'error');
@@ -112,8 +126,23 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75, flexWrap: 'wrap' }}>
-                <Chip size="small" color={STATUS_CHIP[item.status].color} label={STATUS_CHIP[item.status].label} />
-                <Chip size="small" variant="outlined" label={`Refund: ${refundLabel[item.refund_status]}`} />
+                {/* "Visited" once the pod has happened — "Joined" is a promise
+                    about something still ahead. */}
+                <Chip
+                  size="small"
+                  color={STATUS_CHIP[item.status].color}
+                  label={
+                    gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED'
+                      ? 'Visited'
+                      : STATUS_CHIP[item.status].label
+                  }
+                />
+                {/* No refund state at all unless one is actually in play, and
+                    the word comes from the request rather than the booking —
+                    the booking's own copy is never written for a partial. */}
+                {gate.showRefundState && (
+                  <Chip size="small" variant="outlined" label={`Refund: ${refundLabel[gate.refundStatus]}`} />
+                )}
                 {(item.seats ?? 1) > 1 && (
                   <Chip
                     size="small"
@@ -140,46 +169,32 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
       <Card>
         <CardContent>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>Actions</Typography>
-          {isDeleted && (
-            <Alert severity="info" sx={{ mb: 1.5 }}>
-              This pod was removed. Your booking record stays here — download your invoice or contact support.
-            </Alert>
-          )}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-            {!isDeleted && (
-              <>
-                <Button component={RouterLink} to={podDetailsPath || '#'} disabled={!podDetailsPath} variant="contained" endIcon={<ArrowForwardIcon />}>
-                  Go to Pod Details
-                </Button>
-                <Button onClick={onBackout} disabled={item.status !== 'JOINED' || backingOut} color="error" variant="outlined" startIcon={<RestartAltIcon />}>
-                  {backingOut ? 'Backing out...' : 'Backout Pod'}
-                </Button>
-                {canRejoin && (
-                  <Button onClick={onRejoin} disabled={rejoining} color="success" variant="contained" startIcon={<ReplayIcon />}>
-                    {rejoining ? 'Rejoining...' : 'Rejoin Pod'}
-                  </Button>
-                )}
-                <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={() => notify(`Refund status: ${refundLabel[item.refund_status]}`, 'info')}>
-                  Refund Status: {refundLabel[item.refund_status]}
-                </Button>
-                {item.status === 'JOINED' && (
-                  <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 700 }}>
-                    {ticketState.loading ? 'Downloading...' : 'Ticket'}
-                  </Button>
-                )}
-              </>
-            )}
-            <Button onClick={downloadInvoice} disabled={!item.payment_id || invoiceState.loading} variant="outlined" startIcon={<ReceiptLongIcon />}>
-              {invoiceState.loading ? 'Downloading...' : 'Invoice'}
-            </Button>
-            <Button component={RouterLink} to={makeSupportPath(item)} variant="outlined" startIcon={<ContactSupportIcon />}>
-              Contact Support
-            </Button>
-          </Stack>
-          {(canRejoin || item.status === 'BACKOUT_IN_PROCESS') && (
+          <PodHistoryActions
+            item={item}
+            isDeleted={isDeleted}
+            podDetailsPath={podDetailsPath}
+            supportPath={makeSupportPath(item, gate.refundStatus)}
+            canBackout={gate.canBackout}
+            showRefundState={gate.showRefundState}
+            refundLabel={refundLabel[gate.refundStatus]}
+            canRejoin={canRejoin}
+            backingOut={backingOut}
+            rejoining={rejoining}
+            ticketLoading={!pod?.id || ticketState.loading}
+            invoiceLoading={invoiceState.loading}
+            onBackout={onBackout}
+            onRejoin={onRejoin}
+            onDownloadTicket={downloadTicket}
+            onDownloadInvoice={downloadInvoice}
+            onShowRefundStatus={() => notify(`Refund status: ${refundLabel[gate.refundStatus]}`, 'info')}
+          />
+          {/* Both of these promise something that is still to come, so neither
+              belongs on a pod that has already happened: nobody can fill that
+              seat now, and the refund question is already settled. */}
+          {!podPast && (canRejoin || item.status === 'BACKOUT_IN_PROCESS') && (
             <ReplacementNotice deductionPct={backoutDeductionPct} />
           )}
-          {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' && (
+          {!podPast && gate.refundStatus === 'PENDING' && (
             <Alert severity="info" sx={{ mt: 1.5 }}>
               Refund is waiting for criteria completion. Support can help if the status looks wrong.
             </Alert>

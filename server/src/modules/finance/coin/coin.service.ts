@@ -99,6 +99,55 @@ export const coinService = {
     }
   },
 
+  /**
+   * Pay a referrer for bringing somebody in.
+   *
+   * A flat number of coins rather than a share of a spend: the referrer did not
+   * buy anything, and the person they brought may never buy anything either —
+   * what is being rewarded is the introduction.
+   *
+   * Idempotent per REFERRAL, enforced by the unique index rather than a
+   * read-then-write check, because two requests racing to apply the same code
+   * would both pass that check and pay twice. The loser undoes its own
+   * increment, exactly as the payment path does.
+   */
+  async creditForReferral(opts: {
+    referrerId: string;
+    referralId: string;
+    coins: number;
+    reason: string;
+  }): Promise<void> {
+    const value = Math.max(0, Math.floor(opts.coins));
+    if (!Types.ObjectId.isValid(opts.referrerId) || !opts.referralId || value <= 0) return;
+
+    const userId = new Types.ObjectId(opts.referrerId);
+    try {
+      const balance = await CoinBalanceModel.findOneAndUpdate(
+        { user_id: userId },
+        { $inc: { balance: value, lifetime_earned: value } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      await CoinTransactionModel.create({
+        user_id: userId,
+        type: 'CREDIT',
+        amount: value,
+        balance_after: balance!.balance,
+        source: 'REFERRAL_EARN',
+        reason: opts.reason,
+        referral_id: opts.referralId,
+      });
+    } catch (e) {
+      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+        await CoinBalanceModel.updateOne(
+          { user_id: userId },
+          { $inc: { balance: -value, lifetime_earned: -value } }
+        );
+        return;
+      }
+      throw e;
+    }
+  },
+
   /** Spendable coin count — what a checkout may price a redemption against. */
   async balanceOf(userId: string): Promise<number> {
     if (!Types.ObjectId.isValid(userId)) return 0;

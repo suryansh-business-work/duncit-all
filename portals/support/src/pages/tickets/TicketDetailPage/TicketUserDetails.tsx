@@ -52,7 +52,15 @@ function DetailRow({
 
 /** Full user details on the ticket screen — all account info + a link to the
  * Admin user-details page (Item 3). */
-export default function TicketUserDetails({ user }: Readonly<{ user: Ticket['user'] }>) {
+/**
+ * A website message may have no account behind it, so the address the sender
+ * typed is the only way to answer them. It stands in for the account email
+ * rather than sitting beside it — an agent needs one address, not a choice.
+ */
+export default function TicketUserDetails({
+  user,
+  guestEmail,
+}: Readonly<{ user: Ticket['user']; guestEmail?: string | null }>) {
   const location = [user.city, user.state, user.country].filter(Boolean).join(', ');
   const joined = formatJoined(user.joined_at);
 
@@ -84,7 +92,7 @@ export default function TicketUserDetails({ user }: Readonly<{ user: Ticket['use
       <Stack spacing={1} sx={{ mt: 1.5 }}>
         <DetailRow
           icon={<EmailIcon fontSize="small" />}
-          value={user.email}
+          value={user.email || guestEmail || null}
           empty="No email on file"
           verified={user.is_email_verified}
         />

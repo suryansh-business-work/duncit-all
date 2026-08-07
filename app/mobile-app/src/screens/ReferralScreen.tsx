@@ -4,7 +4,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { referralLink, referralShareMessage } from '@duncit/utils';
+
 import { useReferral, type MyReferral } from '@/hooks/useReferral';
+import { POD_WEB_BASE } from '@/utils/pod-format';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 
@@ -16,12 +19,16 @@ function CodeCard({
   onPrimary,
   primary,
 }: Readonly<{ referral: MyReferral | null; onPrimary: string; primary: string }>) {
+  /* istanbul ignore next -- the buttons only mount once the code loads */
+  const link = referral ? referralLink(referral.code, POD_WEB_BASE) : '';
+
   const shareCode = async () => {
-    /* istanbul ignore next -- the button only mounts once the code loads */
     if (!referral) return;
     try {
       await Share.share({
-        message: `Join me on Duncit! Use my referral code ${referral.code} when you sign up.`,
+        // The link goes with the code: whoever receives it should not have to
+        // find the app AND type something in.
+        message: referralShareMessage(referral.code, link, referral.coins_per_referral ?? 0),
       });
     } catch {
       /* user cancelled */
@@ -53,7 +60,7 @@ function CodeCard({
         <XStack
           testID="referral-share"
           role="button"
-          aria-label="Share referral code"
+          aria-label="Share referral link"
           onPress={() => void shareCode()}
           alignItems="center"
           gap={6}
@@ -65,10 +72,18 @@ function CodeCard({
         >
           <MaterialIcons name="share" size={15} color={onPrimary} />
           <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
-            Share
+            Share link
           </Text>
         </XStack>
       </XStack>
+      {(referral?.coins_per_referral ?? 0) > 0 ? (
+        <XStack alignItems="center" gap={8} paddingTop={6}>
+          <MaterialIcons name="monetization-on" size={18} color={primary} />
+          <Text testID="referral-coins" flex={1} fontSize={13} fontWeight="700" color="">
+            {referral?.coins_per_referral} Duncit Coins for every friend who joins
+          </Text>
+        </XStack>
+      ) : null}
       {referral?.gift_description ? (
         <XStack alignItems="center" gap={8} paddingTop={6}>
           <MaterialIcons name="card-giftcard" size={18} color={primary} />

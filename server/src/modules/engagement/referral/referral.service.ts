@@ -3,6 +3,8 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { ReferralCodeModel, ReferralModel, ReferralSettingsModel } from './referral.model';
+import { coinService } from '@modules/finance/coin/coin.service';
+import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const badInput = (message: string): never => {
@@ -83,6 +85,7 @@ export const referralService = {
     return {
       code: codeDoc.code,
       gift_description: settings.gift_description ?? '',
+      coins_per_referral: settings.coins_per_referral ?? 0,
       referred: referred.map((r: any) => ({
         user_id: String(r.referred_user_id),
         full_name: names.get(String(r.referred_user_id)) || null,
@@ -103,11 +106,37 @@ export const referralService = {
     if (String(owner!.user_id) === userId) badInput('You cannot redeem your own code');
     const already = await ReferralModel.exists({ referred_user_id: userId });
     if (already) badInput('A referral code was already applied to this account');
-    await ReferralModel.create({
+    const referral = await ReferralModel.create({
       referrer_user_id: owner!.user_id,
       referred_user_id: new Types.ObjectId(userId),
       code,
     });
+
+    /*
+      The introduction is what earns, so it pays the moment it is made.
+
+      A flat number of coins rather than a share of a spend: the referrer did
+      not buy anything, and the person they brought may never buy anything
+      either. Best-effort — the referral is already recorded, and a ledger
+      briefly behind is a smaller problem than failing a request after two
+      accounts were linked. Idempotent per referral inside the service, so a
+      retry cannot pay twice.
+    */
+    try {
+      const settings = await getSettings();
+      await coinService.creditForReferral({
+        referrerId: String(owner!.user_id),
+        referralId: String(referral._id),
+        coins: settings.coins_per_referral ?? 0,
+        reason: `Referral: ${code}`,
+      });
+    } catch (e) {
+      logs.server.warn('referral', 'applyCode', {
+        error: e,
+        msg: 'Referral coins not credited',
+        code,
+      });
+    }
     return this.myReferral(userId);
   },
 
@@ -136,13 +165,29 @@ export const referralService = {
 
   async settings() {
     const doc = await getSettings();
-    return { gift_description: doc.gift_description ?? '' };
+    return {
+      gift_description: doc.gift_description ?? '',
+      coins_per_referral: doc.coins_per_referral ?? 0,
+    };
   },
 
-  async updateGift(gift: string) {
+  /**
+   * Admin: the gift copy and the rate, saved together.
+   *
+   * They describe the same promise, and one changed without the other is a
+   * promise that lies — "earn 50 coins" beside a rate somebody quietly set to
+   * ten.
+   */
+  async updateGift(gift: string, coinsPerReferral?: number | null) {
     const doc = await getSettings();
     doc.gift_description = gift ?? '';
+    if (coinsPerReferral !== undefined && coinsPerReferral !== null) {
+      doc.coins_per_referral = Math.max(0, Math.floor(coinsPerReferral));
+    }
     await doc.save();
-    return { gift_description: doc.gift_description };
+    return {
+      gift_description: doc.gift_description,
+      coins_per_referral: doc.coins_per_referral ?? 0,
+    };
   },
 };

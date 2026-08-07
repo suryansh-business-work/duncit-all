@@ -47,6 +47,10 @@ const newToken = () => `ref_${crypto.randomBytes(8).toString('hex')}`;
 
 const iso = (v?: Date | null) => (v instanceof Date ? v.toISOString() : null);
 
+/** The pod's own start time has passed — nothing about the seat can change now. */
+const podHasHappened = (pod: { pod_date_time?: Date | null }) =>
+  !!pod.pod_date_time && pod.pod_date_time.getTime() < Date.now();
+
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const clampPct = (pct: unknown) => Math.max(0, Math.min(100, Number(pct) || 0));
@@ -385,6 +389,9 @@ const toBackoutRefund = (
   id: String(request._id),
   backout_no: request.backout_no,
   pod_id: String(request.pod_id),
+  // Not in the schema — the participation field resolver needs the booking this
+  // request came off, and only this row knows which one that was.
+  member_id: request.member_id ? String(request.member_id) : null,
   user_id: String(request.user_id),
   user_name: fullName(user) || null,
   user_email: user?.auth?.email ?? null,
@@ -567,7 +574,10 @@ export const podMemberService = {
       seats_available: podSeatsAvailable(pod),
       max_seats_per_booking: maxSeatsForBooking(pod),
       my_seats: membership?.seats ?? 0,
-      can_backout: isMember && attemptsUsed < maxAttempts,
+      // Same rule the shared podParticipationActions() applies, so Pod Details
+      // and Pod History cannot disagree about whether a booking can still be
+      // given up — and the mutation refuses it either way.
+      can_backout: isMember && attemptsUsed < maxAttempts && !podHasHappened(pod),
       can_join: !!userId && !membership && !full,
       refund_threshold_pct: REFUND_THRESHOLD_PCT,
       backout_in_process: inProcess,
@@ -738,6 +748,15 @@ export const podMemberService = {
   async backout(podDocId: string, userId: string, requestedSeats?: number | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    // Joining and rejoining both refuse a pod that has happened; backing out did
+    // not, so a seat could be released from an evening that was already over —
+    // and the request then rewrote that member's own history as "spot not
+    // filled" on a pod they had actually attended.
+    if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
+      throw new GraphQLError('This pod has already taken place — backout is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
 
     const uid = new Types.ObjectId(userId);
     const membership = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
@@ -1172,6 +1191,8 @@ export const podMemberService = {
       return {
         ...personFields(String(m.user_id)),
         member_id: String(m._id),
+        // Not in the schema — the participation field resolver reads it.
+        pod_id: String(m.pod_id),
         // Without these a 4-seat booking and a 1-seat booking were the same row,
         // which is a large part of why the under-billing went unnoticed.
         seats: m.seats ?? 1,

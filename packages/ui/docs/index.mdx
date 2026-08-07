@@ -38,6 +38,7 @@ exports:
   - 'mergeSx'
   - 'ModerationBlockedDialog'
   - 'LanguageSelect'
+  - 'PodParticipationTimeline'
   - 'StatusColorMap'
   - 'StatCardLayout'
   - 'InfoRowVariant'
@@ -408,6 +409,39 @@ router (that path renders a plain `<Button>`).
 `DuncitTable` already debounces its own search box before `fetchRows` sees the query state.
 Use `useDebouncedValue` for the standalone filter inputs that sit outside a table — adding it on
 top of a `DuncitTable` search only stacks two delays.
+
+## `PodParticipationTimeline` — one booking's story, drawn once
+
+What happened to one person's place in one pod: joined, backed out (once or several times,
+possibly partially), the spot filled or not, the refund, attendance, or the pod being cancelled
+out from under them. mWeb's Pod History, Finance's Backout Refunds detail and Admin's pod
+attendee rows all render **this** component, because three MUI copies of one workflow is how
+three screens start telling the same person three different stories about the same booking.
+
+The nodes and the words both come from `@duncit/utils` — `buildPodParticipationTimeline` builds
+the tree, `timelineCopy` names each node — so the native app draws the identical story in
+Tamagui from the same model (rule 27).
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `input` | `PodParticipationInput` | yes | — | Build it with `participationInputFrom(participation, podDateTime)` — the API returns the fields under `participation` on `PodMember`, `BackoutRefundRequest` and `AdminPodAttendee`. |
+| `formatDateTime` | `(value: string) => string` | yes | — | Admin-configured formatter; mWeb passes `useDateFormat().formatDateTime`, the portals pass their own. |
+| `highlightBackoutNo` | `string` | no | — | Marks one branch as the request this screen is about. Finance passes the DUN-BKO id of the row it was opened from, which is what proves the line and the row are the same request. |
+
+```tsx
+import { PodParticipationTimeline } from '@duncit/ui';
+import { participationInputFrom } from '@duncit/utils';
+
+<PodParticipationTimeline
+  input={participationInputFrom(request.participation, request.pod?.pod_date_time)}
+  formatDateTime={fmtDate}
+  highlightBackoutNo={request.backout_no}
+/>;
+```
+
+The branches **nest**: a backout leads to the spot being filled or not, and each of those leads
+somewhere else again. A flat list can show the same events but not which followed from which,
+and "why was I not refunded" is a question only the shape answers.
 
 ## Localization and coverage
 

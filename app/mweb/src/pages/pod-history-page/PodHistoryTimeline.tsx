@@ -1,71 +1,24 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import UndoIcon from '@mui/icons-material/Undo';
+import { PodParticipationTimeline } from '@duncit/ui';
+import { participationInputFrom } from '@duncit/utils';
 import { useDateFormat } from '../../utils/dateFormat';
 import type { PodHistoryItem } from './queries';
 
-interface TimelineEvent {
-  title: string;
-  date?: string | null;
-  detail: string;
-  state: 'done' | 'current' | 'pending';
-  icon: 'join' | 'backout' | 'refund' | 'wait';
-  tag?: string;
-}
-
-const iconFor = (event: TimelineEvent) => {
-  if (event.state === 'pending') return <RadioButtonUncheckedIcon color="disabled" />;
-  if (event.state === 'current') return <HourglassTopIcon color="info" />;
-  if (event.icon === 'backout') return <UndoIcon color="warning" />;
-  if (event.icon === 'refund') return <ReceiptLongIcon color="success" />;
-  return <CheckCircleIcon color="success" />;
-};
-
-function buildTimeline(item: PodHistoryItem): TimelineEvent[] {
-  const backedOut = item.status === 'BACKED_OUT' || item.status === 'BACKOUT_IN_PROCESS';
-  const refundProcessed = item.refund_status === 'PROCESSED';
-  const refundPending = item.refund_status === 'PENDING';
-  const events: TimelineEvent[] = [
-    { title: 'Pod Joined', date: item.joined_at, detail: 'Your spot was confirmed for this pod.', state: 'done', icon: 'join', tag: 'Completed' },
-  ];
-  if (!backedOut) {
-    events.push({ title: 'Backout requested', detail: 'No backout request yet. Use Backout Pod from actions when needed.', state: 'current', icon: 'backout', tag: 'Available' });
-    return events;
-  }
-  events.push(
-    { title: 'Backout requested', date: item.backed_out_at, detail: 'Backout request was recorded.', state: 'done', icon: 'backout', tag: 'Completed' },
-    { title: 'Refund criteria', detail: refundPending ? 'Waiting for refund criteria to be completed.' : 'Refund criteria was checked for this backout.', state: refundPending ? 'current' : 'done', icon: 'wait', tag: refundPending ? 'Waiting' : 'Checked' },
-    refundProcessed
-      ? { title: 'Refund initiated', detail: 'Refund has been initiated for this membership.', state: 'done', icon: 'refund', tag: 'Initiated' }
-      : { title: 'Refund not initiated', detail: 'Refund has not been initiated for this backout yet.', state: 'current', icon: 'refund', tag: 'Not initiated' }
-  );
-  return events;
-}
-
+/**
+ * What happened to this booking.
+ *
+ * The renderer is the same one Finance and Admin draw, over the same nodes from
+ * @duncit/utils — including the parts the old timeline could not express: no
+ * refund state at all when nobody asked for one, an attendance state once the
+ * pod has happened, and one branch per backout carrying the DUN-BKO id Finance
+ * works from.
+ */
 export default function PodHistoryTimeline({ item }: Readonly<{ item: PodHistoryItem }>) {
   const { formatDateTime } = useDateFormat();
-  const events = buildTimeline(item);
+
   return (
-    <Stack spacing={1.75}>
-      {events.map((event, index) => (
-        <Stack key={`${event.title}-${index}`} direction="row" spacing={1.5} alignItems="flex-start">
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {iconFor(event)}
-            {index < events.length - 1 && <Box sx={{ width: 2, height: 38, bgcolor: event.state === 'pending' ? 'divider' : 'primary.light', my: 0.5 }} />}
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25, flexWrap: 'wrap' }}>
-              <Typography variant="subtitle2" fontWeight={700}>{event.title}</Typography>
-              {event.tag && <Chip size="small" label={event.tag} color={event.state === 'done' ? 'success' : 'info'} variant={event.state === 'done' ? 'filled' : 'outlined'} sx={{ height: 20, fontSize: 11 }} />}
-            </Stack>
-            {event.date && <Typography variant="caption" color="text.secondary">{formatDateTime(event.date)}</Typography>}
-            <Typography variant="body2" color="text.secondary">{event.detail}</Typography>
-          </Box>
-        </Stack>
-      ))}
-    </Stack>
+    <PodParticipationTimeline
+      input={participationInputFrom(item.participation, item.pod?.pod_date_time)}
+      formatDateTime={formatDateTime}
+    />
   );
 }

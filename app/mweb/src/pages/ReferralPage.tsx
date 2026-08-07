@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import LinkIcon from '@mui/icons-material/Link';
+import { referralLink } from '@duncit/utils';
 import { formatRelative } from '../components/app-header/queries';
 
 const MY_REFERRAL = gql`
@@ -21,6 +23,7 @@ const MY_REFERRAL = gql`
     myReferral {
       code
       gift_description
+      coins_per_referral
       referred_by_name
       referred {
         user_id
@@ -46,14 +49,24 @@ export default function ReferralPage() {
   const { data, loading, error, refetch } = useQuery(MY_REFERRAL, { fetchPolicy: 'cache-and-network' });
   const [apply, applyState] = useMutation(APPLY_CODE);
   const [draft, setDraft] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const referral = data?.myReferral;
 
-  const copyCode = async () => {
+  /*
+    Two things worth copying, not one.
+
+    A code has to be typed in by whoever receives it; a link does the typing
+    for them and lands on signup with the code already in hand. Both are here
+    because a code still travels better by voice.
+  */
+  const link = referral?.code ? referralLink(referral.code, globalThis.location.origin) : '';
+
+  const copy = async (what: 'code' | 'link', value: string) => {
+    if (!value) return;
     try {
-      await navigator.clipboard.writeText(referral?.code ?? '');
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(value);
+      setCopied(what);
+      setTimeout(() => setCopied(null), 2000);
     } catch {
       /* clipboard unavailable */
     }
@@ -99,10 +112,18 @@ export default function ReferralPage() {
             <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 1 }}>
               {referral?.code}
             </Typography>
-            <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copyCode()} sx={{ borderRadius: 999, fontWeight: 700 }}>
-              {copied ? 'Copied!' : 'Copy'}
+            <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copy('code', referral?.code ?? '')} sx={{ borderRadius: 999, fontWeight: 700 }}>
+              {copied === 'code' ? 'Copied!' : 'Copy code'}
+            </Button>
+            <Button size="small" startIcon={<LinkIcon />} onClick={() => void copy('link', link)} sx={{ borderRadius: 999, fontWeight: 700 }}>
+              {copied === 'link' ? 'Copied!' : 'Copy link'}
             </Button>
           </Stack>
+          {(referral?.coins_per_referral ?? 0) > 0 && (
+            <Typography variant="body2" sx={{ mt: 1.25, fontWeight: 700 }} color="primary.main">
+              {referral.coins_per_referral} Duncit Coins for every friend who joins
+            </Typography>
+          )}
           {referral?.gift_description && (
             <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5, borderRadius: '16px' }}>
               {referral.gift_description}

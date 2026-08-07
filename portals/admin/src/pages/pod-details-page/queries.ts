@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PodParticipationFields } from '@duncit/utils';
 
 export const POD_DETAIL = gql`
   query AdminPodDetail($id: ID!) {
@@ -69,6 +70,31 @@ export const POD_ATTENDEES_ADMIN = gql`
       backout_no
       replaced_by_user_id
       replaced_by_name
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
+          status
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
+        }
+      }
     }
   }
 `;
@@ -167,6 +193,8 @@ export interface AdminPodAttendeeRow {
   backout_no: string | null;
   replaced_by_user_id: string | null;
   replaced_by_name: string | null;
+  /** This person's own story on the pod — null for a host seat with no booking. */
+  participation: PodParticipationFields | null;
 }
 
 export interface PodPaymentRow {

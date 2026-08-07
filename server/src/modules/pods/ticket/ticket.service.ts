@@ -8,7 +8,10 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { generateTicketPdf } from '@services/ticket/ticket.pdf';
+import { generateTicketWithInvoicePdf } from '@services/ticket/ticket-with-invoice.pdf';
+import type { InvoiceData } from '@services/invoice/invoice.pdf';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { invoiceDataForPayment } from '@modules/finance/payment/payment.invoice';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -170,23 +173,66 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
 const dateLabel = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'Date pending';
 
+/**
+ * The invoice that belongs on the back of this ticket, if there is one.
+ *
+ * Matched on pod + buyer rather than on a stored link, because a payment has
+ * never carried the membership it created — and the newest successful payment
+ * for that pair IS the one that bought this seat. A free join has no payment at
+ * all, which is not a failure: that ticket is simply a one-page document.
+ *
+ * Best-effort on purpose. A ticket that cannot find its invoice must still
+ * reach the door.
+ */
+async function invoiceForTicket(t: ITicket): Promise<InvoiceData | null> {
+  try {
+    // The ticket names its payment when it has one. Older tickets do not, and
+    // for those the newest successful payment by that buyer for that pod IS the
+    // one that bought the seat.
+    const payment = t.payment_id
+      ? await PaymentModel.findById(t.payment_id)
+      : await PaymentModel.findOne({
+          pod_id: t.pod_id,
+          user_id: t.user_id,
+          status: 'SUCCESS',
+          invoice_no: { $ne: null },
+        }).sort({ paid_at: -1, created_at: -1 });
+    if (!payment || payment.status !== 'SUCCESS' || !payment.invoice_no) return null;
+    return await invoiceDataForPayment(payment, {
+      paymentMethod: payment.gateway || 'Gateway',
+      currencySymbol: payment.currency_symbol,
+    });
+  } catch (e) {
+    logs.server.warn('ticket', 'invoiceForTicket', {
+      error: e,
+      msg: 'Could not attach an invoice to the ticket',
+      ticket_code: t.ticket_code,
+    });
+    return null;
+  }
+}
+
 async function pdfFor(t: ITicket): Promise<Buffer> {
   const fs = await getFinanceSettings();
-  return generateTicketPdf({
-    brand: fs.business_name,
-    ticket_code: t.ticket_code,
-    status: t.status,
-    qr_token: t.qr_token,
-    event_title: t.snapshot?.pod_title ?? 'Event',
-    date_label: dateLabel(t.snapshot?.pod_date_time),
-    mode: t.snapshot?.pod_mode ?? 'PHYSICAL',
-    venue_name: t.snapshot?.venue_name ?? null,
-    venue_address: t.snapshot?.venue_address ?? null,
-    meeting_platform: t.snapshot?.meeting_platform ?? null,
-    attendee_name: t.snapshot?.user_name ?? '',
-    attendee_email: t.snapshot?.user_email ?? '',
-    seats: t.seats ?? 1,
-  });
+  const invoice = await invoiceForTicket(t);
+  return generateTicketWithInvoicePdf(
+    {
+      brand: fs.business_name,
+      ticket_code: t.ticket_code,
+      status: t.status,
+      qr_token: t.qr_token,
+      event_title: t.snapshot?.pod_title ?? 'Event',
+      date_label: dateLabel(t.snapshot?.pod_date_time),
+      mode: t.snapshot?.pod_mode ?? 'PHYSICAL',
+      venue_name: t.snapshot?.venue_name ?? null,
+      venue_address: t.snapshot?.venue_address ?? null,
+      meeting_platform: t.snapshot?.meeting_platform ?? null,
+      attendee_name: t.snapshot?.user_name ?? '',
+      attendee_email: t.snapshot?.user_email ?? '',
+      seats: t.seats ?? 1,
+    },
+    invoice
+  );
 }
 
 export const ticketService = {

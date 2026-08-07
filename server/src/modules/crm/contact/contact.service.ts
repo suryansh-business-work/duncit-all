@@ -6,6 +6,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { ticketFromContact } from '@modules/support/ticket/ticket.fromContact';
 
 const submitSchema = yup.object({
   name: yup.string().required('Name is required').max(120),
@@ -76,6 +77,24 @@ export const contactService = {
       });
     }
     await ContactSubmissionModel.create(payload);
+
+    /*
+      The same message, in the queue an agent actually watches.
+
+      The submission row stays: the CRM lists them, and this write is
+      best-effort — a visitor who has just pressed Send should not see an
+      error because a ticket could not be raised behind the scenes. The
+      submission is already saved, and the acknowledgement email still goes.
+    */
+    try {
+      await ticketFromContact(payload);
+    } catch (e) {
+      logs.server.warn('contact', 'submit', {
+        error: e,
+        msg: 'contact ticket not raised',
+        email: payload.email,
+      });
+    }
     try {
       const branding = await settingsService.getBranding();
       const urlConfigs = await getUrlConfigs();

@@ -33,18 +33,23 @@ const BRAND_MARK: Buffer | null = (() => {
   }
 })();
 
-/** Renders a single, designed event-ticket PDF with an embedded verifiable QR. */
-export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
-  const qrPng = await QRCode.toBuffer(data.qr_token, { margin: 1, width: 320, errorCorrectionLevel: 'M' });
+/** The ticket's page size. Exported so a document that opens WITH a ticket
+  * starts at the right size before anything is drawn. */
+export const TICKET_PAGE = { size: 'A5' as const, layout: 'landscape' as const, margin: 0 };
 
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ size: 'A5', layout: 'landscape', margin: 0 });
-      const chunks: Buffer[] = [];
-      doc.on('data', (c: Buffer) => chunks.push(c));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
+/** The QR is the only asynchronous part, so it is rendered before drawing. */
+export const ticketQr = (token: string) =>
+  QRCode.toBuffer(token, { margin: 1, width: 320, errorCorrectionLevel: 'M' });
 
+/**
+ * Draw the ticket onto the CURRENT page of a document.
+ *
+ * Split out from the single-file export so the same ticket can be page one of
+ * a document whose page two is the invoice — one file for the buyer instead of
+ * two, without a second renderer that could drift from this one.
+ */
+export function drawTicket(doc: PDFKit.PDFDocument, data: TicketPdfData, qrPng: Buffer): void {
+  {
       const W = doc.page.width;
       const H = doc.page.height;
       const stubX = W - 200;
@@ -105,6 +110,20 @@ export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
         doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(`ADMITS ${seats}`, stubX, 290, { width: 200, align: 'center' });
       }
 
+  }
+}
+
+/** Renders a single, designed event-ticket PDF with an embedded verifiable QR. */
+export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
+  const qrPng = await ticketQr(data.qr_token);
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument(TICKET_PAGE);
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      drawTicket(doc, data, qrPng);
       doc.end();
     } catch (err) {
       reject(err);

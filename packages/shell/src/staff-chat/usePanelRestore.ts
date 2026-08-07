@@ -37,23 +37,44 @@ export function usePanelRestore({
   onPeer,
   onPanelOpen,
 }: Options) {
-  /** Show the sidebar again if it was showing. */
+  /**
+   * Show the sidebar again if it was showing — ONCE.
+   *
+   * The latch is the whole point. Without it this effect does not restore the
+   * panel, it enforces it: closing sets `open` false, this runs before the save
+   * below has had a chance to write `false`, sees the saved `true` and opens it
+   * straight back up. The close button worked perfectly and the panel never
+   * shut, because two effects in this file were arguing about which of them
+   * owned the answer.
+   *
+   * Restoring is something that happens when you arrive, not a rule about how
+   * the panel must stay.
+   */
+  const restoredOpen = useRef(false);
   useEffect(() => {
-    if (ready && wasOpen && !open) onRequestOpen?.();
+    if (!ready || restoredOpen.current) return;
+    restoredOpen.current = true;
+    if (wasOpen && !open) onRequestOpen?.();
   }, [ready, wasOpen, open, onRequestOpen]);
 
   /**
-   * Reopen the conversation that was open.
+   * Reopen the conversation that was open — also once.
    *
-   * Only once the directory has arrived, and only while nobody is picked:
-   * restoring later would yank somebody out of the thread they just opened.
+   * The latch is set only when the person is actually FOUND, because the
+   * directory arrives after the saved state does; latching on `ready` alone
+   * would spend the one attempt before there was anything to look them up in.
+   * After that it stays shut, so pressing Back does not spring the same thread
+   * open again while the server catches up with the fact that it was closed.
    */
+  const restoredPeer = useRef(false);
   useEffect(() => {
-    if (!ready || !savedPeerId || peer) return;
+    if (!ready || restoredPeer.current || !savedPeerId || peer) return;
     const found =
       threads.find((thread) => thread.peer.id === savedPeerId)?.peer ??
       coworkers.find((person) => person.id === savedPeerId);
-    if (found) onPeer(found);
+    if (!found) return;
+    restoredPeer.current = true;
+    onPeer(found);
   }, [ready, savedPeerId, peer, threads, coworkers, onPeer]);
 
   /**

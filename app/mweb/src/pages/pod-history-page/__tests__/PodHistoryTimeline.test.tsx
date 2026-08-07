@@ -22,7 +22,35 @@ const appSettingsMock = {
   },
 };
 
-const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
+const FUTURE = '2999-01-01T18:00:00.000Z';
+const PAST = '2000-01-01T18:00:00.000Z';
+
+const backout = (over: Record<string, unknown> = {}) => ({
+  backout_no: 'DUN-BKO-000007',
+  status: 'IN_PROCESS',
+  attempt_no: 1,
+  seats: 1,
+  seats_before: 1,
+  refund_amount: 450,
+  refund_status: 'NONE',
+  refund_processed_at: null,
+  created_at: '2026-02-01T10:00:00.000Z',
+  events: [{ status: 'IN_PROCESS', at: '2026-02-01T10:00:00.000Z' }],
+  ...over,
+});
+
+const participation = (over: Record<string, unknown> = {}) => ({
+  joined_at: '2026-01-01T10:00:00.000Z',
+  attended: false,
+  attendance_recorded: false,
+  pod_cancelled_by: null,
+  pod_cancelled_at: null,
+  cancel_refund_status: 'NONE',
+  backouts: [],
+  ...over,
+});
+
+const baseItem = (podDateTime: string, over: Record<string, unknown> = {}): PodHistoryItem =>
   ({
     id: 'mem-1',
     status: 'JOINED',
@@ -33,9 +61,9 @@ const baseItem = (over: Partial<PodHistoryItem> = {}): PodHistoryItem =>
     refund_payment_id: null,
     referral_token: null,
     source: 'WEB',
-    pod: null,
-    ...over,
-  }) as PodHistoryItem;
+    participation: participation(over),
+    pod: { pod_date_time: podDateTime },
+  }) as unknown as PodHistoryItem;
 
 const renderIt = (item: PodHistoryItem) =>
   render(
@@ -45,67 +73,90 @@ const renderIt = (item: PodHistoryItem) =>
   );
 
 describe('PodHistoryTimeline', () => {
-  it('renders a JOINED booking with the join event and an available backout step', () => {
-    renderIt(baseItem());
+  it('says nothing about a refund nobody asked for', () => {
+    renderIt(baseItem(FUTURE));
     expect(screen.getByText('Pod Joined')).toBeInTheDocument();
-    expect(screen.getByText('Your spot was confirmed for this pod.')).toBeInTheDocument();
-    // second (current) event for a non-backed-out booking
-    expect(screen.getByText('Backout requested')).toBeInTheDocument();
-    expect(
-      screen.getByText('No backout request yet. Use Backout Pod from actions when needed.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Completed')).toBeInTheDocument();
-    expect(screen.getByText('Available')).toBeInTheDocument();
+    expect(screen.getByText('You have successfully joined the pod.')).toBeInTheDocument();
+    expect(screen.queryByText('Refund Initiated')).not.toBeInTheDocument();
     // joined_at is formatted through useDateFormat
     expect(screen.getByText(/01 Jan 2026/)).toBeInTheDocument();
   });
 
-  it('renders a backed-out booking with pending refund (waiting criteria, not initiated)', () => {
-    renderIt(
-      baseItem({
-        status: 'BACKED_OUT',
-        backed_out_at: '2026-02-01T10:00:00.000Z',
-        refund_status: 'PENDING',
-      }),
-    );
-    expect(screen.getByText('Backout request was recorded.')).toBeInTheDocument();
-    expect(screen.getByText('Refund criteria')).toBeInTheDocument();
-    expect(screen.getByText('Waiting for refund criteria to be completed.')).toBeInTheDocument();
-    expect(screen.getByText('Waiting')).toBeInTheDocument();
-    // refund not processed => not-initiated leaf
-    expect(screen.getByText('Refund not initiated')).toBeInTheDocument();
-    expect(screen.getByText('Not initiated')).toBeInTheDocument();
-    // backed_out_at date rendered
-    expect(screen.getByText(/01 Feb 2026/)).toBeInTheDocument();
+  it('says the seat is still on sale while the request is open', () => {
+    renderIt(baseItem(FUTURE, { backouts: [backout()] }));
+    expect(screen.getByText('Pod Backout Requested')).toBeInTheDocument();
+    expect(screen.getByText('DUN-BKO-000007')).toBeInTheDocument();
+    expect(screen.getByText('Finding Your Replacement')).toBeInTheDocument();
+    expect(screen.getByText('In progress')).toBeInTheDocument();
   });
 
-  it('renders a backed-out booking with a processed refund (checked + initiated)', () => {
+  it('carries the refund state of the request that earned it', () => {
     renderIt(
-      baseItem({
-        status: 'BACKED_OUT',
-        backed_out_at: '2026-02-01T10:00:00.000Z',
-        refund_status: 'PROCESSED',
+      baseItem(FUTURE, {
+        backouts: [
+          backout({
+            status: 'SPOT_FILLED',
+            refund_status: 'PROCESSED',
+            refund_processed_at: '2026-02-05T10:00:00.000Z',
+            events: [{ status: 'SPOT_FILLED', at: '2026-02-04T10:00:00.000Z' }],
+          }),
+        ],
       }),
     );
-    // refund not pending => criteria "checked" copy + Checked tag
-    expect(screen.getByText('Refund criteria was checked for this backout.')).toBeInTheDocument();
-    expect(screen.getByText('Checked')).toBeInTheDocument();
-    expect(screen.getByText('Refund initiated')).toBeInTheDocument();
-    expect(
-      screen.getByText('Refund has been initiated for this membership.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Initiated')).toBeInTheDocument();
+    expect(screen.getByText('Spot Filled')).toBeInTheDocument();
+    expect(screen.getByText('Refund Initiated')).toBeInTheDocument();
   });
 
-  it('treats BACKOUT_IN_PROCESS like a backed-out booking (refund NONE => checked/not-initiated)', () => {
+  it('declines the refund for a seat nobody took once the pod has happened', () => {
+    renderIt(baseItem(PAST, { backouts: [backout()] }));
+    expect(screen.getByText('Spot Not Filled')).toBeInTheDocument();
+    expect(screen.getByText('Refund Not Eligible')).toBeInTheDocument();
+  });
+
+  it('says how many seats a partial backout gave up, and still records attendance', () => {
     renderIt(
-      baseItem({
-        status: 'BACKOUT_IN_PROCESS',
-        backed_out_at: '2026-02-01T10:00:00.000Z',
-        refund_status: 'NONE',
+      baseItem(PAST, {
+        attended: true,
+        attendance_recorded: true,
+        backouts: [backout({ seats: 1, seats_before: 3, status: 'SPOT_FILLED' })],
       }),
     );
-    expect(screen.getByText('Refund criteria was checked for this backout.')).toBeInTheDocument();
-    expect(screen.getByText('Refund not initiated')).toBeInTheDocument();
+    expect(screen.getByText('Partial Backout Requested')).toBeInTheDocument();
+    expect(screen.getByText('You released 1 of 3 seats and kept 2.')).toBeInTheDocument();
+    expect(screen.getByText('Pod Attended')).toBeInTheDocument();
+  });
+
+  it('does not claim somebody was absent when nobody took attendance', () => {
+    renderIt(baseItem(PAST));
+    expect(screen.getByText('Attendance Not Recorded')).toBeInTheDocument();
+    expect(screen.queryByText('Pod Not Attended')).not.toBeInTheDocument();
+  });
+
+  it('names who cancelled the pod, and keeps the open request visible', () => {
+    renderIt(
+      baseItem(FUTURE, {
+        pod_cancelled_by: 'HOST',
+        pod_cancelled_at: '2026-02-10T10:00:00.000Z',
+        cancel_refund_status: 'PROCESSED',
+        backouts: [backout()],
+      }),
+    );
+    expect(screen.getByText('Pod Cancelled')).toBeInTheDocument();
+    expect(screen.getByText('The pod was cancelled by the host.')).toBeInTheDocument();
+    // The id support works from must survive the cancellation.
+    expect(screen.getByText('DUN-BKO-000007')).toBeInTheDocument();
+  });
+
+  it('promises no refund for a cancellation that moved no money', () => {
+    renderIt(
+      baseItem(FUTURE, {
+        pod_cancelled_by: 'CLUB_ADMIN',
+        pod_cancelled_at: '2026-02-10T10:00:00.000Z',
+        cancel_refund_status: 'NOT_ELIGIBLE',
+      }),
+    );
+    expect(screen.getByText('The pod was cancelled by the club admin.')).toBeInTheDocument();
+    expect(screen.getByText('Refund Not Eligible')).toBeInTheDocument();
+    expect(screen.queryByText('Refund Initiated')).not.toBeInTheDocument();
   });
 });

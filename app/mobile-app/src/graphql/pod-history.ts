@@ -18,6 +18,31 @@ export const MyPodMembershipsDocument = gql(`
       refund_payment_id
       referral_token
       source
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
+          status
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
+        }
+      }
       pod {
         id
         pod_id

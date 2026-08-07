@@ -1,7 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type CoinTxnType = 'CREDIT' | 'DEBIT';
-export type CoinTxnSource = 'PAYMENT_EARN' | 'PAYMENT_REDEEM';
+export type CoinTxnSource = 'PAYMENT_EARN' | 'PAYMENT_REDEEM' | 'REFERRAL_EARN';
 
 /**
  * Duncit Coins are a loyalty balance, NOT withdrawable money — which is exactly
@@ -28,6 +28,9 @@ export interface ICoinTransaction extends Document {
   reason: string;
   /** Business key of the payment that earned this row — the idempotency key. */
   payment_id: string | null;
+  /** The referral that earned this row. The same job as payment_id, for the
+   * other way coins are earned — one referral pays its referrer once. */
+  referral_id: string | null;
   /** Rate in effect when the coins were granted, so changing the setting later
    * never rewrites what a past row says the user was promised. */
   earn_pct: number;
@@ -51,9 +54,10 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     type: { type: String, enum: ['CREDIT', 'DEBIT'], required: true },
     amount: { type: Number, required: true, min: 0 },
     balance_after: { type: Number, required: true, min: 0 },
-    source: { type: String, enum: ['PAYMENT_EARN', 'PAYMENT_REDEEM'], required: true },
+    source: { type: String, enum: ['PAYMENT_EARN', 'PAYMENT_REDEEM', 'REFERRAL_EARN'], required: true },
     reason: { type: String, default: '', trim: true, maxlength: 300 },
     payment_id: { type: String, default: null },
+    referral_id: { type: String, default: null },
     earn_pct: { type: Number, default: 0 },
     spend_amount: { type: Number, default: 0 },
   },
@@ -76,6 +80,14 @@ coinTxnSchema.index({ created_at: -1 });
 coinTxnSchema.index(
   { payment_id: 1, source: 1 },
   { unique: true, partialFilterExpression: { payment_id: { $type: 'string' } } }
+);
+
+// The same guard for the other way coins are earned. A referral pays its
+// referrer exactly once, and two requests racing to apply the same code both
+// reach the insert — so the database decides, not a read-then-write check.
+coinTxnSchema.index(
+  { referral_id: 1 },
+  { unique: true, partialFilterExpression: { referral_id: { $type: 'string' } } }
 );
 
 export const CoinBalanceModel = model<ICoinBalance>('CoinBalance', coinBalanceSchema);

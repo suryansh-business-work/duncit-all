@@ -106,17 +106,26 @@ function drawBillToCard(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R
   return cardH;
 }
 
-export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
-  const logo = await loadLogo(data.invoice_logo_url);
+/** The invoice page. Exported so a combined document can add a page of the
+ * right size before the invoice is drawn onto it. */
+export const INVOICE_PAGE = { size: 'A4' as const, margin: 0 };
 
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ size: 'A4', margin: 0 });
-      const chunks: Buffer[] = [];
-      doc.on('data', (c: Buffer) => chunks.push(c));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
+/** The logo fetch is the only asynchronous part; resolve it before drawing. */
+export const invoiceLogo = (url?: string) => loadLogo(url);
 
+/**
+ * Draw the invoice onto the CURRENT page of a document.
+ *
+ * Split out from the single-file export so an event ticket can carry this
+ * exact invoice as its second page. One renderer, so the emailed invoice and
+ * the one stapled to a ticket can never say different things.
+ */
+export function drawInvoice(
+ doc: PDFKit.PDFDocument,
+ data: InvoiceData,
+ logo: Buffer | null
+): void {
+  {
       const W = doc.page.width;
       const L = 48; // left margin
       const R = W - 48; // right edge
@@ -233,6 +242,20 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
           { align: 'center', width: R - L }
         );
 
+  }
+}
+
+/** Renders a standalone invoice PDF. */
+export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
+  const logo = await invoiceLogo(data.invoice_logo_url);
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument(INVOICE_PAGE);
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      drawInvoice(doc, data, logo);
       doc.end();
     } catch (e) {
       reject(e);

@@ -27,7 +27,6 @@ export const appConfig: AppConfig = {
   // (e.g. to apply as a host / venue / brand), so there is no client-side role gate.
   requiredRoles: [],
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
     {
       label: 'Venues',
       icon: 'storefront',
@@ -71,6 +70,20 @@ const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAG
 /** Sidebar nav for the signed-in user — appends Club Admin tools when entitled
  * and a Wallet entry for roles that can earn payouts. Both slot in before Help
  * (FAQs), keeping the partner tools grouped together. */
+/**
+ * Where `/` sends somebody.
+ *
+ * The portal no longer has a dashboard of its own, and a fixed replacement
+ * would be wrong for somebody: this surface is open to any signed-in user, so
+ * one person arrives as a venue owner and the next arrives to apply as one.
+ * Taking the first entry of THEIR nav means the landing is always something
+ * they can also see in the sidebar.
+ */
+export function landingPath(roles?: readonly string[] | null): string {
+  const [first] = buildNav(roles);
+  return first?.to ?? first?.children?.[0]?.to ?? '/faqs';
+}
+
 export function buildNav(roles?: readonly string[] | null): AppNavItem[] {
   const isClubAdmin = roles?.includes('CLUB_ADMIN') ?? false;
   const isEarner = roles?.some((role) => EARNING_ROLES.has(role)) ?? false;

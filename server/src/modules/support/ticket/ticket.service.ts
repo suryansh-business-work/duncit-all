@@ -77,19 +77,23 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
 
 async function toPub(doc: ITicket) {
   const [user, assignee] = await Promise.all([
-    buildActor(doc.user_id),
+    doc.user_id ? buildActor(doc.user_id) : null,
     doc.assignee_id ? buildActor(doc.assignee_id) : null,
   ]);
   return {
     id: String(doc._id),
     ticket_no: ticketNo('ST', doc._id as Types.ObjectId),
+    // A website message may have no account behind it, so the guest's own
+    // name and address stand in — an agent needs somebody to reply to.
     user: user ?? {
-      id: String(doc.user_id),
-      name: 'User',
+      id: doc.user_id ? String(doc.user_id) : '',
+      name: doc.guest_name || 'User',
       phone: null,
       avatar_url: null,
       ...EMPTY_ACTOR_EXTRAS,
     },
+    source: doc.source ?? 'APP',
+    guest_email: doc.guest_email || null,
     subject: doc.subject,
     category: doc.category,
     pod_id: doc.pod_id ? String(doc.pod_id) : null,

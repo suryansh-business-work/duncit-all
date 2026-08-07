@@ -45,6 +45,20 @@ function mediaDevices(): MediaDevices {
   return devices;
 }
 
+/**
+ * What to show when something threw.
+ *
+ * Never the raw message alone: OverconstrainedError — thrown when a remembered
+ * microphone or camera is no longer plugged in — carries an EMPTY message in
+ * Chrome. Passing that straight through set the error state to '', which is
+ * falsy, so the call window's own "am I open" test said no and the window
+ * vanished the instant it appeared, explaining nothing.
+ */
+const failureText = (error: unknown, fallbackKey: string): string => {
+  const message = error instanceof Error ? error.message.trim() : '';
+  return message || fallbackKey;
+};
+
 /** Open ONE track from a chosen device — the unit a mid-call swap needs. */
 async function openTrack(
   want: 'audio' | 'video',
@@ -180,18 +194,41 @@ export function useCall(
 
   const openMedia = useCallback(
     async (callKind: CallKind) => {
-      // An exact deviceId fails loudly when that device has been unplugged,
-      // which is the right outcome — falling back to a different microphone
-      // without saying so is how people end up broadcasting the wrong room.
-      const wantedCamera = pickDevice(camId);
-      const stream = await mediaDevices().getUserMedia({
-        audio: pickDevice(micId),
-        video: callKind === 'VIDEO' ? wantedCamera : false,
-      });
-      localStream.current = stream;
-      return stream;
+      const wantsVideo = callKind === 'VIDEO';
+      try {
+        const stream = await mediaDevices().getUserMedia({
+          audio: pickDevice(micId),
+          video: wantsVideo ? pickDevice(camId) : false,
+        });
+        localStream.current = stream;
+        return stream;
+      } catch (err) {
+        // Anything else is a real failure and belongs to the caller.
+        if ((err as Error)?.name !== 'OverconstrainedError') throw err;
+
+        /*
+          The remembered microphone or camera is not here any more.
+
+          Device ids are per browser and per machine, and they change when
+          permissions are reset — so a preference saved on one laptop names
+          nothing on the next one. Refusing to place the call at all is the
+          wrong answer to a choice made by a PAST session: nobody asked for
+          that device today. Fall back to the system default, forget the
+          stale id so it cannot bite twice, and say what happened.
+
+          A mid-call switch (useDevice) still fails loudly, because there the
+          person just picked that device and silently using another one is how
+          you end up broadcasting the wrong room.
+        */
+        const stream = await mediaDevices().getUserMedia({ audio: true, video: wantsVideo });
+        localStream.current = stream;
+        if (micId) devices.onChoose('mic', '');
+        if (camId) devices.onChoose('cam', '');
+        setError('shell.chat.call.deviceGone');
+        return stream;
+      }
     },
-    [camId, micId]
+    [camId, micId, devices]
   );
 
   /**
@@ -236,7 +273,7 @@ export function useCall(
         swapInPreview(previous, track);
         previous?.stop();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'shell.chat.call.switchFailed');
+        setError(failureText(err, 'shell.chat.call.switchFailed'));
       }
     },
     [swapInPreview]
@@ -319,7 +356,7 @@ export function useCall(
     } catch (err) {
       // Cancelling the picker throws too; that is not worth an error banner.
       if ((err as Error)?.name !== 'NotAllowedError') {
-        setError(err instanceof Error ? err.message : 'shell.chat.call.shareFailed');
+        setError(failureText(err, 'shell.chat.call.shareFailed'));
       }
     }
   }, []);
@@ -355,7 +392,7 @@ export function useCall(
         startedAt.current = new Date();
       } catch (err) {
         // Almost always a refused camera or microphone permission.
-        setError(err instanceof Error ? err.message : 'shell.chat.call.startFailed');
+        setError(failureText(err, 'shell.chat.call.startFailed'));
         teardown();
       }
     },
@@ -380,7 +417,7 @@ export function useCall(
       startedAt.current = new Date();
       setPhase('connected');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'shell.chat.call.answerFailed');
+      setError(failureText(err, 'shell.chat.call.answerFailed'));
       teardown();
     }
   }, [buildPeer, kind, openMedia, peerId, socket, teardown]);

@@ -73,6 +73,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       savePod: 'Save pod',
       savedPod: 'Remove from saved',
     },
+    // The bar offering the app. Shown only when the OS did not already hand
+    // the link over — a verified App Link never reaches this code at all.
+    openInApp: {
+      title: 'Duncit is better in the app',
+      subtitle: 'Open this page in the app, or get it free.',
+      open: 'Open',
+      getApp: 'Get app',
+      dismiss: 'Dismiss',
+    },
     nav: {
       home: 'Home',
       explore: 'Explore',
@@ -413,6 +422,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
           'This browser will not open the microphone or camera here. Calls need a secure (https) connection.',
         deviceGone:
           'The microphone or camera you had chosen is not available here, so this call is using the default one.',
+        selfCall: 'That call would be to your own account, so there is nobody to reach.',
         startFailed: 'Could not start the call',
         answerFailed: 'Could not answer',
         switchFailed: 'Could not switch device',

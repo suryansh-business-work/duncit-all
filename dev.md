@@ -42,6 +42,93 @@ future update reads from, which is not a decision an unrelated install should ma
 
 ---
 
+## Opening an mWeb link in the app
+
+Tapping `https://mweb.duncit.com/club/x/pod/y` on a phone with the app installed
+should open the app **on that pod**, not the browser. Nothing in JavaScript can
+do that: by the time a page runs, the browser has already won. The OS has to
+recognise the domain as belonging to the app and hand the URL over before any
+page loads.
+
+Most of it was already in place and had been for a while:
+
+- the app declares an intent filter for `mweb.duncit.com` with `autoVerify`
+  (`app/mobile-app/app.json`), and
+- its router mirrors mWeb's URL grammar exactly
+  (`app/mobile-app/src/navigation/linking.ts`), so once the URL arrives it
+  lands on the same screen.
+
+**What was missing is the association files.** Android fetches
+`/.well-known/assetlinks.json` and looks for the app's signing fingerprint;
+iOS fetches `/.well-known/apple-app-site-association`. mWeb answered both with
+`index.html`, because an SPA answers every path with `index.html` —
+`Content-Type: text/html`, which the verifier rejects. The intent filter was
+inert, and Android caches that failure.
+
+### How they are produced
+
+`scripts/generate-app-links.mjs` writes both files into
+`app/mweb/public/.well-known/` during `pnpm --filter mweb-app build`. The
+package name and bundle id come from `app.json` so they cannot drift from the
+app; the signing identity comes from the environment:
+
+| Variable | Where to find it |
+|---|---|
+| `MWEB_ANDROID_CERT_SHA256` | Play Console → your app → **Test and release ▸ Setup ▸ App signing** → *App signing key certificate* → SHA-256. Include the **upload** key's SHA-256 too, comma separated, or internal-testing builds will not verify. |
+| `MWEB_IOS_TEAM_ID` | Apple Developer → **Membership** → Team ID (10 characters). |
+
+Both are passed to the image as build args by `.github/workflows/deploy.yml`,
+from repository secrets of the same names. **They are not committed**, and the
+generated directory is gitignored — a fingerprint belongs to a signing key, and
+a stale one is worse than none because Android remembers the failure.
+
+If a variable is unset the file is not written and the build says so. That is
+deliberate: no file at all is a clean "not configured", while a placeholder is a
+verification failure the phone caches.
+
+`deploy/nginx/spa.conf` serves `/.well-known/` ahead of the SPA fallback, as
+`application/json` — `apple-app-site-association` has no file extension, so
+nginx would otherwise send `application/octet-stream` and iOS would ignore it.
+
+### Turning it on
+
+1. Add the two repository secrets above.
+2. Deploy mWeb.
+3. Check what the phone will see:
+
+   ```sh
+   curl -i https://mweb.duncit.com/.well-known/assetlinks.json
+   curl -i https://mweb.duncit.com/.well-known/apple-app-site-association
+   ```
+
+   Both must return the JSON with `Content-Type: application/json`. HTML here
+   means the SPA fallback is still winning and nothing else will work.
+4. Confirm Android accepts it:
+   <https://developers.google.com/digital-asset-links/tools/generator>, or on a
+   device `adb shell pm get-app-links com.duncit.mobile` — the domain should
+   read `verified`.
+5. **The app must be rebuilt and published** for iOS: `associatedDomains` is
+   compiled into the binary, so an existing TestFlight/App Store build will not
+   pick this up.
+
+Verification is not instant. Android re-checks on install and periodically;
+allow up to a day, and reinstall to force it.
+
+### When the OS does not hand it over
+
+Some contexts never will — an in-app browser (Instagram, Gmail), a user who
+once chose "open in browser", or a phone without the app. `OpenInAppBanner`
+covers those with an explicit button: on iOS the `duncit://` scheme, on Android
+an `intent://` URL carrying `S.browser_fallback_url`. The intent form matters —
+a bare scheme that nothing handles leaves Chrome on an error page, while an
+intent that nothing handles falls back cleanly, and it works during the day or
+so before verification completes.
+
+Staging is not covered: the app's intent filter names `mweb.duncit.com` only, so
+`staging.mweb.duncit.com` links stay in the browser by design.
+
+---
+
 ## Staff calls: the TURN relay
 
 ### Why it exists

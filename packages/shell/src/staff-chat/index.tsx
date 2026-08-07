@@ -20,6 +20,8 @@ interface Props {
   meId: string;
   /** Your own name, for the export's header. */
   meName?: string;
+  /** Your own roles — SUPER_ADMIN may read a message's edit history. */
+  meRoles?: string[];
 }
 
 /**
@@ -42,12 +44,12 @@ export function StaffChatPanel({
   onRequestOpen,
   meId,
   meName,
+  meRoles = [],
 }: Readonly<Props>) {
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [peer, setPeer] = useState<Coworker | null>(null);
   const [replyTo, setReplyTo] = useState<StaffMessage | null>(null);
-  const [sharingWith, setSharingWith] = useState(false);
   const [playingRecording, setPlayingRecording] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,8 +129,6 @@ export function StaffChatPanel({
         call={call}
         recorder={recorder}
         callOpen={callWindowOpen}
-        sharing={sharingWith}
-        onStopSharing={() => setSharingWith(false)}
         playingRecording={playingRecording}
         onClosePlayer={() => setPlayingRecording(null)}
         onSendRecording={(url) => {
@@ -189,8 +189,8 @@ export function StaffChatPanel({
               call.setPeerName(peer.name);
               call.call(peer.id, kind).catch(() => undefined);
             }}
-            onShareScreen={() => setSharingWith(true)}
             onPlayRecording={setPlayingRecording}
+            canSeeEditHistory={meRoles.includes('SUPER_ADMIN')}
           />
         </Box>
       )}

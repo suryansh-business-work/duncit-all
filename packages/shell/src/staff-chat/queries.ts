@@ -243,17 +243,6 @@ export const SEARCH_STAFF_MESSAGES = gql`
   }
 `;
 
-export const STAFF_SCREEN_SHARE_GRANT = gql`
-  query StaffScreenShareGrant($peerId: ID!) {
-    staffScreenShareGrant(peer_id: $peerId) {
-      url
-      token
-      room
-      expiresIn
-    }
-  }
-`;
-
 export const STAFF_LINK_PREVIEW = gql`
   query StaffLinkPreview($url: String!) {
     staffLinkPreview(url: $url) {
@@ -329,12 +318,27 @@ export const SAVE_STAFF_CHAT_STATE = gql`
   }
 `;
 
+export interface StaffMessageEdit {
+  text: string;
+  at?: string | null;
+}
+
+export const STAFF_MESSAGE_EDITS = gql`
+  query StaffMessageEdits($id: ID!) {
+    staffMessageEdits(id: $id) {
+      text
+      at
+    }
+  }
+`;
+
 export const STAFF_PRESENCE = gql`
   query StaffPresence {
     staffPresence {
       user_id
       status
       since
+      last_seen
     }
   }
 `;

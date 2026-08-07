@@ -21,8 +21,9 @@ interface Props {
   replyTo: StaffMessage | null;
   onReplyTo: (message: StaffMessage | null) => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
-  onShareScreen: () => void;
   onPlayRecording: (url: string) => void;
+  /** SUPER_ADMIN may read earlier wordings of an edited message. */
+  canSeeEditHistory: boolean;
 }
 
 /**
@@ -47,8 +48,8 @@ export default function ChatBody({
   replyTo,
   onReplyTo,
   onCall,
-  onShareScreen,
   onPlayRecording,
+  canSeeEditHistory,
 }: Readonly<Props>) {
   const { change, mutations } = data;
 
@@ -59,33 +60,38 @@ export default function ChatBody({
           peer={peer}
           meId={meId}
           status={data.statusOf(peer.id)}
+          lastSeen={data.lastSeenOf(peer.id)}
           messages={data.visibleMessages}
           calls={data.calls}
           onPlayRecording={onPlayRecording}
           sending={data.sending}
           uploading={data.uploading}
+          uploadPct={data.uploadPct}
           onBack={() => onOpenPeer(null)}
           onSend={data.send}
           onAttach={(file) => data.attachFile(file)}
           onVoiceNote={(file, peaks) => data.attachFile(file, peaks)}
-          onEdit={(id, text) => change(mutations.editMessage, { id, text })}
-          onDelete={(id, forEveryone) => {
-            if (forEveryone) {
-              change(mutations.deleteMessage, { id });
-              return;
-            }
-            data.hideForMe(id);
-          }}
-          onReact={(id, emoji) => change(mutations.reactToMessage, { id, emoji })}
-          onReply={onReplyTo}
-          onCancelReply={() => onReplyTo(null)}
-          replyTo={replyTo}
-          onForward={(message) =>
+          handlers={{
+            onEdit: (id, text) => change(mutations.editMessage, { id, text }),
+            onDelete: (id, forEveryone) => {
+              if (forEveryone) {
+                change(mutations.deleteMessage, { id });
+                return;
+              }
+              data.hideForMe(id);
+            },
+            onReact: (id, emoji) => change(mutations.reactToMessage, { id, emoji }),
+            onReply: onReplyTo,
             // One-to-one threads: forwarding goes to whoever you open next, so
             // it lands as a normal message in that conversation.
-            change(mutations.forwardMessage, { id: message.id, toUserId: peer.id })
-          }
-          onPin={(id) => change(mutations.pinMessage, { id })}
+            onForward: (message) =>
+              change(mutations.forwardMessage, { id: message.id, toUserId: peer.id }),
+            onPin: (id) => change(mutations.pinMessage, { id }),
+            onRetry: data.retry,
+          }}
+          onCancelReply={() => onReplyTo(null)}
+          replyTo={replyTo}
+          canSeeEditHistory={canSeeEditHistory}
           loading={data.messagesLoading}
           hasMore={data.hasMore}
           loadingMore={data.loadingMore}
@@ -98,7 +104,6 @@ export default function ChatBody({
           typingAt={data.typingAt[peer.id] ?? 0}
           onCall={onCall}
           onExport={() => data.exportChat().catch(() => undefined)}
-          onShareScreen={onShareScreen}
         />
       ) : (
         <CoworkerList

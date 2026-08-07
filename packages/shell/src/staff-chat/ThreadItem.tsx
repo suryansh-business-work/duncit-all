@@ -20,6 +20,7 @@ interface Props {
   selected?: boolean;
   onSelect?: (id: string) => void;
   onStartSelect?: (id: string) => void;
+  onEditHistory?: (message: StaffMessage) => void;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string, forEveryone: boolean) => void;
   onReact: (id: string, emoji: string) => void;
@@ -52,6 +53,7 @@ export default function ThreadItem({
   selected,
   onSelect,
   onStartSelect,
+  onEditHistory,
   onEdit,
   onDelete,
   onReact,
@@ -99,6 +101,7 @@ export default function ThreadItem({
         selected={selected}
         onSelect={onSelect}
         onStartSelect={onStartSelect}
+        onEditHistory={onEditHistory}
         onEdit={onEdit}
         onDelete={onDelete}
         onReact={onReact}

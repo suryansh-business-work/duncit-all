@@ -135,6 +135,29 @@ export const staffChatService = {
       .sort((a, b) => a.name.localeCompare(b.name));
   },
 
+  /**
+   * Every earlier wording of one message, oldest first.
+   *
+   * Its own query rather than a field on the message: an edit can change what a
+   * conversation appears to have agreed, so the history is worth keeping — but
+   * shipping it to both parties on every read would hand each of them a record
+   * of the other's second thoughts. It is asked for deliberately, by an admin,
+   * about one message.
+   *
+   * The caller's role is checked by the resolver; this checks the message
+   * exists and hands back what is stored.
+   */
+  async messageEdits(messageId: string) {
+    const doc = await StaffMessageModel.findById(messageId).lean();
+    if (!doc) {
+      throw new GraphQLError('No such message', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return (doc.edits ?? []).map((edit: any) => ({
+      text: edit.text ?? '',
+      at: edit.at?.toISOString?.() ?? null,
+    }));
+  },
+
   /** How this person has staff chat set up. Defaults when they have never changed it. */
   async chatState(meId: string) {
     const doc = await StaffChatStateModel.findOne({ user_id: meId }).lean();

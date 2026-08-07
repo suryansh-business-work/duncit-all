@@ -1,22 +1,27 @@
 import { List, ListItemButton, ListItemText, Paper } from '@mui/material';
 
+export interface Suggestion {
+  /** Unique and stable — the list keys off it. */
+  key: string;
+  label: string;
+}
+
 interface Props {
-  /** Names still matching what has been typed after the @. */
-  names: string[];
+  items: Suggestion[];
   /** Which one Enter or Tab would take. */
   active: number;
-  onPick: (name: string) => void;
+  onPick: (item: Suggestion) => void;
 }
 
 /**
- * Who you can mention, above the box you are typing in.
+ * What the composer is offering, above the box you are typing in.
  *
- * A one-to-one thread has exactly one candidate, which sounds like a list not
- * worth having — but it is what makes the mention discoverable at all, and what
- * guarantees the name is spelled the way the bubble highlights it.
+ * One list for both `@` and `:`. They differ only in what fills them and what
+ * picking one writes, and two popovers that behave subtly differently is how a
+ * composer starts feeling unpredictable.
  */
-export default function MentionPopup({ names, active, onPick }: Readonly<Props>) {
-  if (names.length === 0) return null;
+export default function SuggestionPopup({ items, active, onPick }: Readonly<Props>) {
+  if (items.length === 0) return null;
 
   return (
     <Paper
@@ -33,18 +38,18 @@ export default function MentionPopup({ names, active, onPick }: Readonly<Props>)
       }}
     >
       <List dense disablePadding>
-        {names.map((name, index) => (
+        {items.map((item, index) => (
           <ListItemButton
-            key={name}
+            key={item.key}
             selected={index === active}
             // Mouse down, not click: click fires after the textarea has already
             // lost focus, and blurring closes this list before the pick lands.
             onMouseDown={(event) => {
               event.preventDefault();
-              onPick(name);
+              onPick(item);
             }}
           >
-            <ListItemText primary={`@${name}`} />
+            <ListItemText primary={item.label} />
           </ListItemButton>
         ))}
       </List>

@@ -7,6 +7,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ChecklistIcon from '@mui/icons-material/Checklist';
+import HistoryIcon from '@mui/icons-material/History';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -22,6 +23,8 @@ interface Props {
   onCopy: () => void;
   /** Turn on selection mode, with this message already picked. */
   onStartSelect: () => void;
+  /** Absent unless the reader may see earlier wordings of this message. */
+  onEditHistory?: () => void;
   onEdit: () => void;
   /** True deletes it for both people; false only hides it for you. */
   onDelete: (forEveryone: boolean) => void;
@@ -42,6 +45,7 @@ export default function MessageActions({
   onPin,
   onCopy,
   onStartSelect,
+  onEditHistory,
   onEdit,
   onDelete,
 }: Readonly<Props>) {
@@ -99,6 +103,16 @@ export default function MessageActions({
           </ListItemIcon>
           <ListItemText>{message.pinned_at ? 'Unpin' : 'Pin'}</ListItemText>
         </MenuItem>
+        {/* Only where there IS a history, and only for someone allowed to
+            read it — an empty dialog is a worse answer than no menu item. */}
+        {onEditHistory && message.edited_at && (
+          <MenuItem onClick={run(onEditHistory)}>
+            <ListItemIcon>
+              <HistoryIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Edit history</ListItemText>
+          </MenuItem>
+        )}
         {mine && (
           <MenuItem onClick={run(onEdit)}>
             <ListItemIcon>

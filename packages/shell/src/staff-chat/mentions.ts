@@ -4,6 +4,31 @@ export const MENTION_TOKEN = /@[\w][\w.-]*/g;
 /** The half-typed mention under the caret, or null. */
 export const MENTION_QUERY = /@([\w.-]*)$/;
 
+/**
+ * The half-typed `:shortcode` under the caret.
+ *
+ * At least one character after the colon, unlike `@`: a bare `:` is punctuation
+ * far more often than it is the start of an emoji, and popping a list open in
+ * the middle of "Ready to ship:" would be maddening.
+ */
+export const EMOJI_QUERY = /:([a-z_]+)$/i;
+
+/** What is being typed after a `:`, or null. */
+export function emojiQuery(text: string, caret: number): string | null {
+  const match = EMOJI_QUERY.exec(text.slice(0, caret));
+  return match ? match[1] : null;
+}
+
+/** Replace the half-typed `:code` under the caret with the emoji itself. */
+export function applyEmoji(text: string, caret: number, emoji: string): MentionEdit {
+  const before = text.slice(0, caret);
+  const after = text.slice(caret);
+  const match = EMOJI_QUERY.exec(before);
+  if (!match) return { text, caret };
+  const start = before.length - match[0].length;
+  return { text: before.slice(0, start) + emoji + after, caret: start + emoji.length };
+}
+
 export interface MentionEdit {
   text: string;
   /** Where the caret should land — after the inserted name and its space. */

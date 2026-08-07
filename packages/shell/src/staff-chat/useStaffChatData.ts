@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
@@ -62,6 +62,8 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
   const client = useApolloClient();
   const { upload, uploading } = useImagekitDirectUpload();
   const [error, setError] = useState<string | null>(null);
+  /** 0–100 while a file is going up, null when nothing is. */
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
 
   const threadsQuery = useQuery<{ staffThreads: StaffThread[] }>(STAFF_THREADS, {
     skip: !open,
@@ -83,7 +85,9 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     skip: !peer,
     fetchPolicy: 'cache-and-network',
   });
-  const presenceQuery = useQuery<{ staffPresence: { user_id: string; status: PresenceStatus }[] }>(
+  const presenceQuery = useQuery<{
+    staffPresence: { user_id: string; status: PresenceStatus; last_seen?: string | null }[];
+  }>(
     STAFF_PRESENCE,
     { skip: !open, fetchPolicy: 'network-only' }
   );
@@ -112,6 +116,8 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
   const [older, setOlder] = useState<StaffMessage[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [reachedStart, setReachedStart] = useState(false);
+  /** Counter behind the local ids, so two sends in one millisecond differ. */
+  const outboxSeq = useRef(0);
 
   // A different conversation starts its own history.
   useEffect(() => {
@@ -153,6 +159,23 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
   const presence = usePresence(socket, meId);
 
   // The socket only reports CHANGES; the first paint needs the snapshot.
+  /**
+   * When somebody was last connected.
+   *
+   * Live where the socket has said so, seeded from the snapshot otherwise —
+   * the same two-source rule the status itself follows.
+   */
+  const lastSeenOf = useCallback(
+    (id: string): string | null => {
+      const live = presence.lastSeen[id];
+      if (live) return live;
+      return (
+        presenceQuery.data?.staffPresence.find((row) => row.user_id === id)?.last_seen ?? null
+      );
+    },
+    [presence.lastSeen, presenceQuery.data]
+  );
+
   const statusOf = useCallback(
     (id: string): PresenceStatus => {
       const live = presence.others[id];
@@ -163,9 +186,38 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     [presence.others, presenceQuery.data]
   );
 
+  /**
+   * Messages that have left the composer but not yet the network.
+   *
+   * They are rendered immediately with a clock on the first tick and dropped
+   * the moment the real one arrives. A chat where your own words appear only
+   * after a round trip feels broken on a bad line, and a failed send that
+   * simply vanishes is worse than one that stays and offers a retry.
+   */
+  const [outbox, setOutbox] = useState<StaffMessage[]>([]);
+
   const send = useCallback(
     (text: string, attachment?: Attachment) => {
       if (!peer) return;
+      // A local id, replaced by the server's. Prefixed so nothing can confuse
+      // it for something real — the thread keys off it and a collision would
+      // put two messages in one place.
+      const localId = `pending-${peer.id}-${Date.now()}-${outboxSeq.current++}`;
+      const optimistic: StaffMessage = {
+        id: localId,
+        from_user_id: meId,
+        to_user_id: peer.id,
+        text,
+        attachment_url: attachment?.url,
+        attachment_name: attachment?.name,
+        attachment_type: attachment?.type,
+        attachment_size: attachment?.size,
+        attachment_peaks: attachment?.peaks,
+        created_at: new Date().toISOString(),
+        pending: true,
+      };
+      setOutbox((current) => [...current, optimistic]);
+
       sendMessage({
         variables: {
           toUserId: peer.id,
@@ -180,13 +232,44 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
         },
       })
         .then(() => {
+          setOutbox((current) => current.filter((message) => message.id !== localId));
           messagesQuery.refetch().catch(() => undefined);
           refreshAll();
         })
-        .catch(() => undefined);
+        .catch(() => {
+          // Kept, not dropped: the words are still on screen and the retry
+          // button is the only way back to them.
+          setOutbox((current) =>
+            current.map((message) =>
+              message.id === localId ? { ...message, pending: false, failed: true } : message
+            )
+          );
+        });
     },
-    [peer, sendMessage, messagesQuery, refreshAll]
+    [peer, meId, sendMessage, messagesQuery, refreshAll]
   );
+
+  /** Send it again, and forget the attempt that failed. */
+  const retry = useCallback(
+    (message: StaffMessage) => {
+      setOutbox((current) => current.filter((row) => row.id !== message.id));
+      const attachment = message.attachment_url
+        ? {
+            url: message.attachment_url,
+            name: message.attachment_name ?? '',
+            type: message.attachment_type ?? '',
+            size: message.attachment_size,
+            peaks: message.attachment_peaks,
+          }
+        : undefined;
+      send(message.text, attachment);
+    },
+    [send]
+  );
+
+  // A different conversation has its own outbox; a failed message must not
+  // reappear in somebody else's thread.
+  useEffect(() => setOutbox([]), [peer?.id]);
 
   /**
    * Upload, then post what came back.
@@ -198,11 +281,19 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
    */
   const attachFile = useCallback(
     (file: File, peaks?: number[]) => {
-      upload(file, UPLOAD_FOLDER)
-        .then((url) =>
-          send('', { url, name: file.name, type: file.type, size: file.size, peaks })
-        )
-        .catch((err: Error) => setError(err.message));
+      setUploadPct(0);
+      // Real byte progress, not a bar that just spins. The uploader has always
+      // reported it — the recorder uses it — and "is this 200MB video moving
+      // or stuck" is the one thing an indeterminate bar cannot answer.
+      upload(file, UPLOAD_FOLDER, setUploadPct)
+        .then((url) => {
+          setUploadPct(null);
+          send('', { url, name: file.name, type: file.type, size: file.size, peaks });
+        })
+        .catch((err: Error) => {
+          setUploadPct(null);
+          setError(err.message);
+        });
     },
     [upload, send]
   );
@@ -231,8 +322,10 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     const live = messagesQuery.data?.staffMessages ?? [];
     const seen = new Set(live.map((message) => message.id));
     const history = older.filter((message) => !seen.has(message.id));
-    return [...history, ...live].filter((message) => !hiddenIds.has(message.id));
-  }, [messagesQuery.data, older, hiddenIds]);
+    // The outbox goes last: it is always the newest thing in the thread, and
+    // it is what has not landed yet.
+    return [...history, ...live, ...outbox].filter((message) => !hiddenIds.has(message.id));
+  }, [messagesQuery.data, older, hiddenIds, outbox]);
 
   /** Names for reaction tooltips, reply strips and forwarded-from lines. */
   const nameOf = useCallback(
@@ -295,9 +388,11 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     typingAt,
     presence,
     statusOf,
+    lastSeenOf,
     error,
     setError,
     uploading,
+    uploadPct,
     sending: sendState.loading,
     threads: threadsQuery.data?.staffThreads ?? [],
     coworkers: coworkersQuery.data?.coworkers ?? [],
@@ -310,6 +405,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     loadOlder,
     nameOf,
     send,
+    retry,
     attachFile,
     exportChat,
     change,

@@ -17,6 +17,7 @@ export interface ThreadEntryHandlers {
   onNavigate?: (path: string) => void;
   onSelect?: (id: string) => void;
   onStartSelect?: (id: string) => void;
+  onEditHistory?: (message: StaffMessage) => void;
   onPlayRecording: (url: string) => void;
   onNode: (id: string, node: HTMLDivElement | null) => void;
 }

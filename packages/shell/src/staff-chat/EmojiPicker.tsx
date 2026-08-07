@@ -25,6 +25,54 @@ const GROUPS: Array<{ title: string; emoji: string[] }> = [
   },
 ];
 
+/**
+ * Names for the same set, so `:` can find them.
+ *
+ * Written out rather than derived: an emoji has no name a program can read, and
+ * the words people actually type — "tick", "party", "shipit" — are not the ones
+ * a Unicode table would give. Curated to match GROUPS above; anything not here
+ * is still one paste away.
+ */
+export const EMOJI_SHORTCODES: Array<{ code: string; emoji: string }> = [
+  { code: 'thumbsup', emoji: '👍' },
+  { code: 'thumbsdown', emoji: '👎' },
+  { code: 'ok', emoji: '👌' },
+  { code: 'pray', emoji: '🙏' },
+  { code: 'clap', emoji: '👏' },
+  { code: 'muscle', emoji: '💪' },
+  { code: 'handshake', emoji: '🤝' },
+  { code: 'heart', emoji: '❤️' },
+  { code: 'fire', emoji: '🔥' },
+  { code: 'party', emoji: '🎉' },
+  { code: 'sparkles', emoji: '✨' },
+  { code: 'smile', emoji: '😄' },
+  { code: 'sweat', emoji: '😅' },
+  { code: 'laugh', emoji: '😂' },
+  { code: 'wink', emoji: '😉' },
+  { code: 'heart_eyes', emoji: '😍' },
+  { code: 'thinking', emoji: '🤔' },
+  { code: 'neutral', emoji: '😐' },
+  { code: 'sleep', emoji: '😴' },
+  { code: 'cry', emoji: '😢' },
+  { code: 'angry', emoji: '😡' },
+  { code: 'mindblown', emoji: '🤯' },
+  { code: 'cool', emoji: '😎' },
+  { code: 'tick', emoji: '✅' },
+  { code: 'cross', emoji: '❌' },
+  { code: 'warning', emoji: '⚠️' },
+  { code: 'pin', emoji: '📌' },
+  { code: 'note', emoji: '📝' },
+  { code: 'calendar', emoji: '📅' },
+  { code: 'clock', emoji: '⏰' },
+  { code: 'shipit', emoji: '🚀' },
+  { code: 'bug', emoji: '🐛' },
+  { code: 'fix', emoji: '🔧' },
+  { code: 'chart', emoji: '📊' },
+  { code: 'idea', emoji: '💡' },
+  { code: 'coffee', emoji: '☕' },
+  { code: 'eyes', emoji: '👀' },
+];
+
 interface Props {
   /** Called with the chosen character — the composer decides where it lands. */
   onPick: (emoji: string) => void;

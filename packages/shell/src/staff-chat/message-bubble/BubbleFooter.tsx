@@ -15,6 +15,7 @@ interface Props {
   onPin: () => void;
   onCopy: () => void;
   onStartSelect: () => void;
+  onEditHistory?: () => void;
   onEdit: () => void;
   onDelete: (forEveryone: boolean) => void;
   onRetry?: () => void;
@@ -38,6 +39,7 @@ export default function BubbleFooter({
   onPin,
   onCopy,
   onStartSelect,
+  onEditHistory,
   onEdit,
   onDelete,
   onRetry,
@@ -74,6 +76,7 @@ export default function BubbleFooter({
             onPin={onPin}
             onCopy={onCopy}
             onStartSelect={onStartSelect}
+            onEditHistory={onEditHistory}
             onEdit={onEdit}
             onDelete={onDelete}
           />

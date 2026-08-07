@@ -46,18 +46,6 @@ export const staffChatTypeDefs = /* GraphQL */ `
     access_note: String
   }
 
-  """
-  Everything the browser needs to join the screen-share room for this pair.
-  The API secret stays on the server; this is the only thing that crosses.
-  """
-  type StaffLiveKitGrant {
-    url: String!
-    token: String!
-    room: String!
-    "Seconds the token is valid, so a long session can refresh before it lapses."
-    expiresIn: Int!
-  }
-
   "Narrows a thread search. Every field is optional and they combine."
   input StaffSearchInput {
     text: String
@@ -147,12 +135,20 @@ export const staffChatTypeDefs = /* GraphQL */ `
     enter_to_send: Boolean
   }
 
+  "One earlier wording of a message, kept when its author changed it."
+  type StaffMessageEdit {
+    text: String!
+    at: String
+  }
+
   "Whether someone is at their desk. Held for as long as their socket is."
   type StaffPresence {
     user_id: ID!
     "ONLINE, AWAY, BUSY or OFFLINE."
     status: String!
     since: String
+    "When they last had a socket open — what 'last seen' reads from."
+    last_seen: String
   }
 
   """
@@ -195,11 +191,6 @@ export const staffChatTypeDefs = /* GraphQL */ `
     staffMessages(peer_id: ID!, limit: Int, before: String): [StaffMessage!]!
     "Resolve a link for the card that renders it."
     staffLinkPreview(url: String!): StaffLinkPreview!
-    """
-    A token to join the screen-share room shared with this coworker. The room
-    is derived from the pair, so nobody can ask for somebody else's.
-    """
-    staffScreenShareGrant(peer_id: ID!): StaffLiveKitGrant!
     "Everything pinned on this line, newest pin first."
     pinnedStaffMessages(peer_id: ID!): [StaffMessage!]!
     "Find something that was said on this line."
@@ -212,6 +203,12 @@ export const staffChatTypeDefs = /* GraphQL */ `
     staffCalls(peer_id: ID!, limit: Int): [StaffCall!]!
     "Your own chat setup, with defaults when you have never changed it."
     staffChatState: StaffChatState!
+    """
+    Every earlier wording of one message, oldest first. SUPER_ADMIN only: an
+    edit history is a record of somebody's second thoughts, and handing it to
+    both parties on every read is not the same as keeping it.
+    """
+    staffMessageEdits(id: ID!): [StaffMessageEdit!]!
   }
 
   extend type Mutation {

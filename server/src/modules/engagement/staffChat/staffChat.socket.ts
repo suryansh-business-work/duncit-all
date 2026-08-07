@@ -3,6 +3,7 @@ import { staffChatService } from './staffChat.service';
 import type { CallKind, CallOutcome } from './staffCall.model';
 import {
   addSocket,
+  lastSeenOf,
   PRESENCE_STATUSES,
   removeSocket,
   setStatus,
@@ -27,20 +28,16 @@ const isStatus = (value: unknown): value is PresenceStatus =>
 
 function broadcastPresence(userId: string, status: PresenceStatus) {
   try {
-    getIo().to(STAFF_ROOM).emit('staff_presence', { user_id: userId, status });
+    // last_seen rides along so a reader can say WHEN somebody went, not just
+    // that they are gone.
+    getIo()
+      .to(STAFF_ROOM)
+      .emit('staff_presence', { user_id: userId, status, last_seen: lastSeenOf(userId) });
   } catch {
     // No socket server (seed scripts, tests).
   }
 }
 
-/**
- * Signalling only.
- *
- * The offer, the answer and the ICE candidates are opaque here — this server
- * forwards them and never looks inside. The audio and video go browser to
- * browser, which is why a call costs no bandwidth here and why the call RECORD
- * is the only trace of it.
- */
 /**
  * Who each person is currently on a call with.
  *
@@ -67,6 +64,14 @@ const unpair = (userId: string) => {
 /** Every event that means "this call is over", from either side. */
 const ENDING = new Set(['call_decline', 'call_end']);
 
+/**
+ * Signalling only.
+ *
+ * The offer, the answer and the ICE candidates are opaque here — this server
+ * forwards them and never looks inside. The audio and video go browser to
+ * browser, which is why a call costs no bandwidth here and why the call RECORD
+ * is the only trace of it.
+ */
 function attachCallRelay(socket: AuthedSocket) {
   const relay = (event: string) => {
     socket.on(event, async (payload: { to: string } & Record<string, unknown>) => {
@@ -170,7 +175,6 @@ export function attachStaffChatHandlers() {
           getIo().to(room(partner)).emit('call_end', { from: userId, reason: 'DISCONNECTED' });
         }
       }
-      // Only announce a change: closing one of three tabs is not leaving.
       // Only announce a change: closing one of three tabs is not leaving.
       if (next === 'OFFLINE' || next !== statusOf(userId)) broadcastPresence(userId, next);
     });

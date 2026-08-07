@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -43,6 +44,7 @@ const pinUrl = (lat: number, lng: number) =>
  * place and not as a wall of URL.
  */
 export default function LocationDialog({ open, onClose, onSend }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -92,7 +94,7 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
             autoFocus
             fullWidth
             size="small"
-            label="Place or address"
+            label={t('shell.chat.location.label')}
             placeholder="e.g. Cubbon Park, Bengaluru"
             value={query}
             onChange={(event) => setQuery(event.target.value)}

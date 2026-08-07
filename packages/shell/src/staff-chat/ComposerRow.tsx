@@ -4,6 +4,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import MicIcon from '@mui/icons-material/Mic';
 import SendIcon from '@mui/icons-material/Send';
 import EmojiPicker from './EmojiPicker';
+import { useTranslation } from '../i18n/useTranslation';
 import ComposerMenu from './ComposerMenu';
 
 interface Props {
@@ -41,18 +42,19 @@ export default function ComposerRow({
   onRecord,
   onShareLocation,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const hasText = Boolean(draft.trim());
 
   return (
     <Stack direction="row" spacing={0.5} alignItems="center">
-      <Tooltip title="Attach a file">
+      <Tooltip title={t('shell.chat.composer.attach')}>
         <span>
           <IconButton
             size="small"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            aria-label="Attach a file"
+            aria-label={t('shell.chat.composer.attach')}
           >
             <AttachFileIcon fontSize="small" />
           </IconButton>
@@ -84,7 +86,7 @@ export default function ComposerRow({
         // Grows with the message, then scrolls — a composer that can eat the
         // whole panel is a composer that hides the conversation.
         maxRows={6}
-        placeholder="Write a message"
+        placeholder={t('shell.chat.composer.placeholder')}
         value={draft}
         inputRef={inputRef}
         onChange={(event) =>
@@ -92,18 +94,18 @@ export default function ComposerRow({
         }
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        inputProps={{ 'aria-label': 'Write a message' }}
+        inputProps={{ 'aria-label': t('shell.chat.composer.placeholder') }}
       />
 
       {/* Mic when there is nothing to send, send when there is — the same swap
           every messenger makes, because the two are never both wanted. */}
-      <Tooltip title={hasText ? 'Send' : 'Record a voice note'}>
+      <Tooltip title={hasText ? t('shell.chat.composer.send') : t('shell.chat.composer.recordVoice')}>
         <span>
           <IconButton
             color="primary"
             onClick={hasText ? onSend : onRecord}
             disabled={sending || (!hasText && uploading)}
-            aria-label={hasText ? 'Send message' : 'Record a voice note'}
+            aria-label={hasText ? t('shell.chat.composer.sendMessage') : t('shell.chat.composer.recordVoice')}
           >
             {hasText ? <SendIcon /> : <MicIcon />}
           </IconButton>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Backdrop, Box, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -53,6 +54,7 @@ interface Props {
  * phone right now" is answered by a number, not by a filename.
  */
 export default function MessageAttachment({ message }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [lightbox, setLightbox] = useState(false);
   const url = message.attachment_url ?? '';
   if (!url) return null;
@@ -76,7 +78,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
         <Box
           role="button"
           tabIndex={0}
-          aria-label={`Open ${name}`}
+          aria-label={t('shell.chat.attachment.open', { vars: { name } })}
           onClick={() => setLightbox(true)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -111,7 +113,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           sx={{ zIndex: (theme) => theme.zIndex.modal + 1, bgcolor: 'rgba(0,0,0,0.9)' }}
         >
           <IconButton
-            aria-label="Close preview"
+            aria-label={t('shell.chat.attachment.closePreview')}
             onClick={() => setLightbox(false)}
             sx={{ position: 'absolute', top: 12, right: 12, color: '#fff' }}
           >
@@ -165,7 +167,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           </Typography>
         )}
       </Stack>
-      <Tooltip title="Download">
+      <Tooltip title={t('shell.chat.attachment.download')}>
         <IconButton
           size="small"
           component={Link}
@@ -173,7 +175,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           download={name}
           target="_blank"
           rel="noreferrer"
-          aria-label={`Download ${name}`}
+          aria-label={t('shell.chat.attachment.downloadNamed', { vars: { name } })}
         >
           <DownloadIcon fontSize="small" />
         </IconButton>

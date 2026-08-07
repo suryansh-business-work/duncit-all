@@ -2,6 +2,7 @@ import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTranslation } from '../i18n/useTranslation';
 import type { useMessageSelection } from './useMessageSelection';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
  */
 export default function SelectionBar({ selection }: Readonly<Props>) {
   const { selected, allMine, copy, remove, clear } = selection;
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -25,26 +27,26 @@ export default function SelectionBar({ selection }: Readonly<Props>) {
       spacing={1}
       sx={{ p: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'action.selected' }}
     >
-      <Tooltip title="Clear selection">
-        <IconButton size="small" onClick={clear} aria-label="Clear selection">
+      <Tooltip title={t('shell.chat.selection.clear')}>
+        <IconButton size="small" onClick={clear} aria-label={t('shell.chat.selection.clear')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Tooltip>
       <Typography variant="subtitle2" sx={{ flex: 1 }}>
-        {selected.length} selected
+        {t('shell.chat.selection.count', { vars: { count: String(selected.length) } })}
       </Typography>
 
       <Button size="small" startIcon={<ContentCopyIcon />} onClick={copy}>
-        Copy
+        {t('shell.chat.selection.copy')}
       </Button>
       <Button size="small" startIcon={<DeleteIcon />} onClick={() => remove(false)}>
-        Hide
+        {t('shell.chat.selection.hide')}
       </Button>
       {/* Taking a message back reaches the other person's copy, so it is only
           offered when every message picked is one you wrote. */}
       {allMine && (
         <Button size="small" color="error" onClick={() => remove(true)}>
-          Delete for everyone
+          {t('shell.chat.selection.deleteForEveryone')}
         </Button>
       )}
     </Stack>

@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from '../i18n/useTranslation';
 import CoworkerInfoButton from './CoworkerInfoButton';
 import PresenceDot from './PresenceDot';
 import { ROLE_FILTERS, ROLE_LABEL, type Coworker, type StaffThread } from './queries';
@@ -68,6 +69,7 @@ export default function CoworkerList({
   statusOf,
   onOpen,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const searching = search.trim().length > 0;
 
   /*
@@ -95,7 +97,7 @@ export default function CoworkerList({
           fullWidth
           value={search}
           onChange={(event) => onSearch(event.target.value)}
-          placeholder="Search coworkers"
+          placeholder={t('shell.chat.list.searchPlaceholder')}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -104,10 +106,12 @@ export default function CoworkerList({
             ),
           }}
         />
-        <TextField select size="small" fullWidth label="Team" value={role} onChange={(e) => onRole(e.target.value)}>
+        <TextField select size="small" fullWidth label={t('shell.chat.list.team')} value={role} onChange={(e) => onRole(e.target.value)}>
           {ROLE_FILTERS.map((option) => (
             <MenuItem key={option.value || 'all'} value={option.value}>
-              {option.label}
+              {/* The empty option is the only one with copy of its own; the
+                  rest are console NAMES, which do not translate. */}
+              {option.value ? option.label : t('shell.chat.list.everyone')}
             </MenuItem>
           ))}
         </TextField>
@@ -137,7 +141,7 @@ export default function CoworkerList({
               </ListItemAvatar>
               <ListItemText
                 primary={thread.peer.name}
-                secondary={`${thread.last_from_me ? 'You: ' : ''}${thread.last_text}`}
+                secondary={`${thread.last_from_me ? t('shell.chat.list.you') : ''}${thread.last_text}`}
                 primaryTypographyProps={{ noWrap: true }}
                 secondaryTypographyProps={{ noWrap: true }}
               />
@@ -147,7 +151,7 @@ export default function CoworkerList({
 
         {others.length > 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
-            {searching || role ? 'Matching coworkers' : 'Everyone else'}
+            {searching || role ? t('shell.chat.list.matching') : t('shell.chat.list.everyoneElse')}
           </Typography>
         )}
         {others.map((person) => (
@@ -176,7 +180,7 @@ export default function CoworkerList({
 
         {shownThreads.length === 0 && others.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 3 }}>
-            Nobody matches that.
+            {t('shell.chat.list.nobody')}
           </Typography>
         )}
       </List>

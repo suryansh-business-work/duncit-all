@@ -1,6 +1,7 @@
 import { Backdrop, Box, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   url: string | null;
@@ -15,6 +16,8 @@ interface Props {
  * click away.
  */
 export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Backdrop
       open={Boolean(url)}
@@ -36,7 +39,7 @@ export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
             sx={{ width: '100%', borderRadius: 1, display: 'block' }}
           />
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
-            <Tooltip title="Download">
+            <Tooltip title={t('shell.chat.recorder.download')}>
               <IconButton
                 size="small"
                 component="a"
@@ -45,17 +48,17 @@ export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
                 target="_blank"
                 rel="noreferrer"
                 sx={{ color: 'common.white', bgcolor: 'rgba(0,0,0,0.5)' }}
-                aria-label="Download the recording"
+                aria-label={t('shell.chat.callRow.download')}
               >
                 <DownloadIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Close">
+            <Tooltip title={t('shell.chat.recorder.close')}>
               <IconButton
                 size="small"
                 onClick={onClose}
                 sx={{ color: 'common.white', bgcolor: 'rgba(0,0,0,0.5)' }}
-                aria-label="Close the recording"
+                aria-label={t('shell.chat.recorder.closeRecording')}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>

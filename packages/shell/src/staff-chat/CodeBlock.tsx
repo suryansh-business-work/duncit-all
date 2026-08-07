@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
@@ -49,6 +50,7 @@ interface Props {
 
 /** A fenced block: the language, a copy button, and readable colour. */
 export default function CodeBlock({ code, language }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -82,7 +84,7 @@ export default function CodeBlock({ code, language }: Readonly<Props>) {
           {language || 'code'}
         </Typography>
         <Tooltip title={copied ? 'Copied' : 'Copy'}>
-          <IconButton size="small" onClick={copy} aria-label="Copy code">
+          <IconButton size="small" onClick={copy} aria-label={t('shell.chat.actions.copyCode')}>
             {copied ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
           </IconButton>
         </Tooltip>

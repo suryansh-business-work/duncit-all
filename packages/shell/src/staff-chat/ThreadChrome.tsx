@@ -1,5 +1,6 @@
 import { Chip, Divider, Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * Skip the work of laying out what is off screen.
@@ -62,7 +63,11 @@ interface JumpProps {
  * much you have not seen.
  */
 export function JumpToLatest({ show, unseen, onJump }: Readonly<JumpProps>) {
-  const label = unseen > 0 ? `${unseen} new messages — jump to latest` : 'Jump to latest';
+  const { t } = useTranslation();
+  const label =
+    unseen > 0
+      ? t('shell.chat.thread.newMessages', { vars: { count: String(unseen) } })
+      : t('shell.chat.thread.jumpToLatest');
   return (
     <Zoom in={show}>
       <Fab

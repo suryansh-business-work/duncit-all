@@ -13,6 +13,7 @@ import {
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '../i18n/useTranslation';
 import type { RecordStage } from './useCallRecorder';
 
 interface Props {
@@ -25,9 +26,10 @@ interface Props {
   onDismiss: () => void;
 }
 
-const BUSY_LABEL: Partial<Record<RecordStage, string>> = {
-  UPLOADING: 'Uploading the recording…',
-  CONVERTING: 'Converting to MP4…',
+/** Stage to key. Absent means the stage is not a 'still working' one. */
+const BUSY_KEY: Partial<Record<RecordStage, string>> = {
+  UPLOADING: 'shell.chat.recorder.uploading',
+  CONVERTING: 'shell.chat.recorder.converting',
 };
 
 /** mm:ss — a recording is minutes long, never hours. */
@@ -67,13 +69,14 @@ export default function CallRecorder({
   onSendToChat,
   onDismiss,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const elapsed = useElapsed(stage === 'RECORDING');
   if (stage === 'IDLE') return null;
 
   if (stage === 'FAILED') {
     return (
       <Alert severity="error" onClose={onDismiss}>
-        {error ?? 'The recording could not be saved.'}
+        {error ?? t('shell.chat.recorder.failed')}
       </Alert>
     );
   }
@@ -98,18 +101,18 @@ export default function CallRecorder({
           }}
         />
         <Typography variant="caption" color="error.main" role="status">
-          Recording {clock(elapsed)} — both sides
+          {t('shell.chat.recorder.recording', { vars: { clock: clock(elapsed) } })}
         </Typography>
       </Stack>
     );
   }
 
-  const busy = BUSY_LABEL[stage];
-  if (busy) {
+  const busyKey = BUSY_KEY[stage];
+  if (busyKey) {
     return (
       <Box>
         <Typography variant="caption" color="text.secondary">
-          {busy} {pct > 0 ? `${pct}%` : ''}
+          {t(busyKey)} {pct > 0 ? `${pct}%` : ''}
         </Typography>
         <LinearProgress
           variant={pct > 0 ? 'determinate' : 'indeterminate'}
@@ -124,7 +127,7 @@ export default function CallRecorder({
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
       <Typography variant="caption" color="success.main">
-        Recording saved as MP4
+        {t('shell.chat.recorder.saved')}
       </Typography>
       <Box sx={{ flex: 1 }} />
       <Button
@@ -136,7 +139,7 @@ export default function CallRecorder({
         rel="noreferrer"
         startIcon={<DownloadIcon />}
       >
-        Download
+        {t('shell.chat.recorder.download')}
       </Button>
       <Button
         size="small"
@@ -144,10 +147,10 @@ export default function CallRecorder({
         startIcon={<SendIcon />}
         onClick={() => url && onSendToChat(url)}
       >
-        Send to chat
+        {t('shell.chat.recorder.sendToChat')}
       </Button>
-      <Tooltip title="Dismiss">
-        <IconButton size="small" onClick={onDismiss} aria-label="Dismiss the recording">
+      <Tooltip title={t('shell.chat.recorder.dismiss')}>
+        <IconButton size="small" onClick={onDismiss} aria-label={t('shell.chat.recorder.dismissLabel')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Tooltip>

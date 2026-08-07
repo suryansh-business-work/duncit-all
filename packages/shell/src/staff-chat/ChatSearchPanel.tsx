@@ -13,6 +13,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from '../i18n/useTranslation';
 import SearchResultRow from './SearchResultRow';
 import { SEARCH_STAFF_MESSAGES, type StaffMessage } from './queries';
 import type { ChatFormats } from './useChatSettings';
@@ -54,6 +55,7 @@ export default function ChatSearchPanel({
   onJump,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [sender, setSender] = useState<Sender>('ANY');
   const [onlyFiles, setOnlyFiles] = useState(false);
@@ -92,18 +94,18 @@ export default function ChatSearchPanel({
           size="small"
           fullWidth
           autoFocus
-          label="Search this conversation"
+          label={t('shell.chat.search.label')}
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && search()}
         />
-        <Tooltip title="Search">
-          <IconButton size="small" onClick={search} aria-label="Run the search">
+        <Tooltip title={t('shell.chat.header.search')}>
+          <IconButton size="small" onClick={search} aria-label={t('shell.chat.search.run')}>
             <SearchIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Close search">
-          <IconButton size="small" onClick={onClose} aria-label="Close search">
+        <Tooltip title={t('shell.chat.search.close')}>
+          <IconButton size="small" onClick={onClose} aria-label={t('shell.chat.search.close')}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -112,31 +114,31 @@ export default function ChatSearchPanel({
       <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
         <Chip
           size="small"
-          label="Anyone"
+          label={t('shell.chat.search.anyone')}
           color={sender === 'ANY' ? 'primary' : 'default'}
           onClick={() => setSender('ANY')}
         />
         <Chip
           size="small"
-          label="From you"
+          label={t('shell.chat.search.fromYou')}
           color={sender === 'ME' ? 'primary' : 'default'}
           onClick={() => setSender('ME')}
         />
         <Chip
           size="small"
-          label={`From ${peerName}`}
+          label={t('shell.chat.search.fromPerson', { vars: { name: peerName } })}
           color={sender === 'PEER' ? 'primary' : 'default'}
           onClick={() => setSender('PEER')}
         />
         <Chip
           size="small"
-          label="Files"
+          label={t('shell.chat.search.files')}
           color={onlyFiles ? 'primary' : 'default'}
           onClick={() => setOnlyFiles((value) => !value)}
         />
         <Chip
           size="small"
-          label="Links"
+          label={t('shell.chat.search.links')}
           color={onlyLinks ? 'primary' : 'default'}
           onClick={() => setOnlyLinks((value) => !value)}
         />
@@ -144,13 +146,13 @@ export default function ChatSearchPanel({
 
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <DatePicker
-          label="After"
+          label={t('shell.chat.search.after')}
           value={after}
           onChange={setAfter}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
         />
         <DatePicker
-          label="Before"
+          label={t('shell.chat.search.before')}
           value={before}
           onChange={setBefore}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -162,7 +164,7 @@ export default function ChatSearchPanel({
 
         {!loading && called && results.length === 0 && (
           <Typography variant="caption" color="text.secondary">
-            Nothing matched.
+            {t('shell.chat.search.nothing')}
           </Typography>
         )}
 

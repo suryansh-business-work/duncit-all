@@ -1,5 +1,6 @@
 import { Box, Chip, Divider } from '@mui/material';
 import MessageBubble from './message-bubble';
+import { useTranslation } from '../i18n/useTranslation';
 import { DaySeparator, OFFSCREEN_SKIP } from './ThreadChrome';
 import type { StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
@@ -64,6 +65,7 @@ export default function ThreadItem({
   onNavigate,
   onNode,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Their message, naming you — your own outgoing @them is not a mention of you.
   const mentionsMe = message.from_user_id !== meId && (message.mentions ?? []).includes(meId);
 
@@ -87,7 +89,12 @@ export default function ThreadItem({
       {dayLabel && <DaySeparator label={dayLabel} />}
       {firstUnread && (
         <Divider sx={{ my: 1 }} role="separator">
-          <Chip size="small" color="error" label="New" sx={{ height: 22, fontSize: 11 }} />
+          <Chip
+            size="small"
+            color="error"
+            label={t('shell.chat.thread.unread')}
+            sx={{ height: 22, fontSize: 11 }}
+          />
         </Divider>
       )}
       <MessageBubble

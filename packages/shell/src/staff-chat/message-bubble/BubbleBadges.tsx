@@ -1,4 +1,5 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import ForwardIcon from '@mui/icons-material/Forward';
 import type { StaffMessage } from '../queries';
@@ -19,10 +20,11 @@ interface Props {
  * function nobody can read at a glance.
  */
 export default function BubbleBadges({ message, own, nameOf, repliedTo }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       {message.pinned_at && (
-        <Chip size="small" icon={<PushPinIcon />} label="Pinned" sx={{ height: 20, fontSize: 11, mb: 0.5 }} />
+        <Chip size="small" icon={<PushPinIcon />} label={t('shell.chat.thread.pinned')} sx={{ height: 20, fontSize: 11, mb: 0.5 }} />
       )}
 
       {message.forwarded_from && (

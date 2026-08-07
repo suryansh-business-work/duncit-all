@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { useTranslation } from '../i18n/useTranslation';
 import type { ChatSettings } from './useChatSettings';
 
 /** A short list beats a 400-entry dropdown for a team in a few places. */
@@ -58,12 +59,13 @@ function Row({ label, children }: Readonly<{ label: string; children: React.Reac
  * one icon rather than taking space from the conversation.
  */
 export default function ChatSettingsMenu({ settings, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <>
-      <Tooltip title="Chat settings">
-        <IconButton size="small" aria-label="Chat settings" onClick={(e) => setAnchor(e.currentTarget)}>
+      <Tooltip title={t('shell.chat.settings.title')}>
+        <IconButton size="small" aria-label={t('shell.chat.settings.title')} onClick={(e) => setAnchor(e.currentTarget)}>
           <TuneIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -79,17 +81,17 @@ export default function ChatSettingsMenu({ settings, onChange }: Readonly<Props>
             Chat settings
           </ListSubheader>
 
-          <Row label="View">
+          <Row label={t('shell.chat.settings.view')}>
             <ToggleButtonGroup
               size="small"
               exclusive
               value={settings.density}
               onChange={(_e, value) => value && onChange('density', value)}
             >
-              <ToggleButton value="COMFORTABLE" aria-label="Comfortable">
+              <ToggleButton value="COMFORTABLE" aria-label={t('shell.chat.settings.comfortable')}>
                 Comfortable
               </ToggleButton>
-              <ToggleButton value="COMPACT" aria-label="Compact">
+              <ToggleButton value="COMPACT" aria-label={t('shell.chat.settings.compact')}>
                 Compact
               </ToggleButton>
             </ToggleButtonGroup>
@@ -97,7 +99,7 @@ export default function ChatSettingsMenu({ settings, onChange }: Readonly<Props>
 
           <Divider />
 
-          <Row label="Your bubbles">
+          <Row label={t('shell.chat.settings.bubbles')}>
             <Stack direction="row" spacing={0.5}>
               {COLORS.map((color) => (
                 <Box
@@ -135,13 +137,13 @@ export default function ChatSettingsMenu({ settings, onChange }: Readonly<Props>
               valueLabelDisplay="auto"
               value={settings.fontSize}
               onChange={(_e, value) => onChange('fontSize', value as number)}
-              aria-label="Message text size"
+              aria-label={t('shell.chat.settings.textSize')}
             />
           </Box>
 
           <Divider />
 
-          <Row label="Times shown in">
+          <Row label={t('shell.chat.settings.timesIn')}>
             <TextField
               select
               size="small"
@@ -158,7 +160,7 @@ export default function ChatSettingsMenu({ settings, onChange }: Readonly<Props>
             </TextField>
           </Row>
 
-          <Row label="Enter sends">
+          <Row label={t('shell.chat.settings.enterSends')}>
             <Switch
               size="small"
               checked={settings.enterToSend}

@@ -11,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import { STAFF_MESSAGE_EDITS, type StaffMessageEdit } from './queries';
 import type { ChatFormats } from './useChatSettings';
 
@@ -38,6 +39,7 @@ export default function EditHistoryDialog({
   formats,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ staffMessageEdits: StaffMessageEdit[] }>(
     STAFF_MESSAGE_EDITS,
     { variables: { id: messageId }, skip: !open, fetchPolicy: 'network-only' }
@@ -47,7 +49,7 @@ export default function EditHistoryDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit history</DialogTitle>
+      <DialogTitle>{t('shell.chat.history.title')}</DialogTitle>
       <DialogContent>
         {loading && <CircularProgress size={20} sx={{ display: 'block', mx: 'auto', my: 2 }} />}
         {error && <Alert severity="error">{error.message}</Alert>}
@@ -56,7 +58,7 @@ export default function EditHistoryDialog({
           {edits.map((edit) => (
             <Stack key={`${edit.at}-${edit.text}`} spacing={0.25}>
               <Typography variant="caption" color="text.secondary">
-                {edit.at ? formats.full.format(new Date(edit.at)) : 'Earlier'}
+                {edit.at ? formats.full.format(new Date(edit.at)) : t('shell.chat.history.earlier')}
               </Typography>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                 {edit.text}
@@ -68,7 +70,7 @@ export default function EditHistoryDialog({
               only the old ones makes you guess which is which. */}
           <Stack spacing={0.25}>
             <Typography variant="caption" color="primary" sx={{ fontWeight: 700 }}>
-              Current
+              {t('shell.chat.history.current')}
             </Typography>
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
               {current}
@@ -78,12 +80,12 @@ export default function EditHistoryDialog({
 
         {!loading && !error && edits.length === 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-            No earlier version was recorded.
+            {t('shell.chat.history.none')}
           </Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.chat.history.close')}</Button>
       </DialogActions>
     </Dialog>
   );

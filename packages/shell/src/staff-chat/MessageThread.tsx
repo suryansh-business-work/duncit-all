@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import ThreadEntry, { type ThreadEntryHandlers } from './ThreadEntry';
 import { JumpToLatest, ThreadSkeleton } from './ThreadChrome';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
@@ -11,10 +12,10 @@ function dayLabel(iso: string, day: ChatFormats['day']): string {
   const at = new Date(iso);
   const now = new Date();
   const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-  if (sameDay(at, now)) return 'Today';
+  if (sameDay(at, now)) return 'shell.chat.thread.today';
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (sameDay(at, yesterday)) return 'Yesterday';
+  if (sameDay(at, yesterday)) return 'shell.chat.thread.yesterday';
   return day.format(at);
 }
 
@@ -64,6 +65,7 @@ export default function MessageThread({
   onLoadMore,
   ...handlers
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   // Keyed nodes rather than document ids: two panels on one page would collide,
@@ -141,20 +143,23 @@ export default function MessageThread({
         {hasMore && (
           <Box sx={{ textAlign: 'center' }}>
             <Button size="small" onClick={onLoadMore} disabled={loadingMore}>
-              {loadingMore ? 'Loading…' : 'Earlier messages'}
+              {t(loadingMore ? 'shell.chat.thread.loading' : 'shell.chat.thread.earlier')}
             </Button>
           </Box>
         )}
 
         {messages.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            Say hello.
+            {t('shell.chat.thread.sayHello')}
           </Typography>
         )}
 
         {timeline.map((entry) => {
           const at = entry.kind === 'CALL' ? entry.call.started_at : entry.message.created_at;
-          const day = at ? dayLabel(at, formats.day) : '';
+          const raw = at ? dayLabel(at, formats.day) : '';
+          // dayLabel returns a KEY for today/yesterday and a formatted date
+          // otherwise — the date is already localised by the formatter.
+          const day = raw.startsWith('shell.') ? t(raw) : raw;
           const newDay = day && day !== lastDay;
           if (newDay) lastDay = day;
           const replyId = entry.kind === 'MESSAGE' ? entry.message.reply_to_id : null;

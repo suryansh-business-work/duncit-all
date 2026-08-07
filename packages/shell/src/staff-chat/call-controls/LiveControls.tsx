@@ -8,6 +8,7 @@ import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
+import { useTranslation } from '../../i18n/useTranslation';
 import CallToggle from './CallToggle';
 
 export interface LiveControlsProps {
@@ -43,11 +44,13 @@ export default function LiveControls({
   onStopSharing,
   onToggleRecord,
 }: Readonly<LiveControlsProps>) {
+  const { t } = useTranslation();
+
   return (
     <>
       <CallToggle
-        title={muted ? 'Unmute' : 'Mute'}
-        label={muted ? 'Unmute microphone' : 'Mute microphone'}
+        title={t(muted ? 'shell.chat.call.unmute' : 'shell.chat.call.mute')}
+        label={t(muted ? 'shell.chat.call.unmuteMic' : 'shell.chat.call.muteMic')}
         on={muted}
         onClick={onToggleMute}
         onIcon={<MicOffIcon fontSize="small" />}
@@ -56,8 +59,8 @@ export default function LiveControls({
 
       {video && (
         <CallToggle
-          title={cameraOff ? 'Turn camera on' : 'Turn camera off'}
-          label={cameraOff ? 'Turn camera on' : 'Turn camera off'}
+          title={t(cameraOff ? 'shell.chat.call.cameraOn' : 'shell.chat.call.cameraOff')}
+          label={t(cameraOff ? 'shell.chat.call.cameraOn' : 'shell.chat.call.cameraOff')}
           on={cameraOff}
           onClick={onToggleCamera}
           onIcon={<VideocamOffIcon fontSize="small" />}
@@ -66,11 +69,11 @@ export default function LiveControls({
       )}
 
       {video && (
-        <Tooltip title="Full screen">
+        <Tooltip title={t('shell.chat.call.fullscreen')}>
           <IconButton
             size="small"
             color="inherit"
-            aria-label="Full screen video"
+            aria-label={t('shell.chat.call.fullscreenVideo')}
             onClick={onToggleFullscreen}
           >
             <FullscreenIcon fontSize="small" />
@@ -80,8 +83,8 @@ export default function LiveControls({
 
       {video && (
         <CallToggle
-          title={sharing ? 'Stop sharing' : 'Share your screen'}
-          label={sharing ? 'Stop sharing your screen' : 'Share your screen'}
+          title={t(sharing ? 'shell.chat.call.stopShare' : 'shell.chat.call.share')}
+          label={t(sharing ? 'shell.chat.call.stopShareLabel' : 'shell.chat.call.share')}
           on={sharing}
           onColor="primary"
           onClick={sharing ? onStopSharing : onShare}
@@ -93,8 +96,8 @@ export default function LiveControls({
       {/* Recording is offered on audio calls too — most of what is worth
           keeping from a call is what was said, not what was on screen. */}
       <CallToggle
-        title={recording ? 'Stop recording' : 'Record this call'}
-        label={recording ? 'Stop recording this call' : 'Record this call'}
+        title={t(recording ? 'shell.chat.call.stopRecord' : 'shell.chat.call.record')}
+        label={t(recording ? 'shell.chat.call.stopRecordLabel' : 'shell.chat.call.record')}
         on={recording}
         disabled={recordBusy}
         onClick={onToggleRecord}

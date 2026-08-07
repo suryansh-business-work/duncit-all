@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { useQuery } from '@apollo/client';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
@@ -19,6 +20,7 @@ export function StaffChatButton({
   open,
   onToggle,
 }: Readonly<{ meId?: string | null; open: boolean; onToggle: () => void }>) {
+  const { t } = useTranslation();
   const runtime = useShellRuntime();
   const { data, refetch } = useQuery<{ staffUnreadCount: number }>(STAFF_UNREAD, {
     skip: !runtime,
@@ -48,7 +50,7 @@ export function StaffChatButton({
   const unread = data?.staffUnreadCount ?? 0;
 
   return (
-    <Tooltip title="Chat with a coworker">
+    <Tooltip title={t('shell.chat.panel.open')}>
       <IconButton
         size="small"
         onClick={onToggle}

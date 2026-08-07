@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import FilterNoneIcon from '@mui/icons-material/FilterNone';
 import MinimizeIcon from '@mui/icons-material/Minimize';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface TitleBarProps {
   title: string;
@@ -28,6 +29,8 @@ export function TitleBar({
   onPointerMove,
   onPointerUp,
 }: Readonly<TitleBarProps>) {
+  const { t } = useTranslation();
+
   return (
     <Stack
       direction="row"
@@ -74,22 +77,22 @@ export function TitleBar({
           </Typography>
         )}
       </Box>
-      <Tooltip title="Minimise">
-        <IconButton size="small" onClick={onMinimise} aria-label="Minimise this window">
+      <Tooltip title={t('shell.chat.window.minimise')}>
+        <IconButton size="small" onClick={onMinimise} aria-label={t('shell.chat.window.minimiseLabel')}>
           <MinimizeIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title={maximised ? 'Restore' : 'Maximise'}>
+      <Tooltip title={t(maximised ? 'shell.chat.window.restore' : 'shell.chat.window.maximise')}>
         <IconButton
           size="small"
           onClick={onToggleMaximise}
-          aria-label={maximised ? 'Restore this window' : 'Maximise this window'}
+          aria-label={t(maximised ? 'shell.chat.window.restoreLabel' : 'shell.chat.window.maximiseLabel')}
         >
           {maximised ? <FilterNoneIcon fontSize="small" /> : <CropSquareIcon fontSize="small" />}
         </IconButton>
       </Tooltip>
-      <Tooltip title="Close">
-        <IconButton size="small" color="error" onClick={onClose} aria-label="Close this window">
+      <Tooltip title={t('shell.chat.window.close')}>
+        <IconButton size="small" color="error" onClick={onClose} aria-label={t('shell.chat.window.closeLabel')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Tooltip>

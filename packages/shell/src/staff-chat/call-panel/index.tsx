@@ -4,6 +4,7 @@ import CallWaveform from '../CallWaveform';
 import CallControls from '../call-controls';
 import CallRecorder from '../CallRecorder';
 import ConnectionMeter from '../ConnectionMeter';
+import { useTranslation } from '../../i18n/useTranslation';
 import CallHeader from './CallHeader';
 import CallStage from './CallStage';
 import type { CallKind, CallPhase } from '../useCall';
@@ -86,6 +87,7 @@ export default function CallPanel({
   onSendRecording,
   onDismissRecording,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const connected = phase === 'connected';
   // Uploading and converting outlive the call — hanging up is the normal way to
@@ -175,7 +177,7 @@ export default function CallPanel({
               something, or it is not, and an audio call gives no other sign.
               Ambient, so it sits below the things you actually press. */}
           {connected && (
-            <CallWaveform stream={remoteStream} label={`${peerName} — incoming audio`} />
+            <CallWaveform stream={remoteStream} label={t('shell.chat.call.incomingAudio', { vars: { name: peerName } })} />
           )}
 
           {/* Bottom of the call: how good the line is, when the portal has

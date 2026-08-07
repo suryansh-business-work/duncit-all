@@ -1,6 +1,7 @@
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   seconds: number;
@@ -28,10 +29,12 @@ export default function VoiceRecorderBar({
   onCancel,
   onSend,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1, py: 0.5 }}>
-      <Tooltip title="Discard">
-        <IconButton size="small" color="error" onClick={onCancel} aria-label="Discard voice note">
+      <Tooltip title={t('shell.chat.voice.discard')}>
+        <IconButton size="small" color="error" onClick={onCancel} aria-label={t('shell.chat.voice.discardLabel')}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -73,8 +76,8 @@ export default function VoiceRecorderBar({
         })}
       </Stack>
 
-      <Tooltip title="Send">
-        <IconButton size="small" color="primary" onClick={onSend} aria-label="Send voice note">
+      <Tooltip title={t('shell.chat.voice.send')}>
+        <IconButton size="small" color="primary" onClick={onSend} aria-label={t('shell.chat.voice.sendLabel')}>
           <SendIcon fontSize="small" />
         </IconButton>
       </Tooltip>

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import VoiceRecorderBar from './voice/VoiceRecorderBar';
 import { useVoiceNote } from './voice/useVoiceNote';
+import { useTranslation } from '../i18n/useTranslation';
 import ComposerRow from './ComposerRow';
 import SuggestionPopup from './SuggestionPopup';
 import { useComposerSuggestions } from './useComposerSuggestions';
@@ -40,6 +41,7 @@ export default function ChatComposer({
   onTyping,
   onShareLocation,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const voice = useVoiceNote();
   const [draft, setDraft] = useState('');
   const [dragging, setDragging] = useState(false);
@@ -141,7 +143,7 @@ export default function ChatComposer({
           color="primary"
           sx={{ position: 'absolute', top: 4, left: 0, right: 0, textAlign: 'center' }}
         >
-          Drop to attach
+          {t('shell.chat.composer.dropToAttach')}
         </Typography>
       )}
 

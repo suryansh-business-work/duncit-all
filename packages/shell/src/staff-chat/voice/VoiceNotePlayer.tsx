@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   url: string;
@@ -26,6 +27,7 @@ const clock = (value: number) => {
  * and clicking one seeks there.
  */
 export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>) {
+  const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [at, setAt] = useState(0);
@@ -80,7 +82,7 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
       <IconButton
         size="small"
         onClick={toggle}
-        aria-label={playing ? 'Pause the voice note' : 'Play the voice note'}
+        aria-label={t(playing ? 'shell.chat.voice.pause' : 'shell.chat.voice.play')}
       >
         {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
       </IconButton>
@@ -119,7 +121,7 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
         size="small"
         onClick={() => setSpeedIndex((index) => (index + 1) % SPEEDS.length)}
         sx={{ minWidth: 40, px: 0.5 }}
-        aria-label={`Playback speed ${speed} times`}
+        aria-label={t('shell.chat.voice.speed', { vars: { rate: String(speed) } })}
       >
         {speed}×
       </Button>

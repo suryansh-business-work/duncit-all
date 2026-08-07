@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Paper, Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
+import { useTranslation } from '../i18n/useTranslation';
 import { ResizeGrip, TitleBar } from './WindowChrome';
 import { useWindowDrag, type WindowRect } from './useWindowDrag';
 
@@ -47,6 +48,7 @@ export default function FloatingWindow({
   onClose,
   children,
 }: Readonly<FloatingWindowProps>) {
+  const { t } = useTranslation();
   const { rect, begin, move, end } = useWindowDrag(initial);
   const [minimised, setMinimised] = useState(false);
   const [maximised, setMaximised] = useState(false);
@@ -107,7 +109,7 @@ export default function FloatingWindow({
 
         {minimised ? (
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, py: 1 }}>
-            Still running — this window is minimised.
+            {t('shell.chat.window.minimised')}
           </Typography>
         ) : (
           <Stack

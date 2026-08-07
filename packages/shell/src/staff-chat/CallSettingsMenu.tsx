@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { useTranslation } from '../i18n/useTranslation';
 import DeviceSettingsDialog from './devices/DeviceSettingsDialog';
 
 interface Props {
@@ -27,15 +28,16 @@ export default function CallSettingsMenu({
   onCam,
   showCamera,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Tooltip title="Audio & video settings">
+      <Tooltip title={t('shell.chat.call.settings')}>
         <IconButton
           size="small"
           color="inherit"
-          aria-label="Audio and video settings"
+          aria-label={t('shell.chat.call.settingsLabel')}
           onClick={() => setOpen(true)}
         >
           <SettingsIcon fontSize="small" />

@@ -1,4 +1,5 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CallKind, CallPhase } from '../useCall';
 
 const initials = (name: string) =>
@@ -9,11 +10,12 @@ const initials = (name: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
+/** Phase to key; the empty one renders nothing rather than a stray key. */
 const LABEL: Record<CallPhase, string> = {
   idle: '',
-  ringing: 'Ringing…',
-  incoming: 'is calling',
-  connected: 'Connected',
+  ringing: 'shell.chat.call.ringing',
+  incoming: 'shell.chat.call.incoming',
+  connected: 'shell.chat.call.connected',
 };
 
 interface Props {
@@ -40,6 +42,7 @@ export default function CallHeader({
   peerPhoto,
   sharing,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const ringing = phase === 'ringing' || phase === 'incoming';
 
   return (
@@ -78,8 +81,9 @@ export default function CallHeader({
           {peerName}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {kind === 'VIDEO' ? 'Video' : 'Audio'} · {LABEL[phase]}
-          {sharing ? ' · sharing your screen' : ''}
+          {t(kind === 'VIDEO' ? 'shell.chat.call.video' : 'shell.chat.call.audio')} ·{' '}
+          {LABEL[phase] ? t(LABEL[phase]) : ''}
+          {sharing ? t('shell.chat.call.sharingScreen') : ''}
         </Typography>
       </Box>
     </Stack>

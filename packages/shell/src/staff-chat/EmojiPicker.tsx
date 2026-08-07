@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Box, IconButton, Popover, Stack, Tooltip, Typography } from '@mui/material';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 
@@ -81,17 +82,18 @@ interface Props {
 
 /** The composer's emoji button and its popover. */
 export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <>
-      <Tooltip title="Emoji">
+      <Tooltip title={t('shell.chat.composer.emoji')}>
         <span>
           <IconButton
             size="small"
             disabled={disabled}
             onClick={(event) => setAnchor(event.currentTarget)}
-            aria-label="Insert emoji"
+            aria-label={t('shell.chat.composer.insertEmoji')}
           >
             <SentimentSatisfiedAltIcon fontSize="small" />
           </IconButton>

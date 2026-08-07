@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   /** When they last said they were typing, or 0. */
@@ -20,6 +21,7 @@ const DOTS = ['first', 'second', 'third'];
  * forever. The bubble simply expires, and every keystroke pushes it out again.
  */
 export default function TypingIndicator({ at, name }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function TypingIndicator({ at, name }: Readonly<Props>) {
         ))}
       </Stack>
       <Typography variant="caption" color="text.secondary">
-        {name} is typing…
+        {t('shell.chat.thread.typing', { vars: { name } })}
       </Typography>
     </Stack>
   );

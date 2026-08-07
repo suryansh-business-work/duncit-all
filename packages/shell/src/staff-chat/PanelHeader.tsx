@@ -1,5 +1,6 @@
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '../i18n/useTranslation';
 import ChatSettingsMenu from './ChatSettingsMenu';
 import StatusMenu from './StatusMenu';
 import type { ChatSettings } from './useChatSettings';
@@ -24,18 +25,20 @@ export default function PanelHeader({
   busy,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
       <Typography variant="subtitle1" sx={{ flex: 1 }}>
-        Coworkers
+        {t('shell.chat.panel.title')}
       </Typography>
       <ChatSettingsMenu settings={settings} onChange={onSettings} />
       <StatusMenu status={status} onChange={onStatus} />
-      <Tooltip title={busy ? 'Wait — the recording is still being saved' : 'Close chat'}>
+      <Tooltip title={busy ? t('shell.chat.panel.closeBusy') : t('shell.chat.panel.close')}>
         {/* A disabled button fires no events, so the tooltip needs a live
             wrapper to explain why it cannot be pressed. */}
         <span>
-          <IconButton size="small" onClick={onClose} disabled={busy} aria-label="Close chat">
+          <IconButton size="small" onClick={onClose} disabled={busy} aria-label={t('shell.chat.panel.close')}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </span>

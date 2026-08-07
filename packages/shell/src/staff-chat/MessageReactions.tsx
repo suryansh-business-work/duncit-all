@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Box, Chip, IconButton, Popover, Stack, Tooltip } from '@mui/material';
 import AddReactionOutlinedIcon from '@mui/icons-material/AddReactionOutlined';
 import { QUICK_REACTIONS, type StaffReaction } from './queries';
@@ -41,6 +42,7 @@ function tally(reactions: StaffReaction[]) {
  * every line of a quiet conversation is furniture.
  */
 export default function MessageReactions({ reactions, meId, nameOf, onReact }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const groups = tally(reactions);
 
@@ -74,11 +76,11 @@ export default function MessageReactions({ reactions, meId, nameOf, onReact }: R
             {emoji}
           </IconButton>
         ))}
-        <Tooltip title="More">
+        <Tooltip title={t('shell.chat.actions.more')}>
           <IconButton
             size="small"
             onClick={(event) => setAnchor(event.currentTarget)}
-            aria-label="More reactions"
+            aria-label={t('shell.chat.actions.moreReactions')}
             sx={{ p: 0.25 }}
           >
             <AddReactionOutlinedIcon sx={{ fontSize: 15 }} />

@@ -15,6 +15,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useTranslation } from '../i18n/useTranslation';
 import { ROLE_LABEL, type Coworker } from './queries';
 
 interface Props {
@@ -63,15 +64,16 @@ function DetailRow({
  * have is in here, plus a way to reach them off-chat.
  */
 export default function CoworkerInfoButton({ person }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   return (
     <>
-      <Tooltip title={`About ${person.name}`}>
+      <Tooltip title={t('shell.chat.list.about', { vars: { name: person.name } })}>
         <IconButton
           size="small"
           edge="end"
-          aria-label={`About ${person.name}`}
+          aria-label={t('shell.chat.list.about', { vars: { name: person.name } })}
           onClick={(event) => {
             // The row underneath opens the conversation; this does not.
             event.stopPropagation();
@@ -133,18 +135,18 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
           )}
           {person.timezone && (
             <DetailRow icon={<ScheduleIcon fontSize="small" />}>
-              {localTime(person.timezone)} local
+              {t('shell.chat.list.localTime', { vars: { time: localTime(person.timezone) } })}
             </DetailRow>
           )}
 
           <Divider />
 
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-            {person.roles.length === 1 ? 'Console' : 'Consoles'}
+            {t(person.roles.length === 1 ? 'shell.chat.list.console' : 'shell.chat.list.consoles')}
           </Typography>
           {person.roles.length === 0 ? (
             <Typography variant="caption" color="text.secondary">
-              No staff console assigned.
+              {t('shell.chat.list.noConsole')}
             </Typography>
           ) : (
             <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>

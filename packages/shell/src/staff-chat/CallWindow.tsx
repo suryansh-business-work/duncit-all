@@ -1,4 +1,5 @@
 import FloatingWindow from '../floating-window';
+import { useTranslation } from '../i18n/useTranslation';
 import CallPanel from './call-panel';
 import type { Coworker } from './queries';
 import type { useCall } from './useCall';
@@ -15,10 +16,11 @@ interface Props {
   onSendRecording: (url: string) => void;
 }
 
+/** Phase to key — an unknown phase renders no subtitle rather than a key. */
 const SUBTITLE: Record<string, string> = {
-  ringing: 'Calling…',
-  incoming: 'Incoming call',
-  connected: 'On a call',
+  ringing: 'shell.chat.call.calling',
+  incoming: 'shell.chat.call.incomingCall',
+  connected: 'shell.chat.call.onACall',
 };
 
 /**
@@ -38,6 +40,8 @@ export default function CallWindow({
   recorder,
   onSendRecording,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   /*
     Whose call this is.
 
@@ -48,23 +52,25 @@ export default function CallWindow({
     fallback for a call you placed from a thread you are already looking at.
   */
   const onCall = peer?.id === call.peerId ? peer : null;
-  const name = call.peerName || onCall?.name || 'Coworker';
+  const name = call.peerName || onCall?.name || t('shell.chat.call.coworker');
   const photo = onCall?.photo ?? '';
   const live = call.phase !== 'idle';
 
   return (
     <FloatingWindow
       open={open}
-      title={call.kind === 'VIDEO' ? `Video with ${name}` : `Call with ${name}`}
-      subtitle={SUBTITLE[call.phase]}
+      title={t(call.kind === 'VIDEO' ? 'shell.chat.call.videoWithName' : 'shell.chat.call.withName', {
+        vars: { name },
+      })}
+      subtitle={SUBTITLE[call.phase] ? t(SUBTITLE[call.phase]) : undefined}
       initial={{ x: 80, y: 80, width: 520, height: 460 }}
       fill
       closeWarning={
         live
           ? {
-              title: 'End this call?',
-              message: `Closing this window hangs up on ${name}. Any recording still uploading will finish.`,
-              confirmLabel: 'End call',
+              title: t('shell.chat.call.endTitle'),
+              message: t('shell.chat.call.endMessage', { vars: { name } }),
+              confirmLabel: t('shell.chat.call.endConfirm'),
             }
           : undefined
       }

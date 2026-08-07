@@ -27,6 +27,41 @@ export const podMemberTypeDefs = /* GraphQL */ `
     HOST_ADD
   }
 
+  """
+  One backout this booking raised, as Finance sees it. The backout_no is the
+  DUN-BKO id — the same key the User Backout Refunds page lists, so a line on
+  Pod History and a row on that page are provably the same request.
+  """
+  type PodMemberBackout {
+    backout_no: String!
+    status: BackoutStatus!
+    "1-based attempt for this user on this pod (a pod allows a few)."
+    attempt_no: Int!
+    "Seats this request released. Fewer than seats_before means a PARTIAL backout."
+    seats: Int!
+    seats_before: Int!
+    refund_amount: Float
+    deduction_pct: Float!
+    "Set once Finance has processed it — before that the refund is only pending."
+    refund_processed_at: String
+    created_at: String!
+    events: [PodMemberBackoutEvent!]!
+  }
+
+  type PodMemberBackoutEvent {
+    status: BackoutStatus!
+    at: String!
+  }
+
+  "Who ended the pod, when it was not the member who left."
+  enum PodMemberCancelActor {
+    HOST
+    VENUE
+    CLUB_ADMIN
+    ADMIN
+    SYSTEM
+  }
+
   type PodMember {
     id: ID!
     pod_id: ID!
@@ -50,6 +85,14 @@ export const podMemberTypeDefs = /* GraphQL */ `
     refund_payment_id: ID
     "Backout attempts used for this pod (each Confirm Backout counts one)."
     backout_count: Int!
+    "Every backout raised on this booking, oldest first."
+    backouts: [PodMemberBackout!]!
+    "True once a host has scanned this booking in at the door."
+    attended: Boolean!
+    attended_at: String
+    "Set when the POD was cancelled, whoever did it."
+    pod_cancelled_by: PodMemberCancelActor
+    pod_cancelled_at: String
     created_at: String!
     updated_at: String!
   }

@@ -1,4 +1,9 @@
 import { GraphQLError } from 'graphql';
+import {
+  attendanceForMembership,
+  backoutsForMembership,
+  cancellationForPod,
+} from './membershipTimeline.service';
 import { podMemberService } from './podMember.service';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
@@ -21,6 +26,19 @@ export const podMemberResolvers = {
     // Pod History must still show a booking whose pod was soft-deleted.
     pod: async (parent: { pod_id: string }) =>
       podService.getById(parent.pod_id, { includeDeleted: true }),
+    /*
+      Resolved per booking, not folded into the row.
+
+      A list of bookings does not need any of this; a timeline needs all three.
+      Keeping them as fields means only the screen that draws one pays for it.
+    */
+    backouts: async (parent: { id: string }) => backoutsForMembership(parent.id),
+    attended: async (parent: { id: string }) => (await attendanceForMembership(parent.id)).attended,
+    attended_at: async (parent: { id: string }) => (await attendanceForMembership(parent.id)).attended_at,
+    pod_cancelled_by: async (parent: { pod_id: string }) =>
+      (await cancellationForPod(parent.pod_id)).cancelled_by,
+    pod_cancelled_at: async (parent: { pod_id: string }) =>
+      (await cancellationForPod(parent.pod_id)).cancelled_at,
   },
   BackoutRefundRequest: {
     // The pod may have been soft-deleted after the backout — still show it.

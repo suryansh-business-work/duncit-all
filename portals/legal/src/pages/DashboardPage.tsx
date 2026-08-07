@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
+import PolicyIcon from '@mui/icons-material/Policy';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { PageHeader } from '@duncit/ui';
 import {
@@ -21,6 +22,9 @@ import {
 
 // Aggregate rows are keyed by document_type (no id field on the server type).
 const getStatsRowId = (r: LegalDocumentTypeCount) => r.document_type;
+
+/** One shape for every dashboard card, so a new one cannot drift from the rest. */
+const CARD_SX = { flex: '1 1 220px', minWidth: 220 } as const;
 
 // Allowlists (LEGAL_DOCUMENT_STATS_TABLE_CONFIG): sort document_type/count;
 // filter document_type (text) + count (number).
@@ -55,7 +59,7 @@ export default function DashboardPage() {
       ) : (
         <>
           <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 2 }}>
-            <Card variant="outlined" sx={{ flex: '1 1 220px', minWidth: 220 }}>
+            <Card variant="outlined" sx={CARD_SX}>
               <CardActionArea onClick={() => navigate('/documents')}>
                 <CardContent>
                   <Stack direction="row" spacing={1.5} alignItems="center">
@@ -66,6 +70,28 @@ export default function DashboardPage() {
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Total documents
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+
+            {/* Same shell as Documents — outlined card, action area, icon beside
+                the text, and the same flex basis so the two wrap together on a
+                narrow screen. Policies has no count to head with: this card is
+                the way in to the list, not a measure of it. */}
+            <Card variant="outlined" sx={CARD_SX}>
+              <CardActionArea onClick={() => navigate('/policies')}>
+                <CardContent>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <PolicyIcon fontSize="large" color="primary" />
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+                        Policies
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        View, manage, and publish platform policies.
                       </Typography>
                     </Box>
                   </Stack>

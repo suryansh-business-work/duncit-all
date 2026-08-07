@@ -113,22 +113,46 @@ The browser does not have these credentials compiled in. It asks the server for
 them at load time (`staffCallIceServers`), and the server reads them from the
 **Tech portal**, like every other service credential in this platform.
 
-After the release containing the `TURN` env category is deployed:
+**Every database needs its own entry.** Staging and production run the same code
+against *separate* databases (`duncit-staging` and the URI default), so an entry
+created in one is invisible to the other. That asymmetry is how "I configured it
+and calls still fail" happens — the portal was showing a perfectly good entry,
+for the other environment.
 
-1. Open <https://tech.duncit.com> → **Environment**
-2. Add an entry in the **TURN relay (staff calls)** category:
+Use the script rather than the portal, so both get the identical value:
 
-   | Field | Value |
-   |---|---|
-   | `urls` | `turn:server.duncit.com:3478,turns:server.duncit.com:5349` |
-   | `username` | `duncit` |
-   | `credential` | the value in `/root/.turn-credentials` on the VPS |
+```sh
+docker cp server/scripts/seed-turn-credentials.mjs <container>:/app/server/seed-turn.mjs
 
-3. Mark it **active** and **default**.
+. /root/.turn-credentials
+URLS="turn:server.duncit.com:3478,turn:148.135.136.107:3478,turns:server.duncit.com:5349"
 
-Until an entry exists the server serves public STUN alone, which is the
-behaviour that was failing. There is nothing to restart: the value is read per
-request.
+for C in duncit-server duncit-staging-server; do
+  docker exec -e TURN_URLS="$URLS" -e TURN_USERNAME=duncit \
+    -e TURN_CREDENTIAL="$TURN_PASSWORD" "$C" node /app/server/seed-turn.mjs
+done
+```
+
+It reads the container's own `MONGO_URI`/`MONGO_DB_NAME`, so each run lands in
+the right database without anyone choosing. Add `--dry-run` to see what it would
+write. It is idempotent — a rotated credential updates the same entry rather
+than adding a second one — and it demotes any other default, because the server
+reads the one entry that is both active and default.
+
+`TURN_ENTRY_NAME` targets an entry created by hand in the Tech portal, so the
+script updates it instead of creating a duplicate beside it.
+
+The same entry is editable at <https://tech.duncit.com> → **Environment** →
+**TURN relay (staff calls)**, and staging's at
+<https://staging.tech.duncit.com>. Until an entry exists the server serves
+public STUN alone, which is the behaviour that was failing. There is nothing to
+restart: the value is read per request.
+
+**Why the raw IP is in `urls`.** Browser tests showed
+`701 TURN host lookup received error` against `server.duncit.com` before ICE
+recovered; with the IP form present the relay answers immediately. Plain TURN
+does not validate certificates, so an IP is fine there — `turns:` keeps the
+hostname because TLS needs it.
 
 ### Verifying it
 
@@ -144,6 +168,14 @@ node scripts/stun-probe.mjs   # TURN_HOST=148.135.136.107
 ```
 
 **2. Are the TCP ports open?** `3478` and `5349` should both connect.
+
+**2b. Did a browser reach it?** coturn logs every allocation now — without
+`verbose` a working relay and an unreachable one produce identical logs, which
+is how a diagnosis goes in circles:
+
+```sh
+journalctl -u coturn --since "10 min ago" | grep "ALLOCATE processed"
+```
 
 **3. Does the relay actually allocate?** On the VPS, with the credentials:
 

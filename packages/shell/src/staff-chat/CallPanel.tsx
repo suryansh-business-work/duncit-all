@@ -125,12 +125,6 @@ export default function CallPanel({
             </Stack>
           )}
 
-          {/* The line is carrying something, or it is not — an audio call gives
-              no other sign. */}
-          {phase === 'connected' && (
-            <CallWaveform stream={remoteStream} label={`${peer?.name ?? 'They'} — incoming audio`} />
-          )}
-
           <Stack direction="row" spacing={1} alignItems="center">
             {phase === 'incoming' ? (
               <>
@@ -192,6 +186,13 @@ export default function CallPanel({
               showCamera={kind === 'VIDEO'}
             />
           </Stack>
+
+          {/* Bottom of the call, under the controls: the line is carrying
+              something, or it is not, and an audio call gives no other sign.
+              Ambient, so it sits below the things you actually press. */}
+          {phase === 'connected' && (
+            <CallWaveform stream={remoteStream} label={`${peer?.name ?? 'They'} — incoming audio`} />
+          )}
         </Stack>
       )}
     </Paper>

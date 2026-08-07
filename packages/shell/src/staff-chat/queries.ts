@@ -6,6 +6,12 @@ export interface Coworker {
   email: string;
   photo: string;
   roles: string[];
+  /** Reachable off-chat. Empty when they have not given one. */
+  phone: string;
+  city: string;
+  /** Their IANA zone, so the card can say what time it is where they are. */
+  timezone: string;
+  bio: string;
 }
 
 /** The six the bar offers. Any other emoji is allowed — these are just close. */
@@ -39,6 +45,8 @@ export interface StaffMessage {
   attachment_type?: string;
   /** Bytes — so a reader can judge before downloading. */
   attachment_size?: number;
+  /** Loudness per slice, 0-1, for a voice note waveform. */
+  attachment_peaks?: number[];
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
@@ -87,6 +95,10 @@ const COWORKER = `
   email
   photo
   roles
+  phone
+  city
+  timezone
+  bio
 `;
 
 const MESSAGE = `
@@ -98,6 +110,7 @@ const MESSAGE = `
   attachment_name
   attachment_type
   attachment_size
+  attachment_peaks
   read_at
   edited_at
   deleted_at
@@ -157,6 +170,8 @@ export const SEND_STAFF_MESSAGE = gql`
     $attachmentUrl: String
     $attachmentName: String
     $attachmentType: String
+    $attachmentSize: Int
+    $attachmentPeaks: [Float!]
   ) {
     sendStaffMessage(
       to_user_id: $toUserId
@@ -164,6 +179,8 @@ export const SEND_STAFF_MESSAGE = gql`
       attachment_url: $attachmentUrl
       attachment_name: $attachmentName
       attachment_type: $attachmentType
+      attachment_size: $attachmentSize
+      attachment_peaks: $attachmentPeaks
     ) {
       ${MESSAGE}
     }
@@ -226,17 +243,6 @@ export const SEARCH_STAFF_MESSAGES = gql`
   }
 `;
 
-export const STAFF_SCREEN_SHARE_GRANT = gql`
-  query StaffScreenShareGrant($peerId: ID!) {
-    staffScreenShareGrant(peer_id: $peerId) {
-      url
-      token
-      room
-      expiresIn
-    }
-  }
-`;
-
 export const STAFF_LINK_PREVIEW = gql`
   query StaffLinkPreview($url: String!) {
     staffLinkPreview(url: $url) {
@@ -274,13 +280,85 @@ export const ATTACH_CALL_RECORDING = gql`
   }
 `;
 
+export interface StaffChatState {
+  panel_open: boolean;
+  role_filter: string;
+  open_peer_id: string | null;
+  density: string;
+  bubble_color: string;
+  font_size: number;
+  time_zone: string;
+  enter_to_send: boolean;
+  mic_id: string;
+  cam_id: string;
+}
+
+const CHAT_STATE = `
+  panel_open
+  role_filter
+  open_peer_id
+  density
+  bubble_color
+  font_size
+  time_zone
+  enter_to_send
+  mic_id
+  cam_id
+`;
+
+export const STAFF_CHAT_STATE = gql`
+  query StaffChatState {
+    staffChatState {
+      ${CHAT_STATE}
+    }
+  }
+`;
+
+export const SAVE_STAFF_CHAT_STATE = gql`
+  mutation SaveStaffChatState($input: StaffChatStateInput!) {
+    saveStaffChatState(input: $input) {
+      ${CHAT_STATE}
+    }
+  }
+`;
+
+export interface StaffMessageEdit {
+  text: string;
+  at?: string | null;
+}
+
+export const STAFF_MESSAGE_EDITS = gql`
+  query StaffMessageEdits($id: ID!) {
+    staffMessageEdits(id: $id) {
+      text
+      at
+    }
+  }
+`;
+
 export const STAFF_PRESENCE = gql`
   query StaffPresence {
     staffPresence {
       user_id
       status
       since
+      last_seen
     }
+  }
+`;
+
+/** The Maps key for the location preview. Already public — see the server. */
+export const PUBLIC_CLIENT_CONFIG = gql`
+  query StaffChatPublicClientConfig {
+    publicClientConfig {
+      google_maps_api_key
+    }
+  }
+`;
+
+export const CLEAR_STAFF_THREAD = gql`
+  mutation ClearStaffThread($peerId: ID!) {
+    clearStaffThread(peer_id: $peerId)
   }
 `;
 

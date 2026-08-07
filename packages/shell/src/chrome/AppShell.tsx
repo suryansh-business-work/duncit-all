@@ -180,6 +180,7 @@ export function AppShell({
               open={chatOpen}
               meId={user?.id ?? ''}
               meName={user?.full_name ?? user?.first_name ?? undefined}
+              meRoles={user?.roles ?? []}
               onClose={() => setChatOpen(false)}
               onRequestOpen={() => setChatOpen(true)}
             />

@@ -6,9 +6,12 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import HistoryIcon from '@mui/icons-material/History';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useTranslation } from '../i18n/useTranslation';
 import type { StaffMessage } from './queries';
 
 interface Props {
@@ -19,6 +22,10 @@ interface Props {
   onForward: () => void;
   onPin: () => void;
   onCopy: () => void;
+  /** Turn on selection mode, with this message already picked. */
+  onStartSelect: () => void;
+  /** Absent unless the reader may see earlier wordings of this message. */
+  onEditHistory?: () => void;
   onEdit: () => void;
   /** True deletes it for both people; false only hides it for you. */
   onDelete: (forEveryone: boolean) => void;
@@ -38,9 +45,12 @@ export default function MessageActions({
   onForward,
   onPin,
   onCopy,
+  onStartSelect,
+  onEditHistory,
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const close = () => setAnchor(null);
   const run = (action: () => void) => () => {
@@ -50,11 +60,11 @@ export default function MessageActions({
 
   return (
     <>
-      <Tooltip title="More">
+      <Tooltip title={t('shell.chat.actions.more')}>
         <IconButton
           size="small"
           color="inherit"
-          aria-label="Message actions"
+          aria-label={t('shell.chat.actions.messageActions')}
           onClick={(event) => setAnchor(event.currentTarget)}
         >
           <MoreHorizIcon sx={{ fontSize: 15 }} />
@@ -65,19 +75,25 @@ export default function MessageActions({
           <ListItemIcon>
             <ReplyIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Reply</ListItemText>
+          <ListItemText>{t('shell.chat.actions.reply')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={run(onCopy)}>
           <ListItemIcon>
             <ContentCopyIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Copy text</ListItemText>
+          <ListItemText>{t('shell.chat.actions.copyText')}</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={run(onStartSelect)}>
+          <ListItemIcon>
+            <ChecklistIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>{t('shell.chat.actions.select')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={run(onForward)}>
           <ListItemIcon>
             <ForwardIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Forward</ListItemText>
+          <ListItemText>{t('shell.chat.actions.forward')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={run(onPin)}>
           <ListItemIcon>
@@ -87,14 +103,24 @@ export default function MessageActions({
               <PushPinOutlinedIcon fontSize="small" />
             )}
           </ListItemIcon>
-          <ListItemText>{message.pinned_at ? 'Unpin' : 'Pin'}</ListItemText>
+          <ListItemText>{t(message.pinned_at ? 'shell.chat.actions.unpin' : 'shell.chat.actions.pin')}</ListItemText>
         </MenuItem>
+        {/* Only where there IS a history, and only for someone allowed to
+            read it — an empty dialog is a worse answer than no menu item. */}
+        {onEditHistory && message.edited_at && (
+          <MenuItem onClick={run(onEditHistory)}>
+            <ListItemIcon>
+              <HistoryIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t('shell.chat.actions.editHistory')}</ListItemText>
+          </MenuItem>
+        )}
         {mine && (
           <MenuItem onClick={run(onEdit)}>
             <ListItemIcon>
               <EditIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Edit</ListItemText>
+            <ListItemText>{t('shell.chat.actions.edit')}</ListItemText>
           </MenuItem>
         )}
 
@@ -110,7 +136,7 @@ export default function MessageActions({
           <ListItemIcon>
             <DeleteOutlineIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Delete for me</ListItemText>
+          <ListItemText>{t('shell.chat.actions.deleteForMe')}</ListItemText>
         </MenuItem>
         {mine && (
           <MenuItem onClick={run(() => onDelete(true))}>
@@ -118,7 +144,7 @@ export default function MessageActions({
               <DeleteForeverIcon fontSize="small" color="error" />
             </ListItemIcon>
             <ListItemText primaryTypographyProps={{ color: 'error' }}>
-              Delete for everyone
+              {t('shell.chat.actions.deleteForEveryone')}
             </ListItemText>
           </MenuItem>
         )}

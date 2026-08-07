@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Backdrop, Box, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -7,7 +8,19 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import VoiceNotePlayer from './voice/VoiceNotePlayer';
 import type { StaffMessage } from './queries';
+
+/**
+ * How long the note ran, read off the name the recorder gave it.
+ *
+ * The audio element reports its own duration eventually, but a webm written by
+ * MediaRecorder carries no duration in its header — browsers report Infinity
+ * until the whole thing has been played through, which is exactly the number
+ * you cannot show before somebody presses play.
+ */
+const secondsFromName = (name: string): number =>
+  Number(/voice-note-(\d+)s/.exec(name)?.[1] ?? 0);
 
 /** Bytes as something a person reads, not a number they have to divide. */
 export function humanSize(bytes?: number | null): string {
@@ -41,6 +54,7 @@ interface Props {
  * phone right now" is answered by a number, not by a filename.
  */
 export default function MessageAttachment({ message }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [lightbox, setLightbox] = useState(false);
   const url = message.attachment_url ?? '';
   if (!url) return null;
@@ -51,13 +65,20 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
   const isVideo = type.startsWith('video');
   const size = humanSize(message.attachment_size);
 
+  // A voice note is audio that arrived with a waveform. Audio WITHOUT one is a
+  // file somebody attached, and belongs in the named row below like any other.
+  const peaks = message.attachment_peaks ?? [];
+  if (type.startsWith('audio') && peaks.length > 0) {
+    return <VoiceNotePlayer url={url} peaks={peaks} seconds={secondsFromName(name)} />;
+  }
+
   if (isImage || isVideo) {
     return (
       <>
         <Box
           role="button"
           tabIndex={0}
-          aria-label={`Open ${name}`}
+          aria-label={t('shell.chat.attachment.open', { vars: { name } })}
           onClick={() => setLightbox(true)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -92,7 +113,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           sx={{ zIndex: (theme) => theme.zIndex.modal + 1, bgcolor: 'rgba(0,0,0,0.9)' }}
         >
           <IconButton
-            aria-label="Close preview"
+            aria-label={t('shell.chat.attachment.closePreview')}
             onClick={() => setLightbox(false)}
             sx={{ position: 'absolute', top: 12, right: 12, color: '#fff' }}
           >
@@ -146,7 +167,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           </Typography>
         )}
       </Stack>
-      <Tooltip title="Download">
+      <Tooltip title={t('shell.chat.attachment.download')}>
         <IconButton
           size="small"
           component={Link}
@@ -154,7 +175,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
           download={name}
           target="_blank"
           rel="noreferrer"
-          aria-label={`Download ${name}`}
+          aria-label={t('shell.chat.attachment.downloadNamed', { vars: { name } })}
         >
           <DownloadIcon fontSize="small" />
         </IconButton>

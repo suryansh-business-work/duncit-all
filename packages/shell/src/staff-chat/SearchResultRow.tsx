@@ -1,5 +1,6 @@
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { useTranslation } from '../i18n/useTranslation';
 import type { StaffMessage } from './queries';
 import type { ChatFormats } from './useChatSettings';
 
@@ -12,8 +13,6 @@ interface Props {
   loaded: boolean;
   onJump: (id: string) => void;
 }
-
-const OLDER_NOTE = 'Older than the messages loaded — open Earlier messages first';
 
 /**
  * One hit.
@@ -29,11 +28,12 @@ export default function SearchResultRow({
   loaded,
   onJump,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const when = message.created_at ? formats.full.format(new Date(message.created_at)) : '';
-  const preview = message.text || message.attachment_name || 'Attachment';
+  const preview = message.text || message.attachment_name || t('shell.chat.composer.attachment');
 
   return (
-    <Tooltip title={loaded ? '' : OLDER_NOTE}>
+    <Tooltip title={loaded ? '' : t('shell.chat.search.older')}>
       <Box
         component="button"
         type="button"

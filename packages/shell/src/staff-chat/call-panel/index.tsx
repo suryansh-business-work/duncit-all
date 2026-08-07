@@ -4,16 +4,18 @@ import CallWaveform from '../CallWaveform';
 import CallControls from '../call-controls';
 import CallRecorder from '../CallRecorder';
 import ConnectionMeter from '../ConnectionMeter';
+import { useTranslation } from '../../i18n/useTranslation';
 import CallHeader from './CallHeader';
 import CallStage from './CallStage';
-import type { Coworker } from '../queries';
 import type { CallKind, CallPhase } from '../useCall';
 import type { RecordStage } from '../useCallRecorder';
 
 interface Props {
   phase: CallPhase;
   kind: CallKind;
-  peer: Coworker | null;
+  /** Resolved by the window: the offer carries it, not the open thread. */
+  peerName: string;
+  peerPhoto: string;
   error: string | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
@@ -49,14 +51,14 @@ interface Props {
 /**
  * The call, above the conversation it belongs to.
  *
- * In the same panel rather than a dialog: hanging up should not cost you the
- * thread you were talking about, and a call window that covers the chat is a
- * call you cannot take notes during.
+ * In its own window rather than a dialog: hanging up should not cost you the
+ * thread you were talking about.
  */
 export default function CallPanel({
   phase,
   kind,
-  peer,
+  peerName,
+  peerPhoto,
   error,
   localStream,
   remoteStream,
@@ -84,11 +86,11 @@ export default function CallPanel({
   onSendRecording,
   onDismissRecording,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const connected = phase === 'connected';
-  // Uploading and converting outlive the call — hanging up is the normal way to
-  // finish a recording, and taking the progress and the download away at that
-  // moment loses the thing the person was recording FOR.
+  // Uploading and converting outlive the call: hanging up is the normal way to
+  // finish a recording, and taking the progress away then loses it.
   const savingRecording = recordStage !== 'IDLE' && recordStage !== 'RECORDING';
   if (phase === 'idle' && !error && !savingRecording) return null;
 
@@ -102,24 +104,50 @@ export default function CallPanel({
     }
   };
 
-  // No frame of its own: this lives inside a FloatingWindow, and a bordered
-  // card inside a window is two frames drawing the same box.
+  /*
+    A fixed floor, with the picture above it.
+
+    No frame of its own — this lives inside a FloatingWindow, and a bordered
+    card inside a window is two frames drawing the same box. The column is
+    full-height so the video can take whatever is left while the controls stay
+    exactly where they were: a hang-up button that moves when somebody turns
+    their camera on is a hang-up button you have to hunt for mid-call.
+  */
   return (
-    <Box sx={{ p: 1.5 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 1 }}>
-          {error}
-        </Alert>
-      )}
+    <Box
+      sx={{
+        p: 1.5,
+        height: '100%',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+      }}
+    >
+      {error && <Alert severity="error">{error}</Alert>}
 
       {phase !== 'idle' && (
-        <Stack spacing={1}>
-          <CallHeader phase={phase} kind={kind} peer={peer} sharing={sharing} />
+        <CallHeader phase={phase} kind={kind} peerName={peerName} peerPhoto={peerPhoto} sharing={sharing} />
+      )}
 
-          {kind === 'VIDEO' && connected && (
-            <CallStage ref={stageRef} localStream={localStream} remoteStream={remoteStream} />
-          )}
+      {/* The one part that grows. Everything else keeps its natural height. */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {kind === 'VIDEO' && connected && (
+          <CallStage ref={stageRef} localStream={localStream} remoteStream={remoteStream} />
+        )}
+      </Box>
 
+      {phase !== 'idle' && (
+        <Stack spacing={1} sx={{ flexShrink: 0 }}>
           <CallControls
             phase={phase}
             kind={kind}
@@ -147,7 +175,7 @@ export default function CallPanel({
               something, or it is not, and an audio call gives no other sign.
               Ambient, so it sits below the things you actually press. */}
           {connected && (
-            <CallWaveform stream={remoteStream} label={`${peer?.name ?? 'They'} — incoming audio`} />
+            <CallWaveform stream={remoteStream} label={t('shell.chat.call.incomingAudio', { vars: { name: peerName } })} />
           )}
 
           {/* Bottom of the call: how good the line is, when the portal has
@@ -157,7 +185,7 @@ export default function CallPanel({
       )}
 
       {/* Outside the call block on purpose — see savingRecording above. */}
-      <Box sx={{ mt: phase === 'idle' ? 0 : 1 }}>
+      <Box sx={{ flexShrink: 0 }}>
         <CallRecorder
           stage={recordStage}
           pct={recordPct}

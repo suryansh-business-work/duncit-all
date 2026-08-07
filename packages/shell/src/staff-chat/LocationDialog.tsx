@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
@@ -14,6 +15,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { useTranslation } from '../i18n/useTranslation';
+import { PUBLIC_CLIENT_CONFIG } from './queries';
 
 interface Props {
   open: boolean;
@@ -26,112 +29,162 @@ interface Props {
 const searchUrl = (query: string) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
-/** A pin at exact coordinates. */
-const pinUrl = (lat: number, lng: number) =>
-  `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+/**
+ * The preview, from the Maps EMBED API.
+ *
+ * An iframe rather than the Maps JS API: no script for the page to load, no
+ * library on seventeen portal bundles, and the embed takes a plain search
+ * string — so "the Blue Tokai on Church Street" resolves without a geocoding
+ * round trip of our own.
+ */
+const embedUrl = (key: string, query: string) =>
+  `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent(query)}`;
 
 /**
- * Share a place.
+ * Share a place — look at it first, then send it.
  *
- * A LINK rather than an embedded map, deliberately: an embed needs a Maps API
- * key on every portal, a script the CSP has to allow, and a per-load billing
- * event — to show a picture of somewhere the recipient is going to open in
- * Maps anyway. The link opens in their own Maps, already signed in, with their
- * own directions and history.
- *
- * The chat renders it as a link card like any other, so it still reads as a
- * place and not as a wall of URL.
+ * The message itself is still a LINK, deliberately: the recipient opens it in
+ * their own Maps, already signed in, with their own directions and history. The
+ * map in this dialog is for the SENDER, answering the question that used to be
+ * unanswerable before pressing send — is this the right Church Street.
  */
 export default function LocationDialog({ open, onClose, onSend }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
+  /** What the map is showing — set by Search, not by every keystroke. */
+  const [shown, setShown] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
-  const sendSearch = () => {
+  const { data } = useQuery<{ publicClientConfig: { google_maps_api_key: string } }>(
+    PUBLIC_CLIENT_CONFIG,
+    { skip: !open, fetchPolicy: 'cache-first' }
+  );
+  const mapsKey = data?.publicClientConfig?.google_maps_api_key ?? '';
+
+  // A new dialog starts blank rather than on the last place somebody sent.
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+      setShown('');
+      setError(null);
+    }
+  }, [open]);
+
+  const preview = () => {
     const term = query.trim();
     if (!term) return;
-    onSend(`📍 ${term}\n${searchUrl(term)}`);
-    setQuery('');
-    onClose();
+    setError(null);
+    setShown(term);
   };
 
-  const sendHere = () => {
+  const useHere = () => {
     setError(null);
-    if (!globalThis.navigator.geolocation) {
-      setError('This browser cannot share a location.');
-      return;
-    }
     setLocating(true);
-    globalThis.navigator.geolocation.getCurrentPosition(
+    globalThis.navigator.geolocation?.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        onSend(`📍 My location\n${pinUrl(latitude, longitude)}`);
+        const point = `${latitude},${longitude}`;
+        setQuery(point);
+        setShown(point);
         setLocating(false);
-        onClose();
       },
-      (positionError) => {
+      (err) => {
+        setError(err.message);
         setLocating(false);
-        // A refused permission is a choice, not a fault — say what happened.
-        setError(
-          positionError.code === positionError.PERMISSION_DENIED
-            ? 'Location permission was declined.'
-            : 'Could not work out where this device is.',
-        );
       },
-      { enableHighAccuracy: true, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 10_000 }
     );
   };
 
+  const send = () => {
+    if (!shown) return;
+    onSend(`📍 ${shown}\n${searchUrl(shown)}`);
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Share a place</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={1.5}>
-          {error && <Alert severity="warning">{error}</Alert>}
-          <TextField
-            autoFocus
-            fullWidth
-            size="small"
-            label="Place or address"
-            placeholder="e.g. Cubbon Park, Bengaluru"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                sendSearch();
-              }
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Box>
-            <Button
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{t('shell.chat.location.label')}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={1.5} sx={{ mt: 0.5 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <Stack direction="row" spacing={1}>
+            <TextField
               size="small"
-              startIcon={<MyLocationIcon />}
-              onClick={sendHere}
-              disabled={locating}
-            >
-              {locating ? 'Finding you…' : 'Send where I am'}
+              fullWidth
+              autoFocus
+              label={t('shell.chat.location.label')}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => event.key === 'Enter' && preview()}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button onClick={preview} disabled={!query.trim()}>
+              {t('shell.chat.location.search')}
             </Button>
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            Sent as a Google Maps link, so it opens in their own Maps with their
-            directions and history.
-          </Typography>
+          </Stack>
+
+          <Button
+            size="small"
+            startIcon={<MyLocationIcon />}
+            onClick={useHere}
+            disabled={locating}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            {t(locating ? 'shell.chat.location.searching' : 'shell.chat.location.useMyLocation')}
+          </Button>
+
+          <LocationPreview mapsKey={mapsKey} shown={shown} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={sendSearch} disabled={!query.trim()}>
-          Send place
+        <Button onClick={onClose}>{t('shell.chat.location.cancel')}</Button>
+        <Button variant="contained" onClick={send} disabled={!shown}>
+          {t('shell.chat.location.send')}
         </Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+/**
+ * The map, or an honest reason there isn't one.
+ *
+ * A missing Maps key is a Tech-portal configuration state, not a reason to
+ * refuse to share a place — the link works either way, so the preview says
+ * what is missing and sending stays available.
+ */
+function LocationPreview({ mapsKey, shown }: Readonly<{ mapsKey: string; shown: string }>) {
+  const { t } = useTranslation();
+
+  if (!shown) {
+    return (
+      <Typography variant="caption" color="text.secondary">
+        {t('shell.chat.location.pickOne')}
+      </Typography>
+    );
+  }
+
+  if (!mapsKey) {
+    return <Alert severity="info">{t('shell.chat.location.noKey')}</Alert>;
+  }
+
+  return (
+    <Box
+      component="iframe"
+      title={t('shell.chat.location.preview', { vars: { name: shown } })}
+      src={embedUrl(mapsKey, shown)}
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+      sx={{ width: '100%', height: 260, border: 0, borderRadius: 1 }}
+    />
   );
 }

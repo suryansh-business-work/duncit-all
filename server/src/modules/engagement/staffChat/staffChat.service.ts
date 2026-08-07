@@ -3,6 +3,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { escapedSearchRegex } from '@utils/table-query';
 import { StaffCallModel, type CallKind, type CallOutcome } from './staffCall.model';
 import { STAFF_ROLES, StaffMessageModel, reactionEmoji, threadKey } from './staffChat.model';
+import { StaffChatStateModel } from './staffChatState.model';
 
 /**
  * Staff-to-staff messaging.
@@ -18,6 +19,11 @@ export interface Coworker {
   email: string;
   photo: string;
   roles: string[];
+  /** Reachable off-chat, for the details card. */
+  phone: string;
+  city: string;
+  timezone: string;
+  bio: string;
 }
 
 const fullName = (user: any): string =>
@@ -25,11 +31,26 @@ const fullName = (user: any): string =>
   user?.auth?.email ||
   'Someone';
 
+/** The full international number, or empty. */
+const phoneOf = (user: any): string => {
+  const phone = user?.auth?.phone;
+  const number = String(phone?.number ?? '').trim();
+  if (!number) return '';
+  const extension = String(phone?.extension ?? '').trim();
+  return extension ? extension + ' ' + number : number;
+};
+
 const toCoworker = (user: any): Coworker => ({
   id: String(user._id),
   name: fullName(user),
   email: user?.auth?.email ?? '',
-  photo: user?.profile?.photo ?? '',
+  // profile_photo, not photo. The old key does not exist on the schema, so
+  // every avatar in staff chat had been falling back to initials.
+  photo: user?.profile?.profile_photo ?? '',
+  phone: phoneOf(user),
+  city: user?.profile?.city ?? '',
+  timezone: user?.profile?.timezone ?? '',
+  bio: user?.profile?.bio ?? '',
   roles: (user?.metadata?.role_keys ?? []).filter((role: string) => STAFF_ROLES.includes(role as never)),
 });
 
@@ -44,6 +65,7 @@ const pubMessage = (doc: any) => ({
   attachment_name: doc.deleted_at ? '' : (doc.attachment_name ?? ''),
   attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
   attachment_size: doc.deleted_at ? 0 : (doc.attachment_size ?? 0),
+  attachment_peaks: doc.deleted_at ? [] : (doc.attachment_peaks ?? []),
   read_at: doc.read_at?.toISOString() ?? null,
   edited_at: doc.edited_at?.toISOString() ?? null,
   // A deleted message keeps no reactions either — there is nothing left to
@@ -69,7 +91,23 @@ const pubMessage = (doc: any) => ({
 /** An @ at a word boundary — enough for a two-person thread. */
 const MENTION_RE = /(^|\s)@\w/;
 
-const SELECT = 'profile.first_name profile.last_name profile.photo auth.email metadata.role_keys';
+/** The shape the panel reads, with every default filled in. */
+const toChatState = (doc: any) => ({
+  panel_open: doc?.panel_open ?? false,
+  role_filter: doc?.role_filter ?? '',
+  open_peer_id: doc?.open_peer_id ?? null,
+  density: doc?.density ?? 'COMFORTABLE',
+  bubble_color: doc?.bubble_color ?? 'primary',
+  font_size: doc?.font_size ?? 14,
+  time_zone: doc?.time_zone ?? '',
+  enter_to_send: doc?.enter_to_send ?? true,
+  mic_id: doc?.mic_id ?? '',
+  cam_id: doc?.cam_id ?? '',
+});
+
+const SELECT =
+  'profile.first_name profile.last_name profile.profile_photo profile.city ' +
+  'profile.timezone profile.bio auth.email auth.phone metadata.role_keys';
 
 export const staffChatService = {
   /**
@@ -97,6 +135,96 @@ export const staffChatService = {
     return docs
       .map(toCoworker)
       .sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  /**
+   * Every earlier wording of one message, oldest first.
+   *
+   * Its own query rather than a field on the message: an edit can change what a
+   * conversation appears to have agreed, so the history is worth keeping — but
+   * shipping it to both parties on every read would hand each of them a record
+   * of the other's second thoughts. It is asked for deliberately, by an admin,
+   * about one message.
+   *
+   * The caller's role is checked by the resolver; this checks the message
+   * exists and hands back what is stored.
+   */
+  async messageEdits(messageId: string) {
+    const doc = await StaffMessageModel.findById(messageId).lean();
+    if (!doc) {
+      throw new GraphQLError('No such message', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return (doc.edits ?? []).map((edit: any) => ({
+      text: edit.text ?? '',
+      at: edit.at?.toISOString?.() ?? null,
+    }));
+  },
+
+  /**
+   * Empty a conversation, for both people.
+   *
+   * The rows are DELETED, not tombstoned like a single "delete for everyone":
+   * a thread of a hundred blanks is not a cleared thread, it is a thread of a
+   * hundred blanks. Both sides lose it, which is why the button asks first.
+   *
+   * The calls stay. They are a record that two people spoke, and the messages
+   * being gone does not make that untrue.
+   */
+  async clearThread(meId: string, peerId: string): Promise<number> {
+    const res = await StaffMessageModel.deleteMany({ thread_key: threadKey(meId, peerId) });
+    return res.deletedCount ?? 0;
+  },
+
+  /** How this person has staff chat set up. Defaults when they have never changed it. */
+  async chatState(meId: string) {
+    const doc = await StaffChatStateModel.findOne({ user_id: meId }).lean();
+    return toChatState(doc);
+  },
+
+  /**
+   * Save whichever settings were passed, leaving the rest alone.
+   *
+   * A partial update rather than a whole document: the panel writes the one
+   * thing that changed as it changes, and two tabs open at once would otherwise
+   * take turns overwriting each other's unrelated settings.
+   */
+  async saveChatState(meId: string, input: Record<string, unknown>) {
+    const set: Record<string, unknown> = {};
+    if (typeof input.panel_open === 'boolean') set.panel_open = input.panel_open;
+    if (typeof input.role_filter === 'string') set.role_filter = input.role_filter;
+    // Explicit null clears it — that is "they went back to the list", which is
+    // a real state and not the same as "unchanged".
+    if (input.open_peer_id !== undefined) set.open_peer_id = input.open_peer_id ?? null;
+    if (typeof input.density === 'string') set.density = input.density;
+    if (typeof input.bubble_color === 'string') set.bubble_color = input.bubble_color;
+    if (typeof input.font_size === 'number') {
+      set.font_size = Math.min(22, Math.max(11, Math.round(input.font_size)));
+    }
+    if (typeof input.time_zone === 'string') set.time_zone = input.time_zone;
+    if (typeof input.enter_to_send === 'boolean') set.enter_to_send = input.enter_to_send;
+    if (typeof input.mic_id === 'string') set.mic_id = input.mic_id;
+    if (typeof input.cam_id === 'string') set.cam_id = input.cam_id;
+
+    const doc = await StaffChatStateModel.findOneAndUpdate(
+      { user_id: meId },
+      { $set: set, $setOnInsert: { user_id: meId } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).lean();
+    return toChatState(doc);
+  },
+
+  /**
+   * One person's name, for a socket event that has to carry it.
+   *
+   * The callee may have the chat closed and nothing loaded when the phone
+   * rings, so the offer brings the name with it rather than assuming the
+   * browser can look it up in time.
+   */
+  async displayName(userId: string): Promise<string> {
+    const doc = await UserModel.findById(userId)
+      .select('profile.first_name profile.last_name auth.email')
+      .lean();
+    return doc ? fullName(doc) : 'Coworker';
   },
 
   /**
@@ -202,6 +330,8 @@ export const staffChatService = {
       name?: string | null;
       type?: string | null;
       size?: number | null;
+      /** Loudness per slice, for a voice note's waveform. */
+      peaks?: number[] | null;
     } | null,
     extra?: { replyToId?: string | null; forwardedFrom?: string | null } | null
   ) {
@@ -233,6 +363,11 @@ export const staffChatService = {
       attachment_name: attachment?.name?.trim() ?? '',
       attachment_type: attachment?.type?.trim() ?? '',
       attachment_size: Math.max(0, Math.floor(Number(attachment?.size) || 0)),
+      // Clamped and capped: this is drawn as bars, and a caller sending ten
+      // thousand of them would be sending a payload, not a waveform.
+      attachment_peaks: (attachment?.peaks ?? [])
+        .slice(0, 128)
+        .map((value) => Math.min(1, Math.max(0, Number(value) || 0))),
       reply_to_id: extra?.replyToId ?? null,
       forwarded_from: extra?.forwardedFrom ?? null,
       // Only the person on the other end can be mentioned in a one-to-one

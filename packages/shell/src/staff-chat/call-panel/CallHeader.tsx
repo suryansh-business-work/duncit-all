@@ -1,18 +1,28 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
-import type { Coworker } from '../queries';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CallKind, CallPhase } from '../useCall';
 
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+
+/** Phase to key; the empty one renders nothing rather than a stray key. */
 const LABEL: Record<CallPhase, string> = {
   idle: '',
-  ringing: 'Ringing…',
-  incoming: 'is calling',
-  connected: 'Connected',
+  ringing: 'shell.chat.call.ringing',
+  incoming: 'shell.chat.call.incoming',
+  connected: 'shell.chat.call.connected',
 };
 
 interface Props {
   phase: CallPhase;
   kind: CallKind;
-  peer: Coworker | null;
+  peerName: string;
+  peerPhoto: string;
   sharing: boolean;
 }
 
@@ -25,7 +35,14 @@ interface Props {
  * ::after on a wrapper rather than a box-shadow on the avatar, so the pulse
  * cannot resize anything around it.
  */
-export default function CallHeader({ phase, kind, peer, sharing }: Readonly<Props>) {
+export default function CallHeader({
+  phase,
+  kind,
+  peerName,
+  peerPhoto,
+  sharing,
+}: Readonly<Props>) {
+  const { t } = useTranslation();
   const ringing = phase === 'ringing' || phase === 'incoming';
 
   return (
@@ -55,15 +72,18 @@ export default function CallHeader({ phase, kind, peer, sharing }: Readonly<Prop
           }),
         }}
       >
-        <Avatar src={peer?.photo || undefined} sx={{ width: 32, height: 32 }} />
+        <Avatar src={peerPhoto || undefined} sx={{ width: 32, height: 32 }}>
+          {initials(peerName)}
+        </Avatar>
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="subtitle2" noWrap>
-          {peer?.name ?? 'Coworker'}
+          {peerName}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {kind === 'VIDEO' ? 'Video' : 'Audio'} · {LABEL[phase]}
-          {sharing ? ' · sharing your screen' : ''}
+          {t(kind === 'VIDEO' ? 'shell.chat.call.video' : 'shell.chat.call.audio')} ·{' '}
+          {LABEL[phase] ? t(LABEL[phase]) : ''}
+          {sharing ? t('shell.chat.call.sharingScreen') : ''}
         </Typography>
       </Box>
     </Stack>

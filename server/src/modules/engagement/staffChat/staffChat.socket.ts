@@ -3,6 +3,7 @@ import { staffChatService } from './staffChat.service';
 import type { CallKind, CallOutcome } from './staffCall.model';
 import {
   addSocket,
+  lastSeenOf,
   PRESENCE_STATUSES,
   removeSocket,
   setStatus,
@@ -27,11 +28,41 @@ const isStatus = (value: unknown): value is PresenceStatus =>
 
 function broadcastPresence(userId: string, status: PresenceStatus) {
   try {
-    getIo().to(STAFF_ROOM).emit('staff_presence', { user_id: userId, status });
+    // last_seen rides along so a reader can say WHEN somebody went, not just
+    // that they are gone.
+    getIo()
+      .to(STAFF_ROOM)
+      .emit('staff_presence', { user_id: userId, status, last_seen: lastSeenOf(userId) });
   } catch {
     // No socket server (seed scripts, tests).
   }
 }
+
+/**
+ * Who each person is currently on a call with.
+ *
+ * The media is peer to peer, so this server would otherwise have no idea a call
+ * was in progress — and that is exactly what it needs to know when somebody's
+ * browser vanishes. A refresh, a closed tab or a crash all arrive here as a
+ * socket disconnect and nothing else; without this map the other end sits
+ * looking at a frozen picture until they give up and hang up themselves.
+ */
+const callPartner = new Map<string, string>();
+
+const pair = (a: string, b: string) => {
+  callPartner.set(a, b);
+  callPartner.set(b, a);
+};
+
+const unpair = (userId: string) => {
+  const other = callPartner.get(userId);
+  callPartner.delete(userId);
+  if (other) callPartner.delete(other);
+  return other ?? null;
+};
+
+/** Every event that means "this call is over", from either side. */
+const ENDING = new Set(['call_decline', 'call_end']);
 
 /**
  * Signalling only.
@@ -43,11 +74,25 @@ function broadcastPresence(userId: string, status: PresenceStatus) {
  */
 function attachCallRelay(socket: AuthedSocket) {
   const relay = (event: string) => {
-    socket.on(event, (payload: { to: string } & Record<string, unknown>) => {
+    socket.on(event, async (payload: { to: string } & Record<string, unknown>) => {
       if (!socket.userId || !payload?.to) return;
+      const me = socket.userId;
+
+      if (event === 'call_offer' || event === 'call_answer') {
+        pair(me, payload.to);
+      } else if (ENDING.has(event)) {
+        unpair(me);
+      }
+
+      // The offer carries the caller's NAME. Whoever is being rung may have the
+      // chat closed and nothing loaded, so resolving the name in the browser
+      // means the ringing window says "Coworker" for the one moment it matters.
+      const extra =
+        event === 'call_offer' ? { from_name: await staffChatService.displayName(me) } : {};
+
       getIo()
         .to(room(payload.to))
-        .emit(event, { ...payload, from: socket.userId });
+        .emit(event, { ...payload, ...extra, from: me });
     });
   };
   relay('call_offer');
@@ -114,6 +159,22 @@ export function attachStaffChatHandlers() {
 
     socket.on('disconnect', () => {
       const next = removeSocket(userId);
+
+      /*
+        Their last tab went: end whatever call they were on.
+
+        A refresh is a disconnect followed by a connect, and the browser that
+        reloaded comes back with no call at all — so leaving the other end
+        connected would leave them talking to a page that no longer exists.
+        Only on the LAST socket: closing one of three tabs is not leaving, and
+        the call is still up in the other two.
+      */
+      if (next === 'OFFLINE') {
+        const partner = unpair(userId);
+        if (partner) {
+          getIo().to(room(partner)).emit('call_end', { from: userId, reason: 'DISCONNECTED' });
+        }
+      }
       // Only announce a change: closing one of three tabs is not leaving.
       if (next === 'OFFLINE' || next !== statusOf(userId)) broadcastPresence(userId, next);
     });

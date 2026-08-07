@@ -1,6 +1,7 @@
 import { Box, Button, Stack } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import CallEndIcon from '@mui/icons-material/CallEnd';
+import { useTranslation } from '../../i18n/useTranslation';
 import CallSettingsMenu from '../CallSettingsMenu';
 import LiveControls, { type LiveControlsProps } from './LiveControls';
 import type { CallKind, CallPhase } from '../useCall';
@@ -36,9 +37,10 @@ export default function CallControls({
   onCam,
   ...live
 }: Readonly<CallControlsProps>) {
+  const { t } = useTranslation();
   const connected = phase === 'connected';
   const video = kind === 'VIDEO';
-  const hangUpLabel = phase === 'ringing' ? 'Cancel' : 'Hang up';
+  const hangUpLabel = t(phase === 'ringing' ? 'shell.chat.call.cancel' : 'shell.chat.call.hangUp');
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
@@ -51,7 +53,7 @@ export default function CallControls({
             startIcon={<CallIcon />}
             onClick={onAnswer}
           >
-            Answer
+            {t('shell.chat.call.answer')}
           </Button>
           <Button
             size="small"
@@ -60,7 +62,7 @@ export default function CallControls({
             startIcon={<CallEndIcon />}
             onClick={onDecline}
           >
-            Decline
+            {t('shell.chat.call.decline')}
           </Button>
         </>
       ) : (

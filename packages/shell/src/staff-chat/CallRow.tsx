@@ -4,6 +4,7 @@ import CallMissedIcon from '@mui/icons-material/CallMissed';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import DownloadIcon from '@mui/icons-material/Download';
+import { useTranslation } from '../i18n/useTranslation';
 import { callDuration } from './timeline';
 import type { StaffCall } from './queries';
 import type { ChatFormats } from './useChatSettings';
@@ -16,11 +17,30 @@ interface Props {
   onPlay: (url: string) => void;
 }
 
-const OUTCOME_TEXT: Record<StaffCall['outcome'], string> = {
+/**
+ * Direction and kind to key.
+ *
+ * Spelled out rather than built from pieces: a template-built key is invisible
+ * both to the shipped-key verifier and to anyone grepping for where a string
+ * is rendered.
+ */
+const KIND_KEY = {
+  out: {
+    audio: 'shell.chat.callRow.outgoingAudio',
+    video: 'shell.chat.callRow.outgoingVideo',
+  },
+  in: {
+    audio: 'shell.chat.callRow.incomingAudio',
+    video: 'shell.chat.callRow.incomingVideo',
+  },
+} as const;
+
+/** Outcome to key. ANSWERED adds nothing — the duration already says it. */
+const OUTCOME_KEY: Record<StaffCall['outcome'], string> = {
   ANSWERED: '',
-  MISSED: 'Missed',
-  DECLINED: 'Declined',
-  CANCELLED: 'Cancelled',
+  MISSED: 'shell.chat.callRow.missed',
+  DECLINED: 'shell.chat.callRow.declined',
+  CANCELLED: 'shell.chat.callRow.cancelled',
 };
 
 /**
@@ -32,12 +52,14 @@ const OUTCOME_TEXT: Record<StaffCall['outcome'], string> = {
  * long it ran, and whether there is a recording.
  */
 export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>) {
+  const { t } = useTranslation();
   const outgoing = call.from_user_id === meId;
   const answered = call.outcome === 'ANSWERED';
   const when = call.started_at ? formats.full.format(new Date(call.started_at)) : '';
-  const note = OUTCOME_TEXT[call.outcome];
-  const direction = outgoing ? 'Outgoing' : 'Incoming';
-  const label = `${direction} ${call.kind === 'VIDEO' ? 'video' : 'audio'} call`;
+  const noteKey = OUTCOME_KEY[call.outcome];
+  const note = noteKey ? t(noteKey) : '';
+  const video = call.kind === 'VIDEO';
+  const label = t(KIND_KEY[outgoing ? 'out' : 'in'][video ? 'video' : 'audio']);
 
   return (
     <Stack alignItems="center" sx={{ my: 0.5 }}>
@@ -82,12 +104,13 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
             color="primary"
             variant="outlined"
             icon={<PlayCircleOutlineIcon />}
-            label="Recording"
+            label={t('shell.chat.callRow.recording')}
+            aria-label={t('shell.chat.callRow.play')}
             onClick={() => onPlay(call.recording_url as string)}
           />
         )}
         {call.recording_url && (
-          <Tooltip title="Download the recording">
+          <Tooltip title={t('shell.chat.callRow.download')}>
             <IconButton
               size="small"
               component={Link}
@@ -95,7 +118,7 @@ export default function CallRow({ call, meId, formats, onPlay }: Readonly<Props>
               download="call-recording.mp4"
               target="_blank"
               rel="noreferrer"
-              aria-label="Download the recording"
+              aria-label={t('shell.chat.callRow.download')}
             >
               <DownloadIcon fontSize="small" />
             </IconButton>

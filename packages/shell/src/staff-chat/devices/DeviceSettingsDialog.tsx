@@ -11,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import DevicePicker from './DevicePicker';
 import { useDeviceTest } from './useDeviceTest';
 
@@ -43,6 +44,7 @@ export default function DeviceSettingsDialog({
   showCamera,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { devices, stream, level, error, start, stop, testing } = useDeviceTest(micId, camId, open);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -52,16 +54,16 @@ export default function DeviceSettingsDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Audio &amp; video</DialogTitle>
+      <DialogTitle>{t('shell.chat.devices.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
 
-          <DevicePicker label="Microphone" devices={devices.mics} value={micId} onChange={onMic} />
+          <DevicePicker label={t('shell.chat.devices.microphone')} devices={devices.mics} value={micId} onChange={onMic} />
 
           <Box>
             <Typography variant="caption" color="text.secondary">
-              Input level
+              {t('shell.chat.devices.inputLevel')}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -69,12 +71,12 @@ export default function DeviceSettingsDialog({
               sx={{ height: 8, borderRadius: 1, mt: 0.5 }}
             />
             <Typography variant="caption" color="text.secondary">
-              {testing ? 'Say something — the bar should move.' : 'Press Test to try these.'}
+              {t(testing ? 'shell.chat.devices.saySomething' : 'shell.chat.devices.pressTest')}
             </Typography>
           </Box>
 
           {showCamera && (
-            <DevicePicker label="Camera" devices={devices.cams} value={camId} onChange={onCam} />
+            <DevicePicker label={t('shell.chat.devices.camera')} devices={devices.cams} value={camId} onChange={onCam} />
           )}
 
           {showCamera && (
@@ -91,12 +93,12 @@ export default function DeviceSettingsDialog({
       </DialogContent>
       <DialogActions>
         {testing ? (
-          <Button onClick={stop}>Stop test</Button>
+          <Button onClick={stop}>{t('shell.chat.devices.stopTest')}</Button>
         ) : (
-          <Button onClick={() => start(showCamera).catch(() => undefined)}>Test</Button>
+          <Button onClick={() => start(showCamera).catch(() => undefined)}>{t('shell.chat.devices.test')}</Button>
         )}
         <Button variant="contained" onClick={onClose}>
-          Done
+          {t('shell.chat.devices.done')}
         </Button>
       </DialogActions>
     </Dialog>

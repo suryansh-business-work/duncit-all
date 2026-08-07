@@ -1,4 +1,5 @@
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import MessageActions from '../MessageActions';
 import MessageStatus from '../MessageStatus';
 import type { StaffMessage } from '../queries';
@@ -14,6 +15,8 @@ interface Props {
   onForward: () => void;
   onPin: () => void;
   onCopy: () => void;
+  onStartSelect: () => void;
+  onEditHistory?: () => void;
   onEdit: () => void;
   onDelete: (forEveryone: boolean) => void;
   onRetry?: () => void;
@@ -36,10 +39,13 @@ export default function BubbleFooter({
   onForward,
   onPin,
   onCopy,
+  onStartSelect,
+  onEditHistory,
   onEdit,
   onDelete,
   onRetry,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const at = message.created_at ? new Date(message.created_at) : null;
   const showTools = !deleted && !editing;
 
@@ -48,7 +54,7 @@ export default function BubbleFooter({
       <Tooltip title={at ? formats.full.format(at) : ''}>
         <Typography variant="caption" sx={{ opacity: 0.7, flex: 1, cursor: 'default' }}>
           {at ? formats.time.format(at) : ''}
-          {message.edited_at && !deleted ? ' · edited' : ''}
+          {message.edited_at && !deleted ? ` · ${t('shell.chat.thread.edited')}` : ''}
         </Typography>
       </Tooltip>
 
@@ -71,6 +77,8 @@ export default function BubbleFooter({
             onForward={onForward}
             onPin={onPin}
             onCopy={onCopy}
+            onStartSelect={onStartSelect}
+            onEditHistory={onEditHistory}
             onEdit={onEdit}
             onDelete={onDelete}
           />

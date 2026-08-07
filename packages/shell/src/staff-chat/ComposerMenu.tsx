@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -19,13 +20,14 @@ interface Props {
  * natural home for whatever comes next.
  */
 export default function ComposerMenu({ onShareLocation, onShareCurrentLocation }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const close = () => setAnchor(null);
 
   return (
     <>
-      <Tooltip title="More">
-        <IconButton size="small" aria-label="More options" onClick={(e) => setAnchor(e.currentTarget)}>
+      <Tooltip title={t('shell.chat.composer.more')}>
+        <IconButton size="small" aria-label={t('shell.chat.composer.moreOptions')} onClick={(e) => setAnchor(e.currentTarget)}>
           <MoreVertIcon fontSize="small" />
         </IconButton>
       </Tooltip>

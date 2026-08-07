@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import { Box, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import SignalWifiStatusbar4BarIcon from '@mui/icons-material/SignalWifiStatusbar4Bar';
 import SignalWifiStatusbarConnectedNoInternet4Icon from '@mui/icons-material/SignalWifiStatusbarConnectedNoInternet4';
@@ -34,6 +35,7 @@ export default function ConnectionMeter({
   probeBytes,
   intervalMs = 15_000,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [mbps, setMbps] = useState<number | null>(null);
 
   // Nothing to measure with: draw nothing rather than reach for a URL that is
@@ -72,7 +74,7 @@ export default function ConnectionMeter({
           value={filled}
           color={slow ? 'error' : 'success'}
           sx={{ flex: 1, height: 4, borderRadius: 2 }}
-          aria-label="Connection quality"
+          aria-label={t('shell.chat.call.quality')}
         />
         {slow && (
           <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>

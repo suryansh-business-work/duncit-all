@@ -1,4 +1,5 @@
 import { MenuItem, TextField } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   label: string;
@@ -15,6 +16,8 @@ interface Props {
  * looks like "you have no microphone" when it means "we have not asked yet".
  */
 export default function DevicePicker({ label, devices, value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <TextField
       select
@@ -24,10 +27,10 @@ export default function DevicePicker({ label, devices, value, onChange }: Readon
       value={value}
       onChange={(event) => onChange(event.target.value)}
     >
-      <MenuItem value="">System default</MenuItem>
+      <MenuItem value="">{t('shell.chat.devices.systemDefault')}</MenuItem>
       {devices.map((device, index) => (
         <MenuItem key={device.deviceId || `device-${index}`} value={device.deviceId}>
-          {device.label || `Device ${index + 1}`}
+          {device.label || t('shell.chat.devices.device', { vars: { index: String(index + 1) } })}
         </MenuItem>
       ))}
     </TextField>

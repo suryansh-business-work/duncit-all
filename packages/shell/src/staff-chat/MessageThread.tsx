@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import CallRow from './CallRow';
-import ThreadItem from './ThreadItem';
-import { DaySeparator, JumpToLatest, ThreadSkeleton } from './ThreadChrome';
+import { useTranslation } from '../i18n/useTranslation';
+import ThreadEntry, { type ThreadEntryHandlers } from './ThreadEntry';
+import { JumpToLatest, ThreadSkeleton } from './ThreadChrome';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 import { buildTimeline } from './timeline';
 import type { StaffCall, StaffMessage } from './queries';
@@ -12,18 +12,17 @@ function dayLabel(iso: string, day: ChatFormats['day']): string {
   const at = new Date(iso);
   const now = new Date();
   const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-  if (sameDay(at, now)) return 'Today';
+  if (sameDay(at, now)) return 'shell.chat.thread.today';
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  if (sameDay(at, yesterday)) return 'Yesterday';
+  if (sameDay(at, yesterday)) return 'shell.chat.thread.yesterday';
   return day.format(at);
 }
 
-interface Props {
+interface OwnProps {
   messages: StaffMessage[];
   /** Calls on this line, merged into the thread by time. */
   calls: StaffCall[];
-  onPlayRecording: (url: string) => void;
   meId: string;
   loading: boolean;
   /** More history exists above — drives the lazy load. */
@@ -34,19 +33,13 @@ interface Props {
   spacing: number;
   nameOf: (userId: string) => string;
   selectedIds?: Set<string>;
-  onSelect?: (id: string) => void;
   /** A search hit to scroll to and flash. Cleared by the parent afterwards. */
   jumpToId?: string | null;
   onLoadMore: () => void;
-  onEdit: (id: string, text: string) => void;
-  onDelete: (id: string, forEveryone: boolean) => void;
-  onReact: (id: string, emoji: string) => void;
-  onReply: (message: StaffMessage) => void;
-  onForward: (message: StaffMessage) => void;
-  onPin: (id: string) => void;
-  onRetry?: (message: StaffMessage) => void;
-  onNavigate?: (path: string) => void;
 }
+
+/** Everything the thread only forwards — see ThreadEntry, which consumes it. */
+type Props = OwnProps & Omit<ThreadEntryHandlers, 'onNode'>;
 
 /**
  * The scrolling conversation.
@@ -59,7 +52,6 @@ interface Props {
 export default function MessageThread({
   messages,
   calls,
-  onPlayRecording,
   meId,
   loading,
   hasMore,
@@ -69,18 +61,11 @@ export default function MessageThread({
   spacing,
   nameOf,
   selectedIds,
-  onSelect,
   jumpToId,
   onLoadMore,
-  onEdit,
-  onDelete,
-  onReact,
-  onReply,
-  onForward,
-  onPin,
-  onRetry,
-  onNavigate,
+  ...handlers
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   // Keyed nodes rather than document ids: two panels on one page would collide,
@@ -158,61 +143,44 @@ export default function MessageThread({
         {hasMore && (
           <Box sx={{ textAlign: 'center' }}>
             <Button size="small" onClick={onLoadMore} disabled={loadingMore}>
-              {loadingMore ? 'Loading…' : 'Earlier messages'}
+              {t(loadingMore ? 'shell.chat.thread.loading' : 'shell.chat.thread.earlier')}
             </Button>
           </Box>
         )}
 
         {messages.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            Say hello.
+            {t('shell.chat.thread.sayHello')}
           </Typography>
         )}
 
         {timeline.map((entry) => {
           const at = entry.kind === 'CALL' ? entry.call.started_at : entry.message.created_at;
-          const day = at ? dayLabel(at, formats.day) : '';
+          const raw = at ? dayLabel(at, formats.day) : '';
+          // dayLabel returns a KEY for today/yesterday and a formatted date
+          // otherwise — the date is already localised by the formatter.
+          const day = raw.startsWith('shell.') ? t(raw) : raw;
           const newDay = day && day !== lastDay;
           if (newDay) lastDay = day;
+          const replyId = entry.kind === 'MESSAGE' ? entry.message.reply_to_id : null;
 
-          if (entry.kind === 'CALL') {
-            return (
-              <Box key={entry.id}>
-                {newDay && <DaySeparator label={day} />}
-                <CallRow
-                  call={entry.call}
-                  meId={meId}
-                  formats={formats}
-                  onPlay={onPlayRecording}
-                />
-              </Box>
-            );
-          }
-
-          const { message } = entry;
           return (
-            <ThreadItem
+            <ThreadEntry
               key={entry.id}
-              message={message}
+              entry={entry}
               meId={meId}
               settings={settings}
               formats={formats}
               nameOf={nameOf}
-              repliedTo={message.reply_to_id ? (byId.get(message.reply_to_id) ?? null) : null}
+              repliedTo={replyId ? (byId.get(replyId) ?? null) : null}
               dayLabel={newDay ? day : ''}
-              firstUnread={message.id === firstUnreadId}
-              highlighted={message.id === jumpToId}
-              selected={selectedIds?.has(message.id)}
-              onSelect={onSelect}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onReact={onReact}
-              onReply={onReply}
-              onForward={onForward}
-              onPin={onPin}
-              onRetry={onRetry}
-              onNavigate={onNavigate}
+              firstUnread={entry.kind === 'MESSAGE' && entry.message.id === firstUnreadId}
+              highlighted={entry.kind === 'MESSAGE' && entry.message.id === jumpToId}
+              selected={Boolean(
+                entry.kind === 'MESSAGE' && selectedIds?.has(entry.message.id)
+              )}
               onNode={registerNode}
+              {...handlers}
             />
           );
         })}

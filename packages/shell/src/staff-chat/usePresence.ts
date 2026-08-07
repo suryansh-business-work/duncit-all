@@ -33,6 +33,8 @@ function readChoice(): PresenceStatus {
 export function usePresence(socket: Socket | null, meId?: string | null) {
   const [mine, setMine] = useState<PresenceStatus>(readChoice);
   const [others, setOthers] = useState<Record<string, PresenceStatus>>({});
+  /** When each person was last connected — what 'last seen' reads from. */
+  const [lastSeen, setLastSeen] = useState<Record<string, string>>({});
   // Read inside the timer without making it a dependency, or every keystroke
   // would tear the listeners down and rebuild them.
   const mineRef = useRef(mine);
@@ -66,9 +68,16 @@ export function usePresence(socket: Socket | null, meId?: string | null) {
 
   useEffect(() => {
     if (!socket) return undefined;
-    const onPresence = (payload: { user_id: string; status: PresenceStatus }) => {
+    const onPresence = (payload: {
+      user_id: string;
+      status: PresenceStatus;
+      last_seen?: string | null;
+    }) => {
       if (!payload?.user_id || payload.user_id === meId) return;
       setOthers((current) => ({ ...current, [payload.user_id]: payload.status }));
+      if (payload.last_seen) {
+        setLastSeen((current) => ({ ...current, [payload.user_id]: payload.last_seen as string }));
+      }
     };
     socket.on('staff_presence', onPresence);
     return () => {
@@ -105,5 +114,5 @@ export function usePresence(socket: Socket | null, meId?: string | null) {
     };
   }, [socket, publish]);
 
-  return { mine, choose, others, statusOf: (id: string): PresenceStatus => others[id] ?? 'OFFLINE' };
+  return { mine, choose, others, lastSeen, statusOf: (id: string): PresenceStatus => others[id] ?? 'OFFLINE' };
 }

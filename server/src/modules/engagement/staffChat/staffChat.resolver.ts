@@ -3,9 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
 import { statusOf } from './staffPresence';
-import { GraphQLError } from 'graphql';
 import { previewLink } from './staffChat.links';
-import { liveKitGrant } from './staffChat.livekit';
 import { emitStaffMessage } from './staffChat.socket';
 import { snapshot } from './staffPresence';
 
@@ -38,20 +36,6 @@ export const staffChatResolvers = {
     ) => {
       const me = requireRole(ctx, ROLES);
       return staffChatService.messages(me.id, args.peer_id, args.limit ?? 50, args.before);
-    },
-    staffScreenShareGrant: async (
-      _p: unknown,
-      args: { peer_id: string },
-      ctx: GraphQLContext
-    ) => {
-      const me = requireRole(ctx, ROLES);
-      // The peer has to be a coworker, or this becomes a way to open a room
-      // with anybody whose id you happen to know.
-      const peers = await staffChatService.coworkers(me.id);
-      if (!peers.some((person) => person.id === args.peer_id)) {
-        throw new GraphQLError('That person is not a coworker', { extensions: { code: 'NOT_FOUND' } });
-      }
-      return liveKitGrant(me.id, me.email ?? 'Coworker', args.peer_id);
     },
     staffLinkPreview: (_p: unknown, args: { url: string }, ctx: GraphQLContext) => {
       const me = requireRole(ctx, ROLES);
@@ -104,8 +88,28 @@ export const staffChatResolvers = {
       const me = requireRole(ctx, ROLES);
       return staffChatService.calls(me.id, args.peer_id, args.limit ?? 50);
     },
+    staffMessageEdits: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ['SUPER_ADMIN']);
+      return staffChatService.messageEdits(args.id);
+    },
+    staffChatState: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.chatState(me.id);
+    },
   },
   Mutation: {
+    saveStaffChatState: (
+      _p: unknown,
+      args: { input: Record<string, unknown> },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.saveChatState(me.id, args.input ?? {});
+    },
+    clearStaffThread: (_p: unknown, args: { peer_id: string }, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.clearThread(me.id, args.peer_id);
+    },
     attachStaffCallRecording: (
       _p: unknown,
       args: { call_id: string; url: string },
@@ -123,6 +127,7 @@ export const staffChatResolvers = {
         attachment_name?: string | null;
         attachment_type?: string | null;
         attachment_size?: number | null;
+        attachment_peaks?: number[] | null;
         reply_to_id?: string | null;
       },
       ctx: GraphQLContext
@@ -137,6 +142,7 @@ export const staffChatResolvers = {
           name: args.attachment_name,
           type: args.attachment_type,
           size: args.attachment_size,
+          peaks: args.attachment_peaks ?? [],
         },
         { replyToId: args.reply_to_id }
       );

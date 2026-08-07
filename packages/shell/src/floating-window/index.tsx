@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
+import { useTranslation } from '../i18n/useTranslation';
 import { ResizeGrip, TitleBar } from './WindowChrome';
 import { useWindowDrag, type WindowRect } from './useWindowDrag';
 
@@ -12,6 +13,14 @@ export interface FloatingWindowProps {
   initial: WindowRect;
   /** Shown before closing. Absent means close without asking. */
   closeWarning?: { title: string; message: string; confirmLabel: string };
+  /**
+   * The content manages its own height instead of scrolling.
+   *
+   * For a call: the controls belong on a fixed floor with the picture taking
+   * whatever is left, and a scrolling body would let the hang-up button drift
+   * off the bottom the moment somebody turned their camera on.
+   */
+  fill?: boolean;
   onClose: () => void;
   children: React.ReactNode;
 }
@@ -35,9 +44,11 @@ export default function FloatingWindow({
   subtitle,
   initial,
   closeWarning,
+  fill,
   onClose,
   children,
 }: Readonly<FloatingWindowProps>) {
+  const { t } = useTranslation();
   const { rect, begin, move, end } = useWindowDrag(initial);
   const [minimised, setMinimised] = useState(false);
   const [maximised, setMaximised] = useState(false);
@@ -53,9 +64,18 @@ export default function FloatingWindow({
     onClose();
   };
 
-  const box = maximised
+  /*
+    Minimised wins over maximised.
+
+    Otherwise minimising a full-screen window leaves the whole screen covered
+    by one line of text, which is the opposite of what the button says. Rolled
+    up to its bar in its own corner is what minimise means here — there is no
+    taskbar to go to.
+  */
+  const spread = maximised
     ? { left: 0, top: 0, width: '100vw', height: '100dvh' }
-    : { left: rect.x, top: rect.y, width: rect.width, height: minimised ? 'auto' : rect.height };
+    : { left: rect.x, top: rect.y, width: rect.width, height: rect.height };
+  const box = minimised ? { ...spread, height: 'auto' } : spread;
 
   return (
     <>
@@ -89,18 +109,26 @@ export default function FloatingWindow({
 
         {minimised ? (
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, py: 1 }}>
-            Still running — this window is minimised.
+            {t('shell.chat.window.minimised')}
           </Typography>
         ) : (
-          <Stack sx={{ flex: 1, minHeight: 0, overflow: 'auto', overscrollBehavior: 'contain' }}>
+          <Stack
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: fill ? 'hidden' : 'auto',
+              overscrollBehavior: 'contain',
+            }}
+          >
             {children}
           </Stack>
         )}
 
+        {/* Anchored to the Paper, which is already positioned. It used to sit
+            in a wrapper of its own height — zero — so the grip floated above
+            the corner it was meant to be. */}
         {!maximised && !minimised && (
-          <Box sx={{ position: 'relative' }}>
-            <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={end} />
-          </Box>
+          <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={end} />
         )}
       </Paper>
 

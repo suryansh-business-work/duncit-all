@@ -10,6 +10,12 @@ export const staffChatTypeDefs = /* GraphQL */ `
     photo: String!
     "Only their staff roles — the ones that put them in this directory."
     roles: [String!]!
+    "Reachable off-chat. Empty when they have not given one."
+    phone: String!
+    city: String!
+    "Their IANA zone, so you can see whether it is a reasonable hour to call."
+    timezone: String!
+    bio: String!
   }
 
 "One person's reaction to one message. At most one per person per message."
@@ -40,18 +46,6 @@ export const staffChatTypeDefs = /* GraphQL */ `
     access_note: String
   }
 
-  """
-  Everything the browser needs to join the screen-share room for this pair.
-  The API secret stays on the server; this is the only thing that crosses.
-  """
-  type StaffLiveKitGrant {
-    url: String!
-    token: String!
-    room: String!
-    "Seconds the token is valid, so a long session can refresh before it lapses."
-    expiresIn: Int!
-  }
-
   "Narrows a thread search. Every field is optional and they combine."
   input StaffSearchInput {
     text: String
@@ -77,6 +71,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     attachment_type: String!
     "Bytes, so a reader can judge before downloading. 0 when unknown."
     attachment_size: Int!
+    "Loudness per slice, 0-1, for a voice note waveform."
+    attachment_peaks: [Float!]!
     "When the recipient read it; null until they do."
     read_at: String
     "Set when the author changed it, so the reader is told."
@@ -105,12 +101,59 @@ export const staffChatTypeDefs = /* GraphQL */ `
     created_at: String
   }
 
+  """
+  How one person has staff chat set up — what was open and how it looks.
+
+  On the server rather than in localStorage because the same panel renders in
+  all seventeen consoles: "per browser" meant it forgot everything the moment
+  you moved to a different portal, and knew nothing at all on a second machine.
+  """
+  type StaffChatState {
+    panel_open: Boolean!
+    "The team filter, or '' for everyone."
+    role_filter: String!
+    "The conversation that was open, so a refresh returns to it."
+    open_peer_id: ID
+    "COMPACT or COMFORTABLE."
+    density: String!
+    bubble_color: String!
+    font_size: Int!
+    "IANA zone for every timestamp, or '' to follow the machine."
+    time_zone: String!
+    enter_to_send: Boolean!
+    "The microphone and camera chosen in Audio & video settings."
+    mic_id: String!
+    cam_id: String!
+  }
+
+  "Every field optional: the panel saves the one thing that changed."
+  input StaffChatStateInput {
+    panel_open: Boolean
+    role_filter: String
+    open_peer_id: ID
+    density: String
+    bubble_color: String
+    font_size: Int
+    time_zone: String
+    enter_to_send: Boolean
+    mic_id: String
+    cam_id: String
+  }
+
+  "One earlier wording of a message, kept when its author changed it."
+  type StaffMessageEdit {
+    text: String!
+    at: String
+  }
+
   "Whether someone is at their desk. Held for as long as their socket is."
   type StaffPresence {
     user_id: ID!
     "ONLINE, AWAY, BUSY or OFFLINE."
     status: String!
     since: String
+    "When they last had a socket open — what 'last seen' reads from."
+    last_seen: String
   }
 
   """
@@ -153,11 +196,6 @@ export const staffChatTypeDefs = /* GraphQL */ `
     staffMessages(peer_id: ID!, limit: Int, before: String): [StaffMessage!]!
     "Resolve a link for the card that renders it."
     staffLinkPreview(url: String!): StaffLinkPreview!
-    """
-    A token to join the screen-share room shared with this coworker. The room
-    is derived from the pair, so nobody can ask for somebody else's.
-    """
-    staffScreenShareGrant(peer_id: ID!): StaffLiveKitGrant!
     "Everything pinned on this line, newest pin first."
     pinnedStaffMessages(peer_id: ID!): [StaffMessage!]!
     "Find something that was said on this line."
@@ -168,6 +206,14 @@ export const staffChatTypeDefs = /* GraphQL */ `
     staffPresence: [StaffPresence!]!
     "Every call on this line, newest first."
     staffCalls(peer_id: ID!, limit: Int): [StaffCall!]!
+    "Your own chat setup, with defaults when you have never changed it."
+    staffChatState: StaffChatState!
+    """
+    Every earlier wording of one message, oldest first. SUPER_ADMIN only: an
+    edit history is a record of somebody's second thoughts, and handing it to
+    both parties on every read is not the same as keeping it.
+    """
+    staffMessageEdits(id: ID!): [StaffMessageEdit!]!
   }
 
   extend type Mutation {
@@ -189,6 +235,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
       attachment_name: String
       attachment_type: String
       attachment_size: Int
+      "Waveform samples, for a voice note."
+      attachment_peaks: [Float!]
     ): StaffMessage!
     "Change your own words. Only the text — never the attachment."
     editStaffMessage(id: ID!, text: String!): StaffMessage!
@@ -205,5 +253,13 @@ export const staffChatTypeDefs = /* GraphQL */ `
     pinStaffMessage(id: ID!): StaffMessage!
     "Mark what they sent you as read. Returns how many that was."
     markStaffThreadRead(peer_id: ID!): Int!
+    """
+    Empty this conversation for BOTH people and return how many messages went.
+    Deleted, not blanked: a thread of tombstones is not a cleared thread. The
+    call history stays — that two people spoke is still true.
+    """
+    clearStaffThread(peer_id: ID!): Int!
+    "Save part of your chat setup. Anything omitted is left as it was."
+    saveStaffChatState(input: StaffChatStateInput!): StaffChatState!
   }
 `;

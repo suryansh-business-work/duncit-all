@@ -235,8 +235,8 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         onMic={call.setMicId}
         onCam={call.setCamId}
         sharing={call.sharing}
-        onShare={() => void call.shareScreen()}
-        onStopSharing={() => void call.stopSharing()}
+        onShare={() => call.shareScreen().catch(() => undefined)}
+        onStopSharing={() => call.stopSharing().catch(() => undefined)}
       />
 
       <Box sx={{ flex: 1, minHeight: 0 }}>

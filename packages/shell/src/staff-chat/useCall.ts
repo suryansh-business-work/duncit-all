@@ -22,6 +22,22 @@ interface Signal {
   candidate?: RTCIceCandidateInit;
 }
 
+/** An exact deviceId, or "whatever the OS prefers" when none is chosen. */
+const pickDevice = (deviceId: string): MediaTrackConstraints | true =>
+  deviceId ? { deviceId: { exact: deviceId } } : true;
+
+/** Open ONE track from a chosen device — the unit a mid-call swap needs. */
+async function openTrack(
+  want: 'audio' | 'video',
+  deviceId: string
+): Promise<MediaStreamTrack | undefined> {
+  const exact = pickDevice(deviceId);
+  const fresh = await globalThis.navigator.mediaDevices.getUserMedia(
+    want === 'audio' ? { audio: exact } : { video: exact }
+  );
+  return want === 'audio' ? fresh.getAudioTracks()[0] : fresh.getVideoTracks()[0];
+}
+
 /**
  * One call at a time, in the browser.
  *
@@ -104,14 +120,80 @@ export function useCall(socket: Socket | null, meId: string) {
       // An exact deviceId fails loudly when that device has been unplugged,
       // which is the right outcome — falling back to a different microphone
       // without saying so is how people end up broadcasting the wrong room.
+      const wantedCamera = pickDevice(camId);
       const stream = await globalThis.navigator.mediaDevices.getUserMedia({
-        audio: micId ? { deviceId: { exact: micId } } : true,
-        video: callKind === 'VIDEO' ? (camId ? { deviceId: { exact: camId } } : true) : false,
+        audio: pickDevice(micId),
+        video: callKind === 'VIDEO' ? wantedCamera : false,
       });
       localStream.current = stream;
       return stream;
     },
     [camId, micId]
+  );
+
+  /**
+   * Put the new track where the old one was in the local preview, so teardown
+   * still stops what is actually live and the self-view does not freeze.
+   */
+  const swapInPreview = useCallback((previous: MediaStreamTrack | null, next: MediaStreamTrack) => {
+    const preview = localStream.current;
+    if (!preview || !previous) return;
+    preview.removeTrack(previous);
+    preview.addTrack(next);
+  }, []);
+
+  /**
+   * Point the call at a different microphone or camera, mid-call.
+   *
+   * `openMedia` only runs when a call STARTS, so setting the state alone would
+   * have left the menu doing nothing until the next one — a settings control
+   * that silently does nothing is worse than not having one. Same mechanism as
+   * the screen share: open the one track and swap what the sender is pushing,
+   * with no renegotiation.
+   */
+  const useDevice = useCallback(
+    async (want: 'audio' | 'video', deviceId: string) => {
+      // No call in progress: the choice is remembered and the next call opens it.
+      const sender = pc.current?.getSenders().find((s) => s.track?.kind === want);
+      if (!sender) return;
+      try {
+        const track = await openTrack(want, deviceId);
+        if (!track) return;
+        // Sharing: the sender is carrying the screen, so the new camera waits
+        // for sharing to stop rather than yanking it out from under them.
+        if (want === 'video' && screenStream.current) {
+          const shelved = cameraTrack.current;
+          cameraTrack.current = track;
+          swapInPreview(shelved, track);
+          shelved?.stop();
+          return;
+        }
+        const previous = sender.track;
+        await sender.replaceTrack(track);
+        swapInPreview(previous, track);
+        previous?.stop();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not switch device');
+      }
+    },
+    [swapInPreview]
+  );
+
+  /** Remember the choice AND apply it to a call already running. */
+  const chooseMic = useCallback(
+    (deviceId: string) => {
+      setMicId(deviceId);
+      useDevice('audio', deviceId).catch(() => undefined);
+    },
+    [useDevice]
+  );
+
+  const chooseCam = useCallback(
+    (deviceId: string) => {
+      setCamId(deviceId);
+      useDevice('video', deviceId).catch(() => undefined);
+    },
+    [useDevice]
   );
 
   /**
@@ -294,8 +376,8 @@ export function useCall(socket: Socket | null, meId: string) {
     remoteStream: remoteStream.current,
     micId,
     camId,
-    setMicId,
-    setCamId,
+    setMicId: chooseMic,
+    setCamId: chooseCam,
     sharing,
     shareScreen,
     stopSharing,

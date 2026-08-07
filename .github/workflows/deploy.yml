@@ -1501,6 +1501,7 @@ jobs:
           PUBLIC_SITE_URL=${{ env.MAIN_SITE_URL }}
           SERVER_URL=${{ env.SERVER_URL }}
           RUN_POD_TYPE_MIGRATION=1
+          RUN_CLUB_ADMIN_BACKFILL=1
           EOF
           # MWEB_BASE_URL: every link the server EMAILS is built from this
           # (url-configs.getUrlConfigs -> appUrl), and the booking CTA is
@@ -1524,6 +1525,13 @@ jobs:
           # FREE|PAID enum must collapse stored legacy values at boot, on
           # staging and production alike, or the new enum cannot serve old rows.
           # Idempotent, so leaving it on across releases is a no-op.
+          # RUN_CLUB_ADMIN_BACKFILL: the same shape. Club Admins onboarded
+          # before the Onboarded Club Admins table existed have a role and no
+          # record, so the table shows nothing for them — which is what shipped,
+          # because the backfill was a mutation somebody had to remember to
+          # call. Gated rather than always-on: hard-deleting a record does not
+          # revoke the role, so an ungated boot would recreate a record an
+          # operator had just removed. Idempotent for anyone who has one.
           # Staging runs against its OWN Mongo database on the same Atlas
           # cluster — everything (users, pods, Tech-portal env entries, ...) is
           # fully separate, so values saved in the staging Tech portal apply to

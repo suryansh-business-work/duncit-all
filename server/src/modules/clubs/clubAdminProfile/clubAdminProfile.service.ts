@@ -5,6 +5,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 
 const notFound = () =>
@@ -259,36 +260,68 @@ export const clubAdminProfileService = {
   },
 
   /**
-   * Clubs this Club Admin could run: the ones matching their taxonomy.
+   * Clubs this Club Admin could run: the ones matching their taxonomy — plus
+   * any they already run that do not.
    *
    * A club stores its SUB category in `category_id` and its top level in
    * `super_category_id` — there is no third field. So a sub narrows exactly, a
    * middle category widens to its children, and a super is the broadest. The
    * same resolution `listAdminClubsPage` uses, so both screens agree on what
    * "matching" means.
+   *
+   * The "plus" matters. An admin can hold a club from outside their category —
+   * assigned before the category was set, or from the club's own admin list —
+   * and the taxonomy filter alone hid it. The picker then showed fewer clubs
+   * than the row beside it listed as assigned, with no way to give one back:
+   * a checkbox you cannot see is not a decision you can make. They come back
+   * flagged, so the screen can say why they are there.
    */
   async matchingClubs(id: string, search?: string | null) {
     const doc = await ClubAdminProfileModel.findById(id);
     if (!doc) throw notFound();
 
-    const query: any = {};
+    const taxonomy: any = {};
     if (doc.sub_category_id) {
-      query.category_id = doc.sub_category_id;
+      taxonomy.category_id = doc.sub_category_id;
     } else if (doc.category_id) {
       const subs = await CategoryModel.find({ parent_id: doc.category_id }).select('_id').lean();
-      query.category_id = { $in: subs.map((s: any) => s._id) };
+      taxonomy.category_id = { $in: subs.map((s: any) => s._id) };
     } else if (doc.super_category_id) {
-      query.super_category_id = doc.super_category_id;
+      taxonomy.super_category_id = doc.super_category_id;
     }
+
+    const hasTaxonomy = Object.keys(taxonomy).length > 0;
+    const query: any = hasTaxonomy
+      ? { $or: [taxonomy, { admin_user_ids: doc.user_id }] }
+      : {};
     if (search?.trim()) {
       query.club_name = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
 
-    const clubs = await ClubModel.find(query).select('club_name admin_user_ids').sort({ club_name: 1 }).limit(200).lean();
+    const clubs = await ClubModel.find(query)
+      .select('club_name admin_user_ids category_id super_category_id')
+      .sort({ club_name: 1 })
+      .limit(200)
+      .lean();
+
+    /** Does this club fall inside the admin's own category? */
+    const inTaxonomy = (club: any): boolean => {
+      if (!hasTaxonomy) return true;
+      if (taxonomy.super_category_id) {
+        return String(club.super_category_id ?? '') === String(taxonomy.super_category_id);
+      }
+      const want = taxonomy.category_id;
+      const ids: string[] = want?.$in
+        ? want.$in.map((v: any) => String(v))
+        : [String(want)];
+      return ids.includes(String(club.category_id ?? ''));
+    };
+
     return (clubs as any[]).map((club) => ({
       id: String(club._id),
       club_name: club.club_name,
       assigned: (club.admin_user_ids ?? []).some((a: any) => String(a) === String(doc.user_id)),
+      matches_category: inTaxonomy(club),
     }));
   },
 
@@ -327,6 +360,26 @@ export const clubAdminProfileService = {
    * them to Inactive would be this feature switching working admins off.
    */
   async backfill(): Promise<{ created: number; skipped: number }> {
+    /*
+      An id for anyone who somehow has a record without one.
+
+      The hook that mints them fires on INSERT, so a record written before the
+      id existed would keep a blank one for good — and the table would show a
+      dash in the column that is supposed to be this person's permanent handle.
+      Creating the missing records below cannot fix those, because they are not
+      missing. Done first so a record repaired here is not counted as created.
+    */
+    const idless = await ClubAdminProfileModel.find({
+      $or: [{ club_admin_no: null }, { club_admin_no: { $exists: false } }],
+    }).select('_id');
+    for (const doc of idless) {
+      doc.club_admin_no = await nextEntityNo('CADM', 'club_admin');
+      await doc.save();
+    }
+    if (idless.length > 0) {
+      logs.server.info('clubAdminProfile', 'backfill.ids', { count: idless.length });
+    }
+
     // The user document stores a name in two halves and a phone in two parts —
     // `full_name` / `phone_number` are shapes `toPublic` builds, not fields.
     const users = await UserModel.find({ 'metadata.role_keys': 'CLUB_ADMIN' })

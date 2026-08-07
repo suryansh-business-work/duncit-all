@@ -11,6 +11,11 @@ export const clubAdminProfileTypeDefs = /* GraphQL */ `
     club_name: String!
     "Whether this admin already runs it."
     assigned: Boolean!
+    """
+    False for a club they run from outside their own category. Listed anyway,
+    because a club that is assigned but not shown cannot be given back.
+    """
+    matches_category: Boolean!
   }
 
   """
@@ -75,7 +80,10 @@ export const clubAdminProfileTypeDefs = /* GraphQL */ `
     "Onboarded Club Admins, for the Onboarding portal's table."
     clubAdminProfilesTable(query: TableQueryInput): ClubAdminProfileTablePage!
     clubAdminProfile(id: ID!): ClubAdminProfile
-    "Clubs matching this Club Admin's Super > Category > Sub, for Assign Clubs."
+    """
+    Clubs for the Assign Clubs picker: this Club Admin's Super > Category > Sub,
+    plus any club they already run that falls outside it.
+    """
     clubAdminMatchingClubs(id: ID!, search: String): [ClubAdminClubOption!]!
   }
 

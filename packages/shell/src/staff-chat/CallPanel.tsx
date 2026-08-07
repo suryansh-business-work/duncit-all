@@ -10,10 +10,17 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import VideocamOffIcon from '@mui/icons-material/VideocamOff';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import CallSettingsMenu from './CallSettingsMenu';
 import CallWaveform from './CallWaveform';
+import CallControls from './CallControls';
+import ConnectionMeter from './ConnectionMeter';
 import CallEndIcon from '@mui/icons-material/CallEnd';
 import CallIcon from '@mui/icons-material/Call';
 import type { Coworker } from './queries';
@@ -38,6 +45,13 @@ interface Props {
   sharing: boolean;
   onShare: () => void;
   onStopSharing: () => void;
+  muted: boolean;
+  cameraOff: boolean;
+  /** Where the connection meter fetches from. Absent means no meter. */
+  probeUrl?: string;
+  probeBytes?: number;
+  onToggleMute: () => void;
+  onToggleCamera: () => void;
 }
 
 /** Video elements take a stream through a property, not an attribute. */
@@ -89,7 +103,16 @@ export default function CallPanel({
   sharing,
   onShare,
   onStopSharing,
+  muted,
+  cameraOff,
+  probeUrl,
+  probeBytes,
+  onToggleMute,
+  onToggleCamera,
 }: Readonly<Props>) {
+  // What goes full screen: the video stage, not the whole panel — the controls
+  // and the conversation behind them have no business filling a monitor.
+  const stageRef = useRef<HTMLDivElement | null>(null);
   if (phase === 'idle' && !error) return null;
 
   return (
@@ -103,6 +126,8 @@ export default function CallPanel({
       {phase !== 'idle' && (
         <Stack spacing={1}>
           <Stack direction="row" alignItems="center" spacing={1}>
+            {/* A ring that pulses while it rings — a static avatar and a word
+                is not enough to tell "calling" from "on a call" at a glance. */}
             <Avatar src={peer?.photo || undefined} sx={{ width: 32, height: 32 }} />
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="subtitle2" noWrap>
@@ -116,7 +141,7 @@ export default function CallPanel({
           </Stack>
 
           {kind === 'VIDEO' && phase === 'connected' && (
-            <Stack spacing={0.5}>
+            <Stack spacing={0.5} ref={stageRef} sx={{ bgcolor: 'common.black', borderRadius: 1 }}>
               <Video stream={remoteStream} />
               {/* Muted on purpose: hearing your own microphone is feedback. */}
               <Box sx={{ width: '40%' }}>
@@ -125,73 +150,47 @@ export default function CallPanel({
             </Stack>
           )}
 
-          <Stack direction="row" spacing={1} alignItems="center">
-            {phase === 'incoming' ? (
-              <>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  startIcon={<CallIcon />}
-                  onClick={onAnswer}
-                >
-                  Answer
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  startIcon={<CallEndIcon />}
-                  onClick={onDecline}
-                >
-                  Decline
-                </Button>
-              </>
-            ) : (
-              <Button
-                size="small"
-                variant="contained"
-                color="error"
-                startIcon={<CallEndIcon />}
-                onClick={onHangUp}
-              >
-                {phase === 'ringing' ? 'Cancel' : 'Hang up'}
-              </Button>
-            )}
-
-            {phase === 'connected' && kind === 'VIDEO' && (
-              <Tooltip title={sharing ? 'Stop sharing' : 'Share your screen'}>
-                <IconButton
-                  size="small"
-                  color={sharing ? 'primary' : 'inherit'}
-                  aria-label={sharing ? 'Stop sharing your screen' : 'Share your screen'}
-                  aria-pressed={sharing}
-                  onClick={sharing ? onStopSharing : onShare}
-                >
-                  {sharing ? (
-                    <StopScreenShareIcon fontSize="small" />
-                  ) : (
-                    <ScreenShareIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </Tooltip>
-            )}
-
-            <Box sx={{ flex: 1 }} />
-            <CallSettingsMenu
-              micId={micId}
-              camId={camId}
-              onMic={onMic}
-              onCam={onCam}
-              showCamera={kind === 'VIDEO'}
-            />
-          </Stack>
+          <CallControls
+            phase={phase}
+            kind={kind}
+            muted={muted}
+            cameraOff={cameraOff}
+            sharing={sharing}
+            micId={micId}
+            camId={camId}
+            onAnswer={onAnswer}
+            onDecline={onDecline}
+            onHangUp={onHangUp}
+            onToggleMute={onToggleMute}
+            onToggleCamera={onToggleCamera}
+            onToggleFullscreen={() => {
+              // The video stage, not the panel — the controls and the
+              // conversation behind them have no business filling a monitor.
+              const node = stageRef.current;
+              if (!node) return;
+              if (globalThis.document.fullscreenElement) {
+                globalThis.document.exitFullscreen().catch(() => undefined);
+              } else {
+                node.requestFullscreen?.().catch(() => undefined);
+              }
+            }}
+            onShare={onShare}
+            onStopSharing={onStopSharing}
+            onMic={onMic}
+            onCam={onCam}
+          />
 
           {/* Bottom of the call, under the controls: the line is carrying
               something, or it is not, and an audio call gives no other sign.
               Ambient, so it sits below the things you actually press. */}
           {phase === 'connected' && (
             <CallWaveform stream={remoteStream} label={`${peer?.name ?? 'They'} — incoming audio`} />
+          )}
+
+          {/* Bottom of the call: how good the line is, when the portal has
+              given us something of ours to measure against. */}
+          {phase === 'connected' && (
+            <ConnectionMeter probeUrl={probeUrl} probeBytes={probeBytes} />
           )}
         </Stack>
       )}

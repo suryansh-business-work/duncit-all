@@ -37,6 +37,8 @@ export interface StaffMessage {
   attachment_url?: string;
   attachment_name?: string;
   attachment_type?: string;
+  /** Bytes — so a reader can judge before downloading. */
+  attachment_size?: number;
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
@@ -93,6 +95,7 @@ const MESSAGE = `
   attachment_url
   attachment_name
   attachment_type
+  attachment_size
   read_at
   edited_at
   deleted_at

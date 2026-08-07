@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
+import { Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ReplyIcon from '@mui/icons-material/Reply';
 import ForwardIcon from '@mui/icons-material/Forward';
@@ -8,6 +8,7 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import type { StaffMessage } from './queries';
 
 interface Props {
@@ -19,7 +20,8 @@ interface Props {
   onPin: () => void;
   onCopy: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  /** True deletes it for both people; false only hides it for you. */
+  onDelete: (forEveryone: boolean) => void;
 }
 
 /**
@@ -95,12 +97,29 @@ export default function MessageActions({
             <ListItemText>Edit</ListItemText>
           </MenuItem>
         )}
+
+        {/*
+          Two deletes, because they are two different promises. "For me" hides
+          it from this device and leaves the other person's copy alone — the
+          honest thing, since their screen is not ours to reach into. "For
+          everyone" is only offered on your own words, because taking back
+          somebody else's is not a delete, it is an edit of what they said.
+        */}
+        <Divider />
+        <MenuItem onClick={run(() => onDelete(false))}>
+          <ListItemIcon>
+            <DeleteOutlineIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Delete for me</ListItemText>
+        </MenuItem>
         {mine && (
-          <MenuItem onClick={run(onDelete)}>
+          <MenuItem onClick={run(() => onDelete(true))}>
             <ListItemIcon>
-              <DeleteOutlineIcon fontSize="small" color="error" />
+              <DeleteForeverIcon fontSize="small" color="error" />
             </ListItemIcon>
-            <ListItemText primaryTypographyProps={{ color: 'error' }}>Delete</ListItemText>
+            <ListItemText primaryTypographyProps={{ color: 'error' }}>
+              Delete for everyone
+            </ListItemText>
           </MenuItem>
         )}
       </Menu>

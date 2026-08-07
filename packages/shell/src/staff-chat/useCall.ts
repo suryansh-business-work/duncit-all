@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import { startRinging } from './sounds';
+import { playCallEnded, startRinging } from './sounds';
 
 export type CallKind = 'AUDIO' | 'VIDEO';
 export type CallPhase = 'idle' | 'ringing' | 'incoming' | 'connected';
@@ -54,6 +54,9 @@ export function useCall(socket: Socket | null, meId: string) {
   const [micId, setMicId] = useState('');
   const [camId, setCamId] = useState('');
   const [sharing, setSharing] = useState(false);
+  /** Local mute / camera state — the tracks are the truth, this mirrors them. */
+  const [muted, setMuted] = useState(false);
+  const [cameraOff, setCameraOff] = useState(false);
 
   const pc = useRef<RTCPeerConnection | null>(null);
   /** The camera track set aside while the screen is being shared. */
@@ -75,6 +78,8 @@ export function useCall(socket: Socket | null, meId: string) {
     screenStream.current = null;
     cameraTrack.current = null;
     setSharing(false);
+    setMuted(false);
+    setCameraOff(false);
     remoteStream.current = null;
     pc.current?.close();
     pc.current = null;
@@ -178,6 +183,32 @@ export function useCall(socket: Socket | null, meId: string) {
     },
     [swapInPreview]
   );
+
+  /**
+   * Mute, or unmute.
+   *
+   * `track.enabled = false` keeps the track in the connection and stops it
+   * carrying anything — the other end sees silence rather than a renegotiation,
+   * and unmuting is instant because nothing had to be given back.
+   */
+  const toggleMute = useCallback(() => {
+    const tracks = localStream.current?.getAudioTracks() ?? [];
+    const next = !muted;
+    tracks.forEach((track) => {
+      track.enabled = !next;
+    });
+    setMuted(next);
+  }, [muted]);
+
+  /** Camera off, the same way — the track stays, it just stops sending frames. */
+  const toggleCamera = useCallback(() => {
+    const tracks = localStream.current?.getVideoTracks() ?? [];
+    const next = !cameraOff;
+    tracks.forEach((track) => {
+      track.enabled = !next;
+    });
+    setCameraOff(next);
+  }, [cameraOff]);
 
   /** Remember the choice AND apply it to a call already running. */
   const chooseMic = useCallback(
@@ -305,6 +336,9 @@ export function useCall(socket: Socket | null, meId: string) {
     if (peerId) {
       socket?.emit('call_end', { to: peerId });
       record(answered.current ? 'ANSWERED' : 'CANCELLED', peerId, kind);
+      // Only when a call was actually up: a tone for a call that never
+      // connected would be a sound for nothing happening.
+      if (answered.current) playCallEnded();
     }
     teardown();
   }, [kind, peerId, record, socket, teardown]);
@@ -346,6 +380,10 @@ export function useCall(socket: Socket | null, meId: string) {
     };
 
     const onEnd = () => {
+      // The other end hung up. The tone matters more here than on your own
+      // click: you did not do it, so nothing else on screen says why the call
+      // just vanished.
+      if (answered.current) playCallEnded();
       teardown();
     };
 
@@ -381,5 +419,9 @@ export function useCall(socket: Socket | null, meId: string) {
     sharing,
     shareScreen,
     stopSharing,
+    muted,
+    cameraOff,
+    toggleMute,
+    toggleCamera,
   };
 }

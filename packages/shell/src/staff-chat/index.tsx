@@ -13,6 +13,8 @@ import {
   COWORKERS,
   DELETE_STAFF_MESSAGE,
   EDIT_STAFF_MESSAGE,
+  FORWARD_STAFF_MESSAGE,
+  PIN_STAFF_MESSAGE,
   REACT_TO_STAFF_MESSAGE,
   MARK_THREAD_READ,
   SEND_STAFF_MESSAGE,
@@ -27,6 +29,8 @@ import {
   type StaffThread,
 } from './queries';
 import { useCall } from './useCall';
+import { useChatSettings } from './useChatSettings';
+import ChatSettingsMenu from './ChatSettingsMenu';
 import { usePresence, type PresenceStatus } from './usePresence';
 import { useStaffSocket } from './useStaffSocket';
 
@@ -88,7 +92,21 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
   const [editMessage] = useMutation(EDIT_STAFF_MESSAGE);
   const [deleteMessage] = useMutation(DELETE_STAFF_MESSAGE);
   const [reactToMessage] = useMutation(REACT_TO_STAFF_MESSAGE);
+  const [forwardMessage] = useMutation(FORWARD_STAFF_MESSAGE);
+  const [pinMessage] = useMutation(PIN_STAFF_MESSAGE);
   const [markRead] = useMutation(MARK_THREAD_READ);
+
+  const { settings, update: updateSettings, formats, spacing } = useChatSettings();
+  /** What is being answered, until it is sent. */
+  const [replyTo, setReplyTo] = useState<StaffMessage | null>(null);
+  /**
+   * Messages hidden on THIS device only.
+   *
+   * "Delete for me" cannot reach the other person's copy, so it does not
+   * pretend to: it is a local list, and saying so is more honest than a server
+   * flag that would look like it had done more than it did.
+   */
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   const refreshAll = useCallback(() => {
     void threadsQuery.refetch();
@@ -181,6 +199,16 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
     downloadChatExport(text, peer.name);
   };
 
+  /** Names for reaction tooltips, reply strips and forwarded-from lines. */
+  const nameOf = useCallback(
+    (userId: string) => {
+      if (userId === meId) return 'You';
+      if (userId === peer?.id) return peer.name;
+      return 'Someone';
+    },
+    [meId, peer]
+  );
+
   const change = (mutate: typeof editMessage, variables: Record<string, unknown>) => {
     mutate({ variables })
       .then(() => {
@@ -208,6 +236,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         <Typography variant="subtitle1" sx={{ flex: 1 }}>
           Coworkers
         </Typography>
+        <ChatSettingsMenu settings={settings} onChange={updateSettings} />
         <StatusMenu status={presence.mine} onChange={presence.choose} />
         <IconButton size="small" onClick={onClose} aria-label="Close chat">
           <CloseIcon fontSize="small" />
@@ -237,6 +266,10 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         sharing={call.sharing}
         onShare={() => call.shareScreen().catch(() => undefined)}
         onStopSharing={() => call.stopSharing().catch(() => undefined)}
+        muted={call.muted}
+        cameraOff={call.cameraOff}
+        onToggleMute={call.toggleMute}
+        onToggleCamera={call.toggleCamera}
       />
 
       <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -245,15 +278,42 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
             peer={peer}
             meId={meId}
             status={statusOf(peer.id)}
-            messages={messagesQuery.data?.staffMessages ?? []}
+            // "Delete for me" is a local hide, so it is applied here rather
+            // than pretending the server did it.
+            messages={(messagesQuery.data?.staffMessages ?? []).filter(
+              (message) => !hiddenIds.has(message.id)
+            )}
             sending={sendState.loading}
             uploading={uploading}
             onBack={() => setPeer(null)}
             onSend={send}
             onAttach={attach}
             onEdit={(id, text) => change(editMessage, { id, text })}
-            onDelete={(id) => change(deleteMessage, { id })}
-            onReact={(id, kind) => change(reactToMessage, { id, kind })}
+            onDelete={(id, forEveryone) => {
+              if (forEveryone) {
+                change(deleteMessage, { id });
+                return;
+              }
+              setHiddenIds((current) => new Set(current).add(id));
+            }}
+            onReact={(id, emoji) => change(reactToMessage, { id, emoji })}
+            onReply={setReplyTo}
+            onCancelReply={() => setReplyTo(null)}
+            replyTo={replyTo}
+            onForward={(message) => {
+              // One-to-one threads: forwarding goes to whoever you open next,
+              // so it lands as a normal message in that conversation.
+              if (peer) change(forwardMessage, { id: message.id, toUserId: peer.id });
+            }}
+            onPin={(id) => change(pinMessage, { id })}
+            loading={messagesQuery.loading}
+            hasMore={false}
+            loadingMore={false}
+            onLoadMore={() => undefined}
+            settings={settings}
+            formats={formats}
+            spacing={spacing}
+            nameOf={nameOf}
             onTyping={() => typing(peer.id)}
             onCall={(kind) => void call.call(peer.id, kind)}
             onExport={() => void exportChat()}

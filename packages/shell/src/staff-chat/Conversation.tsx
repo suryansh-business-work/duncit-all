@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Avatar,
   Box,
@@ -11,14 +11,18 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import CloseIcon from '@mui/icons-material/Close';
 import CallIcon from '@mui/icons-material/Call';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import EmojiPicker from './EmojiPicker';
-import MessageBubble from './MessageBubble';
+import ChatComposer from './ChatComposer';
+import LocationDialog from './LocationDialog';
+import MessageThread from './MessageThread';
 import PresenceDot from './PresenceDot';
-import type { Coworker, StaffMessage, StaffReactionKind } from './queries';
+import type { Coworker, StaffMessage } from './queries';
+import type { ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
 
 interface Props {
@@ -31,9 +35,24 @@ interface Props {
   onBack: () => void;
   onSend: (text: string) => void;
   onAttach: (file: File) => void;
+  loading: boolean;
+  hasMore: boolean;
+  loadingMore: boolean;
+  settings: ChatSettings;
+  formats: { time: Intl.DateTimeFormat; full: Intl.DateTimeFormat; day: Intl.DateTimeFormat };
+  spacing: number;
+  nameOf: (userId: string) => string;
+  /** The message being answered, shown above the composer until it is sent. */
+  replyTo: StaffMessage | null;
+  onCancelReply: () => void;
+  onLoadMore: () => void;
   onEdit: (id: string, text: string) => void;
-  onDelete: (id: string) => void;
-  onReact: (id: string, kind: StaffReactionKind) => void;
+  onDelete: (id: string, forEveryone: boolean) => void;
+  onReact: (id: string, emoji: string) => void;
+  onReply: (message: StaffMessage) => void;
+  onForward: (message: StaffMessage) => void;
+  onPin: (id: string) => void;
+  onNavigate?: (path: string) => void;
   onTyping: () => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
@@ -49,31 +68,28 @@ export default function Conversation({
   onBack,
   onSend,
   onAttach,
+  loading,
+  hasMore,
+  loadingMore,
+  settings,
+  formats,
+  spacing,
+  nameOf,
+  replyTo,
+  onCancelReply,
+  onLoadMore,
   onEdit,
   onDelete,
   onReact,
+  onReply,
+  onForward,
+  onPin,
+  onNavigate,
   onTyping,
   onCall,
   onExport,
 }: Readonly<Props>) {
-  const [draft, setDraft] = useState('');
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const fileRef = useRef<HTMLInputElement | null>(null);
-
-  // A chat that opens at the top of a hundred messages is a chat you have to
-  // scroll before you can read the one that arrived.
-  useEffect(() => {
-    // Optional call: jsdom has the element but not the method, and a chat that
-    // throws while scrolling would take the whole panel down with it.
-    endRef.current?.scrollIntoView?.({ block: 'end' });
-  }, [messages]);
-
-  const send = () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    onSend(text);
-    setDraft('');
-  };
+  const [locationOpen, setLocationOpen] = useState(false);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -116,69 +132,66 @@ export default function Conversation({
 
       {uploading && <LinearProgress />}
 
-      <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 1.5 }}>
-        {messages.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            Say hello.
-          </Typography>
-        )}
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            mine={message.from_user_id === meId}
-            meId={meId}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onReact={onReact}
-          />
-        ))}
-        <div ref={endRef} />
-      </Stack>
+      <MessageThread
+        messages={messages}
+        meId={meId}
+        loading={loading}
+        hasMore={hasMore}
+        loadingMore={loadingMore}
+        settings={settings}
+        formats={formats}
+        spacing={spacing}
+        nameOf={nameOf}
+        onLoadMore={onLoadMore}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onReact={onReact}
+        onReply={onReply}
+        onForward={onForward}
+        onPin={onPin}
+        onNavigate={onNavigate}
+      />
 
-      <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
-        <Tooltip title="Attach a file">
-          <IconButton size="small" onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Attach a file">
-            <AttachFileIcon fontSize="small" />
+      {/* What you are answering, until it is sent — a reply with no visible
+          target is a message that reads as a non sequitur to its own author. */}
+      {replyTo && (
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{ px: 1.5, py: 0.75, borderTop: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
+        >
+          <Box sx={{ width: 3, alignSelf: 'stretch', bgcolor: 'primary.main', borderRadius: 1 }} />
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
+              Replying to {nameOf(replyTo.from_user_id)}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              {replyTo.text || replyTo.attachment_name || 'Attachment'}
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={onCancelReply} aria-label="Cancel reply">
+            <CloseIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
-        {/* Any file, not only images — a chat where you cannot send a PDF is a
-            chat people leave to send the PDF. */}
-        <input
-          ref={fileRef}
-          type="file"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onAttach(file);
-            event.target.value = '';
-          }}
-        />
-        <EmojiPicker disabled={sending} onPick={(emoji) => setDraft((text) => text + emoji)} />
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          maxRows={4}
-          placeholder="Write a message"
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            onTyping();
-          }}
-          onKeyDown={(event) => {
-            // Enter sends, Shift+Enter breaks the line — what every chat does,
-            // and what fingers already expect.
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              send();
-            }
-          }}
-        />
-        <IconButton color="primary" onClick={send} disabled={!draft.trim() || sending} aria-label="Send message">
-          <SendIcon />
-        </IconButton>
-      </Stack>
+        </Stack>
+      )}
+
+      <ChatComposer
+        sending={sending}
+        uploading={uploading}
+        enterToSend={settings.enterToSend}
+        onSend={onSend}
+        onAttach={onAttach}
+        onTyping={onTyping}
+        onShareLocation={() => setLocationOpen(true)}
+      />
+
+      <LocationDialog
+        open={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        onSend={(text) => onSend(text)}
+      />
+
     </Box>
   );
 }

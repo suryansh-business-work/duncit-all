@@ -43,6 +43,7 @@ const pubMessage = (doc: any) => ({
   attachment_url: doc.deleted_at ? '' : (doc.attachment_url ?? ''),
   attachment_name: doc.deleted_at ? '' : (doc.attachment_name ?? ''),
   attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
+  attachment_size: doc.deleted_at ? 0 : (doc.attachment_size ?? 0),
   read_at: doc.read_at?.toISOString() ?? null,
   edited_at: doc.edited_at?.toISOString() ?? null,
   // A deleted message keeps no reactions either — there is nothing left to
@@ -65,8 +66,8 @@ const pubMessage = (doc: any) => ({
   created_at: doc.created_at?.toISOString() ?? null,
 });
 
-/** An @ followed by a word — enough for a two-person thread. */
-const MENTION_RE = /(^|s)@w/;
+/** An @ at a word boundary — enough for a two-person thread. */
+const MENTION_RE = /(^|\s)@\w/;
 
 const SELECT = 'profile.first_name profile.last_name profile.photo auth.email metadata.role_keys';
 
@@ -166,7 +167,9 @@ export const staffChatService = {
       .sort({ created_at: -1 })
       .limit(Math.min(200, Math.max(1, limit)))
       .lean();
-    return docs.reverse().map(pubMessage);
+    // Queried newest-first so the cursor works; rendered oldest-first.
+    docs.reverse();
+    return docs.map(pubMessage);
   },
 
   /**
@@ -194,7 +197,12 @@ export const staffChatService = {
     meId: string,
     toUserId: string,
     text: string,
-    attachment?: { url?: string | null; name?: string | null; type?: string | null } | null,
+    attachment?: {
+      url?: string | null;
+      name?: string | null;
+      type?: string | null;
+      size?: number | null;
+    } | null,
     extra?: { replyToId?: string | null; forwardedFrom?: string | null } | null
   ) {
     const body = text.trim();
@@ -224,6 +232,7 @@ export const staffChatService = {
       attachment_url: url,
       attachment_name: attachment?.name?.trim() ?? '',
       attachment_type: attachment?.type?.trim() ?? '',
+      attachment_size: Math.max(0, Math.floor(Number(attachment?.size) || 0)),
       reply_to_id: extra?.replyToId ?? null,
       forwarded_from: extra?.forwardedFrom ?? null,
       // Only the person on the other end can be mentioned in a one-to-one
@@ -258,6 +267,7 @@ export const staffChatService = {
         url: source.attachment_url,
         name: source.attachment_name,
         type: source.attachment_type,
+        size: source.attachment_size,
       },
       { forwardedFrom: source.from_user_id }
     );
@@ -317,15 +327,17 @@ export const staffChatService = {
       deleted_at: null,
     };
     const term = (input.text ?? '').trim();
-    // Escaped: a search for "c++" must not be compiled as a quantifier.
-    if (term) where.text = { $regex: term.replaceAll(/[.*+?^${}()|[]\]/g, String.raw`      attachment_name: attachment?.name?.trim() ?? '',
-      attachment_type: attachment?.type?.trim() ?? '',
-    });
-    return pubMessage(doc);
-  },`), $options: 'i' };
+    // Escaped through the shared helper: a search for "c++" must not be
+    // compiled as a quantifier, and there is no reason for this to hold its own
+    // copy of that rule.
+    if (term) where.text = escapedSearchRegex(term);
     if (input.fromUserId) where.from_user_id = input.fromUserId;
     if (input.onlyFiles) where.attachment_url = { $ne: '' };
-    if (input.onlyLinks) where.text = { ...(where.text as object), $regex: 'https?://', $options: 'i' };
+    // A link filter narrows the SAME field, so it goes in as an $and rather
+    // than overwriting whatever the text term put there.
+    if (input.onlyLinks) {
+      where.$and = [...((where.$and as unknown[]) ?? []), { text: /https?:\/\//i }];
+    }
     const range: Record<string, Date> = {};
     if (input.after) range.$gte = new Date(input.after);
     if (input.before) range.$lte = new Date(input.before);

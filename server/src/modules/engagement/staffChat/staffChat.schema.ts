@@ -63,6 +63,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     attachment_url: String!
     attachment_name: String!
     attachment_type: String!
+    "Bytes, so a reader can judge before downloading. 0 when unknown."
+    attachment_size: Int!
     "When the recipient read it; null until they do."
     read_at: String
     "Set when the author changed it, so the reader is told."
@@ -161,6 +163,7 @@ export const staffChatTypeDefs = /* GraphQL */ `
       attachment_url: String
       attachment_name: String
       attachment_type: String
+      attachment_size: Int
     ): StaffMessage!
     "Change your own words. Only the text — never the attachment."
     editStaffMessage(id: ID!, text: String!): StaffMessage!

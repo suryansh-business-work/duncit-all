@@ -98,6 +98,7 @@ export const staffChatResolvers = {
         attachment_url?: string | null;
         attachment_name?: string | null;
         attachment_type?: string | null;
+        attachment_size?: number | null;
         reply_to_id?: string | null;
       },
       ctx: GraphQLContext
@@ -111,6 +112,7 @@ export const staffChatResolvers = {
           url: args.attachment_url,
           name: args.attachment_name,
           type: args.attachment_type,
+          size: args.attachment_size,
         },
         { replyToId: args.reply_to_id }
       );

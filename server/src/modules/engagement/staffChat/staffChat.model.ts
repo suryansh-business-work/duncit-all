@@ -52,6 +52,8 @@ export interface IStaffMessage extends Document {
   attachment_name: string;
   /** ImageKit's own classification: image, or the mime type for anything else. */
   attachment_type: string;
+  /** Bytes, so a reader can judge before downloading. 0 when unknown. */
+  attachment_size: number;
   /** Set when it reached any of the recipient's open tabs. Null until it does. */
   delivered_at: Date | null;
   /** When the recipient read it. Null until they do. */
@@ -105,6 +107,7 @@ const staffMessageSchema = new Schema<IStaffMessage>(
     attachment_url: { type: String, default: '' },
     attachment_name: { type: String, default: '' },
     attachment_type: { type: String, default: '' },
+    attachment_size: { type: Number, default: 0 },
     delivered_at: { type: Date, default: null },
     read_at: { type: Date, default: null },
     edited_at: { type: Date, default: null },

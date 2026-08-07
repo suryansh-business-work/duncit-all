@@ -70,9 +70,32 @@ export const authTypeDefs = gql`
     registered: Boolean
   }
 
+  input PortalLoginOtpRequestInput {
+    email: String!
+    "The console being signed in to. The code only works for this one."
+    portal_key: String
+  }
+
+  input PortalLoginOtpInput {
+    email: String!
+    otp: String!
+    portal_key: String
+  }
+
   extend type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
+    """
+    Email a sign-in code for a console.
+
+    Answers the same way whatever happens, on purpose: an account that does not
+    exist, one that is not active and one with no role for this portal are all
+    reported as sent. Told apart, this mutation would be a directory of who
+    works here and what they can reach.
+    """
+    requestPortalLoginOtp(input: PortalLoginOtpRequestInput!): OtpRequestResult!
+    "Trade a correct code for the same session a password would have produced."
+    loginWithPortalOtp(input: PortalLoginOtpInput!): AuthPayload!
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
     signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
     requestPasswordResetOtp(email: String!): OtpRequestResult!

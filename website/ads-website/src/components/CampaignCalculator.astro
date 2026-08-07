@@ -211,7 +211,7 @@ const defaultPick = 'HOME_BOTTOM';
       body.innerHTML = card.entries
         .map(
           (entry) =>
-            `<tr class="border-t border-line"><th scope="row" class="px-5 py-4 font-head text-sm font-extrabold text-ink">${entry.label}</th><td class="hidden px-5 py-4 text-sm text-ink-soft sm:table-cell">${notes[entry.position] ?? ''}</td><td class="px-5 py-4 text-right font-head text-sm font-extrabold text-primary">${money(entry.price_per_day)}</td></tr>`
+            `<tr class="border-t border-line"><th scope="row" class="px-5 py-4 font-head text-sm font-extrabold text-ink">${entry.label}</th><td class="hidden px-5 py-4 text-sm text-ink-soft sm:table-cell">${entry.note || notes[entry.position] || ''}</td><td class="px-5 py-4 text-right font-head text-sm font-extrabold text-primary">${money(entry.price_per_day)}</td></tr>`
         )
         .join('');
       body.removeAttribute('data-rate-empty');
@@ -241,7 +241,7 @@ const defaultPick = 'HOME_BOTTOM';
                 currency_symbol
                 min_days
                 max_days
-                entries { position label price_per_day }
+                entries { position label note price_per_day }
               }
             }`,
           }),
@@ -252,6 +252,10 @@ const defaultPick = 'HOME_BOTTOM';
         card = live;
         daysInput.min = String(live.min_days);
         daysInput.max = String(live.max_days);
+        // A window Marketing narrowed since this page was built can leave the
+        // slider sitting outside it — quoting a campaign length nobody sells.
+        const days = Number(daysInput.value);
+        daysInput.value = String(Math.min(Math.max(days, live.min_days), live.max_days));
         renderChips();
         fillRateTable();
         paint();

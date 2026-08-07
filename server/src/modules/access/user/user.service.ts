@@ -33,6 +33,7 @@ import {
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
   sendPasswordResetOtpEmail,
+  sendPortalLoginOtpEmail,
   sendPasswordChangeOtpEmail,
   sendAccountDeletionOtpEmail,
   sendAdminAccessGrantedEmail,
@@ -59,6 +60,14 @@ const idStrings = (values: unknown[] | undefined | null) =>
 // (., *, (, etc.) are matched literally and cannot break the query.
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const EMAIL_OTP_MINUTES = 10;
+/**
+ * How long a sign-in code has to run before another will be sent.
+ *
+ * Measured from the END of its life rather than its start, so "still valid with
+ * this much left" is one comparison. A minute is long enough to stop a loop and
+ * short enough that somebody who genuinely lost the mail is not stuck.
+ */
+const RESEND_COOLDOWN_MS = (EMAIL_OTP_MINUTES * 60 - 60) * 1000;
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 // Privileged role keys that require phone-verified + 2FA for elevated session.
 const PRIVILEGED_ROLE_KEYS = [
@@ -1093,6 +1102,135 @@ export const userService = {
     );
     const fresh = await UserModel.findById(user_id);
     return toPublic(fresh);
+  },
+
+  /**
+   * Email a one-time code for signing in to a console.
+   *
+   * The gate runs BEFORE the send, and it is the same one the password login
+   * ends with: the address must belong to an active account that already holds
+   * a role for this portal. A code is not a second way in — it is the same door
+   * with a different key, so it may not open anything a password would not.
+   *
+   * Refusals are deliberately identical whatever the reason. "No such account",
+   * "not active" and "no access to Finance" told apart would make this page a
+   * directory of who works here and what they can reach.
+   */
+  async requestPortalLoginOtp(input: { email: string; portal_key?: string | null }) {
+    const email = String(input.email || '').trim().toLowerCase();
+    const portalKey = String(input.portal_key || '').trim();
+    const user = await UserModel.findOne({ 'auth.email': email });
+    const silent = { ok: true, dev_otp: null as string | null };
+    if (!user || (user as any).metadata?.status !== 'ACTIVE') return silent;
+
+    const pub = await toPublic(user);
+    try {
+      assertPortalLogin(portalKey, pub?.roles ?? []);
+    } catch {
+      return silent;
+    }
+
+    /*
+      One code in flight at a time.
+
+      This mutation takes no token and sends mail, so without a cooldown anyone
+      who knows a colleague's address can post it in a loop and fill their inbox.
+      A live code is left alone rather than replaced — the answer is the same
+      either way, so a caller cannot tell a cooldown from a send, and the person
+      still has the code they were sent.
+    */
+    const live = await UserModel.findOne({ _id: user._id })
+      .select('+auth.portal_login_otp_expires_at +auth.portal_login_otp_portal')
+      .lean();
+    const liveAuth = (live as any)?.auth ?? {};
+    const liveExpiry = liveAuth.portal_login_otp_expires_at as Date | undefined;
+    const stillValid =
+      liveExpiry &&
+      liveExpiry.getTime() - RESEND_COOLDOWN_MS > Date.now() &&
+      liveAuth.portal_login_otp_portal === portalKey;
+    if (stillValid) return silent;
+
+    const otp = String(crypto.randomInt(100000, 1000000));
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.portal_login_otp_hash': hashOtp(otp),
+          'auth.portal_login_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
+          'auth.portal_login_otp_portal': portalKey,
+        },
+      }
+    );
+    await sendPortalLoginOtpEmail({
+      to: email,
+      name: user.profile?.first_name || 'there',
+      otp,
+      portal: portalKey || 'Duncit',
+      expiresMinutes: String(EMAIL_OTP_MINUTES),
+    });
+    return { ok: true, dev_otp: isDev ? otp : null };
+  },
+
+  /**
+   * Trade a correct code for the same session a password would have produced.
+   *
+   * The code is spent whether or not the rest succeeds: a six-digit secret that
+   * survives a failed attempt is a six-digit secret somebody can keep guessing.
+   * The portal it was issued for is checked too, so a code emailed for the one
+   * console this person can reach cannot be typed into another.
+   */
+  async loginWithPortalOtp(input: { email: string; otp: string; portal_key?: string | null }) {
+    const email = String(input.email || '').trim().toLowerCase();
+    const code = String(input.otp || '').trim();
+    const portalKey = String(input.portal_key || '').trim();
+    const invalid = () =>
+      new GraphQLError('Invalid or expired code', { extensions: { code: 'UNAUTHENTICATED' } });
+
+    const user = await UserModel.findOne({ 'auth.email': email }).select(
+      '+auth.portal_login_otp_hash +auth.portal_login_otp_expires_at +auth.portal_login_otp_portal'
+    );
+    if (!user) throw invalid();
+
+    const auth = (user as any).auth ?? {};
+    const storedHash = auth.portal_login_otp_hash as string | undefined;
+    const expiresAt = auth.portal_login_otp_expires_at as Date | undefined;
+    const issuedFor = (auth.portal_login_otp_portal as string | undefined) ?? '';
+
+    const clearOtp = () =>
+      UserModel.updateOne(
+        { _id: user._id },
+        {
+          $unset: {
+            'auth.portal_login_otp_hash': '',
+            'auth.portal_login_otp_expires_at': '',
+            'auth.portal_login_otp_portal': '',
+          },
+        }
+      );
+
+    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
+      await clearOtp();
+      throw invalid();
+    }
+    if (hashOtp(code) !== storedHash || issuedFor !== portalKey) {
+      await clearOtp();
+      throw invalid();
+    }
+    await clearOtp();
+
+    if ((user as any).metadata?.status !== 'ACTIVE') {
+      throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
+    }
+    await UserModel.updateOne(
+      { _id: user._id },
+      { $set: { 'auth.last_login_provider': 'EMAIL', 'auth.last_login_at': new Date() } }
+    );
+    const fresh = await UserModel.findById(user._id);
+    const payload = await authPayload(fresh);
+    // Checked again on the way in: roles can be revoked between the code being
+    // sent and it being typed, and this is the moment that grants the session.
+    assertPortalLogin(portalKey, payload.user.roles);
+    return payload;
   },
 
   // Public: email a password-reset OTP. Always returns ok to avoid leaking which

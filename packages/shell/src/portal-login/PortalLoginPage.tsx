@@ -6,6 +6,7 @@ import { parseApiError } from '@duncit/utils';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
 import { useBranding } from '../hooks/useBranding';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../lib/redirect';
+import OtpLoginPanel from './OtpLoginPanel';
 import type { PortalLoginPageProps, RedirectLocation } from './portal-login.types';
 
 const LOGIN_FAILED_MESSAGE = 'Login failed. Please try again.';
@@ -23,6 +24,27 @@ function buildLoginMutation(mutationName: string, extraUserFields: readonly stri
     }
   `);
 }
+
+/** The same session a password produces, from a code instead. */
+function buildOtpLoginMutation(extraUserFields: readonly string[]) {
+  const extra = extraUserFields.length ? ` ${extraUserFields.join(' ')}` : '';
+  return gql(`
+    mutation ConsoleOtpLogin($input: PortalLoginOtpInput!) {
+      loginWithPortalOtp(input: $input) {
+        token
+        user { ${BASE_USER_FIELDS}${extra} }
+      }
+    }
+  `);
+}
+
+const REQUEST_OTP = gql(`
+  mutation ConsoleRequestLoginOtp($input: PortalLoginOtpRequestInput!) {
+    requestPortalLoginOtp(input: $input) {
+      ok
+    }
+  }
+`);
 
 /**
  * The login page every Duncit console previously hand-rolled: ConsoleLogin
@@ -44,8 +66,12 @@ export default function PortalLoginPage({
     () => buildLoginMutation(mutationName, extraUserFields),
     [mutationName, extraUserFields],
   );
+  const otpLoginDocument = useMemo(() => buildOtpLoginMutation(extraUserFields), [extraUserFields]);
   const [loginMutation, { loading }] = useMutation(loginDocument);
+  const [requestOtp, { loading: sendingOtp }] = useMutation(REQUEST_OTP);
+  const [otpLogin, { loading: verifyingOtp }] = useMutation(otpLoginDocument);
   const [error, setError] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
   const { mode, toggle } = useColorMode();
   const { logoUrl, onLogoError } = useBranding();
   const navigate = useNavigate();
@@ -68,21 +94,53 @@ export default function PortalLoginPage({
 
   const resolveErrorMessage = parseError ?? parseApiError;
 
+  /*
+    What a successful login DOES, once something has produced a payload.
+
+    Shared by both doors: a code is not a lesser credential, so it must pass the
+    same role gate and write the same token to the same place. Two copies of
+    this is how one of them ends up skipping the gate.
+  */
+  const acceptSession = (data?: { token?: string; user?: { roles?: string[] } } | null) => {
+    if (!data?.token) throw new Error(LOGIN_FAILED_MESSAGE);
+    if (!skipAccessGate && !session.hasAppAccess(data.user?.roles)) {
+      throw new Error(session.accessDeniedMessage());
+    }
+    session.setToken(data.token);
+    navigate(redirectAfterLogin(), { replace: true });
+  };
+
   const handleLogin = async (values: LoginFormValues) => {
     setError(null);
     try {
       const res = await loginMutation({
         variables: { input: { ...values, portal_key: appConfig.key } },
       });
-      const data = res.data?.login;
-      if (!data?.token) throw new Error(LOGIN_FAILED_MESSAGE);
-      if (!skipAccessGate && !session.hasAppAccess(data.user?.roles)) {
-        throw new Error(session.accessDeniedMessage());
-      }
-      session.setToken(data.token);
-      navigate(redirectAfterLogin(), { replace: true });
+      acceptSession(res.data?.login);
     } catch (err) {
       setError(resolveErrorMessage(err));
+    }
+  };
+
+  const handleRequestCode = async (email: string) => {
+    setOtpError(null);
+    try {
+      await requestOtp({ variables: { input: { email, portal_key: appConfig.key } } });
+    } catch (err) {
+      setOtpError(resolveErrorMessage(err));
+      throw err;
+    }
+  };
+
+  const handleSubmitCode = async (email: string, otp: string) => {
+    setOtpError(null);
+    try {
+      const res = await otpLogin({
+        variables: { input: { email, otp, portal_key: appConfig.key } },
+      });
+      acceptSession(res.data?.loginWithPortalOtp);
+    } catch (err) {
+      setOtpError(resolveErrorMessage(err));
     }
   };
 
@@ -111,6 +169,14 @@ export default function PortalLoginPage({
       loading={loading}
       errorMessage={error ?? deniedMessage}
       onSubmit={handleLogin}
+      altSlot={
+        <OtpLoginPanel
+          onRequestCode={handleRequestCode}
+          onSubmitCode={handleSubmitCode}
+          busy={sendingOtp || verifyingOtp}
+          errorMessage={otpError}
+        />
+      }
       footerSlot={footerSlot}
     />
   );

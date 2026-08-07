@@ -5,6 +5,7 @@ import { parseApiError } from '@duncit/utils';
 import {
   AdRequestForm,
   EstimateCard,
+  adDurationWindow,
   blankAdRequestValues,
   toSubmitAdRequestInput,
   type AdPricing,
@@ -27,6 +28,8 @@ const AD_PRICING = gql`
       pod_list_per_day
       pod_details_per_day
       currency_symbol
+      min_days
+      max_days
     }
   }
 `;
@@ -100,6 +103,7 @@ export default function RunAdDialog({ product, adKind, open, onClose, onSubmitte
               onValuesChange={setDraft}
               onSubmit={handleSubmit}
               submitLabel={title}
+              durationWindow={adDurationWindow(pricingData?.adPricing)}
             />
           </Grid>
           <Grid item xs={12} md={4}>

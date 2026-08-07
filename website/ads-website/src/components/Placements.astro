@@ -64,7 +64,7 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
                 {entry.label}
               </th>
               <td class="hidden px-5 py-4 text-sm text-ink-soft sm:table-cell">
-                {placements.notes[entry.position] ?? ''}
+                {entry.note || placements.notes[entry.position] || ''}
               </td>
               <td class="px-5 py-4 text-right font-head text-sm font-extrabold text-primary">
                 {price(entry.price_per_day)}
@@ -88,8 +88,9 @@ const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('e
     </table>
   </div>
 
-  <!-- The notes the live filler needs, since the server sends labels but not
-       this site's own copy about each placement. -->
+  <!-- The bundled descriptions, kept only as the answer for a placement Marketing
+       has not written one for. The card now carries its own, so this is a
+       fallback rather than the source it used to be. -->
   <script type="application/json" data-placement-notes set:html={JSON.stringify(placements.notes)}
   ></script>
 </section>

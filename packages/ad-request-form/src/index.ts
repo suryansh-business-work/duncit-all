@@ -7,7 +7,9 @@ export { default as AdRequestForm } from './AdRequestForm';
 export { default as EstimateCard } from './EstimateCard';
 export { default as AdMediaField } from './AdMediaField';
 export {
+  AD_DURATION_FALLBACK,
   adRequestSchema,
+  makeAdRequestSchema,
   blankAdRequestValues,
   toSubmitAdRequestInput,
   type AdRequestFormValues,

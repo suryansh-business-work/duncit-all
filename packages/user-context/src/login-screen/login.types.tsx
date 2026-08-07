@@ -45,6 +45,12 @@ export interface LoginScreenProps {
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: LoginFormValues) => Promise<void> | void;
+  /**
+   * The other way in, rendered directly under the password button — a code
+   * emailed instead of a password. It sits there rather than under the legal
+   * links because it is an alternative to the control above it, not an extra.
+   */
+  altSlot?: ReactNode;
   /** Optional extra content rendered below the form (e.g. Google sign-in). */
   footerSlot?: ReactNode;
 }

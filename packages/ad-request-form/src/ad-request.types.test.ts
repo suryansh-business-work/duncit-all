@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { adRequestSchema, blankAdRequestValues, toSubmitAdRequestInput } from './ad-request.types';
+import {
+  adRequestSchema,
+  blankAdRequestValues,
+  makeAdRequestSchema,
+  toSubmitAdRequestInput,
+} from './ad-request.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -39,9 +44,18 @@ describe('adRequestSchema', () => {
     expect(messages(adRequestSchema.safeParse({ ...valid, start_at: 'not-a-date' }))).toMatch(/valid date/i);
   });
 
-  it('rejects durations below 1 day and above 30 days', () => {
+  it('rejects a duration below a single day', () => {
     expect(messages(adRequestSchema.safeParse({ ...valid, duration_days: 0 }))).toMatch(/at least 1 day/i);
-    expect(messages(adRequestSchema.safeParse({ ...valid, duration_days: 31 }))).toMatch(/at most 30 days/i);
+  });
+
+  it('caps the duration at the window it is given, not at a constant', () => {
+    // The ceiling is a Marketing setting now: a 90-day campaign is valid when
+    // that is what they sell, and 31 is not when it is not.
+    const short = makeAdRequestSchema({ min: 1, max: 30 });
+    const long = makeAdRequestSchema({ min: 1, max: 90 });
+    expect(messages(short.safeParse({ ...valid, duration_days: 31 }))).toMatch(/at most 30 days/i);
+    expect(long.safeParse({ ...valid, duration_days: 31 }).success).toBe(true);
+    expect(messages(long.safeParse({ ...valid, duration_days: 91 }))).toMatch(/at most 90 days/i);
   });
 
   it('rejects a non-http redirect URL but accepts blank/https', () => {

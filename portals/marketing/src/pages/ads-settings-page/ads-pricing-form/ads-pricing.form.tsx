@@ -5,6 +5,7 @@ import { Alert, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } fr
 import SaveIcon from '@mui/icons-material/Save';
 import { RhfTextField } from '@duncit/forms';
 import { AD_POSITIONS, formatAdMoney, type AdPosition } from '../../../lib/ad-positions';
+import PlacementCopyFields from './PlacementCopyFields';
 import {
   adsPricingSchema,
   type AdsPricingFormProps,
@@ -52,7 +53,7 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
           size="small"
           label="Days"
           type="number"
-          inputProps={{ min: 1, max: 30 }}
+          inputProps={{ min: Number(values.min_days) || 1, max: Number(values.max_days) || 30 }}
           value={days}
           onChange={(e) => setDays(e.target.value)}
           sx={{ width: 110 }}
@@ -106,6 +107,35 @@ export default function AdsPricingForm({
             hint="Shown next to every ad price (e.g. ₹)"
             required
           />
+        </Grid>
+        {/* The booking window. The slider on duncit.com is drawn from these two
+            numbers and the server refuses anything outside them, so a length
+            the public page offers can never be one a submission is rejected
+            for. */}
+        <Grid item xs={12} sm={6} md={4}>
+          <RhfTextField
+            control={control}
+            name="min_days"
+            label="Minimum campaign days"
+            type="number"
+            inputProps={{ min: 1, step: 1 }}
+            hint="Shortest campaign an advertiser may book"
+            required
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <RhfTextField
+            control={control}
+            name="max_days"
+            label="Maximum campaign days"
+            type="number"
+            inputProps={{ min: 1, step: 1 }}
+            hint="Longest campaign an advertiser may book"
+            required
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <PlacementCopyFields control={control} />
         </Grid>
         <Grid item xs={12}>
           <AdsPricingExample values={values} />

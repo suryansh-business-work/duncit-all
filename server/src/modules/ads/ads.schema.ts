@@ -85,12 +85,37 @@ export const adsTypeDefs = gql`
     pod_list_per_day: Float!
     pod_details_per_day: Float!
     currency_symbol: String!
+    """
+    The booking window advertisers may pick from. Editable because the slider
+    on the public page is drawn from these two numbers — a length the site
+    offers must never be one the server refuses.
+    """
+    min_days: Int!
+    max_days: Int!
+    "What each placement is called and said about, resolved over the defaults."
+    placements: [AdPlacementCopy!]!
+  }
+
+  "How one placement is sold: the name on the rate card, and the line under it."
+  type AdPlacementCopy {
+    position: AdPosition!
+    label: String!
+    note: String!
+  }
+
+  input AdPlacementCopyInput {
+    position: AdPosition!
+    "Blank clears the override and restores the shipped name."
+    label: String
+    note: String
   }
 
   "One placement on the public rate card: what it is, and what a day of it costs."
   type AdRateCardEntry {
     position: AdPosition!
     label: String!
+    "The description under the name on the rate table. Marketing-editable."
+    note: String!
     price_per_day: Float!
   }
 
@@ -121,6 +146,9 @@ export const adsTypeDefs = gql`
     pod_list_per_day: Float
     pod_details_per_day: Float
     currency_symbol: String
+    min_days: Int
+    max_days: Int
+    placements: [AdPlacementCopyInput!]
   }
 
   input SubmitAdRequestInput {

@@ -556,6 +556,30 @@ export function sendPasswordResetOtpEmail(opts: {
   });
 }
 
+/**
+ * The code that signs somebody in to a console without a password.
+ *
+ * It names the portal, because a person with access to several will otherwise
+ * have several identical emails in front of them and no way to tell which code
+ * belongs to the tab they are looking at — and a code only works for the portal
+ * it was asked from.
+ */
+export function sendPortalLoginOtpEmail(opts: {
+  to: string;
+  name: string;
+  otp: string;
+  portal: string;
+  expiresMinutes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit sign-in code',
+    template: 'portal-login-otp',
+    category: 'authentication',
+    vars: opts,
+  });
+}
+
 export function sendPasswordChangeOtpEmail(opts: {
   to: string;
   name: string;

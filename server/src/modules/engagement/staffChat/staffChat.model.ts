@@ -15,19 +15,29 @@ import mongoose, { Schema, type Document } from 'mongoose';
  */
 
 /**
- * The three reactions a message can carry.
- *
- * A short, fixed list rather than free emoji: these are the answers that mean
- * something on their own — agreed, disagreed, appreciated — and a reader
- * scanning a thread can take them in without decoding anybody's taste in
- * pictures. Free emoji belong IN the message, which the composer allows.
+ * The six offered on the bar, in the order they read. Any other emoji is
+ * allowed too — these are only what the picker puts a click away.
  */
-export const STAFF_REACTIONS = ['THUMBS_UP', 'THUMBS_DOWN', 'HEART'] as const;
-export type StaffReactionKind = (typeof STAFF_REACTIONS)[number];
+export const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'] as const;
+
+/**
+ * What the first version stored, before reactions could be any emoji. Rows
+ * written then still say THUMBS_UP; they are translated on the way out rather
+ * than migrated, so nothing has to run before this deploys.
+ */
+const LEGACY_REACTION: Record<string, string> = {
+  THUMBS_UP: '👍',
+  THUMBS_DOWN: '👎',
+  HEART: '❤️',
+};
+
+/** The emoji a stored reaction means, whichever era wrote it. */
+export const reactionEmoji = (stored: string): string => LEGACY_REACTION[stored] ?? stored;
 
 export interface IStaffReaction {
   user_id: string;
-  kind: StaffReactionKind;
+  /** The character itself — one of QUICK_REACTIONS, or anything they picked. */
+  emoji: string;
   at: Date;
 }
 
@@ -42,10 +52,28 @@ export interface IStaffMessage extends Document {
   attachment_name: string;
   /** ImageKit's own classification: image, or the mime type for anything else. */
   attachment_type: string;
+  /** Set when it reached any of the recipient's open tabs. Null until it does. */
+  delivered_at: Date | null;
   /** When the recipient read it. Null until they do. */
   read_at: Date | null;
   /** Set when the author changed the text, so the reader can be told. */
   edited_at: Date | null;
+  /** The message this one answers, when it is a reply. */
+  reply_to_id: string | null;
+  /** Who wrote it originally, when this message was forwarded on. */
+  forwarded_from: string | null;
+  /** Set when somebody pinned it, with who — pins belong to the thread. */
+  pinned_at: Date | null;
+  pinned_by: string | null;
+  /** User ids named with @ in the text, resolved when it was sent. */
+  mentions: string[];
+  /**
+   * Every previous version of the text, oldest first.
+   *
+   * An edit can change what a conversation appears to have agreed, so the
+   * earlier wording is kept. Only admins are shown it.
+   */
+  edits: Array<{ text: string; at: Date }>;
   /**
    * At most one per person — reacting again with the same thing takes it back,
    * and reacting with something else replaces it. A row of counts is a summary
@@ -77,14 +105,31 @@ const staffMessageSchema = new Schema<IStaffMessage>(
     attachment_url: { type: String, default: '' },
     attachment_name: { type: String, default: '' },
     attachment_type: { type: String, default: '' },
+    delivered_at: { type: Date, default: null },
     read_at: { type: Date, default: null },
     edited_at: { type: Date, default: null },
+    reply_to_id: { type: String, default: null },
+    forwarded_from: { type: String, default: null },
+    pinned_at: { type: Date, default: null, index: true },
+    pinned_by: { type: String, default: null },
+    mentions: { type: [String], default: [], index: true },
+    edits: {
+      type: [
+        new Schema<{ text: string; at: Date }>(
+          { text: { type: String, default: '' }, at: { type: Date, default: () => new Date() } },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     reactions: {
       type: [
         new Schema<IStaffReaction>(
           {
             user_id: { type: String, required: true },
-            kind: { type: String, enum: STAFF_REACTIONS, required: true },
+            // A string, not an enum: the set of emoji people want is not ours
+            // to decide, and an enum would have to be migrated to add one.
+            emoji: { type: String, required: true, maxlength: 16 },
             at: { type: Date, default: () => new Date() },
           },
           { _id: false }

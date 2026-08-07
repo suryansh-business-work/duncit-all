@@ -2,7 +2,8 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
-import type { StaffReactionKind } from './staffChat.model';
+import { statusOf } from './staffPresence';
+import { previewLink } from './staffChat.links';
 import { emitStaffMessage } from './staffChat.socket';
 import { snapshot } from './staffPresence';
 
@@ -30,11 +31,46 @@ export const staffChatResolvers = {
     },
     staffMessages: (
       _p: unknown,
-      args: { peer_id: string; limit?: number | null },
+      args: { peer_id: string; limit?: number | null; before?: string | null },
       ctx: GraphQLContext
     ) => {
       const me = requireRole(ctx, ROLES);
-      return staffChatService.messages(me.id, args.peer_id, args.limit ?? 50);
+      return staffChatService.messages(me.id, args.peer_id, args.limit ?? 50, args.before);
+    },
+    staffLinkPreview: (_p: unknown, args: { url: string }, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      // Resolved against the CALLER's roles: the badge answers "can I open
+      // this", which is what the person looking at it wants to know.
+      return previewLink(args.url, me.roles);
+    },
+    pinnedStaffMessages: (_p: unknown, args: { peer_id: string }, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.pinned(me.id, args.peer_id);
+    },
+    searchStaffMessages: (
+      _p: unknown,
+      args: {
+        peer_id: string;
+        filter?: {
+          text?: string | null;
+          from_user_id?: string | null;
+          after?: string | null;
+          before?: string | null;
+          only_files?: boolean | null;
+          only_links?: boolean | null;
+        } | null;
+      },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.search(me.id, args.peer_id, {
+        text: args.filter?.text,
+        fromUserId: args.filter?.from_user_id,
+        after: args.filter?.after,
+        before: args.filter?.before,
+        onlyFiles: args.filter?.only_files,
+        onlyLinks: args.filter?.only_links,
+      });
     },
     staffUnreadCount: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const me = requireRole(ctx, ROLES);
@@ -62,18 +98,32 @@ export const staffChatResolvers = {
         attachment_url?: string | null;
         attachment_name?: string | null;
         attachment_type?: string | null;
+        reply_to_id?: string | null;
       },
       ctx: GraphQLContext
     ) => {
       const me = requireRole(ctx, ROLES);
-      const message = await staffChatService.send(me.id, args.to_user_id, args.text, {
-        url: args.attachment_url,
-        name: args.attachment_name,
-        type: args.attachment_type,
-      });
+      const message = await staffChatService.send(
+        me.id,
+        args.to_user_id,
+        args.text,
+        {
+          url: args.attachment_url,
+          name: args.attachment_name,
+          type: args.attachment_type,
+        },
+        { replyToId: args.reply_to_id }
+      );
       // After the write, so a socket that arrives first cannot show a message
       // that failed to save.
       emitStaffMessage(message);
+      // Delivered means "it reached a tab of theirs", which is exactly what an
+      // open socket says — so the second tick is decided here rather than
+      // trusting the recipient's client to report on itself.
+      if (statusOf(args.to_user_id) !== 'OFFLINE') {
+        const delivered = await staffChatService.markDelivered(args.to_user_id, me.id);
+        if (delivered > 0) emitStaffMessage(message, 'staff_message_changed');
+      }
       return message;
     },
     editStaffMessage: async (
@@ -95,13 +145,30 @@ export const staffChatResolvers = {
     },
     reactToStaffMessage: async (
       _p: unknown,
-      args: { id: string; kind: StaffReactionKind },
+      args: { id: string; emoji: string },
       ctx: GraphQLContext
     ) => {
       const me = requireRole(ctx, ROLES);
-      const message = await staffChatService.react(me.id, args.id, args.kind);
+      const message = await staffChatService.react(me.id, args.id, args.emoji);
       // The same event the edit and delete paths use, so a client that already
       // replaces a message by id needs no new handler.
+      emitStaffMessage(message, 'staff_message_changed');
+      return message;
+    },
+    forwardStaffMessage: async (
+      _p: unknown,
+      args: { id: string; to_user_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      const message = await staffChatService.forward(me.id, args.id, args.to_user_id);
+      emitStaffMessage(message);
+      return message;
+    },
+    pinStaffMessage: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      const message = await staffChatService.pin(me.id, args.id);
+      // Pins belong to the thread, so the other side has to hear about it.
       emitStaffMessage(message, 'staff_message_changed');
       return message;
     },

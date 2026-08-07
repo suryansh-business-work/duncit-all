@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PodBackoutRequestInput } from '@duncit/utils';
 
 export const MY_POD_MEMBERSHIPS = gql`
   query MyPodMembershipsForHistory {
@@ -13,6 +14,25 @@ export const MY_POD_MEMBERSHIPS = gql`
       refund_payment_id
       referral_token
       source
+      attended
+      attended_at
+      pod_cancelled_by
+      pod_cancelled_at
+      backouts {
+        backout_no
+        status
+        attempt_no
+        seats
+        seats_before
+        refund_amount
+        deduction_pct
+        refund_processed_at
+        created_at
+        events {
+          status
+          at
+        }
+      }
       pod {
         id
         pod_id
@@ -110,6 +130,14 @@ export interface PodHistoryItem {
   payment_id?: string | null;
   refund_status: 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
   refund_payment_id?: string | null;
+  /** Did a host scan this booking in at the door? */
+  attended?: boolean | null;
+  attended_at?: string | null;
+  /** Set when the POD was cancelled, whoever did it. */
+  pod_cancelled_by?: 'HOST' | 'VENUE' | 'CLUB_ADMIN' | 'ADMIN' | 'SYSTEM' | null;
+  pod_cancelled_at?: string | null;
+  /** Every backout raised on this booking, oldest first (DUN-BKO ids). */
+  backouts?: PodBackoutRequestInput[] | null;
   referral_token?: string | null;
   source: string;
   pod?: {

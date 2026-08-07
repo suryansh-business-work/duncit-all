@@ -1,3 +1,4 @@
+import { logs } from '@observability/log';
 import { getIo, type AuthedSocket } from '@realtime/io';
 import { staffChatService } from './staffChat.service';
 import type { CallKind, CallOutcome } from './staffCall.model';
@@ -95,11 +96,72 @@ function cancelPendingEnd(userId: string) {
  * browser, which is why a call costs no bandwidth here and why the call RECORD
  * is the only trace of it.
  */
+/**
+ * How many browsers that person has open.
+ *
+ * Load-bearing for reading these logs: this server delivers to a room per
+ * PERSON, so one signal reaches every tab they have open, and "two of
+ * everything" is a symptom with a cause rather than a mystery.
+ */
+async function socketsIn(userId: string): Promise<number> {
+  try {
+    const members = await getIo().in(room(userId)).fetchSockets();
+    return members.length;
+  } catch {
+    return -1;
+  }
+}
+
 function attachCallRelay(socket: AuthedSocket) {
   const relay = (event: string) => {
     socket.on(event, async (payload: { to: string } & Record<string, unknown>) => {
       if (!socket.userId || !payload?.to) return;
       const me = socket.userId;
+
+      /*
+        You cannot call yourself.
+
+        Not a hypothetical: rooms are per PERSON, so an offer addressed to your
+        own id comes straight back to the tab that sent it. That tab already
+        has a peer connection open, so its "one call at a time" guard declines
+        — its own call — and the window closes in the time it takes to make a
+        round trip. Every call recorded that way was MISSED, from and to the
+        same user, twice over because two tabs each declined.
+
+        Refused here rather than only in the UI, because the UI is not the only
+        thing that can send this.
+      */
+      if (payload.to === me) {
+        logs.server.warn('staffChat', 'callRelay', {
+          msg: `refused ${event}: ${me} addressed itself`,
+          event,
+          from: me,
+        });
+        socket.emit('call_error', { reason: 'SELF_CALL' });
+        return;
+      }
+
+      /*
+        Every signal, both ends, with the tab counts.
+
+        The media is peer to peer, so this relay is the ONLY place a call is
+        visible to us at all — and a call that dies on the way out leaves
+        nothing else behind to read. `call_ice` is left out: it fires dozens of
+        times per call and would bury the four events that decide the outcome.
+      */
+      if (event !== 'call_ice') {
+        const [mine, theirs] = await Promise.all([socketsIn(me), socketsIn(payload.to)]);
+        logs.server.info('staffChat', 'callRelay', {
+          msg: `${event} ${me} -> ${payload.to}`,
+          event,
+          from: me,
+          to: payload.to,
+          from_socket: socket.id,
+          from_sockets: mine,
+          to_sockets: theirs,
+          paired_with: callPartner.get(me) ?? null,
+        });
+      }
 
       if (event === 'call_offer' || event === 'call_answer') {
         pair(me, payload.to);
@@ -114,9 +176,9 @@ function attachCallRelay(socket: AuthedSocket) {
       const extra =
         event === 'call_offer' ? { from_name: await staffChatService.displayName(me) } : {};
 
-      getIo()
-        .to(room(payload.to))
-        .emit(event, { ...payload, ...extra, from: me });
+      // `socket.to` rather than `getIo().to`: a signal must never reach the
+      // socket that sent it. Every other tab of the recipient still gets it.
+      socket.to(room(payload.to)).emit(event, { ...payload, ...extra, from: me });
     });
   };
   relay('call_offer');
@@ -165,6 +227,13 @@ export function attachStaffChatHandlers() {
           ack?.(null);
           return;
         }
+        logs.server.info('staffChat', 'callRecord', {
+          msg: `record ${payload.outcome} ${userId} -> ${payload.peerId}`,
+          outcome: payload.outcome,
+          from: userId,
+          to: payload.peerId,
+          socket: socket.id,
+        });
         staffChatService
           .recordCall({
             meId: userId,

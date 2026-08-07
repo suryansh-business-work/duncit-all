@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
+import { traceCall, traceCallFailure } from './callTrace';
 import { describeFailure, failureFromKey, type Failure } from './failure';
 import { playCallEnded, startRinging } from './sounds';
 
@@ -361,6 +362,14 @@ export function useCall(
   const call = useCallback(
     async (otherId: string, callKind: CallKind) => {
       setError(null);
+      // Caught here as well as on the server, so the window never opens for a
+      // call that cannot exist. The directory hides you from yourself, so this
+      // only fires when the id on screen is not the id on the socket — worth
+      // saying out loud rather than watching the call kill itself.
+      if (otherId === meId) {
+        setError(failureFromKey('shell.chat.call.selfCall'));
+        return;
+      }
       // Show the window BEFORE asking for the microphone. getUserMedia does not
       // resolve until the browser's permission prompt is answered, and on a
       // domain being used for the first time that prompt is the whole delay —
@@ -375,6 +384,7 @@ export function useCall(
         stream.getTracks().forEach((track) => connection.addTrack(track, stream));
         const offer = await connection.createOffer();
         await connection.setLocalDescription(offer);
+        traceCall('offer sent', { to: otherId, kind: callKind });
         socket?.emit('call_offer', { to: otherId, kind: callKind, sdp: offer });
         startedAt.current = new Date();
       } catch (err) {
@@ -437,9 +447,11 @@ export function useCall(
       // One call at a time: a second offer while busy is declined outright
       // rather than quietly replacing the call in progress.
       if (pc.current || phase !== 'idle') {
+        traceCallFailure('declining: already busy', { from: signal.from, phase, hasPeer: Boolean(pc.current) });
         socket.emit('call_decline', { to: signal.from });
         return;
       }
+      traceCall('offer received', { from: signal.from, kind: signal.kind });
       pendingOffer.current = signal.sdp ?? null;
       setKind(signal.kind ?? 'AUDIO');
       setPeerId(signal.from);
@@ -461,17 +473,50 @@ export function useCall(
       await pc.current.addIceCandidate(signal.candidate).catch(() => undefined);
     };
 
-    const onDecline = () => {
+    /*
+      Is this signal about the call I am actually on?
+
+      These handlers used to ignore the payload entirely and tear down on any
+      decline or hang-up that arrived. A signal from a conversation you are not
+      in — or, before the server refused it, one you sent yourself — killed a
+      live call with nothing on screen to say why. A signal with no `from` is
+      treated as ours, because that is what every earlier client sends.
+    */
+    const aboutThisCall = (signal: Signal) => !signal?.from || signal.from === peerId;
+
+    const onDecline = (signal: Signal) => {
+      if (!aboutThisCall(signal)) {
+        traceCall('ignored a decline for another call', { from: signal?.from, peerId });
+        return;
+      }
+      traceCallFailure('declined by the other end', { from: signal?.from });
       // The caller writes this one: the callee already wrote DECLINED.
       if (peerId) record('MISSED', peerId, kind);
       teardown();
     };
 
-    const onEnd = () => {
+    const onEnd = (signal: Signal) => {
+      if (!aboutThisCall(signal)) {
+        traceCall('ignored a hang-up for another call', { from: signal?.from, peerId });
+        return;
+      }
+      traceCall('the other end hung up', { from: signal?.from });
       // The other end hung up. The tone matters more here than on your own
       // click: you did not do it, so nothing else on screen says why the call
       // just vanished.
       if (answered.current) playCallEnded();
+      teardown();
+    };
+
+    /** The server refused the call outright — say so instead of vanishing. */
+    const onCallError = (payload: { reason?: string }) => {
+      setError(
+        failureFromKey(
+          payload?.reason === 'SELF_CALL'
+            ? 'shell.chat.call.selfCall'
+            : 'shell.chat.call.startFailed'
+        )
+      );
       teardown();
     };
 
@@ -489,6 +534,7 @@ export function useCall(
     };
 
     socket.on('connect', onConnect);
+    socket.on('call_error', onCallError);
     socket.on('call_offer', onOffer);
     socket.on('call_answer', onAnswer);
     socket.on('call_ice', onIce);
@@ -496,6 +542,7 @@ export function useCall(
     socket.on('call_end', onEnd);
     return () => {
       socket.off('connect', onConnect);
+      socket.off('call_error', onCallError);
       socket.off('call_offer', onOffer);
       socket.off('call_answer', onAnswer);
       socket.off('call_ice', onIce);

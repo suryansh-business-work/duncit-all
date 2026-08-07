@@ -422,6 +422,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
           'This browser will not open the microphone or camera here. Calls need a secure (https) connection.',
         deviceGone:
           'The microphone or camera you had chosen is not available here, so this call is using the default one.',
+        selfCall: 'That call would be to your own account, so there is nobody to reach.',
         startFailed: 'Could not start the call',
         answerFailed: 'Could not answer',
         switchFailed: 'Could not switch device',

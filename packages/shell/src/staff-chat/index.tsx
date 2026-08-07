@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -107,6 +107,19 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
    * flag that would look like it had done more than it did.
    */
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  /**
+   * History fetched by scrolling up, oldest-first, kept apart from the live
+   * page so an arriving message cannot renumber what is already on screen.
+   */
+  const [older, setOlder] = useState<StaffMessage[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [reachedStart, setReachedStart] = useState(false);
+
+  // A different conversation starts its own history.
+  useEffect(() => {
+    setOlder([]);
+    setReachedStart(false);
+  }, [peer?.id]);
 
   const refreshAll = useCallback(() => {
     void threadsQuery.refetch();
@@ -199,6 +212,19 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
     downloadChatExport(text, peer.name);
   };
 
+  /**
+   * What the thread renders: the history scrolled into view, then the live
+   * page, minus anything hidden with "delete for me" — which cannot reach the
+   * other person's copy and so is applied here rather than pretending the
+   * server did it.
+   */
+  const visibleMessages = useMemo(() => {
+    const live = messagesQuery.data?.staffMessages ?? [];
+    const seen = new Set(live.map((message) => message.id));
+    const history = older.filter((message) => !seen.has(message.id));
+    return [...history, ...live].filter((message) => !hiddenIds.has(message.id));
+  }, [messagesQuery.data, older, hiddenIds]);
+
   /** Names for reaction tooltips, reply strips and forwarded-from lines. */
   const nameOf = useCallback(
     (userId: string) => {
@@ -208,6 +234,33 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
     },
     [meId, peer]
   );
+
+  /**
+   * History above what is loaded.
+   *
+   * A created_at cursor, not an offset: the thread gains messages while it is
+   * being scrolled, and an offset would show one twice or skip one every time
+   * that happened. A short page means there is nothing above it.
+   */
+  const loadOlder = useCallback(async () => {
+    const oldest = visibleMessages[0];
+    if (!peer || !oldest?.created_at || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await client.query<{ staffMessages: StaffMessage[] }>({
+        query: STAFF_MESSAGES,
+        variables: { peerId: peer.id, limit: 50, before: oldest.created_at },
+        fetchPolicy: 'network-only',
+      });
+      const rows = page.data?.staffMessages ?? [];
+      if (rows.length < 50) setReachedStart(true);
+      if (rows.length > 0) setOlder((current) => [...rows, ...current]);
+    } catch {
+      // Leave what is on screen alone; the button stays for another try.
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [client, peer, visibleMessages, loadingMore]);
 
   const change = (mutate: typeof editMessage, variables: Record<string, unknown>) => {
     mutate({ variables })
@@ -278,11 +331,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
             peer={peer}
             meId={meId}
             status={statusOf(peer.id)}
-            // "Delete for me" is a local hide, so it is applied here rather
-            // than pretending the server did it.
-            messages={(messagesQuery.data?.staffMessages ?? []).filter(
-              (message) => !hiddenIds.has(message.id)
-            )}
+            messages={visibleMessages}
             sending={sendState.loading}
             uploading={uploading}
             onBack={() => setPeer(null)}
@@ -307,9 +356,9 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
             }}
             onPin={(id) => change(pinMessage, { id })}
             loading={messagesQuery.loading}
-            hasMore={false}
-            loadingMore={false}
-            onLoadMore={() => undefined}
+            hasMore={!reachedStart && visibleMessages.length > 0}
+            loadingMore={loadingMore}
+            onLoadMore={loadOlder}
             settings={settings}
             formats={formats}
             spacing={spacing}

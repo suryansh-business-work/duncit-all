@@ -113,6 +113,8 @@ export default function CallPanel({
   // What goes full screen: the video stage, not the whole panel — the controls
   // and the conversation behind them have no business filling a monitor.
   const stageRef = useRef<HTMLDivElement | null>(null);
+  // Ringing at either end: the pulse says something is happening.
+  const ringing = phase === 'ringing' || phase === 'incoming';
   if (phase === 'idle' && !error) return null;
 
   return (
@@ -126,9 +128,42 @@ export default function CallPanel({
       {phase !== 'idle' && (
         <Stack spacing={1}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            {/* A ring that pulses while it rings — a static avatar and a word
-                is not enough to tell "calling" from "on a call" at a glance. */}
-            <Avatar src={peer?.photo || undefined} sx={{ width: 32, height: 32 }} />
+            {/*
+              A ring that pulses while it rings — a static avatar and a word are
+              not enough to tell "calling" from "on a call" at a glance, and the
+              one moment a caller is staring at this panel is the moment nothing
+              has happened yet.
+
+              The ring is a ::after on a wrapper rather than a box-shadow on the
+              avatar, so the pulse cannot resize anything around it.
+            */}
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'inline-flex',
+                ...(ringing && {
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: -4,
+                    borderRadius: '50%',
+                    border: 2,
+                    borderColor: 'primary.main',
+                    animation: 'staffCallPulse 1.4s ease-out infinite',
+                  },
+                  '@keyframes staffCallPulse': {
+                    '0%': { transform: 'scale(0.9)', opacity: 0.9 },
+                    '70%': { transform: 'scale(1.35)', opacity: 0 },
+                    '100%': { transform: 'scale(1.35)', opacity: 0 },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    '&::after': { animation: 'none', opacity: 0.6 },
+                  },
+                }),
+              }}
+            >
+              <Avatar src={peer?.photo || undefined} sx={{ width: 32, height: 32 }} />
+            </Box>
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="subtitle2" noWrap>
                 {peer?.name ?? 'Coworker'}

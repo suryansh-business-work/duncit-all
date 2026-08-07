@@ -4,7 +4,7 @@ import MessageReactions from '../MessageReactions';
 import BubbleBadges from './BubbleBadges';
 import BubbleBody from './BubbleBody';
 import BubbleFooter from './BubbleFooter';
-import type { ChatSettings } from '../useChatSettings';
+import type { ChatFormats, ChatSettings } from '../useChatSettings';
 import type { StaffMessage } from '../queries';
 
 export interface MessageBubbleProps {
@@ -14,7 +14,7 @@ export interface MessageBubbleProps {
   meId: string;
   settings: ChatSettings;
   /** Formatters built once for the whole thread. */
-  formats: { time: Intl.DateTimeFormat; full: Intl.DateTimeFormat };
+  formats: ChatFormats;
   /** Names, for reaction tooltips and the reply strip. */
   nameOf: (userId: string) => string;
   /** The message this one answers, when it is still loaded. */

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Chip, Divider, Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MessageBubble from './message-bubble';
-import type { ChatSettings } from './useChatSettings';
+import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { StaffMessage } from './queries';
 
 /** Today, Yesterday, or the day itself — what a separator has to say. */
-function dayLabel(iso: string, day: Intl.DateTimeFormat): string {
+function dayLabel(iso: string, day: ChatFormats['day']): string {
   const at = new Date(iso);
   const now = new Date();
   const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
@@ -25,7 +25,7 @@ interface Props {
   hasMore: boolean;
   loadingMore: boolean;
   settings: ChatSettings;
-  formats: { time: Intl.DateTimeFormat; full: Intl.DateTimeFormat; day: Intl.DateTimeFormat };
+  formats: ChatFormats;
   spacing: number;
   nameOf: (userId: string) => string;
   selectedIds?: Set<string>;

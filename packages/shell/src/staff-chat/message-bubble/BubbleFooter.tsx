@@ -2,13 +2,14 @@ import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import MessageActions from '../MessageActions';
 import MessageStatus from '../MessageStatus';
 import type { StaffMessage } from '../queries';
+import type { ChatFormats } from '../useChatSettings';
 
 interface Props {
   message: StaffMessage;
   mine: boolean;
   editing: boolean;
   deleted: boolean;
-  formats: { time: Intl.DateTimeFormat; full: Intl.DateTimeFormat };
+  formats: ChatFormats;
   onReply: () => void;
   onForward: () => void;
   onPin: () => void;

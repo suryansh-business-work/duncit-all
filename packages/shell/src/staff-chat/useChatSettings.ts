@@ -1,4 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { formatInTimeZone } from 'date-fns-tz';
+
+/** What the thread needs from a formatter — a date in, a string out. */
+export interface ChatTimeFormat {
+  format: (value: Date) => string;
+}
+
+export interface ChatFormats {
+  time: ChatTimeFormat;
+  full: ChatTimeFormat;
+  day: ChatTimeFormat;
+}
 
 export type ChatDensity = 'COMPACT' | 'COMFORTABLE';
 
@@ -61,29 +73,21 @@ export function useChatSettings() {
   /**
    * One formatter for every timestamp in the thread.
    *
-   * Built once per setting rather than per message: a long conversation renders
-   * hundreds of times, and `Intl.DateTimeFormat` is expensive enough that
-   * building one in a render loop is visible.
+   * date-fns, like the rest of this codebase — and `formatInTimeZone` for the
+   * same reason `@duncit/datetime` uses it: it is the stable surface across
+   * date-fns-tz majors, where `utcToZonedTime` was renamed under everybody.
+   *
+   * Built once per setting rather than per message: a long thread renders
+   * hundreds of lines and a formatter rebuilt in that loop is visible.
    */
   const formats = useMemo(() => {
-    const zone = settings.timeZone || undefined;
+    // No choice means this machine's zone, which is what the option says.
+    const zone = settings.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const at = (value: Date, pattern: string) => formatInTimeZone(value, zone, pattern);
     return {
-      time: new Intl.DateTimeFormat(undefined, {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: zone,
-      }),
-      full: new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: zone,
-      }),
-      day: new Intl.DateTimeFormat(undefined, {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        timeZone: zone,
-      }),
+      time: { format: (value: Date) => at(value, 'HH:mm') },
+      full: { format: (value: Date) => at(value, 'd MMM yyyy, HH:mm') },
+      day: { format: (value: Date) => at(value, 'EEEE, d MMMM') },
     };
   }, [settings.timeZone]);
 

@@ -22,7 +22,7 @@ import LocationDialog from './LocationDialog';
 import MessageThread from './MessageThread';
 import PresenceDot from './PresenceDot';
 import type { Coworker, StaffMessage } from './queries';
-import type { ChatSettings } from './useChatSettings';
+import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
 
 interface Props {
@@ -39,7 +39,7 @@ interface Props {
   hasMore: boolean;
   loadingMore: boolean;
   settings: ChatSettings;
-  formats: { time: Intl.DateTimeFormat; full: Intl.DateTimeFormat; day: Intl.DateTimeFormat };
+  formats: ChatFormats;
   spacing: number;
   nameOf: (userId: string) => string;
   /** The message being answered, shown above the composer until it is sent. */

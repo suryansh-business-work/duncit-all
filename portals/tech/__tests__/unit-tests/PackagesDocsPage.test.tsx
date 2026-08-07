@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PackagesDocsPage from '../../src/pages/packages-docs';
-import { DEFAULT_PACKAGE_SLUG, PACKAGE_DOCS } from '../../src/pages/packages-docs/package-docs';
+import { PACKAGE_DOCS } from '../../src/pages/packages-docs/package-docs';
 
 /**
  * The docs are read from packages/-star-/docs/index.mdx at build time, so this
@@ -18,7 +18,7 @@ describe('package docs', () => {
   });
 
   it('reads the frontmatter the docs site validates', () => {
-    const comms = PACKAGE_DOCS.find((p) => p.slug === DEFAULT_PACKAGE_SLUG);
+    const comms = PACKAGE_DOCS.find((p) => p.slug === 'communication');
     expect(comms).toBeDefined();
     expect(comms!.name).toBe('@duncit/communication');
     expect(comms!.summary).toContain('Provider-agnostic');
@@ -32,20 +32,19 @@ describe('package docs', () => {
   });
 
   it('keeps the body and drops the frontmatter block', () => {
-    const comms = PACKAGE_DOCS.find((p) => p.slug === DEFAULT_PACKAGE_SLUG)!;
+    const comms = PACKAGE_DOCS.find((p) => p.slug === 'communication')!;
     expect(comms.body.startsWith('---')).toBe(false);
     expect(comms.body.startsWith('# @duncit/communication')).toBe(false);
     expect(comms.body).toContain('Two channels, one idea');
   });
 
-  it('opens on the communication package, since it is reached from Emails', () => {
+  it('opens on the first package, since a general index privileges none', () => {
     render(
       <MemoryRouter>
         <PackagesDocsPage />
       </MemoryRouter>
     );
-    expect(screen.getByRole('heading', { name: '@duncit/communication' })).toBeInTheDocument();
-    expect(screen.getByText('zero runtime deps')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: PACKAGE_DOCS[0].name })).toBeInTheDocument();
   });
 
   it('opens the package named in the URL', () => {

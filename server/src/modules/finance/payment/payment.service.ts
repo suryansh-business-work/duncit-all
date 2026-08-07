@@ -18,6 +18,7 @@ import { couponService } from '@modules/finance/coupon/coupon.service';
 import { coinService } from '@modules/finance/coin/coin.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
+import { claimSeats } from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -423,9 +424,33 @@ function clampSeatsForPod(pod: any, requested: unknown): number {
   return seats;
 }
 
+/**
+ * A booking is one membership. Topping up seats on an existing one is not a
+ * supported flow and never was: the capture path records seats on a NEW
+ * membership row, so a second purchase bumped the pod's `extra_seats` while the
+ * membership kept its old count. A later backout then released only the old
+ * count and orphaned the rest of the counter permanently — the pod quietly lost
+ * capacity that nothing could give back. Both apps already hide the CTA for a
+ * member, so this only closes the door the API left open.
+ */
+async function assertNotAlreadyBooked(podId: unknown, userId: string) {
+  const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
+  const existing = await PodMemberModel.findOne({
+    pod_id: podId,
+    user_id: new Types.ObjectId(userId),
+    status: { $in: ['JOINED', 'BACKOUT_IN_PROCESS'] },
+  }).select('_id status');
+  if (!existing) return;
+  const message =
+    existing.status === 'BACKOUT_IN_PROCESS'
+      ? 'Your backout for this pod is still in process — use "Keep My Spot" to restore your booking.'
+      : 'You have already booked this pod.';
+  throw new GraphQLError(message, { extensions: { code: 'ALREADY_BOOKED' } });
+}
+
 /** Resolve what the user actually pays (pod ticket + selected products, or a raw
  * amount) plus the human description. Shared by the dummy + Razorpay flows. */
-async function resolvePayable(input: any) {
+async function resolvePayable(input: any, userId?: string) {
   let pod: any = null;
   let payableAmount = Number(input.amount) || 0;
   let description = input.description || 'Booking';
@@ -439,6 +464,7 @@ async function resolvePayable(input: any) {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
+    if (userId) await assertNotAlreadyBooked(pod._id, userId);
     seats = clampSeatsForPod(pod, input.seats);
     description =
       seats > 1
@@ -603,22 +629,36 @@ async function bookPodForPayment(
 ): Promise<string | null> {
   if (!pod) return null;
   let bookingId: string | null = null;
+  // A capture can be replayed (webhook retry, a manual re-verify). The seat
+  // claim below is an `$inc`, which is not idempotent, so the membership row is
+  // the key: if this payment already booked, there is nothing left to do.
+  const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
+  const already = await PodMemberModel.findOne({
+    payment_id: new Types.ObjectId(paymentDocId),
+  }).select('_id');
+  if (already) return String(already._id);
+  // The buyer appears once (identity); the seats beyond their own are the
+  // pod-level counter, so occupancy stays right without duplicating an id.
+  //
+  // A failed claim used to be logged and stepped over, which then issued a
+  // membership and a ticket for seats nobody held. The money is already taken at
+  // this point, so the honest outcome is to book nothing and mark the payment for
+  // refund — Finance can see it, and the pod is not oversold.
   try {
-    // The buyer appears once (identity); the seats beyond their own are the
-    // pod-level counter, so occupancy stays right without duplicating an id.
-    let touched = false;
-    if (!pod.pod_attendees.some((u: any) => String(u) === String(userId))) {
-      pod.pod_attendees.push(userId);
-      touched = true;
-    }
-    const extra = Math.max(normalizeSeats(seats) - 1, 0);
-    if (extra > 0) {
-      pod.extra_seats = (pod.extra_seats ?? 0) + extra;
-      touched = true;
-    }
-    if (touched) await pod.save();
+    await claimSeats(pod._id, userId, seats);
   } catch (e) {
-    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'Pod attendee update failed' });
+    logs.server.error('payment', 'bookPodForPayment', {
+      error: e,
+      msg: 'Seat claim failed after payment — booking skipped, refund required',
+      podId: String(pod._id),
+      paymentDocId,
+      seats,
+    });
+    await PaymentModel.updateOne(
+      { _id: paymentDocId },
+      { $set: { 'metadata.seat_claim_failed': true } },
+    );
+    return null;
   }
   try {
     const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
@@ -667,12 +707,24 @@ function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: num
   const meta: Record<string, any> = doc.metadata ?? {};
   const productLines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
   const isProductPayment = meta.source === 'app_product_checkout';
-  const ticketGross = round2(Number(meta.ticket_amount ?? 0));
+  // `ticket_amount` is the price of ONE seat; the booking may hold several. The
+  // split below weighs the ticket against the products, so comparing a unit
+  // price with a product total handed the ticket too small a share of the bill.
+  const seats = normalizeSeats(meta.seats ?? 1);
+  const ticketGross = round2(Number(meta.ticket_amount ?? 0) * seats);
   const productGross = round2(productLines.reduce((sum, l) => sum + Number(l.gross || 0), 0));
   const totalGross = round2(ticketGross + productGross);
+  // The invoice has a QTY column and the pod line was always claiming 1, so a
+  // four-seat booking read as one ticket at four times the price.
+  const podLine = (amount: number, description: string) => ({
+    description,
+    qty: seats,
+    unit_price: round2(amount / seats),
+    amount,
+  });
 
   if (productLines.length === 0 || totalGross <= 0) {
-    return [{ description: doc.description, qty: 1, unit_price: doc.subtotal, amount: doc.subtotal }];
+    return [podLine(doc.subtotal, doc.description)];
   }
 
   // Proportional share of the net subtotal, largest-remainder-safe: the residual
@@ -692,7 +744,7 @@ function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: num
     if (residualNet <= 0) return items;
     return [...items, { description: 'Delivery charge', qty: 1, unit_price: residualNet, amount: residualNet }];
   }
-  return [{ description: 'Event ticket', qty: 1, unit_price: residualNet, amount: residualNet }, ...items];
+  return [podLine(residualNet, doc.description || 'Event ticket'), ...items];
 }
 
 /** Invoice bill-to fields from a payment — prefers the billing snapshot, falls
@@ -892,7 +944,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products } = await resolvePayable(input);
+    const { pod, payableAmount, description, products } = await resolvePayable(input, userId);
     const {
       quote: couponedQuote,
       originalTotal,
@@ -946,7 +998,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products } = await resolvePayable(input);
+    const { pod, payableAmount, description, products } = await resolvePayable(input, userId);
     const {
       quote: couponedQuote,
       originalTotal,

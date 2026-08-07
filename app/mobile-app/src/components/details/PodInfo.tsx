@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
+import { podSeatsTaken } from '@duncit/utils';
 import {
   podModeLabel,
   podOccurrenceLabel,
@@ -75,7 +76,7 @@ export function PodInfo({
 }: Readonly<{ pod: PodDetail; categoryCrumbs: readonly string[] }>) {
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
-  const attendees = pod.pod_attendees.length;
+  const attendees = podSeatsTaken(pod);
   const hasSpots = pod.no_of_spots > 0;
   const remaining = hasSpots ? Math.max(pod.no_of_spots - attendees, 0) : 0;
   const time = podTimeChip(pod.pod_date_time);

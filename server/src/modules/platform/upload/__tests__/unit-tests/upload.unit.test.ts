@@ -5,6 +5,32 @@ jest.mock('@config/runtimeEnv', () => ({
   getRuntimeEnvValue: jest.fn(async () => 'test-value'),
 }));
 
+/**
+ * The ImageKit credentials come from ONE EnvEntry, so the model is the seam.
+ *
+ * It used to be three `getRuntimeEnvValue` calls, which is exactly the defect
+ * this now guards: three lookups can answer from three records.
+ */
+jest.mock('@modules/platform/envEntry/envEntry.model', () => ({
+  // Only the model: this module also exports ENV_CATEGORIES, which the SDL's
+  // drift guard reads at import time and throws without.
+  ...jest.requireActual('@modules/platform/envEntry/envEntry.model'),
+  EnvEntryModel: { find: () => ({ lean: async () => imagekitEntries }) },
+}));
+
+const WORKING_IMAGEKIT = [
+  {
+    name: 'ImageKit',
+    config: {
+      public_key: 'public_test',
+      private_key: 'private_test',
+      url_endpoint: 'https://ik.imagekit.io/duncit',
+    },
+  },
+];
+
+let imagekitEntries: { name: string; config: Record<string, string> }[] = [...WORKING_IMAGEKIT];
+
 // getUploadSettingsSafe is the seam that decides whether the admin size/format
 // caps apply. Default = null (no DB, matches the un-mocked runtime); individual
 // tests override it with a fake row to exercise the setting-present branches.
@@ -20,13 +46,11 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 const mockSettings = getUploadSettingsSafe as jest.Mock;
 const mockEnv = getRuntimeEnvValue as jest.Mock;
 
-const setImagekitKeys = (pub: string, priv: string, url: string) =>
-  mockEnv.mockImplementation(async (key: string) => {
-    if (key === 'IMAGEKIT_PUBLIC_KEY') return pub;
-    if (key === 'IMAGEKIT_PRIVATE_KEY') return priv;
-    if (key === 'IMAGEKIT_URL_ENDPOINT') return url;
-    return 'test-value';
-  });
+const setImagekitKeys = (pub: string, priv: string, url: string) => {
+  imagekitEntries = [
+    { name: 'ImageKit', config: { public_key: pub, private_key: priv, url_endpoint: url } },
+  ];
+};
 
 const MB = 1024 * 1024;
 const videoBase64 = (bytes: number) => Buffer.alloc(bytes).toString('base64');
@@ -55,6 +79,10 @@ const mockImagekitOk = () =>
     ok: true,
     json: async () => ({ url: 'https://cdn/out', fileId: 'f1' }),
   } as any);
+
+beforeEach(() => {
+  imagekitEntries = [...WORKING_IMAGEKIT];
+});
 
 describe('upload unit', () => {
   it('getImagekitAuth requires authentication', async () => {
@@ -207,29 +235,29 @@ describe('upload unit', () => {
     });
   });
 
-  describe('getImagekitAuth config validation', () => {
-    afterEach(() => mockEnv.mockImplementation(async () => 'test-value'));
-
-    it('returns signed auth params for a valid key pair', async () => {
+  describe('getImagekitAuth', () => {
+    it('hands back a pass to our own upload route, not an ImageKit signature', async () => {
       setImagekitKeys('public_abc', 'private_xyz', 'https://ik.imagekit.io/duncit');
-      const auth = await getImagekitAuth();
-      expect(auth.publicKey).toBe('public_abc');
+      const auth = await getImagekitAuth('u1', '/avatars');
+      expect(auth.uploadUrl).toMatch(/\/upload$/);
+      expect(auth.ticket).toMatch(/^[0-9a-f-]{36}$/);
       expect(auth.urlEndpoint).toBe('https://ik.imagekit.io/duncit');
-      expect(auth.token).toMatch(/^[0-9a-f]{32}$/);
-      expect(auth.signature).toMatch(/^[0-9a-f]{40}$/);
-      expect(auth.expire).toBeGreaterThan(Math.floor(Date.now() / 1000));
+      // No signature and no public key: a browser cannot sign an ImageKit
+      // upload, and a mismatched key pair is what broke every upload before.
+      expect(auth).not.toHaveProperty('signature');
+      expect(auth).not.toHaveProperty('publicKey');
     });
 
-    it.each([
-      ['', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is missing/],
-      ['bad', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is malformed/],
-      ['public_abc', '', 'https://x', /IMAGEKIT_PRIVATE_KEY is missing/],
-      ['public_abc', 'bad', 'https://x', /swapped/],
-      ['public_abc', 'private_xyz', '', /IMAGEKIT_URL_ENDPOINT is missing/],
-      ['public_abc', 'private_xyz', 'ftp://x', /IMAGEKIT_URL_ENDPOINT must be a URL/],
-    ])('rejects a misconfigured key pair (%s / %s / %s)', async (pub, priv, url, expected) => {
-      setImagekitKeys(pub, priv, url);
-      await expect(getImagekitAuth()).rejects.toThrow(expected);
+    it('gives every upload its own pass, because a pass is spent once', async () => {
+      setImagekitKeys('public_abc', 'private_xyz', 'https://ik.imagekit.io/duncit');
+      const a = await getImagekitAuth('u1', '/avatars');
+      const b = await getImagekitAuth('u1', '/avatars');
+      expect(a.ticket).not.toBe(b.ticket);
+    });
+
+    it('refuses when ImageKit is not configured at all', async () => {
+      setImagekitKeys('public_abc', '', 'https://x');
+      await expect(getImagekitAuth('u1')).rejects.toThrow(/not configured/);
     });
   });
 

@@ -10,6 +10,7 @@ import {
   PodCommentsDocument,
   PodDetailsDocument,
   PodPeopleDocument,
+  PodAttendeeSeatsDocument,
   PodSpotFillsDocument,
   TogglePodCommentLikeDocument,
 } from '@/graphql/details';
@@ -100,6 +101,8 @@ export function usePodDetails(podId: string) {
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
   const [people, setPeople] = useState<PodPerson[]>([]);
   const [spotFills, setSpotFills] = useState<PodSpotFill[]>([]);
+  // One face per person; the seats they hold become a label beside their name.
+  const [seatsByUser, setSeatsByUser] = useState<Record<string, number>>({});
   const [categoryCrumbs, setCategoryCrumbs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -136,8 +139,19 @@ export function usePodDetails(podId: string) {
         () => null,
       );
       setSpotFills(fillData?.podSpotFills ?? []);
+      const seatData = await graphqlRequest(
+        PodAttendeeSeatsDocument,
+        { podId },
+        { auth: true },
+      ).catch(() => null);
+      setSeatsByUser(
+        Object.fromEntries(
+          (seatData?.podAttendeeSeats ?? []).map((row) => [row.user_id, row.seats]),
+        ),
+      );
     } else {
       setSpotFills([]);
+      setSeatsByUser({});
     }
   }, [podId]);
 
@@ -170,6 +184,7 @@ export function usePodDetails(podId: string) {
     membershipState,
     people,
     spotFills,
+    seatsByUser,
     categoryCrumbs,
     isLoading,
     error,

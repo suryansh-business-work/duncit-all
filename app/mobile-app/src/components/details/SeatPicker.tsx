@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 import { seatOptions } from '@duncit/utils';
@@ -22,10 +23,16 @@ interface Props {
 export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
   const options = seatOptions(maxSeats);
+  const top = options.length;
+  const seats = top > 0 ? Math.min(Math.max(value, 1), top) : value;
+  // Clamping only what is DISPLAYED left the parent holding the larger number,
+  // so a stepper showing 3 could submit 5 and the pod would reject the booking
+  // after the buyer had filled in the whole checkout form. Tell the parent.
+  useEffect(() => {
+    if (seats !== value) onChange(seats);
+  }, [seats, value, onChange]);
   if (options.length <= 1) return null;
 
-  const top = options.length;
-  const seats = Math.min(Math.max(value, 1), top);
   const step = (next: number) => {
     if (disabled) return;
     onChange(Math.min(Math.max(next, 1), top));

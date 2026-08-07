@@ -46,6 +46,14 @@ export function useStaffSocket({
   // Exposed as state, not just a ref: presence and calls are hooks that need to
   // re-run the moment a socket exists, and a ref does not re-render.
   const [socket, setSocket] = useState<Socket | null>(null);
+  /**
+   * Who is typing, and when they last said so.
+   *
+   * A timestamp rather than a boolean: "typing" has no stop event — somebody
+   * who closes the tab mid-word would otherwise be typing forever. Readers
+   * treat anything older than a few seconds as finished.
+   */
+  const [typingAt, setTypingAt] = useState<Record<string, number>>({});
   // Handlers are read through refs so a new identity does not tear the socket
   // down and reconnect it on every render.
   const handler = useRef(onMessage);
@@ -80,9 +88,15 @@ export function useStaffSocket({
       changed.current?.(message);
     });
 
+    connection.on('staff_typing', (payload: { from_user_id?: string }) => {
+      const from = payload?.from_user_id;
+      if (from) setTypingAt((current) => ({ ...current, [from]: Date.now() }));
+    });
+
     return () => {
       connection.off('staff_message');
       connection.off('staff_message_changed');
+      connection.off('staff_typing');
       connection.disconnect();
       setSocket(null);
     };
@@ -92,5 +106,6 @@ export function useStaffSocket({
     socket,
     /** Tell the other end you are typing. Best-effort; nothing waits on it. */
     typing: (peerId: string) => socket?.emit('staff_typing', peerId),
+    typingAt,
   };
 }

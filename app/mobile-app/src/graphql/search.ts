@@ -71,6 +71,7 @@ export const SearchDiscoveryDocument = gql(`
           place_label
           place_detail
           pod_attendees
+          seats_taken
         }
       }
       more_clubs {
@@ -110,6 +111,7 @@ export const SearchDiscoveryDocument = gql(`
           place_label
           place_detail
           pod_attendees
+          seats_taken
         }
       }
     }

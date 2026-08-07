@@ -13,6 +13,7 @@ import {
   UserInterestModel,
   FollowRequestModel,
 } from './relations';
+import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
   LoginDTO,
@@ -181,6 +182,11 @@ const podToPublic = (d: any, clubSlug = '') => ({
   })),
   pod_hits: d.pod_hits ?? 0,
   pod_attendees: idStrings(d.pod_attendees),
+  // Occupancy is people PLUS the seats they bought beyond their own; the shape
+  // in pod.service already emits both and this one silently returned neither,
+  // so a pod read through a user rendered as emptier than it is.
+  seats_taken: podSeatsTaken(d),
+  seats_available: podSeatsAvailable(d),
   pod_description: d.pod_description ?? '',
   pod_date_time: d.pod_date_time?.toISOString?.() ?? null,
   pod_end_date_time: d.pod_end_date_time?.toISOString?.() ?? null,

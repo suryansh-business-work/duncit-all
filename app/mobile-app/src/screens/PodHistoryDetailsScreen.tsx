@@ -47,10 +47,10 @@ export function PodHistoryDetailsScreen() {
   const title = selected?.pod?.pod_title ?? 'Details';
   const { orders: productOrders, isLoading: ordersLoading } = useProductOrders(selected?.pod?.id);
 
-  const confirmBackout = async () => {
+  const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
     try {
-      await backout(selected.pod.id);
+      await backout(selected.pod.id, seats);
       setNotice('Backout request recorded');
       setBackoutOpen(false);
       await refetch();
@@ -152,6 +152,7 @@ export function PodHistoryDetailsScreen() {
         busy={backingOut}
         onClose={() => setBackoutOpen(false)}
         onConfirm={confirmBackout}
+        mySeats={selected?.seats ?? 1}
         onViewTerms={() => {
           setBackoutOpen(false);
           navigation.navigate('Policy', { slug: 'backout-terms' });

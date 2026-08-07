@@ -19,6 +19,7 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from '@utils/table-query';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 type Actor = { id: string; roles?: string[] };
 
@@ -81,7 +82,7 @@ function tallyPods(pods: any[], byClub: Map<string, ClubTally>, range: Dashboard
     if (isUpcoming) upcoming_pods += 1;
     if (isCompleted) completed_pods += 1;
     total_spots += p.no_of_spots ?? 0;
-    total_attendees += (p.pod_attendees ?? []).length;
+    total_attendees += podSeatsTaken(p);
     (p.pod_hosts_id ?? []).forEach((h: any) => hostSet.add(String(h)));
     bumpClubRow(byClub.get(String(p.club_id)), isUpcoming, isCompleted);
     const d = new Date(p.pod_date_time);
@@ -485,7 +486,7 @@ export const clubAdminService = {
     const now = Date.now();
 
     const pods = await PodModel.find({ club_id: { $in: clubOids }, deleted_at: null })
-      .select('_id club_id pod_date_time is_active no_of_spots pod_attendees pod_hosts_id')
+      .select('_id club_id pod_date_time is_active no_of_spots pod_attendees extra_seats pod_hosts_id')
       .lean();
     const podIds = pods.map((p: any) => p._id);
     const podToClub = new Map<string, string>(

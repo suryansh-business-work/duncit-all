@@ -28,6 +28,13 @@ export interface CheckoutFormProps {
   loading?: boolean;
   errorMessage?: string | null;
   dummyMode?: boolean;
+  /**
+   * What pressing the button will actually charge. On the button itself, not
+   * only in the summary above it — the last thing a buyer reads before paying
+   * should be the number, and on a multi-seat booking the summary can have
+   * scrolled away. mWeb's button has said this all along (rule 27).
+   */
+  payLabel?: string;
   /** Deliveries (product checkout) need a billing/delivery address; the pod
    * membership checkout validates the email only and never blocks on a
    * half-filled profile. */
@@ -47,6 +54,7 @@ export function CheckoutForm({
   loading,
   errorMessage,
   dummyMode = true,
+  payLabel,
   addressRequired = false,
   onPincodeChange,
   onSubmit,
@@ -101,7 +109,7 @@ export function CheckoutForm({
 
       <PrimaryButton
         testID="checkout-submit"
-        label={loading ? 'Processing…' : 'Pay now'}
+        label={loading ? 'Processing…' : (payLabel ?? 'Pay now')}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

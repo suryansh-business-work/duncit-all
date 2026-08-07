@@ -6,12 +6,31 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface AttendeePerson {
   user_id: string;
   full_name?: string | null;
   profile_photo?: string | null;
   is_host: boolean;
+  /**
+   * Seats this person's booking holds. One face per person however many they
+   * booked — the group is a label beside their name, never extra avatars, or
+   * the same booking is counted twice on screen.
+   */
+  seats?: number;
+}
+
+type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
+
+/**
+ * "+3 other members" — the people a booking covers who are not on the app.
+ * Word for word with mWeb through the shared bundle (rule 27).
+ */
+export function otherMembersLabel(seats: number, t: Translate): string {
+  const others = Math.max(0, Math.floor(seats) - 1);
+  if (others === 1) return t('mweb.podDetails.otherMembersOne');
+  return t('mweb.podDetails.otherMembersMany', { vars: { count: others } });
 }
 
 /** One filled Backout seat, already resolved to display copy by the section —
@@ -36,8 +55,9 @@ interface Props {
 /** One attendee row — photo, name, host badge, tap-through to the profile. */
 function AttendeeRow({
   person,
+  label,
   onPress,
-}: Readonly<{ person: AttendeePerson; onPress: () => void }>) {
+}: Readonly<{ person: AttendeePerson; label: string; onPress: () => void }>) {
   return (
     <XStack
       testID={`attendee-row-${person.user_id}`}
@@ -79,7 +99,7 @@ function AttendeeRow({
           {person.full_name || 'Attendee'}
         </Text>
         <Text fontSize={11.5} color="$muted">
-          View profile
+          {label || 'View profile'}
         </Text>
       </YStack>
       {person.is_host ? (
@@ -160,6 +180,7 @@ export function AttendeesDialog({
   onOpenProfile,
 }: Readonly<Props>) {
   const { color: ink } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -214,6 +235,7 @@ export function AttendeesDialog({
                     <AttendeeRow
                       key={person.user_id}
                       person={person}
+                      label={(person.seats ?? 1) > 1 ? otherMembersLabel(person.seats ?? 1, t) : ''}
                       onPress={() => onOpenProfile(person.user_id)}
                     />
                   ))

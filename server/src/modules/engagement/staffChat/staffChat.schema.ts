@@ -12,6 +12,60 @@ export const staffChatTypeDefs = /* GraphQL */ `
     roles: [String!]!
   }
 
+"One person's reaction to one message. At most one per person per message."
+  type StaffReaction {
+    user_id: ID!
+    "The emoji itself. Any is allowed; the bar offers six."
+    emoji: String!
+    at: String
+  }
+
+  """
+  What a link in a message turns into on screen. An outside link gets an Open
+  Graph card; one of our own consoles gets the portal it points at and whether
+  the person reading can actually open it.
+  """
+  type StaffLinkPreview {
+    url: String!
+    "True when it points at one of our own consoles."
+    internal: Boolean!
+    "Which console, when internal."
+    portal: String
+    title: String
+    description: String
+    image: String
+    "Whether the CALLER can open it. Always true for an outside link."
+    has_access: Boolean!
+    "Why not, when they cannot."
+    access_note: String
+  }
+
+  """
+  Everything the browser needs to join the screen-share room for this pair.
+  The API secret stays on the server; this is the only thing that crosses.
+  """
+  type StaffLiveKitGrant {
+    url: String!
+    token: String!
+    room: String!
+    "Seconds the token is valid, so a long session can refresh before it lapses."
+    expiresIn: Int!
+  }
+
+  "Narrows a thread search. Every field is optional and they combine."
+  input StaffSearchInput {
+    text: String
+    "Only what this person wrote."
+    from_user_id: ID
+    "ISO timestamps, inclusive."
+    after: String
+    before: String
+    "Only messages carrying a file."
+    only_files: Boolean
+    "Only messages containing a link."
+    only_links: Boolean
+  }
+
   type StaffMessage {
     id: ID!
     from_user_id: ID!
@@ -21,6 +75,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     attachment_url: String!
     attachment_name: String!
     attachment_type: String!
+    "Bytes, so a reader can judge before downloading. 0 when unknown."
+    attachment_size: Int!
     "When the recipient read it; null until they do."
     read_at: String
     "Set when the author changed it, so the reader is told."
@@ -30,6 +86,22 @@ export const staffChatTypeDefs = /* GraphQL */ `
     line that vanishes from the middle of a conversation reads as a bug.
     """
     deleted_at: String
+    """
+    Who reacted and with what. Empty on a deleted message — there is nothing
+    left to have reacted to.
+    """
+    reactions: [StaffReaction!]!
+    "Set when it reached any of their open tabs — the second tick."
+    delivered_at: String
+    "The message this one answers, when it is a reply."
+    reply_to_id: ID
+    "Whose words these originally were, when it was forwarded on."
+    forwarded_from: ID
+    "Set when somebody pinned it. Pins belong to the thread, not to a person."
+    pinned_at: String
+    pinned_by: ID
+    "Who was named with @ in the text."
+    mentions: [ID!]!
     created_at: String
   }
 
@@ -58,6 +130,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     duration_seconds: Int!
     started_at: String
     ended_at: String
+    "The mp4 this call was recorded to, once FFmpeg has produced it."
+    recording_url: String
   }
 
   "A conversation you already have, for the list down the side."
@@ -76,7 +150,18 @@ export const staffChatTypeDefs = /* GraphQL */ `
     "The conversations you already have, most recent first."
     staffThreads: [StaffThread!]!
     "One conversation, oldest message last."
-    staffMessages(peer_id: ID!, limit: Int): [StaffMessage!]!
+    staffMessages(peer_id: ID!, limit: Int, before: String): [StaffMessage!]!
+    "Resolve a link for the card that renders it."
+    staffLinkPreview(url: String!): StaffLinkPreview!
+    """
+    A token to join the screen-share room shared with this coworker. The room
+    is derived from the pair, so nobody can ask for somebody else's.
+    """
+    staffScreenShareGrant(peer_id: ID!): StaffLiveKitGrant!
+    "Everything pinned on this line, newest pin first."
+    pinnedStaffMessages(peer_id: ID!): [StaffMessage!]!
+    "Find something that was said on this line."
+    searchStaffMessages(peer_id: ID!, filter: StaffSearchInput): [StaffMessage!]!
     "Everything anyone has sent you and you have not opened."
     staffUnreadCount: Int!
     "Everyone connected right now, for the first paint of the coworker list."
@@ -87,19 +172,37 @@ export const staffChatTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     """
+    Hang a finished recording on the call it came from. Only a call you were
+    on: a call id is guessable, and this writes into a conversation.
+    """
+    attachStaffCallRecording(call_id: ID!, url: String!): Boolean!
+
+    """
     Send a message, a file, or both. Text may be empty when a file comes with it.
     """
     sendStaffMessage(
+      "The message this one answers, when it is a reply."
+      reply_to_id: ID
       to_user_id: ID!
       text: String!
       attachment_url: String
       attachment_name: String
       attachment_type: String
+      attachment_size: Int
     ): StaffMessage!
     "Change your own words. Only the text — never the attachment."
     editStaffMessage(id: ID!, text: String!): StaffMessage!
     "Take back your own message. The row stays; the words go."
     deleteStaffMessage(id: ID!): StaffMessage!
+    """
+    React, or take the reaction back. The same kind again removes it; a
+    different kind replaces it, so one person is only ever counted once.
+    """
+    reactToStaffMessage(id: ID!, emoji: String!): StaffMessage!
+    "Send an existing message on to somebody else — a copy, not a pointer."
+    forwardStaffMessage(id: ID!, to_user_id: ID!): StaffMessage!
+    "Pin, or take the pin off. Pins belong to the thread, so both people see them."
+    pinStaffMessage(id: ID!): StaffMessage!
     "Mark what they sent you as read. Returns how many that was."
     markStaffThreadRead(peer_id: ID!): Int!
   }

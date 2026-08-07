@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,15 +8,20 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePolicy } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { stripHtml } from '@/utils/html';
+import { ReleaseSeatsPicker } from './ReleaseSeatsPicker';
 
 export interface BackoutConfirmDialogProps {
   open: boolean;
   busy: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (seats: number) => void;
   onViewTerms: () => void;
   /** Estimated refund after the Backouts deduction (null for free bookings). */
   refundAmount?: number | null;
+  /** Refund for ONE seat after the deduction — prices a partial release. */
+  refundPerSeat?: number | null;
+  /** Seats this booking holds. More than one offers a partial release. */
+  mySeats?: number;
   /** Backouts deduction % applied to the refund estimate. */
   deductionPct?: number;
 }
@@ -29,11 +35,27 @@ export function BackoutConfirmDialog({
   onConfirm,
   onViewTerms,
   refundAmount = null,
+  refundPerSeat = null,
+  mySeats = 1,
   deductionPct = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
   const terms = stripHtml(data?.policyBySlug?.content);
+  const held = Math.max(1, Math.floor(mySeats) || 1);
+  // Default to releasing everything — that is what Backout meant before a
+  // booking could cover several people, and it stays the common case.
+  const [seats, setSeats] = useState(held);
+  useEffect(() => {
+    if (open) setSeats(held);
+  }, [open, held]);
+  const releasing = Math.min(seats, held);
+  // Per-seat is already net of the deduction, so the estimate scales with the
+  // chosen count; releasing everything uses the server's own total.
+  const estimate =
+    releasing < held && refundPerSeat != null
+      ? Math.round(refundPerSeat * releasing * 100) / 100
+      : refundAmount;
 
   return (
     <Modal
@@ -88,15 +110,21 @@ export function BackoutConfirmDialog({
                 <Text fontSize={14} fontWeight="600" color="$color">
                   You will get the refund only if someone fills your spot.
                 </Text>
-                {refundAmount == null ? null : (
+                <ReleaseSeatsPicker
+                  held={held}
+                  value={releasing}
+                  onChange={setSeats}
+                  disabled={busy}
+                />
+                {estimate == null ? null : (
                   <Text
                     testID="backout-refund-amount"
                     fontSize={13.5}
                     fontWeight="600"
                     color="$primary"
                   >
-                    If the refund is done, you will get ₹{refundAmount} (after the {deductionPct}%
-                    backout deduction).
+                    If the refund is done, you will get ₹{estimate} for {releasing} seat
+                    {releasing === 1 ? '' : 's'} (after the {deductionPct}% backout deduction).
                   </Text>
                 )}
               </YStack>
@@ -154,7 +182,7 @@ export function BackoutConfirmDialog({
                   role="button"
                   aria-label="Confirm backout"
                   aria-disabled={busy}
-                  onPress={busy ? undefined : onConfirm}
+                  onPress={busy ? undefined : () => onConfirm(releasing)}
                   flex={2}
                   height={48}
                   alignItems="center"

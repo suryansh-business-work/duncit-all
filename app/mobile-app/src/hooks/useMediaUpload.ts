@@ -24,39 +24,54 @@ function toPickedMedia(asset: ImagePicker.ImagePickerAsset): PickedMedia {
 }
 
 /**
- * Two-step pod-media upload: `pick()` opens the library and stages the picked
- * asset (`pending`) for the crop/preview dialog; `confirm(crop)` uploads it —
- * images go through the server crop+compress+AI path with the chosen crop rect,
- * videos stream direct with a real byte % then the FFmpeg pass. The hosted URL
- * is delivered via `onUploaded`.
+ * Two-step pod-media upload: `pick(limit)` opens the library and QUEUES what was
+ * chosen; the head of the queue is `pending`, which drives the crop/preview
+ * dialog, and `confirm(crop)` uploads it and advances to the next — images go
+ * through the server crop+compress+AI path with the chosen crop rect, videos
+ * stream direct with a real byte % then the FFmpeg pass. Each hosted URL is
+ * delivered via `onUploaded` as it lands.
+ *
+ * The queue is what lets a cover picker take several at once: the OS gallery
+ * already does multi-select, and cropping them one after another beats cropping
+ * five blind or forcing five round trips through the picker.
  */
 export function useMediaUpload(folder: string, onUploaded: (url: string) => void) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [pending, setPending] = useState<PickedMedia | null>(null);
+  // Head of the queue is what the crop dialog is showing.
+  const [queue, setQueue] = useState<PickedMedia[]>([]);
+  const pending = queue[0] ?? null;
   const [stage, setStage] = useState<UploadStage>('processing');
   const [progress, setProgress] = useState<number | null>(null);
 
-  const pick = async () => {
+  const pick = async (limit = 1) => {
     setError(undefined);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setError('Photo access is needed to upload media.');
       return;
     }
+    const room = Math.max(1, Math.floor(limit) || 1);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       base64: true,
       quality: 0.8,
+      allowsMultipleSelection: room > 1,
+      // The OS enforces this too, but a gallery that let the user tick seven and
+      // then silently dropped two would be worse than one that stops at five.
+      selectionLimit: room,
     });
-    const asset = result.canceled ? undefined : result.assets[0];
-    if (!asset) return;
+    if (result.canceled) return;
+    const assets = (result.assets ?? []).slice(0, room);
+    if (assets.length === 0) return;
     setProgress(null);
-    setPending(toPickedMedia(asset));
+    setQueue(assets.map(toPickedMedia));
   };
 
+  /** Skip the one on screen and move to the next — for a single pick, that is
+   * the same "don't upload it" the button always meant. */
   const cancel = () => {
-    setPending(null);
+    setQueue((current) => current.slice(1));
     setProgress(null);
   };
 
@@ -100,7 +115,7 @@ export function useMediaUpload(folder: string, onUploaded: (url: string) => void
       const url =
         pending.kind === 'video' ? await uploadVideo(pending) : await uploadImage(pending, crop);
       onUploaded(url);
-      setPending(null);
+      setQueue((current) => current.slice(1));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -109,5 +124,16 @@ export function useMediaUpload(folder: string, onUploaded: (url: string) => void
     }
   };
 
-  return { uploading, error, pending, stage, progress, pick, confirm, cancel };
+  // `remaining` is what the crop dialog counts down while a batch runs.
+  return {
+    uploading,
+    error,
+    pending,
+    remaining: queue.length,
+    stage,
+    progress,
+    pick,
+    confirm,
+    cancel,
+  };
 }

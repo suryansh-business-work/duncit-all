@@ -76,6 +76,44 @@ export function payingAttendees(
   return attendees.filter((id) => !hosts.has(id)).length;
 }
 
+/** The seat fields every pod carries, whichever query fetched it. */
+export interface PodSeatCounts {
+  pod_attendees?: readonly unknown[] | null;
+  seats_taken?: number | null;
+  no_of_spots?: number | null;
+  seats_available?: number | null;
+}
+
+/**
+ * How full a pod is — the ONE client answer.
+ *
+ * The server counts `pod_attendees.length + extra_seats`, because a person who
+ * books four seats appears in the identity list once. Every screen that counted
+ * the list itself under-reported that booking by three, and the same arithmetic
+ * was copy-pasted across nine files in the two apps. `seats_taken` is what the
+ * server computes; the attendee list is the fallback for a query that has not
+ * been taught to select it yet.
+ */
+export function podSeatsTaken(pod: PodSeatCounts | null | undefined): number {
+  if (!pod) return 0;
+  const taken = Number(pod.seats_taken);
+  if (Number.isFinite(taken) && taken > 0) return Math.floor(taken);
+  return pod.pod_attendees?.length ?? 0;
+}
+
+/**
+ * Seats still bookable. `no_of_spots` of 0 means unlimited, which has no
+ * meaningful "left" — callers show nothing there rather than a zero.
+ */
+export function podSpotsLeft(pod: PodSeatCounts | null | undefined): number {
+  if (!pod) return 0;
+  const available = Number(pod.seats_available);
+  if (Number.isFinite(available) && available > 0) return Math.floor(available);
+  const total = Math.floor(Number(pod.no_of_spots) || 0);
+  if (total <= 0) return 0;
+  return Math.max(total - podSeatsTaken(pod), 0);
+}
+
 /**
  * How many seats one booking may take. Mirrors the server's
  * `MAX_SEATS_PER_BOOKING` (pod.seats.ts) — the server still clamps, this just

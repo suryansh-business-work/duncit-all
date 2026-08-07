@@ -70,7 +70,10 @@ export {
   payableSpots,
   seatOptions,
   payingAttendees,
+  podSeatsTaken,
+  podSpotsLeft,
   spotsBounds,
+  type PodSeatCounts,
   type SpotsBounds,
 } from './pod-spots';
 export {
@@ -104,3 +107,10 @@ export {
   type StatementLine,
   type StatementSection,
 } from './earnings-statement';
+export {
+  MAX_COVER_IMAGES,
+  addToSelection,
+  coverSearchTerm,
+  coverSlotsLeft,
+  pickerBatchSize,
+} from './cover-image';

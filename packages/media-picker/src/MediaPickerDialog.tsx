@@ -15,10 +15,15 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeviceUploadTab from './DeviceUploadTab';
+import SelectionTray from './SelectionTray';
 import PexelsPhotosTab from './PexelsPhotosTab';
 import PexelsVideosTab from './PexelsVideosTab';
 import { useDeviceUpload } from './useDeviceUpload';
+import { useMediaSelection } from './useMediaSelection';
 import type { MediaPickerDialogProps } from './types';
+
+/** A close that does nothing — multi-pick stays open between picks. */
+const noop = () => {};
 
 export default function MediaPickerDialog({
   open,
@@ -29,9 +34,27 @@ export default function MediaPickerDialog({
   accept = 'image/*,video/*',
   allowDocuments,
   surface = 'PORTALS',
+  max = 1,
+  onPickedMany,
+  seedQuery,
+  orientation,
 }: Readonly<MediaPickerDialogProps>) {
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const multi = max > 1;
+  const selection = useMediaSelection(max, open);
+
+  // The seam that makes multi-pick cheap: every tab already ends a pick with
+  // `onPicked(url); onClose()`. Hand them a close that does nothing and the
+  // dialog stays open while the picks pile up in the tray — no tab has to know
+  // which mode it is in.
+  const handlePicked = multi ? selection.add : onPicked;
+  const closeAfterPick = multi ? noop : onClose;
+
+  const done = () => {
+    onPickedMany?.(selection.urls);
+    onClose();
+  };
 
   const allowImage = useMemo(() => /image\//.test(accept) || accept === '*', [accept]);
   const allowVideo = useMemo(() => /video\//.test(accept) || accept === '*', [accept]);
@@ -49,8 +72,11 @@ export default function MediaPickerDialog({
     allowImage,
     allowVideo,
     allowDocuments: allowDocs,
-    onPicked,
-    onClose,
+    onPicked: handlePicked,
+    onClose: closeAfterPick,
+    // Multi-pick keeps the dialog open, so the tab has to let go of the file it
+    // just sent or the next Upload button press would send it again.
+    clearAfterUpload: multi,
     setError,
   });
 
@@ -88,6 +114,10 @@ export default function MediaPickerDialog({
           </Alert>
         )}
 
+        {multi && (
+          <SelectionTray urls={selection.urls} max={max} onRemove={selection.remove} />
+        )}
+
         <Box sx={{ display: tab === 0 ? 'block' : 'none' }}>
           <DeviceUploadTab
             accept={accept}
@@ -110,8 +140,12 @@ export default function MediaPickerDialog({
             active={tab === 1 && allowImage}
             open={open}
             folder={folder}
-            onPicked={onPicked}
-            onClose={onClose}
+            seedQuery={seedQuery}
+            defaultOrientation={orientation}
+            multi={multi}
+            atLimit={selection.atLimit}
+            onPicked={handlePicked}
+            onClose={closeAfterPick}
             setError={setError}
           />
         </Box>
@@ -121,8 +155,8 @@ export default function MediaPickerDialog({
             active={tab === 2 && allowVideo}
             open={open}
             folder={folder}
-            onPicked={onPicked}
-            onClose={onClose}
+            onPicked={handlePicked}
+            onClose={closeAfterPick}
             setError={setError}
           />
         </Box>
@@ -133,12 +167,23 @@ export default function MediaPickerDialog({
         </Button>
         {tab === 0 && (
           <Button
-            variant="contained"
-            disabled={!device.picked || device.uploading}
+            variant={multi ? 'outlined' : 'contained'}
+            disabled={!device.picked || device.uploading || (multi && selection.atLimit)}
             onClick={device.uploadFromDevice}
             startIcon={device.uploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
           >
             {device.uploading ? 'Uploading…' : 'Upload to ImageKit'}
+          </Button>
+        )}
+        {multi && (
+          <Button
+            variant="contained"
+            onClick={done}
+            disabled={selection.urls.length === 0 || device.uploading}
+          >
+            {selection.urls.length > 1
+              ? `Use these ${selection.urls.length}`
+              : 'Use this image'}
           </Button>
         )}
       </DialogActions>

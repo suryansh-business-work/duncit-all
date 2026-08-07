@@ -2,8 +2,6 @@ import { Platform } from 'react-native';
 import { GetImagekitAuthDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 
-const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
-
 export interface DirectUploadFile {
   uri: string;
   name: string;
@@ -22,13 +20,25 @@ async function toFilePart(file: DirectUploadFile): Promise<Blob> {
   return { uri: file.uri, name: file.name, type: file.type } as unknown as Blob;
 }
 
-function postForm(form: FormData, onProgress?: (pct: number) => void): Promise<string> {
+function postForm(
+  url: string,
+  form: FormData,
+  onProgress?: (pct: number) => void,
+): Promise<string> {
   // XMLHttpRequest instead of fetch so the upload reports REAL byte progress.
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', IMAGEKIT_UPLOAD_URL);
+    xhr.open('POST', url);
+    // Clamped, and guarded against a zero total.
+    //
+    // A progress event is the transport's own accounting: React Native reports
+    // `total` as the body size it knows about, which for a multipart body built
+    // from a file URI can be smaller than what actually goes out — so the ratio
+    // walks past 1 and the bar reads "137%". A percentage above 100 is never
+    // meaningful, and a zero total divides to NaN.
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+      if (!e.lengthComputable || e.total <= 0) return;
+      onProgress?.(Math.min(100, Math.max(0, Math.round((e.loaded / e.total) * 100))));
     };
     xhr.onload = () => {
       let json: any = {};
@@ -49,30 +59,33 @@ function postForm(form: FormData, onProgress?: (pct: number) => void): Promise<s
 }
 
 /**
- * Upload a picked file DIRECTLY to ImageKit (multipart), bypassing the GraphQL
- * API's request-body size limit that blocked large support attachments. Fetches
- * short-lived signed auth from the server, then POSTs the file bytes straight to
- * ImageKit and returns the hosted URL. Nothing is base64-encoded through our API.
- * `onProgress` receives the REAL byte percentage while the upload runs.
+ * Upload a picked file to ImageKit THROUGH our server.
+ *
+ * It used to go straight to ImageKit with a server-made signature. That only
+ * works while the account's public and private keys are a matched pair, and a
+ * mismatched pair rejects every upload with "invalid signature parameter" and
+ * no other clue — so there is no signature here at all; the server holds the
+ * private key and does the upload.
+ *
+ * Still multipart and still streamed from the URI, which is what keeps large
+ * files off the GraphQL body limit and out of memory. `onProgress` receives the
+ * REAL byte percentage while the upload runs.
  */
 export async function uploadToImagekitDirect(
   file: DirectUploadFile,
   folder: string,
   onProgress?: (pct: number) => void,
 ): Promise<string> {
-  const { getImagekitAuth: auth } = await graphqlRequest(
+  // The pass is single use, so it is fetched per upload.
+  const { getImagekitAuth: ticket } = await graphqlRequest(
     GetImagekitAuthDocument,
-    {},
+    { folder },
     { auth: true },
   );
   const form = new FormData();
   form.append('file', await toFilePart(file));
-  form.append('fileName', file.name);
-  form.append('useUniqueFileName', 'true');
-  form.append('folder', folder);
-  form.append('publicKey', auth.publicKey);
-  form.append('signature', auth.signature);
-  form.append('expire', String(auth.expire));
-  form.append('token', auth.token);
-  return postForm(form, onProgress);
+  const url =
+    `${ticket.uploadUrl}?ticket=${encodeURIComponent(ticket.ticket)}` +
+    `&fileName=${encodeURIComponent(file.name)}`;
+  return postForm(url, form, onProgress);
 }

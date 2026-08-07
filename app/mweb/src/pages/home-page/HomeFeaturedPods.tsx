@@ -9,6 +9,7 @@ import PodCardMedia from './PodCardMedia';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import { podUrl } from '../../utils/seoUrls';
+import { podSeatsTaken } from '@duncit/utils';
 
 interface HomeFeaturedPodsProps {
   pods: any[];
@@ -64,7 +65,7 @@ export default function HomeFeaturedPods({
     >
       <Stack direction="row" spacing={1.4} sx={{ width: 'max-content', pb: 0.75 }}>
         {pods.map((pod) => {
-          const attendees = pod.pod_attendees?.length ?? 0;
+          const attendees = podSeatsTaken(pod);
           const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - attendees) : 0;
           const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
           let spotsText = `${attendees}${spotsSuffix}`;

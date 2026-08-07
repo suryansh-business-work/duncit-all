@@ -5,6 +5,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { mapClubToPublic } from '@modules/clubs/club/club.service';
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SUGGESTION_CAP = 20;
@@ -140,8 +141,16 @@ async function followedClubIds(viewerId: string | null): Promise<Set<string>> {
   return new Set(rows.map((row: any) => String(row.club_id)));
 }
 
+/**
+ * Seats across a club's pods.
+ *
+ * These are already-mapped PUBLIC pod shapes, which carry the computed
+ * `seats_taken` but not the raw `extra_seats` the server-side helper adds up —
+ * so calling that helper here quietly counted buyers again. Read the computed
+ * field, and fall back to the identity list only for a shape that predates it.
+ */
 const sumAttendees = (pods: any[]) =>
-  pods.reduce((sum, pod) => sum + (pod.pod_attendees?.length ?? 0), 0);
+  pods.reduce((sum, pod) => sum + (Number(pod?.seats_taken) || pod?.pod_attendees?.length || 0), 0);
 
 const compareHappening = (a: ClubResult, b: ClubResult) =>
   b.followers - a.followers ||

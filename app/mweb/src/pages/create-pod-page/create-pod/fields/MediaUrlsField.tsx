@@ -4,6 +4,7 @@ import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternate
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 
@@ -22,6 +23,18 @@ interface Props {
   label?: string;
   required?: boolean;
   folder?: string;
+  /**
+   * The sub-category the host already picked. The cover picker opens on a
+   * Pexels search for it instead of a blank box — the form knows the answer, so
+   * making the user type it is work for nothing.
+   */
+  subCategoryName?: string | null;
+  /**
+   * Hard ceiling on the field. Only the COVER sets one — the edit-time media
+   * list and the post-pod photo list were never capped, and capping them
+   * because the cover is capped would take a feature away.
+   */
+  maxImages?: number;
 }
 
 /** Pod media — a dashed upload dropzone (empty state) that opens the shared
@@ -35,10 +48,21 @@ export default function MediaUrlsField({
   label = 'Cover image',
   required = true,
   folder = '/pods',
+  subCategoryName,
+  maxImages,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const urls = splitLines(value ?? '');
   const addUrl = (url: string) => onChange([...urls, url].join('\n'));
+  const addUrls = (picked: string[]) => {
+    const fresh = picked.filter((url) => !urls.includes(url));
+    if (fresh.length === 0) return;
+    onChange([...urls, ...fresh].join('\n'));
+  };
+  // How many ONE open may return. Five is a batch size everywhere; it only
+  // becomes a ceiling on a field that asked for one.
+  const slotsLeft = pickerBatchSize(urls.length, maxImages);
+  const full = slotsLeft === 0;
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
   const openPicker = () => setPickerOpen(true);
   const openOnKey = (e: React.KeyboardEvent) => {
@@ -110,8 +134,8 @@ export default function MediaUrlsField({
             role="button"
             tabIndex={0}
             aria-label="Add media"
-            onClick={openPicker}
-            onKeyDown={openOnKey}
+            onClick={full ? undefined : openPicker}
+            onKeyDown={full ? undefined : openOnKey}
             sx={{ cursor: 'pointer', width: 88, height: 88, borderRadius: '16px', border: '2px dashed', borderColor: 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}
           >
             <AddIcon />
@@ -119,12 +143,23 @@ export default function MediaUrlsField({
         </Stack>
       )}
       {error && <FormHelperText error>{error}</FormHelperText>}
+      {full && (
+        <FormHelperText>
+          {`That is the maximum of ${maxImages} — remove one to add another.`}
+        </FormHelperText>
+      )}
       <MediaPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder={folder}
         title="Add pod media"
+        // The cover is a wide banner, and a pod is a group activity — so the
+        // search opens on landscape photos of people doing this category.
+        seedQuery={coverSearchTerm(subCategoryName)}
+        orientation="landscape"
+        max={slotsLeft}
         onPicked={addUrl}
+        onPickedMany={addUrls}
       />
     </Box>
   );

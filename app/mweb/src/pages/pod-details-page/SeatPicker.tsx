@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { MenuItem, TextField } from '@mui/material';
 import { seatOptions } from '@duncit/utils';
 
@@ -18,13 +19,20 @@ interface Props {
  */
 export default function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
   const options = seatOptions(maxSeats);
+  // Clamping only what is DISPLAYED left the parent holding the larger number,
+  // so a picker showing 3 could submit 5 and the pod would reject the booking
+  // after the buyer had filled in the whole checkout form. Tell the parent.
+  const capped = options.length > 0 ? Math.min(value, options.length) : value;
+  useEffect(() => {
+    if (capped !== value) onChange(capped);
+  }, [capped, value, onChange]);
   if (options.length <= 1) return null;
   return (
     <TextField
       select
       size="small"
       label="Seats"
-      value={Math.min(value, options.length)}
+      value={capped}
       onChange={(event) => onChange(Number(event.target.value))}
       disabled={disabled}
       sx={{ width: 96, flex: '0 0 auto' }}

@@ -29,6 +29,7 @@ export const HOME_DATA = gql`
       pod_type
       pod_amount
       pod_attendees
+      seats_taken
       no_of_spots
       pod_hosts_id
       host_names

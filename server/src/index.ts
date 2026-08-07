@@ -2,6 +2,7 @@ import 'dotenv/config';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import { logs, ingestRemoteLog } from './observability/log';
 import { buildStatusProbeRouter } from './observability/statusProbe';
+import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
@@ -256,6 +257,11 @@ async function bootstrap() {
 
   // Status-page probe: real HTTP status + TLS cert for the status.duncit.com
   // "Details" dialog (the static page can't read either client-side).
+  // Browser uploads land here and go on to ImageKit on the private key — no
+  // signature, because a browser cannot make one and the signed-from-the-browser
+  // scheme fails outright when the two keys are not a pair.
+  app.use('/upload', buildUploadRouter());
+
   app.use('/status', buildStatusProbeRouter());
 
   // Structured log ingest for the frontend apps (@duncit/logs httpTransport).

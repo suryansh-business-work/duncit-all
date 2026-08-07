@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { UserModel } from '@modules/access/user/user.model';
 import { escapedSearchRegex } from '@utils/table-query';
 import { StaffCallModel, type CallKind, type CallOutcome } from './staffCall.model';
-import { STAFF_ROLES, StaffMessageModel, threadKey } from './staffChat.model';
+import { STAFF_ROLES, StaffMessageModel, reactionEmoji, threadKey } from './staffChat.model';
 
 /**
  * Staff-to-staff messaging.
@@ -43,11 +43,31 @@ const pubMessage = (doc: any) => ({
   attachment_url: doc.deleted_at ? '' : (doc.attachment_url ?? ''),
   attachment_name: doc.deleted_at ? '' : (doc.attachment_name ?? ''),
   attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
+  attachment_size: doc.deleted_at ? 0 : (doc.attachment_size ?? 0),
   read_at: doc.read_at?.toISOString() ?? null,
   edited_at: doc.edited_at?.toISOString() ?? null,
+  // A deleted message keeps no reactions either — there is nothing left to
+  // have reacted to.
+  reactions: doc.deleted_at
+    ? []
+    : (doc.reactions ?? []).map((r: any) => ({
+        user_id: r.user_id,
+        // Rows written before reactions could be any emoji still say THUMBS_UP.
+        emoji: reactionEmoji(r.emoji ?? r.kind ?? ''),
+        at: r.at?.toISOString?.() ?? null,
+      })),
+  delivered_at: doc.delivered_at?.toISOString() ?? null,
+  reply_to_id: doc.reply_to_id ?? null,
+  forwarded_from: doc.forwarded_from ?? null,
+  pinned_at: doc.pinned_at?.toISOString() ?? null,
+  pinned_by: doc.pinned_by ?? null,
+  mentions: doc.mentions ?? [],
   deleted_at: doc.deleted_at?.toISOString() ?? null,
   created_at: doc.created_at?.toISOString() ?? null,
 });
+
+/** An @ at a word boundary — enough for a two-person thread. */
+const MENTION_RE = /(^|\s)@\w/;
 
 const SELECT = 'profile.first_name profile.last_name profile.photo auth.email metadata.role_keys';
 
@@ -133,12 +153,38 @@ export const staffChatService = {
   },
 
   /** One conversation, oldest last — the order a chat window renders in. */
-  async messages(meId: string, peerId: string, limit = 50) {
-    const docs = await StaffMessageModel.find({ thread_key: threadKey(meId, peerId) })
+  /**
+   * A page of the conversation, newest last.
+   *
+   * `before` is a created_at cursor rather than an offset: a long thread gains
+   * messages while it is being scrolled, and an offset would show the same one
+   * twice or skip one entirely every time that happened.
+   */
+  async messages(meId: string, peerId: string, limit = 50, before?: string | null) {
+    const where: Record<string, unknown> = { thread_key: threadKey(meId, peerId) };
+    if (before) where.created_at = { $lt: new Date(before) };
+    const docs = await StaffMessageModel.find(where)
       .sort({ created_at: -1 })
       .limit(Math.min(200, Math.max(1, limit)))
       .lean();
-    return docs.reverse().map(pubMessage);
+    // Queried newest-first so the cursor works; rendered oldest-first.
+    docs.reverse();
+    return docs.map(pubMessage);
+  },
+
+  /**
+   * Mark what they sent as DELIVERED — reached a tab, not yet read.
+   *
+   * The two ticks mean different things and a reader deserves the difference:
+   * delivered says the message is on their machine, read says they looked at
+   * it. Called when a socket carries one in, whether or not the thread is open.
+   */
+  async markDelivered(meId: string, peerId: string): Promise<number> {
+    const res = await StaffMessageModel.updateMany(
+      { thread_key: threadKey(meId, peerId), to_user_id: meId, delivered_at: null },
+      { $set: { delivered_at: new Date() } }
+    );
+    return res.modifiedCount ?? 0;
   },
 
   /**
@@ -151,7 +197,13 @@ export const staffChatService = {
     meId: string,
     toUserId: string,
     text: string,
-    attachment?: { url?: string | null; name?: string | null; type?: string | null } | null
+    attachment?: {
+      url?: string | null;
+      name?: string | null;
+      type?: string | null;
+      size?: number | null;
+    } | null,
+    extra?: { replyToId?: string | null; forwardedFrom?: string | null } | null
   ) {
     const body = text.trim();
     const url = attachment?.url?.trim() ?? '';
@@ -180,8 +232,119 @@ export const staffChatService = {
       attachment_url: url,
       attachment_name: attachment?.name?.trim() ?? '',
       attachment_type: attachment?.type?.trim() ?? '',
+      attachment_size: Math.max(0, Math.floor(Number(attachment?.size) || 0)),
+      reply_to_id: extra?.replyToId ?? null,
+      forwarded_from: extra?.forwardedFrom ?? null,
+      // Only the person on the other end can be mentioned in a one-to-one
+      // thread, so resolving @ against the whole directory would be theatre.
+      mentions: MENTION_RE.test(body) ? [toUserId] : [],
     });
     return pubMessage(doc);
+  },
+
+  /**
+   * Send an existing message on to somebody else.
+   *
+   * A copy, not a pointer: the original can be edited or taken back afterwards,
+   * and a forward that changed underneath the person who received it would be
+   * worse than one that is plainly a snapshot. `forwarded_from` says whose words
+   * they were.
+   */
+  async forward(meId: string, messageId: string, toUserId: string) {
+    const source = await StaffMessageModel.findById(messageId);
+    if (!source) throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
+    if (source.from_user_id !== meId && source.to_user_id !== meId) {
+      throw new GraphQLError('That conversation is not yours', { extensions: { code: 'FORBIDDEN' } });
+    }
+    if (source.deleted_at) {
+      throw new GraphQLError('That message was deleted', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    return this.send(
+      meId,
+      toUserId,
+      source.text,
+      {
+        url: source.attachment_url,
+        name: source.attachment_name,
+        type: source.attachment_type,
+        size: source.attachment_size,
+      },
+      { forwardedFrom: source.from_user_id }
+    );
+  },
+
+  /**
+   * Pin a message, or take the pin off.
+   *
+   * Pins belong to the THREAD, not to the person who set them — "the address is
+   * pinned" has to mean the same thing to both people or it is useless.
+   */
+  async pin(meId: string, messageId: string) {
+    const doc = await StaffMessageModel.findById(messageId);
+    if (!doc) throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.from_user_id !== meId && doc.to_user_id !== meId) {
+      throw new GraphQLError('That conversation is not yours', { extensions: { code: 'FORBIDDEN' } });
+    }
+    const pinning = !doc.pinned_at;
+    doc.pinned_at = pinning ? new Date() : null;
+    doc.pinned_by = pinning ? meId : null;
+    await doc.save();
+    return pubMessage(doc);
+  },
+
+  /** Everything pinned on this line, newest pin first. */
+  async pinned(meId: string, peerId: string) {
+    const docs = await StaffMessageModel.find({
+      thread_key: threadKey(meId, peerId),
+      pinned_at: { $ne: null },
+    })
+      .sort({ pinned_at: -1 })
+      .limit(50);
+    return docs.map(pubMessage);
+  },
+
+  /**
+   * Find something that was said.
+   *
+   * Scoped to one thread on purpose — "search my chats" across everyone is a
+   * different feature with a different privacy question, and this is the one
+   * people actually reach for ("what was that link Priya sent").
+   */
+  async search(
+    meId: string,
+    peerId: string,
+    input: {
+      text?: string | null;
+      fromUserId?: string | null;
+      after?: string | null;
+      before?: string | null;
+      onlyFiles?: boolean | null;
+      onlyLinks?: boolean | null;
+    }
+  ) {
+    const where: Record<string, unknown> = {
+      thread_key: threadKey(meId, peerId),
+      deleted_at: null,
+    };
+    const term = (input.text ?? '').trim();
+    // Escaped through the shared helper: a search for "c++" must not be
+    // compiled as a quantifier, and there is no reason for this to hold its own
+    // copy of that rule.
+    if (term) where.text = escapedSearchRegex(term);
+    if (input.fromUserId) where.from_user_id = input.fromUserId;
+    if (input.onlyFiles) where.attachment_url = { $ne: '' };
+    // A link filter narrows the SAME field, so it goes in as an $and rather
+    // than overwriting whatever the text term put there.
+    if (input.onlyLinks) {
+      where.$and = [...((where.$and as unknown[]) ?? []), { text: /https?:\/\//i }];
+    }
+    const range: Record<string, Date> = {};
+    if (input.after) range.$gte = new Date(input.after);
+    if (input.before) range.$lte = new Date(input.before);
+    if (Object.keys(range).length > 0) where.created_at = range;
+
+    const docs = await StaffMessageModel.find(where).sort({ created_at: -1 }).limit(100);
+    return docs.map(pubMessage);
   },
 
   /**
@@ -198,8 +361,45 @@ export const staffChatService = {
     if (doc.deleted_at) {
       throw new GraphQLError('That message was deleted', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    // The previous wording is kept: an edit can change what a conversation
+    // appears to have agreed, and only admins are shown the history.
+    doc.edits = [...(doc.edits ?? []), { text: doc.text, at: new Date() }];
     doc.text = body;
     doc.edited_at = new Date();
+    await doc.save();
+    return pubMessage(doc);
+  },
+
+  /**
+   * React to a message, or take the reaction back.
+   *
+   * Anyone in the conversation may react — including the author, which is
+   * ordinary in a two-person thread ("yes, that one"). One reaction per person:
+   * the same kind again removes it, a different kind replaces it, so the row of
+   * counts always answers "who felt what" rather than "how many times did
+   * somebody click".
+   */
+  async react(meId: string, messageId: string, emoji: string) {
+    const doc = await StaffMessageModel.findById(messageId);
+    if (!doc) throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.from_user_id !== meId && doc.to_user_id !== meId) {
+      throw new GraphQLError('That conversation is not yours', { extensions: { code: 'FORBIDDEN' } });
+    }
+    if (doc.deleted_at) {
+      throw new GraphQLError('That message was deleted', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const wanted = emoji.trim().slice(0, 16);
+    if (!wanted) {
+      throw new GraphQLError('Pick an emoji', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // One per person: the same emoji again takes it back, a different one
+    // replaces it, so the row answers "who felt what" and not "how many clicks".
+    const mine = (doc.reactions ?? []).find((r) => r.user_id === meId);
+    const rest = (doc.reactions ?? []).filter((r) => r.user_id !== meId);
+    doc.reactions =
+      reactionEmoji(mine?.emoji ?? '') === wanted
+        ? rest
+        : [...rest, { user_id: meId, emoji: wanted, at: new Date() }];
     await doc.save();
     return pubMessage(doc);
   },
@@ -237,7 +437,30 @@ export const staffChatService = {
       duration_seconds: doc.duration_seconds,
       started_at: doc.started_at?.toISOString() ?? null,
       ended_at: doc.ended_at?.toISOString() ?? null,
+      recording_url: doc.recording_url ?? null,
     }));
+  },
+
+  /**
+   * Hang the finished mp4 on the call it came from.
+   *
+   * Scoped to a call the caller was actually on — a call id is guessable, and
+   * without this check anyone could staple a URL of their choosing to somebody
+   * else's conversation.
+   */
+  async attachRecording(meId: string, callId: string, url: string) {
+    const doc = await StaffCallModel.findOneAndUpdate(
+      {
+        _id: callId,
+        $or: [{ from_user_id: meId }, { to_user_id: meId }],
+      },
+      { $set: { recording_url: url } },
+      { new: true }
+    ).lean();
+    if (!doc) {
+      throw new GraphQLError('That call is not yours', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return true;
   },
 
   /** Write the call down once it is over. */
@@ -264,9 +487,17 @@ export const staffChatService = {
 
   /** Mark everything they sent you as read. Returns how many that was. */
   async markRead(meId: string, peerId: string): Promise<number> {
+    const now = new Date();
+    // Read implies delivered. Without this a message opened on a tab that was
+    // offline when it arrived would show one tick forever, having plainly been
+    // read — the ticks have to be able to go forwards only.
+    await StaffMessageModel.updateMany(
+      { thread_key: threadKey(meId, peerId), to_user_id: meId, delivered_at: null },
+      { $set: { delivered_at: now } }
+    );
     const res = await StaffMessageModel.updateMany(
       { thread_key: threadKey(meId, peerId), to_user_id: meId, read_at: null },
-      { $set: { read_at: new Date() } }
+      { $set: { read_at: now } }
     );
     return res.modifiedCount ?? 0;
   },

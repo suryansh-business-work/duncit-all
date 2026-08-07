@@ -81,14 +81,29 @@ export function createTranslator(input: Readonly<TranslatorInput>): Translator {
     return lookup(key);
   };
 
+  /**
+   * The values a template can substitute.
+   *
+   * `count` is spread last so plural-driven copy can rely on it, which used to
+   * mean an explicit `vars.count` was overwritten with '' whenever the caller
+   * had not ALSO passed `options.count` — a `{count}` placeholder simply
+   * vanished from the sentence. `vars.count` is now the second choice rather
+   * than the casualty, and the empty string stays the last resort so existing
+   * copy renders exactly as it did.
+   */
+  const varsFor = (options?: TranslateOptions): TranslateVars => ({
+    ...options?.vars,
+    count: options?.count ?? options?.vars?.count ?? '',
+  });
+
   const t = (key: string, options?: TranslateOptions): string => {
     const found = resolve(key, options?.count);
     if (found === null) {
       input.onMissing?.(key, input.locale);
       const fallbackText = options?.defaultValue ?? key;
-      return interpolate(fallbackText, { ...options?.vars, count: options?.count ?? '' });
+      return interpolate(fallbackText, varsFor(options));
     }
-    return interpolate(found, { ...options?.vars, count: options?.count ?? '' });
+    return interpolate(found, varsFor(options));
   };
 
   return {

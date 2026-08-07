@@ -63,6 +63,58 @@ const toScannedAttendee = (user: any, membership: any) => {
   };
 };
 
+/** A recorded companion, for the scan result and the admin roster. */
+const toPubCompanion = (c: any) => ({
+  name: c.name ?? '',
+  phone_extension: c.phone_extension ?? null,
+  phone_number: c.phone_number ?? '',
+  added_at: c.added_at?.toISOString?.() ?? new Date(0).toISOString(),
+});
+
+/**
+ * The door's rule for a ticket that admits more than one person.
+ *
+ * A multi-seat booking is a number until someone writes down who it covers, and
+ * the only moment those people are all standing there is the scan. So the scan
+ * is two steps: the first returns the buyer and asks for the rest, the second
+ * carries their names and phone numbers and only then marks attendance. The
+ * ticket is NOT flipped in between — a half-checked-in group is worse than an
+ * un-checked-in one.
+ *
+ * Single-seat tickets and legacy tickets (`seats` 1) never reach the gate, so
+ * the ordinary scan is unchanged.
+ *
+ * @returns the number still needed, or 0 when the ticket may be checked in.
+ */
+async function recordCompanions(
+  membership: any,
+  seats: number,
+  supplied: unknown
+): Promise<number> {
+  const needed = Math.max(seats - 1, 0);
+  if (needed === 0 || !membership) return 0;
+  const onFile: any[] = membership.companions ?? [];
+  if (onFile.length >= needed) return 0;
+
+  const list = Array.isArray(supplied) ? supplied : [];
+  if (list.length === 0) return needed;
+
+  const { validate } = await import('@utils/validate');
+  const { podCompanionsSchema } = await import('./ticket.validator');
+  const { companions } = await validate(podCompanionsSchema, { companions: list });
+  // Exactly, not "at least": a short list leaves people unaccounted for and a
+  // long one admits more than the booking paid for.
+  if (companions.length !== needed) {
+    throw new GraphQLError(
+      `This ticket admits ${seats} — enter details for the other ${needed} ${needed === 1 ? 'person' : 'people'}`,
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+  membership.companions = companions.map((c) => ({ ...c, added_at: new Date() }));
+  await membership.save();
+  return 0;
+}
+
 const toPub = (t: ITicket) => ({
   id: String(t._id),
   ticket_code: t.ticket_code,
@@ -133,6 +185,7 @@ async function pdfFor(t: ITicket): Promise<Buffer> {
     meeting_platform: t.snapshot?.meeting_platform ?? null,
     attendee_name: t.snapshot?.user_name ?? '',
     attendee_email: t.snapshot?.user_email ?? '',
+    seats: t.seats ?? 1,
   });
 }
 
@@ -220,6 +273,11 @@ export const ticketService = {
         date_label: dateLabel(t.snapshot?.pod_date_time),
         venue_line: venueLine,
         ticket_code: t.ticket_code,
+        // How many people this one ticket lets in. For a free multi-seat join
+        // this email is the ONLY record the buyer gets — no payment, so no
+        // invoice — which is why the count has to be in the body, not just the
+        // attached PDF.
+        seats_count: String(t.seats ?? 1),
         booking_url: bookingUrl,
         // Templates already cached in the DB still carry the old `{{app_url}}`
         // CTA, so it has to resolve to the same deep link (the disk template is
@@ -321,17 +379,17 @@ export const ticketService = {
    * so an unreadable/foreign/cancelled ticket is a result to show, not an error
    * that tears down the camera screen.
    */
-  async hostScan(podDocId: string, token: string, hostUserId: string) {
+  async hostScan(podDocId: string, token: string, hostUserId: string, companions?: unknown) {
     const { findHostedPod } = await import('@modules/pods/pod/pod.service');
     await findHostedPod(podDocId, hostUserId);
 
     const payload = verifyTicketToken(token);
     if (!payload) {
-      return { ok: false, message: 'Invalid or tampered QR code', already_checked_in: false, ticket: null, attendee: null };
+      return { ok: false, message: 'Invalid or tampered QR code', already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: null, attendee: null };
     }
     const t = await TicketModel.findOne({ ticket_code: payload.t });
     if (!t) {
-      return { ok: false, message: 'Ticket not found', already_checked_in: false, ticket: null, attendee: null };
+      return { ok: false, message: 'Ticket not found', already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: null, attendee: null };
     }
     // Scanning at the wrong pod's door is the mistake this catches — the token
     // is perfectly valid, just not for tonight.
@@ -345,23 +403,48 @@ export const ticketService = {
       };
     }
     if (t.status === 'CANCELLED') {
-      return { ok: false, message: 'Ticket cancelled', already_checked_in: false, ticket: toPub(t), attendee: null };
-    }
-
-    const alreadyCheckedIn = t.status === 'CHECKED_IN';
-    if (!alreadyCheckedIn) {
-      t.status = 'CHECKED_IN';
-      t.checked_in_at = new Date();
-      t.checked_in_by = new Types.ObjectId(hostUserId);
-      await t.save();
+      return { ok: false, message: 'Ticket cancelled', already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: toPub(t), attendee: null };
     }
 
     const [user, membership] = await Promise.all([
       UserModel.findById(t.user_id),
       PodMemberModel.findById(t.membership_id),
     ]);
+    const alreadyCheckedIn = t.status === 'CHECKED_IN';
+    // The booking is the source of truth for how many it covers; the ticket is a
+    // snapshot. Re-sync so a ticket can never tell the door "admits 3" while the
+    // membership says 2.
+    const seats = membership?.seats ?? t.seats ?? 1;
+    if (t.seats !== seats) {
+      t.seats = seats;
+      await t.save();
+    }
+    const attendee = user ? toScannedAttendee(user, membership) : null;
+
+    // Ask for the rest of the group BEFORE marking anyone present. The attendee
+    // still comes back so the host can see who they are talking to while they
+    // collect the names.
+    if (!alreadyCheckedIn) {
+      const stillNeeded = await recordCompanions(membership, seats, companions);
+      if (stillNeeded > 0) {
+        return {
+          ok: false,
+          message: `This ticket admits ${seats} — add the other ${stillNeeded} ${stillNeeded === 1 ? 'person' : 'people'} to mark attendance`,
+          already_checked_in: false,
+          requires_companions: true,
+          companions_required: stillNeeded,
+          ticket: toPub(t),
+          attendee,
+          companions: (membership?.companions ?? []).map(toPubCompanion),
+        };
+      }
+      t.status = 'CHECKED_IN';
+      t.checked_in_at = new Date();
+      t.checked_in_by = new Types.ObjectId(hostUserId);
+      await t.save();
+    }
+
     const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
-    const seats = t.seats ?? 1;
     // A multi-seat ticket admits a group, so the host is told the number —
     // one scan, several people through the door.
     const party = seats > 1 ? ` · admits ${seats}` : '';
@@ -371,13 +454,19 @@ export const ticketService = {
         ? `Already marked present${at}${party}`
         : `Attendance marked${party}`,
       already_checked_in: alreadyCheckedIn,
+      requires_companions: false,
+      companions_required: 0,
       ticket: toPub(t),
-      attendee: user ? toScannedAttendee(user, membership) : null,
+      attendee,
+      companions: (membership?.companions ?? []).map(toPubCompanion),
     };
   },
 
   /** Mark a ticket checked-in (by scanned token or by id). Idempotent. */
-  async checkIn(input: { token?: string | null; ticket_doc_id?: string | null }, adminId: string) {
+  async checkIn(
+    input: { token?: string | null; ticket_doc_id?: string | null; companions?: unknown },
+    adminId: string
+  ) {
     let t: ITicket | null = null;
     if (input.token) {
       const payload = verifyTicketToken(input.token);
@@ -390,6 +479,17 @@ export const ticketService = {
     if (t.status === 'CANCELLED')
       throw new GraphQLError('Ticket is cancelled', { extensions: { code: 'BAD_REQUEST' } });
     if (t.status !== 'CHECKED_IN') {
+      // The same gate as the host's scanner — an admin marking a group present
+      // must account for the group too, or the roster stays a bare number.
+      const membership = await PodMemberModel.findById(t.membership_id);
+      const seats = membership?.seats ?? t.seats ?? 1;
+      const stillNeeded = await recordCompanions(membership, seats, input.companions);
+      if (stillNeeded > 0) {
+        throw new GraphQLError(
+          `This ticket admits ${seats} — add the other ${stillNeeded} ${stillNeeded === 1 ? 'person' : 'people'} to mark attendance`,
+          { extensions: { code: 'COMPANIONS_REQUIRED', companions_required: stillNeeded } }
+        );
+      }
       t.status = 'CHECKED_IN';
       t.checked_in_at = new Date();
       t.checked_in_by = new Types.ObjectId(adminId);

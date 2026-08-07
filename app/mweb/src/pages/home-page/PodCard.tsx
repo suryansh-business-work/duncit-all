@@ -8,6 +8,7 @@ import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
+import { podSeatsTaken } from '@duncit/utils';
 
 /**
  * Image-first pod card (mock): full-bleed media, the category chip and the save
@@ -41,7 +42,7 @@ export default function PodCard({
   const { format } = usePricing();
   const { t } = useTranslation();
   const placeText = showPlace ? [pod.place_label, pod.place_detail].filter(Boolean).join(' - ') : '';
-  const spotsTaken = pod.pod_attendees?.length ?? 0;
+  const spotsTaken = podSeatsTaken(pod);
   const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - spotsTaken) : 0;
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
   let spotsText = `${spotsTaken}${spotsSuffix}`;

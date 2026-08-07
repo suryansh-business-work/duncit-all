@@ -35,6 +35,11 @@ export const podMemberTypeDefs = /* GraphQL */ `
     status: MembershipStatus!
     "Seats this booking holds — one ticket admits this many. 1 for every legacy booking."
     seats: Int!
+    """
+    The other people this booking admits, captured at check-in. Empty until the
+    host scans the ticket; one entry per seat beyond the buyer's own afterwards.
+    """
+    companions: [PodCompanion!]!
     joined_at: String!
     backed_out_at: String
     payment_id: ID
@@ -77,6 +82,17 @@ export const podMemberTypeDefs = /* GraphQL */ `
     backout_deduction_pct: Float!
     "Estimated refund after deduction for the caller's paid booking (null for free)."
     backout_refund_amount: Float
+    """
+    Refund after deduction for ONE seat, so a partial backout can be priced for
+    any number the buyer picks without another round trip. Null for a free join.
+    """
+    backout_refund_per_seat: Float
+    """
+    Seats the caller has already released and is still waiting to have filled.
+    A partial release leaves the member JOINED, so this is the only signal that
+    a Keep My Spot is available to them.
+    """
+    released_seats_pending: Int!
   }
 
   "One recorded Backout lifecycle event (immutable, chronological)."
@@ -104,6 +120,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     backout_status: BackoutStatus!
     "1-based backout attempt this request represents for the user+pod."
     attempt_no: Int!
+    "Seats this request released. Finance refunds these, not the whole booking."
+    seats: Int!
+    "Seats the booking held before this request — fewer released means a partial backout."
+    seats_before: Int!
+    "True when the member gave back only part of their booking and is still attending."
+    is_partial: Boolean!
     "Backout attempts the user has used for this pod so far."
     backout_attempts_used: Int!
     "Max Backout attempts per user per pod (Admin > Pods > Pod Settings)."
@@ -150,10 +172,21 @@ export const podMemberTypeDefs = /* GraphQL */ `
     filled_at: String!
   }
 
+  "How many seats one JOINED member holds — the +N other members label."
+  type PodAttendeeSeats {
+    user_id: ID!
+    "Seats this person's booking holds (always at least 1)."
+    seats: Int!
+  }
+
   "Admin/Finance: one person on a pod — host, attendee or backed-out member."
   type AdminPodAttendee {
     "PodMember row id — null for people without a membership row (host seat)."
     member_id: ID
+    "Seats this booking holds — one ticket admits this many. 1 for a legacy booking."
+    seats: Int!
+    "The other people on this booking, recorded at the door."
+    companions: [PodCompanion!]!
     user_id: ID!
     full_name: String
     email: String
@@ -202,6 +235,11 @@ export const podMemberTypeDefs = /* GraphQL */ `
     myPodMemberships(status: MembershipStatus): [PodMember!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
+    """
+    Seats each JOINED member of a pod holds. Powers the "+N other members" label
+    on the attendee list — one face per person, the group size beside their name.
+    """
+    podAttendeeSeats(pod_doc_id: ID!): [PodAttendeeSeats!]!
     "Every filled Backout seat of a pod — struck-through attendee rows (public)."
     podSpotFills(pod_doc_id: ID!): [PodSpotFill!]!
     "Admin/Finance: everyone on a pod with contact info and replacement links."
@@ -218,10 +256,18 @@ export const podMemberTypeDefs = /* GraphQL */ `
   extend type Mutation {
     "Book a free pod. Seats books several at once (default 1, capped by what is left)."
     joinFreePod(pod_doc_id: ID!, referral_token: String, seats: Int): PodMember!
-    "Confirm Backout — booking moves to 'Backout in process' and the seat is released."
-    backoutPod(pod_doc_id: ID!): PodMember!
+    """
+    Confirm Backout — the released seats go back on sale immediately and the
+    refund becomes eligible only once a replacement takes them.
+
+    Omit the seats argument (or pass the whole booking) for the original
+    all-or-nothing backout. Pass fewer to give back PART of a multi-seat
+    booking: the member stays in the pod with the seats they kept, and only the
+    released ones are refunded, at the same deduction.
+    """
+    backoutPod(pod_doc_id: ID!, seats: Int): PodMember!
     "Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free)."
-    cancelBackoutPod(pod_doc_id: ID!): PodMember!
+    cancelBackoutPod(pod_doc_id: ID!, backout_id: ID): PodMember!
     redeemPodReferral(token: String!): PodMember!
     "Rejoin a pod the caller previously backed out of — no payment, until the pod completes."
     rejoinPod(pod_doc_id: ID!): PodMember!

@@ -11,6 +11,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/breadcrumb": "workspace:*",
+    "@duncit/dialogs": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
@@ -20,6 +21,10 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@fontsource/nunito": "^5.1.1",
+    "date-fns-tz": "^2.0.1",
+    "livekit-client": "^2.21.0",
+    "react-internet-meter": "^1.1.1",
+    "react-markdown": "^10.1.0",
     "socket.io-client": "^4.8.3"
   },
   "peerDependencies": {

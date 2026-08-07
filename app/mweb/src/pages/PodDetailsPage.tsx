@@ -32,6 +32,7 @@ import {
   POD_ID_BY_SLUGS,
   POD_PEOPLE,
   POD_SPOT_FILLS,
+  POD_ATTENDEE_SEATS,
   PodDetailsSkeleton,
 } from './pod-details-page/queries';
 
@@ -75,6 +76,22 @@ export default function PodDetailsPage() {
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
+  const { data: seatData } = useQuery(POD_ATTENDEE_SEATS, {
+    variables: { id },
+    skip: !id,
+    fetchPolicy: 'cache-and-network',
+  });
+  // One face per person; the seats they hold become a label beside their name.
+  const seatsByUser = useMemo(
+    () =>
+      Object.fromEntries(
+        (seatData?.podAttendeeSeats ?? []).map((row: { user_id: string; seats: number }) => [
+          row.user_id,
+          row.seats,
+        ]),
+      ),
+    [seatData],
+  );
   const pod = data?.pod ?? null;
   const productSelection = usePodProductSelection(id, pod);
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
@@ -196,6 +213,7 @@ export default function PodDetailsPage() {
         hosts={podHosts}
         attendees={allPeople}
         spotFills={spotFillData?.podSpotFills ?? []}
+        seatsByUser={seatsByUser}
         isFree={isFree}
         priceCompute={priceCompute}
         categoryCrumbs={clubCategoryCrumbs}
@@ -254,6 +272,8 @@ export default function PodDetailsPage() {
         onClose={() => actions.setBackoutOpen(false)}
         busy={actions.backoutState.loading}
         refundAmount={data?.podMembershipState?.backout_refund_amount ?? null}
+        refundPerSeat={data?.podMembershipState?.backout_refund_per_seat ?? null}
+        mySeats={data?.podMembershipState?.my_seats ?? 1}
         currency={priceCurrency}
         deductionPct={data?.podMembershipState?.backout_deduction_pct ?? 0}
         onConfirm={actions.onConfirmBackout}

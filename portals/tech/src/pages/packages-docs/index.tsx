@@ -5,22 +5,22 @@ import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
 import PackageDocBody from './PackageDocBody';
 import PackageDocHeader from './PackageDocHeader';
-import { DEFAULT_PACKAGE_SLUG, PACKAGE_DOCS } from './package-docs';
+import { PACKAGE_DOCS } from './package-docs';
 
 /**
  * Every shared package's documentation, inside the portal.
  *
- * It is reached from Emails because `@duncit/communication` is what every email
- * in the product goes through, and that is the doc most often wanted here — so
- * that one opens first. The rest are alongside it rather than in a second place:
- * there is one set of package docs, written next to each package, and this page
- * reads those files rather than keeping a copy of anything.
+ * One set of package docs, written next to each package, read from those files
+ * rather than kept as a copy here — a second copy would be wrong within a week,
+ * and the whole reason those files sit beside their package is that they move
+ * with it.
  */
 export default function PackagesDocsPage() {
+  // `?pkg=` opens a named package; otherwise the first one, because a general
+  // index has no package it should privilege — the list and its search are
+  // right there, and picking a favourite would only be a guess.
   const wanted = useSearchParams()[0].get('pkg');
-  const [selected, setSelected] = useState(
-    () => wanted ?? DEFAULT_PACKAGE_SLUG
-  );
+  const [selected, setSelected] = useState(() => wanted ?? PACKAGE_DOCS[0]?.slug ?? '');
 
   const doc = PACKAGE_DOCS.find((p) => p.slug === selected) ?? PACKAGE_DOCS[0];
 

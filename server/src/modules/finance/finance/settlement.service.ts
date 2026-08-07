@@ -8,7 +8,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
 import {
   computePodFinanceBreakdown,
-  payingAttendees,
+  payingSeats,
   type BreakdownOptions,
   type BreakdownRates,
   type PodFinanceBreakdown,
@@ -75,9 +75,9 @@ export interface PodSettlement {
   venue: SettlementParty | null;
   has_venue: boolean;
   waterfall: SettlementWaterfall;
-  /** Guests who actually attended and paid — the host's own free seat excluded.
-   * A completed pod settles on what it COLLECTED, so this is the head count
-   * behind every figure above, and it is what the host is shown. */
+  /** SEATS that attended and paid — the host's own free seat excluded. Seats,
+   * not people: one booking can cover several, and a completed pod settles on
+   * what it COLLECTED, which is priced per seat. */
   paying_attendees: number;
 }
 
@@ -261,7 +261,9 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
     has_venue: hasVenue,
     waterfall,
     // The head count behind `collected` — the host sits in pod_attendees and
-    // never paid, so their seat is dropped.
-    paying_attendees: payingAttendees(pod.pod_attendees, pod.pod_hosts_id),
+    // never paid, so their seat is dropped. Counted in SEATS, because `collected`
+    // is priced per seat: a person count beside it could never reconcile on a pod
+    // where anyone booked for more than themselves.
+    paying_attendees: payingSeats(pod.pod_attendees, pod.pod_hosts_id, pod.extra_seats),
   };
 }

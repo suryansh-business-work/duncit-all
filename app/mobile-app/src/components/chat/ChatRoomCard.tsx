@@ -19,6 +19,8 @@ const STATUS_META: Record<PodStatus, { label: string; color: string }> = {
  * linked pod's status (Upcoming / Live / Previous). */
 export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPress: () => void }>) {
   const { onPrimary, muted } = useThemeColors();
+  // Identity, deliberately: this counts who is IN the chat, and a multi-seat
+  // buyer is one person in it. Do not seat-adjust it the way occupancy was.
   const members = room.pod_attendees.length;
   const status = STATUS_META[podStatus(room.pod_date_time, room.pod_end_date_time)];
 

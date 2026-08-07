@@ -18,6 +18,7 @@ import {
 import { ProductDetailSheet } from '@/components/details/ProductDetailSheet';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
+import { formatMoney } from '@/utils/checkout-math';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import { MyAddressesDocument } from '@/graphql/address-book';
 import type { CouponPreview } from '@/hooks/checkoutRequests';
@@ -295,6 +296,9 @@ export function ProductCheckoutScreen() {
           loading={submitting}
           errorMessage={error}
           dummyMode={dummyMode}
+          // The number goes ON the button — a cart summary has usually scrolled
+          // away by the time the buyer reaches it.
+          payLabel={`Pay ${formatMoney(breakup.currency, coins.effectiveTotal)}`}
           addressRequired
           onPincodeChange={setDeliveryPincode}
           onSubmit={submit}

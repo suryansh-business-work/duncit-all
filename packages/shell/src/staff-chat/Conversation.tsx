@@ -1,23 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  Avatar,
-  Box,
-  IconButton,
-  LinearProgress,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import CallIcon from '@mui/icons-material/Call';
-import DownloadIcon from '@mui/icons-material/Download';
-import SendIcon from '@mui/icons-material/Send';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import MessageBubble from './MessageBubble';
-import PresenceDot from './PresenceDot';
-import type { Coworker, StaffMessage } from './queries';
+import { useMemo, useState } from 'react';
+import { Box, LinearProgress } from '@mui/material';
+import ChatComposer from './ChatComposer';
+import ChatSearchPanel from './ChatSearchPanel';
+import ConversationHeader from './ConversationHeader';
+import LocationDialog from './LocationDialog';
+import MessageThread from './MessageThread';
+import ReplyStrip from './ReplyStrip';
+import TypingIndicator from './TypingIndicator';
+import type { Coworker, StaffCall, StaffMessage } from './queries';
+import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
 
 interface Props {
@@ -25,16 +16,39 @@ interface Props {
   meId: string;
   status: PresenceStatus;
   messages: StaffMessage[];
+  /** Calls on this line, merged into the thread by time. */
+  calls: StaffCall[];
+  onPlayRecording: (url: string) => void;
   sending: boolean;
   uploading: boolean;
   onBack: () => void;
   onSend: (text: string) => void;
   onAttach: (file: File) => void;
+  loading: boolean;
+  hasMore: boolean;
+  loadingMore: boolean;
+  settings: ChatSettings;
+  formats: ChatFormats;
+  spacing: number;
+  nameOf: (userId: string) => string;
+  /** The message being answered, shown above the composer until it is sent. */
+  replyTo: StaffMessage | null;
+  onCancelReply: () => void;
+  onLoadMore: () => void;
   onEdit: (id: string, text: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, forEveryone: boolean) => void;
+  onReact: (id: string, emoji: string) => void;
+  onReply: (message: StaffMessage) => void;
+  onForward: (message: StaffMessage) => void;
+  onPin: (id: string) => void;
+  onNavigate?: (path: string) => void;
   onTyping: () => void;
+  /** When this peer last reported typing, or 0. */
+  typingAt: number;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
+  /** Opens portal-to-portal screen sharing with this person. */
+  onShareScreen: () => void;
 }
 
 export default function Conversation({
@@ -42,137 +56,113 @@ export default function Conversation({
   meId,
   status,
   messages,
+  calls,
+  onPlayRecording,
   sending,
   uploading,
   onBack,
   onSend,
   onAttach,
+  loading,
+  hasMore,
+  loadingMore,
+  settings,
+  formats,
+  spacing,
+  nameOf,
+  replyTo,
+  onCancelReply,
+  onLoadMore,
   onEdit,
   onDelete,
+  onReact,
+  onReply,
+  onForward,
+  onPin,
+  onNavigate,
   onTyping,
+  typingAt,
   onCall,
   onExport,
+  onShareScreen,
 }: Readonly<Props>) {
-  const [draft, setDraft] = useState('');
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [jumpToId, setJumpToId] = useState<string | null>(null);
 
-  // A chat that opens at the top of a hundred messages is a chat you have to
-  // scroll before you can read the one that arrived.
-  useEffect(() => {
-    // Optional call: jsdom has the element but not the method, and a chat that
-    // throws while scrolling would take the whole panel down with it.
-    endRef.current?.scrollIntoView?.({ block: 'end' });
-  }, [messages]);
-
-  const send = () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    onSend(text);
-    setDraft('');
-  };
+  // What the thread can actually scroll to, so a hit outside it can say so.
+  const loadedIds = useMemo(() => new Set(messages.map((message) => message.id)), [messages]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <IconButton size="small" onClick={onBack} aria-label="Back to coworkers">
-          <ArrowBackIcon fontSize="small" />
-        </IconButton>
-        <PresenceDot status={status}>
-          <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
-        </PresenceDot>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" noWrap>
-            {peer.name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {status.toLowerCase()}
-          </Typography>
-        </Box>
-        <Tooltip title="Audio call">
-          <IconButton size="small" onClick={() => onCall('AUDIO')} aria-label="Start audio call">
-            <CallIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Video call">
-          <IconButton size="small" onClick={() => onCall('VIDEO')} aria-label="Start video call">
-            <VideocamIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Export this conversation">
-          <IconButton size="small" onClick={onExport} aria-label="Export conversation">
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+      <ConversationHeader
+        peer={peer}
+        status={status}
+        searchOpen={searchOpen}
+        onBack={onBack}
+        onToggleSearch={() => setSearchOpen((open) => !open)}
+        onCall={onCall}
+        onShareScreen={onShareScreen}
+        onExport={onExport}
+      />
+
+      {searchOpen && (
+        <ChatSearchPanel
+          peerId={peer.id}
+          meId={meId}
+          peerName={peer.name}
+          formats={formats}
+          loadedIds={loadedIds}
+          onJump={setJumpToId}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
 
       {uploading && <LinearProgress />}
 
-      <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 1.5 }}>
-        {messages.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            Say hello.
-          </Typography>
-        )}
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            mine={message.from_user_id === meId}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-        <div ref={endRef} />
-      </Stack>
+      <MessageThread
+        jumpToId={jumpToId}
+        messages={messages}
+        calls={calls}
+        onPlayRecording={onPlayRecording}
+        meId={meId}
+        loading={loading}
+        hasMore={hasMore}
+        loadingMore={loadingMore}
+        settings={settings}
+        formats={formats}
+        spacing={spacing}
+        nameOf={nameOf}
+        onLoadMore={onLoadMore}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onReact={onReact}
+        onReply={onReply}
+        onForward={onForward}
+        onPin={onPin}
+        onNavigate={onNavigate}
+      />
 
-      <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
-        <Tooltip title="Attach a file">
-          <IconButton size="small" onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Attach a file">
-            <AttachFileIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        {/* Any file, not only images — a chat where you cannot send a PDF is a
-            chat people leave to send the PDF. */}
-        <input
-          ref={fileRef}
-          type="file"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onAttach(file);
-            event.target.value = '';
-          }}
-        />
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          maxRows={4}
-          placeholder="Write a message"
-          value={draft}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            onTyping();
-          }}
-          onKeyDown={(event) => {
-            // Enter sends, Shift+Enter breaks the line — what every chat does,
-            // and what fingers already expect.
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              send();
-            }
-          }}
-        />
-        <IconButton color="primary" onClick={send} disabled={!draft.trim() || sending} aria-label="Send message">
-          <SendIcon />
-        </IconButton>
-      </Stack>
+      <TypingIndicator at={typingAt} name={peer.name} />
+
+      {replyTo && <ReplyStrip replyTo={replyTo} nameOf={nameOf} onCancel={onCancelReply} />}
+
+      <ChatComposer
+        sending={sending}
+        uploading={uploading}
+        enterToSend={settings.enterToSend}
+        onSend={onSend}
+        onAttach={onAttach}
+        onTyping={onTyping}
+        onShareLocation={() => setLocationOpen(true)}
+      />
+
+      <LocationDialog
+        open={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        onSend={(text) => onSend(text)}
+      />
+
     </Box>
   );
 }

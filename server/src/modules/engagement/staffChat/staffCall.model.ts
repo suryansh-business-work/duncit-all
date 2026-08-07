@@ -33,6 +33,14 @@ export interface IStaffCall extends Document {
   duration_seconds: number;
   started_at: Date;
   ended_at: Date | null;
+  /**
+   * The mp4 this call was recorded to, once FFmpeg has produced it.
+   *
+   * On the CALL rather than on a message, because a recording is a property of
+   * the call — the thread should be able to say "we spoke for eleven minutes,
+   * here it is" without depending on somebody having chosen to post the link.
+   */
+  recording_url: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -47,6 +55,7 @@ const staffCallSchema = new Schema<IStaffCall>(
     duration_seconds: { type: Number, default: 0 },
     started_at: { type: Date, required: true },
     ended_at: { type: Date, default: null },
+    recording_url: { type: String, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

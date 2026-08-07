@@ -16,6 +16,8 @@ export interface TicketPdfData {
   meeting_platform: string | null;
   attendee_name: string;
   attendee_email: string;
+  /** People this one ticket admits. 1 for a single booking and for legacy tickets. */
+  seats: number;
 }
 
 const ACCENT = '#F82D2F';
@@ -79,6 +81,10 @@ export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
       row(data.mode === 'VIRTUAL' ? 'MEETING' : 'VENUE', data.mode === 'VIRTUAL' ? data.meeting_platform || 'Online' : data.venue_name || '—');
       if (data.mode !== 'VIRTUAL' && data.venue_address) row('ADDRESS', data.venue_address);
       row('ATTENDEE', `${data.attendee_name}  ·  ${data.attendee_email}`);
+      // Only when it admits more than the buyer, so a single-seat ticket keeps
+      // the layout it has today.
+      const seats = Math.max(1, Math.floor(Number(data.seats) || 1));
+      if (seats > 1) row('ADMITS', `${seats} people`);
 
       // Perforation
       doc.save();
@@ -93,6 +99,11 @@ export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
       doc.fillColor(MUTED).fontSize(8).font('Helvetica').text('SCAN AT ENTRY', stubX, 240, { width: 200, align: 'center' });
       doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(data.ticket_code, stubX, 254, { width: 200, align: 'center' });
       doc.fillColor(data.status === 'CHECKED_IN' ? '#16a34a' : ACCENT).fontSize(9).font('Helvetica-Bold').text(data.status, stubX, 274, { width: 200, align: 'center' });
+      // The stub is the half the door keeps, so how many people it lets in has
+      // to be readable without opening anything.
+      if (seats > 1) {
+        doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(`ADMITS ${seats}`, stubX, 290, { width: 200, align: 'center' });
+      }
 
       doc.end();
     } catch (err) {

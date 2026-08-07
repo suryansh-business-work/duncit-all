@@ -171,12 +171,10 @@ export const VideoCompressionJobDocument = gql(`
  * (multipart), bypassing the GraphQL API's request-body size limit that blocked
  * large support attachments. The private key never leaves the server. */
 export const GetImagekitAuthDocument = gql(`
-  mutation MobileGetImagekitAuth {
-    getImagekitAuth {
-      token
-      expire
-      signature
-      publicKey
+  mutation MobileGetImagekitAuth($folder: String) {
+    getImagekitAuth(folder: $folder) {
+      uploadUrl
+      ticket
       urlEndpoint
     }
   }

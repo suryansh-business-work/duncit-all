@@ -178,10 +178,12 @@ export function usePodDetailActions({
     setSnack('Referral link copied');
   };
 
-  const onConfirmBackout = async () => {
+  // `seats` releases part of a multi-seat booking; omitting it releases all of
+  // it, which is what a single-seat booking always does.
+  const onConfirmBackout = async (seats?: number) => {
     if (!pod) return;
     try {
-      await backout({ variables: { id: pod.id } });
+      await backout({ variables: { id: pod.id, seats: seats ?? null } });
       setBackoutOpen(false);
       setSnack('Backout in process — your seat is now open for booking.');
       await refetch();

@@ -36,11 +36,14 @@ export function OrderSummary({
   pod,
   breakup,
   seats = 1,
+  unitAmount = 0,
 }: Readonly<{
   pod: CheckoutPod;
   breakup: CheckoutBreakup;
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
+  /** Price of ONE seat, so the multiplied total below can be reconciled. */
+  unitAmount?: number;
 }>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
@@ -102,6 +105,12 @@ export function OrderSummary({
           </Text>
         </XStack>
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
+        {seats > 1 && unitAmount > 0 ? (
+          <Row
+            label={`Ticket ${fmt(unitAmount)} x ${seats} seats`}
+            value={fmt(unitAmount * seats)}
+          />
+        ) : null}
         <Row label="Subtotal" value={fmt(breakup.subtotal)} />
         <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />

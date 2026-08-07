@@ -4,6 +4,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { VenueModel } from './venue.model';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 /**
  * Partners → Venues → Pods: every pod booked at the caller's venues, ALL
@@ -58,7 +59,7 @@ export const venuePodsService = {
       pod_amount: pod.pod_amount ?? 0,
       pod_type: pod.pod_type,
       no_of_spots: pod.no_of_spots ?? 0,
-      attendee_count: pod.pod_attendees?.length ?? 0,
+      attendee_count: podSeatsTaken(pod),
       pod_attendees: (pod.pod_attendees ?? []).map(String),
       host_names: (pod.pod_hosts_id ?? [])
         .map((id: any) => hostNameById.get(String(id)))

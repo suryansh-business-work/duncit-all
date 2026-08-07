@@ -98,6 +98,7 @@ export const MobileVenuePodsDocument = gql(`
       pod_type
       pod_amount
       pod_attendees
+      seats_taken
       no_of_spots
       host_names
       pod_images_and_videos {

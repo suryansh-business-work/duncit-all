@@ -27,7 +27,8 @@ export type ProfileIconKey =
   | 'host'
   | 'venue'
   | 'ecomm'
-  | 'insights';
+  | 'insights'
+  | 'calendar';
 
 export interface ProfileTile {
   key: string;
@@ -130,6 +131,7 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
     title: 'Venue Menu',
     items: [
       { key: 'venue-studio', label: 'Venue Studio', caption: '', icon: 'venue', to: '/venues/manage' },
+      { key: 'venue-slot-requests', label: 'Slot Requests', caption: '', icon: 'calendar', to: '/venues/slot-requests' },
       { key: 'venue-earnings', label: 'Venue Earnings', caption: '', icon: 'insights', to: '/venues/earnings' },
     ],
   },

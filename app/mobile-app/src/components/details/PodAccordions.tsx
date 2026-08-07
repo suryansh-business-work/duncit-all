@@ -53,8 +53,14 @@ function PaymentDetails({
         </Text>
       </XStack>
       <XStack justifyContent="space-between">
+        {/*
+          Per SEAT, and it has to say so. This prices one ticket, while the bar
+          on the same screen prices however many the seat picker holds — calling
+          this "Total payable" put two different totals in front of the buyer
+          and only one of them was what they would be charged.
+        */}
         <Text fontSize={14} fontWeight="600" color="$color">
-          Total payable
+          Price per seat
         </Text>
         <Text fontSize={14} fontWeight="600" color="$color">
           {money(amount)}
@@ -74,6 +80,7 @@ export function PodAccordions({
   pod,
   people,
   spotFills = [],
+  seatsByUser,
   categoryCrumbs,
   isFree,
   gstPct,
@@ -85,6 +92,8 @@ export function PodAccordions({
   people: PodPerson[];
   /** Filled Backout seats — struck-through rows in the attendees section. */
   spotFills?: PodSpotFill[];
+  /** Seats per attendee id, from podAttendeeSeats. */
+  seatsByUser?: Record<string, number>;
   categoryCrumbs: readonly string[];
   isFree: boolean;
   gstPct: number;
@@ -97,7 +106,12 @@ export function PodAccordions({
   const sections: Section[] = useMemo(() => {
     const charges = pod.place_charges ?? [];
     const terms = pod.payment_terms?.trim();
-    const attendeePeople = buildAttendeePeople(people, pod.pod_attendees, pod.pod_hosts_id);
+    const attendeePeople = buildAttendeePeople(
+      people,
+      pod.pod_attendees,
+      pod.pod_hosts_id,
+      seatsByUser,
+    );
     const hostPeople = buildHostPeople(people, pod.pod_hosts_id);
     const list: Section[] = [
       { id: 'about', title: 'About this pod', icon: 'info', content: <AboutSection pod={pod} /> },
@@ -152,6 +166,7 @@ export function PodAccordions({
             spots={pod.no_of_spots}
             expired={isPodExpired(pod.pod_date_time)}
             spotFills={spotFills}
+            seatsTaken={pod.seats_taken ?? undefined}
             onOpenProfile={onOpenProfile}
           />
         ),
@@ -207,6 +222,7 @@ export function PodAccordions({
     pod,
     people,
     spotFills,
+    seatsByUser,
     categoryCrumbs,
     isFree,
     gstPct,

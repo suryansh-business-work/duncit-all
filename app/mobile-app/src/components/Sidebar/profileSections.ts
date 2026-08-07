@@ -181,6 +181,13 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
         route: 'VenueManage',
       },
       {
+        key: 'venue-slot-requests',
+        label: 'Slot Requests',
+        caption: '',
+        icon: 'event-available',
+        route: 'VenueSlotRequests',
+      },
+      {
         key: 'venue-earnings',
         label: 'Venue Earnings',
         caption: '',

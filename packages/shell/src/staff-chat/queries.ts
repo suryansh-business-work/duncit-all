@@ -8,6 +8,27 @@ export interface Coworker {
   roles: string[];
 }
 
+/** The six the bar offers. Any other emoji is allowed — these are just close. */
+export const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'] as const;
+
+export interface StaffReaction {
+  user_id: string;
+  emoji: string;
+  at?: string | null;
+}
+
+/** What a link in a message turns into on screen. */
+export interface StaffLinkPreview {
+  url: string;
+  internal: boolean;
+  portal?: string | null;
+  title?: string | null;
+  description?: string | null;
+  image?: string | null;
+  has_access: boolean;
+  access_note?: string | null;
+}
+
 export interface StaffMessage {
   id: string;
   from_user_id: string;
@@ -16,10 +37,27 @@ export interface StaffMessage {
   attachment_url?: string;
   attachment_name?: string;
   attachment_type?: string;
+  /** Bytes — so a reader can judge before downloading. */
+  attachment_size?: number;
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
+  /** Who reacted and with what. Empty on a deleted message. */
+  reactions?: StaffReaction[];
+  /** Set when it reached one of their tabs — the second tick. */
+  delivered_at?: string | null;
+  reply_to_id?: string | null;
+  forwarded_from?: string | null;
+  pinned_at?: string | null;
+  pinned_by?: string | null;
+  mentions?: string[];
   created_at?: string | null;
+  /**
+   * Client-only, never from the server: a message being sent, or one that
+   * failed and can be retried. It is what puts a clock on the first tick.
+   */
+  pending?: boolean;
+  failed?: boolean;
 }
 
 export interface StaffCall {
@@ -31,6 +69,8 @@ export interface StaffCall {
   duration_seconds: number;
   started_at?: string | null;
   ended_at?: string | null;
+  /** The mp4 it was recorded to, once FFmpeg has produced one. */
+  recording_url?: string | null;
 }
 
 export interface StaffThread {
@@ -57,9 +97,20 @@ const MESSAGE = `
   attachment_url
   attachment_name
   attachment_type
+  attachment_size
   read_at
   edited_at
   deleted_at
+  reactions {
+    user_id
+    emoji
+  }
+  delivered_at
+  reply_to_id
+  forwarded_from
+  pinned_at
+  pinned_by
+  mentions
   created_at
 `;
 
@@ -86,8 +137,8 @@ export const STAFF_THREADS = gql`
 `;
 
 export const STAFF_MESSAGES = gql`
-  query StaffMessages($peerId: ID!, $limit: Int) {
-    staffMessages(peer_id: $peerId, limit: $limit) {
+  query StaffMessages($peerId: ID!, $limit: Int, $before: String) {
+    staffMessages(peer_id: $peerId, limit: $limit, before: $before) {
       ${MESSAGE}
     }
   }
@@ -135,6 +186,72 @@ export const DELETE_STAFF_MESSAGE = gql`
   }
 `;
 
+export const REACT_TO_STAFF_MESSAGE = gql`
+  mutation ReactToStaffMessage($id: ID!, $emoji: String!) {
+    reactToStaffMessage(id: $id, emoji: $emoji) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const FORWARD_STAFF_MESSAGE = gql`
+  mutation ForwardStaffMessage($id: ID!, $toUserId: ID!) {
+    forwardStaffMessage(id: $id, to_user_id: $toUserId) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const PIN_STAFF_MESSAGE = gql`
+  mutation PinStaffMessage($id: ID!) {
+    pinStaffMessage(id: $id) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const PINNED_STAFF_MESSAGES = gql`
+  query PinnedStaffMessages($peerId: ID!) {
+    pinnedStaffMessages(peer_id: $peerId) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const SEARCH_STAFF_MESSAGES = gql`
+  query SearchStaffMessages($peerId: ID!, $filter: StaffSearchInput) {
+    searchStaffMessages(peer_id: $peerId, filter: $filter) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const STAFF_SCREEN_SHARE_GRANT = gql`
+  query StaffScreenShareGrant($peerId: ID!) {
+    staffScreenShareGrant(peer_id: $peerId) {
+      url
+      token
+      room
+      expiresIn
+    }
+  }
+`;
+
+export const STAFF_LINK_PREVIEW = gql`
+  query StaffLinkPreview($url: String!) {
+    staffLinkPreview(url: $url) {
+      url
+      internal
+      portal
+      title
+      description
+      image
+      has_access
+      access_note
+    }
+  }
+`;
+
 export const STAFF_CALLS = gql`
   query StaffCalls($peerId: ID!, $limit: Int) {
     staffCalls(peer_id: $peerId, limit: $limit) {
@@ -146,7 +263,14 @@ export const STAFF_CALLS = gql`
       duration_seconds
       started_at
       ended_at
+      recording_url
     }
+  }
+`;
+
+export const ATTACH_CALL_RECORDING = gql`
+  mutation AttachStaffCallRecording($callId: ID!, $url: String!) {
+    attachStaffCallRecording(call_id: $callId, url: $url)
   }
 `;
 
@@ -163,6 +287,42 @@ export const STAFF_PRESENCE = gql`
 export const MARK_THREAD_READ = gql`
   mutation MarkStaffThreadRead($peerId: ID!) {
     markStaffThreadRead(peer_id: $peerId)
+  }
+`;
+
+/**
+ * Turn an uploaded recording into an mp4.
+ *
+ * force_transcode is what makes this correct for a recording rather than a
+ * compression: the browser hands us webm, and without the flag a surface with
+ * compression switched off would hand that webm straight back.
+ */
+export const START_VIDEO_COMPRESSION = gql`
+  mutation StartCallRecordingConversion($remoteUrl: String!, $folder: String, $surface: String) {
+    startVideoCompression(
+      remote_url: $remoteUrl
+      folder: $folder
+      surface: $surface
+      force_transcode: true
+    ) {
+      job_id
+      status
+      pct
+      url
+      error
+    }
+  }
+`;
+
+export const VIDEO_COMPRESSION_JOB = gql`
+  query CallRecordingConversion($jobId: String!) {
+    videoCompressionJob(job_id: $jobId) {
+      job_id
+      status
+      pct
+      url
+      error
+    }
   }
 `;
 

@@ -16,7 +16,9 @@ interface Props {
 /** The pod's core facts — schedule, capacity, reach and description. */
 export default function PodOverviewCard({ pod, showProducts }: Readonly<Props>) {
   const isVirtual = pod.pod_mode === 'VIRTUAL';
-  const attendees = pod.pod_attendees?.length ?? 0;
+  // Seats, not buyers: one booking can cover several people, so the identity
+  // list showed an admin free capacity the pod does not have.
+  const attendees = pod.seats_taken ?? pod.pod_attendees?.length ?? 0;
 
   return (
     <SectionCard icon={<GroupsIcon fontSize="small" />} title="Overview">

@@ -227,6 +227,37 @@ pickBestVideoFile({
 | `accept` | `string` | no | images + videos | Comma-separated MIME list. |
 | `allowDocuments` | `boolean` | no | derived from `accept` | Pass `false` to force-disable documents even for a pdf accept list. |
 | `surface` | `'PORTALS' \| 'MOBILE' \| 'MWEB'` | no | — | Which Upload Settings row drives sizes, formats and crop presets. |
+| `max` | `number` | no | `1` | How many images ONE open may return. `1` closes on the first pick; above 1 the picks collect in a tray. |
+| `onPickedMany` | `(urls: string[]) => void` | no | — | Fires once with every picked URL. Required when `max` is above 1. |
+| `seedQuery` | `string` | no | — | What to search Pexels for before the user types — e.g. the pod's sub-category. |
+| `orientation` | `'landscape' \| 'portrait' \| 'square' \| ''` | no | `''` | Pexels orientation to start on. A cover is wide, so pass `'landscape'`. |
+
+#### Picking more than one
+
+`max` is the number **this open** may return, not the field's total — a field
+already holding three of five passes `max={2}`. Above one, the dialog stops
+closing on a pick: both tabs keep working and the picks land in a numbered tray
+(the first is the cover), so two Pexels photos and one of the user's own can be
+chosen in a single visit. `onPicked` still fires per URL if you want to stream
+them; `onPickedMany` fires once on **Use these N**.
+
+The seat of it is small on purpose: the tabs are unchanged, and multi-pick works
+by handing them a `onClose` that does nothing. `useMediaSelection` holds the tray
+and defers the cap and de-duplication to `addToSelection` in `@duncit/utils`, so
+the native app — which cannot import this MUI package — enforces the identical
+rule with Tamagui components (rules 27 and 40).
+
+```tsx
+<MediaPickerDialog
+  open={open}
+  onClose={() => setOpen(false)}
+  max={coverSlotsLeft(urls.length)}
+  seedQuery={coverSearchTerm(subCategoryName)}
+  orientation="landscape"
+  onPicked={addUrl}
+  onPickedMany={addUrls}
+/>
+```
 
 ### `SingleImageUploadField`
 

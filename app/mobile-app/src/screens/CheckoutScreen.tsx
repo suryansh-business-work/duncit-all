@@ -14,6 +14,7 @@ import {
 } from '@/components/checkout';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
+import { formatMoney } from '@/utils/checkout-math';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
   buildCheckoutContact,
@@ -173,7 +174,12 @@ export function CheckoutScreen() {
       </ScrollView>
     ) : (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-        <OrderSummary pod={pod} breakup={breakup} seats={seats} />
+        <OrderSummary
+          pod={pod}
+          breakup={breakup}
+          seats={seats}
+          unitAmount={Number(pod?.pod_amount) || 0}
+        />
         <CouponField
           code={couponCode}
           setCode={setCouponCode}
@@ -199,6 +205,10 @@ export function CheckoutScreen() {
           loading={submitting}
           errorMessage={error}
           dummyMode={dummyMode}
+          // The number goes ON the button. On a multi-seat booking the summary
+          // has usually scrolled away by the time the buyer reaches it, and the
+          // last thing they read before paying should be what they will pay.
+          payLabel={`Pay ${formatMoney(breakup.currency, coins.effectiveTotal)}`}
           onSubmit={submit}
         />
       </ScrollView>

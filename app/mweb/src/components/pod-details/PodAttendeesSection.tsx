@@ -44,6 +44,13 @@ interface Props {
   expired?: boolean;
   /** Filled Backout seats — old attendee struck through, filler named. */
   spotFills?: SpotFill[];
+  /**
+   * Seats each person's booking holds, from `podAttendeeSeats`. Absent means
+   * one each, which is what every booking was before multi-seat.
+   */
+  seatsByUser?: Record<string, number>;
+  /** Occupancy from the server (people + the seats they bought beyond their own). */
+  seatsTaken?: number;
 }
 
 const MAX_PREVIEW = 8;
@@ -52,7 +59,8 @@ const MAX_PREVIEW = 8;
 export function buildAttendeePeople(
   attendees: Attendee[],
   attendeeIds: string[],
-  hostIds: string[]
+  hostIds: string[],
+  seatsByUser: Record<string, number> = {}
 ): AttendeePerson[] {
   const byId = new Map(attendees.map((a) => [a.user_id, a]));
   const hosts = new Set(hostIds);
@@ -63,6 +71,7 @@ export function buildAttendeePeople(
       full_name: person?.full_name ?? null,
       profile_photo: person?.profile_photo ?? null,
       is_host: hosts.has(id),
+      seats: seatsByUser[id] ?? 1,
     };
   });
   return [...people.filter((p) => p.is_host), ...people.filter((p) => !p.is_host)];
@@ -76,15 +85,19 @@ export default function PodAttendeesSection({
   totalSpots,
   expired,
   spotFills = [],
+  seatsByUser,
+  seatsTaken,
 }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   const people = useMemo(
-    () => buildAttendeePeople(attendees, attendeeIds, hostIds),
-    [attendees, attendeeIds, hostIds]
+    () => buildAttendeePeople(attendees, attendeeIds, hostIds, seatsByUser),
+    [attendees, attendeeIds, hostIds, seatsByUser]
   );
   const fillRows = useMemo(() => buildSpotFillRows(spotFills, t), [spotFills, t]);
-  const count = people.length;
+  // Seats, not faces: one person can be bringing three more, and the number
+  // beside "of N spots" has to mean the same thing the capacity does.
+  const count = seatsTaken ?? people.reduce((sum, person) => sum + (person.seats ?? 1), 0);
   const noun = expired ? 'attended' : 'going';
 
   return (

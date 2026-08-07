@@ -137,6 +137,26 @@ export function payingAttendees(
 }
 
 /**
+ * Seats that paid — the money head count.
+ *
+ * `payingAttendees` counts PEOPLE, and one person can hold several seats: the
+ * buyer appears in `pod_attendees` once and the rest of their group is carried
+ * in `extra_seats`. Every rupee on a pod is priced per seat, so a person count
+ * standing next to a seat-priced total can never reconcile — a pod that sold 29
+ * seats to 10 buyers reported ten tickets of revenue.
+ *
+ * The host's own seat is free and is excluded, exactly as above.
+ */
+export function payingSeats(
+  attendeeIds: readonly unknown[] | null | undefined,
+  hostIds: readonly unknown[] | null | undefined,
+  extraSeats: number | null | undefined
+): number {
+  const extra = Math.max(0, Math.floor(Number(extraSeats) || 0));
+  return payingAttendees(attendeeIds, hostIds) + extra;
+}
+
+/**
  * Computes the full GST-inclusive breakdown for a pod payment.
  * Pure: same inputs → same output. All arithmetic on paise integers with
  * half-up rounding per line and exact reconciliation.

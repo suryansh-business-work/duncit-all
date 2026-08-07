@@ -2,6 +2,9 @@ import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getUrlConfigs } from '../../../config/url-configs';
+import { issueUploadTicket } from './uploadTicket';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
 import {
   getUploadSettingsSafe,
@@ -12,85 +15,111 @@ import {
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
-/** The one place the ImageKit credentials are read. Also the media library's. */
+/**
+ * The one place the ImageKit credentials are read. Also the media library's.
+ *
+ * ONE read for all three values, from ONE entry.
+ *
+ * They used to be three independent lookups — a separate
+ * `findOne({ category, is_active, is_default })` per key. Three queries with
+ * the same filter are only guaranteed to return the same document while
+ * exactly one matches it; with two entries left active and default, Mongo may
+ * answer them from different records, and the public key of one account gets
+ * signed with the private key of another. ImageKit calls that an "invalid
+ * signature parameter", which says nothing about where it came from — and the
+ * Tech portal's test, which reads a single entry by id, could never reproduce
+ * it.
+ *
+ * A signed request has to carry one credential set. This reads one record.
+ */
 export async function getImagekitConfig() {
-  const [publicKey, privateKey, urlEndpoint] = await Promise.all([
-    getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY'),
-    getRuntimeEnvValue('IMAGEKIT_PRIVATE_KEY'),
-    getRuntimeEnvValue('IMAGEKIT_URL_ENDPOINT'),
-  ]);
+  const entries = await EnvEntryModel.find({
+    category: 'IMAGEKIT',
+    is_active: true,
+    is_default: true,
+  }).lean();
+
+  if (entries.length > 1) {
+    const names = entries.map((entry: any) => entry.name).join(', ');
+    logs.server.error('upload', 'getImagekitConfig', {
+      error: `Multiple default ImageKit entries: ${names}`,
+    });
+    throw new GraphQLError(
+      `More than one ImageKit entry is marked active and default (${names}). Uploads sign with one entry's private key and send another's public key, which ImageKit rejects as an invalid signature. Leave exactly one default in Tech portal → Environment Variables → ImageKit.`,
+      { extensions: { code: 'CONFIG_ERROR' } }
+    );
+  }
+
+  const config = (entries[0]?.config ?? {}) as Record<string, unknown>;
+  const read = (field: string) => {
+    const value = config[field];
+    return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+  };
   return {
-    publicKey: publicKey.trim(),
-    privateKey: privateKey.trim(),
-    urlEndpoint: urlEndpoint.trim(),
+    publicKey: read('public_key'),
+    privateKey: read('private_key'),
+    urlEndpoint: read('url_endpoint'),
   };
 }
 
 /**
- * Fail fast with a precise message when the ImageKit keys are missing OR
- * malformed. A swapped key pair (public value in the private field, or a key
- * from a different ImageKit account) is the usual cause of ImageKit's opaque
- * "invalid signature parameter" upload rejection — validating the well-known
- * `private_` / `public_` / URL prefixes surfaces it at the source.
+ * The signature a browser upload carries.
+ *
+ * Per ImageKit: HMAC-SHA1(privateKey, token + expire), hex digest, where expire
+ * is a Unix timestamp at most an hour ahead.
+ *
+ * The token is a UUID because that is what ImageKit's own client SDK sends, and
+ * therefore the only shape their endpoint is known to accept. It was hex here,
+ * on a guess about "HTTP clients mangling hyphens" that cannot apply to a
+ * browser FormData field — and an upload rejected for its token reports exactly
+ * the same "invalid signature parameter" as a wrong key, which is why the guess
+ * survived so long.
+ *
+ * It must also be unique per upload, so this is called per request and never
+ * cached.
+ *
+ * Exported so the Tech portal's ImageKit test signs the way production does.
+ * A test that authenticates some other way is a test that can pass while every
+ * real upload fails.
  */
-function assertImagekitConfig(config: {
-  publicKey: string;
-  privateKey: string;
-  urlEndpoint: string;
-}): void {
-  const problems: string[] = [];
-  if (!config.privateKey) {
-    problems.push('IMAGEKIT_PRIVATE_KEY is missing');
-  } else if (!config.privateKey.startsWith('private_')) {
-    problems.push(
-      'IMAGEKIT_PRIVATE_KEY is malformed (it must start with "private_") — the public and private keys may be swapped',
-    );
-  }
-  if (!config.publicKey) {
-    problems.push('IMAGEKIT_PUBLIC_KEY is missing');
-  } else if (!config.publicKey.startsWith('public_')) {
-    problems.push('IMAGEKIT_PUBLIC_KEY is malformed (it must start with "public_")');
-  }
-  if (!config.urlEndpoint) {
-    problems.push('IMAGEKIT_URL_ENDPOINT is missing');
-  } else if (!config.urlEndpoint.startsWith('http')) {
-    problems.push('IMAGEKIT_URL_ENDPOINT must be a URL');
-  }
-  if (problems.length > 0) {
-    const detail = problems.join('; ');
-    logs.server.error('upload', 'getImagekitAuth', { error: `ImageKit misconfigured: ${detail}` });
-    throw new GraphQLError(
-      `ImageKit is misconfigured: ${detail}. Fix it in Tech portal → Environment Variables → ImageKit.`,
-      { extensions: { code: 'CONFIG_ERROR' } },
-    );
-  }
+export function signImagekitUpload(privateKey: string, expireSeconds = 30 * 60) {
+  const token = crypto.randomUUID();
+  // Clamped here rather than trusted from the caller: ImageKit refuses an
+  // expiry more than an hour out, and it refuses it with the same "invalid
+  // signature parameter" as everything else, so the mistake would be invisible.
+  const window = Math.min(Math.max(60, expireSeconds), 60 * 60);
+  const expire = Math.floor(Date.now() / 1000) + window;
+  const signature = crypto
+    .createHmac('sha1', privateKey)
+    .update(`${token}${expire}`)
+    .digest('hex');
+  return { token, expire, signature };
 }
 
 /**
- * Generate the auth params required by the ImageKit browser-side upload SDK.
- * The browser uses this to upload directly to ImageKit without ever seeing
- * the private key.
+ * Where the browser should send a file, and the one-shot pass that lets it.
  *
- * Per ImageKit docs the signature must equal:
- *   HMAC-SHA1(privateKey, token + expire)  (hex digest)
- * where expire is a Unix timestamp (seconds), at most 1 hour ahead of now.
+ * This used to return an ImageKit signature so the browser could upload straight
+ * to ImageKit. That only works while the public and private keys are a matched
+ * pair — and a mismatched pair fails every upload with a message that names no
+ * cause, which is exactly what happened. Uploads now come through the server on
+ * the private key alone, so there is no signature to get wrong and no public key
+ * in play at all.
+ *
+ * `urlEndpoint` still comes back: callers render from it.
  */
-export async function getImagekitAuth(expireSeconds = 30 * 60) {
+export async function getImagekitAuth(userId: string, folder = '/uploads') {
   const config = await getImagekitConfig();
-  assertImagekitConfig(config);
-  // Hex-only token — some HTTP clients mangle UUID hyphens or padding chars.
-  const token = crypto.randomBytes(16).toString('hex');
-  const expire = Math.floor(Date.now() / 1000) + expireSeconds;
-  // The string concatenation here is what ImageKit re-derives on its side.
-  const signature = crypto
-    .createHmac('sha1', config.privateKey)
-    .update(`${token}${expire}`)
-    .digest('hex');
+  if (!config.privateKey) {
+    throw new GraphQLError(
+      'ImageKit is not configured. Add it in Tech portal → Environment Variables → ImageKit.',
+      { extensions: { code: 'CONFIG_ERROR' } }
+    );
+  }
+  const { serverUrl } = await getUrlConfigs();
   return {
-    token,
-    expire,
-    signature,
-    publicKey: config.publicKey,
+    uploadUrl: `${serverUrl.replace(/\/$/, '')}/upload`,
+    ticket: issueUploadTicket(userId, folder),
     urlEndpoint: config.urlEndpoint,
   };
 }

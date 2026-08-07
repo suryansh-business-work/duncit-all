@@ -5,6 +5,7 @@ import {
   Chip,
   InputAdornment,
   List,
+  ListItem,
   ListItemAvatar,
   ListItemButton,
   ListItemText,
@@ -14,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import CoworkerInfoButton from './CoworkerInfoButton';
 import PresenceDot from './PresenceDot';
 import { ROLE_FILTERS, ROLE_LABEL, type Coworker, type StaffThread } from './queries';
 import type { PresenceStatus } from './usePresence';
@@ -98,10 +100,20 @@ export default function CoworkerList({
         </TextField>
       </Stack>
 
-      <List dense sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pt: 0 }}>
+      <List
+        dense
+        sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', pt: 0 }}
+      >
         {!searching &&
           threads.map((thread) => (
-            <ListItemButton key={thread.peer.id} onClick={() => onOpen(thread.peer)}>
+            <ListItem
+              key={thread.peer.id}
+              disablePadding
+              // secondaryAction, not a button inside the row's button — nesting
+              // one interactive element in another breaks both of them.
+              secondaryAction={<CoworkerInfoButton person={thread.peer} />}
+            >
+            <ListItemButton onClick={() => onOpen(thread.peer)}>
               <ListItemAvatar>
                 <Badge color="error" badgeContent={thread.unread} overlap="circular">
                   <PresenceDot status={statusOf(thread.peer.id)}>
@@ -118,6 +130,7 @@ export default function CoworkerList({
                 secondaryTypographyProps={{ noWrap: true }}
               />
             </ListItemButton>
+            </ListItem>
           ))}
 
         {others.length > 0 && (
@@ -126,7 +139,12 @@ export default function CoworkerList({
           </Typography>
         )}
         {others.map((person) => (
-          <ListItemButton key={person.id} onClick={() => onOpen(person)}>
+          <ListItem
+            key={person.id}
+            disablePadding
+            secondaryAction={<CoworkerInfoButton person={person} />}
+          >
+          <ListItemButton onClick={() => onOpen(person)}>
             <ListItemAvatar>
               <PresenceDot status={statusOf(person.id)}>
                 <Avatar src={person.photo || undefined} sx={{ width: 34, height: 34 }}>
@@ -141,6 +159,7 @@ export default function CoworkerList({
               secondaryTypographyProps={{ component: 'div' }}
             />
           </ListItemButton>
+          </ListItem>
         ))}
 
         {threads.length === 0 && others.length === 0 && (

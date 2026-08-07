@@ -87,10 +87,16 @@ export function usePodBackoutDeduction() {
 export function usePodBackout() {
   const [busy, setBusy] = useState(false);
 
-  const backout = useCallback(async (podDocId: string) => {
+  // `seats` releases part of a multi-seat booking; omitting it releases all of
+  // it, which is what a single-seat booking always does.
+  const backout = useCallback(async (podDocId: string, seats?: number) => {
     setBusy(true);
     try {
-      await graphqlRequest(BackoutPodDocument, { pod_doc_id: podDocId }, { auth: true });
+      await graphqlRequest(
+        BackoutPodDocument,
+        { pod_doc_id: podDocId, seats: seats ?? null },
+        { auth: true },
+      );
     } finally {
       setBusy(false);
     }

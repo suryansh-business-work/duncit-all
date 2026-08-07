@@ -8,6 +8,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostScanPodTicketDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { CompanionsForm, type CompanionValue } from './CompanionsForm';
 import { ScannedAttendeeCard } from './ScannedAttendeeCard';
 import { ScannerFrame } from './ScannerFrame';
 import type { HostTicketScanResult } from './scan.types';
@@ -31,6 +32,9 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   const [result, setResult] = useState<HostTicketScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The token of the ticket on screen, so the second call — the one carrying
+  // the group's details — scans the same ticket without another QR read.
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
 
   useEffect(() => {
     setResult(null);
@@ -40,15 +44,16 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
     }
   }, [pod]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const submit = async (token: string) => {
+  const submit = async (token: string, companions?: CompanionValue[]) => {
     setBusy(true);
     setError(null);
     try {
       const res = await graphqlRequest(
         HostScanPodTicketDocument,
-        { pod_doc_id: pod?.id ?? '', token },
+        { pod_doc_id: pod?.id ?? '', token, companions: companions ?? null },
         { auth: true },
       );
+      setPendingToken(token);
       setResult(res.hostScanPodTicket as HostTicketScanResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not read that ticket');
@@ -138,6 +143,15 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                       ticketCode={result?.ticket?.ticket_code}
                       seats={result?.ticket?.seats ?? 1}
                       onOpenProfile={() => onOpenProfile(attendee.user_id)}
+                    />
+                  ) : null}
+
+                  {result?.requires_companions && pendingToken ? (
+                    <CompanionsForm
+                      seats={result.ticket?.seats ?? 1}
+                      required={result.companions_required}
+                      busy={busy}
+                      onSubmit={(companions) => void submit(pendingToken, companions)}
                     />
                   ) : null}
                 </YStack>

@@ -80,6 +80,8 @@ describe('profileSections', () => {
 
     expect(buildPartnerMenus(['VENUE_OWNER'], 'VENUE')[0]?.items.map((i) => i.to)).toEqual([
       '/venues/manage',
+      // Slot Requests sits above earnings: a request is the thing waiting on you.
+      '/venues/slot-requests',
       '/venues/earnings',
       '/host/wallet',
     ]);

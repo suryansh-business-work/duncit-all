@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { directUploadToImagekit } from '../src/useImagekitDirectUpload';
 
+// A pass to OUR upload route, not an ImageKit signature: the browser cannot
+// make one, and the signed-from-the-browser scheme fails outright when the
+// account's two keys are not a pair.
 const AUTH = {
-  token: 'tok',
-  expire: 123,
-  signature: 'sig',
-  publicKey: 'pub',
+  uploadUrl: 'https://server.test/upload',
+  ticket: 'tkt-1',
   urlEndpoint: 'https://ik.io/x',
 };
 
@@ -51,7 +52,7 @@ afterEach(() => {
 });
 
 describe('directUploadToImagekit', () => {
-  it('fetches signed auth, POSTs the multipart form and reports real progress', async () => {
+  it('fetches a pass, POSTs the file to our server and reports real progress', async () => {
     const client = makeClient();
     const onProgress = vi.fn();
     const pending = directUploadToImagekit(client, file, '/pods/reels', onProgress);
@@ -59,23 +60,39 @@ describe('directUploadToImagekit', () => {
 
     const xhr = lastXhr!;
     expect(xhr.method).toBe('POST');
-    expect(xhr.url).toContain('upload.imagekit.io');
+    // Our server, with the single-use pass and the name on the query string.
+    expect(xhr.url).toContain('https://server.test/upload');
+    expect(xhr.url).toContain('ticket=tkt-1');
+    expect(xhr.url).toContain('fileName=reel.mp4');
     expect(xhr.sentBody).toBeInstanceOf(FormData);
     const form = xhr.sentBody as FormData;
-    expect(form.get('file')).toBe(file);
-    expect(form.get('folder')).toBe('/pods/reels');
-    expect(form.get('signature')).toBe('sig');
-    expect(form.get('expire')).toBe('123');
+    const sent = form.get('file') as File;
+    expect(sent.name).toBe('reel.mp4');
+    expect(sent.size).toBe(file.size);
+    // The folder rides on the pass, not the upload — a ticket for one folder
+    // cannot be spent writing into another.
+    expect(form.get('folder')).toBeNull();
+    expect(form.get('signature')).toBeNull();
 
     xhr.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 200 });
     xhr.upload.onprogress?.({ lengthComputable: false, loaded: 0, total: 0 });
+    // A transport that under-reports `total` walks the ratio past 1 — the bar
+    // read "137%" before this was clamped. A zero total would divide to NaN.
+    xhr.upload.onprogress?.({ lengthComputable: true, loaded: 274, total: 200 });
+    xhr.upload.onprogress?.({ lengthComputable: true, loaded: 10, total: 0 });
     xhr.status = 200;
     xhr.responseText = JSON.stringify({ url: 'https://ik.io/out.mp4' });
     xhr.onload?.();
 
     await expect(pending).resolves.toBe('https://ik.io/out.mp4');
     expect(onProgress).toHaveBeenCalledWith(25);
-    expect(onProgress).toHaveBeenCalledTimes(1);
+    expect(onProgress).toHaveBeenCalledWith(100);
+    expect(onProgress).toHaveBeenCalledTimes(2);
+    // Nothing above 100, and nothing that is not a number.
+    for (const [pct] of onProgress.mock.calls) {
+      expect(pct).toBeGreaterThanOrEqual(0);
+      expect(pct).toBeLessThanOrEqual(100);
+    }
   });
 
   it('rejects with the ImageKit error message on a non-2xx response', async () => {
@@ -123,6 +140,6 @@ describe('directUploadToImagekit', () => {
     xhr.status = 200;
     xhr.responseText = JSON.stringify({ fileId: 'f1' });
     xhr.onload?.();
-    await expect(pending).rejects.toThrow('returned no file URL');
+    await expect(pending).rejects.toThrow('no file URL came back');
   });
 });

@@ -19,6 +19,8 @@ interface ClubOption {
   id: string;
   club_name: string;
   assigned: boolean;
+  /** False for a club they run from outside their own category. */
+  matches_category: boolean;
 }
 
 interface Props {
@@ -122,7 +124,13 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
           {options.map((club) => (
             <ListItemButton key={club.id} onClick={() => toggle(club.id)} dense>
               <Checkbox edge="start" size="small" checked={selected.has(club.id)} tabIndex={-1} disableRipple />
-              <ListItemText primary={club.club_name} />
+              {/* A club they run from outside their category says so rather
+                  than sitting in the list looking like a match. */}
+              <ListItemText
+                primary={club.club_name}
+                secondary={club.matches_category ? undefined : 'Outside their category'}
+                secondaryTypographyProps={{ color: 'warning.main', variant: 'caption' }}
+              />
             </ListItemButton>
           ))}
         </List>

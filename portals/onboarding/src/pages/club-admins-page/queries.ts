@@ -75,6 +75,7 @@ export const MATCHING_CLUBS = gql`
       id
       club_name
       assigned
+      matches_category
     }
   }
 `;

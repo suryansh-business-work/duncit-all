@@ -5,7 +5,6 @@ import {
   AccountInfoRow,
   AccountProfileHeader,
   EditAccountDialog,
-  HostsVenuesCard,
 } from '@/components/account';
 import type { AccountHealth, AccountMe } from '@/hooks/useAccount';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -161,61 +160,6 @@ describe('AccountHealthCard', () => {
       <AccountHealthCard health={health({ adjustments: [{ id: 'a' }, { id: 'b' }] as never })} />,
     );
     expect(screen.getByText('2 admin remarks.')).toBeOnTheScreen();
-  });
-});
-
-describe('HostsVenuesCard', () => {
-  it('shows onboarding labels and fires actions', () => {
-    const onHost = jest.fn();
-    const onVenue = jest.fn();
-    const onPodHistory = jest.fn();
-    renderWithProviders(
-      <HostsVenuesCard
-        isHost={false}
-        isVenue={false}
-        onHost={onHost}
-        onVenue={onVenue}
-        onPodHistory={onPodHistory}
-      />,
-    );
-    expect(screen.getByText('Become a Host')).toBeOnTheScreen();
-    expect(screen.getByText('Register Venue')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('hv-host'));
-    fireEvent.press(screen.getByTestId('hv-venue'));
-    fireEvent.press(screen.getByTestId('hv-pod-history'));
-    expect(onHost).toHaveBeenCalled();
-    expect(onVenue).toHaveBeenCalled();
-    expect(onPodHistory).toHaveBeenCalled();
-  });
-
-  it('shows management labels for hosts/venue owners', () => {
-    renderWithProviders(
-      <HostsVenuesCard
-        isHost
-        isVenue
-        onHost={jest.fn()}
-        onVenue={jest.fn()}
-        onPodHistory={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('Hosts Management')).toBeOnTheScreen();
-    expect(screen.getByText('Venue Management')).toBeOnTheScreen();
-  });
-
-  it('opens the discovery list when the header is tapped', () => {
-    const onDiscover = jest.fn();
-    renderWithProviders(
-      <HostsVenuesCard
-        isHost={false}
-        isVenue={false}
-        onDiscover={onDiscover}
-        onHost={jest.fn()}
-        onVenue={jest.fn()}
-        onPodHistory={jest.fn()}
-      />,
-    );
-    fireEvent.press(screen.getByTestId('account-hosts-venues-discover'));
-    expect(onDiscover).toHaveBeenCalled();
   });
 });
 

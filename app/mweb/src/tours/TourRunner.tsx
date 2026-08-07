@@ -13,6 +13,21 @@ const POLL_MS = 250;
 const POLL_LIMIT = 40; // 10s — long enough for a slow feed, short enough to give up
 
 /**
+ * How many quiet ticks mean "this is the whole screen".
+ *
+ * A page does not arrive at once: the header is up immediately, the feed lands
+ * when its query resolves, and a rail below it later still. Starting at the
+ * first anchor found meant starting with only the header — the Home tour has
+ * seven steps and ran two, beginning at "Notifications", which reads as the
+ * tour being broken rather than as five steps having been silently dropped.
+ *
+ * Three quiet ticks is under a second: long enough for the next section to
+ * arrive, short enough that a screen which genuinely has no clubs yet does not
+ * sit there waiting for one.
+ */
+const SETTLE_TICKS = 3;
+
+/**
  * Resolve a tour's steps against what is actually on screen.
  *
  * A step whose element is absent is dropped: Joyride cannot position a tooltip
@@ -47,20 +62,41 @@ export function TourRunner() {
       finishTour(activeTourId);
       return undefined;
     }
-    // Anchors appear when the destination route mounts AND its data lands, which
-    // is not one predictable moment — a fixed delay either fires before the feed
-    // renders or waits longer than it needs to. Poll until they show up, then
-    // stop. This is also what lets a tour armed on a list fire on the detail
-    // screen the user opens next.
+    /*
+      Anchors appear when the destination route mounts AND its data lands, which
+      is not one predictable moment — a fixed delay either fires before the feed
+      renders or waits longer than it needs to. So poll, and start when the
+      screen has stopped growing.
+
+      "Stopped growing", not "found something": the header is on screen before
+      the feed is, so the first non-empty answer is the header alone. Taking it
+      dropped every step below the fold and opened the Home tour on its
+      second-to-last step. This is also what lets a tour armed on a list fire on
+      the detail screen the user opens next.
+    */
     let tries = 0;
+    let best = 0;
+    let quiet = 0;
     const timer = globalThis.setInterval(() => {
       tries += 1;
       const resolved = resolveSteps(tour.steps);
-      if (resolved.length > 0) {
-        setSteps(resolved);
+
+      if (resolved.length > best) {
+        best = resolved.length;
+        quiet = 0;
+      } else if (best > 0) {
+        quiet += 1;
+      }
+
+      const everything = resolved.length === tour.steps.length;
+      const settled = best > 0 && quiet >= SETTLE_TICKS;
+      const outOfTime = tries >= POLL_LIMIT;
+
+      if (everything || settled || outOfTime) {
         globalThis.clearInterval(timer);
-      } else if (tries >= POLL_LIMIT) {
-        globalThis.clearInterval(timer);
+        // Out of time with nothing found is a screen that never rendered its
+        // anchors; there is no tour to show, so leave it closed.
+        if (resolved.length > 0) setSteps(resolved);
       }
     }, POLL_MS);
     return () => globalThis.clearInterval(timer);

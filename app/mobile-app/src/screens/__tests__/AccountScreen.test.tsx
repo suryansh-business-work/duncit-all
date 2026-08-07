@@ -85,7 +85,7 @@ describe('AccountScreen', () => {
     expect(screen.getByTestId('account-error')).toBeOnTheScreen();
   });
 
-  it('renders info rows, health and hosts/venues, and wires actions', () => {
+  it('renders info rows, health and wires actions', () => {
     renderWithProviders(<AccountScreen />);
     expect(screen.getByText('riya@duncit.com')).toBeOnTheScreen();
     expect(screen.getByText('Pune · Maharashtra · India')).toBeOnTheScreen();
@@ -99,14 +99,9 @@ describe('AccountScreen', () => {
     fireEvent.press(screen.getByTestId('account-logout'));
     expect(logout).toHaveBeenCalled();
 
-    fireEvent.press(screen.getByTestId('account-hosts-venues-discover'));
-    expect(mockNavigate).toHaveBeenCalledWith('HostsVenues');
-    fireEvent.press(screen.getByTestId('hv-host'));
-    expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
-    fireEvent.press(screen.getByTestId('hv-venue'));
-    expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
-    fireEvent.press(screen.getByTestId('hv-pod-history'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
+    // The Hosts & Venues card was removed from this screen; those journeys
+    // start from the sidebar now.
+    expect(screen.queryByTestId('account-hosts-venues-discover')).toBeNull();
   });
 
   it('opens and closes the edit dialog', async () => {
@@ -117,14 +112,10 @@ describe('AccountScreen', () => {
     await waitFor(() => expect(screen.queryByTestId('account-edit-submit')).toBeNull());
   });
 
-  it('routes hosts/venue owners to management and hides health when absent', () => {
+  it('hides the health card when there is no score', () => {
     setAccount({ me: { ...me, roles: ['HOST', 'VENUE_OWNER'] }, health: null });
     renderWithProviders(<AccountScreen />);
     expect(screen.queryByTestId('account-health')).toBeNull();
-    fireEvent.press(screen.getByTestId('hv-host'));
-    expect(mockNavigate).toHaveBeenCalledWith('HostManage');
-    fireEvent.press(screen.getByTestId('hv-venue'));
-    expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
   });
 
   it('renders the email/dob/phone fallbacks when fields are empty', () => {

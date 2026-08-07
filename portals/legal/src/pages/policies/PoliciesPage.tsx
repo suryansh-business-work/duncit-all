@@ -30,7 +30,16 @@ export default function PoliciesPage() {
 
   const openNew = () => {
     setIsNew(true);
-    setEditing({ id: '', slug: '', title: '', content: '', is_active: true, sort_order: 0, updated_at: '' });
+    setEditing({
+      id: '',
+      slug: '',
+      title: '',
+      policy_type: '',
+      content: '',
+      is_active: true,
+      sort_order: 0,
+      updated_at: '',
+    });
     setForm({ ...EMPTY_POLICY_FORM });
     setSlugTouched(false);
     setError(null);
@@ -38,7 +47,14 @@ export default function PoliciesPage() {
   const openEdit = (p: Policy) => {
     setIsNew(false);
     setEditing(p);
-    setForm({ slug: p.slug, title: p.title, content: p.content || '', is_active: p.is_active, sort_order: p.sort_order });
+    setForm({
+      slug: p.slug,
+      title: p.title,
+      policy_type: p.policy_type || '',
+      content: p.content || '',
+      is_active: p.is_active,
+      sort_order: p.sort_order,
+    });
     setSlugTouched(true);
     setError(null);
   };
@@ -60,6 +76,7 @@ export default function PoliciesPage() {
     const input = {
       slug,
       title: form.title.trim(),
+      policy_type: form.policy_type.trim(),
       content: form.content,
       is_active: form.is_active,
       sort_order: Number(form.sort_order) || 0,

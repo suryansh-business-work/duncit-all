@@ -83,6 +83,27 @@ async function bootstrap() {
       await migrateLegacyPodTypes();
     });
   }
+  /*
+    Give the Club Admins who predate the onboarding record one.
+
+    Gated like the pod-type migration above, and for the same reason: it is a
+    one-off for the release that ships it, not a rule. Ungated it would run on
+    every boot and quietly recreate a record an operator had deliberately hard-
+    deleted, because deleting the record does not revoke the role.
+
+    It exists at all because the backfill was a mutation somebody had to
+    remember to call — and nobody did, so the Onboarded Club Admins table sat
+    empty in production with three admins in the database.
+  */
+  if (process.env.RUN_CLUB_ADMIN_BACKFILL === '1') {
+    await safeSeed('clubAdminBackfill', async () => {
+      const { clubAdminProfileService } = await import(
+        '@modules/clubs/clubAdminProfile/clubAdminProfile.service'
+      );
+      const result = await clubAdminProfileService.backfill();
+      logs.server.info('bootstrap', 'clubAdminBackfill', result);
+    });
+  }
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

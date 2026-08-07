@@ -1,6 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { PolicyModel, type IPolicy } from './policy.model';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  applyTableQueryInMemory,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -8,6 +13,7 @@ const toPub = (p: IPolicy) => ({
   id: String(p._id),
   slug: p.slug,
   title: p.title,
+  policy_type: p.policy_type || '',
   content: p.content || '',
   is_active: p.is_active,
   sort_order: p.sort_order,
@@ -34,10 +40,11 @@ function assertSlug(slug: string) {
 
 /** Allowlists for the shared table engine (policiesTable — DUNCIT TABLE CONTRACT v1). */
 const POLICY_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['title', 'slug'],
+  searchFields: ['title', 'slug', 'policy_type'],
   sortFields: {
     title: 'title',
     slug: 'slug',
+    policy_type: 'policy_type',
     sort_order: 'sort_order',
     is_active: 'is_active',
     created_at: 'created_at',
@@ -46,11 +53,26 @@ const POLICY_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     is_active: { type: 'boolean' },
     slug: { type: 'string' },
+    policy_type: { type: 'string' },
     sort_order: { type: 'number' },
     created_at: { type: 'date' },
     updated_at: { type: 'date' },
   },
   defaultSort: { sort_order: 1, title: 1 },
+};
+
+/**
+ * Allowlists for the by-type aggregate, mirroring the legal-document one so the
+ * two dashboard sections sort, search and filter identically.
+ */
+const POLICY_STATS_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['policy_type'],
+  sortFields: { policy_type: 'policy_type', count: 'count' },
+  filterFields: {
+    policy_type: { type: 'string' },
+    count: { type: 'number' },
+  },
+  defaultSort: { count: -1 },
 };
 
 export const policyService = {
@@ -74,6 +96,32 @@ export const policyService = {
       POLICY_TABLE_CONFIG
     );
     return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /**
+   * How many policies there are, and how they split by type.
+   *
+   * Counted from the policies themselves rather than from a list of types, so
+   * it cannot drift: a policy created, retyped or deleted changes this answer
+   * on the next read, and a type nobody uses simply does not appear — the same
+   * behaviour the Documents by Type section has always had.
+   */
+  async stats() {
+    const total = await PolicyModel.estimatedDocumentCount();
+    const grouped = await PolicyModel.aggregate<{ _id: string; count: number }>([
+      { $group: { _id: '$policy_type', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+    return {
+      total,
+      by_type: grouped.map((g) => ({ policy_type: g._id || 'Other', count: g.count })),
+    };
+  },
+
+  /** In-memory table page over the computed by-type aggregate (policyStatsTable). */
+  async statsTable(input?: TableQueryInput | null) {
+    const { by_type } = await this.stats();
+    return applyTableQueryInMemory(by_type, input, POLICY_STATS_TABLE_CONFIG);
   },
 
   async publicList() {
@@ -106,6 +154,7 @@ export const policyService = {
     const doc = await PolicyModel.create({
       slug,
       title: input.title.trim(),
+      policy_type: (input.policy_type ?? '').trim(),
       content: input.content ?? '',
       is_active: input.is_active ?? true,
       sort_order: input.sort_order ?? 0,
@@ -133,6 +182,7 @@ export const policyService = {
         throw new GraphQLError('Title is required', { extensions: { code: 'BAD_USER_INPUT' } });
       doc.title = input.title.trim();
     }
+    if (input.policy_type !== undefined) doc.policy_type = String(input.policy_type ?? '').trim();
     if (input.content !== undefined) doc.content = input.content;
     if (input.is_active !== undefined) doc.is_active = !!input.is_active;
     if (input.sort_order !== undefined) doc.sort_order = Number(input.sort_order) || 0;

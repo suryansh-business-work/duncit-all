@@ -8,6 +8,7 @@ export const POLICIES = gql`
       id
       slug
       title
+      policy_type
       content
       is_active
       sort_order
@@ -25,6 +26,7 @@ export const POLICIES_TABLE = gql`
         id
         slug
         title
+        policy_type
         content
         is_active
         sort_order
@@ -60,8 +62,28 @@ export interface Policy {
   id: string;
   slug: string;
   title: string;
+  /** Groups this policy on the dashboard. Blank counts as "Other". */
+  policy_type: string;
   content: string;
   is_active: boolean;
   sort_order: number;
   updated_at: string;
 }
+
+/** The by-type aggregate behind the dashboard's "Policies by Type" section. */
+export interface PolicyTypeCount {
+  policy_type: string;
+  count: number;
+}
+
+export const POLICY_STATS_TABLE = gql`
+  query LegalPolicyStatsTable($query: TableQueryInput) {
+    policyStatsTable(query: $query) {
+      total
+      rows {
+        policy_type
+        count
+      }
+    }
+  }
+`;

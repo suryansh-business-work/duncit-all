@@ -63,13 +63,31 @@ export function NativeTourProvider({ children }: Readonly<{ children: ReactNode 
     [activeTourId, mountedAnchors],
   );
 
+  /**
+   * Which tour has already been started, so a late anchor cannot restart it.
+   *
+   * `steps` changes every time another anchor mounts, and the screen fills in
+   * as its data lands — so a section arriving after the walkthrough began sent
+   * it back to step one. The delay below still debounces the arrivals BEFORE
+   * the start, which is what makes the tour open on its first step rather than
+   * on whichever part of the screen rendered first.
+   */
+  const startedFor = useRef<string | null>(null);
+
   useEffect(() => {
+    if (!activeTourId) {
+      startedFor.current = null;
+      return undefined;
+    }
     // The anchors mount with the destination screen, so give that a beat before
     // starting — otherwise the first step has nothing to spotlight.
-    if (steps.length === 0) return undefined;
-    const timer = setTimeout(() => tourRef.current?.start(), 400);
+    if (steps.length === 0 || startedFor.current === activeTourId) return undefined;
+    const timer = setTimeout(() => {
+      startedFor.current = activeTourId;
+      tourRef.current?.start();
+    }, 400);
     return () => clearTimeout(timer);
-  }, [steps]);
+  }, [steps, activeTourId]);
 
   return (
     <SpotlightTourProvider

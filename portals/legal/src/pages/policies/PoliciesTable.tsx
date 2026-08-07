@@ -36,8 +36,8 @@ export default function PoliciesTable({
   onRemove,
 }: Readonly<Props>) {
   // Only server-allowlisted fields are sortable/filterable (POLICY_TABLE_CONFIG):
-  // sort title/slug/sort_order/is_active/created_at/updated_at; filter is_active
-  // (boolean), slug (text), sort_order (number), created_at/updated_at (date).
+  // sort title/slug/policy_type/sort_order/is_active/created_at/updated_at; filter is_active
+  // (boolean), slug + policy_type (text), sort_order (number), created_at/updated_at (date).
   const columns = useMemo<DuncitColumn<Policy>[]>(() => {
     const renderActions = (p: Policy) => (
       <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
@@ -52,6 +52,13 @@ export default function PoliciesTable({
     return [
       { field: 'title', headerName: 'Title', flex: 1, minWidth: 200, cellRenderer: renderTitle },
       { field: 'slug', headerName: 'Slug', minWidth: 180, filter: { type: 'text' } },
+      {
+        field: 'policy_type',
+        headerName: 'Policy type',
+        minWidth: 180,
+        filter: { type: 'text' },
+        valueGetter: (p) => p.policy_type || '—',
+      },
       {
         field: 'is_active',
         headerName: 'Status',

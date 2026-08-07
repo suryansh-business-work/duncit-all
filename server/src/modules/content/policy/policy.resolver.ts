@@ -13,6 +13,16 @@ export const policyResolvers = {
   Query: {
     policies: (_p: unknown, args: { filter?: any }) => policyService.list(args.filter),
     policiesTable: (_p: unknown, args: { query?: any }) => policyService.table(args.query),
+    // Counts of who wrote what are staff data, so both stats reads are gated —
+    // the same roles the Legal portal's document stats require.
+    policyStats: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return policyService.stats();
+    },
+    policyStatsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return policyService.statsTable(args.query);
+    },
     policy: (_p: unknown, args: { policy_doc_id: string }) =>
       policyService.getById(args.policy_doc_id),
     policyBySlug: (_p: unknown, args: { slug: string }) => policyService.getBySlug(args.slug),

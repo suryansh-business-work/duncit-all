@@ -9,9 +9,18 @@ export interface PanelState {
   panelOpen: boolean;
   role: string;
   openPeerId: string | null;
+  /** The microphone and camera picked in Audio & video settings. */
+  micId: string;
+  camId: string;
 }
 
-const DEFAULT_PANEL: PanelState = { panelOpen: false, role: '', openPeerId: null };
+const DEFAULT_PANEL: PanelState = {
+  panelOpen: false,
+  role: '',
+  openPeerId: null,
+  micId: '',
+  camId: '',
+};
 
 const toSettings = (state?: StaffChatState | null): ChatSettings =>
   state
@@ -26,7 +35,13 @@ const toSettings = (state?: StaffChatState | null): ChatSettings =>
 
 const toPanel = (state?: StaffChatState | null): PanelState =>
   state
-    ? { panelOpen: state.panel_open, role: state.role_filter, openPeerId: state.open_peer_id }
+    ? {
+        panelOpen: state.panel_open,
+        role: state.role_filter,
+        openPeerId: state.open_peer_id,
+        micId: state.mic_id,
+        camId: state.cam_id,
+      }
     : DEFAULT_PANEL;
 
 /** Client key to the server's field name — one place, so they cannot drift. */
@@ -106,6 +121,21 @@ export function useChatState() {
     [push]
   );
 
+  /**
+   * The chosen microphone and camera.
+   *
+   * These were only ever in useCall state, so the dialog appeared to save and
+   * forgot on the next refresh — the one setting somebody changes precisely
+   * because the default was wrong for them.
+   */
+  const setDevice = useCallback(
+    (kind: 'mic' | 'cam', id: string) => {
+      setPanel((current) => ({ ...current, [kind === 'mic' ? 'micId' : 'camId']: id }));
+      push({ [kind === 'mic' ? 'mic_id' : 'cam_id']: id });
+    },
+    [push]
+  );
+
   const setOpenPeerId = useCallback(
     (openPeerId: string | null) => {
       setPanel((current) => ({ ...current, openPeerId }));
@@ -149,5 +179,6 @@ export function useChatState() {
     setPanelOpen,
     setRole,
     setOpenPeerId,
+    setDevice,
   };
 }

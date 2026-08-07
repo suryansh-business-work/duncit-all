@@ -51,9 +51,8 @@ interface Props {
 /**
  * The call, above the conversation it belongs to.
  *
- * In the same panel rather than a dialog: hanging up should not cost you the
- * thread you were talking about, and a call window that covers the chat is a
- * call you cannot take notes during.
+ * In its own window rather than a dialog: hanging up should not cost you the
+ * thread you were talking about.
  */
 export default function CallPanel({
   phase,
@@ -90,9 +89,8 @@ export default function CallPanel({
   const { t } = useTranslation();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const connected = phase === 'connected';
-  // Uploading and converting outlive the call — hanging up is the normal way to
-  // finish a recording, and taking the progress and the download away at that
-  // moment loses the thing the person was recording FOR.
+  // Uploading and converting outlive the call: hanging up is the normal way to
+  // finish a recording, and taking the progress away then loses it.
   const savingRecording = recordStage !== 'IDLE' && recordStage !== 'RECORDING';
   if (phase === 'idle' && !error && !savingRecording) return null;
 

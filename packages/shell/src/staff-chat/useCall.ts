@@ -48,7 +48,14 @@ async function openTrack(
  * audio and video go peer to peer. That is why there is no bandwidth cost here
  * and why the call RECORD, written when it ends, is the only trace.
  */
-export function useCall(socket: Socket | null, meId: string) {
+/** Where the chosen devices are KEPT. useCall applies them; it does not own them. */
+export interface DevicePrefs {
+  micId: string;
+  camId: string;
+  onChoose: (kind: 'mic' | 'cam', deviceId: string) => void;
+}
+
+export function useCall(socket: Socket | null, meId: string, devices: Readonly<DevicePrefs>) {
   const [phase, setPhase] = useState<CallPhase>('idle');
   const [kind, setKind] = useState<CallKind>('AUDIO');
   const [peerId, setPeerId] = useState<string | null>(null);
@@ -57,9 +64,14 @@ export function useCall(socket: Socket | null, meId: string) {
   /** Who is on the other end, by name — set from the offer or by the caller. */
   const [peerName, setPeerName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  /** Which microphone and camera to open. '' means whatever the OS defaults to. */
-  const [micId, setMicId] = useState('');
-  const [camId, setCamId] = useState('');
+  /**
+   * Which microphone and camera to open. '' means whatever the OS prefers.
+   *
+   * Read from the caller, not held here: this hook is remade on every mount and
+   * would forget the choice each time, which is exactly how the settings dialog
+   * came to look like it saved and did not.
+   */
+  const { micId, camId } = devices;
   const [sharing, setSharing] = useState(false);
   /** Local mute / camera state — the tracks are the truth, this mirrors them. */
   const [muted, setMuted] = useState(false);
@@ -226,18 +238,18 @@ export function useCall(socket: Socket | null, meId: string) {
   /** Remember the choice AND apply it to a call already running. */
   const chooseMic = useCallback(
     (deviceId: string) => {
-      setMicId(deviceId);
+      devices.onChoose('mic', deviceId);
       useDevice('audio', deviceId).catch(() => undefined);
     },
-    [useDevice]
+    [useDevice, devices]
   );
 
   const chooseCam = useCallback(
     (deviceId: string) => {
-      setCamId(deviceId);
+      devices.onChoose('cam', deviceId);
       useDevice('video', deviceId).catch(() => undefined);
     },
-    [useDevice]
+    [useDevice, devices]
   );
 
   /**

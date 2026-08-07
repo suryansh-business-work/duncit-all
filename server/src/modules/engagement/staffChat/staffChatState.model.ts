@@ -30,6 +30,15 @@ export interface IStaffChatState extends Document {
   time_zone: string;
   /** False puts Enter on a new line and Ctrl/Cmd+Enter on send. */
   enter_to_send: boolean;
+  /**
+   * The microphone and camera chosen in Audio & video settings.
+   *
+   * A deviceId is stable per browser profile, so this is remembered per person
+   * and simply does not match on a different machine — where the empty string
+   * means "whatever the OS prefers", which is the right answer there anyway.
+   */
+  mic_id: string;
+  cam_id: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -48,6 +57,8 @@ const staffChatStateSchema = new Schema<IStaffChatState>(
     font_size: { type: Number, default: 14, min: 11, max: 22 },
     time_zone: { type: String, default: '' },
     enter_to_send: { type: Boolean, default: true },
+    mic_id: { type: String, default: '' },
+    cam_id: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

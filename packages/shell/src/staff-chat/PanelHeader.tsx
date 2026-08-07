@@ -14,6 +14,10 @@ interface Props {
   /** True while a recording is still uploading or converting. */
   busy: boolean;
   onClose: () => void;
+  /** The settings popover is opened from here AND from a conversation. */
+  settingsOpen: boolean;
+  onOpenSettings: () => void;
+  onCloseSettings: () => void;
 }
 
 /** The panel's own top bar — settings, your status, and the way out. */
@@ -24,6 +28,9 @@ export default function PanelHeader({
   onStatus,
   busy,
   onClose,
+  settingsOpen,
+  onOpenSettings,
+  onCloseSettings,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -32,7 +39,13 @@ export default function PanelHeader({
       <Typography variant="subtitle1" sx={{ flex: 1 }}>
         {t('shell.chat.panel.title')}
       </Typography>
-      <ChatSettingsMenu settings={settings} onChange={onSettings} />
+      <ChatSettingsMenu
+        settings={settings}
+        onChange={onSettings}
+        open={settingsOpen}
+        onOpen={onOpenSettings}
+        onClose={onCloseSettings}
+      />
       <StatusMenu status={status} onChange={onStatus} />
       <Tooltip title={busy ? t('shell.chat.panel.closeBusy') : t('shell.chat.panel.close')}>
         {/* A disabled button fires no events, so the tooltip needs a live

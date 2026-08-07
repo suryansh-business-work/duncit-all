@@ -1,11 +1,11 @@
 import { Avatar, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CallIcon from '@mui/icons-material/Call';
-import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from '../i18n/useTranslation';
+import ConversationMenu from './ConversationMenu';
 import PresenceDot from './PresenceDot';
 import type { Coworker } from './queries';
 import type { PresenceStatus } from './usePresence';
@@ -20,6 +20,8 @@ interface Props {
   onToggleSearch: () => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
+  onClear: () => void;
+  onSettings: () => void;
 }
 
 /**
@@ -52,6 +54,8 @@ export default function ConversationHeader({
   onToggleSearch,
   onCall,
   onExport,
+  onClear,
+  onSettings,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -97,11 +101,7 @@ export default function ConversationHeader({
           <SearchIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title={t('shell.chat.header.export')}>
-        <IconButton size="small" onClick={onExport} aria-label={t('shell.chat.header.exportShort')}>
-          <DownloadIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      <ConversationMenu onExport={onExport} onClear={onClear} onSettings={onSettings} />
     </Stack>
   );
 }

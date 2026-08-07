@@ -121,6 +121,9 @@ export const staffChatTypeDefs = /* GraphQL */ `
     "IANA zone for every timestamp, or '' to follow the machine."
     time_zone: String!
     enter_to_send: Boolean!
+    "The microphone and camera chosen in Audio & video settings."
+    mic_id: String!
+    cam_id: String!
   }
 
   "Every field optional: the panel saves the one thing that changed."
@@ -133,6 +136,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     font_size: Int
     time_zone: String
     enter_to_send: Boolean
+    mic_id: String
+    cam_id: String
   }
 
   "One earlier wording of a message, kept when its author changed it."
@@ -248,6 +253,12 @@ export const staffChatTypeDefs = /* GraphQL */ `
     pinStaffMessage(id: ID!): StaffMessage!
     "Mark what they sent you as read. Returns how many that was."
     markStaffThreadRead(peer_id: ID!): Int!
+    """
+    Empty this conversation for BOTH people and return how many messages went.
+    Deleted, not blanked: a thread of tombstones is not a cleared thread. The
+    call history stays — that two people spoke is still true.
+    """
+    clearStaffThread(peer_id: ID!): Int!
     "Save part of your chat setup. Anything omitted is left as it was."
     saveStaffChatState(input: StaffChatStateInput!): StaffChatState!
   }

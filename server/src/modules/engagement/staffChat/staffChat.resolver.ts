@@ -106,6 +106,10 @@ export const staffChatResolvers = {
       const me = requireRole(ctx, ROLES);
       return staffChatService.saveChatState(me.id, args.input ?? {});
     },
+    clearStaffThread: (_p: unknown, args: { peer_id: string }, ctx: GraphQLContext) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.clearThread(me.id, args.peer_id);
+    },
     attachStaffCallRecording: (
       _p: unknown,
       args: { call_id: string; url: string },

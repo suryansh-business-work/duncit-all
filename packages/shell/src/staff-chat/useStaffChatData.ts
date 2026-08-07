@@ -5,6 +5,7 @@ import { readToken, useShellRuntime } from '../lib/runtime';
 import { buildChatExport, downloadChatExport } from './export-chat';
 import {
   ATTACH_CALL_RECORDING,
+  CLEAR_STAFF_THREAD,
   COWORKERS,
   DELETE_STAFF_MESSAGE,
   EDIT_STAFF_MESSAGE,
@@ -100,6 +101,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
   const [pinMessage] = useMutation(PIN_STAFF_MESSAGE);
   const [markRead] = useMutation(MARK_THREAD_READ);
   const [attachRecording] = useMutation(ATTACH_CALL_RECORDING);
+  const [clearThread] = useMutation(CLEAR_STAFF_THREAD);
 
   /**
    * Messages hidden on THIS device only.
@@ -377,6 +379,21 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     [messagesQuery, refreshAll]
   );
 
+  /** Empty this conversation for both people, then re-read what is left. */
+  const clearConversation = useCallback(() => {
+    if (!peer) return;
+    clearThread({ variables: { peerId: peer.id } })
+      .then(() => {
+        // The local history and the outbox are copies of what just went.
+        setOlder([]);
+        setOutbox([]);
+        setReachedStart(true);
+        messagesQuery.refetch().catch(() => undefined);
+        refreshAll();
+      })
+      .catch((err: Error) => setError(err.message));
+  }, [peer, clearThread, messagesQuery, refreshAll]);
+
   const hideForMe = useCallback(
     (id: string) => setHiddenIds((current) => new Set(current).add(id)),
     []
@@ -408,6 +425,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     retry,
     attachFile,
     exportChat,
+    clearConversation,
     change,
     hideForMe,
     attachRecording,

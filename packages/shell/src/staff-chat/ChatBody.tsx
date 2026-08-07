@@ -22,6 +22,8 @@ interface Props {
   onReplyTo: (message: StaffMessage | null) => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onPlayRecording: (url: string) => void;
+  /** Opens the panel-level chat settings from the conversation menu. */
+  onSettings: () => void;
   /** SUPER_ADMIN may read earlier wordings of an edited message. */
   canSeeEditHistory: boolean;
 }
@@ -49,6 +51,7 @@ export default function ChatBody({
   onReplyTo,
   onCall,
   onPlayRecording,
+  onSettings,
   canSeeEditHistory,
 }: Readonly<Props>) {
   const { change, mutations } = data;
@@ -65,8 +68,7 @@ export default function ChatBody({
           calls={data.calls}
           onPlayRecording={onPlayRecording}
           sending={data.sending}
-          uploading={data.uploading}
-          uploadPct={data.uploadPct}
+          upload={{ active: data.uploading, pct: data.uploadPct }}
           onBack={() => onOpenPeer(null)}
           onSend={data.send}
           onAttach={(file) => data.attachFile(file)}
@@ -92,18 +94,24 @@ export default function ChatBody({
           onCancelReply={() => onReplyTo(null)}
           replyTo={replyTo}
           canSeeEditHistory={canSeeEditHistory}
-          loading={data.messagesLoading}
-          hasMore={data.hasMore}
-          loadingMore={data.loadingMore}
-          onLoadMore={data.loadOlder}
+          paging={{
+            loading: data.messagesLoading,
+            hasMore: data.hasMore,
+            loadingMore: data.loadingMore,
+            onLoadMore: data.loadOlder,
+          }}
           settings={settings}
           formats={formats}
           spacing={spacing}
           nameOf={data.nameOf}
           onTyping={() => data.typing(peer.id)}
           typingAt={data.typingAt[peer.id] ?? 0}
-          onCall={onCall}
-          onExport={() => data.exportChat().catch(() => undefined)}
+          actions={{
+            onCall,
+            onExport: () => data.exportChat().catch(() => undefined),
+            onClear: data.clearConversation,
+            onSettings,
+          }}
         />
       ) : (
         <CoworkerList

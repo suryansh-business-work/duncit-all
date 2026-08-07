@@ -289,6 +289,8 @@ export interface StaffChatState {
   font_size: number;
   time_zone: string;
   enter_to_send: boolean;
+  mic_id: string;
+  cam_id: string;
 }
 
 const CHAT_STATE = `
@@ -300,6 +302,8 @@ const CHAT_STATE = `
   font_size
   time_zone
   enter_to_send
+  mic_id
+  cam_id
 `;
 
 export const STAFF_CHAT_STATE = gql`
@@ -340,6 +344,21 @@ export const STAFF_PRESENCE = gql`
       since
       last_seen
     }
+  }
+`;
+
+/** The Maps key for the location preview. Already public — see the server. */
+export const PUBLIC_CLIENT_CONFIG = gql`
+  query StaffChatPublicClientConfig {
+    publicClientConfig {
+      google_maps_api_key
+    }
+  }
+`;
+
+export const CLEAR_STAFF_THREAD = gql`
+  mutation ClearStaffThread($peerId: ID!) {
+    clearStaffThread(peer_id: $peerId)
   }
 `;
 

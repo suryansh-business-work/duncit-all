@@ -1,19 +1,22 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Box, LinearProgress } from '@mui/material';
-import ChatComposer from './ChatComposer';
 import ChatSearchPanel from './ChatSearchPanel';
 import ConversationHeader from './ConversationHeader';
 import ConversationDialogs from './ConversationDialogs';
+import ConversationFooter from './ConversationFooter';
 import MessageThread from './MessageThread';
-import ReplyStrip from './ReplyStrip';
 import SelectionBar from './SelectionBar';
 import { useMessageSelection } from './useMessageSelection';
 import { useSearchShortcut } from './useSearchShortcut';
-import TypingIndicator from './TypingIndicator';
 import type { Coworker, StaffCall, StaffMessage } from './queries';
 import type { ThreadEntryHandlers } from './ThreadEntry';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
+
+/** What the header bar can start. Conversation only forwards these. */
+export type ConversationActions = Record<'onExport' | 'onClear' | 'onSettings', () => void> & {
+  onCall: (kind: 'AUDIO' | 'VIDEO') => void;
+};
 
 /** What the thread does to one message. Conversation only forwards these. */
 export type ConversationHandlers = Pick<
@@ -35,16 +38,14 @@ interface Props {
   calls: StaffCall[];
   onPlayRecording: (url: string) => void;
   sending: boolean;
-  uploading: boolean;
-  /** 0-100 while a file is going up, null when nothing is. */
-  uploadPct: number | null;
+  /** Whether a file is going up, and how far. null pct means unknown. */
+  upload: { active: boolean; pct: number | null };
   onBack: () => void;
   onSend: (text: string) => void;
   onAttach: (file: File) => void;
   onVoiceNote: (file: File, peaks: number[], seconds: number) => void;
-  loading: boolean;
-  hasMore: boolean;
-  loadingMore: boolean;
+  /** Paging state, forwarded to the thread untouched. */
+  paging: { loading: boolean; hasMore: boolean; loadingMore: boolean; onLoadMore: () => void };
   settings: ChatSettings;
   formats: ChatFormats;
   spacing: number;
@@ -52,7 +53,6 @@ interface Props {
   /** The message being answered, shown above the composer until it is sent. */
   replyTo: StaffMessage | null;
   onCancelReply: () => void;
-  onLoadMore: () => void;
   /** Everything the thread does to one message — forwarded straight through. */
   handlers: ConversationHandlers;
   /** True when this reader may see earlier wordings — SUPER_ADMIN only. */
@@ -60,8 +60,8 @@ interface Props {
   onTyping: () => void;
   /** When this peer last reported typing, or 0. */
   typingAt: number;
-  onCall: (kind: 'AUDIO' | 'VIDEO') => void;
-  onExport: () => void;
+  /** What the header bar can start. Forwarded as a group. */
+  actions: ConversationActions;
 }
 
 export default function Conversation({
@@ -73,34 +73,31 @@ export default function Conversation({
   calls,
   onPlayRecording,
   sending,
-  uploading,
-  uploadPct,
+  upload,
   onBack,
   onSend,
   onAttach,
   onVoiceNote,
-  loading,
-  hasMore,
-  loadingMore,
+  paging,
   settings,
   formats,
   spacing,
   nameOf,
   replyTo,
   onCancelReply,
-  onLoadMore,
   handlers,
   canSeeEditHistory,
   onTyping,
   typingAt,
-  onCall,
-  onExport,
+  actions,
 }: Readonly<Props>) {
   const [locationOpen, setLocationOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [jumpToId, setJumpToId] = useState<string | null>(null);
   /** The message whose earlier wordings are being read, if any. */
   const [historyFor, setHistoryFor] = useState<StaffMessage | null>(null);
+  /** Emptying the thread reaches the other person, so it asks first. */
+  const [confirmClear, setConfirmClear] = useState(false);
   const selection = useMessageSelection({ messages, meId, nameOf, onDelete: handlers.onDelete });
 
   // What the thread can actually scroll to, so a hit outside it can say so.
@@ -108,7 +105,7 @@ export default function Conversation({
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
-  const progressVariant = uploadPct === null ? 'indeterminate' : 'determinate';
+  const progressVariant = upload.pct === null ? 'indeterminate' : 'determinate';
 
   useSearchShortcut(openSearch, closeSearch);
 
@@ -124,8 +121,10 @@ export default function Conversation({
           searchOpen={searchOpen}
           onBack={onBack}
           onToggleSearch={() => setSearchOpen((open) => !open)}
-          onCall={onCall}
-          onExport={onExport}
+          onCall={actions.onCall}
+          onExport={actions.onExport}
+          onClear={() => setConfirmClear(true)}
+          onSettings={actions.onSettings}
         />
       )}
 
@@ -143,7 +142,7 @@ export default function Conversation({
 
       {/* A real percentage where there is one: "is this moving or stuck" is
           the question an indeterminate bar cannot answer. */}
-      {uploading && <LinearProgress variant={progressVariant} value={uploadPct ?? 0} />}
+      {upload.active && <LinearProgress variant={progressVariant} value={upload.pct ?? 0} />}
 
       <MessageThread
         jumpToId={jumpToId}
@@ -155,29 +154,24 @@ export default function Conversation({
         onSelect={selection.active ? selection.toggle : undefined}
         onStartSelect={selection.start}
         meId={meId}
-        loading={loading}
-        hasMore={hasMore}
-        loadingMore={loadingMore}
+        {...paging}
         settings={settings}
         formats={formats}
         spacing={spacing}
         nameOf={nameOf}
-        onLoadMore={onLoadMore}
         onEditHistory={canSeeEditHistory ? setHistoryFor : undefined}
         {...handlers}
       />
 
-      <TypingIndicator at={typingAt} name={peer.name} />
-
-      {replyTo && <ReplyStrip replyTo={replyTo} nameOf={nameOf} onCancel={onCancelReply} />}
-
-      <ChatComposer
+      <ConversationFooter
+        peer={peer}
         sending={sending}
-        uploading={uploading}
-        // One name, because a one-to-one thread has one other person in it.
-        // The server agrees: any @ in the body mentions them.
-        mentionNames={[peer.name]}
-        enterToSend={settings.enterToSend}
+        uploading={upload.active}
+        settings={settings}
+        nameOf={nameOf}
+        replyTo={replyTo}
+        onCancelReply={onCancelReply}
+        typingAt={typingAt}
         onSend={onSend}
         onAttach={onAttach}
         onVoiceNote={onVoiceNote}
@@ -192,6 +186,13 @@ export default function Conversation({
         onCloseLocation={() => setLocationOpen(false)}
         formats={formats}
         onSend={onSend}
+        confirmClear={confirmClear}
+        peerName={peer.name}
+        onCancelClear={() => setConfirmClear(false)}
+        onConfirmClear={() => {
+          setConfirmClear(false);
+          actions.onClear();
+        }}
       />
     </Box>
   );

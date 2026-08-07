@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Box } from '@mui/material';
-import ChatBody from './ChatBody';
+import ChatSidebar from './ChatSidebar';
 import ChatWindows from './ChatWindows';
-import PanelHeader from './PanelHeader';
 import { useCall } from './useCall';
 import { useCallRecorder } from './useCallRecorder';
 import { useChatState } from './useChatState';
@@ -28,13 +26,12 @@ interface Props {
  * Chat with a coworker.
  *
  * A docked panel, not a drawer: no backdrop, and the page beside it is pushed
- * rather than covered. The reason to message someone is almost always something
- * on the screen you are already looking at, so a chat that greys that screen
- * out is a chat you close before you can quote it.
+ * rather than covered — a chat that greys out the screen you wanted to quote
+ * is a chat you close first.
  *
  * It stays MOUNTED whether or not it is showing, because the socket that
- * carries an incoming call lives inside it — a chat that only listens while its
- * sidebar is open is a phone that only rings while you are holding it.
+ * carries an incoming call lives inside it: a chat that only listens while its
+ * sidebar is open is a phone that only rings while you hold it.
  *
  * Reading and writing live in useStaffChatData; what is on screen lives here.
  */
@@ -51,6 +48,8 @@ export function StaffChatPanel({
   const [peer, setPeer] = useState<Coworker | null>(null);
   const [replyTo, setReplyTo] = useState<StaffMessage | null>(null);
   const [playingRecording, setPlayingRecording] = useState<string | null>(null);
+  /** Owned here because two places open it — the header and a conversation. */
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(search), 300);
@@ -88,7 +87,11 @@ export function StaffChatPanel({
     chat.setOpenPeerId(next?.id ?? null);
   };
 
-  const call = useCall(data.socket, meId);
+  const call = useCall(data.socket, meId, {
+    micId: panel.micId,
+    camId: panel.camId,
+    onChoose: chat.setDevice,
+  });
   const recorder = useCallRecorder({
     connected: call.phase === 'connected',
     localStream: call.localStream,
@@ -138,61 +141,35 @@ export function StaffChatPanel({
       />
 
       {open && (
-        <Box
-          sx={{
-            width: { xs: '100%', sm: 380 },
-            flexShrink: 0,
-            borderLeft: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            flexDirection: 'column',
-            // The shell pins itself to the viewport, so 100% here is the space
-            // under the header and nothing more — which is what gives the
-            // thread inside a scrollbar of its own.
-            height: '100%',
-            minHeight: 0,
-            bgcolor: 'background.paper',
+        <ChatSidebar
+          data={data}
+          meId={meId}
+          peer={peer}
+          onOpenPeer={openPeer}
+          search={search}
+          onSearch={setSearch}
+          role={panel.role}
+          onRole={chat.setRole}
+          settings={settings}
+          onSettingChange={updateSettings}
+          formats={formats}
+          spacing={spacing}
+          replyTo={replyTo}
+          onReplyTo={setReplyTo}
+          onCall={(kind) => {
+            if (!peer) return;
+            // The window reads this while it rings, before any answer.
+            call.setPeerName(peer.name);
+            call.call(peer.id, kind).catch(() => undefined);
           }}
-        >
-          <PanelHeader
-            settings={settings}
-            onSettings={updateSettings}
-            status={data.presence.mine}
-            onStatus={data.presence.choose}
-            busy={busyStage}
-            onClose={onClose}
-          />
-
-          {data.error && (
-            <Alert severity="error" onClose={() => data.setError(null)} sx={{ m: 1 }}>
-              {data.error}
-            </Alert>
-          )}
-
-          <ChatBody
-            data={data}
-            meId={meId}
-            peer={peer}
-            onOpenPeer={openPeer}
-            search={search}
-            onSearch={setSearch}
-            role={panel.role}
-            onRole={chat.setRole}
-            settings={settings}
-            formats={formats}
-            spacing={spacing}
-            replyTo={replyTo}
-            onReplyTo={setReplyTo}
-            onCall={(kind) => {
-              if (!peer) return;
-              // The window reads this while it rings, before any answer.
-              call.setPeerName(peer.name);
-              call.call(peer.id, kind).catch(() => undefined);
-            }}
-            onPlayRecording={setPlayingRecording}
-            canSeeEditHistory={meRoles.includes('SUPER_ADMIN')}
-          />
-        </Box>
+          onPlayRecording={setPlayingRecording}
+          busy={busyStage}
+          onClose={onClose}
+          settingsOpen={settingsOpen}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onCloseSettings={() => setSettingsOpen(false)}
+          canSeeEditHistory={meRoles.includes('SUPER_ADMIN')}
+        />
       )}
     </>
   );

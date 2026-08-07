@@ -101,6 +101,8 @@ const toChatState = (doc: any) => ({
   font_size: doc?.font_size ?? 14,
   time_zone: doc?.time_zone ?? '',
   enter_to_send: doc?.enter_to_send ?? true,
+  mic_id: doc?.mic_id ?? '',
+  cam_id: doc?.cam_id ?? '',
 });
 
 const SELECT =
@@ -158,6 +160,21 @@ export const staffChatService = {
     }));
   },
 
+  /**
+   * Empty a conversation, for both people.
+   *
+   * The rows are DELETED, not tombstoned like a single "delete for everyone":
+   * a thread of a hundred blanks is not a cleared thread, it is a thread of a
+   * hundred blanks. Both sides lose it, which is why the button asks first.
+   *
+   * The calls stay. They are a record that two people spoke, and the messages
+   * being gone does not make that untrue.
+   */
+  async clearThread(meId: string, peerId: string): Promise<number> {
+    const res = await StaffMessageModel.deleteMany({ thread_key: threadKey(meId, peerId) });
+    return res.deletedCount ?? 0;
+  },
+
   /** How this person has staff chat set up. Defaults when they have never changed it. */
   async chatState(meId: string) {
     const doc = await StaffChatStateModel.findOne({ user_id: meId }).lean();
@@ -185,6 +202,8 @@ export const staffChatService = {
     }
     if (typeof input.time_zone === 'string') set.time_zone = input.time_zone;
     if (typeof input.enter_to_send === 'boolean') set.enter_to_send = input.enter_to_send;
+    if (typeof input.mic_id === 'string') set.mic_id = input.mic_id;
+    if (typeof input.cam_id === 'string') set.cam_id = input.cam_id;
 
     const doc = await StaffChatStateModel.findOneAndUpdate(
       { user_id: meId },

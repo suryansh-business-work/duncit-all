@@ -1,4 +1,4 @@
-import { flattenCatalogue, MWEB_BUNDLE, type NestedCatalogue } from '@duncit/i18n';
+import { flattenCatalogue, GRIEVANCE_BUNDLE, MWEB_BUNDLE, type NestedCatalogue } from '@duncit/i18n';
 
 /**
  * The native app's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -11,7 +11,8 @@ import { flattenCatalogue, MWEB_BUNDLE, type NestedCatalogue } from '@duncit/i18
  * Add a key to the shared bundle AND to Admin > Localization > Translations
  * BEFORE using it.
  */
-export const NATIVE_FALLBACK: NestedCatalogue = MWEB_BUNDLE;
+// Same grievance namespace mWeb ships — one copy, two surfaces (rule 27).
+export const NATIVE_FALLBACK: NestedCatalogue = { ...MWEB_BUNDLE, ...GRIEVANCE_BUNDLE };
 
 /** Flat, runtime-ready form of the bundle above. */
 export const NATIVE_FALLBACK_FLAT = flattenCatalogue(NATIVE_FALLBACK);

@@ -41,6 +41,16 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.venueSlotRequest.reviewAll": "See all pending requests",
   "email.venueSlotRequest.footer":
     "You're receiving this because a host requested one of your venue's availability slots.",
+  "email.grievance.title": "Grievance received",
+  "email.grievance.heading": "We have your grievance",
+  "email.grievance.intro":
+    "Thanks for writing in. Your grievance has been recorded and our Grievance Officer will look into it.",
+  "email.grievance.refLabel": "Your reference number",
+  "email.grievance.refHint": "Quote this number in any follow-up about this grievance.",
+  "email.grievance.subjectLabel": "Subject",
+  "email.grievance.detailsLabel": "What you told us",
+  "email.grievance.officerLabel": "Grievance Officer",
+  "email.grievance.footer": "Reply to this email if you have anything to add.",
 
   // The header/footer fragments (Tech portal > Emails > Fragments). One note
   // per category, because "why did I get this?" has a different answer for a

@@ -1,0 +1,27 @@
+<mjml>
+  <mj-head>
+    <mj-title>{{t:email.grievance.title}}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">{{t:email.grievance.heading}}</mj-text>
+        <mj-text>{{t:email.grievance.intro}}</mj-text>
+        <mj-text font-weight="bold" color="#222222">{{t:email.grievance.refLabel}}</mj-text>
+        <mj-text font-size="20px" font-weight="bold" color="#7c3aed" letter-spacing="1px">{{grievance_no}}</mj-text>
+        <mj-text color="#888888" font-size="12px">{{t:email.grievance.refHint}}</mj-text>
+        <mj-text font-weight="bold" color="#222222">{{t:email.grievance.subjectLabel}}</mj-text>
+        <mj-text color="#555555">{{subject}}</mj-text>
+        <mj-text font-weight="bold" color="#222222">{{t:email.grievance.detailsLabel}}</mj-text>
+        <mj-text color="#555555" background-color="#f4f4f4" padding="12px">{{description}}</mj-text>
+        <mj-text font-weight="bold" color="#222222">{{t:email.grievance.officerLabel}}</mj-text>
+        <mj-text color="#555555">{{officer_block}}</mj-text>
+        <mj-text color="#888888" font-size="12px">{{t:email.grievance.footer}}</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

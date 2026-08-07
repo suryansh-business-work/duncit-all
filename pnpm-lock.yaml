@@ -2739,9 +2739,15 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../../packages/regex
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell

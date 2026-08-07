@@ -9,6 +9,7 @@ export {
 } from './catalogue';
 export {
   allFallbackEntries,
+  GRIEVANCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
   SHELL_BUNDLE,

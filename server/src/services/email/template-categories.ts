@@ -73,7 +73,9 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // No template sends as these yet; the fragments exist for when one does.
   service: [],
-  legal: [],
+
+  // A legal record of something they raised.
+  legal: ['grievance-received'],
 };
 
 export const TEMPLATE_CATEGORIES: Record<string, EmailCategory> = Object.fromEntries(
@@ -104,6 +106,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'email-verification-otp': "You're receiving this because you use Duncit.",
   'event-ticket': "You're receiving this because you booked a Duncit event.",
   'faq-received': "You're receiving this because you contacted us.",
+  'grievance-received': "You're receiving this because you raised a grievance with us.",
   'host-request-acknowledged': "You're receiving this because you applied to host a new category on Duncit.",
   'host-request-approved': "You're receiving this because you applied to host a new category on Duncit.",
   'host-request-rejected': "You're receiving this because you applied to host a new category on Duncit.",

@@ -49,6 +49,7 @@ export type RootStackParamList = {
   LiveChat: undefined;
   AllSupportTickets: undefined;
   Feedback: undefined;
+  Grievance: undefined;
   TicketDetails: { ticketId: string };
   PodIdeas: undefined;
   Referral: undefined;

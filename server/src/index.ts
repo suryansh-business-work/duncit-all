@@ -114,17 +114,26 @@ async function bootstrap() {
     three are idempotent and cheap — they only look for the missing.
   */
   await safeSeed('legalEntityIds', async () => {
-    const [{ contractService }, { legalDocumentService }, { policyService }] = await Promise.all([
-      import('@modules/content/contract/contract.service'),
-      import('@modules/content/legalDocument/legalDocument.service'),
-      import('@modules/content/policy/policy.service'),
-    ]);
+    const [{ contractService }, { legalDocumentService }, { policyService }, { grievanceService }] =
+      await Promise.all([
+        import('@modules/content/contract/contract.service'),
+        import('@modules/content/legalDocument/legalDocument.service'),
+        import('@modules/content/policy/policy.service'),
+        import('@modules/content/grievance/grievance.service'),
+      ]);
     const contracts = await contractService.backfillIds();
     const documents = await legalDocumentService.backfillIds();
     const policies = await policyService.backfillIds();
-    const repaired = contracts.repaired + documents.repaired + policies.repaired;
+    const grievances = await grievanceService.backfillIds();
+    const repaired =
+      contracts.repaired + documents.repaired + policies.repaired + grievances.repaired;
     if (repaired > 0) {
-      logs.server.info('bootstrap', 'legalEntityIds', { contracts, documents, policies });
+      logs.server.info('bootstrap', 'legalEntityIds', {
+        contracts,
+        documents,
+        policies,
+        grievances,
+      });
     }
   });
   await safeSeed('settings', () => settingsService.seedDefaults());

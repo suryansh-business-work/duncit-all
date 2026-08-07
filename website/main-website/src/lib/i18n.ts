@@ -1,6 +1,7 @@
 import {
   createTranslator,
   flattenCatalogue,
+  GRIEVANCE_BUNDLE,
   WEBSITE_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -21,7 +22,10 @@ import { urlConfigs } from '../config/url-configs';
 /** The website's LOCAL FALLBACK bundle — held in @duncit/i18n with every other
  * surface's, and baked into this static build. Add a key to the shared bundle
  * AND in Admin > Localization > Translations before using it. */
-export const WEBSITE_FALLBACK: NestedCatalogue = WEBSITE_BUNDLE;
+// The grievance form renders here as well as in mWeb and native, so its copy is
+// its own namespace rather than a third hand-kept copy. The two namespaces are
+// disjoint (`website` and `grievance`), so a shallow merge is the whole of it.
+export const WEBSITE_FALLBACK: NestedCatalogue = { ...WEBSITE_BUNDLE, ...GRIEVANCE_BUNDLE };
 
 export const WEBSITE_FALLBACK_FLAT = flattenCatalogue(WEBSITE_FALLBACK);
 

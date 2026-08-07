@@ -4,7 +4,13 @@ import type { MaterialIcons } from '@expo/vector-icons';
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
 /** Param-less support destinations reachable from the "More ways" grid. */
-export type SupportRoute = 'Sos' | 'Callback' | 'SupportTickets' | 'AllSupportTickets' | 'Feedback';
+export type SupportRoute =
+  | 'Sos'
+  | 'Callback'
+  | 'SupportTickets'
+  | 'AllSupportTickets'
+  | 'Feedback'
+  | 'Grievance';
 
 export interface SupportSection {
   key: string;
@@ -14,6 +20,9 @@ export interface SupportSection {
   /** Per-section accent (mirrors mWeb's SUPPORT_SECTIONS colours). */
   color: string;
   route: SupportRoute;
+  /** Localization keys, preferred over the literals above when present. */
+  titleKey?: string;
+  descKey?: string;
 }
 
 /**
@@ -53,6 +62,16 @@ export const SUPPORT_MORE_WAYS: SupportSection[] = [
     icon: 'history',
     color: '#7c5cff',
     route: 'AllSupportTickets',
+  },
+  {
+    key: 'grievance',
+    title: 'Raise a Grievance',
+    desc: 'File a formal grievance with our Grievance Officer',
+    titleKey: 'grievance.title',
+    descKey: 'grievance.subtitle',
+    icon: 'gavel',
+    color: '#795548',
+    route: 'Grievance',
   },
   {
     key: 'feedback',

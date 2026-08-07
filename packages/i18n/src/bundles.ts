@@ -361,6 +361,16 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         failed: 'Failed to send',
         retry: 'Not sent — tap to retry',
       },
+      // Two registers for one failure: a sentence for the person who hit it,
+      // and the whole throw for whoever has to fix it.
+      failure: {
+        showDetails: 'Show details',
+        hideDetails: 'Hide details',
+        copy: 'Copy',
+        copied: 'Copied',
+        unknown: 'Something went wrong',
+        uploadFailed: 'That file could not be uploaded',
+      },
       // Your own availability, and the same words used to describe a coworker's.
       // One set of names for both, so the dot in the header and the menu that
       // sets it can never disagree about what "Away" means.
@@ -401,6 +411,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         // would mean guessing at text we did not write.
         noMediaDevices:
           'This browser will not open the microphone or camera here. Calls need a secure (https) connection.',
+        deviceGone:
+          'The microphone or camera you had chosen is not available here, so this call is using the default one.',
         startFailed: 'Could not start the call',
         answerFailed: 'Could not answer',
         switchFailed: 'Could not switch device',

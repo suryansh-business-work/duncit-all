@@ -1,5 +1,6 @@
-import { Alert, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import ChatBody from './ChatBody';
+import FailureAlert from './FailureAlert';
 import PanelHeader from './PanelHeader';
 import type { Coworker, StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
@@ -88,11 +89,7 @@ export default function ChatSidebar({
         onCloseSettings={onCloseSettings}
       />
 
-      {data.error && (
-        <Alert severity="error" onClose={() => data.setError(null)} sx={{ m: 1 }}>
-          {data.error}
-        </Alert>
-      )}
+      {data.error && <FailureAlert failure={data.error} onDismiss={() => data.setError(null)} />}
 
       <ChatBody
         data={data}

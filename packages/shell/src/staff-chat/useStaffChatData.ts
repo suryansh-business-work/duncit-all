@@ -25,6 +25,7 @@ import {
   type StaffMessage,
   type StaffThread,
 } from './queries';
+import { describeFailure, type Failure } from './failure';
 import { usePresence, type PresenceStatus } from './usePresence';
 import { useStaffSocket } from './useStaffSocket';
 
@@ -65,7 +66,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
   const runtime = useShellRuntime();
   const client = useApolloClient();
   const { upload, uploading } = useImagekitDirectUpload();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Failure | null>(null);
   /** 0–100 while a file is going up, null when nothing is. */
   const [uploadPct, setUploadPct] = useState<number | null>(null);
 
@@ -305,7 +306,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
         })
         .catch((err: Error) => {
           setUploadPct(null);
-          setError(err.message);
+          setError(describeFailure(err, 'shell.chat.failure.uploadFailed'));
         });
     },
     [upload, send]
@@ -402,7 +403,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
         messagesQuery.refetch().catch(() => undefined);
         refreshAll();
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(describeFailure(err, 'shell.chat.failure.unknown')));
   }, [peer, clearThread, messagesQuery, refreshAll]);
 
   const hideForMe = useCallback(

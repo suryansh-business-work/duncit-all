@@ -2,9 +2,14 @@ import type { MutableRefObject, ReactNode } from 'react';
 import { Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch, type TableFilterValue } from '@duncit/table';
-import type { Ticket, TicketStatus } from '../../../graphql/tickets';
+import type { Ticket, TicketSource, TicketStatus } from '../../../graphql/tickets';
 import { relativeTime } from '../../../lib/supportTable';
-import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
+import { TICKET_PRIORITY_COLORS, TICKET_SOURCE_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
+
+const SOURCE_OPTIONS: ReadonlyArray<{ value: TicketSource; label: string }> = [
+  { value: 'APP', label: 'Duncit App' },
+  { value: 'WEBSITE', label: 'Duncit Website' },
+];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: TicketStatus; label: string }> = [
   { value: 'OPEN', label: 'OPEN' },
@@ -29,6 +34,17 @@ const renderSubject = (t: Ticket) => (
   <Typography variant="body2" component="span" sx={{ fontWeight: 700 }}>
     {t.subject}
   </Typography>
+);
+
+/** Where it came in from, in the words an agent would use rather than the
+ * stored enum — the two places are different jobs, not different codes. */
+const SOURCE_LABEL: Record<TicketSource, string> = {
+  APP: 'Duncit App',
+  WEBSITE: 'Duncit Website',
+};
+
+const renderSource = (t: Ticket) => (
+  <StatusChip status={SOURCE_LABEL[t.source] ?? t.source} colorMap={TICKET_SOURCE_COLORS} />
 );
 
 const renderStatus = (t: Ticket) => <StatusChip status={t.status} colorMap={TICKET_STATUS_COLORS} />;
@@ -56,6 +72,15 @@ const COLUMNS: DuncitColumn<Ticket>[] = [
   },
   { field: 'user', headerName: 'User', sortable: false, minWidth: 140, valueGetter: (t) => t.user.name },
   { field: 'category', headerName: 'Category', sortable: false, width: 130 },
+  {
+    field: 'source',
+    headerName: 'Source',
+    sortable: false,
+    width: 150,
+    filter: { type: 'select', options: SOURCE_OPTIONS },
+    cellRenderer: renderSource,
+    valueGetter: (t) => SOURCE_LABEL[t.source] ?? t.source,
+  },
   {
     field: 'status',
     headerName: 'Status',

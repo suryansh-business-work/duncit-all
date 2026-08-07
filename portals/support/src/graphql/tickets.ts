@@ -17,6 +17,8 @@ export const TICKET_FIELDS = gql`
     resolved_at
     reopen_deadline
     rating
+    source
+    guest_email
     feedback_comment
     feedback_at
     user_last_read_at
@@ -193,9 +195,15 @@ export interface TicketMessage {
   created_at: string;
 }
 
+/** Where the request came from — the app, or the contact form on duncit.com. */
+export type TicketSource = 'APP' | 'WEBSITE';
+
 export interface Ticket {
   id: string;
   ticket_no: string;
+  source: TicketSource;
+  /** The address to reply to when no account sits behind the ticket. */
+  guest_email: string | null;
   subject: string;
   category: TicketCategory;
   status: TicketStatus;

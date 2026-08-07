@@ -7,6 +7,8 @@ interface Props {
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  /** Show the content without letting anyone change it (the View dialog). */
+  readOnly?: boolean;
 }
 
 const MODULES = {
@@ -22,12 +24,23 @@ const MODULES = {
 };
 
 /** react-quill wrapper used to author document + policy content. */
-export default function RichTextEditor({ value, onChange, placeholder, minHeight = 320 }: Readonly<Props>) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+  minHeight = 320,
+  readOnly = false,
+}: Readonly<Props>) {
   return (
     <Box
       sx={{
-        '& .ql-toolbar': { borderTopLeftRadius: 8, borderTopRightRadius: 8, borderColor: 'divider' },
+        // Quill leaves its toolbar in place when read-only, which offers
+        // formatting buttons that do nothing. Take it away instead.
+        '& .ql-toolbar': readOnly
+          ? { display: 'none' }
+          : { borderTopLeftRadius: 8, borderTopRightRadius: 8, borderColor: 'divider' },
         '& .ql-container': {
+          borderRadius: readOnly ? 8 : undefined,
           borderBottomLeftRadius: 8,
           borderBottomRightRadius: 8,
           borderColor: 'divider',
@@ -38,7 +51,14 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         '& .ql-editor': { minHeight },
       }}
     >
-      <ReactQuill theme="snow" value={value} onChange={onChange} placeholder={placeholder} modules={MODULES} />
+      <ReactQuill
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        modules={MODULES}
+        readOnly={readOnly}
+      />
     </Box>
   );
 }

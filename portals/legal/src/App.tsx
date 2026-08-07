@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import DocumentsListPage from './pages/documents/DocumentsListPage';
 import DocumentDetailPage from './pages/documents/DocumentDetailPage';
 import PoliciesPage from './pages/policies/PoliciesPage';
+import ContractsPage from './pages/contracts/ContractsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/documents" element={authed(<DocumentsListPage />)} />
       <Route path="/documents/:id" element={authed(<DocumentDetailPage />)} />
       <Route path="/policies" element={authed(<PoliciesPage />)} />
+      <Route path="/contracts" element={authed(<ContractsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

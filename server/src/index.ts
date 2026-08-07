@@ -104,6 +104,20 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'clubAdminBackfill', result);
     });
   }
+
+  /*
+    Give an id to any contract that has none.
+
+    The collection is new, so on most databases this repairs nothing — it is
+    here so that a contract written by some future path that bypasses the model
+    hook cannot sit in the table showing a dash where its permanent handle
+    belongs. Idempotent, and cheap: it only looks for the missing.
+  */
+  await safeSeed('contractIds', async () => {
+    const { contractService } = await import('@modules/content/contract/contract.service');
+    const result = await contractService.backfillIds();
+    if (result.repaired > 0) logs.server.info('bootstrap', 'contractIds', result);
+  });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

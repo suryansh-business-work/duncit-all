@@ -31,6 +31,11 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+# @duncit/media-picker now localises its own copy, so its dependency closure
+# (app-settings -> datetime + user-context) must exist before pnpm installs.
+COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/datetime/package.json ./packages/datetime/
+COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/table/package.json ./packages/table/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/brand/package.json ./packages/brand/

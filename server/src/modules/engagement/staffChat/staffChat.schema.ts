@@ -187,6 +187,21 @@ export const staffChatTypeDefs = /* GraphQL */ `
     unread: Int!
   }
 
+  """
+  One entry of a browser's ICE configuration.
+
+  STUN alone lets two browsers find each other when at least one of them can be
+  reached directly; a TURN relay is what carries the call when neither can, and
+  a company where people work from different networks needs one for calls to
+  connect at all.
+  """
+  type StaffIceServer {
+    urls: [String!]!
+    "TURN only. Empty for a public STUN server, which needs no credentials."
+    username: String!
+    credential: String!
+  }
+
   extend type Query {
     "Everyone you could message, minus yourself. Search matches name or email."
     coworkers(search: String, role: String): [Coworker!]!
@@ -214,6 +229,14 @@ export const staffChatTypeDefs = /* GraphQL */ `
     both parties on every read is not the same as keeping it.
     """
     staffMessageEdits(id: ID!): [StaffMessageEdit!]!
+    """
+    Where a call should look for a path to the other browser.
+
+    Served rather than baked into each console because a TURN relay comes with
+    a username and a secret, and seventeen builds carrying a copy of a secret is
+    seventeen places it can leak.
+    """
+    staffCallIceServers: [StaffIceServer!]!
   }
 
   extend type Mutation {

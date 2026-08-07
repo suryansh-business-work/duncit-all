@@ -124,7 +124,10 @@ export default function CallPanel({
         gap: 1,
       }}
     >
-      {error && <Alert severity="error">{error}</Alert>}
+      {/* Our own failures arrive as keys; a message the browser threw arrives as
+          a sentence, and t() hands an unknown key straight back — so one call
+          renders both without the hook having to tell them apart. */}
+      {error && <Alert severity="error">{t(error)}</Alert>}
 
       {phase !== 'idle' && (
         <CallHeader phase={phase} kind={kind} peerName={peerName} peerPhoto={peerPhoto} sharing={sharing} />

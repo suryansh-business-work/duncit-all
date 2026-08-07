@@ -872,6 +872,12 @@ importers:
 
   packages/media-picker:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils

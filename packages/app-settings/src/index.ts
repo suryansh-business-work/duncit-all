@@ -30,6 +30,7 @@ export {
   allFallbackEntries,
   createTranslator,
   flattenCatalogue,
+  MEDIA_BUNDLE,
   mergeCatalogues,
   missingKeys,
   MWEB_BUNDLE,

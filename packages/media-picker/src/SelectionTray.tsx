@@ -1,4 +1,5 @@
 import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
  * chosen ones leaves "which one is the cover?" unanswered.
  */
 export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ mb: 2 }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
@@ -70,7 +72,7 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
               </Box>
               <IconButton
                 size="small"
-                aria-label="Remove"
+                aria-label={t('media.picker.remove')}
                 onClick={() => onRemove(url)}
                 sx={{
                   position: 'absolute',

@@ -87,11 +87,12 @@ export function StaffChatPanel({
     chat.setOpenPeerId(next?.id ?? null);
   };
 
-  const call = useCall(data.socket, meId, {
-    micId: panel.micId,
-    camId: panel.camId,
-    onChoose: chat.setDevice,
-  });
+  const call = useCall(
+    data.socket,
+    meId,
+    { micId: panel.micId, camId: panel.camId, onChoose: chat.setDevice },
+    data.iceServers
+  );
   const recorder = useCallRecorder({
     connected: call.phase === 'connected',
     localStream: call.localStream,

@@ -86,6 +86,18 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'webhook_secret', label: 'Webhook x-api-key (optional)', secret: true, hint: 'Verifies inbound ShipRocket webhooks' },
     { name: 'token_ttl_hours', label: 'Token TTL hours (optional)', number: true, hint: 'Auth token cache lifetime; default 240 (~10 days)' },
   ],
+  // What carries a staff call when the two browsers cannot reach each other
+  // directly — which is most of the time once the people on it are on different
+  // networks. Without one, calls connect on a shared LAN and nowhere else.
+  TURN: [
+    {
+      name: 'urls',
+      label: 'TURN URLs',
+      hint: 'Comma separated, e.g. turn:turn.example.com:3478,turns:turn.example.com:5349',
+    },
+    { name: 'username', label: 'Username', hint: 'TURN user (coturn: the `user` before the colon)' },
+    { name: 'credential', label: 'Credential', secret: true, hint: 'The TURN password' },
+  ],
   SLACK: [
     { name: 'bot_token', label: 'Bot User OAuth Token', secret: true, hint: 'xoxb-… (Slack app → OAuth & Permissions)' },
     { name: 'signing_secret', label: 'Signing Secret (optional)', secret: true, hint: 'Verifies inbound Slack events/webhooks' },
@@ -152,6 +164,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   SLACK: 'https://api.slack.com/apps',
   AISENSY: 'https://app.aisensy.com/',
   RESEND: 'https://resend.com/api-keys',
+  TURN: 'https://github.com/coturn/coturn',
 };
 
 const secretSet = new Set<string>();
@@ -205,6 +218,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
   SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
   SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
+  TURN_URLS: { category: 'TURN', field: 'urls' },
+  TURN_USERNAME: { category: 'TURN', field: 'username' },
+  TURN_CREDENTIAL: { category: 'TURN', field: 'credential' },
   AISENSY_API_KEY: { category: 'AISENSY', field: 'api_key' },
   AISENSY_CAMPAIGN_NAME: { category: 'AISENSY', field: 'campaign_name' },
   AISENSY_BASE_URL: { category: 'AISENSY', field: 'base_url' },

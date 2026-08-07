@@ -31,6 +31,7 @@ const SDL_CATEGORIES = [
   'SLACK',
   'AISENSY',
   'RESEND',
+  'TURN',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -56,6 +57,7 @@ export const envEntryTypeDefs = gql`
     SLACK
     AISENSY
     RESEND
+    TURN
   }
 
   type EnvConfigPair {

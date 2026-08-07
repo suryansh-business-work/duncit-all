@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
+import { staffCallIceServers } from './staffCallIce';
 import { statusOf } from './staffPresence';
 import { previewLink } from './staffChat.links';
 import { emitStaffMessage } from './staffChat.socket';
@@ -95,6 +96,10 @@ export const staffChatResolvers = {
     staffChatState: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const me = requireRole(ctx, ROLES);
       return staffChatService.chatState(me.id);
+    },
+    staffCallIceServers: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ROLES);
+      return staffCallIceServers();
     },
   },
   Mutation: {

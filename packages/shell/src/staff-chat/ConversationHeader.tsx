@@ -36,7 +36,9 @@ function presenceLine(
   lastSeen: string | null,
   t: (key: string, options?: { vars?: Record<string, string> }) => string
 ): string {
-  if (status !== 'OFFLINE') return status.toLowerCase();
+  if (status === 'ONLINE') return t('shell.chat.presence.online');
+  if (status === 'AWAY') return t('shell.chat.presence.away');
+  if (status === 'BUSY') return t('shell.chat.presence.busy');
   if (!lastSeen) return t('shell.chat.header.offline');
   // The server holds last-seen in memory, so a restart loses it and this
   // falls back to the plain word rather than inventing a time.
@@ -72,36 +74,49 @@ export default function ConversationHeader({
       <PresenceDot status={status}>
         <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
       </PresenceDot>
-      <Box sx={{ minWidth: 0, flex: 1 }}>
+      {/* The only part that may shrink. `noWrap` alone was not enough: with the
+          buttons free to shrink too, flexbox took the width out of THEM, and a
+          long "last seen …" ran under the call icons instead of ellipsing. */}
+      <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
         <Typography variant="subtitle2" noWrap>
           {peer.name}
         </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap>
+        <Typography variant="caption" color="text.secondary" noWrap component="div">
           {presenceLine(status, lastSeen, t)}
         </Typography>
       </Box>
-      <Tooltip title={t('shell.chat.header.audioCall')}>
-        <IconButton size="small" onClick={() => onCall('AUDIO')} aria-label={t('shell.chat.header.startAudio')}>
-          <CallIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={t('shell.chat.header.videoCall')}>
-        <IconButton size="small" onClick={() => onCall('VIDEO')} aria-label={t('shell.chat.header.startVideo')}>
-          <VideocamIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={t('shell.chat.header.searchHint')}>
-        <IconButton
-          size="small"
-          color={searchOpen ? 'primary' : 'default'}
-          onClick={onToggleSearch}
-          aria-label={t('shell.chat.header.search')}
-          aria-pressed={searchOpen}
-        >
-          <SearchIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <ConversationMenu onExport={onExport} onClear={onClear} onSettings={onSettings} />
+      <Stack direction="row" alignItems="center" sx={{ flexShrink: 0 }}>
+        <Tooltip title={t('shell.chat.header.audioCall')}>
+          <IconButton
+            size="small"
+            onClick={() => onCall('AUDIO')}
+            aria-label={t('shell.chat.header.startAudio')}
+          >
+            <CallIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={t('shell.chat.header.videoCall')}>
+          <IconButton
+            size="small"
+            onClick={() => onCall('VIDEO')}
+            aria-label={t('shell.chat.header.startVideo')}
+          >
+            <VideocamIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={t('shell.chat.header.searchHint')}>
+          <IconButton
+            size="small"
+            color={searchOpen ? 'primary' : 'default'}
+            onClick={onToggleSearch}
+            aria-label={t('shell.chat.header.search')}
+            aria-pressed={searchOpen}
+          >
+            <SearchIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <ConversationMenu onExport={onExport} onClear={onClear} onSettings={onSettings} />
+      </Stack>
     </Stack>
   );
 }

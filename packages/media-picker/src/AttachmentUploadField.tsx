@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import type { ChangeEvent } from 'react';
 import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
@@ -79,7 +80,7 @@ export default function AttachmentUploadField({
   onChange,
   folder = '/support',
   max = 5,
-  label = 'Attach files',
+  label,
   disabled = false,
   accept = 'image/*',
   maxBytes = 15 * 1024 * 1024,
@@ -92,9 +93,14 @@ export default function AttachmentUploadField({
   errorVariant = 'text',
   oversizeMessage,
   videoOversizeMessage,
-  buttonLabel = 'Add',
+  buttonLabel,
   buttonSx,
 }: Readonly<AttachmentUploadFieldProps>) {
+  const { t } = useTranslation();
+  // Resolved here, not as default parameters: a hook cannot run in the
+  // parameter list, and a caller-supplied label must still win.
+  const heading = label ?? t('media.picker.attachFiles');
+  const addLabel = buttonLabel ?? t('media.picker.add');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const base64 = useImagekitBase64Upload();
   const direct = useImagekitDirectUpload();
@@ -128,7 +134,7 @@ export default function AttachmentUploadField({
       }
       if (urls.length) onChange([...value, ...urls].slice(0, max));
     } catch (err) {
-      setError(parseApiError(err, 'Upload failed'));
+      setError(parseApiError(err, t('media.picker.uploadFailed')));
     } finally {
       setBusy(false);
     }
@@ -138,7 +144,7 @@ export default function AttachmentUploadField({
     <Box>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: value.length ? 1 : 0 }}>
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          {label} ({value.length}/{max})
+          {heading} ({value.length}/{max})
         </Typography>
         <input ref={inputRef} type="file" accept={accept} multiple={multiple} hidden onChange={onPick} />
         <Button
@@ -148,7 +154,7 @@ export default function AttachmentUploadField({
           onClick={() => inputRef.current?.click()}
           sx={buttonSx}
         >
-          {buttonLabel}
+          {addLabel}
         </Button>
       </Stack>
       {error && errorVariant === 'chip' && (

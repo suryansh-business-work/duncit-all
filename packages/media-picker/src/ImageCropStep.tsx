@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import { Box, Chip, MenuItem, Slider, Stack, TextField, Typography } from '@mui/material';
@@ -31,6 +32,7 @@ export default function ImageCropStep({
   onSelectKey,
   onCropComplete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
 
@@ -63,7 +65,7 @@ export default function ImageCropStep({
         select
         fullWidth
         size="small"
-        label="Crop"
+        label={t('media.crop.title')}
         value={selectedKey}
         onChange={(e) => selectPreset(e.target.value)}
       >
@@ -74,7 +76,7 @@ export default function ImageCropStep({
               {preset.key === suggestedKey && (
                 <Chip
                   icon={<AutoAwesomeIcon />}
-                  label="Suggested"
+                  label={t('media.crop.suggested')}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -109,7 +111,7 @@ export default function ImageCropStep({
               step={0.05}
               value={zoom}
               onChange={(_e, value) => setZoom(value as number)}
-              aria-label="Crop zoom"
+              aria-label={t('media.crop.zoom')}
             />
           </Stack>
           <Typography variant="caption" color="text.secondary">

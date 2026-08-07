@@ -65,6 +65,29 @@ const unpair = (userId: string) => {
 const ENDING = new Set(['call_decline', 'call_end']);
 
 /**
+ * How long a disconnected browser has to come back before its call is ended.
+ *
+ * A tab that closed and a connection that hiccupped arrive here identically —
+ * as a disconnect and nothing else. Ending the call the instant one appears is
+ * right for the closed tab and wrong for the hiccup, and behind a proxy the
+ * hiccup is routine: it is why a call that survives on localhost drops in
+ * production. So the end is SCHEDULED, and only a browser that still has the
+ * call running cancels it (see `call_resume`). A refresh cannot: the page that
+ * came back has no RTCPeerConnection, so it stays quiet and the call ends a few
+ * seconds later, which is still what the other end needs.
+ */
+const DISCONNECT_GRACE_MS = 6000;
+
+const pendingEnd = new Map<string, ReturnType<typeof setTimeout>>();
+
+function cancelPendingEnd(userId: string) {
+  const timer = pendingEnd.get(userId);
+  if (!timer) return;
+  clearTimeout(timer);
+  pendingEnd.delete(userId);
+}
+
+/**
  * Signalling only.
  *
  * The offer, the answer and the ICE candidates are opaque here — this server
@@ -82,6 +105,7 @@ function attachCallRelay(socket: AuthedSocket) {
         pair(me, payload.to);
       } else if (ENDING.has(event)) {
         unpair(me);
+        cancelPendingEnd(me);
       }
 
       // The offer carries the caller's NAME. Whoever is being rung may have the
@@ -157,6 +181,19 @@ export function attachStaffChatHandlers() {
 
     attachCallRelay(socket);
 
+    /*
+      "I reconnected and the call is still running."
+
+      Only a browser that still holds the RTCPeerConnection sends this, which is
+      what separates a dropped connection from a closed tab. The pairing is
+      re-asserted because the call may have been unpaired while it was away.
+    */
+    socket.on('call_resume', (payload: { to?: string }) => {
+      if (!payload?.to) return;
+      cancelPendingEnd(userId);
+      pair(userId, payload.to);
+    });
+
     socket.on('disconnect', () => {
       const next = removeSocket(userId);
 
@@ -167,13 +204,21 @@ export function attachStaffChatHandlers() {
         reloaded comes back with no call at all — so leaving the other end
         connected would leave them talking to a page that no longer exists.
         Only on the LAST socket: closing one of three tabs is not leaving, and
-        the call is still up in the other two.
+        the call is still up in the other two. And only after the grace period,
+        so a connection that merely blinked does not hang up on them.
       */
-      if (next === 'OFFLINE') {
-        const partner = unpair(userId);
-        if (partner) {
-          getIo().to(room(partner)).emit('call_end', { from: userId, reason: 'DISCONNECTED' });
-        }
+      if (next === 'OFFLINE' && callPartner.has(userId)) {
+        cancelPendingEnd(userId);
+        pendingEnd.set(
+          userId,
+          setTimeout(() => {
+            pendingEnd.delete(userId);
+            const partner = unpair(userId);
+            if (partner) {
+              getIo().to(room(partner)).emit('call_end', { from: userId, reason: 'DISCONNECTED' });
+            }
+          }, DISCONNECT_GRACE_MS)
+        );
       }
       // Only announce a change: closing one of three tabs is not leaving.
       if (next === 'OFFLINE' || next !== statusOf(userId)) broadcastPresence(userId, next);

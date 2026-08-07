@@ -1,4 +1,5 @@
 import { Avatar, Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
@@ -22,13 +23,14 @@ export default function AttachmentPreview({
   size = 64,
   docVariant = 'chip',
 }: Readonly<AttachmentPreviewProps>) {
+  const { t } = useTranslation();
   const info = describeAttachment(url);
   const badgeSize = size >= 72 ? 24 : 22;
   const badgeFont = size >= 72 ? 14 : 13;
   const removeButton = (
     <IconButton
       size="small"
-      aria-label="Remove attachment"
+      aria-label={t('media.picker.removeAttachment')}
       onClick={onRemove}
       sx={{
         position: 'absolute',

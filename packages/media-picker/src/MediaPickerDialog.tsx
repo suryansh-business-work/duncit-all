@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from './i18n/useTranslation';
 import {
   Alert,
   Box,
@@ -30,7 +31,7 @@ export default function MediaPickerDialog({
   onClose,
   onPicked,
   folder = '/uploads',
-  title = 'Select an image',
+  title,
   accept = 'image/*,video/*',
   allowDocuments,
   surface = 'PORTALS',
@@ -39,6 +40,10 @@ export default function MediaPickerDialog({
   seedQuery,
   orientation,
 }: Readonly<MediaPickerDialogProps>) {
+  const { t } = useTranslation();
+  // Resolved in the body, not as a default parameter: a hook cannot run in
+  // the parameter list, and a caller-supplied heading must still win.
+  const heading = title ?? t('media.picker.title');
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const multi = max > 1;
@@ -88,7 +93,7 @@ export default function MediaPickerDialog({
   return (
     <Dialog open={open} onClose={device.uploading ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pr: 6 }}>
-        {title}
+        {heading}
         <IconButton
           onClick={onClose}
           disabled={device.uploading}
@@ -103,9 +108,9 @@ export default function MediaPickerDialog({
         onChange={(_e, v) => setTab(v)}
         sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label="Upload from device" />
-        <Tab label="Pexels photos" disabled={!allowImage} />
-        <Tab label="Pexels videos" disabled={!allowVideo} />
+        <Tab label={t('media.picker.fromDevice')} />
+        <Tab label={t('media.picker.pexelsPhotos')} disabled={!allowImage} />
+        <Tab label={t('media.picker.pexelsVideos')} disabled={!allowVideo} />
       </Tabs>
       <DialogContent dividers sx={{ minHeight: 380 }}>
         {error && (
@@ -172,7 +177,7 @@ export default function MediaPickerDialog({
             onClick={device.uploadFromDevice}
             startIcon={device.uploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
           >
-            {device.uploading ? 'Uploading…' : 'Upload to ImageKit'}
+            {device.uploading ? t('media.picker.uploading') : t('media.picker.uploadToImagekit')}
           </Button>
         )}
         {multi && (
@@ -183,7 +188,7 @@ export default function MediaPickerDialog({
           >
             {selection.urls.length > 1
               ? `Use these ${selection.urls.length}`
-              : 'Use this image'}
+              : t('media.picker.useThis')}
           </Button>
         )}
       </DialogActions>

@@ -6,14 +6,16 @@ export type CallKind = 'AUDIO' | 'VIDEO';
 export type CallPhase = 'idle' | 'ringing' | 'incoming' | 'connected';
 
 /**
- * Public STUN only.
+ * Public STUN, used until the server has said what it actually wants.
  *
- * Two people on the same office network connect directly; anyone behind a
- * symmetric NAT would need a TURN relay, which is a paid service and a
- * deliberate decision rather than something to slip in. When a call fails to
- * connect, that is why — and the call record still says it happened.
+ * STUN alone connects two browsers when at least one can be reached directly —
+ * two tabs on one machine always can, which is why calls behave perfectly in
+ * development. Between two people on separate networks it often cannot, and the
+ * server's answer (see staffCallIceServers) is where a TURN relay arrives.
  */
-const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+const FALLBACK_ICE: RTCIceServer[] = [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+];
 
 interface Signal {
   from: string;
@@ -29,13 +31,27 @@ interface Signal {
 const pickDevice = (deviceId: string): MediaTrackConstraints | true =>
   deviceId ? { deviceId: { exact: deviceId } } : true;
 
+/**
+ * The browser's media APIs, or a sentence explaining why there are none.
+ *
+ * `navigator.mediaDevices` is simply ABSENT outside a secure context, so
+ * reaching for getUserMedia there throws "cannot read properties of undefined"
+ * — true, and useless to whoever is looking at it. This is the one deployment
+ * difference that never shows up on localhost, which browsers treat as secure.
+ */
+function mediaDevices(): MediaDevices {
+  const devices = globalThis.navigator?.mediaDevices;
+  if (!devices) throw new Error('shell.chat.call.noMediaDevices');
+  return devices;
+}
+
 /** Open ONE track from a chosen device — the unit a mid-call swap needs. */
 async function openTrack(
   want: 'audio' | 'video',
   deviceId: string
 ): Promise<MediaStreamTrack | undefined> {
   const exact = pickDevice(deviceId);
-  const fresh = await globalThis.navigator.mediaDevices.getUserMedia(
+  const fresh = await mediaDevices().getUserMedia(
     want === 'audio' ? { audio: exact } : { video: exact }
   );
   return want === 'audio' ? fresh.getAudioTracks()[0] : fresh.getVideoTracks()[0];
@@ -55,7 +71,12 @@ export interface DevicePrefs {
   onChoose: (kind: 'mic' | 'cam', deviceId: string) => void;
 }
 
-export function useCall(socket: Socket | null, meId: string, devices: Readonly<DevicePrefs>) {
+export function useCall(
+  socket: Socket | null,
+  meId: string,
+  devices: Readonly<DevicePrefs>,
+  iceServers: readonly RTCIceServer[] = []
+) {
   const [phase, setPhase] = useState<CallPhase>('idle');
   const [kind, setKind] = useState<CallKind>('AUDIO');
   const [peerId, setPeerId] = useState<string | null>(null);
@@ -132,17 +153,29 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
 
   const buildPeer = useCallback(
     (otherId: string) => {
-      const connection = new RTCPeerConnection({ iceServers: ICE });
+      // The server's list when it has arrived, public STUN until then — a call
+      // placed in the first second must still have somewhere to look.
+      const connection = new RTCPeerConnection({
+        iceServers: iceServers.length > 0 ? [...iceServers] : FALLBACK_ICE,
+      });
       connection.onicecandidate = (event) => {
         if (event.candidate) socket?.emit('call_ice', { to: otherId, candidate: event.candidate });
       };
       connection.ontrack = (event) => {
         remoteStream.current = event.streams[0];
       };
+      // A call that never joins up used to look exactly like a call that joined
+      // up silently: the window said "Connected" and nothing arrived. ICE is the
+      // only thing that knows, so it is the only thing that can say so.
+      connection.oniceconnectionstatechange = () => {
+        if (connection.iceConnectionState === 'failed') {
+          setError('shell.chat.call.connectionLost');
+        }
+      };
       pc.current = connection;
       return connection;
     },
-    [socket]
+    [socket, iceServers]
   );
 
   const openMedia = useCallback(
@@ -151,7 +184,7 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
       // which is the right outcome — falling back to a different microphone
       // without saying so is how people end up broadcasting the wrong room.
       const wantedCamera = pickDevice(camId);
-      const stream = await globalThis.navigator.mediaDevices.getUserMedia({
+      const stream = await mediaDevices().getUserMedia({
         audio: pickDevice(micId),
         video: callKind === 'VIDEO' ? wantedCamera : false,
       });
@@ -203,7 +236,7 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
         swapInPreview(previous, track);
         previous?.stop();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not switch device');
+        setError(err instanceof Error ? err.message : 'shell.chat.call.switchFailed');
       }
     },
     [swapInPreview]
@@ -265,11 +298,11 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
     const connection = pc.current;
     const sender = connection?.getSenders().find((s) => s.track?.kind === 'video');
     if (!sender) {
-      setError('Start a video call first — screen sharing replaces the camera.');
+      setError('shell.chat.call.shareNeedsVideo');
       return;
     }
     try {
-      const display = await globalThis.navigator.mediaDevices.getDisplayMedia({ video: true });
+      const display = await mediaDevices().getDisplayMedia({ video: true });
       const track = display.getVideoTracks()[0];
       if (!track) return;
       cameraTrack.current = sender.track;
@@ -286,7 +319,7 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
     } catch (err) {
       // Cancelling the picker throws too; that is not worth an error banner.
       if ((err as Error)?.name !== 'NotAllowedError') {
-        setError(err instanceof Error ? err.message : 'Could not share the screen');
+        setError(err instanceof Error ? err.message : 'shell.chat.call.shareFailed');
       }
     }
   }, []);
@@ -304,6 +337,14 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
   const call = useCallback(
     async (otherId: string, callKind: CallKind) => {
       setError(null);
+      // Show the window BEFORE asking for the microphone. getUserMedia does not
+      // resolve until the browser's permission prompt is answered, and on a
+      // domain being used for the first time that prompt is the whole delay —
+      // so waiting for it to open the window made a fresh deployment look like
+      // a call button that does nothing at all. It opens, then it fills in.
+      setKind(callKind);
+      setPeerId(otherId);
+      setPhase('ringing');
       try {
         const stream = await openMedia(callKind);
         const connection = buildPeer(otherId);
@@ -312,12 +353,9 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
         await connection.setLocalDescription(offer);
         socket?.emit('call_offer', { to: otherId, kind: callKind, sdp: offer });
         startedAt.current = new Date();
-        setKind(callKind);
-        setPeerId(otherId);
-        setPhase('ringing');
       } catch (err) {
         // Almost always a refused camera or microphone permission.
-        setError(err instanceof Error ? err.message : 'Could not start the call');
+        setError(err instanceof Error ? err.message : 'shell.chat.call.startFailed');
         teardown();
       }
     },
@@ -342,7 +380,7 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
       startedAt.current = new Date();
       setPhase('connected');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not answer');
+      setError(err instanceof Error ? err.message : 'shell.chat.call.answerFailed');
       teardown();
     }
   }, [buildPeer, kind, openMedia, peerId, socket, teardown]);
@@ -413,12 +451,27 @@ export function useCall(socket: Socket | null, meId: string, devices: Readonly<D
       teardown();
     };
 
+    /*
+      Back after a blip, still on the call.
+
+      socket.io reconnects on its own and the server cannot tell that from a
+      closed tab — so it schedules the call's end and waits to hear this. Only a
+      browser that still holds the peer connection can send it, which is exactly
+      the distinction the server needs: a page that was refreshed comes back
+      without one and stays quiet.
+    */
+    const onConnect = () => {
+      if (pc.current && peerId) socket.emit('call_resume', { to: peerId });
+    };
+
+    socket.on('connect', onConnect);
     socket.on('call_offer', onOffer);
     socket.on('call_answer', onAnswer);
     socket.on('call_ice', onIce);
     socket.on('call_decline', onDecline);
     socket.on('call_end', onEnd);
     return () => {
+      socket.off('connect', onConnect);
       socket.off('call_offer', onOffer);
       socket.off('call_answer', onAnswer);
       socket.off('call_ice', onIce);

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from '../i18n/useTranslation';
 import {
   Box,
   CircularProgress,
@@ -40,6 +41,7 @@ export default function UrlAdornmentVariant({
   openPicker,
   fileInput,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1}>
       {fileInput}
@@ -51,11 +53,11 @@ export default function UrlAdornmentVariant({
         disabled={disabled || busy}
         error={externalError || !!error}
         helperText={error || helperText}
-        placeholder="Click the icon to upload, or paste a URL…"
+        placeholder={t('media.picker.urlPlaceholder')}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Tooltip title="Upload from device">
+              <Tooltip title={t('media.picker.fromDevice')}>
                 <span>
                   <IconButton size="small" onClick={openPicker} disabled={disabled || busy}>
                     {busy ? <CircularProgress size={18} /> : <ImageIcon fontSize="small" />}
@@ -66,7 +68,7 @@ export default function UrlAdornmentVariant({
           ),
           endAdornment: value ? (
             <InputAdornment position="end">
-              <Tooltip title="Open">
+              <Tooltip title={t('media.picker.open')}>
                 <IconButton size="small" onClick={() => window.open(value, '_blank')}>
                   <OpenInNewIcon fontSize="small" />
                 </IconButton>

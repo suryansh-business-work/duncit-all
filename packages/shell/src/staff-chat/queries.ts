@@ -347,6 +347,22 @@ export const STAFF_PRESENCE = gql`
   }
 `;
 
+/**
+ * How this browser should try to reach the other one.
+ *
+ * Asked of the server rather than compiled in: a TURN relay carries credentials,
+ * and the answer can change without rebuilding seventeen consoles.
+ */
+export const STAFF_CALL_ICE = gql`
+  query StaffCallIceServers {
+    staffCallIceServers {
+      urls
+      username
+      credential
+    }
+  }
+`;
+
 /** The Maps key for the location preview. Already public — see the server. */
 export const PUBLIC_CLIENT_CONFIG = gql`
   query StaffChatPublicClientConfig {

@@ -32,6 +32,15 @@ export function useScreenShareRoom(onMessage: (message: RemoteMessage) => void) 
   const roomRef = useRef<Room | null>(null);
   const [role, setRole] = useState<ShareRole>('IDLE');
   const [remoteTrack, setRemoteTrack] = useState<MediaStreamTrack | null>(null);
+  /**
+   * What I am sharing, shown back to me.
+   *
+   * Not vanity: the pointer, the drawing and the click ripples are painted over
+   * the STAGE, not over the real desktop. Without my own screen in that stage I
+   * see a black box with somebody's cursor moving across it and no way to tell
+   * what they are pointing at.
+   */
+  const [localTrack, setLocalTrack] = useState<MediaStreamTrack | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Kept in a ref so the LiveKit listener never closes over a stale handler.
   const handler = useRef(onMessage);
@@ -42,6 +51,7 @@ export function useScreenShareRoom(onMessage: (message: RemoteMessage) => void) 
     roomRef.current = null;
     setRole('IDLE');
     setRemoteTrack(null);
+    setLocalTrack(null);
     await room?.disconnect().catch(() => undefined);
   }, []);
 
@@ -92,9 +102,30 @@ export function useScreenShareRoom(onMessage: (message: RemoteMessage) => void) 
       const room = await join(grant);
       if (!room) return;
       try {
-        // Audio too: a shared screen with a video playing on it is silent
-        // otherwise, which reads as a broken share.
-        await room.localParticipant.setScreenShareEnabled(true, { audio: true });
+        await room.localParticipant.setScreenShareEnabled(true, {
+          // Audio too: a shared screen with a video playing on it is silent
+          // otherwise, which reads as a broken share.
+          audio: true,
+          // THIS TAB, and only this tab.
+          //
+          // Two reasons, and the second is the important one. Offering a
+          // monitor or another window means offering everything else open on
+          // the machine — inboxes, other consoles, a password manager — when
+          // what is being discussed is this portal. And remote control travels
+          // as fractions of the shared surface: with a whole monitor those
+          // fractions land somewhere in the desktop, but with the tab they map
+          // exactly onto the viewport whose elements are being clicked. A
+          // screen picker set to "monitor" is a control feature that silently
+          // aims at the wrong place.
+          video: { displaySurface: 'browser' },
+          preferCurrentTab: true,
+          selfBrowserSurface: 'include',
+          surfaceSwitching: 'exclude',
+          systemAudio: 'exclude',
+          contentHint: 'text',
+        });
+        const mine = room.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+        setLocalTrack(mine?.track?.mediaStreamTrack ?? null);
         setRole('SHARING');
       } catch (err) {
         // Cancelling the picker throws; that is not an error worth showing.
@@ -110,6 +141,7 @@ export function useScreenShareRoom(onMessage: (message: RemoteMessage) => void) 
     const room = roomRef.current;
     if (!room) return;
     await room.localParticipant.setScreenShareEnabled(false).catch(() => undefined);
+    setLocalTrack(null);
     setRole('IDLE');
     // Nobody left to watch and nothing left to send: hold no connection open.
     if (room.remoteParticipants.size === 0) await leave();
@@ -157,7 +189,18 @@ export function useScreenShareRoom(onMessage: (message: RemoteMessage) => void) 
     []
   );
 
-  return { role, remoteTrack, error, startSharing, stopSharing, watch, leave, send, sendReliable };
+  return {
+    role,
+    remoteTrack,
+    localTrack,
+    error,
+    startSharing,
+    stopSharing,
+    watch,
+    leave,
+    send,
+    sendReliable,
+  };
 }
 
 export { DataPacket_Kind };

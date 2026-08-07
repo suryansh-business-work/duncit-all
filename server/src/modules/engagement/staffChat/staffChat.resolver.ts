@@ -106,6 +106,14 @@ export const staffChatResolvers = {
     },
   },
   Mutation: {
+    attachStaffCallRecording: (
+      _p: unknown,
+      args: { call_id: string; url: string },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      return staffChatService.attachRecording(me.id, args.call_id, args.url);
+    },
     sendStaffMessage: async (
       _p: unknown,
       args: {

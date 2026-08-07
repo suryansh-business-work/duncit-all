@@ -126,7 +126,8 @@ export default function ShareStage({
 
       {!track && (
         <Typography variant="caption" sx={{ color: 'grey.500', p: 2, display: 'block' }}>
-          Waiting for the screen…
+          Nobody is sharing yet — press “Share this tab”, or wait for them to
+          start.
         </Typography>
       )}
 

@@ -49,6 +49,8 @@ export function useCall(socket: Socket | null, meId: string) {
   const [phase, setPhase] = useState<CallPhase>('idle');
   const [kind, setKind] = useState<CallKind>('AUDIO');
   const [peerId, setPeerId] = useState<string | null>(null);
+  /** The row the last finished call was written to, for a late recording. */
+  const [lastCallId, setLastCallId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Which microphone and camera to open. '' means whatever the OS defaults to. */
   const [micId, setMicId] = useState('');
@@ -92,13 +94,19 @@ export function useCall(socket: Socket | null, meId: string) {
   const record = useCallback(
     (outcome: string, otherId: string, callKind: CallKind) => {
       const started = startedAt.current ?? new Date();
-      socket?.emit('call_record', {
-        peerId: otherId,
-        kind: callKind,
-        outcome,
-        durationSeconds: answered.current ? (Date.now() - started.getTime()) / 1000 : 0,
-        startedAt: started.toISOString(),
-      });
+      socket?.emit(
+        'call_record',
+        {
+          peerId: otherId,
+          kind: callKind,
+          outcome,
+          durationSeconds: answered.current ? (Date.now() - started.getTime()) / 1000 : 0,
+          startedAt: started.toISOString(),
+        },
+        // The row's id, so a recording that is still uploading has something to
+        // attach itself to when it finishes.
+        (callId: string | null) => setLastCallId(callId)
+      );
       answered.current = false;
       startedAt.current = null;
     },
@@ -403,6 +411,7 @@ export function useCall(socket: Socket | null, meId: string) {
 
   return {
     phase,
+    lastCallId,
     kind,
     peerId,
     error,

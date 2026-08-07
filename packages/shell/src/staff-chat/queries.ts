@@ -69,6 +69,8 @@ export interface StaffCall {
   duration_seconds: number;
   started_at?: string | null;
   ended_at?: string | null;
+  /** The mp4 it was recorded to, once FFmpeg has produced one. */
+  recording_url?: string | null;
 }
 
 export interface StaffThread {
@@ -261,7 +263,14 @@ export const STAFF_CALLS = gql`
       duration_seconds
       started_at
       ended_at
+      recording_url
     }
+  }
+`;
+
+export const ATTACH_CALL_RECORDING = gql`
+  mutation AttachStaffCallRecording($callId: ID!, $url: String!) {
+    attachStaffCallRecording(call_id: $callId, url: $url)
   }
 `;
 

@@ -130,6 +130,8 @@ export const staffChatTypeDefs = /* GraphQL */ `
     duration_seconds: Int!
     started_at: String
     ended_at: String
+    "The mp4 this call was recorded to, once FFmpeg has produced it."
+    recording_url: String
   }
 
   "A conversation you already have, for the list down the side."
@@ -169,6 +171,12 @@ export const staffChatTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
+    """
+    Hang a finished recording on the call it came from. Only a call you were
+    on: a call id is guessable, and this writes into a conversation.
+    """
+    attachStaffCallRecording(call_id: ID!, url: String!): Boolean!
+
     """
     Send a message, a file, or both. Text may be empty when a file comes with it.
     """

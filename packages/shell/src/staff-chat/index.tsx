@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import FloatingWindow from '../floating-window';
 import CallWindow from './CallWindow';
+import RecordingPlayer from './RecordingPlayer';
 import { useCallRecorder } from './useCallRecorder';
 import Conversation from './Conversation';
 import CoworkerList from './CoworkerList';
@@ -18,6 +19,7 @@ import {
   FORWARD_STAFF_MESSAGE,
   PIN_STAFF_MESSAGE,
   REACT_TO_STAFF_MESSAGE,
+  ATTACH_CALL_RECORDING,
   MARK_THREAD_READ,
   SEND_STAFF_MESSAGE,
   STAFF_CALLS,
@@ -101,6 +103,12 @@ export function StaffChatPanel({
     skip: !peer,
     fetchPolicy: 'cache-and-network',
   });
+  /** Calls on this line, merged into the thread beside the messages. */
+  const callsQuery = useQuery<{ staffCalls: StaffCall[] }>(STAFF_CALLS, {
+    variables: { peerId: peer?.id, limit: 50 },
+    skip: !peer,
+    fetchPolicy: 'cache-and-network',
+  });
   const presenceQuery = useQuery<{ staffPresence: { user_id: string; status: PresenceStatus }[] }>(
     STAFF_PRESENCE,
     { skip: !open, fetchPolicy: 'network-only' }
@@ -113,6 +121,7 @@ export function StaffChatPanel({
   const [forwardMessage] = useMutation(FORWARD_STAFF_MESSAGE);
   const [pinMessage] = useMutation(PIN_STAFF_MESSAGE);
   const [markRead] = useMutation(MARK_THREAD_READ);
+  const [attachRecording] = useMutation(ATTACH_CALL_RECORDING);
 
   const { settings, update: updateSettings, formats, spacing } = useChatSettings();
   /** What is being answered, until it is sent. */
@@ -163,7 +172,7 @@ export function StaffChatPanel({
     [peer, messagesQuery, refreshAll]
   );
 
-  const { socket, typing } = useStaffSocket({
+  const { socket, typing, typingAt } = useStaffSocket({
     graphqlUrl: runtime?.graphqlUrl ?? '',
     token: readToken(runtime),
     onMessage,
@@ -190,6 +199,38 @@ export function StaffChatPanel({
   /** The call window is up for anything that is not "nothing happening". */
   const callWindowOpen =
     call.phase !== 'idle' || Boolean(call.error) || recorder.stage !== 'IDLE';
+
+  /**
+   * A recording being saved pins the panel open.
+   *
+   * The upload and the FFmpeg pass run in this component, so closing it while
+   * either is in flight throws the recording away — and it would look exactly
+   * like a successful close. Locking the button for those two stages costs a
+   * few seconds and is the difference between a saved call and a lost one.
+   */
+  const busyStage = recorder.stage === 'UPLOADING' || recorder.stage === 'CONVERTING';
+
+  /** A recording being watched, over the panel. */
+  const [playingRecording, setPlayingRecording] = useState<string | null>(null);
+
+  /**
+   * A finished recording belongs to the call it came from.
+   *
+   * Attached automatically rather than waiting for somebody to press "send to
+   * chat": a recording nobody remembered to post is a recording nobody can
+   * find. The call row in the thread then carries it, and the chat message is
+   * an extra, not the only copy.
+   */
+  const readyUrl = recorder.stage === 'READY' ? recorder.url : null;
+  const { lastCallId } = call;
+  useEffect(() => {
+    if (!readyUrl || !lastCallId) return;
+    attachRecording({ variables: { callId: lastCallId, url: readyUrl } })
+      .then(() => callsQuery.refetch())
+      .catch(() => undefined);
+    // callsQuery identity changes every render; the pair above is the trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyUrl, lastCallId, attachRecording]);
 
   // The socket only reports CHANGES; the first paint needs the snapshot.
   const statusOf = useCallback(
@@ -309,6 +350,8 @@ export function StaffChatPanel({
 
   return (
     <>
+      <RecordingPlayer url={playingRecording} onClose={() => setPlayingRecording(null)} />
+
       <CallWindow
         open={callWindowOpen}
         peer={peer}
@@ -367,9 +410,22 @@ export function StaffChatPanel({
             </Typography>
             <ChatSettingsMenu settings={settings} onChange={updateSettings} />
             <StatusMenu status={presence.mine} onChange={presence.choose} />
-            <IconButton size="small" onClick={onClose} aria-label="Close chat">
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            <Tooltip
+              title={busyStage ? 'Wait — the recording is still being saved' : 'Close chat'}
+            >
+              {/* A disabled button fires no events, so the tooltip needs a
+                  live wrapper to explain why it cannot be pressed. */}
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={onClose}
+                  disabled={busyStage}
+                  aria-label="Close chat"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Stack>
 
           {error && (
@@ -416,7 +472,10 @@ export function StaffChatPanel({
                 formats={formats}
                 spacing={spacing}
                 nameOf={nameOf}
+                calls={callsQuery.data?.staffCalls ?? []}
+                onPlayRecording={setPlayingRecording}
                 onTyping={() => typing(peer.id)}
+                typingAt={typingAt[peer.id] ?? 0}
                 onCall={(kind) => call.call(peer.id, kind).catch(() => undefined)}
                 onExport={() => exportChat().catch(() => undefined)}
                 onShareScreen={() => setSharingWith(true)}

@@ -6,7 +6,8 @@ import ConversationHeader from './ConversationHeader';
 import LocationDialog from './LocationDialog';
 import MessageThread from './MessageThread';
 import ReplyStrip from './ReplyStrip';
-import type { Coworker, StaffMessage } from './queries';
+import TypingIndicator from './TypingIndicator';
+import type { Coworker, StaffCall, StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
 
@@ -15,6 +16,9 @@ interface Props {
   meId: string;
   status: PresenceStatus;
   messages: StaffMessage[];
+  /** Calls on this line, merged into the thread by time. */
+  calls: StaffCall[];
+  onPlayRecording: (url: string) => void;
   sending: boolean;
   uploading: boolean;
   onBack: () => void;
@@ -39,6 +43,8 @@ interface Props {
   onPin: (id: string) => void;
   onNavigate?: (path: string) => void;
   onTyping: () => void;
+  /** When this peer last reported typing, or 0. */
+  typingAt: number;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
   /** Opens portal-to-portal screen sharing with this person. */
@@ -50,6 +56,8 @@ export default function Conversation({
   meId,
   status,
   messages,
+  calls,
+  onPlayRecording,
   sending,
   uploading,
   onBack,
@@ -73,6 +81,7 @@ export default function Conversation({
   onPin,
   onNavigate,
   onTyping,
+  typingAt,
   onCall,
   onExport,
   onShareScreen,
@@ -114,6 +123,8 @@ export default function Conversation({
       <MessageThread
         jumpToId={jumpToId}
         messages={messages}
+        calls={calls}
+        onPlayRecording={onPlayRecording}
         meId={meId}
         loading={loading}
         hasMore={hasMore}
@@ -131,6 +142,8 @@ export default function Conversation({
         onPin={onPin}
         onNavigate={onNavigate}
       />
+
+      <TypingIndicator at={typingAt} name={peer.name} />
 
       {replyTo && <ReplyStrip replyTo={replyTo} nameOf={nameOf} onCancel={onCancelReply} />}
 

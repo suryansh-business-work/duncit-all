@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
+import CallRow from './CallRow';
 import ThreadItem from './ThreadItem';
-import { JumpToLatest, ThreadSkeleton } from './ThreadChrome';
+import { DaySeparator, JumpToLatest, ThreadSkeleton } from './ThreadChrome';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
-import type { StaffMessage } from './queries';
+import { buildTimeline } from './timeline';
+import type { StaffCall, StaffMessage } from './queries';
 
 /** Today, Yesterday, or the day itself — what a separator has to say. */
 function dayLabel(iso: string, day: ChatFormats['day']): string {
@@ -19,6 +21,9 @@ function dayLabel(iso: string, day: ChatFormats['day']): string {
 
 interface Props {
   messages: StaffMessage[];
+  /** Calls on this line, merged into the thread by time. */
+  calls: StaffCall[];
+  onPlayRecording: (url: string) => void;
   meId: string;
   loading: boolean;
   /** More history exists above — drives the lazy load. */
@@ -53,6 +58,8 @@ interface Props {
  */
 export default function MessageThread({
   messages,
+  calls,
+  onPlayRecording,
   meId,
   loading,
   hasMore,
@@ -92,6 +99,7 @@ export default function MessageThread({
   const lastCount = useRef(messages.length);
 
   const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
+  const timeline = useMemo(() => buildTimeline(messages, calls), [messages, calls]);
 
   // The first message they have not read — where the "new" line goes.
   const firstUnreadId = useMemo(
@@ -161,13 +169,30 @@ export default function MessageThread({
           </Typography>
         )}
 
-        {messages.map((message) => {
-          const day = message.created_at ? dayLabel(message.created_at, formats.day) : '';
+        {timeline.map((entry) => {
+          const at = entry.kind === 'CALL' ? entry.call.started_at : entry.message.created_at;
+          const day = at ? dayLabel(at, formats.day) : '';
           const newDay = day && day !== lastDay;
           if (newDay) lastDay = day;
+
+          if (entry.kind === 'CALL') {
+            return (
+              <Box key={entry.id}>
+                {newDay && <DaySeparator label={day} />}
+                <CallRow
+                  call={entry.call}
+                  meId={meId}
+                  formats={formats}
+                  onPlay={onPlayRecording}
+                />
+              </Box>
+            );
+          }
+
+          const { message } = entry;
           return (
             <ThreadItem
-              key={message.id}
+              key={entry.id}
               message={message}
               meId={meId}
               settings={settings}

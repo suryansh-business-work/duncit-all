@@ -437,7 +437,30 @@ export const staffChatService = {
       duration_seconds: doc.duration_seconds,
       started_at: doc.started_at?.toISOString() ?? null,
       ended_at: doc.ended_at?.toISOString() ?? null,
+      recording_url: doc.recording_url ?? null,
     }));
+  },
+
+  /**
+   * Hang the finished mp4 on the call it came from.
+   *
+   * Scoped to a call the caller was actually on — a call id is guessable, and
+   * without this check anyone could staple a URL of their choosing to somebody
+   * else's conversation.
+   */
+  async attachRecording(meId: string, callId: string, url: string) {
+    const doc = await StaffCallModel.findOneAndUpdate(
+      {
+        _id: callId,
+        $or: [{ from_user_id: meId }, { to_user_id: meId }],
+      },
+      { $set: { recording_url: url } },
+      { new: true }
+    ).lean();
+    if (!doc) {
+      throw new GraphQLError('That call is not yours', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return true;
   },
 
   /** Write the call down once it is over. */

@@ -109,7 +109,10 @@ export default function ScreenSharePanel({ peerId, peerName, onClose }: Readonly
         )}
 
         <ShareStage
-          track={room.remoteTrack}
+          // Whichever screen is in play — theirs when watching, my own when
+          // sharing, so the pointer painted over the stage has something under
+          // it either way.
+          track={room.remoteTrack ?? room.localTrack}
           tool={tool}
           driving={driving}
           cursor={control.cursor}
@@ -122,6 +125,12 @@ export default function ScreenSharePanel({ peerId, peerName, onClose }: Readonly
 
         <ShareToolbar
           amSharing={amSharing}
+          watching={Boolean(room.remoteTrack)}
+          onStart={() => {
+            grant()
+              .then((value) => value && room.startSharing(value))
+              .catch(() => undefined);
+          }}
           tool={tool}
           onTool={setTool}
           onClear={() => {

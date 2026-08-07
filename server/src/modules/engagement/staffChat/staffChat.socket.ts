@@ -87,8 +87,15 @@ export function attachStaffChatHandlers() {
         outcome?: CallOutcome;
         durationSeconds?: number;
         startedAt?: string;
-      }) => {
-        if (!payload?.peerId || !payload.kind || !payload.outcome) return;
+      },
+      // Acked with the row's id so the caller can hang a recording on it later.
+      // Without this the client has no handle on the call it just finished.
+      ack?: (callId: string | null) => void
+      ) => {
+        if (!payload?.peerId || !payload.kind || !payload.outcome) {
+          ack?.(null);
+          return;
+        }
         staffChatService
           .recordCall({
             meId: userId,
@@ -98,7 +105,8 @@ export function attachStaffChatHandlers() {
             durationSeconds: Number(payload.durationSeconds ?? 0),
             startedAt: payload.startedAt ? new Date(payload.startedAt) : new Date(),
           })
-          .catch(() => undefined);
+          .then((callId) => ack?.(callId))
+          .catch(() => ack?.(null));
       }
     );
 

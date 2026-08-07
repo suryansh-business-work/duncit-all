@@ -1,5 +1,6 @@
 import { Box, Chip, Divider } from '@mui/material';
 import MessageBubble from './message-bubble';
+import { DaySeparator } from './ThreadChrome';
 import type { StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 
@@ -68,11 +69,7 @@ export default function ThreadItem({
         bgcolor: highlighted ? 'action.selected' : 'transparent',
       }}
     >
-      {dayLabel && (
-        <Divider sx={{ my: 1 }}>
-          <Chip size="small" label={dayLabel} sx={{ height: 22, fontSize: 11 }} />
-        </Divider>
-      )}
+      {dayLabel && <DaySeparator label={dayLabel} />}
       {firstUnread && (
         <Divider sx={{ my: 1 }} role="separator">
           <Chip size="small" color="error" label="New" sx={{ height: 22, fontSize: 11 }} />

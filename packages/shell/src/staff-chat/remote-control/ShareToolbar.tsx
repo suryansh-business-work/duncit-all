@@ -4,6 +4,7 @@ import HighlightIcon from '@mui/icons-material/Highlight';
 import EditIcon from '@mui/icons-material/Edit';
 import LayersClearIcon from '@mui/icons-material/LayersClear';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import PanToolAltIcon from '@mui/icons-material/PanToolAlt';
 import LockIcon from '@mui/icons-material/Lock';
@@ -13,6 +14,9 @@ import type { ControlState } from './useRemoteControl';
 interface Props {
   /** True on the side whose screen is being shared. */
   amSharing: boolean;
+  /** True when the other side is sharing — then there is nothing to start. */
+  watching: boolean;
+  onStart: () => void;
   tool: PointerTool;
   onTool: (tool: PointerTool) => void;
   onClear: () => void;
@@ -38,6 +42,8 @@ interface Props {
  */
 export default function ShareToolbar({
   amSharing,
+  watching,
+  onStart,
   tool,
   onTool,
   onClear,
@@ -50,6 +56,23 @@ export default function ShareToolbar({
   myControl,
   onRequest,
 }: Readonly<Props>) {
+  // Hoisted out of the JSX: a ternary inside a conditional branch inside the
+  // return is three levels of nesting for one button.
+  const controlAction =
+    myControl === 'GRANTED' ? (
+      <Chip size="small" color="success" icon={<PanToolAltIcon />} label="You have control" />
+    ) : (
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<PanToolAltIcon />}
+        onClick={onRequest}
+        disabled={myControl === 'REQUESTED'}
+      >
+        {myControl === 'REQUESTED' ? 'Asked…' : 'Request control'}
+      </Button>
+    );
+
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
       <ToggleButtonGroup
@@ -105,19 +128,19 @@ export default function ShareToolbar({
         </>
       ) : (
         <>
-          {myControl === 'GRANTED' ? (
-            <Chip size="small" color="success" icon={<PanToolAltIcon />} label="You have control" />
-          ) : (
+          {/* Nothing was ever wired to START a share, which is why control
+              never worked: there was no screen to control. */}
+          {!watching && (
             <Button
               size="small"
-              variant="outlined"
-              startIcon={<PanToolAltIcon />}
-              onClick={onRequest}
-              disabled={myControl === 'REQUESTED'}
+              variant="contained"
+              startIcon={<ScreenShareIcon />}
+              onClick={onStart}
             >
-              {myControl === 'REQUESTED' ? 'Asked…' : 'Request control'}
+              Share this tab
             </Button>
           )}
+          {watching && controlAction}
         </>
       )}
     </Stack>

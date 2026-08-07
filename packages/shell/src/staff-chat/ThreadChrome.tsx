@@ -1,5 +1,14 @@
-import { Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
+import { Chip, Divider, Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+
+/** Today, Yesterday, or the date — above the first entry of each day. */
+export function DaySeparator({ label }: Readonly<{ label: string }>) {
+  return (
+    <Divider sx={{ my: 1 }}>
+      <Chip size="small" label={label} sx={{ height: 22, fontSize: 11 }} />
+    </Divider>
+  );
+}
 
 /** Bubble-shaped placeholders while the first page loads. */
 export function ThreadSkeleton() {

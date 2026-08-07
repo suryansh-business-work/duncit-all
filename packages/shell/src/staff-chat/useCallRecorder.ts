@@ -101,7 +101,17 @@ export function useCallRecorder(call: Readonly<CallSource>) {
           return;
         }
         const mimeType = pickMimeType(stream.getVideoTracks().length > 0);
-        const media = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        const media = new MediaRecorder(stream, {
+          ...(mimeType && { mimeType }),
+          // Capped rather than left to the browser's default, which is chosen
+          // for archival quality and produces a file the person then has to
+          // upload over their own connection. A call is faces and slides, and
+          // the server re-encodes at CRF 28 afterwards anyway — spending
+          // 2.5 Mbps to make bytes that get thrown away costs upload time
+          // and nothing else.
+          videoBitsPerSecond: 1_200_000,
+          audioBitsPerSecond: 96_000,
+        });
         chunks.current = [];
         media.ondataavailable = (event) => {
           if (event.data.size > 0) chunks.current.push(event.data);

@@ -183,8 +183,17 @@ export function MediaUploadField({
           {error}
         </Text>
       ) : null}
+      {/*
+        Stand the picker down while the crop sheet is up. Both are RN Modals,
+        and two of those visible at once is not a stacking order — iOS presents
+        one view controller at a time, so the second simply would not appear and
+        the phone tab would look dead. The tray lives here, not in the dialog,
+        so nothing is lost while it is away; for a batch the picker stays hidden
+        until the last asset has been cropped, which is also the calmer thing to
+        watch.
+      */}
       <CoverPickerDialog
-        open={pickerOpen}
+        open={pickerOpen && !upload.pending}
         seed={coverSearchTerm(subCategoryName)}
         max={slotsLeft}
         tray={tray}
@@ -196,7 +205,6 @@ export function MediaUploadField({
         onDone={commit}
         onClose={() => setPickerOpen(false)}
       />
-      {/* Mounted after the picker so the crop sheet renders ON TOP of it. */}
       <MediaCropDialog
         media={upload.pending}
         settings={settings}

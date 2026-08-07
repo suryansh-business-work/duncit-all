@@ -102,6 +102,8 @@ function runFfmpeg(
       ])
       .audioCodec('aac')
       .audioBitrate('128k')
+      // Harmless on an audio-only source (a recorded audio call): FFmpeg selects
+      // no video stream, so the codec and this filter are simply never applied.
       .videoFilters(`scale=-2:'min(ih,${setting.video_max_height})'`)
       .on('progress', (p: { percent?: number }) => {
         if (typeof p.percent === 'number' && Number.isFinite(p.percent)) {
@@ -160,9 +162,15 @@ export async function startVideoCompression(opts: {
   surface?: string;
   trimStartSeconds?: number | null;
   trimDurationSeconds?: number | null;
+  forceTranscode?: boolean | null;
 }): Promise<VideoCompressionJob> {
   assertImagekitUrl(opts.remoteUrl);
   const trim = resolveTrim(opts.trimStartSeconds, opts.trimDurationSeconds);
+  // Trim and a forced transcode both mean the FFmpeg pass must run whatever the
+  // surface's compression switch says — a trimmed story must not publish at full
+  // length, and a caller that asked for mp4 must not be handed back the webm it
+  // uploaded.
+  const mustEncode = Boolean(trim) || Boolean(opts.forceTranscode);
   pruneJobs();
   const job: VideoCompressionJob = {
     job_id: crypto.randomBytes(8).toString('hex'),
@@ -176,9 +184,9 @@ export async function startVideoCompression(opts: {
 
   const setting = await getUploadSettingsSafe(opts.surface);
   if (!setting) {
-    if (trim) {
+    if (mustEncode) {
       job.status = 'FAILED';
-      job.error = 'Upload settings unavailable — could not trim the video';
+      job.error = 'Upload settings unavailable — could not convert the video';
       return job;
     }
     job.status = 'DONE';
@@ -186,7 +194,7 @@ export async function startVideoCompression(opts: {
     job.url = opts.remoteUrl;
     return job;
   }
-  if (!setting.video_compression_enabled && !trim) {
+  if (!setting.video_compression_enabled && !mustEncode) {
     job.status = 'DONE';
     job.pct = 100;
     job.url = opts.remoteUrl;

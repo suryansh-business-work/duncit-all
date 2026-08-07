@@ -1,30 +1,12 @@
 import { useEffect, useRef } from 'react';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import ScreenShareIcon from '@mui/icons-material/ScreenShare';
-import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
-import CallSettingsMenu from './CallSettingsMenu';
+import { Alert, Avatar, Box, Paper, Stack, Typography } from '@mui/material';
 import CallWaveform from './CallWaveform';
 import CallControls from './CallControls';
+import CallRecorder from './CallRecorder';
 import ConnectionMeter from './ConnectionMeter';
-import CallEndIcon from '@mui/icons-material/CallEnd';
-import CallIcon from '@mui/icons-material/Call';
 import type { Coworker } from './queries';
 import type { CallKind, CallPhase } from './useCall';
+import type { RecordStage } from './useCallRecorder';
 
 interface Props {
   phase: CallPhase;
@@ -52,6 +34,14 @@ interface Props {
   probeBytes?: number;
   onToggleMute: () => void;
   onToggleCamera: () => void;
+  /** The take, and everything that happens to it after "stop". */
+  recordStage: RecordStage;
+  recordPct: number;
+  recordUrl: string | null;
+  recordError: string | null;
+  onToggleRecord: () => void;
+  onSendRecording: (url: string) => void;
+  onDismissRecording: () => void;
 }
 
 /** Video elements take a stream through a property, not an attribute. */
@@ -109,13 +99,24 @@ export default function CallPanel({
   probeBytes,
   onToggleMute,
   onToggleCamera,
+  recordStage,
+  recordPct,
+  recordUrl,
+  recordError,
+  onToggleRecord,
+  onSendRecording,
+  onDismissRecording,
 }: Readonly<Props>) {
   // What goes full screen: the video stage, not the whole panel — the controls
   // and the conversation behind them have no business filling a monitor.
   const stageRef = useRef<HTMLDivElement | null>(null);
   // Ringing at either end: the pulse says something is happening.
   const ringing = phase === 'ringing' || phase === 'incoming';
-  if (phase === 'idle' && !error) return null;
+  // Uploading and converting outlive the call — hanging up is the normal way to
+  // finish a recording, and taking the progress and the download away at that
+  // moment loses the thing the person was recording FOR.
+  const savingRecording = recordStage !== 'IDLE' && recordStage !== 'RECORDING';
+  if (phase === 'idle' && !error && !savingRecording) return null;
 
   return (
     <Paper variant="outlined" sx={{ m: 1, p: 1.5 }}>
@@ -213,6 +214,9 @@ export default function CallPanel({
             onStopSharing={onStopSharing}
             onMic={onMic}
             onCam={onCam}
+            recording={recordStage === 'RECORDING'}
+            recordBusy={savingRecording}
+            onToggleRecord={onToggleRecord}
           />
 
           {/* Bottom of the call, under the controls: the line is carrying
@@ -229,6 +233,18 @@ export default function CallPanel({
           )}
         </Stack>
       )}
+
+      {/* Outside the call block on purpose — see savingRecording above. */}
+      <Box sx={{ mt: phase === 'idle' ? 0 : 1 }}>
+        <CallRecorder
+          stage={recordStage}
+          pct={recordPct}
+          url={recordUrl}
+          error={recordError}
+          onSendToChat={onSendRecording}
+          onDismiss={onDismissRecording}
+        />
+      </Box>
     </Paper>
   );
 }

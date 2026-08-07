@@ -213,6 +213,13 @@ export const uploadTypeDefs = /* GraphQL */ `
       surface: String
       trim_start_seconds: Float
       trim_duration_seconds: Float
+      """
+      Run the FFmpeg pass even when compression is disabled for the surface.
+      Used by callers that need the mp4 container itself, not smaller bytes —
+      a browser call recording arrives as webm, and skipping the pass would
+      hand back that webm under the name of an mp4.
+      """
+      force_transcode: Boolean
     ): VideoCompressionJob!
   }
 `;

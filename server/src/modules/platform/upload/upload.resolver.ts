@@ -157,6 +157,7 @@ export const uploadResolvers = {
         surface?: string;
         trim_start_seconds?: number | null;
         trim_duration_seconds?: number | null;
+        force_transcode?: boolean | null;
       },
       ctx: GraphQLContext
     ) => {
@@ -167,6 +168,7 @@ export const uploadResolvers = {
         surface: args.surface,
         trimStartSeconds: args.trim_start_seconds,
         trimDurationSeconds: args.trim_duration_seconds,
+        forceTranscode: args.force_transcode,
       });
     },
   },

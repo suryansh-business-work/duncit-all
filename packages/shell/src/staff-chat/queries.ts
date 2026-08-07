@@ -282,6 +282,42 @@ export const MARK_THREAD_READ = gql`
 `;
 
 /**
+ * Turn an uploaded recording into an mp4.
+ *
+ * force_transcode is what makes this correct for a recording rather than a
+ * compression: the browser hands us webm, and without the flag a surface with
+ * compression switched off would hand that webm straight back.
+ */
+export const START_VIDEO_COMPRESSION = gql`
+  mutation StartCallRecordingConversion($remoteUrl: String!, $folder: String, $surface: String) {
+    startVideoCompression(
+      remote_url: $remoteUrl
+      folder: $folder
+      surface: $surface
+      force_transcode: true
+    ) {
+      job_id
+      status
+      pct
+      url
+      error
+    }
+  }
+`;
+
+export const VIDEO_COMPRESSION_JOB = gql`
+  query CallRecordingConversion($jobId: String!) {
+    videoCompressionJob(job_id: $jobId) {
+      job_id
+      status
+      pct
+      url
+      error
+    }
+  }
+`;
+
+/**
  * The consoles a coworker can be filtered by.
  *
  * The same keys the server admits to the directory, in the order the sidebar

@@ -8,8 +8,57 @@ import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 import CallSettingsMenu from './CallSettingsMenu';
 import type { CallKind, CallPhase } from './useCall';
+
+interface ToggleProps {
+  title: string;
+  /** Also the accessible name: the tooltip is not read by every reader. */
+  label: string;
+  on: boolean;
+  onColor?: 'error' | 'primary';
+  disabled?: boolean;
+  onClick: () => void;
+  onIcon: React.ReactNode;
+  offIcon: React.ReactNode;
+}
+
+/**
+ * One on/off control in the call row.
+ *
+ * Every one of these was the same eleven lines with two words changed, and each
+ * copy was another place for the pressed state and the label to drift apart.
+ */
+function CallToggle({
+  title,
+  label,
+  on,
+  onColor = 'error',
+  disabled,
+  onClick,
+  onIcon,
+  offIcon,
+}: Readonly<ToggleProps>) {
+  return (
+    <Tooltip title={title}>
+      {/* A disabled button fires no events, so the tooltip needs a live wrapper. */}
+      <span>
+        <IconButton
+          size="small"
+          color={on ? onColor : 'inherit'}
+          aria-label={label}
+          aria-pressed={on}
+          disabled={disabled}
+          onClick={onClick}
+        >
+          {on ? onIcon : offIcon}
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
 
 interface Props {
   phase: CallPhase;
@@ -29,6 +78,103 @@ interface Props {
   onStopSharing: () => void;
   onMic: (id: string) => void;
   onCam: (id: string) => void;
+  /** True while the take is running — not while it uploads or converts. */
+  recording: boolean;
+  /** Disabled while a finished take is still being saved. */
+  recordBusy: boolean;
+  onToggleRecord: () => void;
+}
+
+/** The controls that only exist once the call is up. */
+function LiveControls({
+  video,
+  muted,
+  cameraOff,
+  sharing,
+  recording,
+  recordBusy,
+  onToggleMute,
+  onToggleCamera,
+  onToggleFullscreen,
+  onShare,
+  onStopSharing,
+  onToggleRecord,
+}: Readonly<
+  Pick<
+    Props,
+    | 'muted'
+    | 'cameraOff'
+    | 'sharing'
+    | 'recording'
+    | 'recordBusy'
+    | 'onToggleMute'
+    | 'onToggleCamera'
+    | 'onToggleFullscreen'
+    | 'onShare'
+    | 'onStopSharing'
+    | 'onToggleRecord'
+  > & { video: boolean }
+>) {
+  return (
+    <>
+      <CallToggle
+        title={muted ? 'Unmute' : 'Mute'}
+        label={muted ? 'Unmute microphone' : 'Mute microphone'}
+        on={muted}
+        onClick={onToggleMute}
+        onIcon={<MicOffIcon fontSize="small" />}
+        offIcon={<MicIcon fontSize="small" />}
+      />
+
+      {video && (
+        <CallToggle
+          title={cameraOff ? 'Turn camera on' : 'Turn camera off'}
+          label={cameraOff ? 'Turn camera on' : 'Turn camera off'}
+          on={cameraOff}
+          onClick={onToggleCamera}
+          onIcon={<VideocamOffIcon fontSize="small" />}
+          offIcon={<VideocamIcon fontSize="small" />}
+        />
+      )}
+
+      {video && (
+        <Tooltip title="Full screen">
+          <IconButton
+            size="small"
+            color="inherit"
+            aria-label="Full screen video"
+            onClick={onToggleFullscreen}
+          >
+            <FullscreenIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {video && (
+        <CallToggle
+          title={sharing ? 'Stop sharing' : 'Share your screen'}
+          label={sharing ? 'Stop sharing your screen' : 'Share your screen'}
+          on={sharing}
+          onColor="primary"
+          onClick={sharing ? onStopSharing : onShare}
+          onIcon={<StopScreenShareIcon fontSize="small" />}
+          offIcon={<ScreenShareIcon fontSize="small" />}
+        />
+      )}
+
+      {/* Recording is offered on audio calls too — most of what is worth
+          keeping from a call is what was said, not what was on screen. */}
+      <CallToggle
+        title={recording ? 'Stop recording' : 'Record this call'}
+        label={recording ? 'Stop recording this call' : 'Record this call'}
+        on={recording}
+        disabled={recordBusy}
+        onClick={onToggleRecord}
+        onIcon={<StopCircleIcon fontSize="small" />}
+        offIcon={<FiberManualRecordIcon fontSize="small" />}
+      />
+    </>
+  );
 }
 
 /**
@@ -41,91 +187,55 @@ interface Props {
 export default function CallControls({
   phase,
   kind,
-  muted,
-  cameraOff,
-  sharing,
   micId,
   camId,
   onAnswer,
   onDecline,
   onHangUp,
-  onToggleMute,
-  onToggleCamera,
-  onToggleFullscreen,
-  onShare,
-  onStopSharing,
   onMic,
   onCam,
+  ...live
 }: Readonly<Props>) {
-  const live = phase === 'connected';
+  const connected = phase === 'connected';
   const video = kind === 'VIDEO';
+  const hangUpLabel = phase === 'ringing' ? 'Cancel' : 'Hang up';
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       {phase === 'incoming' ? (
         <>
-          <Button size="small" variant="contained" color="success" startIcon={<CallIcon />} onClick={onAnswer}>
+          <Button
+            size="small"
+            variant="contained"
+            color="success"
+            startIcon={<CallIcon />}
+            onClick={onAnswer}
+          >
             Answer
           </Button>
-          <Button size="small" variant="outlined" color="error" startIcon={<CallEndIcon />} onClick={onDecline}>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            startIcon={<CallEndIcon />}
+            onClick={onDecline}
+          >
             Decline
           </Button>
         </>
       ) : (
-        <Button size="small" variant="contained" color="error" startIcon={<CallEndIcon />} onClick={onHangUp}>
-          {phase === 'ringing' ? 'Cancel' : 'Hang up'}
+        <Button
+          size="small"
+          variant="contained"
+          color="error"
+          startIcon={<CallEndIcon />}
+          onClick={onHangUp}
+        >
+          {hangUpLabel}
         </Button>
       )}
 
-      {live && (
-        <Tooltip title={muted ? 'Unmute' : 'Mute'}>
-          <IconButton
-            size="small"
-            color={muted ? 'error' : 'inherit'}
-            aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
-            aria-pressed={muted}
-            onClick={onToggleMute}
-          >
-            {muted ? <MicOffIcon fontSize="small" /> : <MicIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      )}
-
-      {live && video && (
-        <Tooltip title={cameraOff ? 'Turn camera on' : 'Turn camera off'}>
-          <IconButton
-            size="small"
-            color={cameraOff ? 'error' : 'inherit'}
-            aria-label={cameraOff ? 'Turn camera on' : 'Turn camera off'}
-            aria-pressed={cameraOff}
-            onClick={onToggleCamera}
-          >
-            {cameraOff ? <VideocamOffIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      )}
-
-      {live && video && (
-        <Tooltip title="Full screen">
-          <IconButton size="small" color="inherit" aria-label="Full screen video" onClick={onToggleFullscreen}>
-            <FullscreenIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-
-      {live && video && (
-        <Tooltip title={sharing ? 'Stop sharing' : 'Share your screen'}>
-          <IconButton
-            size="small"
-            color={sharing ? 'primary' : 'inherit'}
-            aria-label={sharing ? 'Stop sharing your screen' : 'Share your screen'}
-            aria-pressed={sharing}
-            onClick={sharing ? onStopSharing : onShare}
-          >
-            {sharing ? <StopScreenShareIcon fontSize="small" /> : <ScreenShareIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      )}
+      {connected && <LiveControls video={video} {...live} />}
 
       <Box sx={{ flex: 1 }} />
       <CallSettingsMenu micId={micId} camId={camId} onMic={onMic} onCam={onCam} showCamera={video} />

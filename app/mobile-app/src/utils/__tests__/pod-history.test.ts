@@ -1,11 +1,11 @@
 import {
   activePodHistoryFilterCount,
   applyPodHistory,
-  buildTimeline,
   canRejoin,
   categoriesUnder,
   dedupeByPod,
   DEFAULT_POD_HISTORY_FILTERS,
+  podHistoryGate,
   podPriceCaption,
   refundLabel,
   REFUND_LABEL,
@@ -90,61 +90,43 @@ describe('dedupeByPod', () => {
   });
 });
 
-describe('buildTimeline', () => {
-  it('returns join + available backout for a joined membership', () => {
-    const events = buildTimeline(membership());
-    expect(events.map((e) => e.title)).toEqual(['Pod Joined', 'Backout requested']);
-    expect(events[1]?.tag).toBe('Available');
-  });
+describe('podHistoryGate', () => {
+  const future = '2999-01-01T10:00:00Z';
+  const past = '2020-01-01T10:00:00Z';
 
-  it('marks refund as processed when backed out + PROCESSED', () => {
-    const events = buildTimeline(
-      membership({ status: 'BACKED_OUT', backed_out_at: '2026-06-05', refund_status: 'PROCESSED' }),
+  it('offers a backout and calls it Joined while the pod is still ahead', () => {
+    const gate = podHistoryGate(
+      membership({ pod: { ...membership().pod!, pod_date_time: future } }),
     );
-    expect(events).toHaveLength(4);
-    expect(events[2]?.tag).toBe('Checked');
-    expect(events[3]?.title).toBe('Refund initiated');
-    expect(events[3]?.state).toBe('done');
+    expect(gate).toEqual({ canBackout: true, showRefundState: false, joinedLabelKind: 'JOINED' });
   });
 
-  it('marks refund pending (current) when backed out + PENDING', () => {
-    const events = buildTimeline(
-      membership({ status: 'BACKED_OUT', backed_out_at: '2026-06-05', refund_status: 'PENDING' }),
-    );
-    expect(events[2]?.tag).toBe('Waiting');
-    expect(events[2]?.state).toBe('current');
-    expect(events[3]?.title).toBe('Refund not initiated');
+  it('offers nothing and calls it Visited once the pod has happened', () => {
+    const gate = podHistoryGate(membership({ pod: { ...membership().pod!, pod_date_time: past } }));
+    expect(gate).toEqual({ canBackout: false, showRefundState: false, joinedLabelKind: 'VISITED' });
   });
 
-  it('records the request as waiting while the backout is in process', () => {
-    const events = buildTimeline(
+  it('reports a refund state once a backout asked for one', () => {
+    const gate = podHistoryGate(
       membership({
-        status: 'BACKOUT_IN_PROCESS',
-        backed_out_at: '2026-06-05',
-        refund_status: 'PENDING',
+        pod: { ...membership().pod!, pod_date_time: future },
+        backouts: [
+          {
+            backout_no: 'DUN-BKO-1',
+            status: 'SPOT_FILLED',
+            attempt_no: 1,
+            seats: 1,
+            seats_before: 1,
+            refund_amount: 500,
+            deduction_pct: 10,
+            refund_processed_at: '2026-06-06',
+            created_at: '2026-06-05',
+            events: [],
+          },
+        ],
       }),
     );
-    expect(events.map((e) => e.title)).toEqual([
-      'Pod Joined',
-      'Backout requested',
-      'Refund criteria',
-      'Refund not initiated',
-    ]);
-    expect(events[1]?.tag).toBe('Completed');
-    expect(events[2]?.tag).toBe('Waiting');
-  });
-
-  it('marks refund not initiated when backed out + NOT_ELIGIBLE', () => {
-    const events = buildTimeline(
-      membership({
-        status: 'BACKED_OUT',
-        backed_out_at: '2026-06-05',
-        refund_status: 'NOT_ELIGIBLE',
-      }),
-    );
-    expect(events[2]?.tag).toBe('Checked');
-    expect(events[3]?.title).toBe('Refund not initiated');
-    expect(events[3]?.state).toBe('current');
+    expect(gate.showRefundState).toBe(true);
   });
 });
 

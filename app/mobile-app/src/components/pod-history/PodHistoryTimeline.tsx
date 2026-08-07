@@ -2,77 +2,125 @@ import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
+import {
+  buildPodParticipationTimeline,
+  timelineCopy,
+  type PodTimelineNode,
+  type TimelineCopy,
+} from '@duncit/utils';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { buildTimeline, type PodMembership, type TimelineEvent } from '@/utils/pod-history';
+import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
-function iconFor(event: TimelineEvent): { name: IconName; color: string } {
-  if (event.state === 'current') return { name: 'hourglass-top', color: semantic.info };
-  if (event.icon === 'backout') return { name: 'undo', color: semantic.warning };
-  if (event.icon === 'refund') return { name: 'receipt-long', color: semantic.success };
-  return { name: 'check-circle', color: semantic.success };
+const TONE: Record<TimelineCopy['tone'], { name: IconName; color: string }> = {
+  good: { name: 'check-circle', color: semantic.success },
+  bad: { name: 'cancel', color: semantic.error },
+  warn: { name: 'undo', color: semantic.warning },
+  info: { name: 'hourglass-top', color: semantic.info },
+};
+
+/**
+ * One node and everything under it.
+ *
+ * Hoisted and recursive because the workflow branches: a backout leads to the
+ * spot being filled or not, and each of those leads somewhere else again. A
+ * flat list can show the same events but not which followed from which, and
+ * "why was I not refunded" is a question only the shape answers.
+ */
+function TimelineNode({ node, depth }: Readonly<{ node: PodTimelineNode; depth: number }>) {
+  const copy = timelineCopy(node);
+  const icon = TONE[copy.tone];
+  const children = node.children ?? [];
+
+  return (
+    <YStack paddingLeft={depth === 0 ? 0 : 18}>
+      <XStack gap={10} alignItems="flex-start" paddingVertical={5}>
+        {/* The rail into a nested branch — what makes "this followed from that"
+            visible without a second column. */}
+        {depth > 0 ? (
+          <YStack width={2} alignSelf="stretch" backgroundColor="$borderColor" marginRight={4} />
+        ) : null}
+        <MaterialIcons name={icon.name} size={20} color={icon.color} />
+        <YStack flex={1}>
+          <XStack alignItems="center" gap={8} flexWrap="wrap">
+            <Text fontSize={14} fontWeight="700" color="$color">
+              {copy.title}
+            </Text>
+            {node.state === 'current' ? (
+              <XStack
+                borderRadius={999}
+                paddingHorizontal={8}
+                paddingVertical={2}
+                borderWidth={1}
+                borderColor="$borderColor"
+              >
+                <Text fontSize={10} fontWeight="600" color="$color">
+                  In progress
+                </Text>
+              </XStack>
+            ) : null}
+            {/* The id is the whole point of the mapping: this line and the row on
+                Finance's User Backout Refunds page are the same request. */}
+            {node.backoutNo && node.kind === 'BACKOUT_REQUESTED' ? (
+              <XStack
+                borderRadius={999}
+                paddingHorizontal={8}
+                paddingVertical={2}
+                borderWidth={1}
+                borderColor="$borderColor"
+              >
+                <Text fontSize={10} fontWeight="600" color="$colorSubtle">
+                  {node.backoutNo}
+                </Text>
+              </XStack>
+            ) : null}
+          </XStack>
+          {node.at ? (
+            <Text fontSize={11} color="$muted">
+              {formatDateTime(node.at)}
+            </Text>
+          ) : null}
+          <Text fontSize={13} color="$muted">
+            {copy.detail}
+          </Text>
+        </YStack>
+      </XStack>
+      {children.map((child, index) => (
+        <TimelineNode
+          key={`${child.kind}-${child.backoutNo ?? index}`}
+          node={child}
+          depth={depth + 1}
+        />
+      ))}
+    </YStack>
+  );
 }
 
-/** Vertical membership timeline — RN twin of mWeb's PodHistoryTimeline. */
+/**
+ * What happened to this booking.
+ *
+ * Tamagui twin of mWeb's timeline: the nodes and the words both come from
+ * @duncit/utils, so the two apps cannot start telling the same person different
+ * stories about the same booking (rule 27).
+ */
 export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) {
-  const { primary } = useThemeColors();
-  const events = buildTimeline(item);
+  const nodes = buildPodParticipationTimeline({
+    joinedAt: item.joined_at,
+    podDateTime: item.pod?.pod_date_time,
+    attended: item.attended ?? false,
+    attendedAt: item.attended_at,
+    cancelledBy: item.pod_cancelled_by ?? null,
+    cancelledAt: item.pod_cancelled_at,
+    backouts: item.backouts ?? [],
+  });
 
   return (
     <YStack gap={2} testID="pod-history-timeline">
-      {events.map((event, index) => {
-        const icon = iconFor(event);
-        const last = index === events.length - 1;
-        return (
-          <XStack key={`${event.title}-${index}`} gap={12} alignItems="flex-start">
-            <YStack alignItems="center">
-              <MaterialIcons name={icon.name} size={22} color={icon.color} />
-              {last ? null : (
-                <YStack
-                  width={2}
-                  height={34}
-                  marginVertical={4}
-                  backgroundColor={event.state === 'current' ? '$borderColor' : primary}
-                />
-              )}
-            </YStack>
-            <YStack flex={1} paddingBottom={last ? 0 : 6}>
-              <XStack alignItems="center" gap={8} flexWrap="wrap">
-                <Text fontSize={14} fontWeight="700" color="$color">
-                  {event.title}
-                </Text>
-                <XStack
-                  borderRadius={999}
-                  paddingHorizontal={8}
-                  paddingVertical={2}
-                  backgroundColor={event.state === 'done' ? '$primary' : '$surface'}
-                  borderWidth={event.state === 'done' ? 0 : 1}
-                  borderColor="$borderColor"
-                >
-                  <Text
-                    fontSize={10}
-                    fontWeight="600"
-                    color={event.state === 'done' ? '$onPrimary' : '$color'}
-                  >
-                    {event.tag}
-                  </Text>
-                </XStack>
-              </XStack>
-              {event.date ? (
-                <Text fontSize={11} color="$muted">
-                  {formatDateTime(event.date)}
-                </Text>
-              ) : null}
-              <Text fontSize={13} color="$muted">
-                {event.detail}
-              </Text>
-            </YStack>
-          </XStack>
-        );
-      })}
+      {nodes.map((node, index) => (
+        <TimelineNode key={`${node.kind}-${node.backoutNo ?? index}`} node={node} depth={0} />
+      ))}
     </YStack>
   );
 }

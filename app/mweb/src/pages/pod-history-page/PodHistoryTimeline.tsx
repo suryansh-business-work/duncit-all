@@ -3,9 +3,13 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import UndoIcon from '@mui/icons-material/Undo';
-import { buildPodParticipationTimeline, type PodTimelineNode } from '@duncit/utils';
+import {
+  buildPodParticipationTimeline,
+  timelineCopy,
+  type PodTimelineNode,
+  type TimelineCopy,
+} from '@duncit/utils';
 import { useDateFormat } from '../../utils/dateFormat';
-import { timelineCopy, type TimelineCopy } from './timelineCopy';
 import type { PodHistoryItem } from './queries';
 
 const TONE_ICON: Record<TimelineCopy['tone'], React.ReactElement> = {

@@ -1,12 +1,12 @@
-import type { PodCancelActor, PodTimelineKind, PodTimelineNode } from '@duncit/utils';
+import type { PodCancelActor, PodTimelineKind, PodTimelineNode } from './pod-participation';
 
 /**
  * What each state of the participation workflow says on screen.
  *
- * Kept apart from the drawing so the native twin can render the same nodes with
- * the same words: the timeline is one model (rule 27), and two hand-written
- * copies of this table is exactly how the two apps start describing the same
- * booking differently.
+ * Beside the model rather than beside either renderer: mWeb draws these nodes
+ * in MUI and the native app draws them in Tamagui, and two hand-written copies
+ * of this table is exactly how the two apps start describing the same booking
+ * differently (rule 27).
  */
 export interface TimelineCopy {
   title: string;

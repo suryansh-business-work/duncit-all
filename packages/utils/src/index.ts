@@ -12,6 +12,7 @@ export {
   type PodTimelineNode,
   type PodTimelineState,
 } from './pod-participation';
+export { timelineCopy, type TimelineCopy } from './pod-participation-copy';
 export {
   readReferralCode,
   referralLink,

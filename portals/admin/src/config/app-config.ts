@@ -78,6 +78,7 @@ export const appConfig = {
         { label: 'FAQs', to: '/faqs', icon: 'help' },
         { label: 'Partner FAQs', to: '/partners/faqs', icon: 'help' },
         { label: 'Badges', to: '/badges', icon: 'shield' },
+        { label: 'Something for you', to: '/something-for-you', icon: 'campaign' },
       ],
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
@@ -146,6 +147,7 @@ export const appConfig = {
     { label: 'FAQs', to: '/faqs', section: 'Engagement' },
     { label: 'Partner FAQs', to: '/partners/faqs', section: 'Engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
+    { label: 'Something for you', to: '/something-for-you', section: 'Engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
     {
       label: 'Coin Dashboard',

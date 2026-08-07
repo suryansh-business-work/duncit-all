@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, type ScrollView as RNScrollView } from 'react-native';
+import * as Linking from 'expo-linking';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, YStack } from 'tamagui';
@@ -29,6 +31,7 @@ import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
+import { SomethingForYouRail } from '@/components/home/SomethingForYouRail';
 import { VerifyEmailBanner } from '@/components/home/VerifyEmailBanner';
 import { StatusRail } from '@/components/status/StatusRail';
 import { useSavedPodHearts } from '@/hooks/useSavedPodHearts';
@@ -68,6 +71,17 @@ export function HomeFeed() {
   const { primary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  /**
+   * Open one of our own paths, through our own deep link.
+   *
+   * The linking config already maps every mWeb path to a screen, so routing
+   * an admin-entered path through it reuses that map instead of keeping a
+   * second copy here that would drift the first time a route moved.
+   */
+  const openInAppPath = useCallback((path: string) => {
+    fireAndForget(Linking.openURL(Linking.createURL(path)));
+  }, []);
   const isHost = meData?.me?.roles?.includes('HOST') ?? false;
 
   // A logo tap bumps this nonce; scroll the feed back to the top in response.
@@ -190,6 +204,9 @@ export function HomeFeed() {
               />
             </Reveal>
             <Reveal index={6}>
+              <SomethingForYouRail onOpenPath={openInAppPath} />
+            </Reveal>
+            <Reveal index={7}>
               <YStack paddingHorizontal={16}>
                 <AdSlot position="HOME_BOTTOM" variant="banner" />
               </YStack>

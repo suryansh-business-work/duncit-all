@@ -70,6 +70,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       membersOne: '1 Member',
       membersMany: '{count} Members',
       homeEmpty: 'No pods here yet. Pull to refresh or pick a different vibe.',
+      // The rail of promo cards at the bottom of Home. The cards themselves
+      // are admin content; only the heading over them is copy.
+      somethingForYou: "We've got something for you",
       savePod: 'Save pod',
       savedPod: 'Remove from saved',
     },

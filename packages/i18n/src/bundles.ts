@@ -299,7 +299,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       panel: {
         title: 'Coworkers',
         close: 'Close chat',
-        closeBusy: 'Wait — the recording is still being saved',
+        closeBusy: 'Close chat — the recording keeps saving in the background',
         open: 'Chat with a coworker',
       },
       list: {

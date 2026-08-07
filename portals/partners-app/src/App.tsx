@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
-import PartnerDashboardPage from './pages/dashboard-page/PartnerDashboardPage';
+import PartnerLanding from './components/PartnerLanding';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import RegisterVenuePage from './pages/RegisterVenuePage';
 import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
@@ -36,7 +36,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/profile" element={authed(<ProfilePage />)} />
-      <Route path="/" element={authed(<PartnerDashboardPage />)} />
+      <Route path="/" element={authed(<PartnerLanding />)} />
       <Route path="/faqs" element={authed(<PartnerFaqsPage />)} />
       <Route path="/register-venue" element={authed(<VenueListingsPage />)} />
       <Route path="/register-venue/new" element={authed(<RegisterVenuePage />)} />

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
+import { describeFailure, failureFromKey, type Failure } from './failure';
 import { playCallEnded, startRinging } from './sounds';
 
 export type CallKind = 'AUDIO' | 'VIDEO';
@@ -45,20 +46,6 @@ function mediaDevices(): MediaDevices {
   return devices;
 }
 
-/**
- * What to show when something threw.
- *
- * Never the raw message alone: OverconstrainedError — thrown when a remembered
- * microphone or camera is no longer plugged in — carries an EMPTY message in
- * Chrome. Passing that straight through set the error state to '', which is
- * falsy, so the call window's own "am I open" test said no and the window
- * vanished the instant it appeared, explaining nothing.
- */
-const failureText = (error: unknown, fallbackKey: string): string => {
-  const message = error instanceof Error ? error.message.trim() : '';
-  return message || fallbackKey;
-};
-
 /** Open ONE track from a chosen device — the unit a mid-call swap needs. */
 async function openTrack(
   want: 'audio' | 'video',
@@ -98,7 +85,7 @@ export function useCall(
   const [lastCallId, setLastCallId] = useState<string | null>(null);
   /** Who is on the other end, by name — set from the offer or by the caller. */
   const [peerName, setPeerName] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Failure | null>(null);
   /**
    * Which microphone and camera to open. '' means whatever the OS prefers.
    *
@@ -183,7 +170,7 @@ export function useCall(
       // only thing that knows, so it is the only thing that can say so.
       connection.oniceconnectionstatechange = () => {
         if (connection.iceConnectionState === 'failed') {
-          setError('shell.chat.call.connectionLost');
+          setError(failureFromKey('shell.chat.call.connectionLost'));
         }
       };
       pc.current = connection;
@@ -224,7 +211,7 @@ export function useCall(
         localStream.current = stream;
         if (micId) devices.onChoose('mic', '');
         if (camId) devices.onChoose('cam', '');
-        setError('shell.chat.call.deviceGone');
+        setError(failureFromKey('shell.chat.call.deviceGone'));
         return stream;
       }
     },
@@ -273,7 +260,7 @@ export function useCall(
         swapInPreview(previous, track);
         previous?.stop();
       } catch (err) {
-        setError(failureText(err, 'shell.chat.call.switchFailed'));
+        setError(describeFailure(err, 'shell.chat.call.switchFailed'));
       }
     },
     [swapInPreview]
@@ -335,7 +322,7 @@ export function useCall(
     const connection = pc.current;
     const sender = connection?.getSenders().find((s) => s.track?.kind === 'video');
     if (!sender) {
-      setError('shell.chat.call.shareNeedsVideo');
+      setError(failureFromKey('shell.chat.call.shareNeedsVideo'));
       return;
     }
     try {
@@ -356,7 +343,7 @@ export function useCall(
     } catch (err) {
       // Cancelling the picker throws too; that is not worth an error banner.
       if ((err as Error)?.name !== 'NotAllowedError') {
-        setError(failureText(err, 'shell.chat.call.shareFailed'));
+        setError(describeFailure(err, 'shell.chat.call.shareFailed'));
       }
     }
   }, []);
@@ -392,7 +379,7 @@ export function useCall(
         startedAt.current = new Date();
       } catch (err) {
         // Almost always a refused camera or microphone permission.
-        setError(failureText(err, 'shell.chat.call.startFailed'));
+        setError(describeFailure(err, 'shell.chat.call.startFailed'));
         teardown();
       }
     },
@@ -417,7 +404,7 @@ export function useCall(
       startedAt.current = new Date();
       setPhase('connected');
     } catch (err) {
-      setError(failureText(err, 'shell.chat.call.answerFailed'));
+      setError(describeFailure(err, 'shell.chat.call.answerFailed'));
       teardown();
     }
   }, [buildPeer, kind, openMedia, peerId, socket, teardown]);

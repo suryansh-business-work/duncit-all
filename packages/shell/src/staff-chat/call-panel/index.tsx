@@ -1,10 +1,13 @@
 import { useRef } from 'react';
-import { Alert, Box, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import CallWaveform from '../CallWaveform';
 import CallControls from '../call-controls';
 import CallRecorder from '../CallRecorder';
 import ConnectionMeter from '../ConnectionMeter';
 import { useTranslation } from '../../i18n/useTranslation';
+import FailureAlert from '../FailureAlert';
+import type { Failure } from '../failure';
+import { toggleFullscreen } from '../fullscreen';
 import CallHeader from './CallHeader';
 import CallStage from './CallStage';
 import type { CallKind, CallPhase } from '../useCall';
@@ -16,7 +19,7 @@ interface Props {
   /** Resolved by the window: the offer carries it, not the open thread. */
   peerName: string;
   peerPhoto: string;
-  error: string | null;
+  error: Failure | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   onAnswer: () => void;
@@ -94,15 +97,6 @@ export default function CallPanel({
   const savingRecording = recordStage !== 'IDLE' && recordStage !== 'RECORDING';
   if (phase === 'idle' && !error && !savingRecording) return null;
 
-  const toggleFullscreen = () => {
-    const node = stageRef.current;
-    if (!node) return;
-    if (globalThis.document.fullscreenElement) {
-      globalThis.document.exitFullscreen().catch(() => undefined);
-    } else {
-      node.requestFullscreen?.().catch(() => undefined);
-    }
-  };
 
   /*
     A fixed floor, with the picture above it.
@@ -124,10 +118,7 @@ export default function CallPanel({
         gap: 1,
       }}
     >
-      {/* Our own failures arrive as keys; a message the browser threw arrives as
-          a sentence, and t() hands an unknown key straight back — so one call
-          renders both without the hook having to tell them apart. */}
-      {error && <Alert severity="error">{t(error)}</Alert>}
+      {error && <FailureAlert failure={error} />}
 
       {phase !== 'idle' && (
         <CallHeader phase={phase} kind={kind} peerName={peerName} peerPhoto={peerPhoto} sharing={sharing} />
@@ -164,7 +155,7 @@ export default function CallPanel({
             onHangUp={onHangUp}
             onToggleMute={onToggleMute}
             onToggleCamera={onToggleCamera}
-            onToggleFullscreen={toggleFullscreen}
+            onToggleFullscreen={() => toggleFullscreen(stageRef.current)}
             onShare={onShare}
             onStopSharing={onStopSharing}
             onMic={onMic}

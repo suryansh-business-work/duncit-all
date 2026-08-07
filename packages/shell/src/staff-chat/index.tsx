@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatWindows from './ChatWindows';
 import { useCall } from './useCall';
@@ -99,12 +99,21 @@ export function StaffChatPanel({
     remoteStream: call.remoteStream,
   });
 
-  // A call arriving is a reason to show the panel. Only on the way IN: opening
-  // it every render while ringing would fight anyone who closed it deliberately.
+  /*
+    A call arriving is a reason to show the panel — on the way IN, once.
+
+    Held in a ref so the effect depends on the PHASE and nothing else. With the
+    callback in the dependencies, a caller passing an inline arrow re-ran this
+    on every render, and a phone that is still ringing would reopen the panel
+    the instant anyone closed it. A hook should not be that easy for its caller
+    to break by accident.
+  */
+  const requestOpen = useRef(onRequestOpen);
+  requestOpen.current = onRequestOpen;
   const incoming = call.phase === 'incoming';
   useEffect(() => {
-    if (incoming) onRequestOpen?.();
-  }, [incoming, onRequestOpen]);
+    if (incoming) requestOpen.current?.();
+  }, [incoming]);
 
   useRecordingAttach({
     readyUrl: recorder.stage === 'READY' ? recorder.url : null,

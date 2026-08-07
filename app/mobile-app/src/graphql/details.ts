@@ -284,6 +284,25 @@ export const PodPeopleDocument = gql(`
   }
 `);
 
+/**
+ * Join a FREE pod outright — no payment, no checkout.
+ *
+ * A free pod is forced to `pod_amount` 0 server-side, so sending it through the
+ * paid checkout asked the server to charge nothing and got "Amount must be
+ * greater than 0" back: free pods could not be joined from the app at all.
+ * mWeb has always called this. `seats` books several at once, and the referral
+ * token is what credits whoever shared the link.
+ */
+export const JoinFreePodDocument = gql(`
+  mutation MobileJoinFreePod($podId: ID!, $referral: String, $seats: Int) {
+    joinFreePod(pod_doc_id: $podId, referral_token: $referral, seats: $seats) {
+      id
+      status
+      seats
+    }
+  }
+`);
+
 /** Seats each attendee's booking holds — the "+N other members" label. Mirrors
  * mWeb's POD_ATTENDEE_SEATS (rule 27). */
 export const PodAttendeeSeatsDocument = gql(`

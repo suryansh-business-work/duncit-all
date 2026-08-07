@@ -26,6 +26,8 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
+import { JoinFreePodDocument } from '@/graphql/details';
+import { graphqlRequest } from '@/services/graphql.client';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
@@ -74,7 +76,40 @@ export function PodDetailsScreen() {
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
+  const [joiningFree, setJoiningFree] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const isFree = pod?.pod_type === 'FREE';
+
+  /**
+   * A free pod is joined outright — no checkout.
+   *
+   * The server forces `pod_amount` to 0 on a FREE pod, so sending one through
+   * the paid checkout asked it to charge nothing and got "Amount must be
+   * greater than 0" back: free pods could not be joined from the app at all.
+   * mWeb has always called `joinFreePod` here (rule 27).
+   *
+   * KNOWN GAP: mWeb also forwards the `?ref=` referral token from the URL. The
+   * native PodDetails route has no referral param yet, so a free join from a
+   * shared link does not credit the sharer — that needs deep-link plumbing and
+   * is its own change.
+   */
+  const onJoinFree = async () => {
+    if (!pod || joiningFree) return;
+    setJoiningFree(true);
+    setJoinError(null);
+    try {
+      await graphqlRequest(
+        JoinFreePodDocument,
+        { podId: pod.id, referral: null, seats },
+        { auth: true },
+      );
+      await refetch();
+    } catch (err) {
+      setJoinError(toErrorMessage(err, 'Could not join this pod.'));
+    } finally {
+      setJoiningFree(false);
+    }
+  };
   // The viewer hosts THIS pod (pod-specific, independent of their active studio
   // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
   const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);
@@ -279,6 +314,19 @@ export function PodDetailsScreen() {
         {podBody}
       </SafeAreaView>
 
+      {joinError ? (
+        <Text
+          testID="pod-join-error"
+          fontSize={12.5}
+          color="$danger"
+          textAlign="center"
+          paddingHorizontal={16}
+          paddingBottom={6}
+        >
+          {joinError}
+        </Text>
+      ) : null}
+
       {pod ? (
         <PodBookingBar
           pod={pod}
@@ -287,7 +335,11 @@ export function PodDetailsScreen() {
           membershipState={membershipState}
           seats={seats}
           onSeatsChange={setSeats}
-          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id, seats })}
+          onCheckout={
+            isFree
+              ? () => void onJoinFree()
+              : () => navigation.navigate('Checkout', { podId: pod.id, seats })
+          }
           onBackout={() => setBackoutOpen(true)}
           onKeepSpot={openKeepSpot}
           onGoToDashboard={() => {

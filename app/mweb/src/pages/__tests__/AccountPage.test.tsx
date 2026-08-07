@@ -45,10 +45,6 @@ vi.mock('../account-page/CompletionMeter', () => ({
   default: () => <div>stub-completion</div>,
 }));
 
-vi.mock('../account-page/HostsVenuesCard', () => ({
-  default: () => <div>stub-hostsvenues</div>,
-}));
-
 vi.mock('../account-page/PrivacyToggleCard', () => ({
   default: ({ onChanged }: { onChanged: () => void }) => (
     <button onClick={onChanged}>stub-privacy</button>

@@ -2,7 +2,6 @@ export { AccountInfoRow } from './AccountInfoRow';
 export { AccountProfileHeader } from './AccountProfileHeader';
 export { AccountHealthCard } from './AccountHealthCard';
 export { CompletionMeter } from './CompletionMeter';
-export { HostsVenuesCard } from './HostsVenuesCard';
 export { EditAccountDialog } from './EditAccountDialog';
 export { EmailVerificationSection } from './EmailVerificationSection';
 export { AddressBookSection } from './AddressBookSection';

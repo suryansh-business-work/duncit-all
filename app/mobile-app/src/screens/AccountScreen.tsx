@@ -9,7 +9,6 @@ import {
   AccountProfileHeader,
   CompletionMeter,
   EditAccountDialog,
-  HostsVenuesCard,
   LanguageSection,
   PrivacyToggleCard,
   SecuritySection,
@@ -29,9 +28,6 @@ export function AccountScreen() {
   const { me, health, isLoading, error, updateProfile, updateVisibility, refresh } = useAccount();
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
-
-  const isHost = me?.roles.includes('HOST') ?? false;
-  const isVenue = me?.roles.includes('VENUE_OWNER') ?? false;
 
   const loaded =
     error || !me ? (
@@ -93,15 +89,6 @@ export function AccountScreen() {
         {health ? (
           <AccountHealthCard health={health} onPress={() => navigation.navigate('AccountHealth')} />
         ) : null}
-
-        <HostsVenuesCard
-          isHost={isHost}
-          isVenue={isVenue}
-          onDiscover={() => navigation.navigate('HostsVenues')}
-          onHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
-          onVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
-          onPodHistory={() => navigation.navigate('PodHistory')}
-        />
 
         <YStack height={1} backgroundColor="$borderColor" />
         <LanguageSection />

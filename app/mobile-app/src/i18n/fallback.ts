@@ -1,4 +1,9 @@
-import { flattenCatalogue, GRIEVANCE_BUNDLE, MWEB_BUNDLE, type NestedCatalogue } from '@duncit/i18n';
+import {
+  flattenCatalogue,
+  GRIEVANCE_BUNDLE,
+  MWEB_BUNDLE,
+  type NestedCatalogue,
+} from '@duncit/i18n';
 
 /**
  * The native app's LOCAL FALLBACK bundle (CLAUDE.md rule 38).

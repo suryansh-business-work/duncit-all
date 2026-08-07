@@ -16,7 +16,7 @@ interface Props {
  */
 export default function GrievanceOfficerCard({ officer }: Readonly<Props>) {
   const { t } = useTranslation();
-  const rows: Array<[string, string]> = [
+  const rows: [string, string][] = [
     [t('grievance.officerName'), officer?.name ?? ''],
     [t('grievance.officerEmail'), officer?.email ?? ''],
     [t('grievance.officerPhone'), officer?.phone ?? ''],

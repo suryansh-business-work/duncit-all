@@ -54,7 +54,10 @@ export function buildGrievanceSchema(t: GrievanceTranslate) {
       .max(GRIEVANCE_MAX_LENGTH.phone, tooLong(label('phone')))
       .refine((v) => PHONE_INTL_PLUS.test(phoneDigits(v)), t('grievance.errorPhone')),
     // The one optional field.
-    address: z.string().trim().max(GRIEVANCE_MAX_LENGTH.address, tooLong(label('address'))),
+    address: z
+      .string()
+      .trim()
+      .max(GRIEVANCE_MAX_LENGTH.address, tooLong(label('address'))),
     subject: z
       .string()
       .trim()

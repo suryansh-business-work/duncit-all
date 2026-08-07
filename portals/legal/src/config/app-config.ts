@@ -25,6 +25,14 @@ export const appConfig = {
     { label: 'Documents', to: '/documents', icon: 'document' },
     { label: 'Policies', to: '/policies', icon: 'policy' },
     { label: 'Contracts', to: '/contracts', icon: 'handshake' },
+    {
+      label: 'Grievance',
+      icon: 'flag',
+      children: [
+        { label: 'Grievance Tickets', to: '/grievance/tickets', icon: 'ticket' },
+        { label: 'Grievance Info', to: '/grievance/info', icon: 'contactMail' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

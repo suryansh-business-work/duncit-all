@@ -30,6 +30,7 @@ export {
   allFallbackEntries,
   createTranslator,
   flattenCatalogue,
+  GRIEVANCE_BUNDLE,
   MEDIA_BUNDLE,
   mergeCatalogues,
   missingKeys,

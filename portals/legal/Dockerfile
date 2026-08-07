@@ -51,6 +51,10 @@ COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
+# @duncit/forms peers on react-hook-form + MUI. Without its package.json in the
+# install stage pnpm never links them, and `tsc -b` fails inside the image on a
+# build that passes locally — the one failure mode local work cannot show you.
+COPY packages/forms/package.json ./packages/forms/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

@@ -5,6 +5,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
+import GavelIcon from '@mui/icons-material/Gavel';
 
 export interface SupportSection {
   key: string;
@@ -14,6 +15,9 @@ export interface SupportSection {
   Icon: SvgIconComponent;
   color: string;
   podScoped: boolean;
+  /** Localization keys, preferred over the literals above when present. */
+  labelKey?: string;
+  descriptionKey?: string;
 }
 
 // Navigation configuration for the Support hub landing grid. Each entry maps to
@@ -62,6 +66,17 @@ export const SUPPORT_SECTIONS: SupportSection[] = [
     description: 'Every request you have raised, in one list',
     Icon: HistoryIcon,
     color: '#7c5cff',
+    podScoped: false,
+  },
+  {
+    key: 'grievance',
+    path: '/support/grievance',
+    label: 'Raise a Grievance',
+    description: 'File a formal grievance with our Grievance Officer',
+    labelKey: 'grievance.title',
+    descriptionKey: 'grievance.subtitle',
+    Icon: GavelIcon,
+    color: '#795548',
     podScoped: false,
   },
   {

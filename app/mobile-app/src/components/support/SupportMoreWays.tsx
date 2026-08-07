@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { SUPPORT_MORE_WAYS, type SupportSection } from './supportSections';
 
 interface MoreWayCardProps {
@@ -12,11 +13,15 @@ interface MoreWayCardProps {
 /** A single "More ways" row card — coloured icon badge + title + description. */
 function MoreWayCard({ section, onPress }: Readonly<MoreWayCardProps>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
+  // Sections added since rule 38 carry keys; the older literals still render.
+  const title = section.titleKey ? t(section.titleKey) : section.title;
+  const desc = section.descKey ? t(section.descKey) : section.desc;
   return (
     <XStack
       testID={`support-more-${section.key}`}
       role="button"
-      aria-label={section.title}
+      aria-label={title}
       onPress={onPress}
       alignItems="center"
       gap={14}
@@ -39,10 +44,10 @@ function MoreWayCard({ section, onPress }: Readonly<MoreWayCardProps>) {
       </YStack>
       <YStack flex={1} gap={2}>
         <Text fontSize={15} fontWeight="700" color="$color">
-          {section.title}
+          {title}
         </Text>
         <Text fontSize={12.5} color="$muted">
-          {section.desc}
+          {desc}
         </Text>
       </YStack>
       <MaterialIcons name="chevron-right" size={22} color={muted} />

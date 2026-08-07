@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { Box, Paper, Stack, Typography, alpha } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { SupportSection } from './sections';
 
 interface Props {
@@ -8,7 +9,11 @@ interface Props {
 }
 
 export default function SupportSectionCard({ section }: Readonly<Props>) {
-  const { Icon, color, label, description, path } = section;
+  const { t } = useTranslation();
+  const { Icon, color, label, description, path, labelKey, descriptionKey } = section;
+  // Sections added since rule 38 carry keys; the older literals still render.
+  const title = labelKey ? t(labelKey) : label;
+  const caption = descriptionKey ? t(descriptionKey) : description;
 
   return (
     <Paper
@@ -42,10 +47,10 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            {label}
+            {title}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {description}
+            {caption}
           </Typography>
         </Box>
         <Stack direction="row" alignItems="center" spacing={0.25} sx={{ color }}>

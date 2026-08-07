@@ -118,6 +118,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       OrdersHistory: 'orders',
       ProductDetail: 'product/:productId',
       Feedback: 'support/feedback',
+      Grievance: 'support/grievance',
       NotFound: '*',
     },
   },

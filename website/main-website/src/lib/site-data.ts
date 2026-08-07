@@ -1,3 +1,4 @@
+import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
 
 /** Build-time GraphQL helpers for the static site. Every call degrades to a
@@ -111,6 +112,21 @@ export async function fetchPolicies(): Promise<SitePolicy[]> {
   return data?.publicPolicies ?? [];
 }
 
+/** The Grievance Officer the Legal portal publishes. Blank until they fill it in. */
+export interface SiteGrievanceOfficer {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export async function fetchGrievanceOfficer(): Promise<SiteGrievanceOfficer | null> {
+  const data = await gqlFetch<{ grievanceOfficer: SiteGrievanceOfficer }>(GRIEVANCE_OFFICER_SDL);
+  const officer = data?.grievanceOfficer;
+  // A row exists from the first save, so "published" means the name is filled
+  // in — not that the record is there.
+  return officer?.name ? officer : null;
+}
 export interface SiteNavLink {
   id: string;
   area: 'HEADER' | 'FOOTER';

@@ -1,0 +1,162 @@
+---
+// Raise a grievance — the open door.
+//
+// The apps carry the same form, but a person with a grievance about Duncit may
+// well have already deleted their account, so this page asks for no login at
+// all. The officer block above the form is what we are required to publish;
+// the Legal portal fills it in and this page reads it at build time.
+import PageLayout from '../layouts/PageLayout.astro';
+import { fetchGrievanceOfficer } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
+const officer = await fetchGrievanceOfficer();
+
+const officerRows = officer
+  ? [
+      [t('grievance.officerName'), officer.name],
+      [t('grievance.officerEmail'), officer.email],
+      [t('grievance.officerPhone'), officer.phone],
+      [t('grievance.officerAddress'), officer.address],
+    ].filter(([, value]) => value)
+  : [];
+
+const fields = [
+  { name: 'name', label: t('grievance.field.name'), type: 'text', required: true },
+  { name: 'email', label: t('grievance.field.email'), type: 'email', required: true },
+  { name: 'phone', label: t('grievance.field.phone'), type: 'tel', required: true },
+  { name: 'address', label: t('grievance.field.address'), type: 'text', required: false },
+  { name: 'subject', label: t('grievance.field.subject'), type: 'text', required: true },
+];
+
+const optionalSuffix = ` (${t('grievance.optional')})`;
+const inputClass =
+  'w-full px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none';
+---
+
+<PageLayout
+  title={t('grievance.title')}
+  eyebrow="Grievance redressal"
+  heading={t('grievance.title')}
+  intro={t('grievance.subtitle')}
+  accent="secondary"
+>
+  <section class="not-prose my-6">
+    <h2 class="font-head font-bold text-ink text-xl mb-3">{t('grievance.officerTitle')}</h2>
+    {officerRows.length === 0 ? (
+      <p class="text-ink-soft">{t('grievance.officerEmpty')}</p>
+    ) : (
+      <dl class="grid sm:grid-cols-2 gap-3 p-5 rounded-2xl glass">
+        {officerRows.map(([label, value]) => (
+          <div>
+            <dt class="text-sm text-ink-soft">{label}</dt>
+            <dd class="font-bold text-ink break-words">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+  </section>
+
+  <h2>{t('grievance.title')}</h2>
+  {/* The copy travels on the element, not through `define:vars`: that directive
+      makes the script inline, which would ship the imports below verbatim and
+      leave the form dead in the browser. */}
+  <form
+    class="not-prose grid gap-4 max-w-xl mt-4"
+    id="grievanceForm"
+    data-failed={t('grievance.failed')}
+    data-sending={t('grievance.submitting')}
+  >
+    {fields.map((field) => (
+      <label class="grid gap-1.5">
+        <span class="text-sm text-ink-soft">
+          {field.label}{field.required ? '' : optionalSuffix}
+        </span>
+        <input
+          name={field.name}
+          type={field.type}
+          required={field.required}
+          class={inputClass}
+        />
+      </label>
+    ))}
+    <label class="grid gap-1.5">
+      <span class="text-sm text-ink-soft">{t('grievance.field.description')}</span>
+      <textarea
+        name="description"
+        required
+        rows="5"
+        class={`${inputClass} resize-y`}
+        placeholder={t('grievance.descriptionHint')}></textarea>
+    </label>
+    <p id="grievanceErr" class="text-sm text-red-600 hidden"></p>
+    <button
+      class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start"
+    >
+      {t('grievance.submit')} <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </form>
+
+  <div id="grievanceDone" class="not-prose hidden mt-4 p-5 rounded-2xl glass">
+    <div class="font-head font-bold text-ink text-lg">{t('grievance.successTitle')}</div>
+    <p class="text-ink-soft mt-1">{t('grievance.successBody')}</p>
+    <div class="mt-3 text-sm text-ink-soft">{t('grievance.referenceLabel')}</div>
+    <div class="font-mono font-bold text-2xl text-primary" id="grievanceRef"></div>
+  </div>
+</PageLayout>
+
+<script>
+  import { urlConfigs } from '../config/url-configs';
+  import { SUBMIT_GRIEVANCE_SDL } from '@duncit/utils';
+
+  const form = document.getElementById('grievanceForm') as HTMLFormElement | null;
+  const errBox = document.getElementById('grievanceErr');
+  const done = document.getElementById('grievanceDone');
+  const ref = document.getElementById('grievanceRef');
+  const failedMessage = form?.dataset.failed || 'Could not submit. Please try again.';
+  const sendingLabel = form?.dataset.sending || 'Submitting…';
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errBox?.classList.add('hidden');
+
+    const fd = new FormData(form);
+    const input: Record<string, string> = { source: 'WEBSITE' };
+    for (const key of ['name', 'email', 'phone', 'address', 'subject', 'description']) {
+      input[key] = String(fd.get(key) || '').trim();
+    }
+
+    const btn = form.querySelector('button');
+    const orig = btn?.innerHTML;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${sendingLabel}`;
+    }
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: SUBMIT_GRIEVANCE_SDL, variables: { input } }),
+      });
+      const json = await res.json();
+      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      const grievance = json?.data?.submitGrievance;
+      if (!grievance?.grievance_no) throw new Error(failedMessage);
+      // The reference replaces the form: there is nothing left to do here, and
+      // leaving the fields filled invites a duplicate grievance.
+      if (ref) ref.textContent = grievance.grievance_no;
+      form.classList.add('hidden');
+      done?.classList.remove('hidden');
+      done?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (err) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.textContent = err instanceof Error ? err.message : failedMessage;
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = orig || '';
+      }
+    }
+  });
+</script>

@@ -39,6 +39,16 @@ exports:
   - 'HOST_FREE_SPOT_NOTE'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
+  - 'GRIEVANCE_FIELDS'
+  - 'GRIEVANCE_MAX_LENGTH'
+  - 'GRIEVANCE_OPTIONAL_FIELDS'
+  - 'GRIEVANCE_STATUSES'
+  - 'EMPTY_GRIEVANCE_DRAFT'
+  - 'isGrievanceFieldRequired'
+  - 'isGrievanceOpen'
+  - 'grievanceFieldLabelKey'
+  - 'SUBMIT_GRIEVANCE_SDL'
+  - 'GRIEVANCE_OFFICER_SDL'
 ---
 
 ## Why this exists
@@ -434,6 +444,36 @@ buildPodFeedbackInput({
 
 The category is deliberately NOT sent — the server derives it from the weakest score,
 so a guest is never asked to triage their own feedback.
+
+## The grievance form is one spec, four validators
+
+The same grievance is raised from mWeb, the native app and the main website, and gated
+again by the server. Four validators means four chances to disagree about whether a field
+is required or how long it may be — so the numbers live here once and each surface builds
+its own schema from them:
+
+```ts
+GRIEVANCE_MAX_LENGTH.subject;          // 200 — the same number the server enforces
+GRIEVANCE_OPTIONAL_FIELDS;             // ['address'] — the only field you may leave blank
+isGrievanceFieldRequired('address');   // false
+isGrievanceFieldRequired('phone');     // true
+grievanceFieldLabelKey('subject');     // 'grievance.field.subject'
+GRIEVANCE_FIELDS;                      // render order, shared so the two apps match
+```
+
+The value SHAPES are deliberately NOT here — email and phone patterns belong to
+`@duncit/regex`, which already owns them. This module owns lengths, order and
+optionality; nothing else.
+
+`SUBMIT_GRIEVANCE_SDL` and `GRIEVANCE_OFFICER_SDL` are the operations as plain strings,
+because the three surfaces wrap documents differently: Apollo's `gql` on mWeb,
+`graphql-tag` in native, a bare `fetch` on the Astro site. A string is the one form all
+three accept.
+
+```ts
+isGrievanceOpen('RECEIVED');   // true  — still owed an answer
+isGrievanceOpen('RESOLVED');   // false
+```
 
 ## No live preview
 

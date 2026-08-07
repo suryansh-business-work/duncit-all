@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
+import type { StaffReactionKind } from './staffChat.model';
 import { emitStaffMessage } from './staffChat.socket';
 import { snapshot } from './staffPresence';
 
@@ -89,6 +90,18 @@ export const staffChatResolvers = {
     deleteStaffMessage: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const me = requireRole(ctx, ROLES);
       const message = await staffChatService.remove(me.id, args.id);
+      emitStaffMessage(message, 'staff_message_changed');
+      return message;
+    },
+    reactToStaffMessage: async (
+      _p: unknown,
+      args: { id: string; kind: StaffReactionKind },
+      ctx: GraphQLContext
+    ) => {
+      const me = requireRole(ctx, ROLES);
+      const message = await staffChatService.react(me.id, args.id, args.kind);
+      // The same event the edit and delete paths use, so a client that already
+      // replaces a message by id needs no new handler.
       emitStaffMessage(message, 'staff_message_changed');
       return message;
     },

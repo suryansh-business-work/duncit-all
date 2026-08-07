@@ -12,6 +12,20 @@ export const staffChatTypeDefs = /* GraphQL */ `
     roles: [String!]!
   }
 
+  "The three things a message can be answered with, without writing a reply."
+  enum StaffReactionKind {
+    THUMBS_UP
+    THUMBS_DOWN
+    HEART
+  }
+
+  "One person's reaction to one message. At most one per person per message."
+  type StaffReaction {
+    user_id: ID!
+    kind: StaffReactionKind!
+    at: String
+  }
+
   type StaffMessage {
     id: ID!
     from_user_id: ID!
@@ -30,6 +44,11 @@ export const staffChatTypeDefs = /* GraphQL */ `
     line that vanishes from the middle of a conversation reads as a bug.
     """
     deleted_at: String
+    """
+    Who reacted and with what. Empty on a deleted message — there is nothing
+    left to have reacted to.
+    """
+    reactions: [StaffReaction!]!
     created_at: String
   }
 
@@ -100,6 +119,11 @@ export const staffChatTypeDefs = /* GraphQL */ `
     editStaffMessage(id: ID!, text: String!): StaffMessage!
     "Take back your own message. The row stays; the words go."
     deleteStaffMessage(id: ID!): StaffMessage!
+    """
+    React, or take the reaction back. The same kind again removes it; a
+    different kind replaces it, so one person is only ever counted once.
+    """
+    reactToStaffMessage(id: ID!, kind: StaffReactionKind!): StaffMessage!
     "Mark what they sent you as read. Returns how many that was."
     markStaffThreadRead(peer_id: ID!): Int!
   }

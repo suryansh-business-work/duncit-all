@@ -355,6 +355,41 @@ for any post-login `?redirect=` handling — they reject absolute and off-origin
 hand-rolled version is an open redirect. `parseEnvRoles` turns a `VITE_*` roles string into the array
 `createSession` wants.
 
+## Chat with a coworker
+
+Every portal's header carries it, so it lives here rather than in any one
+console. One-to-one only: the pair of user ids IS the thread key, which is why
+there is no threads collection and why two people can never end up with two
+threads because they each started one.
+
+What it does, and the reasoning worth keeping:
+
+- **Reactions** are three fixed kinds — agree, disagree, love it — not free
+  emoji. They are the answers that mean something at a glance, and a reader
+  scanning a thread should not have to decode anybody's taste in pictures. One
+  per person: reacting again takes it back, a different one replaces it, so the
+  row is a summary of who felt what and never a click count. Free emoji belong
+  IN the message, which the composer allows.
+- **The emoji picker is a hand-picked list, not a dependency.** A full picker is
+  a megabyte of sprite sheets and a search index for a problem nobody in a work
+  chat has, and it would land in seventeen portal bundles.
+- **Screen share replaces the camera track** (`RTCRtpSender.replaceTrack`), so
+  the call carries on without a new offer — nothing to renegotiate mid-call.
+  That needs a video sender to exist, so it is only offered on a VIDEO call. The
+  browser's own "Stop sharing" bar ends the track without telling the page, so
+  the camera is restored from `track.onended`, not only from our button.
+- **Device pickers** read `enumerateDevices` only while the menu is open, and
+  select with `deviceId: { exact }` — a device that has been unplugged should
+  fail loudly rather than silently opening a different microphone.
+- **The waveform** (`@audiowave/react`, bound to the REMOTE stream) exists
+  because an audio call is otherwise a rectangle with a timer on it: nothing on
+  screen says the line is carrying anything. It answers "can they hear me / are
+  they still there" without anybody saying "hello?" twice.
+- **Presence** is in-memory and socket-counted, with a ten-minute idle timer.
+  The user can override their own status.
+- **Deleted messages keep their row** and lose their words. A line that vanishes
+  from the middle of a conversation reads as a bug.
+
 ## Coverage gate
 
 100% statements / functions / lines, with `branches: -3`. That negative threshold caps the number of

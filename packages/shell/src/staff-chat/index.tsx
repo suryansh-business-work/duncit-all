@@ -13,6 +13,7 @@ import {
   COWORKERS,
   DELETE_STAFF_MESSAGE,
   EDIT_STAFF_MESSAGE,
+  REACT_TO_STAFF_MESSAGE,
   MARK_THREAD_READ,
   SEND_STAFF_MESSAGE,
   STAFF_CALLS,
@@ -86,6 +87,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
   const [sendMessage, sendState] = useMutation(SEND_STAFF_MESSAGE);
   const [editMessage] = useMutation(EDIT_STAFF_MESSAGE);
   const [deleteMessage] = useMutation(DELETE_STAFF_MESSAGE);
+  const [reactToMessage] = useMutation(REACT_TO_STAFF_MESSAGE);
   const [markRead] = useMutation(MARK_THREAD_READ);
 
   const refreshAll = useCallback(() => {
@@ -228,6 +230,13 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         onAnswer={() => void call.answer()}
         onDecline={call.decline}
         onHangUp={call.hangUp}
+        micId={call.micId}
+        camId={call.camId}
+        onMic={call.setMicId}
+        onCam={call.setCamId}
+        sharing={call.sharing}
+        onShare={() => void call.shareScreen()}
+        onStopSharing={() => void call.stopSharing()}
       />
 
       <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -244,6 +253,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
             onAttach={attach}
             onEdit={(id, text) => change(editMessage, { id, text })}
             onDelete={(id) => change(deleteMessage, { id })}
+            onReact={(id, kind) => change(reactToMessage, { id, kind })}
             onTyping={() => typing(peer.id)}
             onCall={(kind) => void call.call(peer.id, kind)}
             onExport={() => void exportChat()}

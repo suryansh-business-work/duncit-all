@@ -15,9 +15,10 @@ import CallIcon from '@mui/icons-material/Call';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import EmojiPicker from './EmojiPicker';
 import MessageBubble from './MessageBubble';
 import PresenceDot from './PresenceDot';
-import type { Coworker, StaffMessage } from './queries';
+import type { Coworker, StaffMessage, StaffReactionKind } from './queries';
 import type { PresenceStatus } from './usePresence';
 
 interface Props {
@@ -32,6 +33,7 @@ interface Props {
   onAttach: (file: File) => void;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
+  onReact: (id: string, kind: StaffReactionKind) => void;
   onTyping: () => void;
   onCall: (kind: 'AUDIO' | 'VIDEO') => void;
   onExport: () => void;
@@ -49,6 +51,7 @@ export default function Conversation({
   onAttach,
   onEdit,
   onDelete,
+  onReact,
   onTyping,
   onCall,
   onExport,
@@ -124,8 +127,10 @@ export default function Conversation({
             key={message.id}
             message={message}
             mine={message.from_user_id === meId}
+            meId={meId}
             onEdit={onEdit}
             onDelete={onDelete}
+            onReact={onReact}
           />
         ))}
         <div ref={endRef} />
@@ -149,6 +154,7 @@ export default function Conversation({
             event.target.value = '';
           }}
         />
+        <EmojiPicker disabled={sending} onPick={(emoji) => setDraft((text) => text + emoji)} />
         <TextField
           fullWidth
           size="small"

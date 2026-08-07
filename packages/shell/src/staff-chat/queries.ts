@@ -8,6 +8,15 @@ export interface Coworker {
   roles: string[];
 }
 
+/** Agreed, disagreed, appreciated — the three answers that need no words. */
+export type StaffReactionKind = 'THUMBS_UP' | 'THUMBS_DOWN' | 'HEART';
+
+export interface StaffReaction {
+  user_id: string;
+  kind: StaffReactionKind;
+  at?: string | null;
+}
+
 export interface StaffMessage {
   id: string;
   from_user_id: string;
@@ -19,6 +28,8 @@ export interface StaffMessage {
   read_at?: string | null;
   edited_at?: string | null;
   deleted_at?: string | null;
+  /** Who reacted and with what. Empty on a deleted message. */
+  reactions?: StaffReaction[];
   created_at?: string | null;
 }
 
@@ -60,6 +71,10 @@ const MESSAGE = `
   read_at
   edited_at
   deleted_at
+  reactions {
+    user_id
+    kind
+  }
   created_at
 `;
 
@@ -130,6 +145,14 @@ export const EDIT_STAFF_MESSAGE = gql`
 export const DELETE_STAFF_MESSAGE = gql`
   mutation DeleteStaffMessage($id: ID!) {
     deleteStaffMessage(id: $id) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const REACT_TO_STAFF_MESSAGE = gql`
+  mutation ReactToStaffMessage($id: ID!, $kind: StaffReactionKind!) {
+    reactToStaffMessage(id: $id, kind: $kind) {
       ${MESSAGE}
     }
   }

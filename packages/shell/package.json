@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@audiowave/react": "^0.6.2",
     "@duncit/app-settings": "workspace:*",
     "@duncit/breadcrumb": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",

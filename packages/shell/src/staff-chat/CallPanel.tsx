@@ -1,5 +1,19 @@
 import { useEffect, useRef } from 'react';
-import { Alert, Avatar, Box, Button, Paper, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import ScreenShareIcon from '@mui/icons-material/ScreenShare';
+import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
+import CallSettingsMenu from './CallSettingsMenu';
+import CallWaveform from './CallWaveform';
 import CallEndIcon from '@mui/icons-material/CallEnd';
 import CallIcon from '@mui/icons-material/Call';
 import type { Coworker } from './queries';
@@ -15,6 +29,15 @@ interface Props {
   onAnswer: () => void;
   onDecline: () => void;
   onHangUp: () => void;
+  /** Which devices the call opens. */
+  micId: string;
+  camId: string;
+  onMic: (id: string) => void;
+  onCam: (id: string) => void;
+  /** True while the screen is going out in place of the camera. */
+  sharing: boolean;
+  onShare: () => void;
+  onStopSharing: () => void;
 }
 
 /** Video elements take a stream through a property, not an attribute. */
@@ -59,6 +82,13 @@ export default function CallPanel({
   onAnswer,
   onDecline,
   onHangUp,
+  micId,
+  camId,
+  onMic,
+  onCam,
+  sharing,
+  onShare,
+  onStopSharing,
 }: Readonly<Props>) {
   if (phase === 'idle' && !error) return null;
 
@@ -80,6 +110,7 @@ export default function CallPanel({
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {kind === 'VIDEO' ? 'Video' : 'Audio'} · {LABEL[phase]}
+                {sharing ? ' · sharing your screen' : ''}
               </Typography>
             </Box>
           </Stack>
@@ -94,7 +125,13 @@ export default function CallPanel({
             </Stack>
           )}
 
-          <Stack direction="row" spacing={1}>
+          {/* The line is carrying something, or it is not — an audio call gives
+              no other sign. */}
+          {phase === 'connected' && (
+            <CallWaveform stream={remoteStream} label={`${peer?.name ?? 'They'} — incoming audio`} />
+          )}
+
+          <Stack direction="row" spacing={1} alignItems="center">
             {phase === 'incoming' ? (
               <>
                 <Button
@@ -127,6 +164,33 @@ export default function CallPanel({
                 {phase === 'ringing' ? 'Cancel' : 'Hang up'}
               </Button>
             )}
+
+            {phase === 'connected' && kind === 'VIDEO' && (
+              <Tooltip title={sharing ? 'Stop sharing' : 'Share your screen'}>
+                <IconButton
+                  size="small"
+                  color={sharing ? 'primary' : 'inherit'}
+                  aria-label={sharing ? 'Stop sharing your screen' : 'Share your screen'}
+                  aria-pressed={sharing}
+                  onClick={sharing ? onStopSharing : onShare}
+                >
+                  {sharing ? (
+                    <StopScreenShareIcon fontSize="small" />
+                  ) : (
+                    <ScreenShareIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
+
+            <Box sx={{ flex: 1 }} />
+            <CallSettingsMenu
+              micId={micId}
+              camId={camId}
+              onMic={onMic}
+              onCam={onCam}
+              showCamera={kind === 'VIDEO'}
+            />
           </Stack>
         </Stack>
       )}

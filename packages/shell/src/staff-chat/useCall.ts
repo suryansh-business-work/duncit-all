@@ -34,8 +34,15 @@ export function useCall(socket: Socket | null, meId: string) {
   const [kind, setKind] = useState<CallKind>('AUDIO');
   const [peerId, setPeerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Which microphone and camera to open. '' means whatever the OS defaults to. */
+  const [micId, setMicId] = useState('');
+  const [camId, setCamId] = useState('');
+  const [sharing, setSharing] = useState(false);
 
   const pc = useRef<RTCPeerConnection | null>(null);
+  /** The camera track set aside while the screen is being shared. */
+  const cameraTrack = useRef<MediaStreamTrack | null>(null);
+  const screenStream = useRef<MediaStream | null>(null);
   const localStream = useRef<MediaStream | null>(null);
   const remoteStream = useRef<MediaStream | null>(null);
   const stopRing = useRef<(() => void) | null>(null);
@@ -48,6 +55,10 @@ export function useCall(socket: Socket | null, meId: string) {
     stopRing.current = null;
     localStream.current?.getTracks().forEach((track) => track.stop());
     localStream.current = null;
+    screenStream.current?.getTracks().forEach((track) => track.stop());
+    screenStream.current = null;
+    cameraTrack.current = null;
+    setSharing(false);
     remoteStream.current = null;
     pc.current?.close();
     pc.current = null;
@@ -88,13 +99,67 @@ export function useCall(socket: Socket | null, meId: string) {
     [socket]
   );
 
-  const openMedia = useCallback(async (callKind: CallKind) => {
-    const stream = await globalThis.navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: callKind === 'VIDEO',
-    });
-    localStream.current = stream;
-    return stream;
+  const openMedia = useCallback(
+    async (callKind: CallKind) => {
+      // An exact deviceId fails loudly when that device has been unplugged,
+      // which is the right outcome — falling back to a different microphone
+      // without saying so is how people end up broadcasting the wrong room.
+      const stream = await globalThis.navigator.mediaDevices.getUserMedia({
+        audio: micId ? { deviceId: { exact: micId } } : true,
+        video: callKind === 'VIDEO' ? (camId ? { deviceId: { exact: camId } } : true) : false,
+      });
+      localStream.current = stream;
+      return stream;
+    },
+    [camId, micId]
+  );
+
+  /**
+   * Share the screen in place of the camera.
+   *
+   * `replaceTrack` swaps what the existing video sender is pushing, so the call
+   * carries on without a new offer — no renegotiation, nothing to go wrong
+   * mid-call. That also means it needs a video sender to exist, so it is only
+   * offered on a video call; the panel says as much rather than presenting a
+   * button that would do nothing on an audio one.
+   */
+  const shareScreen = useCallback(async () => {
+    const connection = pc.current;
+    const sender = connection?.getSenders().find((s) => s.track?.kind === 'video');
+    if (!sender) {
+      setError('Start a video call first — screen sharing replaces the camera.');
+      return;
+    }
+    try {
+      const display = await globalThis.navigator.mediaDevices.getDisplayMedia({ video: true });
+      const track = display.getVideoTracks()[0];
+      if (!track) return;
+      cameraTrack.current = sender.track;
+      screenStream.current = display;
+      await sender.replaceTrack(track);
+      setSharing(true);
+      // The browser's own "Stop sharing" bar ends the track without telling us,
+      // so the camera has to come back from the track, not only from our button.
+      track.onended = () => {
+        void sender.replaceTrack(cameraTrack.current ?? null);
+        screenStream.current = null;
+        setSharing(false);
+      };
+    } catch (err) {
+      // Cancelling the picker throws too; that is not worth an error banner.
+      if ((err as Error)?.name !== 'NotAllowedError') {
+        setError(err instanceof Error ? err.message : 'Could not share the screen');
+      }
+    }
+  }, []);
+
+  const stopSharing = useCallback(async () => {
+    const connection = pc.current;
+    const sender = connection?.getSenders().find((s) => s.track?.kind === 'video');
+    screenStream.current?.getTracks().forEach((track) => track.stop());
+    screenStream.current = null;
+    if (sender) await sender.replaceTrack(cameraTrack.current ?? null);
+    setSharing(false);
   }, []);
 
   /** Place a call. The other end rings until it answers, declines or gives up. */
@@ -227,5 +292,12 @@ export function useCall(socket: Socket | null, meId: string) {
     hangUp,
     localStream: localStream.current,
     remoteStream: remoteStream.current,
+    micId,
+    camId,
+    setMicId,
+    setCamId,
+    sharing,
+    shareScreen,
+    stopSharing,
   };
 }

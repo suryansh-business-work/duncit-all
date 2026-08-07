@@ -3,13 +3,17 @@ import { Box, IconButton, Link, Paper, Stack, TextField, Tooltip, Typography } f
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import type { StaffMessage } from './queries';
+import MessageReactions from './MessageReactions';
+import type { StaffMessage, StaffReactionKind } from './queries';
 
 interface Props {
   message: StaffMessage;
   mine: boolean;
+  /** The reader's own id, so their reaction reads as pressed. */
+  meId: string;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
+  onReact: (id: string, kind: StaffReactionKind) => void;
 }
 
 const time = (iso?: string | null) =>
@@ -24,7 +28,14 @@ const isImage = (message: StaffMessage) => (message.attachment_type ?? '').start
  * menu — two clicks to fix a typo is why people send a second message saying
  * "*the*" instead.
  */
-export default function MessageBubble({ message, mine, onEdit, onDelete }: Readonly<Props>) {
+export default function MessageBubble({
+  message,
+  mine,
+  meId,
+  onEdit,
+  onDelete,
+  onReact,
+}: Readonly<Props>) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.text);
 
@@ -47,6 +58,13 @@ export default function MessageBubble({ message, mine, onEdit, onDelete }: Reado
           bgcolor: mine && !deleted ? 'primary.main' : 'background.paper',
           color: mine && !deleted ? 'primary.contrastText' : 'text.primary',
           borderColor: mine && !deleted ? 'primary.main' : 'divider',
+          // The pick buttons are furniture on a quiet thread, so they wait for
+          // the pointer. Keyboard users get them from focus-within, which is
+          // the reason this is not a plain :hover.
+          '& .staff-reaction-picker': { visibility: 'hidden' },
+          '&:hover .staff-reaction-picker, &:focus-within .staff-reaction-picker': {
+            visibility: 'visible',
+          },
         }}
       >
         {deleted ? (
@@ -107,6 +125,14 @@ export default function MessageBubble({ message, mine, onEdit, onDelete }: Reado
               )
             )}
           </>
+        )}
+
+        {!deleted && (
+          <MessageReactions
+            reactions={message.reactions ?? []}
+            meId={meId}
+            onReact={(kind) => onReact(message.id, kind)}
+          />
         )}
 
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>

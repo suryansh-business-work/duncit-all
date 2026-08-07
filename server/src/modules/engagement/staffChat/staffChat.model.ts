@@ -14,6 +14,23 @@ import mongoose, { Schema, type Document } from 'mongoose';
  * threads because they each started one.
  */
 
+/**
+ * The three reactions a message can carry.
+ *
+ * A short, fixed list rather than free emoji: these are the answers that mean
+ * something on their own — agreed, disagreed, appreciated — and a reader
+ * scanning a thread can take them in without decoding anybody's taste in
+ * pictures. Free emoji belong IN the message, which the composer allows.
+ */
+export const STAFF_REACTIONS = ['THUMBS_UP', 'THUMBS_DOWN', 'HEART'] as const;
+export type StaffReactionKind = (typeof STAFF_REACTIONS)[number];
+
+export interface IStaffReaction {
+  user_id: string;
+  kind: StaffReactionKind;
+  at: Date;
+}
+
 export interface IStaffMessage extends Document {
   /** The two user ids, sorted and joined — the same for both directions. */
   thread_key: string;
@@ -29,6 +46,12 @@ export interface IStaffMessage extends Document {
   read_at: Date | null;
   /** Set when the author changed the text, so the reader can be told. */
   edited_at: Date | null;
+  /**
+   * At most one per person — reacting again with the same thing takes it back,
+   * and reacting with something else replaces it. A row of counts is a summary
+   * of who felt what, not a tally of how many times they clicked.
+   */
+  reactions: IStaffReaction[];
   /**
    * Deleted messages are kept, not removed.
    *
@@ -56,6 +79,19 @@ const staffMessageSchema = new Schema<IStaffMessage>(
     attachment_type: { type: String, default: '' },
     read_at: { type: Date, default: null },
     edited_at: { type: Date, default: null },
+    reactions: {
+      type: [
+        new Schema<IStaffReaction>(
+          {
+            user_id: { type: String, required: true },
+            kind: { type: String, enum: STAFF_REACTIONS, required: true },
+            at: { type: Date, default: () => new Date() },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     deleted_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

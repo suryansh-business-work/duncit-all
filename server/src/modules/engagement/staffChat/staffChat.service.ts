@@ -2,7 +2,12 @@ import { GraphQLError } from 'graphql';
 import { UserModel } from '@modules/access/user/user.model';
 import { escapedSearchRegex } from '@utils/table-query';
 import { StaffCallModel, type CallKind, type CallOutcome } from './staffCall.model';
-import { STAFF_ROLES, StaffMessageModel, threadKey } from './staffChat.model';
+import {
+  STAFF_ROLES,
+  StaffMessageModel,
+  threadKey,
+  type StaffReactionKind,
+} from './staffChat.model';
 
 /**
  * Staff-to-staff messaging.
@@ -45,6 +50,15 @@ const pubMessage = (doc: any) => ({
   attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
   read_at: doc.read_at?.toISOString() ?? null,
   edited_at: doc.edited_at?.toISOString() ?? null,
+  // A deleted message keeps no reactions either — there is nothing left to
+  // have reacted to.
+  reactions: doc.deleted_at
+    ? []
+    : (doc.reactions ?? []).map((r: any) => ({
+        user_id: r.user_id,
+        kind: r.kind,
+        at: r.at?.toISOString?.() ?? null,
+      })),
   deleted_at: doc.deleted_at?.toISOString() ?? null,
   created_at: doc.created_at?.toISOString() ?? null,
 });
@@ -200,6 +214,31 @@ export const staffChatService = {
     }
     doc.text = body;
     doc.edited_at = new Date();
+    await doc.save();
+    return pubMessage(doc);
+  },
+
+  /**
+   * React to a message, or take the reaction back.
+   *
+   * Anyone in the conversation may react — including the author, which is
+   * ordinary in a two-person thread ("yes, that one"). One reaction per person:
+   * the same kind again removes it, a different kind replaces it, so the row of
+   * counts always answers "who felt what" rather than "how many times did
+   * somebody click".
+   */
+  async react(meId: string, messageId: string, kind: StaffReactionKind) {
+    const doc = await StaffMessageModel.findById(messageId);
+    if (!doc) throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.from_user_id !== meId && doc.to_user_id !== meId) {
+      throw new GraphQLError('That conversation is not yours', { extensions: { code: 'FORBIDDEN' } });
+    }
+    if (doc.deleted_at) {
+      throw new GraphQLError('That message was deleted', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const mine = (doc.reactions ?? []).find((r) => r.user_id === meId);
+    const rest = (doc.reactions ?? []).filter((r) => r.user_id !== meId);
+    doc.reactions = mine?.kind === kind ? rest : [...rest, { user_id: meId, kind, at: new Date() }];
     await doc.save();
     return pubMessage(doc);
   },

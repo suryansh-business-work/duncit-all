@@ -211,9 +211,11 @@ export function HomeFeed() {
                 onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
               />
             </Reveal>
-            <Reveal index={6}>
-              <SomethingForYouRail onOpen={openCardTarget} />
-            </Reveal>
+            {/* No Reveal wrapper: it is a plain View, and an empty one is still
+                a flex child — so a Home with no promo cards was left with the
+                feed's 20px gap where the rail would have been. The rail draws
+                nothing at all when there is nothing to draw. */}
+            <SomethingForYouRail onOpen={openCardTarget} />
             <Reveal index={7}>
               <YStack paddingHorizontal={16}>
                 <AdSlot position="HOME_BOTTOM" variant="banner" />

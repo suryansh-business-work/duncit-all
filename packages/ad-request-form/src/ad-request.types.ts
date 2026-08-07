@@ -51,8 +51,7 @@ export const adRequestSchema = z.object({
   duration_days: z
     .number({ invalid_type_error: 'Ad duration must be a number of days' })
     .int('Ad duration must be whole days')
-    .min(1, 'Ad duration must be at least 1 day')
-    .max(30, 'Ad duration can be at most 30 days (1 month)'),
+    .min(1, 'Ad duration must be at least 1 day'),
   redirect_url: z
     .string()
     .trim()
@@ -62,6 +61,30 @@ export const adRequestSchema = z.object({
 });
 
 export type AdRequestFormValues = z.infer<typeof adRequestSchema>;
+
+/**
+ * The booking window when the caller has not loaded one yet.
+ *
+ * The real one is on the AdPricing row, which both consumers already query for
+ * the estimate. These are only what the form validates against while that
+ * query is in flight — the server checks the live window on submit either way.
+ */
+export const AD_DURATION_FALLBACK = { min: 1, max: 30 } as const;
+
+/**
+ * The contract with the configured window applied.
+ *
+ * A factory rather than a constant because the window is a setting now:
+ * Marketing can sell a 90-day campaign, and a schema compiled at import time
+ * would still be refusing it at 31.
+ */
+export function makeAdRequestSchema(window: { min: number; max: number }) {
+  const max = Math.max(window.min, window.max);
+  return adRequestSchema.refine((values) => values.duration_days <= max, {
+    message: `Ad duration can be at most ${max} ${max === 1 ? 'day' : 'days'}`,
+    path: ['duration_days'],
+  });
+}
 
 export function blankAdRequestValues(): AdRequestFormValues {
   return {
@@ -101,4 +124,10 @@ export interface AdRequestFormProps {
   onSubmit: (values: AdRequestFormValues) => Promise<void> | void;
   /** Optional override for the submit button label (e.g. "Submit Product Ad"). */
   submitLabel?: string;
+  /**
+   * The booking window Marketing set. Defaults to 1–30 for the moment before
+   * the pricing query lands; the slider, its labels and the schema all read it,
+   * so what the form offers is what the server will accept.
+   */
+  durationWindow?: { min: number; max: number };
 }

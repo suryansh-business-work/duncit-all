@@ -94,6 +94,8 @@ export async function fetchBranding(): Promise<SiteBranding> {
 export interface AdRateCardEntry {
   position: string;
   label: string;
+  /** Marketing's description of the placement; blank falls back to this site's. */
+  note: string;
   price_per_day: number;
 }
 
@@ -127,6 +129,7 @@ export async function fetchAdRateCard(): Promise<AdRateCard | null> {
         entries {
           position
           label
+          note
           price_per_day
         }
       }

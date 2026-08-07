@@ -17,10 +17,25 @@ export type AdPosition =
   | 'POD_LIST'
   | 'POD_DETAILS';
 
-/** The booking window a campaign must fall inside. One place, because the
- * schema validates against it and the public rate card advertises it. */
-export const AD_MIN_DAYS = 1;
-export const AD_MAX_DAYS = 30;
+/**
+ * The booking window a campaign must fall inside, when nobody has set one.
+ *
+ * A DEFAULT, not the rule: the live window lives on the AdPricing row so
+ * Marketing can widen or narrow it without a deploy, exactly like the prices
+ * beside it. These are what a database with no pricing row yet answers.
+ */
+export const AD_MIN_DAYS_DEFAULT = 1;
+export const AD_MAX_DAYS_DEFAULT = 30;
+
+/**
+ * The longest booking the stored document will accept, ever.
+ *
+ * The schema's bound cannot be the configured one — Mongoose fixes it when the
+ * model is defined, so it would freeze whatever the setting happened to be at
+ * boot. This is a sanity ceiling; the real window is enforced per submission
+ * against the row.
+ */
+const AD_DAYS_HARD_CEILING = 3650;
 
 export const AD_POSITIONS: AdPosition[] = [
   'AUTO',
@@ -82,7 +97,7 @@ const adRequestSchema = new Schema<IAdRequest>(
     media_url: { type: String, required: true, trim: true, maxlength: 1000 },
     position: { type: String, enum: AD_POSITIONS, required: true },
     start_at: { type: Date, required: true },
-    duration_days: { type: Number, required: true, min: AD_MIN_DAYS, max: AD_MAX_DAYS },
+    duration_days: { type: Number, required: true, min: 1, max: AD_DAYS_HARD_CEILING },
     end_at: { type: Date, required: true },
     redirect_url: { type: String, default: null, trim: true, maxlength: 1000 },
     target_audience: { type: String, default: null, trim: true, maxlength: 500 },
@@ -102,6 +117,20 @@ adRequestSchema.index({ status: 1, position: 1, start_at: 1, end_at: 1 });
 
 export const AdRequestModel = model<IAdRequest>('AdRequest', adRequestSchema);
 
+/**
+ * How ONE placement is sold: what the rate card calls it, and the line under it.
+ *
+ * On the pricing row rather than in either codebase, because both were carrying
+ * their own copy — the server named the placements for the rate card and the
+ * marketing site kept a second table of descriptions beside it. Renaming a
+ * placement meant a deploy of each, and for a while they disagreed.
+ */
+export interface IAdPlacementCopy {
+  position: AdPosition;
+  label: string;
+  note: string;
+}
+
 /** Per-position per-day pricing, editable by Marketing at runtime (no code changes). */
 export interface IAdPricing extends Document {
   singleton_key: string;
@@ -115,9 +144,23 @@ export interface IAdPricing extends Document {
   pod_list_per_day: number;
   pod_details_per_day: number;
   currency_symbol: string;
+  /** The booking window advertisers may pick from. */
+  min_days: number;
+  max_days: number;
+  /** Overrides for the shipped placement names and descriptions. */
+  placements: IAdPlacementCopy[];
 }
 
 const priceField = { type: Number, default: 500, min: 0 };
+
+const adPlacementCopySchema = new Schema<IAdPlacementCopy>(
+  {
+    position: { type: String, enum: AD_POSITIONS, required: true },
+    label: { type: String, default: '', trim: true, maxlength: 80 },
+    note: { type: String, default: '', trim: true, maxlength: 240 },
+  },
+  { _id: false }
+);
 
 const adPricingSchema = new Schema<IAdPricing>(
   {
@@ -132,6 +175,9 @@ const adPricingSchema = new Schema<IAdPricing>(
     pod_list_per_day: priceField,
     pod_details_per_day: priceField,
     currency_symbol: { type: String, default: '₹' },
+    min_days: { type: Number, default: AD_MIN_DAYS_DEFAULT, min: 1, max: AD_DAYS_HARD_CEILING },
+    max_days: { type: Number, default: AD_MAX_DAYS_DEFAULT, min: 1, max: AD_DAYS_HARD_CEILING },
+    placements: { type: [adPlacementCopySchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

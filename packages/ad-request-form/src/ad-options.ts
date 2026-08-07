@@ -88,7 +88,23 @@ export const AD_PRICING_KEY_BY_POSITION: Readonly<Record<AdPosition, AdPricingRa
 };
 
 /** The per-day pricing shape the estimate reads (mirrors the AdPricing query). */
-export type AdPricing = Record<AdPricingRateKey, number> & { currency_symbol: string };
+export type AdPricing = Record<AdPricingRateKey, number> & {
+  currency_symbol: string;
+  /** The booking window Marketing set. Absent on a caller that has not selected it. */
+  min_days?: number;
+  max_days?: number;
+};
+
+/**
+ * The window to hand the form, from whatever pricing the caller has loaded.
+ *
+ * A pricing row that predates the setting, or a query that did not select it,
+ * falls back to the shipped 1–30 rather than to a slider with no range at all.
+ */
+export const adDurationWindow = (pricing?: AdPricing | null) => ({
+  min: Math.max(1, Math.round(Number(pricing?.min_days) || 1)),
+  max: Math.max(1, Math.round(Number(pricing?.max_days) || 30)),
+});
 
 /** Money display for ad costs: whole amounts show no decimals, fractional show 2. */
 export const formatAdCost = (value: number, symbol: string): string =>

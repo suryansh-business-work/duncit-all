@@ -8,6 +8,7 @@ import { parseApiError } from '@duncit/utils';
 import {
   AdRequestForm,
   EstimateCard,
+  adDurationWindow,
   blankAdRequestValues,
   toSubmitAdRequestInput,
   type AdRequestFormValues,
@@ -60,6 +61,7 @@ export default function CreateAdPage() {
                 errorMessage={formError}
                 onValuesChange={setDraft}
                 onSubmit={handleSubmit}
+                durationWindow={adDurationWindow(pricingData?.adPricing)}
               />
             </CardContent>
           </Card>

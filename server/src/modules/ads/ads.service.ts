@@ -6,8 +6,8 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   AD_KINDS,
-  AD_MAX_DAYS,
-  AD_MIN_DAYS,
+  AD_MAX_DAYS_DEFAULT,
+  AD_MIN_DAYS_DEFAULT,
   AD_POSITIONS,
   AdRequestModel,
   getAdPricing,
@@ -48,17 +48,52 @@ export function pricePerDayFor(pricing: IAdPricing, position: AdPosition): numbe
  * by design. The portal names a field an advertiser is filling in; this names a
  * thing someone is deciding whether to buy, so it says where the ad appears.
  */
-const POSITION_LABEL: Record<AdPosition, string> = {
-  AUTO: 'Everywhere (all placements)',
-  HOME_BOTTOM: 'Home feed',
-  SIDEBAR: 'Sidebar',
-  EXPLORE_SCROLL: 'Explore scroll',
-  STATUS: 'Stories',
-  VENUE_LIST: 'Venue listings',
-  CLUB_LIST: 'Club listings',
-  POD_LIST: 'Pod listings',
-  POD_DETAILS: 'Pod detail pages',
+const POSITION_COPY: Record<AdPosition, { label: string; note: string }> = {
+  AUTO: {
+    label: 'Everywhere (all placements)',
+    note: 'One booking, every surface below — the widest reach we sell.',
+  },
+  HOME_BOTTOM: { label: 'Home feed', note: 'A banner under the feed everyone lands on.' },
+  SIDEBAR: { label: 'Sidebar', note: 'Beside the content, on every screen that has one.' },
+  EXPLORE_SCROLL: {
+    label: 'Explore scroll',
+    note: 'In the browse stream, while people are still deciding.',
+  },
+  STATUS: {
+    label: 'Stories',
+    note: 'Full screen, between the stories people are already watching.',
+  },
+  VENUE_LIST: { label: 'Venue listings', note: 'Against the venues in someone’s own city.' },
+  CLUB_LIST: { label: 'Club listings', note: 'Against the clubs someone is choosing between.' },
+  POD_LIST: { label: 'Pod listings', note: 'Against the pods someone is scrolling through.' },
+  POD_DETAILS: { label: 'Pod detail pages', note: 'On the page someone reads before they book.' },
 };
+
+/**
+ * The live copy for one placement: Marketing's words if they wrote any, ours
+ * otherwise. A blank override is treated as "not set" rather than as an empty
+ * label, so clearing a field restores the default instead of emptying the card.
+ */
+function placementCopy(pricing: IAdPricing, position: AdPosition) {
+  const override = (pricing.placements ?? []).find((row) => row.position === position);
+  const fallback = POSITION_COPY[position];
+  return {
+    label: override?.label?.trim() || fallback.label,
+    note: override?.note?.trim() || fallback.note,
+  };
+}
+
+/**
+ * The booking window in force right now.
+ *
+ * Clamped rather than trusted: a row saved with max below min would make every
+ * submission impossible and every slider empty, and the setting is a text box.
+ */
+export function adDayWindow(pricing: IAdPricing): { min: number; max: number } {
+  const min = Math.max(1, Math.round(Number(pricing.min_days) || AD_MIN_DAYS_DEFAULT));
+  const max = Math.max(min, Math.round(Number(pricing.max_days) || AD_MAX_DAYS_DEFAULT));
+  return { min, max };
+}
 
 /**
  * The rate card as the marketing site reads it: every placement, what a day
@@ -70,16 +105,17 @@ export async function buildPublicRateCard() {
   const pricing = await getAdPricing();
   const entries = AD_POSITIONS.map((position) => ({
     position,
-    label: POSITION_LABEL[position],
+    ...placementCopy(pricing, position),
     price_per_day: pricePerDayFor(pricing, position),
   }));
   const prices = entries.map((entry) => entry.price_per_day);
+  const window = adDayWindow(pricing);
 
   return {
     currency_symbol: pricing.currency_symbol || '₹',
     entries,
-    min_days: AD_MIN_DAYS,
-    max_days: AD_MAX_DAYS,
+    min_days: window.min,
+    max_days: window.max,
     from_per_day: Math.min(...prices),
     to_per_day: Math.max(...prices),
   };
@@ -126,6 +162,7 @@ function toPub(doc: IAdRequest, currencySymbol: string) {
 }
 
 function pricingToPub(p: IAdPricing) {
+  const window = adDayWindow(p);
   return {
     auto_per_day: p.auto_per_day,
     home_bottom_per_day: p.home_bottom_per_day,
@@ -137,7 +174,55 @@ function pricingToPub(p: IAdPricing) {
     pod_list_per_day: p.pod_list_per_day,
     pod_details_per_day: p.pod_details_per_day,
     currency_symbol: p.currency_symbol,
+    min_days: window.min,
+    max_days: window.max,
+    // Resolved, never raw: the form edits what the public page shows, so an
+    // untouched placement must arrive carrying the default rather than blank.
+    placements: AD_POSITIONS.map((position) => ({ position, ...placementCopy(p, position) })),
   };
+}
+
+/**
+ * The booking window, if the caller sent one.
+ *
+ * Rejected rather than clamped on the way IN: silently widening what somebody
+ * typed is how a setting stops meaning what the page says it means. The reader
+ * still clamps, for rows written before this validation existed.
+ */
+function applyDayWindow(pricing: IAdPricing, input: Record<string, unknown>) {
+  const asDays = (value: unknown, name: string) => {
+    const days = Number(value);
+    if (!Number.isInteger(days) || days < 1) fail(`${name} must be a whole number of days`);
+    return days;
+  };
+  const min = input.min_days == null ? pricing.min_days : asDays(input.min_days, 'Minimum days');
+  const max = input.max_days == null ? pricing.max_days : asDays(input.max_days, 'Maximum days');
+  if (max < min) fail('Maximum days cannot be shorter than minimum days');
+  pricing.min_days = min;
+  pricing.max_days = max;
+}
+
+/**
+ * The names and descriptions, if the caller sent any.
+ *
+ * Only the placements actually named are touched, and a blank field clears the
+ * override rather than storing an empty label — which is what makes "clear it
+ * to get ours back" work.
+ */
+function applyPlacementCopy(pricing: IAdPricing, input: Record<string, unknown>) {
+  const rows = input.placements as { position?: string; label?: string; note?: string }[] | undefined;
+  if (!Array.isArray(rows)) return;
+  const kept = new Map((pricing.placements ?? []).map((row) => [row.position, row]));
+  for (const row of rows) {
+    const position = row.position as AdPosition;
+    if (!AD_POSITIONS.includes(position)) fail('Unknown ad position');
+    kept.set(position, {
+      position,
+      label: String(row.label ?? '').trim(),
+      note: String(row.note ?? '').trim(),
+    });
+  }
+  pricing.placements = [...kept.values()].filter((row) => row.label || row.note);
 }
 
 const AD_TABLE_CONFIG: TableEntityConfig = {
@@ -166,7 +251,10 @@ const AD_TABLE_CONFIG: TableEntityConfig = {
 
 const HTTPS_URL = /^https?:\/\//i;
 
-function validateSubmission(input: any): { startAt: Date; endAt: Date } {
+function validateSubmission(
+  input: any,
+  window: { min: number; max: number }
+): { startAt: Date; endAt: Date } {
   if (!AD_POSITIONS.includes(input.position)) fail('Unknown ad position');
   if (!HTTPS_URL.test(String(input.media_url ?? ''))) {
     fail('Ad media must be uploaded before submitting');
@@ -175,8 +263,11 @@ function validateSubmission(input: any): { startAt: Date; endAt: Date } {
     fail('Redirect URL must start with http(s)://');
   }
   const days = Number(input.duration_days);
-  if (!Number.isInteger(days) || days < 1 || days > 30) {
-    fail('Duration must be between 1 day and 1 month');
+  // The window Marketing set, not a constant: the slider on the public page is
+  // drawn from the same two numbers, so a campaign length the site offered can
+  // never be one the server rejects.
+  if (!Number.isInteger(days) || days < window.min || days > window.max) {
+    fail(`Duration must be between ${window.min} and ${window.max} days`);
   }
   const startAt = new Date(input.start_at);
   if (Number.isNaN(startAt.getTime())) fail('Invalid start date');
@@ -246,15 +337,17 @@ export const adsService = {
         (pricing as any)[field] = price;
       }
     }
+    applyDayWindow(pricing, input);
+    applyPlacementCopy(pricing, input);
     await pricing.save();
     return pricingToPub(pricing);
   },
 
   async submit(userId: string, input: any) {
-    const { startAt, endAt } = validateSubmission(input);
+    const pricing = await getAdPricing();
+    const { startAt, endAt } = validateSubmission(input, adDayWindow(pricing));
     const adKind: AdKind = AD_KINDS.includes(input.ad_kind) ? input.ad_kind : 'PLACEMENT';
     const context = await resolveAdProductContext(adKind, input.product_id, userId);
-    const pricing = await getAdPricing();
     const estimated = pricePerDayFor(pricing, input.position) * Number(input.duration_days);
     const doc = await AdRequestModel.create({
       trace_id: await nextAdTraceId(),

@@ -46,6 +46,8 @@ export const AD_PRICING = gql`
       pod_list_per_day
       pod_details_per_day
       currency_symbol
+      min_days
+      max_days
     }
   }
 `;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Button, Grid, MenuItem, Slider, Stack, TextField, Typography } from '@mui/material';
@@ -7,12 +7,32 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { RhfTextField } from '@duncit/forms';
 import { AD_MEDIA_TYPE_OPTIONS, AD_POSITION_OPTIONS } from './ad-options';
 import AdMediaField from './AdMediaField';
-import { adRequestSchema, type AdRequestFormProps, type AdRequestFormValues } from './ad-request.types';
+import {
+  AD_DURATION_FALLBACK,
+  makeAdRequestSchema,
+  type AdRequestFormProps,
+  type AdRequestFormValues,
+} from './ad-request.types';
 
-const DURATION_MARKS = [
-  { value: 1, label: '1 day' },
-  { value: 30, label: '1 month' },
-];
+/**
+ * A day count in the words a person would use.
+ *
+ * The old marks said "1 month" for 30, which was true only while 30 was the
+ * ceiling. Now that the ceiling is a setting, the label has to be derived or it
+ * will one day sit under a 90.
+ */
+function dayLabel(days: number): string {
+  if (days === 1) return '1 day';
+  if (days % 30 === 0) {
+    const months = days / 30;
+    return months === 1 ? '1 month' : `${months} months`;
+  }
+  if (days % 7 === 0) {
+    const weeks = days / 7;
+    return weeks === 1 ? '1 week' : `${weeks} weeks`;
+  }
+  return `${days} days`;
+}
 
 /** The shared ad-request form (RHF + Zod), used by the Ads portal Create Ad page
  * and the Partner portal's "Run ad" dialog. */
@@ -23,10 +43,27 @@ export default function AdRequestForm({
   onValuesChange,
   onSubmit,
   submitLabel = 'Submit Ad Request',
+  durationWindow = AD_DURATION_FALLBACK,
 }: Readonly<AdRequestFormProps>) {
+  // Marketing's window, not a constant: the slider, the sentence above it, its
+  // end marks and the schema all come from one pair of numbers, so the form
+  // cannot offer a campaign length the server would then refuse.
+  const window = useMemo(
+    () => ({ min: durationWindow.min, max: Math.max(durationWindow.min, durationWindow.max) }),
+    [durationWindow.min, durationWindow.max]
+  );
+  const schema = useMemo(() => makeAdRequestSchema(window), [window]);
+  const durationMarks = useMemo(
+    () => [
+      { value: window.min, label: dayLabel(window.min) },
+      { value: window.max, label: dayLabel(window.max) },
+    ],
+    [window]
+  );
+
   const { control, handleSubmit, setValue, watch, formState } = useForm<AdRequestFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(adRequestSchema),
+    resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
@@ -119,15 +156,16 @@ export default function AdRequestForm({
             render={({ field }) => (
               <Box sx={{ px: 1 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom id="ad-duration-label">
-                  Ad Duration: {field.value} {field.value === 1 ? 'day' : 'days'} (1 day – 1 month)
+                  Ad Duration: {field.value} {field.value === 1 ? 'day' : 'days'} (
+                  {dayLabel(window.min)} – {dayLabel(window.max)})
                 </Typography>
                 <Slider
                   value={field.value}
                   onChange={(_event, value) => field.onChange(value as number)}
-                  min={1}
-                  max={30}
+                  min={window.min}
+                  max={window.max}
                   step={1}
-                  marks={DURATION_MARKS}
+                  marks={durationMarks}
                   valueLabelDisplay="auto"
                   aria-labelledby="ad-duration-label"
                 />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { readReferralCode } from '@duncit/utils';
 import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Divider, Stack, Typography } from '@mui/material';
@@ -47,12 +48,42 @@ function splitName(name: string): { first_name: string; last_name?: string } {
   return { first_name: first ?? '', last_name: rest.length ? rest.join(' ') : undefined };
 }
 
+
+const APPLY_REFERRAL = gql`
+  mutation ApplyReferralOnSignup($code: String!) {
+    applyReferralCode(code: $code) {
+      code
+    }
+  }
+`;
+
 export default function RegisterPage() {
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
   const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [applyReferral] = useMutation(APPLY_REFERRAL);
+
+  /*
+    A shared referral link carries its code in the URL, and this page is where
+    it lands. Redeeming it is deliberately AFTER the token is stored — the
+    mutation is authenticated, and there is no account to credit until the
+    signup has returned one.
+
+    Best-effort and silent: somebody who has just made an account is not the
+    person to hand "your friend's code could not be applied" to. The referrer's
+    coins are the thing at stake, and the code can still be entered by hand.
+  */
+  const claimReferral = async () => {
+    const code = readReferralCode(globalThis.location.search);
+    if (!code) return;
+    try {
+      await applyReferral({ variables: { code } });
+    } catch {
+      /* already referred, or the code has gone — neither blocks the signup */
+    }
+  };
   const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
 
@@ -74,6 +105,7 @@ export default function RegisterPage() {
       const token = res.data?.register?.token;
       if (token) {
         localStorage.setItem('token', token);
+        await claimReferral();
         navigate(nextRoute);
       }
     } catch (e) {
@@ -89,6 +121,7 @@ export default function RegisterPage() {
       const token = res.data?.signupWithGoogle?.token;
       if (token) {
         localStorage.setItem('token', token);
+        await claimReferral();
         navigate('/signup-survey');
       }
     } catch (e) {

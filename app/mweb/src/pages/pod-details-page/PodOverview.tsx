@@ -1,6 +1,5 @@
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import RepeatIcon from '@mui/icons-material/Repeat';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -8,7 +7,6 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
-import { podOccurrenceLabel } from '../../utils/podOccurrence';
 import { podSeatsTaken } from '@duncit/utils';
 
 interface Props {
@@ -91,7 +89,6 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           label={pod.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'}
           sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }}
         />
-        <Chip icon={<RepeatIcon />} label={podOccurrenceLabel(pod.pod_occurrence)} sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }} />
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
@@ -104,11 +101,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
         </Box>
       </Stack>
-      <PodQuickStats
-        views={pod.pod_hits}
-        spotsTaken={spotsTaken}
-        spotsTotal={spotsTotal}
-      />
+      <PodQuickStats spotsTaken={spotsTaken} spotsTotal={spotsTotal} />
     </Box>
   );
 }

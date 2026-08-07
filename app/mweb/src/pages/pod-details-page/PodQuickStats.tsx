@@ -1,32 +1,24 @@
 import { Chip, Stack } from '@mui/material';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface Props {
-  views: number;
   spotsTaken: number;
   spotsTotal: number;
 }
 
-export default function PodQuickStats({ views, spotsTaken, spotsTotal }: Readonly<Props>) {
+/** What is left of the pod, at a glance. The view counter was removed: a
+ * number nobody can act on, next to the one that decides whether to book. */
+export default function PodQuickStats({ spotsTaken, spotsTotal }: Readonly<Props>) {
   const remaining = spotsTotal > 0 ? Math.max(spotsTotal - spotsTaken, 0) : null;
-  const viewLabel = new Intl.NumberFormat(undefined, { notation: 'compact' }).format(views || 0);
+  if (remaining === null) return null;
 
   return (
     <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>
-      {remaining !== null && (
-        <Chip
-          variant="outlined"
-          color={remaining <= 3 ? 'warning' : 'default'}
-          icon={<ConfirmationNumberIcon fontSize="small" />}
-          label={`${remaining} spots left`}
-          size="small"
-        />
-      )}
       <Chip
         variant="outlined"
-        icon={<VisibilityIcon fontSize="small" />}
-        label={`${viewLabel} views`}
+        color={remaining <= 3 ? 'warning' : 'default'}
+        icon={<ConfirmationNumberIcon fontSize="small" />}
+        label={`${remaining} spots left`}
         size="small"
       />
     </Stack>

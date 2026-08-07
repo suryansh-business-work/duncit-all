@@ -20,7 +20,7 @@ function shareWhenText(pod: any): string | null {
   if (!pod?.pod_date_time) return null;
   const date = new Date(pod.pod_date_time);
   if (Number.isNaN(date.getTime())) return null;
-  return format(date, "EEE, d MMM yyyy 'at' HH:mm");
+  return format(date, "EEE, d MMM yyyy 'at' h:mm a");
 }
 
 /**

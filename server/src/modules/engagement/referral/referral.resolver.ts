@@ -27,11 +27,11 @@ export const referralResolvers = {
     },
     updateReferralGift: async (
       _p: unknown,
-      args: { gift_description: string },
+      args: { gift_description: string; coins_per_referral?: number | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_WRITE);
-      return referralService.updateGift(args.gift_description);
+      return referralService.updateGift(args.gift_description, args.coins_per_referral);
     },
   },
 };

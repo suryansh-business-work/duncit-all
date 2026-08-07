@@ -5,13 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { podSeatsTaken } from '@duncit/utils';
-import {
-  podModeLabel,
-  podOccurrenceLabel,
-  podPriceLabel,
-  podTimeChip,
-  type TimeTone,
-} from '@/utils/pod-format';
+import { podModeLabel, podPriceLabel, podTimeChip, type TimeTone } from '@/utils/pod-format';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -103,7 +97,6 @@ export function PodInfo({
       <XStack gap={8} flexWrap="wrap">
         <Chip label={podPriceLabel(pod)} primary />
         <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode)} />
-        <Chip icon="repeat" label={podOccurrenceLabel(pod.pod_occurrence)} />
         {time ? (
           <Chip
             icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
@@ -124,7 +117,6 @@ export function PodInfo({
             tone={remaining <= 3 ? TONE.warning : undefined}
           />
         ) : null}
-        <Chip icon="visibility" label={`${pod.pod_hits ?? 0} views`} />
       </XStack>
     </YStack>
   );

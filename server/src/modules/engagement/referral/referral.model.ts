@@ -43,11 +43,14 @@ export const ReferralModel: Model<IReferral> =
 export interface IReferralSettings {
   singleton_key: string;
   gift_description: string;
+  /** Coins the referrer earns per person they bring in. */
+  coins_per_referral: number;
 }
 
 const referralSettingsSchema = new Schema<IReferralSettings>({
   singleton_key: { type: String, default: 'referral', unique: true },
   gift_description: { type: String, default: '' },
+  coins_per_referral: { type: Number, default: 50, min: 0 },
 });
 
 export const ReferralSettingsModel: Model<IReferralSettings> =

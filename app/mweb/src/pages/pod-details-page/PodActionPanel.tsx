@@ -8,6 +8,8 @@ import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { podUrl } from '../../utils/seoUrls';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
+import MemberPanel from './MemberPanel';
+import { compactButtonSx, gradientButtonSx } from './buttonSx';
 import { buildPodShareText } from './usePodDetailActions';
 import SeatPicker from './SeatPicker';
 
@@ -31,23 +33,6 @@ interface Props {
   onGoToDashboard: () => void;
 }
 
-const compactButtonSx = {
-  minHeight: 40,
-  px: 1.5,
-  fontSize: 13,
-  fontWeight: 700,
-  whiteSpace: 'nowrap',
-};
-
-const gradientButtonSx = {
-  ...compactButtonSx,
-  background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 54%, #f5337a 100%)',
-  boxShadow: '0 12px 24px rgba(245,51,122,0.28)',
-  '&:hover': {
-    background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 54%, #db2468 100%)',
-    boxShadow: '0 14px 28px rgba(245,51,122,0.34)',
-  },
-};
 
 export default function PodActionPanel({
   pod,
@@ -112,37 +97,14 @@ export default function PodActionPanel({
   }
 
   if (isMember) {
-    const canBackout = !!ms?.can_backout;
     return (
-      <Stack spacing={1}>
-        <Stack direction="row" spacing={1}>
-          <Button variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
-            Joined
-          </Button>
-          {canBackout && (
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={onBackout}
-              disabled={backingOut}
-              fullWidth
-              sx={compactButtonSx}
-            >
-              Backout
-            </Button>
-          )}
-        </Stack>
-        {canBackout ? (
-          <Typography variant="caption" color="text.secondary">
-            Backing out releases your seat — you will get the refund only if someone fills your
-            spot ({ms?.backout_deduction_pct ?? 0}% deduction applies on paid pods).
-          </Typography>
-        ) : (
-          <Alert severity="info">
-            You have reached the maximum number of Backout attempts allowed for this Pod.
-          </Alert>
-        )}
-      </Stack>
+      <MemberPanel
+        isExpired={isExpired}
+        canBackout={!!ms?.can_backout}
+        backingOut={backingOut}
+        deductionPct={ms?.backout_deduction_pct ?? 0}
+        onBackout={onBackout}
+      />
     );
   }
 

@@ -62,6 +62,8 @@ interface LiveActionsProps {
   /** From the shared participation rules — computed once by the parent. */
   canBackout: boolean;
   showRefundState: boolean;
+  /** The refund word, from the request rather than the booking's stale copy. */
+  refundText: string;
   showRejoin: boolean;
   backingOut: boolean;
   rejoining: boolean;
@@ -78,6 +80,7 @@ function LivePodActions({
   item,
   canBackout,
   showRefundState,
+  refundText,
   showRejoin,
   backingOut,
   rejoining,
@@ -122,7 +125,7 @@ function LivePodActions({
         <ActionButton
           testID="ph-refund"
           icon="receipt-long"
-          label={`Refund: ${refundLabel(item.refund_status)}`}
+          label={`Refund: ${refundText}`}
           onPress={onRefundStatus}
         />
       ) : null}
@@ -188,6 +191,7 @@ export function PodHistoryActions({
           item={item}
           canBackout={gate.canBackout}
           showRefundState={gate.showRefundState}
+          refundText={refundLabel(gate.refundStatus)}
           showRejoin={showRejoin}
           backingOut={backingOut}
           rejoining={rejoining}

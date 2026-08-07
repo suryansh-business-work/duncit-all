@@ -34,6 +34,18 @@ const basePod = {
 const futurePod = { ...basePod, pod_date_time: '2999-01-01T10:00:00Z', pod_end_date_time: null };
 const endedPod = { ...basePod, pod_date_time: '2000-01-01T10:00:00Z', pod_end_date_time: null };
 
+/** The booking's own story, in the nested shape the API returns it. */
+const baseParticipation = (over: Record<string, unknown> = {}) => ({
+  joined_at: '2026-06-01T10:00:00Z',
+  attended: false,
+  attendance_recorded: false,
+  pod_cancelled_by: null,
+  pod_cancelled_at: null,
+  cancel_refund_status: 'NONE',
+  backouts: [],
+  ...over,
+});
+
 const membership = (over: Record<string, unknown> = {}): PodMembership =>
   ({
     id: 'm1',
@@ -96,8 +108,11 @@ describe('PodHistoryCard', () => {
 describe('PodHistoryTimeline', () => {
   const future = '2999-01-01T10:00:00Z';
   const past = '2020-01-01T10:00:00Z';
-  const withDate = (date: string, over: Record<string, unknown> = {}) =>
-    membership({ pod: { ...membership().pod!, pod_date_time: date }, ...over });
+  const withDate = (date: string, participation: Record<string, unknown> = {}) =>
+    membership({
+      pod: { ...membership().pod!, pod_date_time: date },
+      participation: baseParticipation(participation),
+    });
   const backout = (over: Record<string, unknown> = {}) => ({
     backout_no: 'DUN-BKO-7',
     status: 'SPOT_FILLED',
@@ -105,6 +120,7 @@ describe('PodHistoryTimeline', () => {
     seats: 1,
     seats_before: 1,
     refund_amount: 500,
+    refund_status: 'PROCESSED',
     deduction_pct: 10,
     refund_processed_at: '2026-06-06',
     created_at: '2026-06-05',
@@ -119,7 +135,9 @@ describe('PodHistoryTimeline', () => {
   });
 
   it('records attendance once the pod has happened', () => {
-    renderWithProviders(<PodHistoryTimeline item={withDate(past, { attended: true })} />);
+    renderWithProviders(
+      <PodHistoryTimeline item={withDate(past, { attended: true, attendance_recorded: true })} />,
+    );
     expect(screen.getByText('Pod Attended')).toBeOnTheScreen();
   });
 
@@ -172,7 +190,11 @@ describe('PodHistoryActions', () => {
       <PodHistoryActions
         // Refund Status is only offered to someone who asked for a refund, so the
         // booking that offers every button is one with a backout on it.
-        item={membership({ backouts: [{ refund_amount: 500, seats: 1, seats_before: 1 }] })}
+        item={membership({
+          participation: baseParticipation({
+            backouts: [{ refund_status: 'PROCESSED', seats: 1, seats_before: 1 }],
+          }),
+        })}
         backingOut={false}
         rejoining={false}
         invoiceBusy={false}
@@ -330,7 +352,9 @@ describe('PodHistoryDetails', () => {
       <PodHistoryDetails
         item={membership({
           pod: endedPod,
-          backouts: [{ refund_amount: 500, seats: 1, seats_before: 1 }],
+          participation: baseParticipation({
+            backouts: [{ refund_status: 'PROCESSED', seats: 1, seats_before: 1 }],
+          }),
         })}
         backingOut={false}
         rejoining={false}
@@ -342,8 +366,9 @@ describe('PodHistoryDetails', () => {
       />,
     );
     expect(screen.getByText('Visited')).toBeOnTheScreen();
-    // The chip; the actions row carries the same label on its Refund button.
-    expect(screen.getAllByText('Refund: Not started').length).toBeGreaterThan(0);
+    // The word comes from the request, not from the booking's own copy — which
+    // the server never writes for a partial backout.
+    expect(screen.getAllByText('Refund: Refund initiated').length).toBeGreaterThan(0);
   });
 
   it('shows the pending refund alert + notice for a backed-out membership', () => {
@@ -351,9 +376,13 @@ describe('PodHistoryDetails', () => {
       <PodHistoryDetails
         item={membership({
           status: 'BACKED_OUT',
-          refund_status: 'PENDING',
+          participation: baseParticipation({
+            backouts: [
+              { status: 'SPOT_FILLED', refund_status: 'PENDING', seats: 1, seats_before: 1 },
+            ],
+          }),
           pod: {
-            ...basePod,
+            ...futurePod,
             pod_images_and_videos: [{ url: 'http://i', type: 'IMAGE' }],
             pod_type: 'FREE',
           },
@@ -408,22 +437,30 @@ describe('PodHistoryDetails', () => {
     expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/15% deduction/);
   });
 
-  it('labels an in-process backout and keeps the replacement notice visible', () => {
+  it('labels an in-process backout and promises the replacement only while it can happen', () => {
+    const props = {
+      backingOut: false,
+      rejoining: false,
+      invoiceBusy: false,
+      ticketBusy: false,
+      notice: null,
+      deductionPct: 10,
+      ...handlers(),
+    };
+    renderWithProviders(
+      <PodHistoryDetails item={membership({ status: 'BACKOUT_IN_PROCESS' })} {...props} />,
+    );
+    expect(screen.getByText('Backout in process')).toBeOnTheScreen();
+    expect(screen.getByTestId('ph-replacement')).toBeOnTheScreen();
+
+    // Nobody can fill that seat once the pod has happened, so the promise goes.
     renderWithProviders(
       <PodHistoryDetails
         item={membership({ status: 'BACKOUT_IN_PROCESS', pod: endedPod })}
-        backingOut={false}
-        rejoining={false}
-        invoiceBusy={false}
-        ticketBusy={false}
-        notice={null}
-        deductionPct={10}
-        {...handlers()}
+        {...props}
       />,
     );
-    expect(screen.getByText('Backout in process')).toBeOnTheScreen();
-    // Even for an ended pod (no rejoin) the in-process state shows the notice.
-    expect(screen.getByTestId('ph-replacement')).toBeOnTheScreen();
+    expect(screen.queryAllByTestId('ph-replacement')).toHaveLength(0);
   });
 });
 

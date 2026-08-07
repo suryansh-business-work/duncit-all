@@ -298,7 +298,7 @@ describe('usePodDetailActions', () => {
   it('onConfirmBackout closes dialog, snacks, refetches', async () => {
     const mocks = [
       ...baseMocks(),
-      makeMock({ id: 'pod-doc-1' }, BACKOUT, {
+      makeMock({ id: 'pod-doc-1', seats: null }, BACKOUT, {
         data: { backoutPod: { id: 'm1', status: 'BACKOUT', referral_token: null, refund_status: 'PENDING' } },
       }),
     ];
@@ -315,7 +315,7 @@ describe('usePodDetailActions', () => {
   it('onConfirmBackout closes + snacks error on failure', async () => {
     const mocks = [
       ...baseMocks(),
-      makeMock({ id: 'pod-doc-1' }, BACKOUT, null, new Error('too late')),
+      makeMock({ id: 'pod-doc-1', seats: null }, BACKOUT, null, new Error('too late')),
     ];
     const { result } = renderActions({}, mocks);
     act(() => result.current.setBackoutOpen(true));

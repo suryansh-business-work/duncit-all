@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { PodBackoutRequestInput } from '@duncit/utils';
+import type { PodParticipationFields } from '@duncit/utils';
 
 export const MY_POD_MEMBERSHIPS = gql`
   query MyPodMembershipsForHistory {
@@ -14,23 +14,29 @@ export const MY_POD_MEMBERSHIPS = gql`
       refund_payment_id
       referral_token
       source
-      attended
-      attended_at
-      pod_cancelled_by
-      pod_cancelled_at
-      backouts {
-        backout_no
-        status
-        attempt_no
-        seats
-        seats_before
-        refund_amount
-        deduction_pct
-        refund_processed_at
-        created_at
-        events {
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
           status
-          at
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
         }
       }
       pod {
@@ -130,14 +136,11 @@ export interface PodHistoryItem {
   payment_id?: string | null;
   refund_status: 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
   refund_payment_id?: string | null;
-  /** Did a host scan this booking in at the door? */
-  attended?: boolean | null;
-  attended_at?: string | null;
-  /** Set when the POD was cancelled, whoever did it. */
-  pod_cancelled_by?: 'HOST' | 'VENUE' | 'CLUB_ADMIN' | 'ADMIN' | 'SYSTEM' | null;
-  pod_cancelled_at?: string | null;
-  /** Every backout raised on this booking, oldest first (DUN-BKO ids). */
-  backouts?: PodBackoutRequestInput[] | null;
+  /**
+   * Backouts, attendance and cancellation in one object — the timeline and the
+   * action gates both read it, and nothing else does.
+   */
+  participation?: PodParticipationFields | null;
   referral_token?: string | null;
   source: string;
   pod?: {

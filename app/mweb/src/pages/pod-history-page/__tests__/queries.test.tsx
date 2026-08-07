@@ -61,7 +61,7 @@ describe('pod-history-page queries module', () => {
   it('category + mutation + pdf documents declare their variables', () => {
     expect(body(queries.POD_HISTORY_CATEGORIES)).toContain('categories {');
     expect(body(queries.BACKOUT_POD_HISTORY)).toContain('$pod_doc_id: ID!');
-    expect(body(queries.BACKOUT_POD_HISTORY)).toContain('backoutPod(pod_doc_id: $pod_doc_id)');
+    expect(body(queries.BACKOUT_POD_HISTORY)).toContain('backoutPod(pod_doc_id: $pod_doc_id, seats: $seats)');
     expect(body(queries.REJOIN_POD)).toContain('rejoinPod(pod_doc_id: $pod_doc_id)');
     expect(body(queries.POD_HISTORY_INVOICE_PDF)).toContain('paymentInvoicePdfBase64(payment_doc_id: $id)');
     expect(body(queries.POD_HISTORY_TICKET_FOR_POD)).toContain('myEventTicketForPod(pod_doc_id: $podId)');

@@ -72,7 +72,7 @@ export function PodBookingBar({
             <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
           ) : null}
           {!isHost && !showClosedNotice && !inProcess && isMember ? (
-            <MemberBar canBackout={canBackout} onBackout={onBackout} />
+            <MemberBar canBackout={canBackout} isExpired={isExpired} onBackout={onBackout} />
           ) : null}
           {showBookBar ? (
             <BookBar
@@ -138,27 +138,41 @@ function ClosedNotice() {
   );
 }
 
-/** Booked state: "Pod Booked" badge with an optional Backout action. */
+/**
+ * Booked state: "Pod Booked" badge with an optional Backout action.
+ *
+ * The note under it used to be a two-way choice, so a pod that had simply
+ * already happened told the member they had used all their attempts — and the
+ * badge kept saying "You're going" about an evening that was over.
+ */
 function MemberBar({
   canBackout,
+  isExpired,
   onBackout,
-}: Readonly<{ canBackout: boolean; onBackout: () => void }>) {
+}: Readonly<{ canBackout: boolean; isExpired: boolean; onBackout: () => void }>) {
+  let note: string | null = null;
+  if (!canBackout) {
+    note = isExpired
+      ? 'This pod has already taken place.'
+      : 'You have reached the maximum number of Backout attempts allowed for this Pod.';
+  }
+
   return (
     <>
       <XStack flex={1} alignItems="center" gap={8}>
         <MaterialIcons name="check-circle" size={22} color={semantic.success} />
         <YStack flex={1}>
           <Text fontSize={11} color="$muted">
-            You're going
+            {isExpired ? 'You went' : "You're going"}
           </Text>
           <Text fontSize={16} fontWeight="700" color="$color" testID="pod-booked-label">
-            Pod Booked
+            {isExpired ? 'Pod Visited' : 'Pod Booked'}
           </Text>
-          {canBackout ? null : (
+          {note ? (
             <Text fontSize={10.5} color="$muted" testID="pod-backout-maxed">
-              You have reached the maximum number of Backout attempts allowed for this Pod.
+              {note}
             </Text>
-          )}
+          ) : null}
         </YStack>
       </XStack>
       {canBackout ? (

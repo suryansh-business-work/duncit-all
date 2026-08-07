@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 import {
   buildPodParticipationTimeline,
+  participationInputFrom,
   timelineCopy,
   type PodTimelineNode,
   type TimelineCopy,
@@ -106,15 +107,9 @@ function TimelineNode({ node, depth }: Readonly<{ node: PodTimelineNode; depth: 
  * stories about the same booking (rule 27).
  */
 export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) {
-  const nodes = buildPodParticipationTimeline({
-    joinedAt: item.joined_at,
-    podDateTime: item.pod?.pod_date_time,
-    attended: item.attended ?? false,
-    attendedAt: item.attended_at,
-    cancelledBy: item.pod_cancelled_by ?? null,
-    cancelledAt: item.pod_cancelled_at,
-    backouts: item.backouts ?? [],
-  });
+  const nodes = buildPodParticipationTimeline(
+    participationInputFrom(item.participation, item.pod?.pod_date_time),
+  );
 
   return (
     <YStack gap={2} testID="pod-history-timeline">

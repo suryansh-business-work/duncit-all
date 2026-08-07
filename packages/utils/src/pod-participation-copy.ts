@@ -44,6 +44,16 @@ const BASE: Record<PodTimelineKind, TimelineCopy> = {
     detail: 'You did not attend the pod.',
     tone: 'bad',
   },
+  ATTENDANCE_NOT_RECORDED: {
+    title: 'Attendance Not Recorded',
+    detail: 'Nobody scanned tickets at this pod, so attendance was never taken.',
+    tone: 'info',
+  },
+  FINDING_REPLACEMENT: {
+    title: 'Finding Your Replacement',
+    detail: 'Your seat is back on sale. The refund follows once somebody takes it.',
+    tone: 'info',
+  },
   BACKOUT_REQUESTED: {
     title: 'Pod Backout Requested',
     detail: 'You have requested to back out from the pod.',

@@ -3,6 +3,7 @@ import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { isPodPast } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
@@ -108,6 +109,10 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
   // still ahead.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
   const statusLabel = visited ? 'Visited' : STATUS_CHIP[item.status].label;
+  // Neither notice belongs on a pod that has already happened: nobody can fill
+  // that seat now, and the refund question is already settled.
+  const podPast = isPodPast(pod?.pod_date_time);
+  const showReplacement = !podPast && (canRejoin(item) || item.status === 'BACKOUT_IN_PROCESS');
 
   return (
     <YStack gap={12}>
@@ -135,9 +140,11 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           <YStack flex={1} gap={6}>
             <XStack gap={6} flexWrap="wrap">
               <Chip label={statusLabel} tone={STATUS_CHIP[item.status].tone} />
-              {/* No refund state at all unless one was actually asked for. */}
+              {/* No refund state at all unless one is actually in play, and the
+                  word comes from the request rather than the booking — the
+                  booking's own copy is never written for a partial. */}
               {gate.showRefundState ? (
-                <Chip label={`Refund: ${refundLabel(item.refund_status)}`} tone="muted" />
+                <Chip label={`Refund: ${refundLabel(gate.refundStatus)}`} tone="muted" />
               ) : null}
             </XStack>
             <Text fontSize={16} fontWeight="700" color="$color">
@@ -155,10 +162,8 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
       <Card title="Actions">
         <PodHistoryActions {...props} />
-        {canRejoin(item) || item.status === 'BACKOUT_IN_PROCESS' ? (
-          <ReplacementNotice deductionPct={deductionPct} />
-        ) : null}
-        {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' ? (
+        {showReplacement ? <ReplacementNotice deductionPct={deductionPct} /> : null}
+        {!podPast && gate.refundStatus === 'PENDING' ? (
           <Text testID="ph-refund-pending" fontSize={12} color="$muted">
             Refund is waiting for criteria completion. Support can help if the status looks wrong.
           </Text>

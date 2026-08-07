@@ -55,7 +55,11 @@ export default function BackoutRefundDetailPage() {
 
             {/* Complete Backout lifecycle, below the Refund section (spec). */}
             <Box sx={{ mt: 2 }}>
-              <BackoutTimeline events={request.events} />
+              <BackoutTimeline
+                participation={request.participation}
+                podDateTime={request.pod?.pod_date_time}
+                backoutNo={request.backout_no}
+              />
             </Box>
           </Box>
         );

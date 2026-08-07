@@ -46,13 +46,30 @@ const pod = {
   pod_id: 'p1',
   club_slug: 'club',
   pod_title: 'Sunset Pod',
-  pod_date_time: '2026-06-10T10:00:00Z',
+  // A pod that has not happened yet: what a booking may still be offered
+  // depends on the date, so the fixture pins one rather than drifting into the
+  // past as the calendar moves.
+  pod_date_time: '2999-01-01T10:00:00Z',
   pod_end_date_time: null,
   pod_amount: 500,
   pod_type: 'PAID',
   no_of_spots: 4,
   pod_images_and_videos: [],
 };
+
+/** The booking's own story, in the nested shape the API returns it. */
+const participation = (over: Record<string, unknown> = {}) => ({
+  joined_at: '2026-06-01T10:00:00Z',
+  attended: false,
+  attendance_recorded: false,
+  pod_cancelled_by: null,
+  pod_cancelled_at: null,
+  cancel_refund_status: 'NONE',
+  // A refund is only reported to somebody who asked for one.
+  backouts: [{ status: 'SPOT_FILLED', refund_status: 'PENDING', seats: 1, seats_before: 1 }],
+  ...over,
+});
+
 const membership = (over: Record<string, unknown> = {}): PodMembership =>
   ({
     id: 'm1',
@@ -65,6 +82,7 @@ const membership = (over: Record<string, unknown> = {}): PodMembership =>
     refund_payment_id: null,
     referral_token: null,
     source: 'DIRECT',
+    participation: participation(),
     pod,
     ...over,
   }) as unknown as PodMembership;
@@ -165,7 +183,8 @@ describe('PodHistoryDetailsScreen actions', () => {
     renderWithProviders(<PodHistoryDetailsScreen />);
     fireEvent.press(screen.getByTestId('ph-backout'));
     fireEvent.press(screen.getByTestId('backout-confirm'));
-    await waitFor(() => expect(backout).toHaveBeenCalledWith('pod1'));
+    // The seat count rides along: a backout releases the seats it names.
+    await waitFor(() => expect(backout).toHaveBeenCalledWith('pod1', 1));
     expect(refetch).toHaveBeenCalled();
     await waitFor(() =>
       expect(screen.getByTestId('ph-notice')).toHaveTextContent('Backout request recorded'),

@@ -93,23 +93,42 @@ describe('dedupeByPod', () => {
 describe('podHistoryGate', () => {
   const future = '2999-01-01T10:00:00Z';
   const past = '2020-01-01T10:00:00Z';
+  const onPod = (date: string, participation: Record<string, unknown> = {}) =>
+    membership({
+      pod: { ...membership().pod!, pod_date_time: date },
+      participation: {
+        joined_at: '2026-06-01T10:00:00Z',
+        attended: false,
+        attendance_recorded: false,
+        pod_cancelled_by: null,
+        pod_cancelled_at: null,
+        cancel_refund_status: 'NONE',
+        backouts: [],
+        ...participation,
+      },
+    });
 
   it('offers a backout and calls it Joined while the pod is still ahead', () => {
-    const gate = podHistoryGate(
-      membership({ pod: { ...membership().pod!, pod_date_time: future } }),
-    );
-    expect(gate).toEqual({ canBackout: true, showRefundState: false, joinedLabelKind: 'JOINED' });
+    expect(podHistoryGate(onPod(future))).toEqual({
+      canBackout: true,
+      showRefundState: false,
+      refundStatus: 'NONE',
+      joinedLabelKind: 'JOINED',
+    });
   });
 
   it('offers nothing and calls it Visited once the pod has happened', () => {
-    const gate = podHistoryGate(membership({ pod: { ...membership().pod!, pod_date_time: past } }));
-    expect(gate).toEqual({ canBackout: false, showRefundState: false, joinedLabelKind: 'VISITED' });
+    expect(podHistoryGate(onPod(past))).toEqual({
+      canBackout: false,
+      showRefundState: false,
+      refundStatus: 'NONE',
+      joinedLabelKind: 'VISITED',
+    });
   });
 
-  it('reports a refund state once a backout asked for one', () => {
+  it('reports the refund state of the request that earned it', () => {
     const gate = podHistoryGate(
-      membership({
-        pod: { ...membership().pod!, pod_date_time: future },
+      onPod(future, {
         backouts: [
           {
             backout_no: 'DUN-BKO-1',
@@ -118,6 +137,7 @@ describe('podHistoryGate', () => {
             seats: 1,
             seats_before: 1,
             refund_amount: 500,
+            refund_status: 'PROCESSED',
             deduction_pct: 10,
             refund_processed_at: '2026-06-06',
             created_at: '2026-06-05',
@@ -127,6 +147,30 @@ describe('podHistoryGate', () => {
       }),
     );
     expect(gate.showRefundState).toBe(true);
+    expect(gate.refundStatus).toBe('PROCESSED');
+  });
+
+  it('reports nothing for a request the member cancelled with Keep My Spot', () => {
+    const gate = podHistoryGate(
+      onPod(future, {
+        backouts: [
+          {
+            backout_no: 'DUN-BKO-2',
+            status: 'CANCELLED',
+            attempt_no: 1,
+            seats: 1,
+            seats_before: 1,
+            refund_amount: null,
+            refund_status: 'NONE',
+            deduction_pct: 10,
+            refund_processed_at: null,
+            created_at: '2026-06-05',
+            events: [],
+          },
+        ],
+      }),
+    );
+    expect(gate.showRefundState).toBe(false);
   });
 });
 

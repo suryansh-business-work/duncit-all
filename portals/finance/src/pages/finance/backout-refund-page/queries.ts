@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, type PodParticipationFields } from '@duncit/utils';
 
 /** Same selection as the list rows — one row per Backout request. */
 const BACKOUT_REFUND_ROW_FIELDS = gql`
@@ -105,6 +105,31 @@ export const BACKOUT_REFUND_DETAIL = gql`
         status
         backout_count
         at
+      }
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
+          status
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
+        }
       }
       created_at
       pod {
@@ -266,6 +291,11 @@ export interface BackoutRefundDetail extends Omit<BackoutRefundRequest, 'pod'> {
   replacement_user_name: string | null;
   replacement_user_email: string | null;
   events: BackoutEvent[];
+  /**
+   * The whole booking this request came off — the same story the member reads
+   * on Pod History, with this request one branch of it (found by backout_no).
+   */
+  participation: PodParticipationFields | null;
   pod: BackoutRefundDetailPod | null;
 }
 

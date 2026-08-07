@@ -41,6 +41,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     seats: Int!
     seats_before: Int!
     refund_amount: Float
+    """
+    What Finance shows for THIS request. The booking's own refund_status is not
+    it: the server never writes that one for a partial backout, so a member paid
+    back for one of three seats was reading "not started".
+    """
+    refund_status: RefundStatus!
     deduction_pct: Float!
     "Set once Finance has processed it — before that the refund is only pending."
     refund_processed_at: String
@@ -60,6 +66,37 @@ export const podMemberTypeDefs = /* GraphQL */ `
     CLUB_ADMIN
     ADMIN
     SYSTEM
+  }
+
+  """
+  One booking's whole story, in the shape the participation timeline reads.
+
+  Finance and Admin resolve the same object the member's own Pod History does,
+  so a support conversation is about one account of what happened rather than
+  two. The pod's date is not on it: every screen that draws this already has
+  the pod loaded, and it is the pod that says whether the story is still ahead.
+  """
+  type PodParticipation {
+    joined_at: String!
+    "True once a host has scanned this booking in at the door."
+    attended: Boolean!
+    attended_at: String
+    """
+    False when NOBODY on the pod was scanned — a virtual pod, or a host who
+    never opened the scanner. Not attending and nobody checking are different
+    things, and only one of them is this person's doing.
+    """
+    attendance_recorded: Boolean!
+    "Set only when the pod itself was cancelled — then nothing else applies."
+    pod_cancelled_by: PodMemberCancelActor
+    pod_cancelled_at: String
+    """
+    What the cancellation did to this booking's money. Not every cancel path
+    refunds, and a free booking has nothing to give back.
+    """
+    cancel_refund_status: RefundStatus!
+    "Every backout this booking raised, oldest first."
+    backouts: [PodMemberBackout!]!
   }
 
   type PodMember {
@@ -85,14 +122,13 @@ export const podMemberTypeDefs = /* GraphQL */ `
     refund_payment_id: ID
     "Backout attempts used for this pod (each Confirm Backout counts one)."
     backout_count: Int!
-    "Every backout raised on this booking, oldest first."
-    backouts: [PodMemberBackout!]!
-    "True once a host has scanned this booking in at the door."
-    attended: Boolean!
-    attended_at: String
-    "Set when the POD was cancelled, whoever did it."
-    pod_cancelled_by: PodMemberCancelActor
-    pod_cancelled_at: String
+    """
+    This booking's whole story — backouts, attendance and cancellation in one
+    object, so a timeline costs one resolution rather than five. Null to anyone
+    but the member themselves and Admin/Finance: it carries DUN-BKO ids and
+    refund amounts, and PodMember is reachable from unauthenticated queries.
+    """
+    participation: PodParticipation
     created_at: String!
     updated_at: String!
   }
@@ -197,6 +233,11 @@ export const podMemberTypeDefs = /* GraphQL */ `
     refund_processed_at: String
     "Immutable, chronological Backout lifecycle timeline."
     events: [BackoutEvent!]!
+    """
+    The whole booking this request belongs to, so Finance reads the same story
+    the member reads — this request is one branch of it, found by backout_no.
+    """
+    participation: PodParticipation
     refund_threshold_pct: Int!
     created_at: String!
   }
@@ -248,6 +289,8 @@ export const podMemberTypeDefs = /* GraphQL */ `
     "Set when this member backed out and a replacement filled the seat."
     replaced_by_user_id: ID
     replaced_by_name: String
+    "This person's own story on the pod. Null for a host seat with no booking."
+    participation: PodParticipation
   }
 
   "One booking resolved from a booking deep link (the receipt email's View Booking CTA)."

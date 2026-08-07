@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, Chip, Divider, Fab, Skeleton, Stack, Typography, Zoom } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import MessageBubble from './message-bubble';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import ThreadItem from './ThreadItem';
+import { JumpToLatest, ThreadSkeleton } from './ThreadChrome';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { StaffMessage } from './queries';
 
@@ -30,6 +30,8 @@ interface Props {
   nameOf: (userId: string) => string;
   selectedIds?: Set<string>;
   onSelect?: (id: string) => void;
+  /** A search hit to scroll to and flash. Cleared by the parent afterwards. */
+  jumpToId?: string | null;
   onLoadMore: () => void;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string, forEveryone: boolean) => void;
@@ -61,6 +63,7 @@ export default function MessageThread({
   nameOf,
   selectedIds,
   onSelect,
+  jumpToId,
   onLoadMore,
   onEdit,
   onDelete,
@@ -73,6 +76,17 @@ export default function MessageThread({
 }: Readonly<Props>) {
   const scroller = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  // Keyed nodes rather than document ids: two panels on one page would collide,
+  // and an id is a promise about the whole document that this does not need.
+  const nodes = useRef(new Map<string, HTMLDivElement>());
+
+  const registerNode = useCallback((id: string, node: HTMLDivElement | null) => {
+    if (node) {
+      nodes.current.set(id, node);
+    } else {
+      nodes.current.delete(id);
+    }
+  }, []);
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
   const lastCount = useRef(messages.length);
@@ -98,6 +112,13 @@ export default function MessageThread({
     }
   }, [messages, atBottom]);
 
+  // Centred, not just "into view": a hit at the very top of the box with no
+  // conversation around it reads as the start of the thread rather than a hit.
+  useEffect(() => {
+    if (!jumpToId) return;
+    nodes.current.get(jumpToId)?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  }, [jumpToId]);
+
   const onScroll = () => {
     const node = scroller.current;
     if (!node) return;
@@ -113,20 +134,7 @@ export default function MessageThread({
     setUnseen(0);
   };
 
-  if (loading && messages.length === 0) {
-    return (
-      <Stack spacing={1} sx={{ flex: 1, p: 1.5 }}>
-        {[64, 40, 88, 52].map((height, index) => (
-          <Skeleton
-            key={height}
-            variant="rounded"
-            height={height}
-            sx={{ maxWidth: '75%', alignSelf: index % 2 ? 'flex-end' : 'flex-start' }}
-          />
-        ))}
-      </Stack>
-    );
-  }
+  if (loading && messages.length === 0) return <ThreadSkeleton />;
 
   let lastDay = '';
   return (
@@ -156,59 +164,35 @@ export default function MessageThread({
           const newDay = day && day !== lastDay;
           if (newDay) lastDay = day;
           return (
-            <Box key={message.id}>
-              {newDay && (
-                <Divider sx={{ my: 1 }}>
-                  <Chip size="small" label={day} sx={{ height: 22, fontSize: 11 }} />
-                </Divider>
-              )}
-              {message.id === firstUnreadId && (
-                <Divider sx={{ my: 1 }} role="separator">
-                  <Chip size="small" color="error" label="New" sx={{ height: 22, fontSize: 11 }} />
-                </Divider>
-              )}
-              <MessageBubble
-                message={message}
-                mine={message.from_user_id === meId}
-                meId={meId}
-                settings={settings}
-                formats={formats}
-                nameOf={nameOf}
-                repliedTo={message.reply_to_id ? (byId.get(message.reply_to_id) ?? null) : null}
-                selected={selectedIds?.has(message.id)}
-                onSelect={onSelect}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onReact={onReact}
-                onReply={onReply}
-                onForward={onForward}
-                onPin={onPin}
-                onRetry={onRetry}
-                onNavigate={onNavigate}
-              />
-            </Box>
+            <ThreadItem
+              key={message.id}
+              message={message}
+              meId={meId}
+              settings={settings}
+              formats={formats}
+              nameOf={nameOf}
+              repliedTo={message.reply_to_id ? (byId.get(message.reply_to_id) ?? null) : null}
+              dayLabel={newDay ? day : ''}
+              firstUnread={message.id === firstUnreadId}
+              highlighted={message.id === jumpToId}
+              selected={selectedIds?.has(message.id)}
+              onSelect={onSelect}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReact={onReact}
+              onReply={onReply}
+              onForward={onForward}
+              onPin={onPin}
+              onRetry={onRetry}
+              onNavigate={onNavigate}
+              onNode={registerNode}
+            />
           );
         })}
         <div ref={endRef} />
       </Stack>
 
-      <Zoom in={!atBottom}>
-        <Fab
-          size="small"
-          color={unseen > 0 ? 'primary' : 'default'}
-          onClick={jump}
-          aria-label={unseen > 0 ? `${unseen} new messages — jump to latest` : 'Jump to latest'}
-          sx={{ position: 'absolute', right: 16, bottom: 12 }}
-        >
-          {unseen > 0 ? (
-            <Typography variant="caption" sx={{ fontWeight: 700 }}>
-              {unseen > 9 ? '9+' : unseen}
-            </Typography>
-          ) : (
-            <KeyboardArrowDownIcon />
-          )}
-        </Fab>
-      </Zoom>
+      <JumpToLatest show={!atBottom} unseen={unseen} onJump={jump} />
     </Box>
   );
 }

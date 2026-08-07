@@ -4,7 +4,7 @@ import { Alert, Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
-import CallPanel from './CallPanel';
+import CallPanel from './call-panel';
 import { useCallRecorder } from './useCallRecorder';
 import Conversation from './Conversation';
 import CoworkerList from './CoworkerList';
@@ -158,23 +158,11 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
 
   const presence = usePresence(socket, meId);
   const call = useCall(socket, meId);
-  const recorder = useCallRecorder();
-
-  /**
-   * Hanging up ends the take.
-   *
-   * The tracks are gone the moment the call closes, so a recorder left running
-   * would keep writing an empty file and never produce anything. Stopping here
-   * means "hang up" is a perfectly good way to finish a recording — which is
-   * how people actually end calls.
-   */
-  const recording = recorder.stage === 'RECORDING';
-  const stopRecording = recorder.stop;
-  useEffect(() => {
-    if (call.phase !== 'connected' && recording) {
-      stopRecording().catch(() => undefined);
-    }
-  }, [call.phase, recording, stopRecording]);
+  const recorder = useCallRecorder({
+    connected: call.phase === 'connected',
+    localStream: call.localStream,
+    remoteStream: call.remoteStream,
+  });
 
   // The socket only reports CHANGES; the first paint needs the snapshot.
   const statusOf = useCallback(
@@ -359,13 +347,7 @@ export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>)
         recordPct={recorder.pct}
         recordUrl={recorder.url}
         recordError={recorder.error}
-        onToggleRecord={() => {
-          if (recording) {
-            recorder.stop().catch(() => undefined);
-            return;
-          }
-          recorder.start(call.localStream, call.remoteStream);
-        }}
+        onToggleRecord={recorder.toggle}
         onSendRecording={(url) => {
           send('', { url, name: 'Call recording.mp4', type: 'video/mp4' });
           recorder.reset();

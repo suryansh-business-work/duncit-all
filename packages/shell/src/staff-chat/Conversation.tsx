@@ -1,27 +1,11 @@
-import { useState } from 'react';
-import {
-  Avatar,
-  Box,
-  IconButton,
-  LinearProgress,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import CloseIcon from '@mui/icons-material/Close';
-import ScreenShareIcon from '@mui/icons-material/ScreenShare';
-import CallIcon from '@mui/icons-material/Call';
-import DownloadIcon from '@mui/icons-material/Download';
-import SendIcon from '@mui/icons-material/Send';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import EmojiPicker from './EmojiPicker';
+import { useMemo, useState } from 'react';
+import { Box, LinearProgress } from '@mui/material';
 import ChatComposer from './ChatComposer';
+import ChatSearchPanel from './ChatSearchPanel';
+import ConversationHeader from './ConversationHeader';
 import LocationDialog from './LocationDialog';
 import MessageThread from './MessageThread';
-import PresenceDot from './PresenceDot';
+import ReplyStrip from './ReplyStrip';
 import type { Coworker, StaffMessage } from './queries';
 import type { ChatFormats, ChatSettings } from './useChatSettings';
 import type { PresenceStatus } from './usePresence';
@@ -94,54 +78,41 @@ export default function Conversation({
   onShareScreen,
 }: Readonly<Props>) {
   const [locationOpen, setLocationOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [jumpToId, setJumpToId] = useState<string | null>(null);
+
+  // What the thread can actually scroll to, so a hit outside it can say so.
+  const loadedIds = useMemo(() => new Set(messages.map((message) => message.id)), [messages]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <IconButton size="small" onClick={onBack} aria-label="Back to coworkers">
-          <ArrowBackIcon fontSize="small" />
-        </IconButton>
-        <PresenceDot status={status}>
-          <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
-        </PresenceDot>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" noWrap>
-            {peer.name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {status.toLowerCase()}
-          </Typography>
-        </Box>
-        <Tooltip title="Audio call">
-          <IconButton size="small" onClick={() => onCall('AUDIO')} aria-label="Start audio call">
-            <CallIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Video call">
-          <IconButton size="small" onClick={() => onCall('VIDEO')} aria-label="Start video call">
-            <VideocamIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Share your screen">
-          <IconButton size="small" onClick={onShareScreen} aria-label="Share your screen">
-            <ScreenShareIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Export this conversation">
-          <IconButton size="small" onClick={onExport} aria-label="Export conversation">
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+      <ConversationHeader
+        peer={peer}
+        status={status}
+        searchOpen={searchOpen}
+        onBack={onBack}
+        onToggleSearch={() => setSearchOpen((open) => !open)}
+        onCall={onCall}
+        onShareScreen={onShareScreen}
+        onExport={onExport}
+      />
+
+      {searchOpen && (
+        <ChatSearchPanel
+          peerId={peer.id}
+          meId={meId}
+          peerName={peer.name}
+          formats={formats}
+          loadedIds={loadedIds}
+          onJump={setJumpToId}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
 
       {uploading && <LinearProgress />}
 
       <MessageThread
+        jumpToId={jumpToId}
         messages={messages}
         meId={meId}
         loading={loading}
@@ -161,29 +132,7 @@ export default function Conversation({
         onNavigate={onNavigate}
       />
 
-      {/* What you are answering, until it is sent — a reply with no visible
-          target is a message that reads as a non sequitur to its own author. */}
-      {replyTo && (
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1}
-          sx={{ px: 1.5, py: 0.75, borderTop: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
-        >
-          <Box sx={{ width: 3, alignSelf: 'stretch', bgcolor: 'primary.main', borderRadius: 1 }} />
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
-              Replying to {nameOf(replyTo.from_user_id)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-              {replyTo.text || replyTo.attachment_name || 'Attachment'}
-            </Typography>
-          </Box>
-          <IconButton size="small" onClick={onCancelReply} aria-label="Cancel reply">
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-      )}
+      {replyTo && <ReplyStrip replyTo={replyTo} nameOf={nameOf} onCancel={onCancelReply} />}
 
       <ChatComposer
         sending={sending}

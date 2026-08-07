@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { directUploadToImagekit } from '@duncit/media-picker';
 import { START_VIDEO_COMPRESSION, VIDEO_COMPRESSION_JOB } from './queries';
@@ -7,6 +7,13 @@ export type RecordStage = 'IDLE' | 'RECORDING' | 'UPLOADING' | 'CONVERTING' | 'R
 
 /** Its own folder in the media library, so recordings are findable as a set. */
 const RECORDING_FOLDER = '/call-recordings';
+
+/** What the recorder needs from the call it is recording. */
+export interface CallSource {
+  connected: boolean;
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
+}
 
 /** What the browser will actually give us, best first. */
 const VIDEO_CANDIDATES = [
@@ -37,7 +44,7 @@ const pickMimeType = (hasVideo: boolean): string => {
  * The tracks are MIXED here rather than recorded separately: a call is two
  * people, and two files nobody can line up is not a recording of a conversation.
  */
-export function useCallRecorder() {
+export function useCallRecorder(call: Readonly<CallSource>) {
   const client = useApolloClient();
   const [stage, setStage] = useState<RecordStage>('IDLE');
   const [pct, setPct] = useState(0);
@@ -187,5 +194,26 @@ export function useCallRecorder() {
     setPct(0);
   }, []);
 
-  return { stage, pct, url, error, start, stop, reset };
+  const recording = stage === 'RECORDING';
+
+  /**
+   * Hanging up ends the take.
+   *
+   * The tracks are gone the moment the call closes, so a recorder left running
+   * would keep writing nothing. Stopping here makes "hang up" a perfectly good
+   * way to finish a recording — which is how people actually end calls.
+   */
+  useEffect(() => {
+    if (!call.connected && recording) stop().catch(() => undefined);
+  }, [call.connected, recording, stop]);
+
+  const toggle = useCallback(() => {
+    if (recording) {
+      stop().catch(() => undefined);
+      return;
+    }
+    start(call.localStream, call.remoteStream);
+  }, [recording, stop, start, call.localStream, call.remoteStream]);
+
+  return { stage, pct, url, error, recording, toggle, reset };
 }

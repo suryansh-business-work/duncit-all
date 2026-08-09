@@ -33,10 +33,12 @@ export function CheckoutSuccess({
   onDownloadTicket,
   onHome,
   onProfile,
-  profileLabel = 'My bookings',
+  profileLabel,
 }: Readonly<CheckoutSuccessProps>) {
   const { t } = useTranslation();
   const { onPrimary, muted } = useThemeColors();
+  const profileAction = profileLabel ?? t('mweb.checkout.myBookings');
+  const invoiceLabel = t('mweb.checkout.downloadInvoice');
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function CheckoutSuccess({
     try {
       await onDownloadInvoice();
     } catch (e) {
-      setError(toErrorMessage(e, 'Could not download invoice.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorInvoiceDownload')));
     } finally {
       setBusy(false);
     }
@@ -62,7 +64,7 @@ export function CheckoutSuccess({
     try {
       await onDownloadTicket();
     } catch (e) {
-      setError(toErrorMessage(e, 'Could not download ticket.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorTicketDownload')));
     } finally {
       setTicketBusy(false);
     }
@@ -72,7 +74,7 @@ export function CheckoutSuccess({
     <YStack testID="checkout-success" alignItems="center" gap={14} padding={20}>
       <MaterialIcons name="check-circle" size={64} color={semantic.success} />
       <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
-        Payment successful
+        {t('mweb.checkout.successTitle')}
       </Text>
       <YStack
         alignSelf="stretch"
@@ -83,9 +85,15 @@ export function CheckoutSuccess({
         padding={16}
         gap={6}
       >
-        <Row label="Invoice" value={payment.invoice_no ?? '—'} />
-        <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} />
-        <Row label="Paid on" value={formatDateTime(payment.paid_at ?? payment.created_at)} />
+        <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no ?? '—'} />
+        <Row
+          label={t('mweb.checkout.amountPaid')}
+          value={formatMoney(payment.currency_symbol, payment.total)}
+        />
+        <Row
+          label={t('mweb.checkout.paidOn')}
+          value={formatDateTime(payment.paid_at ?? payment.created_at)}
+        />
       </YStack>
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
@@ -94,8 +102,9 @@ export function CheckoutSuccess({
         <XStack testID="success-venue-note" alignItems="center" gap={6} alignSelf="stretch">
           <MaterialIcons name="storefront" size={16} color={muted} />
           <Text fontSize={12} color="$muted" flex={1}>
-            Venue charges {formatMoney(payment.currency_symbol, venueTotal)} are payable directly at
-            the venue.
+            {t('mweb.checkout.venueChargesPaid', {
+              vars: { amount: formatMoney(payment.currency_symbol, venueTotal) },
+            })}
           </Text>
         </XStack>
       ) : null}
@@ -120,10 +129,10 @@ export function CheckoutSuccess({
 
       <ActionButton
         testID="download-invoice"
-        ariaLabel="Download invoice"
+        ariaLabel={invoiceLabel}
         busy={busy}
         onPress={() => void download()}
-        label="Download invoice"
+        label={invoiceLabel}
         iconName="download"
         variant="outlined"
       />
@@ -132,7 +141,7 @@ export function CheckoutSuccess({
         <XStack
           testID="success-home"
           role="button"
-          aria-label="Go home"
+          aria-label={t('mweb.checkout.goHome')}
           onPress={onHome}
           flex={1}
           height={46}
@@ -143,13 +152,13 @@ export function CheckoutSuccess({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            Home
+            {t('mweb.checkout.home')}
           </Text>
         </XStack>
         <XStack
           testID="success-profile"
           role="button"
-          aria-label="View bookings"
+          aria-label={t('mweb.checkout.viewBookings')}
           onPress={onProfile}
           flex={1}
           height={46}
@@ -161,7 +170,7 @@ export function CheckoutSuccess({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color="$color">
-            {profileLabel}
+            {profileAction}
           </Text>
         </XStack>
       </XStack>
@@ -190,6 +199,7 @@ function ActionButton({
   variant,
 }: Readonly<ActionButtonProps>) {
   const { onPrimary, primary } = useThemeColors();
+  const { t } = useTranslation();
   const filled = variant === 'filled';
   return (
     <XStack
@@ -220,7 +230,7 @@ function ActionButton({
         fontWeight={filled ? '700' : '600'}
         color={filled ? onPrimary : '$primary'}
       >
-        {busy ? 'Preparing…' : label}
+        {busy ? t('mweb.checkout.preparing') : label}
       </Text>
     </XStack>
   );

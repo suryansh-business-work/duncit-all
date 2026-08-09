@@ -1,5 +1,6 @@
 import { type Control, type FieldValues, type Path } from 'react-hook-form';
 import { Stack, type SxProps, type Theme } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import RhfTextField from './RhfTextField';
 
 /** Maps each postal-address part to a typed field name on the parent form. */
@@ -43,19 +44,20 @@ export default function AddressFields<T extends FieldValues>({
   required = false,
   pincodeHint,
 }: Readonly<Props<T>>) {
+  const { t } = useTranslation();
   const labelProps = shrinkLabels ? { shrink: true } : undefined;
   return (
     <Stack spacing={1.5}>
-      <RhfTextField control={control} name={names.line1} label="Address line 1" required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
-      <RhfTextField control={control} name={names.line2} label="Address line 2 (optional)" size={size} sx={fieldSx} InputLabelProps={labelProps} />
-      <RhfTextField control={control} name={names.landmark} label="Landmark (optional)" size={size} sx={fieldSx} InputLabelProps={labelProps} />
+      <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+      <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+      <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.city} label="City" required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
-        <RhfTextField control={control} name={names.state} label="State" required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+        <RhfTextField control={control} name={names.city} label={t('mweb.address.city')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
+        <RhfTextField control={control} name={names.state} label={t('mweb.address.state')} required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.pincode} label="Pincode" required={required} hint={pincodeHint} size={size} sx={fieldSx} InputLabelProps={labelProps} inputProps={PINCODE_INPUT} />
-        <RhfTextField control={control} name={names.country} label="Country" size={size} sx={fieldSx} InputLabelProps={labelProps} />
+        <RhfTextField control={control} name={names.pincode} label={t('mweb.address.pincode')} required={required} hint={pincodeHint} size={size} sx={fieldSx} InputLabelProps={labelProps} inputProps={PINCODE_INPUT} />
+        <RhfTextField control={control} name={names.country} label={t('mweb.address.country')} size={size} sx={fieldSx} InputLabelProps={labelProps} />
       </Stack>
     </Stack>
   );

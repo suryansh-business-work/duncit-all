@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  checkoutSchema,
-  productCheckoutSchema,
+  makeCheckoutSchema,
+  makeProductCheckoutSchema,
   checkoutDefaults,
   resolveBillingAddress,
   shouldPersistMainAddress,
 } from './checkout';
+import { useTranslation } from '../../i18n/useTranslation';
 import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
@@ -51,6 +52,7 @@ interface Args {
  * amount as an argument so either page can drive them.
  */
 export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddress = false }: Args) {
+  const { t } = useTranslation();
   const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
   const { data: meData, loading: meLoading } = useQuery(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
   const { data: couponsData } = useQuery(AVAILABLE_COUPONS, {
@@ -74,9 +76,16 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const [coinsApplied, setCoinsApplied] = useState(0);
   const [pickedContact, setPickedContact] = useState<PickedContact | null>(null);
 
+  // The schemas cannot call `t` at module scope, so they are built here from the
+  // reader's own catalogue — the validation messages are copy like any other.
+  const schema = useMemo(
+    () => (requireAddress ? makeProductCheckoutSchema(t) : makeCheckoutSchema(t)),
+    [requireAddress, t],
+  );
+
   const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm>({
     defaultValues: checkoutDefaults,
-    resolver: zodResolver(requireAddress ? productCheckoutSchema : checkoutSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 
@@ -111,7 +120,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
       if (preview?.ok) setCoupon(preview);
       else {
         setCoupon(null);
-        setCouponError(preview?.message ?? 'Invalid coupon code');
+        setCouponError(preview?.message ?? t('mweb.checkout.errorCouponInvalid'));
       }
     } catch (e: any) {
       setCoupon(null);
@@ -169,7 +178,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
       const res = await doVerifyRazorpay({ variables: { input: { payment_doc_id: paymentDocId, ...sig } } });
       const payment = res.data?.verifyRazorpayPayment;
       if (payment?.status === 'SUCCESS') finishSuccess(payment);
-      else setError('Payment could not be verified.');
+      else setError(t('mweb.checkout.errorNotVerified'));
     } catch (e: any) {
       setError(parseApiError(e));
     } finally {

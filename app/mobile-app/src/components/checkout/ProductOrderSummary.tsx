@@ -4,6 +4,8 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Translate } from '@/i18n/fallback';
 import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import type { ProductShippingQuote } from '@/hooks/useProductShippingQuote';
@@ -49,11 +51,12 @@ function LineThumb({
   onInfo,
 }: Readonly<{ line: CartLine; onInfo: (productId: string) => void }>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <XStack
       testID={`summary-info-${line.pod_id}:${cartLineKey(line)}`}
       role="button"
-      aria-label={`View ${line.product_name} details`}
+      aria-label={t('mweb.checkout.viewProduct', { vars: { name: line.product_name } })}
       onPress={() => onInfo(line.product_id)}
       pressStyle={{ opacity: 0.6 }}
       width={40}
@@ -110,17 +113,17 @@ function ProductLineRow({
 
 /** A warehouse group's delivery charge: "Free" when every line in the group met
  * its free-delivery threshold, else the (live or manual-fallback) charge. */
-function quoteLineValue(line: QuoteLine, currency: string): string {
-  if (line.free) return 'Free';
+function quoteLineValue(line: QuoteLine, currency: string, t: Translate): string {
+  if (line.free) return t('mweb.checkout.deliveryFree');
   return formatMoney(currency, line.charge);
 }
 
 /** A warehouse group's row label: the courier name, marked "(estimated)" when
  * ShipRocket could not price it live (manual fallback). No pod title — checkout
  * hides pod detail (products and pods are separate entities). */
-function quoteLineLabel(line: QuoteLine): string {
-  const courier = line.courier_name || 'Delivery';
-  return line.quoted ? courier : `${courier} (estimated)`;
+function quoteLineLabel(line: QuoteLine, t: Translate): string {
+  const courier = line.courier_name || t('mweb.checkout.delivery');
+  return line.quoted ? courier : t('mweb.checkout.deliveryEstimated', { vars: { courier } });
 }
 
 /** Delivery rows — a prompt until a valid pincode, a spinner label while
@@ -137,21 +140,27 @@ function DeliveryRows({
   pincodeValid: boolean;
   currency: string;
 }>) {
-  if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
+  const { t } = useTranslation();
+  const deliveryLabel = t('mweb.checkout.delivery');
+  if (!pincodeValid) {
+    return <Row label={deliveryLabel} value={t('mweb.checkout.deliveryEnterPincode')} />;
+  }
   if (!quote) {
-    const pending = shippingLoading ? 'Calculating…' : formatMoney(currency, 0);
-    return <Row label="Delivery" value={pending} />;
+    const pending = shippingLoading
+      ? t('mweb.checkout.deliveryCalculating')
+      : formatMoney(currency, 0);
+    return <Row label={deliveryLabel} value={pending} />;
   }
   return (
     <YStack gap={8}>
       {quote.lines.map((line) => (
         <Row
           key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
-          label={quoteLineLabel(line)}
-          value={quoteLineValue(line, currency)}
+          label={quoteLineLabel(line, t)}
+          value={quoteLineValue(line, currency, t)}
         />
       ))}
-      <Row label="Delivery total" value={formatMoney(currency, quote.total)} />
+      <Row label={t('mweb.checkout.deliveryTotal')} value={formatMoney(currency, quote.total)} />
     </YStack>
   );
 }
@@ -170,6 +179,7 @@ export function ProductOrderSummary({
   pincodeValid,
   onInfo,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const estimated = !!quote && !quote.all_quoted;
 
@@ -187,10 +197,10 @@ export function ProductOrderSummary({
         <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
         <YStack flex={1} minWidth={0}>
           <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
-            Order summary
+            {t('mweb.checkout.orderSummary')}
           </Text>
           <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
-            Your order
+            {t('mweb.checkout.yourOrder')}
           </Text>
         </YStack>
       </XStack>
@@ -206,7 +216,7 @@ export function ProductOrderSummary({
         ))}
       </YStack>
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-      <Row label="Subtotal" value={fmt(subtotal)} />
+      <Row label={t('mweb.checkout.subtotal')} value={fmt(subtotal)} />
       <DeliveryRows
         quote={quote}
         shippingLoading={shippingLoading}
@@ -215,12 +225,15 @@ export function ProductOrderSummary({
       />
       {estimated ? (
         <Text testID="product-shipping-estimated" fontSize={11.5} color="$muted">
-          Estimated delivery — final charge confirmed at checkout.
+          {t('mweb.checkout.deliveryEstimatedNote')}
         </Text>
       ) : null}
-      <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
+      <Row
+        label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
+        value={fmt(breakup.gst)}
+      />
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-      <Row label="Total payable" value={fmt(breakup.total)} bold />
+      <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
     </YStack>
   );
 }

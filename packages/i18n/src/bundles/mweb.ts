@@ -7,6 +7,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       language: 'Language',
       languageHint: 'Choose the language for the app.',
       languageSaved: 'Language updated',
+      goBack: 'Go back',
     },
     account: {
       preferences: 'Preferences',
@@ -290,12 +291,241 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       retry: 'Retry payment',
       close: 'Close',
     },
+    // The seven postal-address parts. One namespace, because the SAME block is
+    // rendered by checkout billing and by the account address book on both
+    // surfaces — a second copy per form is exactly the drift rule 40 forbids.
+    address: {
+      line1: 'Address line 1',
+      line2: 'Address line 2 (optional)',
+      landmark: 'Landmark (optional)',
+      city: 'City',
+      state: 'State',
+      pincode: 'Pincode',
+      country: 'Country',
+    },
+    // The cart: the products waiting to be paid for, and the header button that
+    // leads back to them.
+    cart: {
+      title: 'Cart',
+      empty: 'Your cart is empty',
+      emptyBody: 'Add products from any Pod Shop and they will wait for you here.',
+      // The empty-cart CTA. The two surfaces send the buyer to DIFFERENT places
+      // — mWeb to the Pod Shop, native to Home — so each says where it goes
+      // rather than sharing a label that would be wrong on one of them.
+      browseShop: 'Browse the Pod Shop',
+      findPod: 'Find a pod',
+      total: 'Cart total',
+      checkout: 'Proceed to checkout',
+      clear: 'Clear cart',
+      productsTotal: 'Products total',
+      // The money is formatted by @duncit/utils and passed in; only the word
+      // around it is copy.
+      unitEach: '{price} each',
+      freeDelivery: 'Free delivery',
+      decrease: 'Decrease {name}',
+      increase: 'Increase {name}',
+      removeItem: 'Remove {name}',
+      open: 'Open cart ({count} items)',
+    },
+    // The money path: the pod-membership checkout, the standalone product
+    // checkout, and the confirmation both of them end on. mWeb and the native
+    // app render the SAME journey (rule 27), so a key here is used by BOTH
+    // unless its comment says which surface renders it.
+    //
     // Plurals ship as explicit One/Many pairs: the key-verification gate needs
     // every leaf rendered via a literal t('…'), which the translator's
     // `.one/.other` siblings would fail.
     checkout: {
       seatsOne: '1 seat',
       seatsMany: '{count} seats',
+      // Page chrome.
+      title: 'Checkout',
+      heading: 'Confirm your spot',
+      productTitle: 'Product checkout',
+      // mWeb only — native's screen title is the whole header.
+      productHeading: 'Complete your order',
+      // Native only — mWeb renders a skeleton instead of an unavailable state.
+      unavailable: 'Checkout is unavailable right now. Please try again later.',
+      nothingToCheckout: 'Nothing to checkout',
+      noProductsInCart: 'There are no products in your cart.',
+      backToCart: 'Back to cart',
+      // mWeb only — the pod checkout can be opened with no pod at all.
+      backToHome: 'Back to Home',
+      // The pod order summary.
+      ticket: 'Ticket',
+      podBooking: 'Pod booking',
+      ticketMultiplier: 'Ticket {price} x {seats} seats',
+      // mWeb prices the pod line as the whole payable, native as the pre-GST
+      // subtotal, so each labels the number it actually shows.
+      ticketPrice: 'Ticket price',
+      subtotal: 'Subtotal',
+      // mWeb only — it lists the tax as a component of the price above it.
+      inclusiveOf: 'Inclusive of:',
+      gst: 'GST ({pct}%)',
+      totalPayable: 'Total payable',
+      // Venue charges are settled at the door and are NOT part of the online
+      // payment, which is the one thing this copy has to make unmistakable.
+      venueCharges: 'Venue Charges',
+      venueChargesAbout: 'About venue charges',
+      venuePayAtVenue: 'Payable directly at the venue',
+      venueChargesIntro: 'Optional venue-side charges to be paid to the Venue.',
+      venueChargesTotal: 'Total venue charges',
+      venueChargesNote: 'Pay this directly at the venue — it is not included in your online payment.',
+      venueChargesPaid: 'Venue charges {amount} are payable directly at the venue.',
+      close: 'Close',
+      // Coupons.
+      couponCode: 'Coupon code',
+      couponApply: 'Apply',
+      // mWeb only — the native button swaps its label for a spinner.
+      couponApplying: 'Applying…',
+      // Native only — its controls are pressable stacks and carry their own
+      // accessible names; mWeb's are real buttons labelled by their text.
+      couponApplyAria: 'Apply coupon',
+      couponRemoveAria: 'Remove coupon',
+      couponRemove: 'Remove',
+      // mWeb only — native states the applied coupon as code · −amount.
+      couponApplied: '{code} applied',
+      couponsAvailableOne: 'View 1 available coupon',
+      couponsAvailableMany: 'View {count} available coupons',
+      couponsTitle: 'Available coupons',
+      couponsEmpty: 'No coupons available right now.',
+      // Native only — the sheet has its own close control.
+      couponsClose: 'Close coupons',
+      couponPickAria: 'Apply {code}',
+      couponPercentOff: '{pct}% off',
+      couponForPod: 'For this pod',
+      couponAllPods: 'All pods',
+      couponMin: 'Min {amount}',
+      // The pay step.
+      paymentDetails: 'Payment details',
+      pay: 'Pay {amount}',
+      // Native only — its button needs a label before the total is known.
+      payNow: 'Pay now',
+      processing: 'Processing…',
+      // What the discount did, said once per surface: mWeb strikes the old
+      // total and names the saving, native names what is actually charged.
+      youSave: 'you save {amount}',
+      youPay: 'You pay {amount}',
+      // mWeb only.
+      receiptNote: 'Receipt and invoice will be sent after successful payment.',
+      // Native only — the footer under its pay button.
+      dummyGatewayNote: 'Dummy gateway — no real money is charged.',
+      razorpayNote: 'Payments secured by Razorpay.',
+      // The read-only contact block. It is edited from the profile, never here.
+      contactDetails: 'Contact details',
+      contactName: 'Name',
+      contactEmail: 'Email',
+      contactPhone: 'Phone',
+      contactEditNote: 'To change these, edit your profile.',
+      // Native only — mWeb shows skeleton lines while the profile loads.
+      contactLoading: 'Loading your details…',
+      // Billing address + GST.
+      billingAddress: 'Billing address',
+      sameAsMain: 'Same as my main address',
+      saveAsMain: 'Save this as my main address',
+      billingEmail: 'Billing email (optional)',
+      // Native only — mWeb's field carries no helper line.
+      billingEmailHint: 'Leave blank to use your contact email.',
+      pincodeHint: '4–10 digits',
+      gstDetails: 'GST details',
+      hasGstin: 'I have a GSTIN (for business invoice)',
+      // Native only — its switch needs a name of its own.
+      hasGstinAria: 'I have a GSTIN',
+      gstin: 'GSTIN',
+      gstinHint: '15-character GSTIN',
+      // The saved-address picker. mWeb is one labelled select; native is a
+      // field that opens a sheet, so it has more parts to name.
+      deliverToSaved: 'Deliver to a saved address',
+      deliverTo: 'Deliver to',
+      selectAddress: 'Select address',
+      chooseAddress: 'Choose a saved address',
+      addressDefault: '(default)',
+      // The blocking overlay while a payment is in flight. The instruction
+      // names the thing the buyer must not close, which differs by medium.
+      processingTitle: 'Processing your payment…',
+      processingNoteWeb: 'Please don’t close this tab.',
+      processingNoteApp: 'Please don’t close this screen.',
+      // The product order summary.
+      orderSummary: 'Order summary',
+      yourOrder: 'Your order',
+      delivery: 'Delivery',
+      deliveryEnterPincode: 'Enter pincode',
+      deliveryCalculating: 'Calculating…',
+      deliveryTotal: 'Delivery total',
+      deliveryFree: 'Free',
+      deliveryEstimated: '{courier} (estimated)',
+      deliveryEstimatedNote: 'Estimated delivery — final charge confirmed at checkout.',
+      viewProduct: 'View {name} details',
+      // The confirmation.
+      successTitle: 'Payment successful',
+      // mWeb only — its confirmation is a full page with room to say more.
+      successOverline: 'You are in',
+      successSubtitle: 'Your slot is booked. A receipt with the tax invoice has been emailed to you.',
+      paymentId: 'Payment ID',
+      amountPaid: 'Amount paid',
+      paidOn: 'Paid on',
+      invoiceLabel: 'Invoice',
+      downloadInvoice: 'Download invoice',
+      // Native only — its download buttons say so while they work.
+      preparing: 'Preparing…',
+      yourBooking: 'Your booking',
+      home: 'Home',
+      goHome: 'Go home',
+      viewBookings: 'View bookings',
+      myBookings: 'My bookings',
+      // mWeb only — its confirmation returns to the profile, not the bookings
+      // list, so the label names where it actually goes.
+      myProfile: 'My Profile',
+      myOrders: 'My orders',
+      // mWeb only — passes to a wallet are a browser affordance.
+      appleWallet: 'Add to Apple Wallet',
+      googleWallet: 'Add to Google Wallet',
+      appleWalletUnavailable:
+        'Apple Wallet pass is not available yet. Invoice download is separate below.',
+      calendarEventFallback: 'Duncit Pod',
+      calendarDetails: 'Your Duncit booking is confirmed.',
+      // What went wrong. A buyer reads these instead of the payable, so they
+      // say what happened to the money and what to do next.
+      errorFailed: 'Payment failed. Please try again.',
+      errorNotConfigured: 'Online payments are not configured yet. Please try again later.',
+      errorNotVerified: 'Payment could not be verified.',
+      errorCouponInvalid: 'Invalid coupon code',
+      errorInvoiceUnavailable: 'Invoice not available',
+      // mWeb only — it creates the gateway order itself and can fail before
+      // the sheet ever opens, and it downloads the ticket from this page.
+      errorStart: 'Could not start the payment. Please try again.',
+      errorTicketUnavailable: 'Ticket not available',
+      errorTicketNotReady: 'Ticket not ready yet — check your email shortly.',
+      // Native only.
+      errorCouponApply: 'Could not apply coupon',
+      errorInvoiceDownload: 'Could not download invoice.',
+      errorTicketDownload: 'Could not download ticket.',
+      // Zod messages. They are copy like any other — the person who reads them
+      // is the person filling the form in. Email uses `auth.validation.*`,
+      // which already says the same two things.
+      validation: {
+        nameMax: 'Name must be 160 characters or fewer',
+        phoneCodeInvalid: 'Use a code like +91',
+        phoneInvalid: 'Phone must contain only digits (6-15 digits)',
+        line1Required: 'Address line 1 is required',
+        line1Max: 'Address line 1 must be 200 characters or fewer',
+        line2Max: 'Address line 2 must be 200 characters or fewer',
+        landmarkMax: 'Landmark must be 160 characters or fewer',
+        cityRequired: 'City is required',
+        cityMax: 'City must be 120 characters or fewer',
+        stateRequired: 'State is required',
+        stateMax: 'State must be 120 characters or fewer',
+        pincodeInvalid: 'Enter a valid pincode',
+        pincodeMax: 'Pincode must be 10 characters or fewer',
+        countryMax: 'Country must be 80 characters or fewer',
+        billingEmailInvalid: 'Enter a valid billing email',
+        // The two surfaces cap GSTIN and the billing email at different
+        // lengths, so these say "too long" rather than a number that would be
+        // wrong on one of them.
+        billingEmailMax: 'Billing email is too long',
+        gstinInvalid: 'Enter a valid 15-character GSTIN',
+        gstinMax: 'GSTIN is too long',
+      },
     },
     // The Follow button's three states. REQUESTED only ever appears on a
     // private profile, whose owner must accept before a follow exists.

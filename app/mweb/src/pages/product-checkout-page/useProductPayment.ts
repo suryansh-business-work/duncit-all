@@ -11,6 +11,7 @@ import {
   type RazorpaySignature,
 } from '../checkout-page/razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CheckoutSession } from '../checkout-page/useCheckoutSession';
 import type { CoinRedemption } from '../checkout-page/useCoinRedemption';
 import type { RazorpayErrorLike } from '@duncit/utils';
@@ -31,6 +32,7 @@ interface Args {
  * dummy gateway is the local fallback. Never touches the pod-join engine.
  */
 export function useProductPayment({ session, items, coins, onPaymentFailure }: Args) {
+  const { t } = useTranslation();
   const [doDummy] = useMutation(DUMMY_PRODUCT_CHECKOUT);
   const [doRazorpay] = useMutation(CREATE_RAZORPAY_PRODUCT_ORDER);
 
@@ -51,7 +53,7 @@ export function useProductPayment({ session, items, coins, onPaymentFailure }: A
         const orderRes = await doRazorpay({ variables: { input } });
         const order = orderRes.data?.createRazorpayProductOrder;
         if (!order) {
-          session.setError('Could not start the payment. Please try again.');
+          session.setError(t('mweb.checkout.errorStart'));
           return;
         }
         if (order.free && order.payment) {
@@ -70,10 +72,10 @@ export function useProductPayment({ session, items, coins, onPaymentFailure }: A
         const res = await doDummy({ variables: { input: { ...input, simulate_failure } } });
         const payment = res.data?.dummyProductCheckout;
         if (payment?.status === 'SUCCESS') session.finishSuccess(payment);
-        else session.setError('Payment failed. Please try again.');
+        else session.setError(t('mweb.checkout.errorFailed'));
         return;
       }
-      session.setError('Online payments are not configured yet. Please try again later.');
+      session.setError(t('mweb.checkout.errorNotConfigured'));
     } catch (submitError: any) {
       session.setError(parseApiError(submitError));
     } finally {

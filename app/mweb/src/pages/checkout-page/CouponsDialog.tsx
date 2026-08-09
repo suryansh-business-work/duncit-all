@@ -11,6 +11,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import type { AvailableCoupon } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -24,18 +25,19 @@ interface Props {
 /** Available-coupons picker for checkout — lists the active global + pod
  * coupons from the admin panel; tapping one applies it (B2-#3). */
 export default function CouponsDialog({ open, coupons, currency, onClose, onPick }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ pr: 6, fontWeight: 700 }}>
-        Available coupons
-        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
+        {t('mweb.checkout.couponsTitle')}
+        <IconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent>
         {coupons.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
-            No coupons available right now.
+            {t('mweb.checkout.couponsEmpty')}
           </Typography>
         ) : (
           <Stack spacing={1.25} sx={{ pb: 1 }}>
@@ -66,12 +68,20 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
                     <Typography variant="subtitle2" fontWeight={700}>
                       {coupon.code}
                     </Typography>
-                    <Chip size="small" color="success" label={`${coupon.discount_pct}% off`} sx={{ height: 20, fontWeight: 600 }} />
+                    <Chip
+                      size="small"
+                      color="success"
+                      label={t('mweb.checkout.couponPercentOff', { vars: { pct: coupon.discount_pct } })}
+                      sx={{ height: 20, fontWeight: 600 }}
+                    />
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
-                    {coupon.description || (coupon.scope === 'POD' ? 'For this pod' : 'All pods')}
+                    {coupon.description ||
+                      (coupon.scope === 'POD'
+                        ? t('mweb.checkout.couponForPod')
+                        : t('mweb.checkout.couponAllPods'))}
                     {coupon.min_order_amount > 0
-                      ? ` · Min ${formatMoney(currency, coupon.min_order_amount)}`
+                      ? ` · ${t('mweb.checkout.couponMin', { vars: { amount: formatMoney(currency, coupon.min_order_amount) } })}`
                       : ''}
                   </Typography>
                 </Box>

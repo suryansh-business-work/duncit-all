@@ -18,12 +18,14 @@ import { useCoinRedemption } from '../checkout-page/useCoinRedemption';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
+import { useTranslation } from '../../i18n/useTranslation';
 import { useProductPayment } from './useProductPayment';
 import { useProductShippingQuote } from './useProductShippingQuote';
 
 /** The combined product checkout — EVERY cart line (across pods) pays in ONE
  * payment with one Pay button; delivery is listed per warehouse group. */
 export default function ProductCheckoutPage() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
@@ -70,12 +72,21 @@ export default function ProductCheckoutPage() {
         payment={session.success}
         onHome={() => navigate('/')}
         onProfile={() => navigate('/orders')}
-        profileLabel="My Orders"
+        profileLabel={t('mweb.checkout.myOrders')}
       />
     );
   }
 
-  if (lines.length === 0) return <EmptyProductCheckout onCart={() => navigate('/cart')} />;
+  if (lines.length === 0) {
+    return (
+      <EmptyProductCheckout
+        onCart={() => navigate('/cart')}
+        title={t('mweb.checkout.nothingToCheckout')}
+        body={t('mweb.checkout.noProductsInCart')}
+        action={t('mweb.checkout.backToCart')}
+      />
+    );
+  }
   if (session.financeLoading || !breakup) return <ProductCheckoutSkeleton />;
 
   const headerBg = isDark
@@ -86,10 +97,10 @@ export default function ProductCheckoutPage() {
     <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
       <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-          <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
+          <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Product checkout</Typography>
-            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>Complete your order</Typography>
+            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.productTitle')}</Typography>
+            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>{t('mweb.checkout.productHeading')}</Typography>
           </Box>
           <GatewayChip finance={session.finance} />
         </Stack>
@@ -152,13 +163,18 @@ export default function ProductCheckoutPage() {
   );
 }
 
-function EmptyProductCheckout({ onCart }: Readonly<{ onCart: () => void }>) {
+function EmptyProductCheckout({
+  onCart,
+  title,
+  body,
+  action,
+}: Readonly<{ onCart: () => void; title: string; body: string; action: string }>) {
   return (
     <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
       <ShoppingBagIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-      <Typography variant="h6" fontWeight={700}>Nothing to checkout</Typography>
-      <Typography variant="body2" color="text.secondary">There are no products in your cart.</Typography>
-      <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>Back to cart</Button>
+      <Typography variant="h6" fontWeight={700}>{title}</Typography>
+      <Typography variant="body2" color="text.secondary">{body}</Typography>
+      <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>{action}</Button>
     </Stack>
   );
 }

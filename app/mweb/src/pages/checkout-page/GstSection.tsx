@@ -4,6 +4,7 @@ import { FormControlLabel, Stack, Switch, type SxProps, type Theme } from '@mui/
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RhfTextField from '../../forms/components/RhfTextField';
 import PodAccordion from '../../components/pod-details/PodAccordion';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CheckoutForm } from './queries';
 
 interface Props {
@@ -17,13 +18,14 @@ interface Props {
  * field is hidden and no GSTIN is sent on pay.
  */
 export default function GstSection({ control, fieldSx }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const hasGstin = useWatch({ control, name: 'has_gstin' });
 
   return (
     <PodAccordion
       id="gst-details"
-      title="GST details"
+      title={t('mweb.checkout.gstDetails')}
       icon={<ReceiptLongIcon fontSize="small" />}
       expanded={open}
       onChange={setOpen}
@@ -40,12 +42,18 @@ export default function GstSection({ control, fieldSx }: Readonly<Props>) {
                   onChange={(event) => field.onChange(event.target.checked)}
                 />
               }
-              label="I have a GSTIN (for business invoice)"
+              label={t('mweb.checkout.hasGstin')}
             />
           )}
         />
         {hasGstin && (
-          <RhfTextField control={control} name="gstin" label="GSTIN" hint="15-character GSTIN" sx={fieldSx} />
+          <RhfTextField
+            control={control}
+            name="gstin"
+            label={t('mweb.checkout.gstin')}
+            hint={t('mweb.checkout.gstinHint')}
+            sx={fieldSx}
+          />
         )}
       </Stack>
     </PodAccordion>

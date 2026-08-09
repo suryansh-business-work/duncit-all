@@ -8,6 +8,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { AddressFields } from '@/forms/components/AddressFields';
 import { FormCheckbox } from '@/forms/components/FormCheckbox';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutFormValues, CheckoutMainAddress } from './checkout.types';
 
 const ADDRESS_NAMES = {
@@ -81,13 +82,14 @@ function BillingAddress({
   sameAsMain,
   addressRequired,
 }: Readonly<BillingBodyProps>) {
+  const { t } = useTranslation();
   if (mainAddress?.line1) {
     return (
       <YStack gap={12}>
         <FormCheckbox
           control={control}
           name="same_as_main"
-          label="Same as my main address"
+          label={t('mweb.checkout.sameAsMain')}
           testID="billing-same-as-main"
         />
         {sameAsMain ? (
@@ -97,7 +99,7 @@ function BillingAddress({
             control={control}
             names={ADDRESS_NAMES}
             required={addressRequired}
-            pincodeHint="4–10 digits"
+            pincodeHint={t('mweb.checkout.pincodeHint')}
           />
         )}
       </YStack>
@@ -109,7 +111,7 @@ function BillingAddress({
       <FormCheckbox
         control={control}
         name="save_as_main"
-        label="Save this as my main address"
+        label={t('mweb.checkout.saveAsMain')}
         testID="billing-save-as-main"
       />
     </YStack>
@@ -123,6 +125,7 @@ function BillingBody({
   sameAsMain,
   addressRequired,
 }: Readonly<BillingBodyProps>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={12}>
       <BillingAddress
@@ -134,10 +137,10 @@ function BillingBody({
       <FormTextField
         control={control}
         name="billing_email"
-        label="Billing email (optional)"
+        label={t('mweb.checkout.billingEmail')}
         autoCapitalize="none"
         keyboardType="email-address"
-        hint="Leave blank to use your contact email."
+        hint={t('mweb.checkout.billingEmailHint')}
       />
     </YStack>
   );
@@ -146,17 +149,18 @@ function BillingBody({
 /** GST accordion body: a switch that reveals the GSTIN input when on. */
 function GstBody({ control }: Readonly<{ control: Control<CheckoutFormValues> }>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const { field } = useController({ control, name: 'has_gstin' });
   const hasGstin = !!field.value;
   return (
     <YStack gap={12}>
       <XStack alignItems="center" gap={12}>
         <Text flex={1} fontSize={13.5} color="$color">
-          I have a GSTIN (for business invoice)
+          {t('mweb.checkout.hasGstin')}
         </Text>
         <Switch
           testID="billing-has-gstin"
-          aria-label="I have a GSTIN"
+          aria-label={t('mweb.checkout.hasGstinAria')}
           value={hasGstin}
           onValueChange={field.onChange}
           trackColor={{ true: primary }}
@@ -166,8 +170,8 @@ function GstBody({ control }: Readonly<{ control: Control<CheckoutFormValues> }>
         <FormTextField
           control={control}
           name="gstin"
-          label="GSTIN"
-          hint="15-character GSTIN"
+          label={t('mweb.checkout.gstin')}
+          hint={t('mweb.checkout.gstinHint')}
           autoCapitalize="characters"
           maxLength={15}
         />
@@ -189,6 +193,7 @@ export function CheckoutBillingSection({
   mainAddress,
   addressRequired = false,
 }: Readonly<CheckoutBillingSectionProps>) {
+  const { t } = useTranslation();
   const sameAsMain = useWatch({ control, name: 'same_as_main' });
   const { errors } = useFormState({ control });
   const [billingOpen, setBillingOpen] = useState(true);
@@ -199,7 +204,7 @@ export function CheckoutBillingSection({
     <YStack>
       <Accordion
         testID="billing-accordion"
-        title="Billing address"
+        title={t('mweb.checkout.billingAddress')}
         icon="home"
         error={hasBillingError}
         open={billingOpen || hasBillingError}
@@ -214,7 +219,7 @@ export function CheckoutBillingSection({
       </Accordion>
       <Accordion
         testID="gst-accordion"
-        title="GST details"
+        title={t('mweb.checkout.gstDetails')}
         icon="receipt-long"
         open={gstOpen}
         onToggle={() => setGstOpen((open) => !open)}

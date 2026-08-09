@@ -15,6 +15,7 @@ import { CheckoutFields, type PostalAddressParts } from './checkout';
 import CouponField from './CouponField';
 import CoinRedeemField from './CoinRedeemField';
 import type { CoinRedemption } from './useCoinRedemption';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -68,6 +69,7 @@ export default function PaymentDetailsCard({
   coins,
   addressRequired = false,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const discounted = effectiveTotal < total;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -98,7 +100,7 @@ export default function PaymentDetailsCard({
   return (
     <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} gutterBottom>Payment details</Typography>
+        <Typography variant="subtitle1" fontWeight={700} gutterBottom>{t('mweb.checkout.paymentDetails')}</Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <CheckoutFields
             control={control}
@@ -126,8 +128,10 @@ export default function PaymentDetailsCard({
           {error && <Alert severity="error">{error}</Alert>}
           {discounted && (
             <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-              <s>{formatMoney(currency, total)}</s> &nbsp;you save{' '}
-              {formatMoney(currency, total - effectiveTotal)}
+              <s>{formatMoney(currency, total)}</s> &nbsp;
+              {t('mweb.checkout.youSave', {
+                vars: { amount: formatMoney(currency, total - effectiveTotal) },
+              })}
             </Typography>
           )}
           <Button
@@ -138,10 +142,12 @@ export default function PaymentDetailsCard({
             disabled={submitting || total <= 0}
             sx={{ minHeight: 48, borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
-            {submitting ? 'Processing...' : `Pay ${formatMoney(currency, effectiveTotal)}`}
+            {submitting
+              ? t('mweb.checkout.processing')
+              : t('mweb.checkout.pay', { vars: { amount: formatMoney(currency, effectiveTotal) } })}
           </Button>
           <Typography variant="caption" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-            Receipt and invoice will be sent after successful payment.
+            {t('mweb.checkout.receiptNote')}
           </Typography>
         </Stack>
       </CardContent>

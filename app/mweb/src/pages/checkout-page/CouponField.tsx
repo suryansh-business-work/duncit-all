@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Button, Chip, Link, Stack, TextField, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import type { AvailableCoupon, CouponPreview } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import CouponsDialog from './CouponsDialog';
 
@@ -30,7 +31,13 @@ export default function CouponField({
   onApply,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const couponCodeLabel = t('mweb.checkout.couponCode');
+  const availableLabel =
+    available.length === 1
+      ? t('mweb.checkout.couponsAvailableOne')
+      : t('mweb.checkout.couponsAvailableMany', { count: available.length });
 
   if (applied?.ok) {
     return (
@@ -43,7 +50,7 @@ export default function CouponField({
         <Stack direction="row" spacing={1} alignItems="center">
           <LocalOfferIcon fontSize="small" />
           <Typography variant="body2" fontWeight={600}>
-            {applied.code} applied
+            {t('mweb.checkout.couponApplied', { vars: { code: applied.code ?? '' } })}
           </Typography>
           <Chip
             size="small"
@@ -52,7 +59,7 @@ export default function CouponField({
           />
         </Stack>
         <Button size="small" color="inherit" onClick={onRemove}>
-          Remove
+          {t('mweb.checkout.couponRemove')}
         </Button>
       </Stack>
     );
@@ -63,13 +70,13 @@ export default function CouponField({
         <TextField
           size="small"
           fullWidth
-          label="Coupon code"
+          label={couponCodeLabel}
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          inputProps={{ style: { textTransform: 'uppercase' }, 'aria-label': 'Coupon code' }}
+          inputProps={{ style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel }}
         />
         <Button variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
-          {applying ? 'Applying…' : 'Apply'}
+          {applying ? t('mweb.checkout.couponApplying') : t('mweb.checkout.couponApply')}
         </Button>
       </Stack>
       {available.length > 0 && (
@@ -80,7 +87,7 @@ export default function CouponField({
           onClick={() => setPickerOpen(true)}
           sx={{ alignSelf: 'flex-start', fontWeight: 600, fontSize: 13 }}
         >
-          View {available.length} available coupon{available.length === 1 ? '' : 's'}
+          {availableLabel}
         </Link>
       )}
       {error && <Alert severity="warning">{error}</Alert>}

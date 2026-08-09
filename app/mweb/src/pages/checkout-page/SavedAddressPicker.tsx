@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { MenuItem, TextField } from '@mui/material';
 import { MY_ADDRESSES } from '../account-page/AddressBookSection';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { UserAddress } from '../account-page/address-book-form';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
  * pre-selected as soon as the book loads (picking another re-quotes delivery).
  * Hidden while the book is empty. */
 export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data } = useQuery(MY_ADDRESSES, { fetchPolicy: 'cache-and-network' });
   const addresses: UserAddress[] = data?.myAddresses ?? [];
   const [selectedId, setSelectedId] = useState('');
@@ -31,7 +33,7 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
     <TextField
       select
       size="small"
-      label="Deliver to a saved address"
+      label={t('mweb.checkout.deliverToSaved')}
       value={selectedId}
       onChange={(event) => {
         const picked = addresses.find((address) => address.id === event.target.value);
@@ -45,7 +47,7 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
       {addresses.map((address) => (
         <MenuItem key={address.id} value={address.id}>
           {address.label}
-          {address.is_default ? ' (default)' : ''} — {address.line1}, {address.city}
+          {address.is_default ? ` ${t('mweb.checkout.addressDefault')}` : ''} — {address.line1}, {address.city}
         </MenuItem>
       ))}
     </TextField>

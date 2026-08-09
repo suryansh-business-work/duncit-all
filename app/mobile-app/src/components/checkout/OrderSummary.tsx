@@ -77,10 +77,10 @@ export function OrderSummary({
       ) : null}
       <YStack padding={16} gap={8}>
         <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
-          Ticket
+          {t('mweb.checkout.ticket')}
         </Text>
         <Text fontSize={17} fontWeight="700" color="$color">
-          {pod?.pod_title ?? 'Pod booking'}
+          {pod?.pod_title ?? t('mweb.checkout.podBooking')}
         </Text>
         {pod?.pod_date_time ? (
           <Text fontSize={12.5} color="$muted">
@@ -107,14 +107,19 @@ export function OrderSummary({
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
         {seats > 1 && unitAmount > 0 ? (
           <Row
-            label={`Ticket ${fmt(unitAmount)} x ${seats} seats`}
+            label={t('mweb.checkout.ticketMultiplier', {
+              vars: { price: fmt(unitAmount), seats },
+            })}
             value={fmt(unitAmount * seats)}
           />
         ) : null}
-        <Row label="Subtotal" value={fmt(breakup.subtotal)} />
-        <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
+        <Row label={t('mweb.checkout.subtotal')} value={fmt(breakup.subtotal)} />
+        <Row
+          label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
+          value={fmt(breakup.gst)}
+        />
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-        <Row label="Total payable" value={fmt(breakup.total)} bold />
+        <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
         {venueCharges.length > 0 ? (
           <YStack
             testID="venue-charges-row"
@@ -129,12 +134,12 @@ export function OrderSummary({
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap={6}>
                 <Text fontSize={13} fontWeight="700" color="$color">
-                  Venue Charges
+                  {t('mweb.checkout.venueCharges')}
                 </Text>
                 <XStack
                   testID="venue-charges-info"
                   role="button"
-                  aria-label="About venue charges"
+                  aria-label={t('mweb.checkout.venueChargesAbout')}
                   onPress={() => setVenueInfoOpen(true)}
                   pressStyle={{ opacity: 0.6 }}
                 >
@@ -146,7 +151,7 @@ export function OrderSummary({
               </Text>
             </XStack>
             <Text fontSize={11.5} color="$muted">
-              Payable directly at the venue
+              {t('mweb.checkout.venuePayAtVenue')}
             </Text>
           </YStack>
         ) : null}

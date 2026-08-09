@@ -1,6 +1,7 @@
 import { useWatch, type Control } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutContact, CheckoutFormValues } from './checkout.types';
 
 export interface CheckoutContactFieldsProps {
@@ -42,6 +43,7 @@ export function CheckoutContactFields({
   contact,
   loading,
 }: Readonly<CheckoutContactFieldsProps>) {
+  const { t } = useTranslation();
   const [fullName, email, phoneExtension, phoneNumber] = useWatch({
     control,
     name: ['full_name', 'email', 'phone_extension', 'phone_number'],
@@ -54,8 +56,14 @@ export function CheckoutContactFields({
 
   return (
     <YStack gap={10}>
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
-        CONTACT DETAILS
+      <Text
+        fontSize={12}
+        fontWeight="700"
+        color="$muted"
+        letterSpacing={0.6}
+        textTransform="uppercase"
+      >
+        {t('mweb.checkout.contactDetails')}
       </Text>
       <YStack
         testID="checkout-contact-summary"
@@ -70,19 +78,19 @@ export function CheckoutContactFields({
           <XStack testID="checkout-contact-loading" alignItems="center" gap={8}>
             <Spinner color="$primary" />
             <Text fontSize={13} color="$muted">
-              Loading your details…
+              {t('mweb.checkout.contactLoading')}
             </Text>
           </XStack>
         ) : (
           <>
-            <SummaryRow label="Name" value={displayName} />
-            <SummaryRow label="Email" value={displayEmail} />
-            <SummaryRow label="Phone" value={phone} />
+            <SummaryRow label={t('mweb.checkout.contactName')} value={displayName} />
+            <SummaryRow label={t('mweb.checkout.contactEmail')} value={displayEmail} />
+            <SummaryRow label={t('mweb.checkout.contactPhone')} value={phone} />
           </>
         )}
       </YStack>
       <Text fontSize={12} color="$muted">
-        To change these, edit your profile.
+        {t('mweb.checkout.contactEditNote')}
       </Text>
     </YStack>
   );

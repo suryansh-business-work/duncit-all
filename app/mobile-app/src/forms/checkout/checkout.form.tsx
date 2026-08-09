@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useController, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -6,12 +6,13 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { CheckoutBillingSection } from './CheckoutBillingSection';
 import { CheckoutContactFields } from './CheckoutContactFields';
 import {
   checkoutDefaults,
-  checkoutSchema,
-  productCheckoutSchema,
+  makeCheckoutSchema,
+  makeProductCheckoutSchema,
   type CheckoutContact,
   type CheckoutFormValues,
   type CheckoutMainAddress,
@@ -60,9 +61,16 @@ export function CheckoutForm({
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
+  const { t } = useTranslation();
+  // The schemas cannot call `t` at module scope, so they are built here from the
+  // reader's own catalogue — the validation messages are copy like any other.
+  const schema = useMemo(
+    () => (addressRequired ? makeProductCheckoutSchema(t) : makeCheckoutSchema(t)),
+    [addressRequired, t],
+  );
   const { control, handleSubmit } = useForm<CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
-    resolver: zodResolver(addressRequired ? productCheckoutSchema : checkoutSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
   const simulate = useController({ control, name: 'simulate_failure' });
@@ -109,12 +117,12 @@ export function CheckoutForm({
 
       <PrimaryButton
         testID="checkout-submit"
-        label={loading ? 'Processing…' : (payLabel ?? 'Pay now')}
+        label={loading ? t('mweb.checkout.processing') : (payLabel ?? t('mweb.checkout.payNow'))}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />
       <Text fontSize={11} color="$muted" textAlign="center">
-        {dummyMode ? 'Dummy gateway — no real money is charged.' : 'Payments secured by Razorpay.'}
+        {dummyMode ? t('mweb.checkout.dummyGatewayNote') : t('mweb.checkout.razorpayNote')}
       </Text>
     </YStack>
   );

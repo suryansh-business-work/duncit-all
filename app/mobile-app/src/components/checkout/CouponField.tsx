@@ -4,6 +4,7 @@ import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import type { AvailableCoupon, CouponPreview } from '@/hooks/useCheckout';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Field } from '@/components/Field';
 import { CouponsSheet } from '@/components/checkout/CouponsSheet';
 
@@ -34,7 +35,13 @@ export function CouponField({
   onRemove,
 }: Readonly<Props>) {
   const { primary, success } = useThemeColors();
+  const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const couponCodeLabel = t('mweb.checkout.couponCode');
+  const availableLabel =
+    available.length === 1
+      ? t('mweb.checkout.couponsAvailableOne')
+      : t('mweb.checkout.couponsAvailableMany', { count: available.length });
   // Same hex-alpha-suffix tint pattern as ClubTotalMembersSection — a 15% alpha
   // channel on the resolved success token (mirrors mWeb's alpha(success, 0.15)).
   const successTint = `${success}26`;
@@ -61,12 +68,12 @@ export function CouponField({
         <XStack
           testID="coupon-remove"
           role="button"
-          aria-label="Remove coupon"
+          aria-label={t('mweb.checkout.couponRemoveAria')}
           onPress={onRemove}
           pressStyle={{ opacity: 0.6 }}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
-            Remove
+            {t('mweb.checkout.couponRemove')}
           </Text>
         </XStack>
       </XStack>
@@ -75,23 +82,23 @@ export function CouponField({
 
   return (
     <YStack gap={6}>
-      <Field label="Coupon code">
+      <Field label={couponCodeLabel}>
         <XStack gap={8} alignItems="center">
           <Input
             testID="coupon-input"
             flex={1}
             value={code}
-            onChangeText={(t) => setCode(t.toUpperCase())}
-            placeholder="Coupon code"
+            onChangeText={(next) => setCode(next.toUpperCase())}
+            placeholder={couponCodeLabel}
             placeholderTextColor="$muted"
             autoCapitalize="characters"
-            aria-label="Coupon code"
+            aria-label={couponCodeLabel}
             onSubmitEditing={() => onApply()}
           />
           <XStack
             testID="coupon-apply"
             role="button"
-            aria-label="Apply coupon"
+            aria-label={t('mweb.checkout.couponApplyAria')}
             onPress={() => onApply()}
             alignItems="center"
             justifyContent="center"
@@ -107,7 +114,7 @@ export function CouponField({
               <Spinner color={primary} />
             ) : (
               <Text fontSize={14} fontWeight="600" color="$primary">
-                Apply
+                {t('mweb.checkout.couponApply')}
               </Text>
             )}
           </XStack>
@@ -117,13 +124,13 @@ export function CouponField({
         <XStack
           testID="coupon-view-available"
           role="button"
-          aria-label="View available coupons"
+          aria-label={availableLabel}
           onPress={() => setSheetOpen(true)}
           alignSelf="flex-start"
           pressStyle={{ opacity: 0.7 }}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
-            View available coupons ({available.length})
+            {availableLabel}
           </Text>
         </XStack>
       ) : null}

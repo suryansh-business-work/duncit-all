@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -35,152 +36,158 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} testID="location-dialog">
-          <YStack
-            testID="location-backdrop"
-            role="button"
-            aria-label="Close"
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            position="absolute"
-            left={0}
-            right={0}
-            bottom={0}
-            maxHeight="88%"
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
-          >
-            <SafeAreaView edges={['bottom']}>
-              <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
-                <XStack alignItems="center" justifyContent="space-between">
-                  <Text fontSize={18} fontWeight="700" color="$color">
-                    Choose your location
-                  </Text>
+        <KeyboardScreen>
+          <YStack flex={1} testID="location-dialog">
+            <YStack
+              testID="location-backdrop"
+              role="button"
+              aria-label="Close"
+              onPress={onClose}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.5)"
+            />
+            <YStack
+              position="absolute"
+              left={0}
+              right={0}
+              bottom={0}
+              maxHeight="88%"
+              backgroundColor="$background"
+              borderTopLeftRadius={20}
+              borderTopRightRadius={20}
+            >
+              <SafeAreaView edges={['bottom']}>
+                <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <Text fontSize={18} fontWeight="700" color="$color">
+                      Choose your location
+                    </Text>
+                    <XStack
+                      testID="location-close"
+                      role="button"
+                      aria-label="Close"
+                      onPress={onClose}
+                      width={32}
+                      height={32}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <MaterialIcons name="close" size={20} color={color} />
+                    </XStack>
+                  </XStack>
                   <XStack
-                    testID="location-close"
+                    testID="location-gps"
                     role="button"
-                    aria-label="Close"
-                    onPress={onClose}
-                    width={32}
-                    height={32}
+                    aria-label="Use my location"
+                    onPress={() => void draft.detect()}
                     alignItems="center"
                     justifyContent="center"
+                    gap={8}
+                    height={46}
+                    borderRadius={12}
+                    borderWidth={1.5}
+                    borderColor="$primary"
+                    pressStyle={{ opacity: 0.85 }}
                   >
-                    <MaterialIcons name="close" size={20} color={color} />
+                    {draft.busy ? (
+                      <Spinner color="$primary" />
+                    ) : (
+                      <MaterialIcons name="my-location" size={18} color={primary} />
+                    )}
+                    <Text fontSize={14} fontWeight="700" color="$primary">
+                      {draft.busy ? 'Locating…' : 'Use my location'}
+                    </Text>
+                  </XStack>
+                  {draft.detected ? (
+                    <Text fontSize={12} color="$muted">
+                      Detected: {draft.detected}
+                    </Text>
+                  ) : null}
+                  {draft.error ? (
+                    <Text testID="location-error" fontSize={12} color="$danger">
+                      {draft.error}
+                    </Text>
+                  ) : null}
+                </YStack>
+
+                <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                  <YStack paddingHorizontal={16} paddingVertical={12} gap={16}>
+                    <CountryStateChips
+                      tree={draft.tree}
+                      country={draft.country}
+                      state={draft.state}
+                      onCountry={draft.pickCountry}
+                      onState={draft.setState}
+                    />
+                    <CityList
+                      cities={draft.cities}
+                      draftId={draft.draftId}
+                      onPick={draft.pickCity}
+                    />
+                    {draft.draftLoc ? (
+                      <AreaList
+                        locationName={draft.draftLoc.location_name}
+                        zones={draft.zones}
+                        draftZone={draft.draftZone}
+                        onZone={draft.setDraftZone}
+                      />
+                    ) : null}
+                    <LocationMap
+                      city={draft.draftLoc?.city || draft.draftLoc?.location_name}
+                      zoneName={draft.draftZone}
+                      pincode={draft.draftLoc?.location_pincode}
+                      country={draft.draftLoc?.country}
+                    />
+                  </YStack>
+                </ScrollView>
+
+                <XStack paddingHorizontal={16} paddingVertical={12} gap={12}>
+                  <XStack
+                    testID="location-cancel"
+                    role="button"
+                    aria-label="Cancel"
+                    onPress={onClose}
+                    flex={1}
+                    height={48}
+                    alignItems="center"
+                    justifyContent="center"
+                    borderRadius={12}
+                    borderWidth={1}
+                    borderColor="$borderColor"
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    <Text fontSize={14} fontWeight="600" color="$color">
+                      Cancel
+                    </Text>
+                  </XStack>
+                  <XStack
+                    testID="location-apply"
+                    role="button"
+                    aria-label="Apply location"
+                    aria-disabled={!draft.draftId}
+                    onPress={draft.apply}
+                    flex={2}
+                    height={48}
+                    alignItems="center"
+                    justifyContent="center"
+                    borderRadius={12}
+                    backgroundColor={draft.draftId ? '$primary' : '$borderColor'}
+                    opacity={draft.draftId ? 1 : 0.6}
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    <Text fontSize={14} fontWeight="700" color={draft.draftId ? onPrimary : color}>
+                      {applyLabel}
+                    </Text>
                   </XStack>
                 </XStack>
-                <XStack
-                  testID="location-gps"
-                  role="button"
-                  aria-label="Use my location"
-                  onPress={() => void draft.detect()}
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={8}
-                  height={46}
-                  borderRadius={12}
-                  borderWidth={1.5}
-                  borderColor="$primary"
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  {draft.busy ? (
-                    <Spinner color="$primary" />
-                  ) : (
-                    <MaterialIcons name="my-location" size={18} color={primary} />
-                  )}
-                  <Text fontSize={14} fontWeight="700" color="$primary">
-                    {draft.busy ? 'Locating…' : 'Use my location'}
-                  </Text>
-                </XStack>
-                {draft.detected ? (
-                  <Text fontSize={12} color="$muted">
-                    Detected: {draft.detected}
-                  </Text>
-                ) : null}
-                {draft.error ? (
-                  <Text testID="location-error" fontSize={12} color="$danger">
-                    {draft.error}
-                  </Text>
-                ) : null}
-              </YStack>
-
-              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
-                <YStack paddingHorizontal={16} paddingVertical={12} gap={16}>
-                  <CountryStateChips
-                    tree={draft.tree}
-                    country={draft.country}
-                    state={draft.state}
-                    onCountry={draft.pickCountry}
-                    onState={draft.setState}
-                  />
-                  <CityList cities={draft.cities} draftId={draft.draftId} onPick={draft.pickCity} />
-                  {draft.draftLoc ? (
-                    <AreaList
-                      locationName={draft.draftLoc.location_name}
-                      zones={draft.zones}
-                      draftZone={draft.draftZone}
-                      onZone={draft.setDraftZone}
-                    />
-                  ) : null}
-                  <LocationMap
-                    city={draft.draftLoc?.city || draft.draftLoc?.location_name}
-                    zoneName={draft.draftZone}
-                    pincode={draft.draftLoc?.location_pincode}
-                    country={draft.draftLoc?.country}
-                  />
-                </YStack>
-              </ScrollView>
-
-              <XStack paddingHorizontal={16} paddingVertical={12} gap={12}>
-                <XStack
-                  testID="location-cancel"
-                  role="button"
-                  aria-label="Cancel"
-                  onPress={onClose}
-                  flex={1}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={12}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    Cancel
-                  </Text>
-                </XStack>
-                <XStack
-                  testID="location-apply"
-                  role="button"
-                  aria-label="Apply location"
-                  aria-disabled={!draft.draftId}
-                  onPress={draft.apply}
-                  flex={2}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={12}
-                  backgroundColor={draft.draftId ? '$primary' : '$borderColor'}
-                  opacity={draft.draftId ? 1 : 0.6}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  <Text fontSize={14} fontWeight="700" color={draft.draftId ? onPrimary : color}>
-                    {applyLabel}
-                  </Text>
-                </XStack>
-              </XStack>
-            </SafeAreaView>
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

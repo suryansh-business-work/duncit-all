@@ -30,6 +30,32 @@ export function coverSearchTerm(subCategoryName?: string | null): string {
   return `${name} ${GROUP_TERMS}`;
 }
 
+/** The three names denormalised onto a host's onboarded category. */
+export interface CoverCategoryNames {
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+}
+
+/**
+ * The most specific category name available, for seeding the cover search.
+ *
+ * These names are denormalised onto the host record, and a host onboarded
+ * before a given level existed (or through a path that never filled it) can
+ * have `sub_category_name` blank. Reading only that field turned into a blank
+ * Pexels box with no hint of why, so this walks outward — sub-category, then
+ * category, then super-category — and returns '' only when the host genuinely
+ * has no named category at all.
+ */
+export function coverCategoryName(category?: CoverCategoryNames | null): string {
+  const candidates = [
+    category?.sub_category_name,
+    category?.category_name,
+    category?.super_category_name,
+  ];
+  return candidates.map((name) => (name ?? '').trim()).find((name) => name.length > 0) ?? '';
+}
+
 /**
  * How many more the picker may take, given what the field already holds.
  * Never negative, so a field that somehow went over the cap still opens.

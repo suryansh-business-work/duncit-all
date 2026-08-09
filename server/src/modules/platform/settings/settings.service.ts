@@ -144,6 +144,7 @@ const BRANDING_FIELDS = [
   "home_vibe_subheading",
   "home_header_tagline",
   "app_latest_version",
+  "app_min_supported_version",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -213,6 +214,7 @@ const brandingToPub = (doc: any) => ({
   home_vibe_subheading: doc.home_vibe_subheading ?? "",
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
+  app_min_supported_version: doc.app_min_supported_version ?? "",
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
     url: m.url,
     type: m.type ?? "IMAGE",
@@ -557,6 +559,10 @@ export const settingsService = {
     const b = await this.getBranding();
     return {
       latest_version: b.app_latest_version ?? "",
+      // Never falls back to app_latest_version: that is auto-synced on every
+      // deploy, so defaulting to it would re-create the very lockout this
+      // field exists to prevent. Blank blocks nobody.
+      min_supported_version: b.app_min_supported_version ?? "",
       android_store_url: b.android_app_url || DEFAULT_ANDROID_STORE_URL,
       ios_store_url: b.ios_app_url ?? "",
     };

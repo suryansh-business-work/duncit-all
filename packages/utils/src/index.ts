@@ -162,7 +162,9 @@ export {
 export {
   MAX_COVER_IMAGES,
   addToSelection,
+  coverCategoryName,
   coverSearchTerm,
   coverSlotsLeft,
   pickerBatchSize,
+  type CoverCategoryNames,
 } from './cover-image';

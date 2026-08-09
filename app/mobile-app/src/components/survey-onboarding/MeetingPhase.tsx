@@ -1,6 +1,7 @@
 import { ScrollView } from 'react-native';
 import { Button, Input, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, MeetingSlot } from '@/graphql/onboarding-survey';
 import { SlotPicker } from './SlotPicker';
@@ -50,6 +51,10 @@ export function MeetingPhase({
   onSubmit,
 }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
+  // "Book this slot" is the last row of this scroll and nothing floats over it,
+  // so it only has to clear the Android navigation bar the edge-to-edge window
+  // paints over the app — on top of the container's own 16pt padding.
+  const bottomInset = useBottomInset();
   const answered = (survey?.questions ?? [])
     .filter((q) => q.type !== 'SECTION')
     .map((q) => {
@@ -61,7 +66,7 @@ export function MeetingPhase({
 
   return (
     <ScrollView
-      contentContainerStyle={{ padding: 16, paddingBottom: 96, gap: 16 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
     >

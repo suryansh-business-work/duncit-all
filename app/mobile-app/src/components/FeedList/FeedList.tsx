@@ -15,6 +15,9 @@ interface FeedListProps<T> {
   emptyComponent?: ReactElement;
   testID: string;
   onRefresh?: () => void;
+  /** Drives the pull-to-refresh spinner. Defaults to the list's own loading
+   * flag once there is data on screen, which is exactly a refresh. */
+  refreshing?: boolean;
   data: readonly T[];
   keyExtractor: (item: T) => string;
   renderItem: (item: T, index: number) => ReactElement;
@@ -31,19 +34,29 @@ export function FeedList<T>({
   emptyComponent,
   testID,
   onRefresh,
+  refreshing,
   data,
   keyExtractor,
   renderItem,
 }: Readonly<FeedListProps<T>>) {
-  const { primary } = useThemeColors();
+  const { primary, surface } = useThemeColors();
   const bottomSpace = useBottomNavSpace();
 
   if (isLoading && isEmpty) {
     return <ListSkeleton testID={`${testID}-loading`} />;
   }
 
+  // Without a truthful `refreshing` the spinner never appears, so a pull reads
+  // as "nothing happened" even while the refetch is in flight.
+  const isRefreshing = refreshing ?? (isLoading && !isEmpty);
   const refreshControl = onRefresh ? (
-    <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={primary} />
+    <RefreshControl
+      refreshing={isRefreshing}
+      onRefresh={onRefresh}
+      tintColor={primary}
+      colors={[primary]}
+      progressBackgroundColor={surface}
+    />
   ) : undefined;
 
   return (

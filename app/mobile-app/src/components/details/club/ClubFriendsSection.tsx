@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { graphqlRequest } from '@/services/graphql.client';
 import { PodPeopleDocument } from '@/graphql/details';
 import type { PodPerson } from '@/hooks/useDetails';
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
@@ -32,6 +33,8 @@ function useFriendProfiles(friendIds: string[]) {
 
 export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
+  // The sheet is flush to the bottom edge the Android navigation bar paints over.
+  const bottomInset = useBottomInset();
   const [modalVisible, setModalVisible] = useState(false);
   const { profiles } = useFriendProfiles(friendIds);
 
@@ -76,6 +79,7 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
             borderTopLeftRadius={20}
             borderTopRightRadius={20}
             padding={20}
+            paddingBottom={20 + bottomInset}
             maxHeight="70%"
           >
             <XStack alignItems="center" justifyContent="space-between" marginBottom={16}>

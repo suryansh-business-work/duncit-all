@@ -137,8 +137,14 @@ export function CoverPickerDialog({
                   </Text>
                 ) : null}
 
+                {/* React Native defaults `flexShrink` to 0, so once the sheet hit
+                    its 88% cap nothing gave way and each "Load more" page pushed
+                    the Cancel / "Use this image" row off the bottom. Letting the
+                    grid shrink keeps that row on screen. `flexShrink` rather than
+                    `flex`, so a short list (the phone tab) still renders a short
+                    sheet instead of always filling 88%. */}
                 <ScrollView
-                  style={{ marginTop: 12 }}
+                  style={{ flexShrink: 1, minHeight: 0, marginTop: 12 }}
                   contentContainerStyle={{ paddingBottom: 12 }}
                   keyboardShouldPersistTaps="handled"
                 >

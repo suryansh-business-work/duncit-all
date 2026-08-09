@@ -23,6 +23,7 @@ import { DetailSkeleton } from '@/components/Skeleton';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
@@ -79,6 +80,10 @@ export function PodDetailsScreen() {
   const [joiningFree, setJoiningFree] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const isFree = pod?.pod_type === 'FREE';
+  // The booking bar floats over the scroll, and its height changes with the
+  // viewer's state (host / member / backout / the taller book bar), so the
+  // space reserved below the content is measured rather than guessed.
+  const { height: bookingBarHeight, onLayout: onBookingBarLayout } = useMeasuredHeight();
 
   /**
    * A free pod is joined outright — no checkout.
@@ -194,7 +199,7 @@ export function PodDetailsScreen() {
     podBody = <DetailSkeleton testID="pod-details-loading" />;
   } else if (pod) {
     podBody = (
-      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
+      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bookingBarHeight + 16 }}>
         <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
           <HeroButton
             testID="pod-save"
@@ -329,6 +334,7 @@ export function PodDetailsScreen() {
 
       {pod ? (
         <PodBookingBar
+          onLayout={onBookingBarLayout}
           pod={pod}
           isFree={isFree}
           isHost={isPodHost}

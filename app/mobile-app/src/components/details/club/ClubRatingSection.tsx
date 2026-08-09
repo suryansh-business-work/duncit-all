@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { ClubRatingsDocument, AddClubRatingDocument } from '@/graphql/details';
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface ClubRating {
@@ -63,6 +64,9 @@ function StarPicker({
 
 export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
+  // The rate sheet is flush to the bottom edge the Android navigation bar paints
+  // over — without this the Submit button sits under it.
+  const bottomInset = useBottomInset();
   const [reviews, setReviews] = useState<ClubRating[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stars, setStars] = useState(0);
@@ -185,6 +189,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
             borderTopLeftRadius={20}
             borderTopRightRadius={20}
             padding={24}
+            paddingBottom={24 + bottomInset}
             gap={16}
           >
             <XStack alignItems="center" justifyContent="space-between">

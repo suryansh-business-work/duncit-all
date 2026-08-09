@@ -216,6 +216,12 @@ export const settingsTypeDefs = gql`
     home_vibe_subheading: String!
     home_header_tagline: String!
     app_latest_version: String!
+    """
+    Oldest mobile build still allowed in. Set by hand once a release is live in
+    the stores — unlike app_latest_version, which moves on every deploy. Blank
+    means nothing is blocked.
+    """
+    app_min_supported_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
     pod_shop_slider: [PodShopSliderMedia!]!
     "Festive icon windows; the app clock picks which one is active."
@@ -224,7 +230,13 @@ export const settingsTypeDefs = gql`
   }
 
   type AppVersionInfo {
+    "Newest released version. Moves on every deploy — informational only."
     latest_version: String!
+    """
+    Oldest build still allowed in; what the force-update gate compares against.
+    Blank means nothing is blocked, which is the state a fresh database is in.
+    """
+    min_supported_version: String!
     android_store_url: String!
     ios_store_url: String!
   }
@@ -263,6 +275,7 @@ export const settingsTypeDefs = gql`
     home_vibe_subheading: String
     home_header_tagline: String
     app_latest_version: String
+    app_min_supported_version: String
   }
 
   extend type Query {

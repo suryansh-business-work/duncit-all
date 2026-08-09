@@ -29,18 +29,20 @@ const FORCE_APP_UPDATE_FLAG = 'force_app_update';
 /**
  * Full-screen, NON-DISMISSABLE force-update gate. Renders over the whole app
  * (absolute inset + high zIndex, modelled on <SplashOverlay/>) whenever the
- * running build is behind the server's `latest_version`; otherwise it renders
- * null and the app passes through untouched. There is no close/skip — the block
- * is intentional and covers everything below it.
+ * running build is older than the server's `min_supported_version`; otherwise it
+ * renders null and the app passes through untouched. There is no close/skip —
+ * the block is intentional and covers everything below it.
  *
  * The Tech Portal's "Force App Update" flag is the master switch: with it OFF,
  * an outdated build is never blocked.
  *
- * CAVEAT: the DB `latest_version` is bumped on every deploy, but the Play Store
- * build publishes on its own cadence. This gate blocks purely on the DB value —
- * so if the DB is ahead of the currently-published Play Store build, users see
- * the block with no update yet available. That is the chosen product behaviour,
- * and the feature flag is the escape hatch when it bites.
+ * It gates on `min_supported_version`, NOT `latest_version`. `latest_version`
+ * is auto-synced from app.json on every deploy, and the store build publishes
+ * on its own cadence — gating on it meant a push could block users out of a
+ * build that did not exist to download yet. `min_supported_version` is raised
+ * by hand (Admin → Branding) once a release is actually live, so the block can
+ * only ever point at a version users can install. Blank — which is what a fresh
+ * database holds — blocks nobody.
  */
 export function ForceUpdateGate() {
   // Colours are selected from the SAME scheme source AppBackground uses
@@ -56,6 +58,9 @@ export function ForceUpdateGate() {
   const enforced = useFeatureFlag(FORCE_APP_UPDATE_FLAG, true);
   const flagsLoaded = useFeatureFlagsStore((s) => s.data !== undefined);
   const current = appVersion();
+  // The floor an admin set, never the auto-bumped latest — see the note above.
+  const minSupported = info?.min_supported_version ?? '';
+  // Shown, not compared: the newest release is what the user is being sent to get.
   const latest = info?.latest_version ?? '';
   // Computed unconditionally (before the guard) so the CTA URL is always defined
   // and the empty-server-value fallback stays reachable/tested.
@@ -71,7 +76,7 @@ export function ForceUpdateGate() {
   // server means nobody gets locked out.
   if (!flagsLoaded || !enforced) return null;
 
-  if (!isOutdated(current, latest)) return null;
+  if (!isOutdated(current, minSupported)) return null;
 
   const openStore = () => {
     /* istanbul ignore next -- an OS-level open failure has no user-facing recovery */

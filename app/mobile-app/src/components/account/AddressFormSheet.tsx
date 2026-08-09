@@ -7,6 +7,7 @@ import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** Validation for a saved address — RN twin of mWeb's addressSchema. */
@@ -97,6 +98,9 @@ export function AddressFormSheet({
   onSubmit,
 }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
+  // The sheet sits flush on the bottom edge, which the edge-to-edge window lets
+  // the Android navigation bar paint over — without this the Save row is under it.
+  const bottomInset = useBottomInset();
   const { control, handleSubmit, reset } = useForm<AddressFormValues>({
     defaultValues: initial ?? blankAddressValues,
     resolver: zodResolver(addressSchema),
@@ -129,6 +133,7 @@ export function AddressFormSheet({
               borderTopLeftRadius={22}
               borderTopRightRadius={22}
               padding={16}
+              paddingBottom={16 + bottomInset}
               gap={10}
             >
               <Text fontSize={17} fontWeight="700" color="$color">

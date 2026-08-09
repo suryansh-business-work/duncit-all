@@ -66,6 +66,15 @@ export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>)
         helperText="App Store listing link for the websites' Download section. Leave empty until live — the sites show a 'coming soon' state."
         fullWidth
       />
+
+      <TextField
+        label="Minimum supported app version"
+        value={form.app_min_supported_version}
+        onChange={(e) => update('app_min_supported_version', e.target.value)}
+        placeholder="e.g. 1.50.0"
+        helperText="Mobile builds older than this are force-updated and cannot use the app. Raise it ONLY after that release is live in the stores — set it to a version users cannot download yet and they are locked out. Leave empty to block nobody. (The app's own version bumps on every deploy; this one never does.)"
+        fullWidth
+      />
     </Stack>
   );
 }

@@ -35,7 +35,13 @@ export function StackScreen({
   return (
     <YStack flex={1} testID={testID}>
       <AppBackground />
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+      {/* `bottom` as well as `top`: a pushed screen has no floating tab bar to
+          reserve that strip, and the edge-to-edge window Expo SDK 54 forces on
+          Android paints the navigation bar over the app — without this the last
+          row of every stack screen is clipped by it. (Tab screens deliberately
+          stay top-only; their content already reserves the strip through
+          `useBottomNavSpace`, so adding it here too would double it.) */}
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         {header ? <AppHeader /> : null}
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack

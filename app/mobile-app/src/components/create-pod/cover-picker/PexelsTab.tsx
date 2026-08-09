@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { usePexelsPhotos, type PexelsPhoto } from './usePexelsPhotos';
 
@@ -24,9 +25,13 @@ interface Props {
  * Stock photos for a pod cover — the Tamagui twin of the package's
  * PexelsPhotosTab (rule 27).
  *
- * Tapping imports the photo into our own ImageKit account and adds the hosted
- * URL to the tray; the tile keeps a tick so the grid says what was chosen. It
- * does NOT close the sheet — the whole point is picking several.
+ * Tapping a tile only OPENS it full-screen; nothing is uploaded until the host
+ * confirms with "Use this image" in the viewer. A 104px thumbnail is far too
+ * small to judge a cover by, and importing on tap meant every look cost an
+ * upload into our ImageKit account (and a tray slot) that then had to be undone.
+ * Confirming imports the photo and adds the hosted URL to the tray; the tile
+ * keeps a tick so the grid says what was chosen. It does NOT close the sheet —
+ * the whole point is picking several.
  */
 export function PexelsTab({
   active,
@@ -40,20 +45,30 @@ export function PexelsTab({
   const pexels = usePexelsPhotos(seed, orientation, active);
   const [importingId, setImportingId] = useState<string | null>(null);
   const [pickedIds, setPickedIds] = useState<string[]>([]);
+  const [preview, setPreview] = useState<PexelsPhoto | null>(null);
 
-  const pick = async (photo: PexelsPhoto) => {
-    if (importingId) return;
+  const confirmPreview = async () => {
+    const photo = preview;
+    if (!photo || importingId) return;
     setImportingId(String(photo.id));
     try {
       const url = await pexels.importPhoto(photo);
       onPicked(url);
       setPickedIds((current) => [...current, String(photo.id)]);
+      setPreview(null);
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not add that photo');
     } finally {
       setImportingId(null);
     }
   };
+
+  const previewId = preview ? String(preview.id) : null;
+  const previewPicked = !!previewId && pickedIds.includes(previewId);
+  const previewSource = preview?.src_large ?? preview?.src_medium ?? preview?.src_tiny ?? '';
+  const previewCredit = preview?.photographer
+    ? `Photo by ${preview.photographer} on Pexels`
+    : undefined;
 
   return (
     <YStack gap={10} testID="cover-pexels-tab">
@@ -132,7 +147,7 @@ export function PexelsTab({
               role="button"
               aria-label={photo.alt || `Photo by ${photo.photographer ?? 'Pexels'}`}
               aria-disabled={frozen}
-              onPress={frozen ? undefined : () => void pick(photo)}
+              onPress={frozen ? undefined : () => setPreview(photo)}
               width={TILE}
               height={TILE}
               borderRadius={10}
@@ -194,6 +209,21 @@ export function PexelsTab({
       <Text fontSize={11} color="$muted">
         Photos provided by Pexels. Picked photos are copied into your own media library.
       </Text>
+
+      {/* Look before committing: the import (and the tray slot it takes) only
+          happens when the host confirms. An already-picked photo gets no action
+          so the same one cannot be imported twice. */}
+      <ImageViewerModal
+        images={previewSource ? [previewSource] : []}
+        index={preview ? 0 : null}
+        onClose={() => setPreview(null)}
+        caption={previewCredit}
+        action={
+          previewPicked
+            ? undefined
+            : { label: 'Use this image', onPress: () => void confirmPreview(), busy: !!importingId }
+        }
+      />
     </YStack>
   );
 }

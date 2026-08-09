@@ -10,6 +10,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { DetailSkeleton } from '@/components/Skeleton';
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
@@ -33,6 +34,10 @@ export function ClubDetailsScreen() {
     toggle: toggleFollow,
   } = useClubFollow(clubId, followingInitially);
   const { openPod } = useDetailNav();
+  // Nothing floats over this scroll (the follow CTA sits inline in the body), so
+  // the last row only has to clear the Android navigation bar the edge-to-edge
+  // window paints over the app — plus the page's own bottom breathing room.
+  const bottomInset = useBottomInset();
 
   const handleShare = async () => {
     /* istanbul ignore next */
@@ -42,7 +47,7 @@ export function ClubDetailsScreen() {
   };
 
   const content = club ? (
-    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
+    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomInset + 16 }}>
       <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
         <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
       </DetailHero>

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Button, Input, Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, SurveyQuestion } from '@/graphql/onboarding-survey';
 import type { Answer } from './useOnboardingFlow';
@@ -22,6 +23,10 @@ interface Props {
 /** Section-stepped survey — one step per SECTION; final step submits. */
 export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
+  // The Next/Continue button is the last row of this scroll and nothing floats
+  // over it, so it only has to clear the Android navigation bar the edge-to-edge
+  // window paints over the app — on top of the container's own 16pt padding.
+  const bottomInset = useBottomInset();
   const sections = useMemo(
     () => splitSections(survey.questions, survey.title || 'Survey'),
     [survey],
@@ -66,7 +71,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
 
   return (
     <ScrollView
-      contentContainerStyle={{ padding: 16, paddingBottom: 96, gap: 16 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
     >

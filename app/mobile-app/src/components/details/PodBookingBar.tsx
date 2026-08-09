@@ -1,3 +1,4 @@
+import type { LayoutChangeEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -20,6 +21,9 @@ interface Props {
   onBackout: () => void;
   onKeepSpot: () => void;
   onGoToDashboard: () => void;
+  /** Reports the bar's rendered height so the scroll behind it can reserve
+   * exactly that much room — the bar's height changes with its state. */
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 /**
@@ -41,6 +45,7 @@ export function PodBookingBar({
   onBackout,
   onKeepSpot,
   onGoToDashboard,
+  onLayout,
 }: Readonly<Props>) {
   const isMember = !!membershipState?.is_member;
   const inProcess = !!membershipState?.backout_in_process;
@@ -60,6 +65,7 @@ export function PodBookingBar({
       left={0}
       right={0}
       bottom={0}
+      onLayout={onLayout}
       backgroundColor="$background"
       borderTopWidth={1}
       borderColor="$borderColor"

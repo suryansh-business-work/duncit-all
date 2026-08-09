@@ -1,3 +1,4 @@
+import type { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -7,6 +8,10 @@ export interface SurveyFooterProps {
   saving: boolean;
   canSubmit: boolean;
   onSubmit: () => void;
+  /** Reports the footer's rendered height so the scroll behind it can reserve
+   * exactly that much room — its height varies with the device's safe-area
+   * inset, so a constant is wrong on some phones. */
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 /**
@@ -19,6 +24,7 @@ export function SurveyFooter({
   saving,
   canSubmit,
   onSubmit,
+  onLayout,
 }: Readonly<SurveyFooterProps>) {
   const insets = useSafeAreaInsets();
   return (
@@ -28,6 +34,7 @@ export function SurveyFooter({
       left={0}
       right={0}
       bottom={0}
+      onLayout={onLayout}
       borderTopWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"

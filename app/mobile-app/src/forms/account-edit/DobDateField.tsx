@@ -6,6 +6,7 @@ import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/dateti
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { DobCalendarSheet } from './DobCalendarSheet';
@@ -100,41 +101,43 @@ export function DobDateField<T extends FieldValues>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <ModalThemeScope>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="dob-sheet">
-            <YStack
-              testID="dob-sheet-backdrop"
-              role="button"
-              aria-label="Close"
-              onPress={closeSheet}
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              backgroundColor="rgba(0,0,0,0.5)"
-            />
-            <YStack
-              width="92%"
-              maxWidth={420}
-              maxHeight="86%"
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={16}
-            >
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <DobCalendarSheet
-                  testID="dob"
-                  initial={parseDob(value)}
-                  muted={muted}
-                  maxDate={maxDate}
-                  onDone={(picked) => {
-                    field.onChange(format(picked, 'yyyy-MM-dd'));
-                    setOpen(false);
-                  }}
-                />
-              </ScrollView>
+          <KeyboardScreen>
+            <YStack flex={1} alignItems="center" justifyContent="center" testID="dob-sheet">
+              <YStack
+                testID="dob-sheet-backdrop"
+                role="button"
+                aria-label="Close"
+                onPress={closeSheet}
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                backgroundColor="rgba(0,0,0,0.5)"
+              />
+              <YStack
+                width="92%"
+                maxWidth={420}
+                maxHeight="86%"
+                backgroundColor="$background"
+                borderRadius={20}
+                padding={16}
+              >
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <DobCalendarSheet
+                    testID="dob"
+                    initial={parseDob(value)}
+                    muted={muted}
+                    maxDate={maxDate}
+                    onDone={(picked) => {
+                      field.onChange(format(picked, 'yyyy-MM-dd'));
+                      setOpen(false);
+                    }}
+                  />
+                </ScrollView>
+              </YStack>
             </YStack>
-          </YStack>
+          </KeyboardScreen>
         </ModalThemeScope>
       </Modal>
     </YStack>

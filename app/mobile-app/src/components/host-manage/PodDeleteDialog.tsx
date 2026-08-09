@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostDeletePodDocument, HostPodDeleteImpactDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -97,135 +98,137 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
   return (
     <Modal visible={!!podId} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-delete-dialog">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={dismiss}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            width="92%"
-            maxWidth={460}
-            maxHeight="86%"
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
-          >
-            <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="700" color="$color">
-                Cancel pod
-              </Text>
-              <Text fontSize={13} color="$muted" paddingTop={4} paddingBottom={8}>
-                You're cancelling "{podTitle}". This can't be undone.
-              </Text>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <YStack gap={10} paddingBottom={6}>
-                  {impact ? <ImpactSummary impact={impact} /> : <Spinner color="$primary" />}
-                  <Text fontSize={13} fontWeight="600" color="$color" paddingTop={4}>
-                    Reason
-                  </Text>
-                  {POD_DELETE_REASON_SUBJECTS.map((item) => {
-                    const selected = subject === item;
-                    return (
-                      <XStack
-                        key={item}
-                        testID={`pod-delete-reason-${item}`}
-                        role="button"
-                        aria-label={item}
-                        aria-pressed={selected}
-                        onPress={() => setSubject(item)}
-                        alignItems="center"
-                        padding={10}
-                        borderRadius={10}
-                        borderWidth={1}
-                        borderColor={selected ? '$primary' : '$borderColor'}
-                        backgroundColor={selected ? '$primary' : 'transparent'}
-                        pressStyle={{ opacity: 0.85 }}
-                      >
-                        <Text
-                          fontSize={13.5}
-                          fontWeight="700"
-                          color={selected ? '$onPrimary' : '$color'}
-                        >
-                          {item}
-                        </Text>
-                      </XStack>
-                    );
-                  })}
-                  <Field label="Note for attendees">
-                    <Input
-                      testID="pod-delete-note"
-                      value={note}
-                      onChangeText={setNote}
-                      placeholder="Note (shared with attendees)"
-                      placeholderTextColor="$muted"
-                      aria-label="Note for attendees"
-                      multiline
-                      size="$4"
-                      backgroundColor="$surface"
-                      color="$color"
-                      borderColor="$borderColor"
-                    />
-                  </Field>
-                  {error ? (
-                    <Text testID="pod-delete-error" fontSize={12.5} color="$danger">
-                      {error}
+        <KeyboardScreen>
+          <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-delete-dialog">
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={dismiss}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.5)"
+            />
+            <YStack
+              width="92%"
+              maxWidth={460}
+              maxHeight="86%"
+              backgroundColor="$background"
+              borderRadius={20}
+              padding={18}
+            >
+              <SafeAreaView edges={[]}>
+                <Text fontSize={17} fontWeight="700" color="$color">
+                  Cancel pod
+                </Text>
+                <Text fontSize={13} color="$muted" paddingTop={4} paddingBottom={8}>
+                  You're cancelling "{podTitle}". This can't be undone.
+                </Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <YStack gap={10} paddingBottom={6}>
+                    {impact ? <ImpactSummary impact={impact} /> : <Spinner color="$primary" />}
+                    <Text fontSize={13} fontWeight="600" color="$color" paddingTop={4}>
+                      Reason
                     </Text>
-                  ) : null}
-                </YStack>
-              </ScrollView>
-              <XStack gap={12} paddingTop={12}>
-                <XStack
-                  testID="pod-delete-cancel"
-                  role="button"
-                  aria-label="Keep pod"
-                  aria-disabled={busy}
-                  onPress={dismiss}
-                  flex={1}
-                  height={46}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={12}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  opacity={busy ? 0.6 : 1}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    Keep pod
-                  </Text>
+                    {POD_DELETE_REASON_SUBJECTS.map((item) => {
+                      const selected = subject === item;
+                      return (
+                        <XStack
+                          key={item}
+                          testID={`pod-delete-reason-${item}`}
+                          role="button"
+                          aria-label={item}
+                          aria-pressed={selected}
+                          onPress={() => setSubject(item)}
+                          alignItems="center"
+                          padding={10}
+                          borderRadius={10}
+                          borderWidth={1}
+                          borderColor={selected ? '$primary' : '$borderColor'}
+                          backgroundColor={selected ? '$primary' : 'transparent'}
+                          pressStyle={{ opacity: 0.85 }}
+                        >
+                          <Text
+                            fontSize={13.5}
+                            fontWeight="700"
+                            color={selected ? '$onPrimary' : '$color'}
+                          >
+                            {item}
+                          </Text>
+                        </XStack>
+                      );
+                    })}
+                    <Field label="Note for attendees">
+                      <Input
+                        testID="pod-delete-note"
+                        value={note}
+                        onChangeText={setNote}
+                        placeholder="Note (shared with attendees)"
+                        placeholderTextColor="$muted"
+                        aria-label="Note for attendees"
+                        multiline
+                        size="$4"
+                        backgroundColor="$surface"
+                        color="$color"
+                        borderColor="$borderColor"
+                      />
+                    </Field>
+                    {error ? (
+                      <Text testID="pod-delete-error" fontSize={12.5} color="$danger">
+                        {error}
+                      </Text>
+                    ) : null}
+                  </YStack>
+                </ScrollView>
+                <XStack gap={12} paddingTop={12}>
+                  <XStack
+                    testID="pod-delete-cancel"
+                    role="button"
+                    aria-label="Keep pod"
+                    aria-disabled={busy}
+                    onPress={dismiss}
+                    flex={1}
+                    height={46}
+                    alignItems="center"
+                    justifyContent="center"
+                    borderRadius={12}
+                    borderWidth={1}
+                    borderColor="$borderColor"
+                    opacity={busy ? 0.6 : 1}
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    <Text fontSize={14} fontWeight="600" color="$color">
+                      Keep pod
+                    </Text>
+                  </XStack>
+                  <XStack
+                    testID="pod-delete-confirm"
+                    role="button"
+                    aria-label={confirmLabel}
+                    aria-disabled={busy}
+                    onPress={busy ? undefined : () => void confirm()}
+                    flex={1}
+                    height={46}
+                    alignItems="center"
+                    justifyContent="center"
+                    gap={8}
+                    borderRadius={12}
+                    backgroundColor="$danger"
+                    opacity={busy ? 0.7 : 1}
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    {busy ? <Spinner size="small" color={onPrimary} /> : null}
+                    <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>
+                      {busy ? 'Cancelling…' : confirmLabel}
+                    </Text>
+                  </XStack>
                 </XStack>
-                <XStack
-                  testID="pod-delete-confirm"
-                  role="button"
-                  aria-label={confirmLabel}
-                  aria-disabled={busy}
-                  onPress={busy ? undefined : () => void confirm()}
-                  flex={1}
-                  height={46}
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={8}
-                  borderRadius={12}
-                  backgroundColor="$danger"
-                  opacity={busy ? 0.7 : 1}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>
-                    {busy ? 'Cancelling…' : confirmLabel}
-                  </Text>
-                </XStack>
-              </XStack>
-            </SafeAreaView>
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

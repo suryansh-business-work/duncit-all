@@ -47,6 +47,7 @@ export const AppVersionInfoDocument = gql(`
   query MobileAppVersionInfo {
     appVersionInfo {
       latest_version
+      min_supported_version
       android_store_url
       ios_store_url
     }

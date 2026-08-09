@@ -159,6 +159,11 @@ export interface IBranding extends Document {
   // mobile app compares its baked-in version to this and force-updates when
   // it is behind.
   app_latest_version: string;
+  // Oldest mobile build still allowed in (semver, e.g. "1.2.3"). Deliberately
+  // NOT auto-synced: `app_latest_version` moves on every deploy, so gating on
+  // it could lock users out of a build the store has not published yet. This is
+  // raised by hand once a release is actually live. Blank = nobody is blocked.
+  app_min_supported_version: string;
   // Global Pod Shop top slider (image/video), admin-managed from the products
   // portal. Shown above the platform-wide Pod Shop grid on mobile + mWeb.
   pod_shop_slider: {
@@ -293,6 +298,7 @@ const brandingSchema = new Schema<IBranding>(
     home_vibe_subheading: { type: String, default: "" },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
+    app_min_supported_version: { type: String, default: "" },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },
     occasional_icons: { type: [occasionalIconSchema], default: [] },
   },

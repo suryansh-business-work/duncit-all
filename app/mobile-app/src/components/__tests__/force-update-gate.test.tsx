@@ -22,6 +22,10 @@ const setVersionInfo = (latest: string, androidUrl: string) =>
     data: {
       appVersionInfo: {
         latest_version: latest,
+        // The gate compares against the supported floor, not the latest
+        // release; these cases all mean "the server says this build is too
+        // old", so the floor is the version they were already passing.
+        min_supported_version: latest,
         android_store_url: androidUrl,
         ios_store_url: '',
       },

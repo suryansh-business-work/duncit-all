@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import type { ProductShippingQuote } from '@/hooks/useProductShippingQuote';
@@ -47,6 +48,7 @@ function LineThumb({
   line,
   onInfo,
 }: Readonly<{ line: CartLine; onInfo: (productId: string) => void }>) {
+  const { muted } = useThemeColors();
   return (
     <XStack
       testID={`summary-info-${line.pod_id}:${cartLineKey(line)}`}
@@ -70,7 +72,7 @@ function LineThumb({
           resizeMode="cover"
         />
       ) : (
-        <MaterialIcons name="shopping-bag" size={18} color="#9aa0a6" />
+        <MaterialIcons name="shopping-bag" size={18} color={muted} />
       )}
     </XStack>
   );

@@ -3,6 +3,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } from '@duncit/slots';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
+
 export interface SlotMonthGridProps {
   monthKey: string;
   onMonthChange: (monthKey: string) => void;
@@ -30,6 +32,7 @@ export default function SlotMonthGrid({
   fmt,
   labels,
 }: Readonly<SlotMonthGridProps>) {
+  const { muted } = useThemeColors();
   const weeks = buildMonthGrid(monthKey);
   const initials = weekdayInitials(fmt);
   const firstMonth = bounds ? monthKeyOf(bounds.first) : monthKey;
@@ -60,7 +63,7 @@ export default function SlotMonthGrid({
           opacity={canGoBack ? 1 : 0.3}
           pressStyle={{ opacity: 0.6 }}
         >
-          <MaterialIcons name="chevron-left" size={24} color="#8a8a8f" />
+          <MaterialIcons name="chevron-left" size={24} color={muted} />
         </XStack>
         <Text fontSize={14} fontWeight="600" color="$color">
           {title}
@@ -80,7 +83,7 @@ export default function SlotMonthGrid({
           opacity={canGoNext ? 1 : 0.3}
           pressStyle={{ opacity: 0.6 }}
         >
-          <MaterialIcons name="chevron-right" size={24} color="#8a8a8f" />
+          <MaterialIcons name="chevron-right" size={24} color={muted} />
         </XStack>
       </XStack>
 

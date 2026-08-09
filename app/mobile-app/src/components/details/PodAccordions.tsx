@@ -101,7 +101,7 @@ export function PodAccordions({
   onOpenClub: () => void;
   onOpenProfile: (userId: string) => void;
 }>) {
-  const { primary } = useThemeColors();
+  const { primary, success } = useThemeColors();
 
   const sections: Section[] = useMemo(() => {
     const charges = pod.place_charges ?? [];
@@ -146,7 +146,7 @@ export function PodAccordions({
           <ChipList
             items={pod.what_this_pod_offers}
             emptyText="Details coming soon."
-            tint="#ff5a5a"
+            tint={primary}
           />
         ),
       },
@@ -179,7 +179,7 @@ export function PodAccordions({
           <ChipList
             items={pod.available_perks}
             emptyText="No additional perks listed."
-            tint="#22c55e"
+            tint={success}
           />
         ),
       },
@@ -230,6 +230,7 @@ export function PodAccordions({
     onOpenClub,
     onOpenProfile,
     primary,
+    success,
   ]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));

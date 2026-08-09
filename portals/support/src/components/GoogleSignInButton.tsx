@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { GoogleLogin } from '@react-oauth/google';
 import { getGoogleClientId } from '@duncit/shell';
 
@@ -83,7 +83,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)',
+            bgcolor: isDark ? alpha(theme.palette.common.black, 0.45) : alpha(theme.palette.common.white, 0.6),
             borderRadius: 1,
           }}
         >

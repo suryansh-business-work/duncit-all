@@ -1,4 +1,5 @@
 import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -62,8 +63,8 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
                   bottom: 4,
                   px: 0.75,
                   borderRadius: '8px',
-                  bgcolor: 'rgba(0,0,0,0.62)',
-                  color: '#fff',
+                  bgcolor: (theme) => alpha(theme.palette.common.black, 0.62),
+                  color: (theme) => theme.palette.common.white,
                   fontSize: 11,
                   fontWeight: 700,
                 }}
@@ -78,9 +79,9 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
                   position: 'absolute',
                   right: 2,
                   top: 2,
-                  bgcolor: 'rgba(0,0,0,0.55)',
-                  color: '#fff',
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
+                  bgcolor: (theme) => alpha(theme.palette.common.black, 0.55),
+                  color: (theme) => theme.palette.common.white,
+                  '&:hover': { bgcolor: (theme) => alpha(theme.palette.common.black, 0.75) },
                 }}
               >
                 <CloseIcon sx={{ fontSize: 14 }} />

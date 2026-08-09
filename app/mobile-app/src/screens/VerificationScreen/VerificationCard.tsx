@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { semantic } from '@duncit/auth-tokens';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
 import type { Verification } from '@/hooks/useVerifications';
 
 import { LABELS, STATUS_META } from './labels';
@@ -14,6 +16,7 @@ export function VerificationCard({
   item,
   children,
 }: Readonly<{ item: Verification; children?: ReactNode }>) {
+  const { muted } = useThemeColors();
   const meta = STATUS_META[item.status];
   const verified = DONE.has(item.status);
 
@@ -28,7 +31,7 @@ export function VerificationCard({
       backgroundColor="$surface"
     >
       <XStack alignItems="center" gap={12}>
-        <MaterialIcons name="check-circle" size={22} color={verified ? '#22c55e' : '#cfd2d6'} />
+        <MaterialIcons name="check-circle" size={22} color={verified ? semantic.success : muted} />
         <YStack flex={1} gap={4}>
           <Text fontSize={14.5} fontWeight="700" color="$color">
             {LABELS[item.type]}
@@ -41,7 +44,7 @@ export function VerificationCard({
             borderRadius={999}
             backgroundColor={meta.color}
           >
-            <Text fontSize={11} fontWeight="700" color="#ffffff">
+            <Text fontSize={11} fontWeight="700" color="$onPrimary">
               {meta.label}
             </Text>
           </XStack>

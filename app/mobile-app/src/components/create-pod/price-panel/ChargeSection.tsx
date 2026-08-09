@@ -10,7 +10,6 @@ export const DEFAULT_TINT = 'rgba(99,102,241,0.10)';
 export const VENUE_TINT = 'rgba(245,158,11,0.12)';
 /** The venue section when the pod cannot cover the slot price. */
 export const SHORTFALL_TINT = 'rgba(239,68,68,0.12)';
-const SHORTFALL_BORDER = '#ef4444';
 
 /** One auditable row: label + amount with the formula that produced it
  * underneath. Context rows (the taxable base) render muted, not bold. */
@@ -63,7 +62,7 @@ export function ChargeSection({
       overflow="hidden"
       backgroundColor={tint}
       borderWidth={invalidMessage ? 1.5 : 0}
-      borderColor={SHORTFALL_BORDER}
+      borderColor="$danger"
     >
       <XStack
         testID={testID}

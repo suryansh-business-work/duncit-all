@@ -1,4 +1,5 @@
 import { Card, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import EventIcon from '@mui/icons-material/Event';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
@@ -152,7 +153,7 @@ export default function PodCard({
           p: 1.25,
           borderRadius: '14px',
           bgcolor: (theme) =>
-            theme.palette.mode === 'dark' ? 'rgba(17,26,46,0.78)' : 'rgba(255,255,255,0.80)',
+            alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.8),
           backdropFilter: 'blur(10px)',
           border: '1px solid',
           borderColor: (theme) =>

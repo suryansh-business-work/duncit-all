@@ -268,7 +268,7 @@ const graphqlUrl = urlConfigs.graphqlUrl;
         feedback.classList.remove('hidden');
         if (result?.ok) {
           feedback.textContent = result.message || 'Application received!';
-          feedback.className = 'text-sm font-semibold text-green-700';
+          feedback.className = 'text-sm font-semibold text-ink';
           window.setTimeout(() => dialog?.close(), 1800);
         } else {
           feedback.textContent = json?.errors?.[0]?.message || 'Could not submit — please check the form.';

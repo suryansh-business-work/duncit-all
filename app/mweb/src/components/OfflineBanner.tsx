@@ -12,7 +12,7 @@ export default function OfflineBanner() {
       data-testid="offline-banner"
       role="status"
       aria-live="polite"
-      sx={{ bgcolor: '#b3261e', color: '#fff', px: 2, py: 0.75 }}
+      sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 2, py: 0.75 }}
     >
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
         <WifiOffIcon fontSize="small" />

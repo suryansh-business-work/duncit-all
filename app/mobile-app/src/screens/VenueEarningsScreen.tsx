@@ -1,3 +1,4 @@
+import { neutral, semantic } from '@duncit/auth-tokens';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -5,9 +6,9 @@ import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles
 import { useVenueEarnings, type VenuePayout } from '@/hooks/useVenueEarnings';
 
 const STATUS_BG: Record<string, string> = {
-  PENDING: '#d97706',
-  APPROVED: '#16a34a',
-  REJECTED: '#dc2626',
+  PENDING: semantic.warning,
+  APPROVED: semantic.success,
+  REJECTED: semantic.error,
 };
 
 const fmtDate = (iso: string) => {
@@ -52,9 +53,9 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: 
           paddingHorizontal={8}
           paddingVertical={2}
           borderRadius={999}
-          backgroundColor={STATUS_BG[payout.status] ?? '#6b7280'}
+          backgroundColor={STATUS_BG[payout.status] ?? neutral[500]}
         >
-          <Text fontSize={10.5} fontWeight="700" color="#ffffff">
+          <Text fontSize={10.5} fontWeight="700" color="$onPrimary">
             {payout.status}
           </Text>
         </XStack>

@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { podSeatsTaken } from '@duncit/utils';
 import { podModeLabel, podPriceLabel, podTimeChip, type TimeTone } from '@/utils/pod-format';
 
@@ -26,7 +27,8 @@ function Chip({
   primary?: boolean;
   tone?: string;
 }>) {
-  const fg = primary ? '#ffffff' : (tone ?? '#9aa0aa');
+  const { onPrimary, muted } = useThemeColors();
+  const fg = primary ? onPrimary : (tone ?? muted);
   const toneBg = tone ? `${tone}22` : '$surface';
   const chipBg = primary ? '$primary' : toneBg;
   return (

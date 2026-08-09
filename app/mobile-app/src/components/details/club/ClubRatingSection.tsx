@@ -62,7 +62,7 @@ function StarPicker({
 }
 
 export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { primary, muted } = useThemeColors();
   const [reviews, setReviews] = useState<ClubRating[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stars, setStars] = useState(0);
@@ -192,7 +192,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
                 Rate this Club
               </Text>
               <TouchableOpacity testID="rating-dialog-close" onPress={() => setDialogOpen(false)}>
-                <MaterialIcons name="close" size={22} color="gray" />
+                <MaterialIcons name="close" size={22} color={muted} />
               </TouchableOpacity>
             </XStack>
             <YStack gap={8}>

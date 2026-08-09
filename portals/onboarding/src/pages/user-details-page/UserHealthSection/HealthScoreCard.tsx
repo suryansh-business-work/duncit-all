@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
 import AdjustHealthDialog from './AdjustHealthDialog';
@@ -21,12 +22,6 @@ const BAND_COLOR: Record<AdminHealthScore['band'], 'error' | 'warning' | 'succes
   GREEN: 'success',
 };
 
-const BAND_HEX: Record<AdminHealthScore['band'], string> = {
-  RED: '#e53935',
-  YELLOW: '#fb8c00',
-  GREEN: '#43a047',
-};
-
 interface Props {
   score: AdminHealthScore;
   onUpdated: (next: AdminHealthScore) => void;
@@ -34,6 +29,12 @@ interface Props {
 
 export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const theme = useTheme();
+  const bandHex: Record<AdminHealthScore['band'], string> = {
+    RED: theme.palette.error.main,
+    YELLOW: theme.palette.warning.main,
+    GREEN: theme.palette.success.main,
+  };
 
   return (
     <Card variant="outlined">
@@ -47,11 +48,11 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                 borderRadius: '50%',
                 display: 'grid',
                 placeItems: 'center',
-                bgcolor: `${BAND_HEX[score.band]}1A`,
-                color: BAND_HEX[score.band],
+                bgcolor: alpha(bandHex[score.band], 0.1),
+                color: bandHex[score.band],
                 fontWeight: 950,
                 fontSize: 28,
-                border: `3px solid ${BAND_HEX[score.band]}`,
+                border: `3px solid ${bandHex[score.band]}`,
               }}
             >
               {score.total_score}

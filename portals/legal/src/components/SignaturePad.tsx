@@ -180,7 +180,10 @@ export default function SignaturePad({
               border: 1,
               borderColor: 'divider',
               borderRadius: 1,
-              bgcolor: 'background.paper',
+              // Fixed white "paper" backdrop: the ink drawn below is a fixed
+              // dark color so the signature always renders the same way,
+              // regardless of the portal's light/dark mode.
+              bgcolor: 'common.white',
               touchAction: 'none',
               cursor: 'crosshair',
             }}
@@ -207,11 +210,20 @@ export default function SignaturePad({
           />
           {value && method === 'TYPE' && (
             <Box
-              component="img"
-              src={value}
-              alt="Typed signature preview"
-              sx={{ height: 80, objectFit: 'contain', alignSelf: 'flex-start' }}
-            />
+              sx={{
+                bgcolor: 'common.white',
+                borderRadius: 1,
+                p: 0.5,
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Box
+                component="img"
+                src={value}
+                alt="Typed signature preview"
+                sx={{ height: 80, objectFit: 'contain', display: 'block' }}
+              />
+            </Box>
           )}
         </Stack>
       )}

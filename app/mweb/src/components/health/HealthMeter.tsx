@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 export type HealthBand = 'RED' | 'YELLOW' | 'GREEN';
 
@@ -30,6 +31,8 @@ export default function HealthMeter({
   onClick,
   caption,
 }: Readonly<Props>) {
+  const theme = useTheme();
+  const trackColor = alpha(theme.palette.text.primary, 0.08);
   const radius = (size - thickness) / 2;
   const cy = size / 2;
   const circumference = Math.PI * radius;
@@ -68,7 +71,7 @@ export default function HealthMeter({
           <path
             d={arc}
             fill="none"
-            stroke="rgba(0,0,0,0.08)"
+            stroke={trackColor}
             strokeWidth={thickness}
             strokeLinecap="round"
           />

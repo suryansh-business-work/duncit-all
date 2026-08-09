@@ -132,7 +132,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
           )}
           {errors.length > 0 && <Alert severity="warning">{errors.slice(0, 2).join(' · ')}</Alert>}
           <Typography variant="caption" color="text.secondary">Preview</Typography>
-          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', height: 220, bgcolor: '#f5f5f5' }}>
+          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', height: 220, bgcolor: 'background.default' }}>
             <iframe title="template-preview" srcDoc={html} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           </Box>
         </>

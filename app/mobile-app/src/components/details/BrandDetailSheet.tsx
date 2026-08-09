@@ -161,6 +161,7 @@ function BrandStat({
   icon,
   label,
 }: Readonly<{ icon: 'place' | 'event' | 'inventory-2'; label: string }>) {
+  const { muted } = useThemeColors();
   return (
     <XStack
       alignItems="center"
@@ -170,7 +171,7 @@ function BrandStat({
       borderRadius={999}
       backgroundColor="$surface"
     >
-      <MaterialIcons name={icon} size={14} color="#9aa0a6" />
+      <MaterialIcons name={icon} size={14} color={muted} />
       <Text fontSize={12} fontWeight="700" color="$color">
         {label}
       </Text>

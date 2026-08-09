@@ -1,6 +1,7 @@
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   settlement: PodSettlement | null;
@@ -37,6 +38,10 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
 
 /** "Host Share" preview of the reconciled split for the entered venue bill. */
 export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
+  const { primary } = useThemeColors();
+  // Hex-alpha-suffix tint pattern (same as CouponField/ClubTotalMembersSection) —
+  // an 8% alpha channel on the resolved primary token instead of a hardcoded rgba.
+  const primaryTint = `${primary}14`;
   let body;
   if (settlement) {
     const w = settlement.waterfall;
@@ -85,7 +90,7 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       gap={6}
       padding={12}
       borderRadius={12}
-      backgroundColor="rgba(255,79,115,0.08)"
+      backgroundColor={primaryTint}
       testID="settlement-summary"
     >
       <Text fontSize={13} fontWeight="700" color="$color">

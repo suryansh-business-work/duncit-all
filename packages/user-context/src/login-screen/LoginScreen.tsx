@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Alert, Box, Chip, Fade, IconButton, Link, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
-import { glass } from './glass';
+import { glass, inkCta } from './glass';
 import LoginForm from './login.form';
 import PromoCard from './PromoCard';
 import OtherPortalsDialog from './OtherPortalsDialog';
@@ -52,9 +53,10 @@ export default function LoginScreen({
           inset: 0,
           backdropFilter: 'blur(1.5px)',
           WebkitBackdropFilter: 'blur(1.5px)',
-          background: dark
-            ? 'linear-gradient(180deg, rgba(3,6,15,0.72) 0%, rgba(3,6,15,0.88) 100%)'
-            : 'linear-gradient(180deg, rgba(248,250,252,0.62) 0%, rgba(226,232,240,0.78) 100%)',
+          background: (theme) =>
+            dark
+              ? `linear-gradient(180deg, ${alpha(theme.palette.common.black, 0.72)} 0%, ${alpha(theme.palette.common.black, 0.88)} 100%)`
+              : `linear-gradient(180deg, ${alpha(theme.palette.common.white, 0.62)} 0%, ${alpha(theme.palette.grey[300], 0.78)} 100%)`,
           zIndex: 1,
         }}
       />
@@ -63,7 +65,7 @@ export default function LoginScreen({
         <IconButton
           onClick={onToggleMode}
           aria-label="toggle color mode"
-          sx={{ position: 'fixed', top: 16, right: 16, zIndex: 3, color: dark ? '#fff' : 'text.primary' }}
+          sx={{ position: 'fixed', top: 16, right: 16, zIndex: 3, color: 'text.primary' }}
         >
           {dark ? <LightModeIcon /> : <DarkModeIcon />}
         </IconButton>
@@ -128,7 +130,7 @@ export default function LoginScreen({
               </Typography>
             </Box>
 
-            <Box sx={{ bgcolor: '#0b0b0f', color: '#fff', borderRadius: 3, px: 2.5, py: 1.75, textAlign: 'center' }}>
+            <Box sx={{ bgcolor: inkCta.bgcolor, color: inkCta.color, borderRadius: 3, px: 2.5, py: 1.75, textAlign: 'center' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 {config.tagline}
               </Typography>

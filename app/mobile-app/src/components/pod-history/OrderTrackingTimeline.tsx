@@ -8,10 +8,14 @@ import type { TimelineStep } from '@/utils/product-orders';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
-function iconFor(step: TimelineStep, primary: string): { name: IconName; color: string } {
+function iconFor(
+  step: TimelineStep,
+  primary: string,
+  muted: string,
+): { name: IconName; color: string } {
   if (step.done) return { name: 'check-circle', color: semantic.success };
   if (step.current) return { name: 'radio-button-checked', color: primary };
-  return { name: 'radio-button-unchecked', color: '#9aa0a6' };
+  return { name: 'radio-button-unchecked', color: muted };
 }
 
 /** Vertical fulfilment timeline over the order's step ladder — RN twin of mWeb's
@@ -20,12 +24,12 @@ export function OrderTrackingTimeline({
   steps,
   testID,
 }: Readonly<{ steps: TimelineStep[]; testID?: string }>) {
-  const { primary } = useThemeColors();
+  const { primary, muted } = useThemeColors();
   return (
     <YStack gap={2} testID={testID}>
       {steps.map((step, index) => {
         const last = index === steps.length - 1;
-        const icon = iconFor(step, primary);
+        const icon = iconFor(step, primary, muted);
         return (
           <XStack key={step.status} gap={12} alignItems="flex-start">
             <YStack alignItems="center">

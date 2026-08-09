@@ -1,4 +1,4 @@
-import { Badge } from '@mui/material';
+import { Badge, type Theme } from '@mui/material';
 import type { ReactNode } from 'react';
 import type { PresenceStatus } from './usePresence';
 
@@ -9,11 +9,14 @@ import type { PresenceStatus } from './usePresence';
  * readable to everyone — so the status word is always written next to it in the
  * places where it matters, and this is the glance version.
  */
-const COLOR: Record<PresenceStatus, string> = {
-  ONLINE: '#2e7d32',
-  AWAY: '#ed6c02',
-  BUSY: '#d32f2f',
-  OFFLINE: '#9e9e9e',
+const colorFor = (theme: Theme, status: PresenceStatus): string => {
+  const byStatus: Record<PresenceStatus, string> = {
+    ONLINE: theme.palette.success.main,
+    AWAY: theme.palette.warning.main,
+    BUSY: theme.palette.error.main,
+    OFFLINE: theme.palette.text.disabled,
+  };
+  return byStatus[status];
 };
 
 export default function PresenceDot({
@@ -28,7 +31,7 @@ export default function PresenceDot({
       title={status.toLowerCase()}
       sx={{
         '& .MuiBadge-badge': {
-          backgroundColor: COLOR[status],
+          backgroundColor: (theme) => colorFor(theme, status),
           boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
         },
       }}

@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   addDays,
   endOfMonth,
@@ -84,7 +85,7 @@ function CountBadge({ count, selected, label, bg, fg }: Readonly<BadgeProps>) {
         px: 0.5,
         py: 0,
         borderRadius: 0.5,
-        bgcolor: selected ? 'rgba(255,255,255,0.25)' : bg,
+        bgcolor: selected ? (theme) => alpha(theme.palette.common.white, 0.25) : bg,
         color: selected ? 'primary.contrastText' : fg,
         fontSize: 10,
         fontWeight: 800,
@@ -135,7 +136,9 @@ function DayBadges({ bucket, isSelected }: Readonly<DayBadgesProps>) {
       <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
       <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
       <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
-      <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
+      {/* grey.300 never darkens in dark mode, so its fg must be a fixed grey
+          too — text.secondary would go light-on-light here. */}
+      <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="grey.800" />
     </Stack>
   );
 }

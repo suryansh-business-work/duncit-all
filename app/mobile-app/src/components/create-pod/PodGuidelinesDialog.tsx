@@ -15,7 +15,7 @@ interface Props {
 /** "What AI monitors" dialog — explains the AI content check and the community
  * guidelines every pod must follow, with the consequences of breaking them. */
 export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { primary, danger } = useThemeColors();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -53,7 +53,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
               <YStack gap={7} paddingVertical={6}>
                 {POD_AI_GUIDELINES.rules.map((rule) => (
                   <XStack key={rule} gap={8} alignItems="flex-start">
-                    <MaterialIcons name="block" size={15} color="#ef4444" />
+                    <MaterialIcons name="block" size={15} color={danger} />
                     <Text flex={1} fontSize={12.5} color="$color">
                       {rule}
                     </Text>

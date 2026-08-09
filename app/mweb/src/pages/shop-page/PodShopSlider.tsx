@@ -76,7 +76,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
             fontWeight: 600,
             textTransform: 'none',
             bgcolor: 'common.white',
-            color: 'text.primary',
+            color: 'primary.main',
             '&:hover': { bgcolor: 'grey.100' },
           }}
         >

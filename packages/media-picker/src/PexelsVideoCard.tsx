@@ -1,4 +1,5 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
 import { pickBestVideoFile } from './utils';
 
@@ -60,23 +61,23 @@ export default function PexelsVideoCard({
       <ImageListItemBar
         title={video.user_name || 'Pexels'}
         subtitle={`${video.duration}s · ${video.width}×${video.height}`}
-        sx={{ background: 'linear-gradient(rgba(0,0,0,.6), transparent)' }}
+        sx={{ background: (theme) => `linear-gradient(${alpha(theme.palette.common.black, 0.6)}, transparent)` }}
       />
       {importing && (
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            bgcolor: 'rgba(0,0,0,.5)',
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.5),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
+            color: (theme) => theme.palette.common.white,
             flexDirection: 'column',
             gap: 1,
           }}
         >
-          <CircularProgress size={28} sx={{ color: 'white' }} />
+          <CircularProgress size={28} sx={{ color: (theme) => theme.palette.common.white }} />
           <Typography variant="caption">{t('media.pexels.importing')}</Typography>
         </Box>
       )}

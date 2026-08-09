@@ -32,8 +32,8 @@ function SosSendButton({
       opacity={disabled ? 0.6 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
-      {busy ? <Spinner color="white" /> : null}
-      <Text fontSize={15} fontWeight="700" color="white" letterSpacing={1}>
+      {busy ? <Spinner color="$onPrimary" /> : null}
+      <Text fontSize={15} fontWeight="700" color="$onPrimary" letterSpacing={1}>
         {busy ? 'SENDING SOS…' : 'SEND SOS'}
       </Text>
     </XStack>

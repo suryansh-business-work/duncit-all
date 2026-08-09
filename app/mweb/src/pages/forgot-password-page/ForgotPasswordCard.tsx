@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Link, Stack, Typography } from '@mui/material';
+import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { ForgotPasswordForm, type ForgotPasswordValues } from '../../forms/forgot-password';
@@ -20,7 +21,7 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Forgot <Box component="span" sx={{ color: '#ff5b72' }}>password?</Box>
+            Forgot <Box component="span" sx={{ color: auth.accent }}>password?</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
             Enter your email and we’ll send you a 6-digit OTP to reset your password.

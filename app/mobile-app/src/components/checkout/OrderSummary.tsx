@@ -45,7 +45,7 @@ export function OrderSummary({
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
   unitAmount?: number;
 }>) {
-  const { onPrimary } = useThemeColors();
+  const { onPrimary, muted } = useThemeColors();
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
   // number has to be visible here — a silent multiplier reads as a wrong price.
@@ -138,7 +138,7 @@ export function OrderSummary({
                   onPress={() => setVenueInfoOpen(true)}
                   pressStyle={{ opacity: 0.6 }}
                 >
-                  <MaterialIcons name="info-outline" size={16} color="#9aa0a6" />
+                  <MaterialIcons name="info-outline" size={16} color={muted} />
                 </XStack>
               </XStack>
               <Text fontSize={13} fontWeight="600" color="$color">

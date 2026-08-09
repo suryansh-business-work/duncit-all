@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { glass } from './glass';
+import { glass, inkCta } from './glass';
 
 interface Props {
   title: string;
@@ -74,10 +74,10 @@ export default function PromoCard({ title, text, brandName }: Readonly<Props>) {
           endIcon={<ArrowForwardIcon />}
           sx={{
             borderRadius: 999,
-            bgcolor: '#0b0b0f',
-            color: '#fff',
+            bgcolor: inkCta.bgcolor,
+            color: inkCta.color,
             px: 2,
-            '&:hover': { bgcolor: '#000' },
+            '&:hover': { bgcolor: inkCta.hoverBgcolor },
           }}
         >
           Explore

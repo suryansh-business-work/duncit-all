@@ -88,7 +88,7 @@ export default function PaymentDetailsCard({
         borderRadius: '16px',
         border: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider',
-        bgcolor: isDark ? '#171821' : theme.palette.background.paper,
+        bgcolor: theme.palette.background.paper,
         boxShadow: '0 18px 44px rgba(15,23,42,0.2)',
         '& .MuiMenuItem-root': { minHeight: 42, fontWeight: 700, borderRadius: '16px', mx: 0.75, my: 0.25 },
       },

@@ -2,6 +2,7 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { describeAttachment, typeLabel, type AttachmentInfo } from '@duncit/media-picker';
+import { tokens } from '@duncit/theme';
 
 interface DocCardProps {
   info: AttachmentInfo;
@@ -43,7 +44,7 @@ function VideoCard({ info }: Readonly<DocCardProps>) {
         src={info.url}
         controls
         preload="metadata"
-        style={{ width: '100%', maxHeight: 160, borderRadius: 8, background: '#000' }}
+        style={{ width: '100%', maxHeight: 160, borderRadius: tokens.radius.md, background: '#000' }}
       />
       <Typography variant="caption" noWrap sx={{ display: 'block', opacity: 0.8, mt: 0.25 }}>
         {info.name}

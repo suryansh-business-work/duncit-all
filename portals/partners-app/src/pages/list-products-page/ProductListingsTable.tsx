@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit, onView, onSettings }: Readonly<Props>) {
+  const theme = useTheme();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
@@ -158,7 +160,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
             fetchRows={fetchRows}
             getRowId={getProductRowId}
             onRowClick={onView}
-            getRowStyle={(product) => (isLowStock(product) ? { backgroundColor: 'rgba(237, 108, 2, 0.10)' } : undefined)}
+            getRowStyle={(product) => (isLowStock(product) ? { backgroundColor: alpha(theme.palette.warning.main, 0.1) } : undefined)}
             emptyText="No product listings yet."
             defaultSort={{ field: 'updated_at', dir: 'desc' }}
             searchPlaceholder="Search product, size, color"

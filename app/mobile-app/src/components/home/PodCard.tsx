@@ -6,6 +6,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import type { HomePod } from '@/hooks/useHomeFeed';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
@@ -82,9 +83,9 @@ interface PodInfoPanelProps {
 /** The translucent bottom panel: date, big title, spots left, price, place.
  * Module scope (S6478) and out of PodCard to keep its complexity in bounds. */
 function PodInfoPanel({ pod, dark, spotsText, place, joiningText }: Readonly<PodInfoPanelProps>) {
+  const { muted: mutedInk } = useThemeColors();
   const panelBg = dark ? 'rgba(17,26,46,0.88)' : 'rgba(255,255,255,0.90)';
   const panelBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.55)';
-  const mutedInk = dark ? '#9aa3b2' : '#6b7280';
   return (
     <YStack
       position="absolute"

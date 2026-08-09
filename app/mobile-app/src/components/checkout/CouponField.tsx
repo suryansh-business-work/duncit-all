@@ -33,8 +33,11 @@ export function CouponField({
   onApply,
   onRemove,
 }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { primary, success } = useThemeColors();
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Same hex-alpha-suffix tint pattern as ClubTotalMembersSection — a 15% alpha
+  // channel on the resolved success token (mirrors mWeb's alpha(success, 0.15)).
+  const successTint = `${success}26`;
 
   if (applied?.ok) {
     return (
@@ -44,12 +47,12 @@ export function CouponField({
         justifyContent="space-between"
         padding={12}
         borderRadius={12}
-        backgroundColor="rgba(34,197,94,0.15)"
+        backgroundColor={successTint}
         borderWidth={1}
-        borderColor="#22c55e"
+        borderColor={success}
       >
         <XStack alignItems="center" gap={8} flex={1}>
-          <MaterialIcons name="local-offer" size={16} color="#22c55e" />
+          <MaterialIcons name="local-offer" size={16} color={success} />
           <Text fontSize={13.5} fontWeight="600" color="$color">
             {applied.code} · −{currency}
             {applied.discount_amount}

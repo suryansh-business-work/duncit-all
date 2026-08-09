@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
+import { semantic } from '@duncit/auth-tokens';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -23,9 +24,9 @@ const QUICK: { label: string; icon: IconName; route: QuickRoute }[] = [
 ];
 
 const BAND_COLOR: Record<string, string> = {
-  GREEN: '#43a047',
-  YELLOW: '#fb8c00',
-  RED: '#e53935',
+  GREEN: semantic.success,
+  YELLOW: semantic.warning,
+  RED: semantic.error,
 };
 
 /** One dashboard stat tile. */
@@ -90,6 +91,7 @@ const statTiles = (stats: HostDashboardStats) => [
  * health. RN twin of mWeb's HostDashboardPage (B2-#5). */
 export function HostDashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { muted } = useThemeColors();
   const { me, wallet, earnings, health, stats, pods, isLoading } = useHostDashboard();
 
   if (isLoading && !me) {
@@ -168,7 +170,7 @@ export function HostDashboardScreen() {
               justifyContent="center"
               backgroundColor={BAND_COLOR[health.band]}
             >
-              <Text fontSize={14} fontWeight="700" color="#ffffff">
+              <Text fontSize={14} fontWeight="700" color="$onPrimary">
                 {health.total_score}
               </Text>
             </YStack>
@@ -180,7 +182,7 @@ export function HostDashboardScreen() {
                 Keep your profile + verification up to date to rank higher.
               </Text>
             </YStack>
-            <MaterialIcons name="chevron-right" size={22} color="#9aa0a6" />
+            <MaterialIcons name="chevron-right" size={22} color={muted} />
           </XStack>
         ) : null}
       </ScrollView>

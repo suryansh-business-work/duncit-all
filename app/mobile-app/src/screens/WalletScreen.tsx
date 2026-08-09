@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { neutral, semantic } from '@duncit/auth-tokens';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -11,9 +12,9 @@ const PAYOUT_LABEL: Record<string, string> = {
   MONTH_END: 'Paid at month end',
 };
 const STATUS_BG: Record<string, string> = {
-  PENDING: '#d97706',
-  PAID: '#16a34a',
-  REJECTED: '#dc2626',
+  PENDING: semantic.warning,
+  PAID: semantic.success,
+  REJECTED: semantic.error,
 };
 
 const fmtDate = (iso: string) => {
@@ -33,7 +34,7 @@ function TxnRow({ txn, symbol }: Readonly<{ txn: WalletTxn; symbol: string }>) {
           {fmtDate(txn.created_at)}
         </Text>
       </YStack>
-      <Text fontSize={13.5} fontWeight="700" color={credit ? '#16a34a' : '#dc2626'}>
+      <Text fontSize={13.5} fontWeight="700" color={credit ? '$success' : '$danger'}>
         {credit ? '+' : '-'}
         {symbol}
         {txn.amount.toFixed(2)}
@@ -59,9 +60,9 @@ function WithdrawalRow({ w, symbol }: Readonly<{ w: Withdrawal; symbol: string }
         paddingHorizontal={8}
         paddingVertical={2}
         borderRadius={999}
-        backgroundColor={STATUS_BG[w.status] ?? '#6b7280'}
+        backgroundColor={STATUS_BG[w.status] ?? neutral[500]}
       >
-        <Text fontSize={10.5} fontWeight="700" color="#ffffff">
+        <Text fontSize={10.5} fontWeight="700" color="$onPrimary">
           {w.status}
         </Text>
       </XStack>

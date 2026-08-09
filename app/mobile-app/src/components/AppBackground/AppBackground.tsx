@@ -3,8 +3,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useThemeStore } from '@/stores/theme.store';
 
-const DARK = ['#100d18', '#08070b'] as const;
-const LIGHT = ['#fff5f7', '#ffffff'] as const;
+// Exported so root-level overlays (e.g. ForceUpdateGate) that must paint before
+// this gradient can match its start colour instead of typing their own copy.
+export const DARK = ['#100d18', '#08070b'] as const;
+export const LIGHT = ['#fff5f7', '#ffffff'] as const;
 
 /**
  * App-wide gradient backdrop — a single vertical LinearGradient (GPU-composited,

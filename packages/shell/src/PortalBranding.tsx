@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
+import { useTheme } from '@mui/material/styles';
 
 const PORTAL_BRANDING = gql`
   query PortalBranding {
@@ -55,11 +56,10 @@ function applyPortalFont(family: string): () => void {
   };
 }
 
-const splashStyle: React.CSSProperties = {
+const splashBaseStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
   zIndex: 99999,
-  background: '#F82C2E',
 };
 
 const splashMediaStyle: React.CSSProperties = {
@@ -75,6 +75,7 @@ const splashMediaStyle: React.CSSProperties = {
  * when the assets aren't configured.
  */
 export function PortalBranding(): React.ReactElement | null {
+  const theme = useTheme();
   const { data } = useQuery(PORTAL_BRANDING, { fetchPolicy: 'cache-first' });
   const branding = data?.branding;
   const splashUrl: string = branding?.portals_splash_url || '';
@@ -109,7 +110,10 @@ export function PortalBranding(): React.ReactElement | null {
   if (!splashOpen || !splashUrl) return null;
 
   return (
-    <output aria-label={`Loading ${branding?.app_name || 'Duncit'}`} style={splashStyle}>
+    <output
+      aria-label={`Loading ${branding?.app_name || 'Duncit'}`}
+      style={{ ...splashBaseStyle, background: theme.palette.primary.main }}
+    >
       {isVideo ? (
         <video src={splashUrl} autoPlay muted loop playsInline style={splashMediaStyle} />
       ) : (

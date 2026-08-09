@@ -90,7 +90,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
       </Stack>
 
       {tab === 'preview' ? (
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: '#f5f5f5' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && <Alert severity="warning" sx={{ borderRadius: 0 }}>{previewErrors.slice(0, 3).join(' · ')}</Alert>}
           <iframe title="preview" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen>

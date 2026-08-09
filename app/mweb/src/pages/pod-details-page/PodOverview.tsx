@@ -41,8 +41,8 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
   const spotsTaken = podSeatsTaken(pod);
   const spotsTotal = pod.no_of_spots ?? 0;
-  const textColor = isDark ? '#fff' : 'text.primary';
-  const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';
+  const textColor = theme.palette.text.primary;
+  const mutedColor = theme.palette.text.secondary;
   const softBg = isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.72);
   const chipBg = isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08);
 
@@ -58,7 +58,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.16)} 52%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
         boxShadow: isDark ? '0 18px 48px rgba(17,24,39,0.24)' : `0 18px 48px ${alpha(theme.palette.primary.dark, 0.12)}`,
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'divider',
+        borderColor: 'divider',
       }}
     >
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>

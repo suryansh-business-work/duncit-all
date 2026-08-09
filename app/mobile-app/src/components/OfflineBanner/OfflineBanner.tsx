@@ -1,5 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { semantic } from '@duncit/auth-tokens';
 import { Text, XStack } from 'tamagui';
 
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -11,7 +12,7 @@ export function OfflineBanner() {
   if (!isOffline) return null;
 
   return (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: '#b3261e' }}>
+    <SafeAreaView edges={['top']} style={{ backgroundColor: semantic.error }}>
       <XStack
         testID="offline-banner"
         alignItems="center"
@@ -19,7 +20,7 @@ export function OfflineBanner() {
         gap={8}
         paddingHorizontal={16}
         paddingVertical={8}
-        backgroundColor="#b3261e"
+        backgroundColor="$danger"
       >
         <MaterialIcons name="wifi-off" size={16} color="#ffffff" />
         <Text fontSize={13} fontWeight="600" color="#ffffff">

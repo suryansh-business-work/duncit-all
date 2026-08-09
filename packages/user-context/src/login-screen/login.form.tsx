@@ -17,6 +17,7 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { LoginFormValues } from './login.types';
 import { loginInitialValues } from './login.types';
+import { inkCta } from './glass';
 
 export const loginSchema = yup.object({
   email: yup
@@ -114,9 +115,9 @@ export default function LoginForm({ loading, onSubmit, onForgotPassword }: Reado
               width: 56,
               height: 56,
               flexShrink: 0,
-              bgcolor: '#0b0b0f',
-              color: '#fff',
-              '&:hover': { bgcolor: '#000' },
+              bgcolor: inkCta.bgcolor,
+              color: inkCta.color,
+              '&:hover': { bgcolor: inkCta.hoverBgcolor },
               '&.Mui-disabled': { bgcolor: 'action.disabledBackground' },
             }}
           >

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
+import { semantic } from '@duncit/auth-tokens';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -104,7 +105,7 @@ export function HostManageScreen() {
               backgroundColor="$surface"
               alignItems="flex-start"
             >
-              <MaterialIcons name="schedule" size={16} color="#f59e0b" />
+              <MaterialIcons name="schedule" size={16} color={semantic.warning} />
               <Text flex={1} fontSize={12.5} color="$muted">
                 Draft Pods are automatically deleted after {draftRetentionDays} days of being saved.
                 Please publish your Pod before it expires.

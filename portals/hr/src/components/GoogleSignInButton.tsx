@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { GoogleLogin } from '@react-oauth/google';
 import { getGoogleClientId } from '@duncit/shell';
 
@@ -61,10 +61,10 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   }
 
   let googleTheme: 'filled_black' | 'outline' = 'outline';
-  let overlayBg = 'rgba(255,255,255,0.6)';
+  let overlayBg = alpha(theme.palette.common.white, 0.6);
   if (isDark) {
     googleTheme = 'filled_black';
-    overlayBg = 'rgba(0,0,0,0.45)';
+    overlayBg = alpha(theme.palette.common.black, 0.45);
   }
 
   return (

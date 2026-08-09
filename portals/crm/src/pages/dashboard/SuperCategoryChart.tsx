@@ -26,7 +26,6 @@ interface Props {
  */
 export default function SuperCategoryChart({ data, title = 'Leads by Super Category' }: Readonly<Props>) {
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
 
   const chartData = useMemo(
     () => ({
@@ -71,11 +70,11 @@ export default function SuperCategoryChart({ data, title = 'Leads by Super Categ
         y: {
           beginAtZero: true,
           ticks: { color: theme.palette.text.secondary, font: { size: 11 }, precision: 0 },
-          grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+          grid: { color: theme.palette.divider },
         },
       },
     }),
-    [theme.palette, isDark]
+    [theme.palette]
   );
 
   return (

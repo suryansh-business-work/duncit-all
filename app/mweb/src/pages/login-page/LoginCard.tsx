@@ -7,6 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
@@ -36,7 +37,7 @@ export default function LoginCard({
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Welcome <Box component="span" sx={{ color: '#ff5b72' }}>back.</Box>
+            Welcome <Box component="span" sx={{ color: auth.accent }}>back.</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 300 }}>
             Pick up where you left off and find pods around you.
@@ -57,8 +58,8 @@ export default function LoginCard({
           }}
         >
           <Stack direction="row" spacing={-0.7}>
-            {['#ff5b67', '#ff8d47', '#aa4cff'].map((color) => (
-              <Box key={color} sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: color, border: '2px solid #201529' }} />
+            {auth.avatars.map((color) => (
+              <Box key={color} sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: color, border: `2px solid ${auth.avatarRing}` }} />
             ))}
           </Stack>
           <Typography variant="caption" fontWeight={600} color="text.primary">

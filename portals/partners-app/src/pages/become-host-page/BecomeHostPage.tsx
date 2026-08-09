@@ -95,7 +95,7 @@ export default function BecomeHostPage() {
           {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
           {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myHost?.reviewer_notes || 'See notes.'}</Alert>}
           <HostWithdrawApplication status={status} busy={busy} onWithdraw={withdraw} />
-          <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(17,24,39,0.05)' }}>
+          <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'action.hover' }}>
             {HOST_STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
           </Stepper>
           <Card variant="outlined">

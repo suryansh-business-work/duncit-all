@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { Backdrop, Box, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -110,12 +111,15 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
         <Backdrop
           open={lightbox}
           onClick={() => setLightbox(false)}
-          sx={{ zIndex: (theme) => theme.zIndex.modal + 1, bgcolor: 'rgba(0,0,0,0.9)' }}
+          sx={{
+            zIndex: (theme) => theme.zIndex.modal + 1,
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.9),
+          }}
         >
           <IconButton
             aria-label={t('shell.chat.attachment.closePreview')}
             onClick={() => setLightbox(false)}
-            sx={{ position: 'absolute', top: 12, right: 12, color: '#fff' }}
+            sx={{ position: 'absolute', top: 12, right: 12, color: (theme) => theme.palette.common.white }}
           >
             <CloseIcon />
           </IconButton>

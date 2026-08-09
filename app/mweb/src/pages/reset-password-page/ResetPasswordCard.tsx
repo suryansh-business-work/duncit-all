@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { ResetPasswordForm, type ResetPasswordValues } from '../../forms/reset-password';
@@ -28,9 +29,9 @@ export default function ResetPasswordCard({
     return (
       <AuthScreenFrame center>
         <Stack spacing={2.2} alignItems="center" data-testid="reset-success">
-          <CheckCircleRoundedIcon sx={{ fontSize: 72, color: '#2e7d32' }} />
+          <CheckCircleRoundedIcon sx={{ fontSize: 72, color: 'success.main' }} />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Password reset <Box component="span" sx={{ color: '#2e7d32' }}>successfully</Box>
+            Password reset <Box component="span" sx={{ color: 'success.main' }}>successfully</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
             Your password has been updated. You can now log in with your new password.
@@ -55,7 +56,7 @@ export default function ResetPasswordCard({
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Reset <Box component="span" sx={{ color: '#ff5b72' }}>password</Box>
+            Reset <Box component="span" sx={{ color: auth.accent }}>password</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
             Enter the OTP sent to {email || 'your email'} and choose a new password.

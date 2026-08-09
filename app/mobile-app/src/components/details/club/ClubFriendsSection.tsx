@@ -31,7 +31,7 @@ function useFriendProfiles(friendIds: string[]) {
 }
 
 export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { primary, muted } = useThemeColors();
   const [modalVisible, setModalVisible] = useState(false);
   const { profiles } = useFriendProfiles(friendIds);
 
@@ -83,7 +83,7 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
                 Friends in this club
               </Text>
               <TouchableOpacity testID="friends-modal-close" onPress={() => setModalVisible(false)}>
-                <MaterialIcons name="close" size={22} color="gray" />
+                <MaterialIcons name="close" size={22} color={muted} />
               </TouchableOpacity>
             </XStack>
             {profiles.map((p) => (

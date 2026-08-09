@@ -56,6 +56,26 @@ export const TRANSLATIONS_TABLE = gql`
   }
 `;
 
+export const TRANSLATION_GROUPS = gql`
+  query TranslationGroups($query: TableQueryInput) {
+    translationGroups(query: $query) {
+      total
+      page
+      page_size
+      rows {
+        id
+        surface
+        page
+        key_count
+        locales {
+          locale
+          translated
+        }
+      }
+    }
+  }
+`;
+
 export const UPSERT_TRANSLATION = gql`
   mutation UpsertTranslation($input: UpsertTranslationInput!) {
     upsertTranslation(input: $input) {
@@ -109,6 +129,21 @@ export interface TranslationRow {
   updated_at?: string | null;
 }
 
+/** One namespace — the surface + page pair a set of keys shares. */
+export interface TranslationGroupRow {
+  /** `surface.page`, e.g. 'mweb.shop'. */
+  id: string;
+  surface: string;
+  page: string;
+  key_count: number;
+  /** One entry per active locale; translated < key_count means a gap. */
+  locales: { locale: string; translated: number }[];
+}
+
 /** Text for one locale on a translation row, '' when untranslated. */
 export const valueFor = (row: TranslationRow, code: string): string =>
   row.values.find((v) => v.key === code)?.value ?? '';
+
+/** Keys of a namespace already translated into one locale. */
+export const translatedFor = (row: TranslationGroupRow, code: string): number =>
+  row.locales.find((l) => l.locale === code)?.translated ?? 0;

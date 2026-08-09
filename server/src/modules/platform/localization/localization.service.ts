@@ -1,5 +1,6 @@
 import { GraphQLError } from "graphql";
 import {
+  applyTableQueryInMemory,
   runTableQuery,
   type TableEntityConfig,
   type TableQueryInput,
@@ -23,6 +24,46 @@ const TRANSLATION_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { key: 1 },
 };
+
+/** Same contract over the namespace list. The rows are aggregated rather than
+ * documents, so the in-memory engine applies search/sort/paging to them. */
+const TRANSLATION_GROUP_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ["surface", "page"],
+  sortFields: { surface: "surface", page: "page", key_count: "key_count" },
+  filterFields: { surface: { path: "surface", type: "string" } },
+  defaultSort: { surface: 1, page: 1 },
+};
+
+/**
+ * The locale codes a key actually carries text for. `values` is a Map, so it is
+ * a subdocument in mongo: turn it into entries, drop the blank ones, keep the
+ * codes. Reading the codes off the DATA (rather than testing `values.<code>`
+ * per locale) keeps a locale code out of the field path entirely.
+ */
+const FILLED_LOCALES = {
+  $map: {
+    input: {
+      $filter: {
+        input: { $objectToArray: { $ifNull: ["$values", {}] } },
+        as: "entry",
+        cond: { $ne: [{ $trim: { input: { $ifNull: ["$$entry.v", ""] } } }, ""] },
+      },
+    },
+    as: "entry",
+    in: "$$entry.k",
+  },
+};
+
+/** One `$group` row: the pair, its key count, and a `locale_<i>` per locale. */
+interface TranslationGroupAggregate {
+  _id: { surface: string; page: string };
+  key_count: number;
+  [localeCount: string]: unknown;
+}
+
+/** The accumulator key for the nth active locale — a BCP-47 tag is not a legal
+ * `$group` output field name, so the codes stay in a parallel array. */
+const localeCountField = (index: number) => `locale_${index}`;
 
 const badInput = (message: string) =>
   new GraphQLError(message, { extensions: { code: "BAD_USER_INPUT" } });
@@ -212,5 +253,60 @@ export const localizationService = {
       TRANSLATION_TABLE_CONFIG,
     );
     return { rows: docs.map(translationToPub), total, page, page_size };
+  },
+
+  /**
+   * One row per surface + page pair, with how many keys it holds and how many of
+   * them each ACTIVE locale has text for. Mongo does the counting: the catalogue
+   * is hundreds of keys and growing, so pulling it into Node to group would get
+   * slower every time a page ships copy.
+   */
+  async translationGroups(input?: TableQueryInput | null) {
+    const localeDocs = await LocaleModel.find({ is_active: true })
+      .sort({ sort_order: 1, code: 1 })
+      .select("code")
+      .lean();
+    const codes = localeDocs.map((doc) => doc.code);
+
+    const perLocale: Record<string, unknown> = {};
+    codes.forEach((code, index) => {
+      perLocale[localeCountField(index)] = {
+        $sum: { $cond: [{ $in: [code, "$filled"] }, 1, 0] },
+      };
+    });
+
+    const groups: TranslationGroupAggregate[] = await TranslationModel.aggregate([
+      {
+        $project: {
+          surface: { $ifNull: ["$surface", ""] },
+          page: { $ifNull: ["$page", ""] },
+          filled: FILLED_LOCALES,
+        },
+      },
+      {
+        $group: {
+          _id: { surface: "$surface", page: "$page" },
+          key_count: { $sum: 1 },
+          ...perLocale,
+        },
+      },
+      // $group returns its buckets in no defined order, and the in-memory sort
+      // below is stable — so without this, two namespaces under one surface
+      // could swap places between fetches and jump across table pages.
+      { $sort: { "_id.surface": 1, "_id.page": 1 } },
+    ]);
+
+    const rows = groups.map((group) => ({
+      id: `${group._id.surface}.${group._id.page}`,
+      surface: group._id.surface,
+      page: group._id.page,
+      key_count: group.key_count,
+      locales: codes.map((code, index) => ({
+        locale: code,
+        translated: Number(group[localeCountField(index)] ?? 0),
+      })),
+    }));
+
+    return applyTableQueryInMemory(rows, input, TRANSLATION_GROUP_TABLE_CONFIG);
   },
 };

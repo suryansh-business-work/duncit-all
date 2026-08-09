@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Stack, keyframes } from '@mui/material';
@@ -8,7 +8,8 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import RhfTextField from '../components/RhfTextField';
-import { loginDefaults, loginSchema, type LoginFormValues } from './login.types';
+import { useTranslation } from '../../i18n/useTranslation';
+import { loginDefaults, makeLoginSchema, type LoginFormValues } from './login.types';
 
 const fadeUp = keyframes`
   0%   { opacity: 0; transform: translateY(18px); }
@@ -28,13 +29,15 @@ export default function LoginForm({
   initialValues,
   errorMessage,
   onSubmit,
-  submitLabel = 'Login',
+  submitLabel,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const schema = useMemo(() => makeLoginSchema(t), [t]);
   const { control, handleSubmit } = useForm<LoginFormValues>({
     defaultValues: initialValues ?? loginDefaults,
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 
@@ -43,7 +46,7 @@ export default function LoginForm({
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.auth.somethingWentWrong'));
     }
   });
 
@@ -62,9 +65,9 @@ export default function LoginForm({
           control={control}
           name="email"
           type="email"
-          label="Email"
+          label={t('mweb.auth.emailLabel')}
           required
-          placeholder="hello@duncit.com"
+          placeholder={t('mweb.auth.emailPlaceholder')}
           autoComplete="email"
           size="small"
           InputProps={{
@@ -79,10 +82,10 @@ export default function LoginForm({
           control={control}
           name="password"
           type={showPwd ? 'text' : 'password'}
-          label="Password"
+          label={t('mweb.auth.passwordLabel')}
           required
-          hint="At least 8 characters"
-          placeholder="Enter password"
+          hint={t('mweb.auth.passwordHint')}
+          placeholder={t('mweb.login.passwordPlaceholder')}
           autoComplete="current-password"
           size="small"
           InputProps={{
@@ -97,7 +100,7 @@ export default function LoginForm({
                   size="small"
                   onClick={() => setShowPwd((v) => !v)}
                   edge="end"
-                  aria-label="toggle password"
+                  aria-label={showPwd ? t('mweb.auth.hidePassword') : t('mweb.auth.showPassword')}
                 >
                   {showPwd ? (
                     <VisibilityOffOutlinedIcon fontSize="small" />
@@ -125,7 +128,7 @@ export default function LoginForm({
             '&:hover': { transform: 'translateY(-1px)' },
           }}
         >
-          {loading ? 'Signing in…' : submitLabel}
+          {loading ? t('mweb.login.submitting') : (submitLabel ?? t('mweb.login.submit'))}
         </Button>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>

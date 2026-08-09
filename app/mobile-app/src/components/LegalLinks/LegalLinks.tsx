@@ -2,30 +2,37 @@ import { Linking } from 'react-native';
 import { Text } from 'tamagui';
 import { auth } from '@duncit/auth-tokens';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 /**
  * Terms & Privacy footer, mirroring mWeb's <LegalLinks/>. URLs come from the
  * shared auth tokens so both apps point at the same legal pages.
  */
-export function LegalLinks({ prefix = 'By continuing,' }: Readonly<{ prefix?: string }>) {
+export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
+  const { t } = useTranslation();
+  // The lead-in arrives already translated because it names the action of the
+  // screen it sits on ("By signing in," / "By signing up,").
+  const lead = prefix ?? t('mweb.auth.legalContinue');
+
   return (
     <Text textAlign="center" fontSize={12} lineHeight={20} color="$muted">
-      {prefix} you agree to our{' '}
+      {lead} {t('mweb.auth.legalAgree')}{' '}
       <Text
         testID="legal-terms"
         color={auth.accent}
         fontWeight="700"
         onPress={() => Linking.openURL(auth.legal.termsUrl)}
       >
-        Terms &amp; Conditions
+        {t('mweb.auth.terms')}
       </Text>{' '}
-      and{' '}
+      {t('mweb.auth.legalAnd')}{' '}
       <Text
         testID="legal-privacy"
         color={auth.accent}
         fontWeight="700"
         onPress={() => Linking.openURL(auth.legal.privacyUrl)}
       >
-        Privacy Policy
+        {t('mweb.auth.privacy')}
       </Text>
       .
     </Text>

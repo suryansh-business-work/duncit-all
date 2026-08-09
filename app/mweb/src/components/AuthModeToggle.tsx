@@ -2,18 +2,23 @@ import { IconButton, Tooltip } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useColorMode } from '../ColorModeContext';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface AuthModeToggleProps {
   placement?: 'fixed' | 'inline';
 }
 
 export default function AuthModeToggle({ placement = 'fixed' }: Readonly<AuthModeToggleProps>) {
+  const { t } = useTranslation();
   const colorMode = useColorMode();
   const isDark = colorMode.mode === 'dark';
   const fixed = placement === 'fixed';
+  // Whole sentences, not a word slotted into one: "light"/"dark" do not
+  // decline the same way in every language.
+  const tooltip = isDark ? t('mweb.auth.switchToLight') : t('mweb.auth.switchToDark');
 
   return (
-    <Tooltip title={`Switch to ${isDark ? 'light' : 'dark'} mode`}>
+    <Tooltip title={tooltip}>
       <IconButton
         onClick={colorMode.toggle}
         size={fixed ? 'medium' : 'small'}
@@ -32,7 +37,7 @@ export default function AuthModeToggle({ placement = 'fixed' }: Readonly<AuthMod
           boxShadow: fixed ? 2 : 0,
           '&:hover': { bgcolor: 'action.hover' },
         }}
-        aria-label="Toggle color mode"
+        aria-label={t('mweb.auth.toggleColorMode')}
       >
         {isDark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
       </IconButton>

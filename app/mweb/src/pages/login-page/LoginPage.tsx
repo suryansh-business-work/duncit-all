@@ -5,6 +5,7 @@ import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginFormValues } from '../../forms/login';
+import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
 import {
   getSafeRedirectPath,
@@ -16,6 +17,7 @@ import { LOGIN, LOGIN_GOOGLE } from './queries';
 import LoginCard from './LoginCard';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
@@ -59,15 +61,14 @@ export default function LoginPage() {
       const code = e.graphQLErrors?.[0]?.extensions?.code;
       if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
         setGNotice({
-          title: 'Google account not found',
-          message: 'User is not in our system. Please sign up first.',
-          action: 'Sign up',
+          title: t('mweb.login.googleNotFoundTitle'),
+          message: t('mweb.login.googleNotFoundBody'),
+          action: t('mweb.login.googleNotFoundAction'),
         });
       } else if (code === 'EMAIL_LOGIN_REQUIRED') {
         setGNotice({
-          title: 'Use email login',
-          message:
-            'Please login with email. You registered with us using email and password.',
+          title: t('mweb.login.emailLoginTitle'),
+          message: t('mweb.login.emailLoginBody'),
         });
       } else {
         setGError(parseApiError(e));

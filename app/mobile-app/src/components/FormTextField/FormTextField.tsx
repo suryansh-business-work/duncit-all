@@ -6,6 +6,7 @@ import { Input, XStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The RN TextInput props the auth forms pass through (Tamagui's <Input> styles
  * the rest); spreading the full TextInputProps clashes with Tamagui's typing. */
@@ -55,9 +56,11 @@ export function FormTextField<T extends FieldValues>({
 }: Readonly<FormTextFieldProps<T>>) {
   const { field, fieldState } = useController({ control, name });
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const hasError = !!fieldState.error;
   const isSecure = !!secureTextEntry;
+  const toggleLabel = visible ? t('mweb.auth.hidePassword') : t('mweb.auth.showPassword');
 
   return (
     <Field
@@ -94,7 +97,7 @@ export function FormTextField<T extends FieldValues>({
           <XStack
             testID={`toggle-${name}`}
             role="button"
-            aria-label={visible ? 'Hide password' : 'Show password'}
+            aria-label={toggleLabel}
             onPress={() => setVisible((v) => !v)}
             position="absolute"
             right={4}

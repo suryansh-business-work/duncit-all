@@ -8,6 +8,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ResetPasswordForm, type ResetPasswordFormValues } from '@/forms/reset-password';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { requestPasswordResetOtp, resetPasswordWithOtp } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
@@ -15,6 +16,7 @@ import { toErrorMessage } from '@/utils/errors';
 /** Reset password — OTP + new password, then a success screen. RN twin of mWeb's
  * ResetPasswordPage (with the "password reset successfully" state). */
 export function ResetPasswordScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ResetPassword'>>();
   const email = route.params?.email ?? '';
@@ -29,7 +31,7 @@ export function ResetPasswordScreen() {
       await resetPasswordWithOtp({ email, otp: values.otp, new_password: values.new_password });
       setDone(true);
     } catch (e) {
-      setError(toErrorMessage(e, 'Something went wrong'));
+      setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
       setLoading(false);
     }
@@ -39,15 +41,15 @@ export function ResetPasswordScreen() {
     return (
       <AuthScaffold
         testID="reset-password-success"
-        title="Password reset"
-        accentWord="successfully"
-        subtitle="Your password has been updated. You can now log in with your new password."
+        title={t('mweb.resetPassword.successTitle')}
+        accentWord={t('mweb.resetPassword.successTitleAccent')}
+        subtitle={t('mweb.resetPassword.successSubtitle')}
       >
         <YStack alignItems="center" gap={16}>
           <MaterialIcons name="check-circle" size={64} color={semantic.success} />
           <PrimaryButton
             testID="reset-go-login"
-            label="Go to login"
+            label={t('mweb.resetPassword.goToLogin')}
             onPress={() => navigation.navigate('Login')}
           />
         </YStack>
@@ -58,14 +60,16 @@ export function ResetPasswordScreen() {
   return (
     <AuthScaffold
       testID="reset-password-screen"
-      title="Reset"
-      accentWord="password"
-      subtitle={`Enter the OTP sent to ${email || 'your email'} and choose a new password.`}
+      title={t('mweb.resetPassword.title')}
+      accentWord={t('mweb.resetPassword.titleAccent')}
+      subtitle={t('mweb.resetPassword.subtitle', {
+        vars: { email: email || t('mweb.resetPassword.emailFallback') },
+      })}
     >
       <ResetPasswordForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
       <XStack justifyContent="center" gap={4}>
         <Text fontSize={14} color="$muted">
-          Didn’t get it?
+          {t('mweb.resetPassword.didntGetIt')}
         </Text>
         <Text
           testID="reset-resend"
@@ -74,7 +78,7 @@ export function ResetPasswordScreen() {
           color="$primary"
           onPress={() => email && requestPasswordResetOtp(email)}
         >
-          Resend OTP
+          {t('mweb.resetPassword.resend')}
         </Text>
       </XStack>
     </AuthScaffold>

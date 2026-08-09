@@ -12,6 +12,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
 import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
+import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
 
 interface Props {
@@ -25,16 +26,11 @@ const startIcon = (icon: React.ReactNode) => ({
   startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,
 });
 
-const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
+const passwordInputProps = (visible: boolean, onToggle: () => void, toggleLabel: string) => ({
   ...startIcon(<LockOutlinedIcon fontSize="small" />),
   endAdornment: (
     <InputAdornment position="end">
-      <IconButton
-        size="small"
-        onClick={onToggle}
-        edge="end"
-        aria-label={visible ? 'Hide password' : 'Show password'}
-      >
+      <IconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
         ) : (
@@ -46,23 +42,26 @@ const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
 });
 
 export default function RegisterForm({ loading, errorMessage, initialValues, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const minAge = useMinSignupAge();
-  const schema = useMemo(() => makeRegisterSchema(minAge), [minAge]);
+  const schema = useMemo(() => makeRegisterSchema(minAge, t), [minAge, t]);
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
     resolver: zodResolver(schema),
     mode: 'onTouched',
   });
+  const showLabel = t('mweb.auth.showPassword');
+  const hideLabel = t('mweb.auth.hidePassword');
 
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.auth.somethingWentWrong'));
     }
   });
 
@@ -72,9 +71,9 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
         <RhfTextField
           control={control}
           name="name"
-          label="Name"
+          label={t('mweb.signup.nameLabel')}
           required
-          placeholder="Riya Sharma"
+          placeholder={t('mweb.signup.namePlaceholder')}
           autoComplete="name"
           size="small"
           InputLabelProps={{ shrink: true }}
@@ -84,9 +83,9 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           control={control}
           name="email"
           type="email"
-          label="Email"
+          label={t('mweb.auth.emailLabel')}
           required
-          placeholder="riya@gmail.com"
+          placeholder={t('mweb.signup.emailPlaceholder')}
           autoComplete="email"
           size="small"
           InputLabelProps={{ shrink: true }}
@@ -97,26 +96,34 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           control={control}
           name="password"
           type={showPwd ? 'text' : 'password'}
-          label="Password"
+          label={t('mweb.auth.passwordLabel')}
           required
-          hint="At least 8 characters"
-          placeholder="Create password"
+          hint={t('mweb.auth.passwordHint')}
+          placeholder={t('mweb.signup.passwordPlaceholder')}
           autoComplete="new-password"
           size="small"
           InputLabelProps={{ shrink: true }}
-          InputProps={passwordInputProps(showPwd, () => setShowPwd((v) => !v))}
+          InputProps={passwordInputProps(
+            showPwd,
+            () => setShowPwd((v) => !v),
+            showPwd ? hideLabel : showLabel,
+          )}
         />
         <RhfTextField
           control={control}
           name="confirmPassword"
           type={showConfirmPwd ? 'text' : 'password'}
-          label="Confirm Password"
+          label={t('mweb.signup.confirmPasswordLabel')}
           required
-          placeholder="Re-enter password"
+          placeholder={t('mweb.signup.confirmPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
           InputLabelProps={{ shrink: true }}
-          InputProps={passwordInputProps(showConfirmPwd, () => setShowConfirmPwd((v) => !v))}
+          InputProps={passwordInputProps(
+            showConfirmPwd,
+            () => setShowConfirmPwd((v) => !v),
+            showConfirmPwd ? hideLabel : showLabel,
+          )}
         />
       </Stack>
       <Stack spacing={2} sx={{ mt: 2 }}>
@@ -127,13 +134,13 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           fullWidth
           endIcon={<ArrowForwardIcon />}
         >
-          {loading ? 'Creating…' : 'Create account'}
+          {loading ? t('mweb.signup.submitting') : t('mweb.signup.submit')}
         </Button>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          Already have an account?{' '}
+          {t('mweb.signup.haveAccount')}{' '}
           <Link component={RouterLink} to="/login" underline="hover">
-            Sign in
+            {t('mweb.signup.logIn')}
           </Link>
         </Typography>
       </Stack>

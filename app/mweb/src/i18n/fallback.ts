@@ -1,4 +1,11 @@
-import { flattenCatalogue, GRIEVANCE_BUNDLE, MWEB_BUNDLE, type NestedCatalogue } from '@duncit/app-settings';
+import {
+  createTranslator,
+  flattenCatalogue,
+  GRIEVANCE_BUNDLE,
+  MWEB_BUNDLE,
+  type NestedCatalogue,
+  type Translator,
+} from '@duncit/app-settings';
 
 /**
  * mWeb's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -19,3 +26,19 @@ export const MWEB_FALLBACK: NestedCatalogue = { ...MWEB_BUNDLE, ...GRIEVANCE_BUN
 
 /** Flat, runtime-ready form of the bundle above. */
 export const MWEB_FALLBACK_FLAT = flattenCatalogue(MWEB_FALLBACK);
+
+/** The `t` a component receives from `useTranslation`. */
+export type Translate = Translator['t'];
+
+/**
+ * A provider-free translator over the bundled copy.
+ *
+ * Zod schemas are built outside React, so a schema factory takes `t` from the
+ * form that renders it and follows the reader's language. This is what the
+ * module-level schema exports fall back to — they are parsed with no React tree
+ * around them, and must still produce real English messages rather than keys.
+ */
+export const fallbackT: Translate = createTranslator({
+  locale: 'en-IN',
+  fallback: MWEB_FALLBACK_FLAT,
+}).t;

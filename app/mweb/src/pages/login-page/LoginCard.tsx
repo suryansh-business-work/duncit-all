@@ -13,6 +13,7 @@ import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import { LoginForm, type LoginFormValues } from '../../forms/login';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
@@ -31,16 +32,21 @@ export default function LoginCard({
   gError,
   onGoogleCredential,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Welcome <Box component="span" sx={{ color: auth.accent }}>back.</Box>
+            {t('mweb.login.title')}{' '}
+            <Box component="span" sx={{ color: auth.accent }}>
+              {t('mweb.login.titleAccent')}
+            </Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 300 }}>
-            Pick up where you left off and find pods around you.
+            {t('mweb.login.subtitle')}
           </Typography>
         </Stack>
 
@@ -63,19 +69,19 @@ export default function LoginCard({
             ))}
           </Stack>
           <Typography variant="caption" fontWeight={600} color="text.primary">
-            New pods are waiting for your crew today
+            {t('mweb.login.avatarsCaption')}
           </Typography>
         </Stack>
 
-        <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} submitLabel="Log me in" />
+        <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
 
         <Stack alignItems="flex-end" sx={{ mt: -1 }}>
           <Link component={RouterLink} to="/forgot-password" underline="hover" variant="body2">
-            Forgot password?
+            {t('mweb.login.forgotPassword')}
           </Link>
         </Stack>
 
-        <Divider>OR</Divider>
+        <Divider>{t('mweb.auth.or')}</Divider>
 
         <Stack spacing={1.4} alignItems="center">
           <GoogleSignInButton
@@ -89,14 +95,14 @@ export default function LoginCard({
             </Alert>
           )}
           <Typography variant="body2" color="text.secondary">
-            New here?{' '}
+            {t('mweb.login.newHere')}{' '}
             <Link component={RouterLink} to="/register" underline="hover">
-              Create one
+              {t('mweb.login.createOne')}
             </Link>
           </Typography>
-          <LegalLinks prefix="By signing in," />
+          <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
           <Typography variant="caption" color="text.disabled">
-            App version {__APP_VERSION__}
+            {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
           </Typography>
         </Stack>
       </Stack>

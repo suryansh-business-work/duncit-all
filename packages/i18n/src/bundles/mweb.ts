@@ -11,6 +11,150 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     account: {
       preferences: 'Preferences',
     },
+    // The auth journey — login, signup, forgot password, reset password. mWeb
+    // and the native app render the SAME screens (rule 27), so a key here is
+    // used by BOTH surfaces unless its comment says which surface renders it.
+    // `auth.*` holds the atoms more than one auth screen needs; the four screen
+    // groups below hold what only that screen says.
+    auth: {
+      emailLabel: 'Email',
+      emailPlaceholder: 'hello@duncit.com',
+      passwordLabel: 'Password',
+      passwordHint: 'At least 8 characters',
+      showPassword: 'Show password',
+      hidePassword: 'Hide password',
+      dateOfBirth: 'Date of birth',
+      or: 'OR',
+      orEmail: 'OR EMAIL',
+      backToLogin: 'Back to login',
+      close: 'Close',
+      appVersion: 'App version {version}',
+      somethingWentWrong: 'Something went wrong',
+      // Google sign-in. mWeb renders Google's OWN button, which Google labels
+      // and localises itself — only the native button's label is ours.
+      googleContinue: 'Continue with Google',
+      googleFailed: 'Google sign-in failed.',
+      googleNoIdToken: 'Google did not return an id token.',
+      // The Terms & Privacy footer. The lead-in changes per screen and the two
+      // links must stay tappable inside the sentence, so it is assembled from
+      // parts rather than one template with markup in it.
+      legalContinue: 'By continuing,',
+      legalSignIn: 'By signing in,',
+      legalSignUp: 'By signing up,',
+      legalAgree: 'you agree to our',
+      legalAnd: 'and',
+      terms: 'Terms & Conditions',
+      privacy: 'Privacy Policy',
+      // mWeb only: the native auth screens follow the device theme, so there is
+      // nothing for a light/dark toggle to sit on.
+      switchToLight: 'Switch to light mode',
+      switchToDark: 'Switch to dark mode',
+      toggleColorMode: 'Toggle color mode',
+      // Zod messages. They are copy like any other — the person who reads them
+      // is the person filling the form in.
+      validation: {
+        emailRequired: 'Email is required',
+        emailInvalid: 'Enter a valid email',
+        passwordMin: 'Min 8 characters',
+        passwordTooLong: 'Password is too long',
+        passwordsMismatch: 'Passwords do not match',
+      },
+    },
+    login: {
+      title: 'Welcome',
+      titleAccent: 'back.',
+      subtitle: 'Pick up where you left off and find pods around you.',
+      avatarsCaption: 'New pods are waiting for your crew today',
+      passwordPlaceholder: 'Enter password',
+      submit: 'Log me in',
+      // mWeb only — the native button swaps its label for a spinner.
+      submitting: 'Signing in…',
+      forgotPassword: 'Forgot password?',
+      // Native only — mWeb's Google button is rendered by Google.
+      googleSignIn: 'Sign in with Google',
+      newHere: 'New here?',
+      createOne: 'Create one',
+      // mWeb only: the web Google flow can come back with an account state the
+      // native flow never reaches, and says so in a dialog.
+      googleNotFoundTitle: 'Google account not found',
+      googleNotFoundBody: 'User is not in our system. Please sign up first.',
+      googleNotFoundAction: 'Sign up',
+      emailLoginTitle: 'Use email login',
+      emailLoginBody: 'Please login with email. You registered with us using email and password.',
+    },
+    signup: {
+      title: 'Join',
+      titleAccent: 'Duncit.',
+      subtitle: 'Create your account to discover pods nearby.',
+      nameLabel: 'Name',
+      namePlaceholder: 'Riya Sharma',
+      emailPlaceholder: 'riya@duncit.com',
+      passwordPlaceholder: 'Create a password',
+      confirmPasswordLabel: 'Confirm Password',
+      confirmPasswordPlaceholder: 'Re-enter password',
+      // mWeb only — MUI X's picker carries a helper line, the native field does not.
+      dobHint: 'You must be at least {years} years old',
+      // Native only — its date of birth is typed as well as picked.
+      dobPlaceholder: 'YYYY-MM-DD',
+      dobPick: 'Pick date of birth',
+      submit: 'Create account',
+      // mWeb only — the native button swaps its label for a spinner.
+      submitting: 'Creating…',
+      haveAccount: 'Already have an account?',
+      logIn: 'Log in',
+      // The two surfaces enforce slightly different name and date rules, so a
+      // few of these are rendered by one surface only.
+      validation: {
+        nameRequired: 'Name is required',
+        namePattern: 'Name can use letters, spaces, apostrophes, periods and hyphens only',
+        nameMin: 'Name must be at least 2 characters',
+        nameTooLong: 'Name is too long',
+        confirmRequired: 'Please confirm your password',
+        dobRequired: 'Date of birth is required',
+        dobInvalid: 'Enter a valid date of birth',
+        dobFormat: 'Use the format YYYY-MM-DD',
+        dobMinAge: 'You must be at least {years} years old to join Duncit',
+      },
+    },
+    forgotPassword: {
+      title: 'Forgot',
+      titleAccent: 'password?',
+      subtitle: 'Enter your email and we’ll send you a 6-digit OTP to reset your password.',
+      submit: 'Send reset OTP',
+      submitting: 'Sending OTP…',
+      unregistered: 'Unregistered User',
+      newToDuncit: 'New to Duncit?',
+      createAccount: 'Create Account',
+      remembered: 'Remembered it?',
+    },
+    resetPassword: {
+      title: 'Reset',
+      titleAccent: 'password',
+      subtitle: 'Enter the OTP sent to {email} and choose a new password.',
+      // Stands in for the address when the reset step was reached without one.
+      emailFallback: 'your email',
+      otpLabel: '6-digit OTP',
+      otpHint: '6-digit code',
+      otpPlaceholder: '123456',
+      newPasswordLabel: 'New password',
+      newPasswordPlaceholder: 'Create a new password',
+      confirmPasswordLabel: 'Confirm new password',
+      confirmPasswordPlaceholder: 'Re-enter new password',
+      submit: 'Reset password',
+      submitting: 'Resetting…',
+      didntGetIt: 'Didn’t get it?',
+      resend: 'Resend OTP',
+      // mWeb only — the native resend link has no in-flight label.
+      resending: 'Resending…',
+      successTitle: 'Password reset',
+      successTitleAccent: 'successfully',
+      successSubtitle:
+        'Your password has been updated. You can now log in with your new password.',
+      goToLogin: 'Go to login',
+      validation: {
+        otpInvalid: 'Enter the 6 digit OTP',
+      },
+    },
     home: {
       closeMenu: 'Close menu',
       seeAll: 'See all',

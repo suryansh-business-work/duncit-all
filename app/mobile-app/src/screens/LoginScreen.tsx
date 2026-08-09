@@ -9,6 +9,7 @@ import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { LegalLinks } from '@/components/LegalLinks';
 import { LoginForm, type LoginFormValues } from '@/forms/login';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { login as loginService, loginWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
@@ -16,6 +17,7 @@ import { appVersion } from '@/utils/app-version';
 import { toErrorMessage } from '@/utils/errors';
 
 export function LoginScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function LoginScreen() {
       const result = await loginService(values);
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
-      setError(toErrorMessage(e, 'Something went wrong'));
+      setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
       setLoading(false);
     }
@@ -42,18 +44,18 @@ export function LoginScreen() {
       const result = await loginWithGoogle(idToken);
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
-      setError(toErrorMessage(e, 'Google sign-in failed'));
+      setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
     }
   };
 
   return (
     <AuthScaffold
       testID="login-screen"
-      title="Welcome"
-      accentWord="back."
-      subtitle="Pick up where you left off and find pods around you."
+      title={t('mweb.login.title')}
+      accentWord={t('mweb.login.titleAccent')}
+      subtitle={t('mweb.login.subtitle')}
     >
-      <AuthAvatarsStrip caption="New pods are waiting for your crew today" />
+      <AuthAvatarsStrip caption={t('mweb.login.avatarsCaption')} />
       <LoginForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
       <XStack justifyContent="flex-end">
         <Text
@@ -63,14 +65,18 @@ export function LoginScreen() {
           color="$primary"
           onPress={() => navigation.navigate('ForgotPassword')}
         >
-          Forgot password?
+          {t('mweb.login.forgotPassword')}
         </Text>
       </XStack>
       <AuthDivider />
-      <GoogleAuthButton label="Sign in with Google" onIdToken={handleGoogle} onError={setError} />
+      <GoogleAuthButton
+        label={t('mweb.login.googleSignIn')}
+        onIdToken={handleGoogle}
+        onError={setError}
+      />
       <XStack justifyContent="center" gap={4}>
         <Text fontSize={14} color="$muted">
-          New here?
+          {t('mweb.login.newHere')}
         </Text>
         <Text
           testID="go-signup"
@@ -79,12 +85,12 @@ export function LoginScreen() {
           color="$primary"
           onPress={() => navigation.navigate('Signup')}
         >
-          Create one
+          {t('mweb.login.createOne')}
         </Text>
       </XStack>
-      <LegalLinks prefix="By signing in," />
+      <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
       <Text testID="login-app-version" textAlign="center" fontSize={12} color="$muted">
-        App version {appVersion()}
+        {t('mweb.auth.appVersion', { vars: { version: appVersion() } })}
       </Text>
     </AuthScaffold>
   );

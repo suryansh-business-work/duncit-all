@@ -6,6 +6,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,8 @@ export default function GoogleAuthNoticeDialog({
   onAction,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{title}</DialogTitle>
@@ -33,7 +36,7 @@ export default function GoogleAuthNoticeDialog({
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('mweb.auth.close')}</Button>
         {actionLabel && onAction && (
           <Button variant="contained" onClick={onAction}>
             {actionLabel}

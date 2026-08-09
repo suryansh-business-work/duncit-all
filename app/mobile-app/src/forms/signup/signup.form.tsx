@@ -7,6 +7,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useTranslation } from '@/hooks/useTranslation';
 import { makeSignupSchema, signupDefaults, type SignupFormValues } from './signup.types';
 
 export interface SignupFormProps {
@@ -17,8 +18,9 @@ export interface SignupFormProps {
 
 /** Email signup form: Name, Date of Birth, Email, Password, Confirm Password. */
 export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
+  const { t } = useTranslation();
   const { minSignupAge } = useAppSettings();
-  const schema = useMemo(() => makeSignupSchema(minSignupAge), [minSignupAge]);
+  const schema = useMemo(() => makeSignupSchema(minSignupAge, t), [minSignupAge, t]);
   const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,
     resolver: zodResolver(schema),
@@ -30,8 +32,8 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
       <FormTextField
         control={control}
         name="name"
-        label="Name"
-        placeholder="Riya Sharma"
+        label={t('mweb.signup.nameLabel')}
+        placeholder={t('mweb.signup.namePlaceholder')}
         autoCapitalize="words"
         autoComplete="name"
         textContentType="name"
@@ -41,8 +43,8 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
       <FormTextField
         control={control}
         name="email"
-        label="Email"
-        placeholder="riya@duncit.com"
+        label={t('mweb.auth.emailLabel')}
+        placeholder={t('mweb.signup.emailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
@@ -52,19 +54,19 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
       <FormTextField
         control={control}
         name="password"
-        label="Password"
-        placeholder="Create a password"
+        label={t('mweb.auth.passwordLabel')}
+        placeholder={t('mweb.signup.passwordPlaceholder')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
         required
-        hint="At least 8 characters"
+        hint={t('mweb.auth.passwordHint')}
       />
       <FormTextField
         control={control}
         name="confirmPassword"
-        label="Confirm Password"
-        placeholder="Re-enter password"
+        label={t('mweb.signup.confirmPasswordLabel')}
+        placeholder={t('mweb.signup.confirmPasswordPlaceholder')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
@@ -79,7 +81,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
 
       <PrimaryButton
         testID="signup-submit"
-        label="Create account"
+        label={t('mweb.signup.submit')}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

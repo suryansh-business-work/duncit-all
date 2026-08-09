@@ -2,7 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
-import { MAX_COVER_IMAGES } from '@duncit/utils';
+import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import PodReelAccordion from '../fields/PodReelAccordion';
 import ChipArrayField from '../fields/ChipArrayField';
@@ -29,11 +29,13 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
 
   // The host picks the category above the media field, and the server already
   // denormalised its name onto the host record — so the cover picker can open
-  // on a search for it without another query.
+  // on a search for it without another query. `coverCategoryName` falls back to
+  // the parent levels, because a host whose sub-category name was never
+  // denormalised would otherwise open the picker on a blank search.
   const categoryKey = watch('host_category_key');
-  const subCategoryName = hostCategories.find(
-    (category) => hostCategoryKeyOf(category) === categoryKey,
-  )?.sub_category_name;
+  const subCategoryName = coverCategoryName(
+    hostCategories.find((category) => hostCategoryKeyOf(category) === categoryKey),
+  );
 
   return (
     <Stack spacing={2.25}>

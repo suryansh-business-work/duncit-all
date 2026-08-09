@@ -47,6 +47,8 @@ export const tokens = {
     bg: '#0b1220',
     surface: '#111a2e',
     border: 'rgba(255,255,255,0.10)',
+    gradientFrom: '#100d18',
+    gradientTo: '#08070b',
   },
 
   // Corner radii (px).

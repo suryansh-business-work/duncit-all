@@ -9,6 +9,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import StarIcon from '@mui/icons-material/Star';
@@ -87,21 +88,21 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
                     position: 'absolute',
                     top: 4,
                     right: 4,
-                    bgcolor: 'rgba(0,0,0,0.55)',
+                    bgcolor: (theme) => alpha(theme.palette.common.black, 0.55),
                     borderRadius: 1,
                   }}
                 >
                   <Tooltip title={isCover ? 'Cover image' : 'Set as cover'}>
                     <IconButton
                       size="small"
-                      sx={{ color: 'white' }}
+                      sx={{ color: (theme) => theme.palette.common.white }}
                       onClick={() => makeCover(url)}
                     >
                       {isCover ? <StarIcon fontSize="inherit" /> : <StarBorderIcon fontSize="inherit" />}
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Remove">
-                    <IconButton size="small" sx={{ color: 'white' }} onClick={() => remove(url)}>
+                    <IconButton size="small" sx={{ color: (theme) => theme.palette.common.white }} onClick={() => remove(url)}>
                       <DeleteOutlineIcon fontSize="inherit" />
                     </IconButton>
                   </Tooltip>

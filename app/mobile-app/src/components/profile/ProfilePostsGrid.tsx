@@ -12,7 +12,8 @@ import type { ProfilePost } from '@/hooks/useProfile';
 function AddPostButton({
   uploading,
   onAddPost,
-}: Readonly<{ uploading?: boolean; onAddPost: () => void }>) {
+  onPrimary,
+}: Readonly<{ uploading?: boolean; onAddPost: () => void; onPrimary: string }>) {
   return (
     <XStack
       testID="profile-add-post"
@@ -29,8 +30,8 @@ function AddPostButton({
       opacity={uploading ? 0.6 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
-      <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color="#ffffff" />
-      <Text fontSize={13} fontWeight="700" color="#ffffff">
+      <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color={onPrimary} />
+      <Text fontSize={13} fontWeight="700" color={onPrimary}>
         {uploading ? 'Uploading…' : 'Add post'}
       </Text>
     </XStack>
@@ -53,7 +54,7 @@ export function ProfilePostsGrid({
   uploading?: boolean;
 }>) {
   const { width } = useWindowDimensions();
-  const { muted, primary } = useThemeColors();
+  const { muted, primary, onPrimary } = useThemeColors();
   const size = (width - 32 - 8) / 3;
   const [active, setActive] = useState<ProfilePost | null>(null);
 
@@ -63,7 +64,9 @@ export function ProfilePostsGrid({
         <Text fontSize={16} fontWeight="700" color="$color">
           Posts
         </Text>
-        {onAddPost ? <AddPostButton uploading={uploading} onAddPost={onAddPost} /> : null}
+        {onAddPost ? (
+          <AddPostButton uploading={uploading} onAddPost={onAddPost} onPrimary={onPrimary} />
+        ) : null}
       </XStack>
       {posts.length === 0 ? (
         <YStack testID="profile-no-posts" alignItems="center" gap={8} paddingVertical={20}>

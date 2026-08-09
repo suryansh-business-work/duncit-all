@@ -42,7 +42,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
       >
         <Stack spacing={2} alignItems="center" textAlign="center">
-          <ErrorOutlineIcon sx={{ fontSize: 56, color: '#b3261e' }} />
+          <ErrorOutlineIcon sx={{ fontSize: 56, color: 'error.main' }} />
           <Typography variant="h5" fontWeight={700}>
             Something went wrong
           </Typography>

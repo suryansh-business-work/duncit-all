@@ -9,7 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
  * clubs. Offers a "Reset Location" action that re-opens the location picker so
  * the user can pick a different location. */
 export function ClubsLocationEmpty() {
-  const { onPrimary } = useThemeColors();
+  const { onPrimary, muted } = useThemeColors();
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +20,7 @@ export function ClubsLocationEmpty() {
       paddingVertical={48}
       paddingHorizontal={24}
     >
-      <MaterialIcons name="location-off" size={40} color="#9aa0a6" />
+      <MaterialIcons name="location-off" size={40} color={muted} />
       <Text fontSize={14} fontWeight="700" color="$muted" textAlign="center">
         No Clubs operating at the selected location,
       </Text>

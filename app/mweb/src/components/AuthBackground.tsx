@@ -1,4 +1,5 @@
 import { Box, keyframes, useTheme } from '@mui/material';
+import { auth } from '@duncit/auth-tokens';
 
 const gradientShift = keyframes`
   0%   { background-position: 0% 50%; }
@@ -33,10 +34,9 @@ export default function AuthBackground({ children }: Readonly<Props>) {
         px: 2,
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
-        background:
-          isDark
-            ? 'linear-gradient(120deg, #100f18 0%, #191326 48%, #25151d 100%)'
-            : 'linear-gradient(120deg, #f7f2ea 0%, #fffaf4 46%, #f5e6e8 100%)',
+        background: isDark
+          ? `linear-gradient(120deg, ${auth.bgGradient.dark[0]} 0%, ${auth.bgGradient.dark[1]} 48%, ${auth.bgGradient.dark[2]} 100%)`
+          : `linear-gradient(120deg, ${auth.bgGradient.light[0]} 0%, ${auth.bgGradient.light[1]} 46%, ${auth.bgGradient.light[2]} 100%)`,
         backgroundSize: '300% 300%',
         animation: `${gradientShift} 18s ease infinite`,
         '&:before': {

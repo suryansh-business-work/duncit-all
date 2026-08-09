@@ -73,7 +73,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
             borderRadius={999}
             backgroundColor={status.color}
           >
-            <Text fontSize={10} fontWeight="700" color="#ffffff">
+            <Text fontSize={10} fontWeight="700" color="$onPrimary">
               {status.label}
             </Text>
           </XStack>

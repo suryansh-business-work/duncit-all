@@ -3,6 +3,7 @@
 // render identical numbers. Mirrored by app/mobile-app/src/utils/host-insights.ts.
 
 import { podSeatsTaken } from '@duncit/utils';
+import { semantic } from '@duncit/auth-tokens';
 
 export type HostChartRange = 'ALL' | 'LAST_YEAR' | 'CURRENT_YEAR' | 'PAST_6_MONTHS' | 'PAST_3_MONTHS';
 
@@ -21,10 +22,10 @@ export interface RangeMeta {
 
 // Donut slice colours = semantic tokens (auth-tokens): amber / green / blue / red.
 export const STATUS_SLICE_COLORS = {
-  upcoming: '#f59e0b',
-  ongoing: '#22c55e',
-  completed: '#3b82f6',
-  cancelled: '#ef4444',
+  upcoming: semantic.warning,
+  ongoing: semantic.success,
+  completed: semantic.info,
+  cancelled: semantic.error,
 } as const;
 
 const shortMonth = (d: Date) => d.toLocaleString('en', { month: 'short' });

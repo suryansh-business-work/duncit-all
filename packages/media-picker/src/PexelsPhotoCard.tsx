@@ -1,4 +1,5 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
@@ -54,7 +55,7 @@ export default function PexelsPhotoCard({
             right: 6,
             top: 6,
             fontSize: 22,
-            bgcolor: '#fff',
+            bgcolor: (theme) => theme.palette.common.white,
             borderRadius: '50%',
           }}
         />
@@ -62,23 +63,23 @@ export default function PexelsPhotoCard({
       <ImageListItemBar
         title={photo.photographer}
         subtitle={t('media.pexels.credit')}
-        sx={{ background: 'linear-gradient(rgba(0,0,0,.6), transparent)' }}
+        sx={{ background: (theme) => `linear-gradient(${alpha(theme.palette.common.black, 0.6)}, transparent)` }}
       />
       {importing && (
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            bgcolor: 'rgba(0,0,0,.5)',
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.5),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
+            color: (theme) => theme.palette.common.white,
             flexDirection: 'column',
             gap: 1,
           }}
         >
-          <CircularProgress size={28} sx={{ color: 'white' }} />
+          <CircularProgress size={28} sx={{ color: (theme) => theme.palette.common.white }} />
           <Typography variant="caption">{t('media.pexels.importing')}</Typography>
         </Box>
       )}

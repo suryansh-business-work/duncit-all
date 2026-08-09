@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from 'chart.js';
 import { Box, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -25,6 +26,9 @@ interface InventoryAnalyticsChartProps {
 }
 
 export default function InventoryAnalyticsChart({ points, loading }: Readonly<InventoryAnalyticsChartProps>) {
+  const theme = useTheme();
+  const inColor = alpha(theme.palette.success.main, 0.7);
+  const outColor = alpha(theme.palette.error.main, 0.7);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
 
@@ -50,8 +54,8 @@ export default function InventoryAnalyticsChart({ points, loading }: Readonly<In
       data: {
         labels,
         datasets: [
-          { label: 'In', data: ins, backgroundColor: 'rgba(46,125,50,0.7)' },
-          { label: 'Out', data: outs, backgroundColor: 'rgba(211,47,47,0.7)' },
+          { label: 'In', data: ins, backgroundColor: inColor },
+          { label: 'Out', data: outs, backgroundColor: outColor },
         ],
       },
       options: {
@@ -61,7 +65,7 @@ export default function InventoryAnalyticsChart({ points, loading }: Readonly<In
         plugins: { legend: { position: 'bottom' } },
       },
     });
-  }, [labels, ins, outs]);
+  }, [labels, ins, outs, inColor, outColor]);
 
   useEffect(() => () => {
     chartRef.current?.destroy();

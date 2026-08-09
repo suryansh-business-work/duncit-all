@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { OrderTrackingTimeline } from './OrderTrackingTimeline';
 import {
   buildOrderTimeline,
@@ -34,6 +35,7 @@ function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) 
  * tracking block, then the fulfilment timeline. RN twin of mWeb's
  * PodProductOrderItem. */
 export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>) {
+  const { muted, primary } = useThemeColors();
   const isShip = order.fulfilment_method === 'SHIP';
   const track = trackingUrl(order.shiprocket.awb);
   const steps = buildOrderTimeline(order);
@@ -72,7 +74,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
               alignItems="center"
               justifyContent="center"
             >
-              <MaterialIcons name="shopping-bag" size={16} color="#9aa0a6" />
+              <MaterialIcons name="shopping-bag" size={16} color={muted} />
             </YStack>
           )}
           <Text flex={1} fontSize={13} color="$color" numberOfLines={1}>
@@ -105,7 +107,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
               if (track) Linking.openURL(track).catch(() => {});
             }}
           >
-            <MaterialIcons name="open-in-new" size={14} color="#ff4f73" />
+            <MaterialIcons name="open-in-new" size={14} color={primary} />
             <Text fontSize={12.5} fontWeight="600" color="$primary">
               Track shipment
             </Text>

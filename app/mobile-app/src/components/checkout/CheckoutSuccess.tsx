@@ -36,7 +36,7 @@ export function CheckoutSuccess({
   profileLabel = 'My bookings',
 }: Readonly<CheckoutSuccessProps>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
+  const { onPrimary, muted } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export function CheckoutSuccess({
 
       {venueTotal > 0 ? (
         <XStack testID="success-venue-note" alignItems="center" gap={6} alignSelf="stretch">
-          <MaterialIcons name="storefront" size={16} color="#9aa0a6" />
+          <MaterialIcons name="storefront" size={16} color={muted} />
           <Text fontSize={12} color="$muted" flex={1}>
             Venue charges {formatMoney(payment.currency_symbol, venueTotal)} are payable directly at
             the venue.

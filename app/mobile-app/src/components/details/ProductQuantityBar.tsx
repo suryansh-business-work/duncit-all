@@ -1,10 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { StepButton } from './PodShopProductRow';
-
-const MUTED_ICON = '#9aa0a6';
-const DANGER = '#e5484d';
 
 interface Props {
   quantity: number;
@@ -20,7 +18,8 @@ function AddToSelection({
   outOfStock,
   onAdd,
 }: Readonly<{ outOfStock: boolean; onAdd: () => void }>) {
-  const iconColor = outOfStock ? MUTED_ICON : '#fff';
+  const { muted } = useThemeColors();
+  const iconColor = outOfStock ? muted : '#fff';
   const textColor = outOfStock ? '$muted' : '#fff';
   const label = outOfStock ? 'Out of stock' : 'Add to selection';
   return (
@@ -60,6 +59,7 @@ function QuantityStepper({
   primary: string;
   onUpdate: (quantity: number) => void;
 }>) {
+  const { muted, danger } = useThemeColors();
   const atMax = quantity >= maxQuantity;
   return (
     <XStack marginTop={4} alignItems="center" justifyContent="space-between">
@@ -76,7 +76,7 @@ function QuantityStepper({
         <StepButton
           testID="product-detail-inc"
           icon="add"
-          color={atMax ? MUTED_ICON : primary}
+          color={atMax ? muted : primary}
           disabled={atMax}
           onPress={() => onUpdate(Math.min(maxQuantity, quantity + 1))}
         />
@@ -93,7 +93,7 @@ function QuantityStepper({
         borderRadius={999}
         pressStyle={{ opacity: 0.6 }}
       >
-        <MaterialIcons name="delete-outline" size={18} color={DANGER} />
+        <MaterialIcons name="delete-outline" size={18} color={danger} />
         <Text fontSize={13} fontWeight="600" color="$danger">
           Remove
         </Text>

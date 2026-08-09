@@ -41,8 +41,8 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   // The variant-aware total from the cart wins when provided.
   const shownTotal = selectedTotal ?? baseTotal;
   const selectedCount = Object.values(selectedProducts).filter((quantity) => quantity > 0).length;
-  const textColor = isDark ? '#fff' : 'text.primary';
-  const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';
+  const textColor = theme.palette.text.primary;
+  const mutedColor = theme.palette.text.secondary;
   const itemBg = isDark ? 'rgba(255,255,255,0.05)' : alpha(theme.palette.background.paper, 0.72);
   const selectedBg = isDark ? 'rgba(255,139,95,0.14)' : alpha(theme.palette.primary.main, 0.1);
   const borderColor = isDark ? 'rgba(255,255,255,0.1)' : alpha(theme.palette.text.primary, 0.1);
@@ -76,7 +76,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.16)} 54%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
         boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.24)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`,
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'divider',
+        borderColor: 'divider',
         overflow: 'hidden',
       }}
     >

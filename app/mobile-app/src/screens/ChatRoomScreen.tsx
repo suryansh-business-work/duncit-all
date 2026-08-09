@@ -36,7 +36,7 @@ export function ChatRoomScreen() {
   const { hosts, participants, count } = useChatParticipants(podId);
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
-  const { color: ink, muted } = useThemeColors();
+  const { color: ink, muted, onPrimary } = useThemeColors();
 
   const openPod = () => navigation.navigate('PodDetails', { podId, title });
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
@@ -134,10 +134,10 @@ export function ChatRoomScreen() {
               borderRadius={10}
               backgroundColor="$danger"
             >
-              <Text flex={1} fontSize={13} color="white">
+              <Text flex={1} fontSize={13} color="$onPrimary">
                 {error}
               </Text>
-              <MaterialIcons name="close" size={18} color="white" />
+              <MaterialIcons name="close" size={18} color={onPrimary} />
             </XStack>
           ) : null}
 

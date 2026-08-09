@@ -84,7 +84,7 @@ export default function PreviewVariablesPane({
         />
       </Tabs>
       {tab === 'preview' ? (
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: '#f5f5f5' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && (
             <Alert severity="warning" sx={{ borderRadius: 0 }}>
               {previewErrors.slice(0, 3).join(' · ')}

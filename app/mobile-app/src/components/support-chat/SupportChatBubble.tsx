@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AttachmentView } from '@/components/AttachmentView';
 import type { SupportChatMessage } from '@/hooks/useSupportChat';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatTime, tickState } from '@/utils/support-chat';
 
 const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
@@ -38,6 +39,8 @@ export function SupportChatBubble({
   timeZone,
   onRetry,
 }: Readonly<Props>) {
+  const { onPrimary } = useThemeColors();
+
   if (message.sender_role === 'SYSTEM') {
     return (
       <XStack justifyContent="center" testID={`support-msg-${message.id}`}>
@@ -100,8 +103,8 @@ export function SupportChatBubble({
             alignSelf="flex-end"
             pressStyle={{ opacity: 0.7 }}
           >
-            <MaterialIcons name="error-outline" size={13} color="#ff5a5f" />
-            <Text fontSize={11} fontWeight="600" color="#ff5a5f">
+            <MaterialIcons name="error-outline" size={13} color={onPrimary} />
+            <Text fontSize={11} fontWeight="600" color="$onPrimary">
               Failed · Retry
             </Text>
           </XStack>

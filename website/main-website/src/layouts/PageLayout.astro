@@ -33,6 +33,16 @@ const accentBg = {
   secondary: 'bg-secondary',
   tertiary: 'bg-tertiary',
 }[accent];
+
+// The eyebrow badge sits directly on accentBg — tertiary (yellow) is a
+// fixed, non-inverting accent, so it needs the dark on-accent token, not
+// white, or the label goes near-invisible (same reasoning as global.css's
+// --color-on-accent comment).
+const accentText = {
+  primary: 'text-white',
+  secondary: 'text-white',
+  tertiary: 'text-on-accent',
+}[accent];
 ---
 
 <Layout title={`${heading} — Duncit`}>
@@ -42,7 +52,9 @@ const accentBg = {
     <section class="relative overflow-hidden rounded-3xl min-h-[420px] px-6 pt-5 pb-16">
       <div class="absolute inset-0 z-0">
         <img src={heroImage} alt="" class="w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-linear-to-b from-ink/30 via-ink/40 to-ink/70"></div>
+        <!-- The heading over this scrim is always white, so the scrim must
+             stay dark in both themes — `frame` never inverts, `ink` does. -->
+        <div class="absolute inset-0 bg-linear-to-b from-frame/30 via-frame/40 to-frame/70"></div>
       </div>
 
       <nav class="relative z-20 flex items-center justify-between">
@@ -61,7 +73,7 @@ const accentBg = {
 
       <div class="relative z-10 mt-16 max-w-3xl">
         {eyebrow && (
-          <span data-page-eyebrow class={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${accentBg} text-white font-bold text-xs uppercase tracking-wider mb-4 sticker`}>
+          <span data-page-eyebrow class={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${accentBg} ${accentText} font-bold text-xs uppercase tracking-wider mb-4 sticker`}>
             <i class="fa-solid fa-sparkles"></i> {eyebrow}
           </span>
         )}
@@ -183,7 +195,7 @@ const accentBg = {
   .prose-page .not-prose ul li,
   .prose-page .not-prose ol li { list-style: none; margin: 0; }
   .prose-page strong { color: var(--color-ink); font-weight: 700; }
-  .prose-page hr { margin: 2rem 0; border: 0; border-top: 1px solid rgba(0,0,0,0.08); }
+  .prose-page hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--color-line); }
   .prose-page blockquote {
     border-left: 4px solid var(--color-primary);
     padding: 0.5rem 0 0.5rem 1rem;

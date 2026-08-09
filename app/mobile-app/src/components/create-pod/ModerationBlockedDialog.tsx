@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** One flagged issue, resolved to the step the host must fix it on. */
 export interface BlockedViolation {
@@ -23,6 +24,7 @@ interface Props {
 /** Shown when the AI + rules preflight blocks publishing: lists what to fix and
  * links each issue to the step it lives on (tap → jump there). */
 export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonly<Props>) {
+  const { danger, primary } = useThemeColors();
   return (
     <Modal
       visible={violations.length > 0}
@@ -59,7 +61,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
           >
             <SafeAreaView edges={[]}>
               <XStack alignItems="center" gap={8} paddingBottom={2}>
-                <MaterialIcons name="gpp-maybe" size={20} color="#ef4444" />
+                <MaterialIcons name="gpp-maybe" size={20} color={danger} />
                 <Text fontSize={17} fontWeight="700" color="$color">
                   Fix these before publishing
                 </Text>
@@ -92,8 +94,8 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                       gap={4}
                       pressStyle={{ opacity: 0.7 }}
                     >
-                      <MaterialIcons name="arrow-forward" size={14} color="#7C3AED" />
-                      <Text fontSize={12} fontWeight="600" color="#7C3AED">
+                      <MaterialIcons name="arrow-forward" size={14} color={primary} />
+                      <Text fontSize={12} fontWeight="600" color="$primary">
                         Fix in {violation.stepTitle}
                       </Text>
                     </XStack>

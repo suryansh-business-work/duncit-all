@@ -10,8 +10,6 @@ import type { PodDetail } from '@/hooks/useDetails';
 
 type Product = PodDetail['product_requests'][number];
 
-const MUTED_ICON = '#9aa0a6';
-
 /** A round +/- stepper button; disabled state greys out and drops the handler. */
 export function StepButton({
   testID,
@@ -143,6 +141,7 @@ function QuantityStepper({
   primary: string;
   onUpdate: (productId: string, quantity: number) => void;
 }>) {
+  const { muted } = useThemeColors();
   const atMax = quantity >= maxQuantity;
   return (
     <XStack alignItems="center" gap={12} marginTop={6}>
@@ -158,7 +157,7 @@ function QuantityStepper({
       <StepButton
         testID={`pod-shop-inc-${productId}`}
         icon="add"
-        color={atMax ? MUTED_ICON : primary}
+        color={atMax ? muted : primary}
         disabled={atMax}
         onPress={() => onUpdate(productId, Math.min(maxQuantity, quantity + 1))}
       />
@@ -184,6 +183,7 @@ export function PodShopProductRow({
   onInfo: (productId: string) => void;
   readOnly?: boolean;
 }>) {
+  const { muted } = useThemeColors();
   const image = product.image_url || product.images?.[0] || '';
   const maxQuantity = Number(product.available_count ?? product.quantity ?? 0);
   // Members can only view products — never select them (avoids a re-charge).
@@ -231,7 +231,7 @@ export function PodShopProductRow({
         borderRadius={999}
         pressStyle={{ opacity: 0.6 }}
       >
-        <MaterialIcons name="info-outline" size={18} color={MUTED_ICON} />
+        <MaterialIcons name="info-outline" size={18} color={muted} />
       </XStack>
       <Text fontSize={14} fontWeight="700" color="$color">
         {priceLabel}

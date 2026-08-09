@@ -165,6 +165,7 @@ function BrandRow({
   primary: string;
   onOpenBrand: (brandId: string) => void;
 }>) {
+  const { muted } = useThemeColors();
   return (
     <XStack
       testID="product-detail-brand"
@@ -175,7 +176,7 @@ function BrandRow({
       alignItems="center"
       pressStyle={brandId ? { opacity: 0.6 } : undefined}
     >
-      <MaterialIcons name="storefront" size={15} color="#9aa0a6" />
+      <MaterialIcons name="storefront" size={15} color={muted} />
       <Text fontSize={13} fontWeight="600" color={brandId ? '$primary' : '$muted'}>
         by {brandName}
       </Text>

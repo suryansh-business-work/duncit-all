@@ -17,7 +17,7 @@ export function buildThemeCtx(mode: ColorMode, accent: AccentColors): ThemeCtx {
   const violet = tokens.semantic.secondary;
 
   const appBg = isDark
-    ? `radial-gradient(circle at 8% 0%, ${alpha(primary, 0.2)}, transparent 34%), radial-gradient(circle at 90% 16%, ${alpha(violet, 0.18)}, transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)`
+    ? `radial-gradient(circle at 8% 0%, ${alpha(primary, 0.2)}, transparent 34%), radial-gradient(circle at 90% 16%, ${alpha(violet, 0.18)}, transparent 32%), linear-gradient(180deg, ${tokens.dark.gradientFrom} 0%, ${tokens.dark.gradientTo} 100%)`
     : `radial-gradient(circle at 8% 0%, ${alpha(primary, 0.15)}, transparent 34%), radial-gradient(circle at 90% 16%, ${alpha(violet, 0.1)}, transparent 32%), linear-gradient(180deg, ${alpha(primary, 0.05)} 0%, ${tokens.common.white} 62%)`;
 
   const surfaceGradient = isDark

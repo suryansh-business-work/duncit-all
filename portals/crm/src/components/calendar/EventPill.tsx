@@ -11,25 +11,25 @@ interface Props {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Colour by urgency: overdue/now = red, within 24h = yellow, later = green. */
-function urgencyBg(date: Date, done: boolean): string {
-  if (done) return 'text.disabled';
+function urgencyTone(date: Date, done: boolean): { bg: string; fg: string } {
+  if (done) return { bg: 'action.disabledBackground', fg: 'text.disabled' };
   const diff = date.getTime() - Date.now();
-  if (diff <= 0) return 'error.main';
-  if (diff <= DAY_MS) return 'warning.main';
-  return 'success.main';
+  if (diff <= 0) return { bg: 'error.main', fg: 'error.contrastText' };
+  if (diff <= DAY_MS) return { bg: 'warning.main', fg: 'warning.contrastText' };
+  return { bg: 'success.main', fg: 'success.contrastText' };
 }
 
 /** Compact clickable event chip; colour encodes urgency (and done state). */
 export default function EventPill({ event, onClick, showTime }: Readonly<Props>) {
   const done = event.status === 'DONE';
-  const bg = urgencyBg(event.date, done);
+  const { bg, fg } = urgencyTone(event.date, done);
   return (
     <Tooltip title={`${format(event.date, 'p')} · ${event.title}`}>
       <Box
         onClick={(e) => { e.stopPropagation(); onClick(event); }}
         sx={{
           bgcolor: bg,
-          color: '#fff',
+          color: fg,
           borderRadius: 0.75,
           px: 0.5,
           py: 0.125,

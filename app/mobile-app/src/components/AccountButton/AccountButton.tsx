@@ -58,7 +58,7 @@ export function AccountButton() {
           width={11}
           height={11}
           borderRadius={6}
-          backgroundColor="#22c55e"
+          backgroundColor="$success"
           borderWidth={2}
           borderColor="$surface"
         />

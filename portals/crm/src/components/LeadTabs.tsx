@@ -38,7 +38,7 @@ export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props
           // Flat in light, subtle in dark — keeps the strip from competing
           // with the hero card above.
           boxShadow: 'none',
-          bgcolor: t.palette.mode === 'light' ? '#fff' : t.palette.background.paper,
+          bgcolor: t.palette.background.paper,
         })}
       >
         <Tabs

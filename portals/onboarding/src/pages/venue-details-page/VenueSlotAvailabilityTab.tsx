@@ -105,7 +105,7 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
           <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
             <Legend color="success.light" label="A — Available" />
             <Legend color="warning.light" label="B — Booked" />
-            <Legend color="grey.300" label="× — Blocked" />
+            <Legend color="action.disabled" label="× — Blocked" />
           </Stack>
         </CardContent>
       </Card>

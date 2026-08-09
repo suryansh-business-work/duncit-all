@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import type { PodDetail } from '@/hooks/useDetails';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { type HostPerson } from './AttendeesSection';
 
 export { AttendeesSection, buildAttendeePeople, buildHostPeople } from './AttendeesSection';
@@ -63,6 +64,7 @@ function HostRow({
   onOpenProfile,
 }: Readonly<{ host: HostPerson; onOpenProfile: (userId: string) => void }>) {
   const name = host.full_name || 'Host';
+  const { muted } = useThemeColors();
   return (
     <XStack
       testID={`host-row-${host.user_id}`}
@@ -99,7 +101,7 @@ function HostRow({
           Host
         </Text>
       </YStack>
-      <MaterialIcons name="chevron-right" size={20} color="#9aa0a6" />
+      <MaterialIcons name="chevron-right" size={20} color={muted} />
     </XStack>
   );
 }

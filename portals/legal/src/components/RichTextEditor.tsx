@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import ReactQuill from 'react-quill';
+import { tokens } from '@duncit/theme';
 import 'react-quill/dist/quill.snow.css';
 
 interface Props {
@@ -38,11 +39,15 @@ export default function RichTextEditor({
         // formatting buttons that do nothing. Take it away instead.
         '& .ql-toolbar': readOnly
           ? { display: 'none' }
-          : { borderTopLeftRadius: 8, borderTopRightRadius: 8, borderColor: 'divider' },
+          : {
+              borderTopLeftRadius: tokens.radius.md,
+              borderTopRightRadius: tokens.radius.md,
+              borderColor: 'divider',
+            },
         '& .ql-container': {
-          borderRadius: readOnly ? 8 : undefined,
-          borderBottomLeftRadius: 8,
-          borderBottomRightRadius: 8,
+          borderRadius: readOnly ? tokens.radius.md : undefined,
+          borderBottomLeftRadius: tokens.radius.md,
+          borderBottomRightRadius: tokens.radius.md,
           borderColor: 'divider',
           fontFamily: 'inherit',
           fontSize: 14,

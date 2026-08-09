@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfilePost } from '@/hooks/usePublicProfile';
 
 /** Posts grid + active stories on a member's public profile. Shows a lock card
@@ -16,6 +17,7 @@ export function PublicProfilePosts({
   canView,
 }: Readonly<{ posts: PublicProfilePost[]; stories: string[]; canView: boolean }>) {
   const { width } = useWindowDimensions();
+  const { muted } = useThemeColors();
   const [postIndex, setPostIndex] = useState<number | null>(null);
   const [storyIndex, setStoryIndex] = useState<number | null>(null);
 
@@ -28,7 +30,7 @@ export function PublicProfilePosts({
         paddingVertical={32}
         paddingHorizontal={24}
       >
-        <MaterialIcons name="lock-outline" size={28} color="#9aa0a6" />
+        <MaterialIcons name="lock-outline" size={28} color={muted} />
         <Text fontSize={15} fontWeight="700" color="$color">
           This account is private
         </Text>
@@ -69,7 +71,7 @@ export function PublicProfilePosts({
       ) : null}
 
       <XStack alignItems="center" justifyContent="center" gap={6} paddingTop={4}>
-        <MaterialIcons name="grid-on" size={16} color="#9aa0a6" />
+        <MaterialIcons name="grid-on" size={16} color={muted} />
         <Text fontSize={12} fontWeight="600" color="$muted" letterSpacing={1.5}>
           POSTS
         </Text>

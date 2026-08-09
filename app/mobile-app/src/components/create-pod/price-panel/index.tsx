@@ -2,10 +2,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CreatePodFinance } from '../create-pod.types';
 import { EARNINGS_ESTIMATE_NOTE } from './step4-copy';
 import { ChargesAccordion } from './ChargesAccordion';
-import { EARN_GREEN, PayoutCard } from './PayoutCard';
+import { PayoutCard } from './PayoutCard';
 import type { PodPricingState } from './usePodPricing';
 
 const FREE_NOTE_BG = 'rgba(34,197,94,0.08)';
@@ -27,6 +28,7 @@ interface Props {
 export function PricePanel({ finance, pricing }: Readonly<Props>) {
   const { projection, waterfall, isLoading, venuePicked, ready, hostOnly, podAmount, noOfSpots } =
     pricing;
+  const { success } = useThemeColors();
   const symbol = finance.currency_symbol;
   // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
   const money = (value: number) => formatStatementMoney(value, symbol);
@@ -44,7 +46,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
       borderRadius={12}
     >
       <XStack alignItems="center" gap={6}>
-        <MaterialIcons name="insights" size={16} color={EARN_GREEN} />
+        <MaterialIcons name="insights" size={16} color={success} />
         <Text fontSize={14} fontWeight="700" color="$color">
           Potential earnings
         </Text>
@@ -64,7 +66,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
           paddingHorizontal={10}
           paddingVertical={8}
         >
-          <MaterialIcons name="info-outline" size={16} color={EARN_GREEN} />
+          <MaterialIcons name="info-outline" size={16} color={success} />
           <Text flex={1} fontSize={12} color="$color">
             {HOST_FREE_NOTE}
           </Text>
@@ -92,7 +94,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
               <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
                 Total collection ({money(podAmount)} × {projection.payable_spots})
               </Text>
-              <Text fontSize={13} fontWeight="700" color={EARN_GREEN}>
+              <Text fontSize={13} fontWeight="700" color="$success">
                 {money(waterfall.amount)}
               </Text>
             </XStack>

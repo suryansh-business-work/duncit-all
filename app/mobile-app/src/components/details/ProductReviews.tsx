@@ -31,9 +31,6 @@ interface Summary {
   total: number;
 }
 
-const MUTED = '#9aa0a6';
-const DOWN = '#e5484d';
-
 /** Tappable / read-only 5-star row. */
 function Stars({
   value,
@@ -118,11 +115,15 @@ function ReviewCard({
   review,
   ink,
   primary,
+  muted,
+  danger,
   onVote,
 }: Readonly<{
   review: Review;
   ink: string;
   primary: string;
+  muted: string;
+  danger: string;
   onVote: (id: string, value: number, current: number) => void;
 }>) {
   return (
@@ -165,7 +166,7 @@ function ReviewCard({
           role="button"
           onPress={() => onVote(review.id, 1, review.my_vote)}
         >
-          <MaterialIcons name="thumb-up" size={16} color={review.my_vote === 1 ? primary : MUTED} />
+          <MaterialIcons name="thumb-up" size={16} color={review.my_vote === 1 ? primary : muted} />
         </YStack>
         <Text fontSize={12} color="$muted">
           {review.up_votes}
@@ -175,7 +176,11 @@ function ReviewCard({
           role="button"
           onPress={() => onVote(review.id, -1, review.my_vote)}
         >
-          <MaterialIcons name="thumb-down" size={16} color={review.my_vote === -1 ? DOWN : MUTED} />
+          <MaterialIcons
+            name="thumb-down"
+            size={16}
+            color={review.my_vote === -1 ? danger : muted}
+          />
         </YStack>
         <Text fontSize={12} color="$muted">
           {review.down_votes}
@@ -188,7 +193,7 @@ function ReviewCard({
 /** Ratings & reviews — the RN twin of mWeb's ProductReviews: summary, a write
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
-  const { color: ink, primary } = useThemeColors();
+  const { color: ink, primary, muted, danger } = useThemeColors();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
@@ -296,7 +301,15 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
         <Spinner testID="reviews-loading" color="$primary" />
       ) : null}
       {reviews.map((r) => (
-        <ReviewCard key={r.id} review={r} ink={ink} primary={primary} onVote={vote} />
+        <ReviewCard
+          key={r.id}
+          review={r}
+          ink={ink}
+          primary={primary}
+          muted={muted}
+          danger={danger}
+          onVote={vote}
+        />
       ))}
       {!loading && reviews.length === 0 ? (
         <Text fontSize={13} color="$muted">

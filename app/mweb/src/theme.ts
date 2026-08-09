@@ -1,29 +1,49 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
-import { brand, neutral, semantic, surface } from '@duncit/auth-tokens';
+import { brand, neutral, semantic, light, dark, radii } from '@duncit/auth-tokens';
 
 // Design-system tokens now come from the shared @duncit/auth-tokens package so
 // the mobile app (NativeWind) and mWeb (MUI) draw from one source. Re-exported
 // here under the same shape used across the app — no visual change.
-export const tokens = { brand, neutral, semantic, surface };
+export const tokens = { brand, neutral, semantic };
 
-const PRIMARY = tokens.brand[500];
-const PRIMARY_HOVER = tokens.brand[600];
-const PRIMARY_ACTIVE = tokens.brand[700];
+// The single source of white used across contrastText/chip/button colours below
+// — `light.surface` is `@duncit/auth-tokens`' canonical white, so this stays in
+// lock-step with the token package instead of a repeated hex literal.
+const WHITE = light.surface;
+
+// mWeb's own corner-radius scale, layered on top of the shared `radii` bucket
+// tokens: values that already exist upstream (surface/tooltip/pill/hairline)
+// are re-read from `radii` so they can't drift; `dialog`/`input` are
+// mWeb-specific steps the shared scale doesn't cover (rounded-design policy,
+// 2026-08-04).
+export const RADIUS = {
+  surface: radii.lg, // 16 — Paper/Card/Accordion
+  dialog: 20,
+  input: 12, // OutlinedInput/Alert/ToggleButton/Menu/ListItemButton
+  tooltip: radii.md, // 10
+  pill: radii.pill, // 999 — Button/IconButton/Chip/LinearProgress
+  hairline: radii.sm, // 8 — scrollbar thumb + focus ring
+} as const;
+const SCROLLBAR_SIZE = 8;
 
 export const buildTheme = (mode: PaletteMode = 'light') => {
   const isDark = mode === 'dark';
-  const INK = isDark ? '#f4f6fb' : tokens.neutral[900];
-  const MUTED = isDark ? '#9aa3b2' : tokens.neutral[500];
-  const BORDER = isDark ? 'rgba(255,255,255,0.10)' : tokens.surface.border;
-  const BG = isDark ? '#0b1220' : tokens.surface.bg;
-  const SURFACE = isDark ? '#111a2e' : tokens.surface.paper;
+  const m = isDark ? dark : light;
+  const INK = m.ink;
+  const MUTED = m.muted;
+  const BORDER = m.border;
+  const BG = m.bg;
+  const SURFACE = m.surface;
+  const PRIMARY = m.primary;
+  const PRIMARY_HOVER = m.primaryHover;
+  const PRIMARY_ACTIVE = m.primaryActive;
   const APP_BG = isDark
     ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.20), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.18), transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
-    : 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.15), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.10), transparent 32%), linear-gradient(180deg, #fff5f7 0%, #ffffff 62%)';
+    : `radial-gradient(circle at 8% 0%, rgba(255,79,115,0.15), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.10), transparent 32%), linear-gradient(180deg, #fff5f7 0%, ${WHITE} 62%)`;
   const SURFACE_GRADIENT = isDark
-    ? `linear-gradient(180deg, ${alpha('#ffffff', 0.05)} 0%, ${alpha(PRIMARY, 0.06)} 100%)`
-    : `linear-gradient(180deg, #ffffff 0%, ${alpha(PRIMARY, 0.035)} 100%)`;
+    ? `linear-gradient(180deg, ${alpha(WHITE, 0.05)} 0%, ${alpha(PRIMARY, 0.06)} 100%)`
+    : `linear-gradient(180deg, ${WHITE} 0%, ${alpha(PRIMARY, 0.035)} 100%)`;
   return createTheme({
   palette: {
     mode,
@@ -31,9 +51,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       light: tokens.brand[300],
       main: PRIMARY,
       dark: PRIMARY_ACTIVE,
-      contrastText: '#ffffff',
+      contrastText: WHITE,
     },
-    secondary: { main: tokens.semantic.secondary, contrastText: '#ffffff' },
+    secondary: { main: tokens.semantic.secondary, contrastText: WHITE },
     success: { main: tokens.semantic.success },
     warning: { main: tokens.semantic.warning },
     error: { main: tokens.semantic.error },
@@ -42,7 +62,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
   },
-  shape: { borderRadius: 16 },
+  shape: { borderRadius: RADIUS.surface },
   typography: {
     fontFamily:
       '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -92,10 +112,10 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           transitionDuration: '180ms',
           transitionTimingFunction: 'ease',
         },
-        '*::-webkit-scrollbar': { width: 8, height: 8 },
+        '*::-webkit-scrollbar': { width: SCROLLBAR_SIZE, height: SCROLLBAR_SIZE },
         '*::-webkit-scrollbar-thumb': {
           background: alpha(INK, 0.18),
-          borderRadius: 8,
+          borderRadius: RADIUS.hairline,
         },
         '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
         // Accessibility: visible focus ring for keyboard users.
@@ -103,7 +123,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           {
             outline: `2px solid ${PRIMARY}`,
             outlineOffset: 2,
-            borderRadius: 8,
+            borderRadius: RADIUS.hairline,
           },
         // Touch target minimum (WCAG 2.5.5 / iOS HIG).
         '@media (pointer: coarse)': {
@@ -129,7 +149,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        rounded: { borderRadius: 16 },
+        rounded: { borderRadius: RADIUS.surface },
         outlined: { borderColor: BORDER },
       },
     },
@@ -137,7 +157,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: RADIUS.surface,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -150,13 +170,13 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiCardActionArea: {
-      styleOverrides: { focusHighlight: { borderRadius: 16 } },
+      styleOverrides: { focusHighlight: { borderRadius: RADIUS.surface } },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: RADIUS.pill,
           paddingInline: 18,
           paddingBlock: 9,
           fontWeight: 600,
@@ -171,7 +191,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
         containedPrimary: {
           backgroundColor: PRIMARY,
-          color: '#ffffff',
+          color: WHITE,
           '&:hover': { backgroundColor: PRIMARY_HOVER },
           '&:active': { backgroundColor: PRIMARY_ACTIVE },
         },
@@ -197,7 +217,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: RADIUS.pill,
           '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
         },
       },
@@ -206,15 +226,15 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { size: 'small' },
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: RADIUS.pill,
           fontWeight: 600,
           height: 32,
           paddingInline: 6,
           fontSize: '0.8125rem',
         },
         outlined: { borderColor: BORDER, backgroundColor: SURFACE },
-        filledPrimary: { backgroundColor: PRIMARY, color: '#ffffff' },
-        filledSecondary: { backgroundColor: tokens.semantic.secondary, color: '#ffffff' },
+        filledPrimary: { backgroundColor: PRIMARY, color: WHITE },
+        filledSecondary: { backgroundColor: tokens.semantic.secondary, color: WHITE },
       },
     },
     MuiTextField: {
@@ -242,7 +262,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: RADIUS.input,
           backgroundColor: SURFACE,
           '& fieldset': { borderColor: BORDER },
           '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
@@ -252,7 +272,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 12, border: `1px solid ${BORDER}` },
+        root: { borderRadius: RADIUS.input, border: `1px solid ${BORDER}` },
         standardInfo: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
         standardSuccess: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
         standardWarning: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
@@ -264,7 +284,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiAccordion: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: RADIUS.surface,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -277,7 +297,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: RADIUS.input,
           '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
         },
       },
@@ -285,7 +305,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: RADIUS.input,
           textTransform: 'none',
           fontWeight: 600,
           paddingInline: 14,
@@ -293,7 +313,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           color: INK,
           '&.Mui-selected': {
             backgroundColor: PRIMARY,
-            color: '#ffffff',
+            color: WHITE,
             '&:hover': { backgroundColor: PRIMARY_HOVER },
           },
         },
@@ -314,27 +334,31 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiTooltip: {
       styleOverrides: {
+        // Always a near-black surface regardless of mode — a tooltip needs to
+        // read the same in both, and neutral[900] contrasts with white text
+        // either way (dark mode adds a hairline border since its page bg is
+        // close in tone to this fill).
         tooltip: {
-          backgroundColor: isDark ? '#111827' : tokens.neutral[900],
-          color: '#ffffff',
+          backgroundColor: tokens.neutral[900],
+          color: WHITE,
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
-          borderRadius: 10,
+          borderRadius: RADIUS.tooltip,
           fontSize: '0.75rem',
           fontWeight: 600,
           paddingInline: 8,
           paddingBlock: 6,
         },
         arrow: {
-          color: isDark ? '#111827' : tokens.neutral[900],
+          color: tokens.neutral[900],
         },
       },
     },
-    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 12 } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: 20, backgroundImage: SURFACE_GRADIENT } } },
+    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: RADIUS.input } } },
+    MuiDialog: { styleOverrides: { paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT } } },
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
+          borderRadius: RADIUS.input,
           border: `1px solid ${BORDER}`,
           boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
         },
@@ -352,7 +376,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: 999, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
+        root: { borderRadius: RADIUS.pill, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
         bar: { backgroundColor: PRIMARY },
       },
     },
@@ -360,7 +384,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       styleOverrides: {
         switchBase: {
           '&.Mui-checked': {
-            color: '#fff',
+            color: WHITE,
             '& + .MuiSwitch-track': { backgroundColor: PRIMARY, opacity: 1 },
           },
         },

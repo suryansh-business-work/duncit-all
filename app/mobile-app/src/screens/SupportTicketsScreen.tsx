@@ -64,7 +64,7 @@ export function SupportTicketsScreen() {
             borderRadius={999}
             backgroundColor={success}
           >
-            <Text fontSize={11} fontWeight="700" color="#ffffff">
+            <Text fontSize={11} fontWeight="700" color={onPrimary}>
               Live
             </Text>
           </XStack>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import AdjustHealthDialog from './AdjustHealthDialog';
 import AdjustmentRow from './AdjustmentRow';
@@ -17,22 +18,18 @@ const BAND_COLOR: Record<AdminHealthScore['band'], 'error' | 'warning' | 'succes
   GREEN: 'success',
 };
 
-const BAND_HEX: Record<AdminHealthScore['band'], string> = {
-  RED: '#e53935',
-  YELLOW: '#fb8c00',
-  GREEN: '#43a047',
-};
-
 interface Props {
   score: AdminHealthScore;
   onUpdated: (next: AdminHealthScore) => void;
 }
 
 export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdminHealthAdjustment | null>(null);
   const [deleteAdjustment, { loading: deleting }] = useMutation(DELETE_ADJUSTMENT);
   const confirm = useConfirm();
+  const bandColor = theme.palette[BAND_COLOR[score.band]].main;
 
   const closeDialog = () => {
     setOpen(false);
@@ -63,11 +60,11 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                 borderRadius: '50%',
                 display: 'grid',
                 placeItems: 'center',
-                bgcolor: `${BAND_HEX[score.band]}1A`,
-                color: BAND_HEX[score.band],
+                bgcolor: alpha(bandColor, 0.1),
+                color: bandColor,
                 fontWeight: 950,
                 fontSize: 28,
-                border: `3px solid ${BAND_HEX[score.band]}`,
+                border: `3px solid ${bandColor}`,
               }}
             >
               {score.total_score}

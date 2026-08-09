@@ -95,7 +95,7 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
               {previewErrors.join('; ')}
             </Alert>
           )}
-          <Box sx={{ flex: 1, minHeight: 0, bgcolor: '#f4f4f4' }}>
+          <Box sx={{ flex: 1, minHeight: 0, bgcolor: 'background.default' }}>
             <iframe
               title="Fragment preview"
               srcDoc={previewHtml}

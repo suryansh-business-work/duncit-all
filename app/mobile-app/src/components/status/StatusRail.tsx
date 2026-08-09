@@ -8,6 +8,7 @@ import { ScrollView, XStack, YStack } from 'tamagui';
 import type { RootStackParamList } from '@/navigation/types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useDetailNav } from '@/hooks/useDetailNav';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useStoryRail, type StoryRailItem, type StoryTarget } from '@/hooks/useStoryRail';
 import { useStatusStore } from '@/stores/status.store';
@@ -52,6 +53,7 @@ function shuffleStatus<T>(items: T[]): T[] {
  * shows upload progress (Bug 1), and the viewer supports like (Bug 5), viewers
  * (Bug 4) and delete (Bug 7). */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
+  const { primary } = useThemeColors();
   const { mine, items } = useStoryRail();
   const { uploading, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
     useStatusUpload();
@@ -195,7 +197,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             <MaterialIcons
               name="near-me"
               size={22}
-              color="#ff4f73"
+              color={primary}
               style={{ transform: [{ rotate: '45deg' }] }}
             />
           </XStack>

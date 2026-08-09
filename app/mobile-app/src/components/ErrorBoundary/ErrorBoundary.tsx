@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { semantic } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 import { logs } from '@duncit/logs';
 
@@ -47,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
         padding={24}
         backgroundColor="$background"
       >
-        <MaterialIcons name="error-outline" size={48} color="#b3261e" />
+        <MaterialIcons name="error-outline" size={48} color={semantic.error} />
         <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
           Something went wrong
         </Text>

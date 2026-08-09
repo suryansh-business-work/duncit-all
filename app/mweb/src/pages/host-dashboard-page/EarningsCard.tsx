@@ -79,7 +79,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
             variant="contained"
             size="small"
             startIcon={<AccountBalanceWalletIcon />}
-            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: 'common.white', color: 'text.primary', '&:hover': { bgcolor: 'grey.100' } }}
+            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: 'common.white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
           >
             Wallet
           </Button>

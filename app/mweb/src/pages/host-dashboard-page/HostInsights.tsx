@@ -6,6 +6,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
+import { brand, semantic } from '@duncit/auth-tokens';
 import InsightChartCard from './InsightChartCard';
 import HostInsightsFilterSheet from './HostInsightsFilterSheet';
 import { HOST_INSIGHTS } from './queries';
@@ -22,8 +23,8 @@ import {
 
 const ALL_TIME_FROM = '1970-01-01T00:00:00.000Z';
 const CHART_HEIGHT = 220;
-const PRIMARY = '#ff5757';
-const INFO = '#3b82f6';
+const PRIMARY = brand[500];
+const INFO = semantic.info;
 const EMPTY_COUNTS = { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 };
 
 interface HostPod {

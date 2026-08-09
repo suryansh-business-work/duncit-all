@@ -1,8 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
+
 /** Green earnings emphasis — matches mWeb's success.main highlight. */
-export const EARN_GREEN = '#22c55e';
 const PAYOUT_BG = 'rgba(34,197,94,0.10)';
 const PAYOUT_BORDER = 'rgba(34,197,94,0.35)';
 
@@ -25,6 +26,7 @@ export function PayoutCard({
   collection,
   totalDeductions,
 }: Readonly<Props>) {
+  const { success } = useThemeColors();
   return (
     <YStack
       testID="price-panel-payout"
@@ -36,7 +38,7 @@ export function PayoutCard({
       gap={10}
     >
       <XStack alignItems="flex-start" gap={10}>
-        <MaterialIcons name="account-balance-wallet" size={22} color={EARN_GREEN} />
+        <MaterialIcons name="account-balance-wallet" size={22} color={success} />
         <YStack flex={1} minWidth={0} gap={4}>
           <Text fontSize={15.5} fontWeight="700" color="$color">
             You will receive
@@ -52,13 +54,13 @@ export function PayoutCard({
               paddingHorizontal={8}
               paddingVertical={2}
             >
-              <Text fontSize={11} fontWeight="600" color={EARN_GREEN}>
+              <Text fontSize={11} fontWeight="600" color="$success">
                 {earnPct}% of collection
               </Text>
             </XStack>
           </XStack>
         </YStack>
-        <Text fontSize={21} fontWeight="700" color={EARN_GREEN}>
+        <Text fontSize={21} fontWeight="700" color="$success">
           {amount}
         </Text>
       </XStack>
@@ -83,7 +85,7 @@ export function PayoutCard({
           <Text fontSize={11.5} fontWeight="600" color="$color">
             = You will receive
           </Text>
-          <Text fontSize={11.5} fontWeight="700" color={EARN_GREEN}>
+          <Text fontSize={11.5} fontWeight="700" color="$success">
             {amount}
           </Text>
         </XStack>

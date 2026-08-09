@@ -1,9 +1,15 @@
 import { Box, keyframes } from '@mui/material';
+import { semantic } from '@duncit/auth-tokens';
 
 interface Props {
   variant: 'processing' | 'success';
   size?: number;
 }
+
+// The checkmark is a fixed brand-success green regardless of colour mode —
+// same value as the theme's success token, named once here so it's not
+// repeated inline across the circle + check strokes below.
+const SUCCESS_STROKE = semantic.success;
 
 const bounce = keyframes`
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
@@ -85,7 +91,7 @@ function SuccessCheck({ size }: Readonly<{ size: number }>) {
           cy={30}
           r={26}
           fill="none"
-          stroke="#22c55e"
+          stroke={SUCCESS_STROKE}
           strokeWidth={4}
           strokeLinecap="round"
           sx={{
@@ -100,7 +106,7 @@ function SuccessCheck({ size }: Readonly<{ size: number }>) {
           component="path"
           d="M18 31 L27 40 L43 22"
           fill="none"
-          stroke="#22c55e"
+          stroke={SUCCESS_STROKE}
           strokeWidth={4}
           strokeLinecap="round"
           strokeLinejoin="round"

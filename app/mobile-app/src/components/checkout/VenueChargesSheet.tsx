@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatMoney } from '@/utils/checkout-math';
 
 export interface VenueCharge {
@@ -31,6 +32,7 @@ export function VenueChargesSheet({
   testID = 'venue-charges-sheet',
 }: Readonly<Props>) {
   const total = charges.reduce((sum, charge) => sum + charge.amount, 0);
+  const { muted } = useThemeColors();
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -76,7 +78,7 @@ export function VenueChargesSheet({
                   borderRadius={16}
                   pressStyle={{ opacity: 0.6 }}
                 >
-                  <MaterialIcons name="close" size={20} color="#9aa0a6" />
+                  <MaterialIcons name="close" size={20} color={muted} />
                 </XStack>
               </XStack>
               <Text fontSize={13.5} color="$muted" paddingTop={6}>

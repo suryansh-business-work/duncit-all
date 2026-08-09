@@ -1,3 +1,4 @@
+import { alpha } from '@mui/material/styles';
 import type { Components, Theme } from '@mui/material/styles';
 import type { ThemeCtx } from '../types';
 
@@ -8,16 +9,16 @@ import type { ThemeCtx } from '../types';
  */
 export const tooltip = (c: ThemeCtx): Components<Theme>['MuiTooltip'] => {
   const fill = c.isDark ? c.white : c.ink;
+  const onFill = c.isDark ? c.t.neutral[900] : c.white;
   return {
     styleOverrides: {
       tooltip: {
-        backgroundColor:  c.isDark ? `#000` : '#ddd',
-        color: c.isDark ? `#fff` : '#000',
-        border: c.isDark ? `1px solid ${c.border}` : 'none',
+        backgroundColor: fill,
+        color: onFill,
         borderRadius: c.t.radius.sm,
         fontSize: c.t.font.size.tooltip,
         fontWeight: c.t.font.weight.medium,
-        boxShadow: c.isDark ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+        boxShadow: `0 4px 12px ${alpha(c.t.common.black, c.isDark ? 0.4 : 0.18)}`,
       },
       arrow: { color: fill },
     },

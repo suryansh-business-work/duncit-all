@@ -19,7 +19,7 @@ interface Props {
 /** Available-coupons picker for the native checkout — lists active global + pod
  * coupons from the admin panel; tapping one applies it (B2-#3). */
 export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Readonly<Props>) {
-  const { color } = useThemeColors();
+  const { color, success } = useThemeColors();
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -81,7 +81,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         borderStyle="dashed"
                         pressStyle={{ opacity: 0.85 }}
                       >
-                        <MaterialIcons name="local-offer" size={20} color="#22c55e" />
+                        <MaterialIcons name="local-offer" size={20} color={success} />
                         <YStack flex={1}>
                           <Text fontSize={14.5} fontWeight="700" color="$color">
                             {coupon.code} · {coupon.discount_pct}% off

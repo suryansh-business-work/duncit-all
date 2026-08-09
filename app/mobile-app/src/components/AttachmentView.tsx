@@ -3,13 +3,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { describeAttachment, typeLabel, type AttachmentInfo } from '@/utils/attachment';
-
-const ICON_TINT = '#9aa0a6';
 
 /** Video/document card: type icon + file name + type badge + open/download.
  * Tapping opens the file in the device's default viewer. */
 function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
+  const { muted } = useThemeColors();
   const icon = info.kind === 'video' ? 'play-circle-outline' : 'insert-drive-file';
   return (
     <XStack
@@ -25,7 +25,7 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       backgroundColor="$background"
       pressStyle={{ opacity: 0.8 }}
     >
-      <MaterialIcons name={icon} size={22} color={ICON_TINT} />
+      <MaterialIcons name={icon} size={22} color={muted} />
       <YStack flex={1} minWidth={0}>
         <Text fontSize={12.5} fontWeight="700" color="$color" numberOfLines={1}>
           {info.name}
@@ -34,7 +34,7 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
           {typeLabel(info.ext)}
         </Text>
       </YStack>
-      <MaterialIcons name="file-download" size={18} color={ICON_TINT} />
+      <MaterialIcons name="file-download" size={18} color={muted} />
     </XStack>
   );
 }

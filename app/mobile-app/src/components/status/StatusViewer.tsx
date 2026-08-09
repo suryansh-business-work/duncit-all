@@ -117,6 +117,7 @@ function StatusLikeButton({
   likeCount,
   onPress,
 }: Readonly<{ liked: boolean; likeCount: number; onPress: () => void }>) {
+  const { primary } = useThemeColors();
   return (
     <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
       <XStack
@@ -131,7 +132,7 @@ function StatusLikeButton({
         <MaterialIcons
           name={liked ? 'favorite' : 'favorite-border'}
           size={26}
-          color={liked ? '#ff4f73' : '#ffffff'}
+          color={liked ? primary : '#ffffff'}
         />
         {likeCount > 0 ? (
           <Text testID="status-like-count" fontSize={14} fontWeight="600" color="#ffffff">
@@ -157,7 +158,7 @@ export function StatusViewer({
   onSlideSeen,
   startIndex = 0,
 }: Readonly<StatusViewerProps>) {
-  const { onPrimary } = useThemeColors();
+  const { onPrimary, danger } = useThemeColors();
   const [index, setIndex] = useState(startIndex);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -332,8 +333,8 @@ export function StatusViewer({
                   paddingVertical={12}
                   pressStyle={{ opacity: 0.7 }}
                 >
-                  <MaterialIcons name="delete-outline" size={18} color="#e0435a" />
-                  <Text fontSize={14} fontWeight="600" color="#e0435a">
+                  <MaterialIcons name="delete-outline" size={18} color={danger} />
+                  <Text fontSize={14} fontWeight="600" color="$danger">
                     Delete
                   </Text>
                 </XStack>

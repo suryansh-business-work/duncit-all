@@ -68,7 +68,7 @@ export default function HeaderQuickActions({
             variant="dot"
             sx={{
               '& .MuiBadge-dot': {
-                bgcolor: '#22c55e',
+                bgcolor: 'success.main',
                 border: '2px solid',
                 borderColor: 'background.paper',
                 width: 11,

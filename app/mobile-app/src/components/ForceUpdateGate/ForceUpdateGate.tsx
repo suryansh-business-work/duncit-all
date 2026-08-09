@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { dark, light } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 
-import { AppBackground } from '@/components/AppBackground';
+import { AppBackground, DARK, LIGHT } from '@/components/AppBackground';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useAppVersionStore } from '@/stores/app-version.store';
@@ -87,7 +87,7 @@ export function ForceUpdateGate() {
       right={0}
       bottom={0}
       zIndex={10000}
-      backgroundColor={scheme === 'dark' ? '#100d18' : '#fff5f7'}
+      backgroundColor={scheme === 'dark' ? DARK[0] : LIGHT[0]}
       alignItems="center"
       justifyContent="center"
       padding={28}

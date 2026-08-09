@@ -44,7 +44,7 @@ function CategoryChips({
               borderColor={selected ? primary : '$borderColor'}
               backgroundColor={selected ? primary : 'transparent'}
             >
-              <Text fontSize={13} fontWeight="600" color={selected ? 'white' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {c.name}
               </Text>
             </YStack>

@@ -1,4 +1,5 @@
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { format } from 'date-fns';
@@ -48,7 +49,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
         borderRadius: 1,
         border: 1,
         borderColor: 'divider',
-        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'background.paper',
+        bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.02) : 'background.paper',
       })}
     >
       <StatusVisual type={log.type} status={log.status} />

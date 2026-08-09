@@ -66,3 +66,7 @@ export { WelcomeDashboard, type WelcomeDashboardProps } from './dashboard/Welcom
 export { ColorModeProvider, type ColorModeProviderProps } from './test/ColorModeProvider';
 export { ProfileLanguage } from './chrome/ProfileLanguage';
 export { SHELL_FALLBACK, SHELL_FALLBACK_FLAT } from './i18n/fallback';
+// Portals translate through the shell's wrapper so the bundled fallback is
+// always supplied — a portal importing @duncit/app-settings directly would have
+// to repeat that argument at every call site.
+export { useTranslation } from './i18n/useTranslation';

@@ -3264,7 +3264,6 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
-  | 'RESEND'
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'

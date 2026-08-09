@@ -1502,7 +1502,16 @@ jobs:
           SERVER_URL=${{ env.SERVER_URL }}
           RUN_POD_TYPE_MIGRATION=1
           RUN_CLUB_ADMIN_BACKFILL=1
+          DATA_CLONE_TARGET_DB=duncit-staging
           EOF
+          # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
+          # is allowed to overwrite. Source falls back to MONGO_URI +
+          # MONGO_DB_NAME, so the production stack clones production ->
+          # duncit-staging. Written for both stacks on purpose: on the staging
+          # stack the source IS duncit-staging, so source and target resolve to
+          # the same database and the server refuses to start a clone — the
+          # guard, not a second config file, is what keeps staging from
+          # overwriting itself.
           # MWEB_BASE_URL: every link the server EMAILS is built from this
           # (url-configs.getUrlConfigs -> appUrl), and the booking CTA is
           # `${appUrl}/booking/:bookingId`. It was never written here, so both

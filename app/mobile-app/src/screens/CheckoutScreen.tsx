@@ -26,6 +26,7 @@ import {
 } from '@/hooks/useCheckout';
 import { useCoinRedemption } from '@/hooks/useCoinRedemption';
 import { usePodTicket } from '@/hooks/usePodHistory';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { buildBreakup } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
@@ -33,6 +34,7 @@ import { toErrorMessage } from '@/utils/errors';
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
 export function CheckoutScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Checkout'>>();
   const podId = route.params?.podId ?? '';
@@ -96,11 +98,11 @@ export function CheckoutScreen() {
       if (preview?.ok) setCoupon(preview);
       else {
         setCoupon(null);
-        setCouponError(preview?.message ?? 'Invalid coupon code');
+        setCouponError(preview?.message ?? t('mweb.checkout.errorCouponInvalid'));
       }
     } catch (e) {
       setCoupon(null);
-      setCouponError(toErrorMessage(e, 'Could not apply coupon'));
+      setCouponError(toErrorMessage(e, t('mweb.checkout.errorCouponApply')));
     } finally {
       setApplyingCoupon(false);
     }
@@ -120,9 +122,9 @@ export function CheckoutScreen() {
     try {
       const result = await verifyRazorpay(order.payment_doc_id, sig);
       if (result?.status === 'SUCCESS') setPayment(result);
-      else setError('Payment could not be verified.');
+      else setError(t('mweb.checkout.errorNotVerified'));
     } catch (e) {
-      setError(toErrorMessage(e, 'Payment could not be verified.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorNotVerified')));
     } finally {
       setSubmitting(false);
     }
@@ -142,12 +144,12 @@ export function CheckoutScreen() {
       if (dummyMode) {
         const result = await pay(values, amount, appliedCode, coins.applied);
         if (result?.status === 'SUCCESS') setPayment(result);
-        else setError('Payment failed. Please try again.');
+        else setError(t('mweb.checkout.errorFailed'));
         return;
       }
-      setError('Online payments are not configured yet. Please try again later.');
+      setError(t('mweb.checkout.errorNotConfigured'));
     } catch (e) {
-      setError(toErrorMessage(e, 'Payment failed. Please try again.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +210,9 @@ export function CheckoutScreen() {
           // The number goes ON the button. On a multi-seat booking the summary
           // has usually scrolled away by the time the buyer reaches it, and the
           // last thing they read before paying should be what they will pay.
-          payLabel={`Pay ${formatMoney(breakup.currency, coins.effectiveTotal)}`}
+          payLabel={t('mweb.checkout.pay', {
+            vars: { amount: formatMoney(breakup.currency, coins.effectiveTotal) },
+          })}
           onSubmit={submit}
         />
       </ScrollView>
@@ -216,13 +220,13 @@ export function CheckoutScreen() {
   } else {
     checkoutBody = (
       <Text testID="checkout-unavailable" padding={24} color="$muted">
-        Checkout is unavailable right now. Please try again later.
+        {t('mweb.checkout.unavailable')}
       </Text>
     );
   }
 
   return (
-    <StackScreen title="Checkout" testID="checkout-screen">
+    <StackScreen title={t('mweb.checkout.title')} testID="checkout-screen">
       {checkoutBody}
       <RazorpayWebView
         order={order}

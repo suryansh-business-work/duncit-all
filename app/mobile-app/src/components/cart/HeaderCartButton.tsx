@@ -6,6 +6,7 @@ import { deriveCartEntry } from '@duncit/utils';
 import { navigationRef } from '@/navigation/navigationRef';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The active screen's route name, or '' before the container has settled. */
 function currentRouteName(): string {
@@ -24,6 +25,7 @@ function currentRouteName(): string {
 export function HeaderCartButton({ label }: Readonly<{ label?: string }> = {}) {
   const totalCount = useCartStore(selectCartCount);
   const { color: ink } = useThemeColors();
+  const { t } = useTranslation();
   const [routeName, setRouteName] = useState(currentRouteName);
 
   // The button reads the active route through the container ref rather than a
@@ -45,7 +47,7 @@ export function HeaderCartButton({ label }: Readonly<{ label?: string }> = {}) {
       <XStack
         testID="header-cart"
         role="button"
-        aria-label={entry.label}
+        aria-label={t('mweb.cart.open', { count: entry.count })}
         onPress={() => navigationRef.navigate('Cart')}
         width={40}
         height={40}

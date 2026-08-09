@@ -6,6 +6,7 @@ import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
 import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   podId: string;
@@ -23,13 +24,14 @@ interface StepperProps {
 /** The per-line − qty + stepper. */
 function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const atMax = line.quantity >= line.max_quantity;
   return (
     <XStack gap={6} alignItems="center">
       <XStack
         testID={`cart-minus-${cartLineKey(line)}`}
         role="button"
-        aria-label={`Decrease ${line.product_name}`}
+        aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
         onPress={() => onSetQuantity(line, line.quantity - 1)}
         width={30}
         height={30}
@@ -48,7 +50,7 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
       <XStack
         testID={`cart-plus-${cartLineKey(line)}`}
         role="button"
-        aria-label={`Increase ${line.product_name}`}
+        aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
         aria-disabled={atMax}
         onPress={atMax ? undefined : () => onSetQuantity(line, line.quantity + 1)}
         width={30}
@@ -72,6 +74,7 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
  * RN twin of mWeb's CartPodGroup. */
 export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }: Readonly<Props>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
   return (
     <YStack
@@ -109,7 +112,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
               {line.variant_label ? ` — ${line.variant_label}` : ''}
             </Text>
             <Text fontSize={11.5} color="$muted">
-              ₹{line.unit_cost} each
+              {t('mweb.cart.unitEach', { vars: { price: `₹${line.unit_cost}` } })}
             </Text>
             {lineQualifiesFreeDelivery(line) ? (
               <FreeDeliveryBadge testID={`cart-free-delivery-${cartLineKey(line)}`} />
@@ -119,7 +122,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
           <XStack
             testID={`cart-remove-${cartLineKey(line)}`}
             role="button"
-            aria-label={`Remove ${line.product_name}`}
+            aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
             onPress={() => onRemove(line)}
             padding={4}
             pressStyle={{ opacity: 0.7 }}
@@ -130,7 +133,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
       ))}
       <XStack justifyContent="space-between" alignItems="center">
         <Text fontSize={12} color="$muted">
-          Products total
+          {t('mweb.cart.productsTotal')}
         </Text>
         <Text fontSize={15} fontWeight="700" color="$color">
           ₹{total}

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { readReferralCode } from '@duncit/utils';
 import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
+import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../components/AuthBackground';
 import AuthLogo from '../components/AuthLogo';
 import AuthModeToggle from '../components/AuthModeToggle';
 import AuthScreenFrame from '../components/AuthScreenFrame';
 import LegalLinks from '../components/LegalLinks';
+import { useTranslation } from '../i18n/useTranslation';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { RegisterForm, type RegisterFormValues } from '../forms/register';
@@ -58,6 +60,7 @@ const APPLY_REFERRAL = gql`
 `;
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
   const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
@@ -137,10 +140,13 @@ export default function RegisterPage() {
           <Stack alignItems="center" spacing={1.1} sx={{ pt: 0.5 }}>
             <AuthLogo />
             <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-              Join the crew
+              {t('mweb.signup.title')}{' '}
+              <Box component="span" sx={{ color: auth.accent }}>
+                {t('mweb.signup.titleAccent')}
+              </Box>
             </Typography>
             <Typography variant="body2" textAlign="center" color="text.secondary">
-              Start where you are and discover pods nearby.
+              {t('mweb.signup.subtitle')}
             </Typography>
           </Stack>
 
@@ -150,14 +156,14 @@ export default function RegisterPage() {
               {gError}
             </Alert>
           )}
-          <Divider>OR EMAIL</Divider>
+          <Divider>{t('mweb.auth.orEmail')}</Divider>
 
           <RegisterForm
             loading={loading}
             errorMessage={registerError ?? (error ? parseApiError(error) : null)}
             onSubmit={handleRegister}
           />
-          <LegalLinks prefix="By creating an account," />
+          <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
         </Stack>
       </AuthScreenFrame>
     </AuthBackground>

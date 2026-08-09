@@ -4,12 +4,14 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
 import { usePricing } from '../hooks/usePricing';
+import { useTranslation } from '../i18n/useTranslation';
 import CartPodGroup from './cart-page/CartPodGroup';
 
 /** The cart — every product added from any Pod Shop, grouped by pod. The WHOLE
  * cart checks out as ONE standalone PRODUCT payment (separate from any pod
  * booking) via the combined product checkout. */
 export default function CartPage() {
+  const { t } = useTranslation();
   const { lines, setLine, removeLine, clearAll } = useCart();
   const { format: priceFormat } = usePricing();
   const navigate = useNavigate();
@@ -34,13 +36,13 @@ export default function CartPage() {
       <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
         <ShoppingCartIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
         <Typography variant="h6" fontWeight={700}>
-          Your cart is empty
+          {t('mweb.cart.empty')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Add products from any Pod Shop and they will wait for you here.
+          {t('mweb.cart.emptyBody')}
         </Typography>
         <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
-          Browse the Pod Shop
+          {t('mweb.cart.browseShop')}
         </Button>
       </Stack>
     );
@@ -49,7 +51,7 @@ export default function CartPage() {
   return (
     <Stack spacing={2} sx={{ py: 1 }}>
       <Typography variant="h5" sx={{ fontWeight: 700 }}>
-        Cart
+        {t('mweb.cart.title')}
       </Typography>
       {groups.map(([podId, group]) => (
         <CartPodGroup
@@ -64,7 +66,7 @@ export default function CartPage() {
       ))}
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.5 }}>
         <Typography variant="body2" color="text.secondary">
-          Cart total
+          {t('mweb.cart.total')}
         </Typography>
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           {priceFormat(grandTotal)}
@@ -77,10 +79,10 @@ export default function CartPage() {
         onClick={() => navigate('/product-checkout')}
         sx={{ borderRadius: 999, fontWeight: 700 }}
       >
-        Proceed to checkout
+        {t('mweb.cart.checkout')}
       </Button>
       <Button variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 600 }}>
-        Clear cart
+        {t('mweb.cart.clear')}
       </Button>
     </Stack>
   );

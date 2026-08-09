@@ -9,6 +9,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { DobCalendarSheet } from './DobCalendarSheet';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -44,6 +45,7 @@ export function DobDateField<T extends FieldValues>({
   minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
 }: Readonly<DobDateFieldProps<T>>) {
   const { color: ink, muted } = useThemeColors();
+  const { t } = useTranslation();
   const { field, fieldState } = useController({ control, name: name ?? ('dob' as Path<T>) });
   const [open, setOpen] = useState(false);
   const closeSheet = () => setOpen(false);
@@ -57,7 +59,7 @@ export function DobDateField<T extends FieldValues>({
   return (
     <YStack gap={6}>
       <Text fontSize={14} fontWeight="500" color="$color">
-        Date of birth
+        {t('mweb.auth.dateOfBirth')}
       </Text>
       <XStack gap={8} alignItems="center">
         <Input
@@ -71,14 +73,14 @@ export function DobDateField<T extends FieldValues>({
           value={value}
           onChangeText={field.onChange}
           onBlur={field.onBlur}
-          placeholder="YYYY-MM-DD"
+          placeholder={t('mweb.signup.dobPlaceholder')}
           autoCapitalize="none"
-          aria-label="Date of birth"
+          aria-label={t('mweb.auth.dateOfBirth')}
         />
         <XStack
           testID="dob-open"
           role="button"
-          aria-label="Pick date of birth"
+          aria-label={t('mweb.signup.dobPick')}
           onPress={() => setOpen(true)}
           width={44}
           height={44}

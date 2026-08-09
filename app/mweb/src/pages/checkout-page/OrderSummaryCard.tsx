@@ -31,7 +31,7 @@ export default function OrderSummaryCard({
   const seatsText =
     seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
   const isDark = theme.palette.mode === 'dark';
-  const title = pod?.pod_title || stateTitle || 'Pod booking';
+  const title = pod?.pod_title || stateTitle || t('mweb.checkout.podBooking');
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
@@ -51,7 +51,7 @@ export default function OrderSummaryCard({
           {media?.url && <Box component={media.type === 'VIDEO' ? 'video' : 'img'} src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 12%, rgba(0,0,0,0.75) 100%)' }} />
           <Box sx={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>Ticket</Typography>
+            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.ticket')}</Typography>
             <Typography variant="subtitle1" fontWeight={700} noWrap>{title}</Typography>
             {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
           </Box>
@@ -67,26 +67,29 @@ export default function OrderSummaryCard({
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
           {seats > 1 && unitAmount > 0 && (
-            <Row label={`Ticket ${fmt(unitAmount)} x ${seats} seats`} value={fmt(unitAmount * seats)} />
+            <Row
+              label={t('mweb.checkout.ticketMultiplier', { vars: { price: fmt(unitAmount), seats } })}
+              value={fmt(unitAmount * seats)}
+            />
           )}
-          <Row label="Ticket price" value={fmt(ticketTotal)} />
+          <Row label={t('mweb.checkout.ticketPrice')} value={fmt(ticketTotal)} />
           <Divider sx={{ my: 1 }} />
-          <Typography variant="caption" color="text.secondary">Inclusive of:</Typography>
-          <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
+          <Typography variant="caption" color="text.secondary">{t('mweb.checkout.inclusiveOf')}</Typography>
+          <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
-          <Row label="Total payable" value={fmt(breakup.total)} bold />
+          <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
           {venueCharges.length > 0 && (
             <Box sx={{ mt: 1, p: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Typography variant="body2" fontWeight={600}>Venue Charges</Typography>
-                  <IconButton size="small" aria-label="About venue charges" onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
+                  <Typography variant="body2" fontWeight={600}>{t('mweb.checkout.venueCharges')}</Typography>
+                  <IconButton size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
                     <InfoOutlinedIcon fontSize="inherit" color="action" />
                   </IconButton>
                 </Stack>
                 <Typography variant="body2" fontWeight={700}>{fmt(venueTotal)}</Typography>
               </Stack>
-              <Typography variant="caption" color="text.secondary">Payable directly at the venue</Typography>
+              <Typography variant="caption" color="text.secondary">{t('mweb.checkout.venuePayAtVenue')}</Typography>
             </Box>
           )}
         </Stack>

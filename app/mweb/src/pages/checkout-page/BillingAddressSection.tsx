@@ -5,6 +5,7 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import AddressFields, { type AddressFieldNames } from '../../forms/components/AddressFields';
 import RhfTextField from '../../forms/components/RhfTextField';
 import PodAccordion from '../../components/pod-details/PodAccordion';
+import { useTranslation } from '../../i18n/useTranslation';
 import BillingSummary from './BillingSummary';
 import type { CheckoutForm } from './queries';
 import type { PostalAddressParts } from './checkout';
@@ -67,6 +68,7 @@ interface Props {
  * and stays open whenever any billing field fails validation.
  */
 export default function BillingAddressSection({ control, fieldSx, mainAddress, hasMainAddress, addressRequired }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sameAsMain = useWatch({ control, name: 'same_as_main' });
   const { errors } = useFormState({ control });
@@ -76,14 +78,14 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
   return (
     <PodAccordion
       id="billing-address"
-      title="Billing address"
+      title={t('mweb.checkout.billingAddress')}
       icon={<HomeOutlinedIcon fontSize="small" />}
       expanded={open || hasError}
       onChange={setOpen}
       error={hasError}
     >
       <Stack spacing={1.5}>
-        {hasMainAddress && <BillingCheckbox control={control} name="same_as_main" label="Same as my main address" />}
+        {hasMainAddress && <BillingCheckbox control={control} name="same_as_main" label={t('mweb.checkout.sameAsMain')} />}
         {sameAsMain && mainAddress && <BillingSummary address={mainAddress} />}
         {showEditable && (
           <AddressFields
@@ -91,11 +93,11 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
             names={ADDRESS_NAMES}
             fieldSx={fieldSx}
             required={addressRequired}
-            pincodeHint="4–10 digits"
+            pincodeHint={t('mweb.checkout.pincodeHint')}
           />
         )}
-        <RhfTextField control={control} name="billing_email" label="Billing email (optional)" sx={fieldSx} />
-        {!hasMainAddress && <BillingCheckbox control={control} name="save_as_main" label="Save this as my main address" />}
+        <RhfTextField control={control} name="billing_email" label={t('mweb.checkout.billingEmail')} sx={fieldSx} />
+        {!hasMainAddress && <BillingCheckbox control={control} name="save_as_main" label={t('mweb.checkout.saveAsMain')} />}
       </Stack>
     </PodAccordion>
   );

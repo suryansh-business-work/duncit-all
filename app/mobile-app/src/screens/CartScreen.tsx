@@ -7,6 +7,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { CartPodGroup } from '@/components/cart/CartPodGroup';
 import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -16,6 +17,10 @@ import type { RootStackParamList } from '@/navigation/types';
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
+  const findPodLabel = t('mweb.cart.findPod');
+  const checkoutLabel = t('mweb.cart.checkout');
+  const clearLabel = t('mweb.cart.clear');
   const lines = useCartStore((s) => s.lines);
   const setLine = useCartStore((s) => s.setLine);
   const removeLine = useCartStore((s) => s.removeLine);
@@ -30,15 +35,15 @@ export function CartScreen() {
       <YStack alignItems="center" gap={10} paddingVertical={64} testID="cart-empty">
         <MaterialIcons name="shopping-cart" size={44} color={muted} />
         <Text fontSize={17} fontWeight="700" color="$color">
-          Your cart is empty
+          {t('mweb.cart.empty')}
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
-          Add products from any Pod Shop and they will wait for you here.
+          {t('mweb.cart.emptyBody')}
         </Text>
         <XStack
           testID="cart-find-pod"
           role="button"
-          aria-label="Find a pod"
+          aria-label={findPodLabel}
           onPress={() => navigation.navigate('Home')}
           paddingHorizontal={24}
           height={44}
@@ -49,7 +54,7 @@ export function CartScreen() {
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            Find a pod
+            {findPodLabel}
           </Text>
         </XStack>
       </YStack>
@@ -69,7 +74,7 @@ export function CartScreen() {
         ))}
         <XStack justifyContent="space-between" alignItems="center">
           <Text fontSize={12} color="$muted">
-            Cart total
+            {t('mweb.cart.total')}
           </Text>
           <Text testID="cart-total" fontSize={16} fontWeight="700" color="$color">
             ₹{total}
@@ -79,7 +84,7 @@ export function CartScreen() {
         <XStack
           testID="cart-checkout"
           role="button"
-          aria-label="Proceed to checkout"
+          aria-label={checkoutLabel}
           onPress={() => navigation.navigate('ProductCheckout')}
           height={46}
           alignItems="center"
@@ -89,20 +94,20 @@ export function CartScreen() {
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            Proceed to checkout
+            {checkoutLabel}
           </Text>
         </XStack>
         <XStack
           testID="cart-clear"
           role="button"
-          aria-label="Clear cart"
+          aria-label={clearLabel}
           onPress={clearAll}
           alignSelf="center"
           padding={8}
           pressStyle={{ opacity: 0.7 }}
         >
           <Text fontSize={13} fontWeight="600" color="$danger">
-            Clear cart
+            {clearLabel}
           </Text>
         </XStack>
       </YStack>
@@ -110,7 +115,7 @@ export function CartScreen() {
   }
 
   return (
-    <StackScreen title="Cart" testID="cart-screen">
+    <StackScreen title={t('mweb.cart.title')} testID="cart-screen">
       <ScrollView flex={1}>{body}</ScrollView>
     </StackScreen>
   );

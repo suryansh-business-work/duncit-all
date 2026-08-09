@@ -4,6 +4,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { Text, XStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -30,11 +31,12 @@ export interface GoogleAuthButtonProps {
  * server's token-only `signupWithGoogle`/`loginWithGoogle`.
  */
 export function GoogleAuthButton({
-  label = 'Continue with Google',
+  label,
   disabled,
   onIdToken,
   onError,
 }: Readonly<GoogleAuthButtonProps>) {
+  const { t } = useTranslation();
   const scheme = useThemeStore((s) => s.scheme);
   const googleClientId = useConfigStore((s) => s.googleClientId);
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
@@ -46,9 +48,9 @@ export function GoogleAuthButton({
     if (response.type === 'success') {
       const idToken = response.params?.id_token;
       if (idToken) onIdToken(idToken);
-      else onError?.('Google did not return an id token.');
+      else onError?.(t('mweb.auth.googleNoIdToken'));
     } else if (response.type === 'error') {
-      onError?.(response.error?.message ?? 'Google sign-in failed.');
+      onError?.(response.error?.message ?? t('mweb.auth.googleFailed'));
     }
     // Only react to a settled auth response; callbacks are stable enough here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +87,7 @@ export function GoogleAuthButton({
         accessibilityIgnoresInvertColors
       />
       <Text fontSize={16} fontWeight="600" color="$color">
-        {label}
+        {label ?? t('mweb.auth.googleContinue')}
       </Text>
     </XStack>
   );

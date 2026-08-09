@@ -67,6 +67,36 @@ export const localizationTypeDefs = gql`
     page_size: Int!
   }
 
+  "How many of a namespace's keys carry text in one locale."
+  type TranslationGroupLocaleCount {
+    locale: String!
+    translated: Int!
+  }
+
+  """
+  One namespace — the surface + page pair every key under it shares, e.g.
+  'mweb' + 'shop'. The admin lists these first and drills into the entries, so a
+  catalogue of hundreds of keys reads as a few dozen pages instead of one flat
+  wall.
+  """
+  type TranslationGroup {
+    "surface + page joined, e.g. 'mweb.shop' — the table's stable row id."
+    id: ID!
+    surface: String!
+    page: String!
+    key_count: Int!
+    "One entry per ACTIVE locale, so translated < key_count reads as a gap."
+    locales: [TranslationGroupLocaleCount!]!
+  }
+
+  "Server-side table page of namespaces for the shared table engine."
+  type TranslationGroupTablePage {
+    rows: [TranslationGroup!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Every locale, for admin lists."
     locales: [Locale!]!
@@ -80,6 +110,13 @@ export const localizationTypeDefs = gql`
     publicTranslations(locale: String!): [TranslationEntry!]!
     "Admin table of translation keys, filterable surface-wise and page-wise."
     translationsTable(query: TableQueryInput): TranslationTablePage!
+    """
+    Namespaces with their key counts and per-locale completeness — the first
+    level of the admin Translations view, which drills into translationsTable
+    filtered by the surface + page it hands back. Counted by a mongo
+    aggregation rather than in Node, because the catalogue only grows.
+    """
+    translationGroups(query: TableQueryInput): TranslationGroupTablePage!
     """
     Keys the SERVER itself ships copy for (the MJML email templates), with their
     bundled English text. The admin merges these with the client surfaces' own

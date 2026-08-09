@@ -1,6 +1,7 @@
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Full-screen blocking overlay shown while a payment is being processed/verified.
  * Captures all touches so the form underneath can't be edited once the user has
@@ -8,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
  * <Backdrop> on the checkout page. */
 export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   if (!open) return null;
 
   return (
@@ -40,10 +42,10 @@ export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
       >
         <Spinner size="large" color={primary} />
         <Text fontSize={16} fontWeight="700" color="#ffffff" textAlign="center">
-          Processing your payment…
+          {t('mweb.checkout.processingTitle')}
         </Text>
         <Text fontSize={12.5} color="rgba(255,255,255,0.74)" textAlign="center">
-          Please don't close this screen.
+          {t('mweb.checkout.processingNoteApp')}
         </Text>
       </YStack>
     </YStack>

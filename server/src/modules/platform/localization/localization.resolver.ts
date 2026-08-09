@@ -26,6 +26,14 @@ export const localizationResolvers = {
       requireRole(ctx, ADMIN_READ);
       return localizationService.translationsTable(args.query);
     },
+    translationGroups: async (
+      _p: unknown,
+      args: { query?: TableQueryInput | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_READ);
+      return localizationService.translationGroups(args.query);
+    },
     serverTranslationSeed: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return Object.entries(EMAIL_FALLBACK).map(([key, value]) => ({ key, value }));

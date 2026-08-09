@@ -1,12 +1,14 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   forgotPasswordDefaults,
-  forgotPasswordSchema,
+  makeForgotPasswordSchema,
   type ForgotPasswordValues,
 } from './forgot-password.types';
 
@@ -25,19 +27,24 @@ export function ForgotPasswordForm({
   emailError,
   onSubmit,
 }: Readonly<ForgotPasswordFormProps>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     defaultValues: forgotPasswordDefaults,
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
+  const submitLabel = loading
+    ? t('mweb.forgotPassword.submitting')
+    : t('mweb.forgotPassword.submit');
 
   return (
     <YStack gap={16}>
       <FormTextField
         control={control}
         name="email"
-        label="Email"
-        placeholder="hello@duncit.com"
+        label={t('mweb.auth.emailLabel')}
+        placeholder={t('mweb.auth.emailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
@@ -59,7 +66,7 @@ export function ForgotPasswordForm({
 
       <PrimaryButton
         testID="forgot-password-submit"
-        label={loading ? 'Sending OTP…' : 'Send reset OTP'}
+        label={submitLabel}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

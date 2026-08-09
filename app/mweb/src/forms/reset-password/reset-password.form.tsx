@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Stack } from '@mui/material';
@@ -8,9 +8,10 @@ import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import RhfTextField from '../components/RhfTextField';
+import { useTranslation } from '../../i18n/useTranslation';
 import {
+  makeResetPasswordSchema,
   resetPasswordDefaults,
-  resetPasswordSchema,
   type ResetPasswordValues,
 } from './reset-password.types';
 
@@ -20,7 +21,7 @@ interface Props {
   onSubmit: (values: ResetPasswordValues) => Promise<void> | void;
 }
 
-const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
+const passwordInputProps = (visible: boolean, onToggle: () => void, toggleLabel: string) => ({
   startAdornment: (
     <InputAdornment position="start">
       <LockOutlinedIcon fontSize="small" />
@@ -28,12 +29,7 @@ const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
   ),
   endAdornment: (
     <InputAdornment position="end">
-      <IconButton
-        size="small"
-        onClick={onToggle}
-        edge="end"
-        aria-label={visible ? 'Hide password' : 'Show password'}
-      >
+      <IconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
         ) : (
@@ -45,21 +41,25 @@ const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
 });
 
 export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ResetPasswordValues>({
     defaultValues: resetPasswordDefaults,
-    resolver: zodResolver(resetPasswordSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
+  const showLabel = t('mweb.auth.showPassword');
+  const hideLabel = t('mweb.auth.hidePassword');
 
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.auth.somethingWentWrong'));
     }
   });
 
@@ -69,10 +69,10 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
         <RhfTextField
           control={control}
           name="otp"
-          label="6-digit OTP"
+          label={t('mweb.resetPassword.otpLabel')}
           required
-          hint="6-digit code"
-          placeholder="123456"
+          hint={t('mweb.resetPassword.otpHint')}
+          placeholder={t('mweb.resetPassword.otpPlaceholder')}
           inputProps={{ inputMode: 'numeric', maxLength: 6 }}
           size="small"
           InputProps={{
@@ -87,24 +87,32 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           control={control}
           name="new_password"
           type={showPwd ? 'text' : 'password'}
-          label="New password"
+          label={t('mweb.resetPassword.newPasswordLabel')}
           required
-          hint="At least 8 characters"
-          placeholder="Create a new password"
+          hint={t('mweb.auth.passwordHint')}
+          placeholder={t('mweb.resetPassword.newPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordInputProps(showPwd, () => setShowPwd((v) => !v))}
+          InputProps={passwordInputProps(
+            showPwd,
+            () => setShowPwd((v) => !v),
+            showPwd ? hideLabel : showLabel,
+          )}
         />
         <RhfTextField
           control={control}
           name="confirm_password"
           type={showConfirmPwd ? 'text' : 'password'}
-          label="Confirm new password"
+          label={t('mweb.resetPassword.confirmPasswordLabel')}
           required
-          placeholder="Re-enter new password"
+          placeholder={t('mweb.resetPassword.confirmPasswordPlaceholder')}
           autoComplete="new-password"
           size="small"
-          InputProps={passwordInputProps(showConfirmPwd, () => setShowConfirmPwd((v) => !v))}
+          InputProps={passwordInputProps(
+            showConfirmPwd,
+            () => setShowConfirmPwd((v) => !v),
+            showConfirmPwd ? hideLabel : showLabel,
+          )}
         />
         <Button
           type="submit"
@@ -114,7 +122,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           disabled={loading}
           sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
-          {loading ? 'Resetting…' : 'Reset password'}
+          {loading ? t('mweb.resetPassword.submitting') : t('mweb.resetPassword.submit')}
         </Button>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>

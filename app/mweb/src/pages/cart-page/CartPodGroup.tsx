@@ -3,6 +3,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { cartLineKey, lineQualifiesFreeDelivery, type CartLine } from '../../components/cart/CartContext';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   podId: string;
@@ -23,6 +24,7 @@ export default function CartPodGroup({
   onSetQuantity,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
   return (
     <Stack
@@ -54,13 +56,13 @@ export default function CartPodGroup({
             </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center">
               <Typography variant="caption" color="text.secondary">
-                {priceFormat(line.unit_cost)} each
+                {t('mweb.cart.unitEach', { vars: { price: priceFormat(line.unit_cost) } })}
               </Typography>
               {lineQualifiesFreeDelivery(line) && (
                 <Chip
                   size="small"
                   color="success"
-                  label="Free delivery"
+                  label={t('mweb.cart.freeDelivery')}
                   sx={{ height: 18, fontSize: 11, fontWeight: 700 }}
                 />
               )}
@@ -69,7 +71,7 @@ export default function CartPodGroup({
           <Stack direction="row" spacing={0.5} alignItems="center">
             <IconButton
               size="small"
-              aria-label={`Decrease ${line.product_name}`}
+              aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
               onClick={() => onSetQuantity(line, line.quantity - 1)}
             >
               <RemoveIcon fontSize="small" />
@@ -79,7 +81,7 @@ export default function CartPodGroup({
             </Typography>
             <IconButton
               size="small"
-              aria-label={`Increase ${line.product_name}`}
+              aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
               disabled={line.quantity >= line.max_quantity}
               onClick={() => onSetQuantity(line, Math.min(line.max_quantity, line.quantity + 1))}
             >
@@ -88,7 +90,7 @@ export default function CartPodGroup({
           </Stack>
           <IconButton
             size="small"
-            aria-label={`Remove ${line.product_name}`}
+            aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
             onClick={() => onRemove(line)}
           >
             <DeleteOutlineIcon fontSize="small" />
@@ -98,7 +100,7 @@ export default function CartPodGroup({
       <Divider />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="body2" color="text.secondary">
-          Products total
+          {t('mweb.cart.productsTotal')}
         </Typography>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {priceFormat(total)}

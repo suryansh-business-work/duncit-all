@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fallbackT, type Translate } from '../../../i18n/fallback';
 import type { CheckoutForm } from '../queries';
 
 export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
@@ -28,64 +29,101 @@ const isEmail = (value: string) => z.string().email().safeParse(value).success;
  * here (it is edited from the profile), so requiring a phone the buyer has not
  * filled in would dead-end the payment. GSTIN, phone and billing email validate
  * only when provided. Mirrors the server rules (payment.validator.ts).
+ *
+ * The messages are copy, so they come from the shared catalogue (rule 38): the
+ * session passes its live `t`, and the exports below resolve against the
+ * bundled English for callers that parse the schema outside React.
  */
-const checkoutObject = z
-  .object({
-    full_name: z.string().trim().max(160, 'Name must be 160 characters or fewer'),
-    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email').max(254),
+function makeCheckoutObject(t: Translate) {
+  return z.object({
+    full_name: z.string().trim().max(160, t('mweb.checkout.validation.nameMax')),
+    email: z
+      .string()
+      .trim()
+      .min(1, t('mweb.auth.validation.emailRequired'))
+      .email(t('mweb.auth.validation.emailInvalid'))
+      .max(254),
     phone_extension: z
       .string()
       .trim()
-      .refine((v) => !v || PHONE_EXTENSION_PATTERN.test(v), 'Phone code is invalid'),
+      .refine(
+        (v) => !v || PHONE_EXTENSION_PATTERN.test(v),
+        t('mweb.checkout.validation.phoneCodeInvalid'),
+      ),
     phone_number: z
       .string()
       .trim()
-      .refine((v) => !v || PHONE_NUMBER_PATTERN.test(v), 'Phone must contain only digits (6-15 digits)'),
+      .refine((v) => !v || PHONE_NUMBER_PATTERN.test(v), t('mweb.checkout.validation.phoneInvalid')),
     same_as_main: z.boolean(),
-    line1: z.string().trim().max(200, 'Address line 1 must be 200 characters or fewer'),
-    line2: z.string().trim().max(200, 'Address line 2 must be 200 characters or fewer'),
-    landmark: z.string().trim().max(160, 'Landmark must be 160 characters or fewer'),
-    city: z.string().trim().max(120, 'City must be 120 characters or fewer'),
-    state: z.string().trim().max(120, 'State must be 120 characters or fewer'),
-    pincode: z.string().trim().max(10, 'Pincode must be 10 characters or fewer'),
-    country: z.string().trim().max(80, 'Country must be 80 characters or fewer'),
-    billing_email: z.string().trim().max(254),
+    line1: z.string().trim().max(200, t('mweb.checkout.validation.line1Max')),
+    line2: z.string().trim().max(200, t('mweb.checkout.validation.line2Max')),
+    landmark: z.string().trim().max(160, t('mweb.checkout.validation.landmarkMax')),
+    city: z.string().trim().max(120, t('mweb.checkout.validation.cityMax')),
+    state: z.string().trim().max(120, t('mweb.checkout.validation.stateMax')),
+    pincode: z.string().trim().max(10, t('mweb.checkout.validation.pincodeMax')),
+    country: z.string().trim().max(80, t('mweb.checkout.validation.countryMax')),
+    billing_email: z.string().trim().max(254, t('mweb.checkout.validation.billingEmailMax')),
     has_gstin: z.boolean(),
-    gstin: z.string().trim().max(20),
+    gstin: z.string().trim().max(20, t('mweb.checkout.validation.gstinMax')),
     save_as_main: z.boolean(),
     simulate_failure: z.boolean(),
   });
+}
 
-type CheckoutObjectValues = z.infer<typeof checkoutObject>;
+type CheckoutObjectValues = z.infer<ReturnType<typeof makeCheckoutObject>>;
 
 /** Address parts are only demanded by the flows that ship something, and only
  * when the buyer is not reusing their saved main address. */
-function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx) {
+function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.same_as_main) return;
   if (values.line1.trim().length < 3) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['line1'], message: 'Address line 1 is required' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['line1'],
+      message: t('mweb.checkout.validation.line1Required'),
+    });
   }
   if (!values.city.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'City is required' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['city'],
+      message: t('mweb.checkout.validation.cityRequired'),
+    });
   }
   if (!values.state.trim()) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['state'], message: 'State is required' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['state'],
+      message: t('mweb.checkout.validation.stateRequired'),
+    });
   }
   if (!PINCODE_PATTERN.test(values.pincode.trim())) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pincode'], message: 'Enter a valid pincode' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['pincode'],
+      message: t('mweb.checkout.validation.pincodeInvalid'),
+    });
   }
 }
 
 /** GSTIN and the separate billing email are optional everywhere — checked only
  * once the buyer typed something. */
-function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx) {
+function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t: Translate) {
   const gstin = values.gstin.trim().toUpperCase();
   if (values.has_gstin && gstin && !GSTIN_PATTERN.test(gstin)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gstin'], message: 'Enter a valid 15-character GSTIN' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['gstin'],
+      message: t('mweb.checkout.validation.gstinInvalid'),
+    });
   }
   const billingEmail = values.billing_email.trim();
   if (billingEmail && !isEmail(billingEmail)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['billing_email'], message: 'Enter a valid billing email' });
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['billing_email'],
+      message: t('mweb.checkout.validation.billingEmailInvalid'),
+    });
   }
 }
 
@@ -93,16 +131,24 @@ function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementC
  * Pod membership checkout: nothing is delivered, so email is the only hard
  * requirement — an empty profile must never block the booking.
  */
-export const checkoutSchema = checkoutObject.superRefine(addOptionalFieldIssues);
+export function makeCheckoutSchema(t: Translate = fallbackT) {
+  return makeCheckoutObject(t).superRefine((values, ctx) => addOptionalFieldIssues(values, ctx, t));
+}
 
 /**
  * Product checkout: the order is physically delivered, so the address stays
  * mandatory (the contact for the parcel comes from the saved address book).
  */
-export const productCheckoutSchema = checkoutObject.superRefine((values, ctx) => {
-  addAddressIssues(values, ctx);
-  addOptionalFieldIssues(values, ctx);
-});
+export function makeProductCheckoutSchema(t: Translate = fallbackT) {
+  return makeCheckoutObject(t).superRefine((values, ctx) => {
+    addAddressIssues(values, ctx, t);
+    addOptionalFieldIssues(values, ctx, t);
+  });
+}
+
+export const checkoutSchema = makeCheckoutSchema();
+
+export const productCheckoutSchema = makeProductCheckoutSchema();
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 

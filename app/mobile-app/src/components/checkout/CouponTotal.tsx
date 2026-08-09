@@ -1,5 +1,7 @@
 import { Text } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 /** Strikethrough "You pay …" line shown once the bill is discounted — by a
  * coupon, by redeemed Duncit Coins, or by both. Keyed off the amounts rather
  * than the coupon so coins alone still show what is actually charged (mWeb's
@@ -13,11 +15,11 @@ export function CouponTotal({
   effectiveTotal: number;
   originalTotal: number;
 }>) {
+  const { t } = useTranslation();
   if (effectiveTotal >= originalTotal) return null;
   return (
     <Text testID="coupon-total" fontSize={14} fontWeight="600" color="$color">
-      You pay {currency}
-      {effectiveTotal}{' '}
+      {t('mweb.checkout.youPay', { vars: { amount: `${currency}${effectiveTotal}` } })}{' '}
       <Text fontSize={13} color="$muted" textDecorationLine="line-through">
         {currency}
         {originalTotal}

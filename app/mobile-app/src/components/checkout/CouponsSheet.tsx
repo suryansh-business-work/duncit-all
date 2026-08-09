@@ -6,7 +6,12 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AvailableCoupon } from '@/hooks/useCheckout';
+
+/** The coupon's minimum order as the sheet has always printed it — symbol then
+ * amount, hoisted so the row below never nests one template inside another. */
+const minOrderAmount = (currency: string, amount: number) => `${currency}${amount}`;
 
 interface Props {
   open: boolean;
@@ -20,6 +25,7 @@ interface Props {
  * coupons from the admin panel; tapping one applies it (B2-#3). */
 export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Readonly<Props>) {
   const { color, success } = useThemeColors();
+  const { t } = useTranslation();
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -28,7 +34,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
           <YStack flex={1} justifyContent="flex-end" testID="coupons-sheet">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.checkout.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -47,12 +53,12 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
               <SafeAreaView edges={['bottom']}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
                   <Text fontSize={17} fontWeight="700" color="$color">
-                    Available coupons
+                    {t('mweb.checkout.couponsTitle')}
                   </Text>
                   <XStack
                     testID="coupons-sheet-close"
                     role="button"
-                    aria-label="Close coupons"
+                    aria-label={t('mweb.checkout.couponsClose')}
                     onPress={onClose}
                     pressStyle={{ opacity: 0.6 }}
                   >
@@ -61,7 +67,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                 </XStack>
                 {coupons.length === 0 ? (
                   <Text testID="coupons-empty" fontSize={13.5} color="$muted" paddingVertical={20}>
-                    No coupons available right now.
+                    {t('mweb.checkout.couponsEmpty')}
                   </Text>
                 ) : (
                   <ScrollView contentContainerStyle={{ gap: 10, paddingBottom: 8 }}>
@@ -70,7 +76,9 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         key={coupon.id}
                         testID={`coupon-pick-${coupon.code}`}
                         role="button"
-                        aria-label={`Apply ${coupon.code}`}
+                        aria-label={t('mweb.checkout.couponPickAria', {
+                          vars: { code: coupon.code },
+                        })}
                         onPress={() => onPick(coupon.code)}
                         alignItems="center"
                         gap={12}
@@ -84,13 +92,18 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         <MaterialIcons name="local-offer" size={20} color={success} />
                         <YStack flex={1}>
                           <Text fontSize={14.5} fontWeight="700" color="$color">
-                            {coupon.code} · {coupon.discount_pct}% off
+                            {coupon.code} ·{' '}
+                            {t('mweb.checkout.couponPercentOff', {
+                              vars: { pct: coupon.discount_pct },
+                            })}
                           </Text>
                           <Text fontSize={12} color="$muted">
                             {coupon.description ||
-                              (coupon.scope === 'POD' ? 'For this pod' : 'All pods')}
+                              (coupon.scope === 'POD'
+                                ? t('mweb.checkout.couponForPod')
+                                : t('mweb.checkout.couponAllPods'))}
                             {coupon.min_order_amount > 0
-                              ? ` · Min ${currency}${coupon.min_order_amount}`
+                              ? ` · ${t('mweb.checkout.couponMin', { vars: { amount: minOrderAmount(currency, coupon.min_order_amount) } })}`
                               : ''}
                           </Text>
                         </YStack>

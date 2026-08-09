@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
+import { fallbackT, type Translate } from '../../i18n/fallback';
 
 export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 
@@ -12,32 +13,41 @@ export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
  * server all gate on the same calendar comparison. It replaced an
  * admin-configured birth-YEAR range, which could only ever approximate an age:
  * a year picker passes anyone born in the cut-off year, including someone whose
- * 18th birthday is still months away.
+ * 18th birthday is still months away. The message it fails with is copy, so it
+ * comes from the shared catalogue rather than the package's English constant.
  */
-export function makeRegisterSchema(minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS) {
+export function makeRegisterSchema(
+  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  t: Translate = fallbackT,
+) {
   const dobString = z
     .string()
-    .min(1, 'Date of birth is required')
-    .refine((v) => !Number.isNaN(new Date(v).getTime()), 'Enter a valid date of birth')
-    .refine((v) => isEligibleDob(v, minAge), dobMinAgeMessage(minAge));
+    .min(1, t('mweb.signup.validation.dobRequired'))
+    .refine((v) => !Number.isNaN(new Date(v).getTime()), t('mweb.signup.validation.dobInvalid'))
+    .refine(
+      (v) => isEligibleDob(v, minAge),
+      t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),
+    );
 
   return z
     .object({
       name: z
         .string()
         .trim()
-        .min(1, 'Name is required')
-        .regex(
-          PERSON_NAME_PATTERN,
-          'Name can use letters, spaces, apostrophes, periods and hyphens only',
-        ),
-      email: z.string().trim().min(1, 'Email is required').email('Enter a valid email').max(254),
-      password: z.string().min(8, 'Min 8 characters').max(128),
-      confirmPassword: z.string().min(1, 'Please confirm your password'),
+        .min(1, t('mweb.signup.validation.nameRequired'))
+        .regex(PERSON_NAME_PATTERN, t('mweb.signup.validation.namePattern')),
+      email: z
+        .string()
+        .trim()
+        .min(1, t('mweb.auth.validation.emailRequired'))
+        .email(t('mweb.auth.validation.emailInvalid'))
+        .max(254),
+      password: z.string().min(8, t('mweb.auth.validation.passwordMin')).max(128),
+      confirmPassword: z.string().min(1, t('mweb.signup.validation.confirmRequired')),
       dob: dobString,
     })
     .refine((values) => values.password === values.confirmPassword, {
-      message: 'Passwords do not match',
+      message: t('mweb.auth.validation.passwordsMismatch'),
       path: ['confirmPassword'],
     });
 }

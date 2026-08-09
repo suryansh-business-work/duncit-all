@@ -9,6 +9,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { MyAddressesDocument } from '@/graphql/address-book';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -16,10 +17,11 @@ interface Props {
   onPick: (address: UserAddress) => void;
 }
 
-const summary = (address: UserAddress) =>
-  `${address.label}${address.is_default ? ' (default)' : ''} — ${[address.line1, address.city]
-    .filter(Boolean)
-    .join(', ')}`;
+const summary = (address: UserAddress, defaultTag: string) => {
+  const tag = address.is_default ? ` ${defaultTag}` : '';
+  const where = [address.line1, address.city].filter(Boolean).join(', ');
+  return `${address.label}${tag} — ${where}`;
+};
 
 /** Checkout address-book dropdown — the saved delivery address the order ships
  * to and that delivery charges are quoted for. The default address is
@@ -27,6 +29,8 @@ const summary = (address: UserAddress) =>
  * while the book is empty. RN twin of mWeb's SavedAddressPicker. */
 export function SavedAddressPicker({ onPick }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const defaultTag = t('mweb.checkout.addressDefault');
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [open, setOpen] = useState(false);
@@ -65,12 +69,12 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
   return (
     <YStack gap={6} testID="checkout-address-picker">
       <Text fontSize={12} fontWeight="600" color="$muted">
-        Deliver to
+        {t('mweb.checkout.deliverTo')}
       </Text>
       <XStack
         testID="checkout-address-field"
         role="button"
-        aria-label="Choose a saved address"
+        aria-label={t('mweb.checkout.chooseAddress')}
         onPress={() => setOpen(true)}
         alignItems="center"
         gap={10}
@@ -90,7 +94,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
           color="$color"
           numberOfLines={1}
         >
-          {selected ? summary(selected) : 'Select address'}
+          {selected ? summary(selected, defaultTag) : t('mweb.checkout.selectAddress')}
         </Text>
         <MaterialIcons name="expand-more" size={20} color={muted} />
       </XStack>
@@ -101,7 +105,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
             <YStack
               testID="checkout-address-backdrop"
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.checkout.close')}
               onPress={close}
               position="absolute"
               top={0}
@@ -118,7 +122,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
             >
               <SafeAreaView edges={['bottom']}>
                 <Text padding={16} fontSize={16} fontWeight="700" color="$color">
-                  Deliver to a saved address
+                  {t('mweb.checkout.deliverToSaved')}
                 </Text>
                 <ScrollView>
                   <YStack paddingHorizontal={16} paddingBottom={16} gap={8}>
@@ -156,7 +160,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
                           color="$color"
                           numberOfLines={2}
                         >
-                          {summary(address)}
+                          {summary(address, defaultTag)}
                         </Text>
                       </XStack>
                     ))}

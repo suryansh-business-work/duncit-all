@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ForgotPasswordForm, type ForgotPasswordValues } from '@/forms/forgot-password';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { requestPasswordResetOtp } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
@@ -14,6 +15,7 @@ import { toErrorMessage } from '@/utils/errors';
  * Only registered emails receive an OTP; an unregistered email is flagged and
  * offered a Create-Account CTA. RN twin of mWeb's ForgotPasswordPage. */
 export function ForgotPasswordScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export function ForgotPasswordScreen() {
       }
       navigation.navigate('ResetPassword', { email: values.email.trim().toLowerCase() });
     } catch (e) {
-      setError(toErrorMessage(e, 'Something went wrong'));
+      setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
       setLoading(false);
     }
@@ -40,31 +42,31 @@ export function ForgotPasswordScreen() {
   return (
     <AuthScaffold
       testID="forgot-password-screen"
-      title="Forgot"
-      accentWord="password?"
-      subtitle="Enter your email and we’ll send you a 6-digit OTP to reset your password."
+      title={t('mweb.forgotPassword.title')}
+      accentWord={t('mweb.forgotPassword.titleAccent')}
+      subtitle={t('mweb.forgotPassword.subtitle')}
     >
       <ForgotPasswordForm
         loading={loading}
         errorMessage={error}
-        emailError={unregistered ? 'Unregistered User' : null}
+        emailError={unregistered ? t('mweb.forgotPassword.unregistered') : null}
         onSubmit={handleSubmit}
       />
       {unregistered ? (
         <YStack gap={8} alignItems="center">
           <Text fontSize={14} color="$muted">
-            New to Duncit?
+            {t('mweb.forgotPassword.newToDuncit')}
           </Text>
           <PrimaryButton
             testID="forgot-create-account"
-            label="Create Account"
+            label={t('mweb.forgotPassword.createAccount')}
             onPress={() => navigation.navigate('Signup')}
           />
         </YStack>
       ) : (
         <XStack justifyContent="center" gap={4}>
           <Text fontSize={14} color="$muted">
-            Remembered it?
+            {t('mweb.forgotPassword.remembered')}
           </Text>
           <Text
             testID="forgot-back-login"
@@ -73,7 +75,7 @@ export function ForgotPasswordScreen() {
             color="$primary"
             onPress={() => navigation.navigate('Login')}
           >
-            Back to login
+            {t('mweb.auth.backToLogin')}
           </Text>
         </XStack>
       )}

@@ -8,12 +8,14 @@ import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { LegalLinks } from '@/components/LegalLinks';
 import { SignupForm, type SignupFormValues } from '@/forms/signup';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { register, signupWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { toErrorMessage } from '@/utils/errors';
 
 export function SignupScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function SignupScreen() {
       });
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
-      setError(toErrorMessage(e, 'Something went wrong'));
+      setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
       setLoading(false);
     }
@@ -44,23 +46,23 @@ export function SignupScreen() {
       const result = await signupWithGoogle(idToken);
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
-      setError(toErrorMessage(e, 'Google sign-in failed'));
+      setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
     }
   };
 
   return (
     <AuthScaffold
       testID="signup-screen"
-      title="Join"
-      accentWord="Duncit."
-      subtitle="Create your account to discover pods nearby."
+      title={t('mweb.signup.title')}
+      accentWord={t('mweb.signup.titleAccent')}
+      subtitle={t('mweb.signup.subtitle')}
     >
       <GoogleAuthButton onIdToken={handleGoogle} onError={setError} />
-      <AuthDivider />
+      <AuthDivider label={t('mweb.auth.orEmail')} />
       <SignupForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
       <XStack justifyContent="center" gap={4}>
         <Text fontSize={14} color="$muted">
-          Already have an account?
+          {t('mweb.signup.haveAccount')}
         </Text>
         <Text
           testID="go-login"
@@ -69,10 +71,10 @@ export function SignupScreen() {
           color="$primary"
           onPress={() => navigation.navigate('Login')}
         >
-          Log in
+          {t('mweb.signup.logIn')}
         </Text>
       </XStack>
-      <LegalLinks prefix="By signing up," />
+      <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
     </AuthScaffold>
   );
 }

@@ -2,6 +2,7 @@ import type { Control, FieldValues, Path } from 'react-hook-form';
 import { XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The seven postal-address field names this component binds to on the form. */
 export interface AddressFieldNames<T extends FieldValues> {
@@ -35,22 +36,33 @@ export function AddressFields<T extends FieldValues>({
   required = false,
   pincodeHint,
 }: Readonly<AddressFieldsProps<T>>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={12}>
       <FormTextField
         control={control}
         name={names.line1}
-        label="Address line 1"
+        label={t('mweb.address.line1')}
         required={required}
       />
-      <FormTextField control={control} name={names.line2} label="Address line 2 (optional)" />
-      <FormTextField control={control} name={names.landmark} label="Landmark (optional)" />
+      <FormTextField control={control} name={names.line2} label={t('mweb.address.line2')} />
+      <FormTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} />
       <XStack gap={12}>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.city} label="City" required={required} />
+          <FormTextField
+            control={control}
+            name={names.city}
+            label={t('mweb.address.city')}
+            required={required}
+          />
         </YStack>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.state} label="State" required={required} />
+          <FormTextField
+            control={control}
+            name={names.state}
+            label={t('mweb.address.state')}
+            required={required}
+          />
         </YStack>
       </XStack>
       <XStack gap={12}>
@@ -58,7 +70,7 @@ export function AddressFields<T extends FieldValues>({
           <FormTextField
             control={control}
             name={names.pincode}
-            label="Pincode"
+            label={t('mweb.address.pincode')}
             required={required}
             hint={pincodeHint}
             keyboardType="number-pad"
@@ -66,7 +78,7 @@ export function AddressFields<T extends FieldValues>({
           />
         </YStack>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.country} label="Country" />
+          <FormTextField control={control} name={names.country} label={t('mweb.address.country')} />
         </YStack>
       </XStack>
     </YStack>

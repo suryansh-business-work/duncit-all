@@ -1,6 +1,7 @@
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 
 export interface VenueCharge {
@@ -20,21 +21,22 @@ interface Props {
  * summary. These are paid directly at the venue and are NOT part of the online
  * payable amount, so this purely explains + itemises them. */
 export default function VenueChargesDialog({ open, charges, currency, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const total = charges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ pr: 6, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <StorefrontIcon color="primary" fontSize="small" />
-        Venue Charges
-        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
+        {t('mweb.checkout.venueCharges')}
+        <IconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
-            Optional venue-side charges to be paid to the Venue.
+            {t('mweb.checkout.venueChargesIntro')}
           </Typography>
           {charges.length > 0 && (
             <Stack
@@ -67,7 +69,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
               ))}
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="body2" fontWeight={700}>
-                  Total venue charges
+                  {t('mweb.checkout.venueChargesTotal')}
                 </Typography>
                 <Typography variant="body2" fontWeight={700}>
                   {formatMoney(currency, total)}
@@ -76,7 +78,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
             </Stack>
           )}
           <Typography variant="caption" color="text.secondary">
-            Pay this directly at the venue — it is not included in your online payment.
+            {t('mweb.checkout.venueChargesNote')}
           </Typography>
         </Stack>
       </DialogContent>

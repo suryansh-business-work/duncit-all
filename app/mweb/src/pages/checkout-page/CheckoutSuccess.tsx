@@ -42,11 +42,11 @@ interface Props {
   onHome: () => void;
   onProfile: () => void;
   /** Label for the primary action (defaults to "My Profile"; the product
-   * checkout routes to "My Orders"). */
+   * checkout routes to "My orders"). */
   profileLabel?: string;
 }
 
-export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel = 'My Profile' }: Readonly<Props>) {
+export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
@@ -56,6 +56,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery(TICKET_PDF, { fetchPolicy: 'network-only' });
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
+  const profileAction = profileLabel ?? t('mweb.checkout.myProfile');
   const paidAt = payment.paid_at || payment.created_at;
   const venueCharges: Array<{ amount: number }> = pod?.place_charges ?? [];
   const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
@@ -66,10 +67,10 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     try {
       const { data: tData } = await loadTicketForPod({ variables: { podId: pod.id } });
       const ticket = tData?.myEventTicketForPod;
-      if (!ticket?.id) throw new Error('Ticket not ready yet — check your email shortly.');
+      if (!ticket?.id) throw new Error(t('mweb.checkout.errorTicketNotReady'));
       const { data } = await loadTicketPdf({ variables: { id: ticket.id } });
       const b64 = data?.eventTicketPdfBase64;
-      if (!b64) throw new Error('Ticket not available');
+      if (!b64) throw new Error(t('mweb.checkout.errorTicketUnavailable'));
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
       link.download = `ticket-and-invoice-${ticket.ticket_code}.pdf`;
@@ -85,7 +86,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     try {
       const { data } = await loadInvoice({ variables: { id: payment.id } });
       const b64 = data?.paymentInvoicePdfBase64;
-      if (!b64) throw new Error('Invoice not available');
+      if (!b64) throw new Error(t('mweb.checkout.errorInvoiceUnavailable'));
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
       link.download = `invoice-${String(payment.invoice_no).replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`;
@@ -99,12 +100,17 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     const start = pod?.pod_date_time ? new Date(pod.pod_date_time) : new Date();
     const end = pod?.pod_end_date_time ? new Date(pod.pod_end_date_time) : new Date(start.getTime() + 60 * 60 * 1000);
     const dates = `${start.toISOString().replace(/[-:]/g, '').replace('.000', '')}/${end.toISOString().replace(/[-:]/g, '').replace('.000', '')}`;
-    const params = new URLSearchParams({ action: 'TEMPLATE', text: pod?.pod_title || 'Duncit Pod', dates, details: 'Your Duncit booking is confirmed.' });
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: pod?.pod_title || t('mweb.checkout.calendarEventFallback'),
+      dates,
+      details: t('mweb.checkout.calendarDetails'),
+    });
     window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank', 'noopener,noreferrer');
   };
 
   const requestAppleWallet = () => {
-    notify('Apple Wallet pass is not available yet. Invoice download is separate below.', 'info');
+    notify(t('mweb.checkout.appleWalletUnavailable'), 'info');
   };
 
   return (
@@ -113,17 +119,17 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
       <Card sx={{ borderRadius: '16px', color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />
-          <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>You are in</Typography>
-          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ mt: 0.5, lineHeight: 1.05 }}>Payment Successful</Typography>
+          <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.successOverline')}</Typography>
+          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ mt: 0.5, lineHeight: 1.05 }}>{t('mweb.checkout.successTitle')}</Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Your slot is booked. A receipt with the tax invoice has been emailed to you.
+            {t('mweb.checkout.successSubtitle')}
           </Typography>
           <Box sx={{ mt: 3, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
           <Stack spacing={0.8}>
-            <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} bold />
-            {paidAt && <Row label="Paid on" value={formatDateTime(paidAt)} />}
-            <Row label="Payment ID" value={payment.payment_id} mono />
-            {payment.invoice_no && <Row label="Invoice" value={payment.invoice_no} mono />}
+            <Row label={t('mweb.checkout.amountPaid')} value={formatMoney(payment.currency_symbol, payment.total)} bold />
+            {paidAt && <Row label={t('mweb.checkout.paidOn')} value={formatDateTime(paidAt)} />}
+            <Row label={t('mweb.checkout.paymentId')} value={payment.payment_id} mono />
+            {payment.invoice_no && <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no} mono />}
           </Stack>
           </Box>
           {pod && (
@@ -138,17 +144,19 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#171717' } }}>
-                    Add to Apple Wallet
+                    {t('mweb.checkout.appleWallet')}
                   </Button>
                   <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#111827' } }}>
-                    Add to Google Wallet
+                    {t('mweb.checkout.googleWallet')}
                   </Button>
                 </Stack>
                 {venueTotal > 0 && (
                   <Stack direction="row" spacing={1} alignItems="center">
                     <StorefrontIcon fontSize="small" color="action" />
                     <Typography variant="caption" color="text.secondary">
-                      Venue charges {formatMoney(payment.currency_symbol, venueTotal)} are payable directly at the venue.
+                      {t('mweb.checkout.venueChargesPaid', {
+                        vars: { amount: formatMoney(payment.currency_symbol, venueTotal) },
+                      })}
                     </Typography>
                   </Stack>
                 )}
@@ -160,9 +168,9 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
             {pod?.id && (
               <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{t('mweb.ticket.download')}</Button>
             )}
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
-            <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>
-            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileLabel}</Button>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>{t('mweb.checkout.downloadInvoice')}</Button>
+            <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>{t('mweb.checkout.home')}</Button>
+            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileAction}</Button>
           </Stack>
         </CardContent>
       </Card>

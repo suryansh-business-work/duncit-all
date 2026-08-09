@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, FormHelperText, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import RhfTextField from '../components/RhfTextField';
+import { useTranslation } from '../../i18n/useTranslation';
 import {
   forgotPasswordDefaults,
-  forgotPasswordSchema,
+  makeForgotPasswordSchema,
   type ForgotPasswordValues,
 } from './forgot-password.types';
 
@@ -21,10 +22,12 @@ interface Props {
 }
 
 export default function ForgotPasswordForm({ loading, initialValues, errorMessage, emailError, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const schema = useMemo(() => makeForgotPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     defaultValues: initialValues ?? forgotPasswordDefaults,
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 
@@ -33,7 +36,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.auth.somethingWentWrong'));
     }
   });
 
@@ -44,9 +47,9 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           control={control}
           name="email"
           type="email"
-          label="Email"
+          label={t('mweb.auth.emailLabel')}
           required
-          placeholder="hello@duncit.com"
+          placeholder={t('mweb.auth.emailPlaceholder')}
           autoComplete="email"
           size="small"
           InputProps={{
@@ -70,7 +73,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           disabled={loading}
           sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
-          {loading ? 'Sending OTP…' : 'Send reset OTP'}
+          {loading ? t('mweb.forgotPassword.submitting') : t('mweb.forgotPassword.submit')}
         </Button>
         {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>

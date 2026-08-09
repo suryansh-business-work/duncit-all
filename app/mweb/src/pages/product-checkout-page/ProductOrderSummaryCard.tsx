@@ -7,6 +7,8 @@ import {
   type CartLine,
 } from '../../components/cart/CartContext';
 import { formatMoney } from '../checkout-page/checkoutMath';
+import { useTranslation } from '../../i18n/useTranslation';
+import type { Translate } from '../../i18n/fallback';
 import type { ProductShippingQuote, ProductShippingQuoteLine } from '../checkout-page/queries';
 
 interface Props {
@@ -36,9 +38,10 @@ function LineThumb({
   line,
   onInfo,
 }: Readonly<{ line: CartLine; onInfo: (productId: string) => void }>) {
+  const { t } = useTranslation();
   return (
     <ButtonBase
-      aria-label={`View ${line.product_name} details`}
+      aria-label={t('mweb.checkout.viewProduct', { vars: { name: line.product_name } })}
       onClick={() => onInfo(line.product_id)}
       sx={{
         width: 40,
@@ -73,6 +76,7 @@ function LineRow({
   fmt,
   onInfo,
 }: Readonly<{ line: CartLine; fmt: (value: number) => string; onInfo: (productId: string) => void }>) {
+  const { t } = useTranslation();
   const variant = line.variant_label ? ` — ${line.variant_label}` : '';
   const label = `${line.product_name}${variant} × ${line.quantity}`;
   return (
@@ -81,7 +85,7 @@ function LineRow({
         <LineThumb line={line} onInfo={onInfo} />
         <Typography variant="body2" fontWeight={500} noWrap>{label}</Typography>
         {lineQualifiesFreeDelivery(line) && (
-          <Chip size="small" color="success" label="Free delivery" sx={{ height: 18, fontSize: 11, fontWeight: 700 }} />
+          <Chip size="small" color="success" label={t('mweb.cart.freeDelivery')} sx={{ height: 18, fontSize: 11, fontWeight: 700 }} />
         )}
       </Stack>
       <Typography variant="body2" fontWeight={700}>{fmt(line.unit_cost * line.quantity)}</Typography>
@@ -91,8 +95,8 @@ function LineRow({
 
 /** A warehouse group's delivery charge: "Free" when every line in the group met
  * its free-delivery threshold, else the (live or manual-fallback) charge. */
-function quoteLineValue(line: ProductShippingQuoteLine, currency: string): string {
-  if (line.free) return 'Free';
+function quoteLineValue(line: ProductShippingQuoteLine, currency: string, t: Translate): string {
+  if (line.free) return t('mweb.checkout.deliveryFree');
   return formatMoney(currency, line.charge);
 }
 
@@ -100,9 +104,9 @@ function quoteLineValue(line: ProductShippingQuoteLine, currency: string): strin
  * and manual-fallback groups — fall back to "Delivery"), marked "(estimated)"
  * when ShipRocket could not price it live. No pod title — checkout hides pod
  * detail (products and pods are separate entities). */
-function quoteLineLabel(line: ProductShippingQuoteLine): string {
-  const courier = line.courier_name || 'Delivery';
-  return line.quoted ? courier : `${courier} (estimated)`;
+function quoteLineLabel(line: ProductShippingQuoteLine, t: Translate): string {
+  const courier = line.courier_name || t('mweb.checkout.delivery');
+  return line.quoted ? courier : t('mweb.checkout.deliveryEstimated', { vars: { courier } });
 }
 
 /** Delivery rows — a prompt until a valid pincode, a spinner label while
@@ -118,20 +122,23 @@ function DeliveryRows({
   pincodeValid: boolean;
   currency: string;
 }>) {
-  if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
+  const { t } = useTranslation();
+  const deliveryLabel = t('mweb.checkout.delivery');
+  if (!pincodeValid) return <Row label={deliveryLabel} value={t('mweb.checkout.deliveryEnterPincode')} />;
   if (!quote) {
-    return <Row label="Delivery" value={shippingLoading ? 'Calculating…' : formatMoney(currency, 0)} />;
+    const pending = shippingLoading ? t('mweb.checkout.deliveryCalculating') : formatMoney(currency, 0);
+    return <Row label={deliveryLabel} value={pending} />;
   }
   return (
     <>
       {quote.lines.map((line) => (
         <Row
           key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
-          label={quoteLineLabel(line)}
-          value={quoteLineValue(line, currency)}
+          label={quoteLineLabel(line, t)}
+          value={quoteLineValue(line, currency, t)}
         />
       ))}
-      <Row label="Delivery total" value={formatMoney(currency, quote.total)} />
+      <Row label={t('mweb.checkout.deliveryTotal')} value={formatMoney(currency, quote.total)} />
     </>
   );
 }
@@ -141,6 +148,7 @@ function DeliveryRows({
  * delivery (ShipRocket) and the payable total. No pod title / "Event ticket"
  * line — pods and products are separate entities and never share a payment. */
 export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
@@ -152,8 +160,8 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <ShoppingBagIcon sx={{ color: '#ff8b5f' }} />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Order summary</Typography>
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.1 }}>Your order</Typography>
+            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.orderSummary')}</Typography>
+            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.1 }}>{t('mweb.checkout.yourOrder')}</Typography>
           </Box>
         </Stack>
         <Divider sx={{ my: 1 }} />
@@ -164,17 +172,17 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
             ))}
           </Stack>
           <Divider sx={{ my: 1 }} />
-          <Row label="Subtotal" value={fmt(subtotal)} />
+          <Row label={t('mweb.checkout.subtotal')} value={fmt(subtotal)} />
           <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} />
           {estimated && (
             <Typography variant="caption" color="text.secondary">
-              Estimated delivery — final charge confirmed at checkout.
+              {t('mweb.checkout.deliveryEstimatedNote')}
             </Typography>
           )}
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>Inclusive of:</Typography>
-          <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>{t('mweb.checkout.inclusiveOf')}</Typography>
+          <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
-          <Row label="Total payable" value={fmt(breakup.total)} bold />
+          <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
         </Stack>
       </CardContent>
     </Card>

@@ -4,6 +4,7 @@ import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { ForgotPasswordForm, type ForgotPasswordValues } from '../../forms/forgot-password';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
@@ -15,30 +16,35 @@ interface Props {
 }
 
 export default function ForgotPasswordCard({ loading, errorMessage, unregistered, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Forgot <Box component="span" sx={{ color: auth.accent }}>password?</Box>
+            {t('mweb.forgotPassword.title')}{' '}
+            <Box component="span" sx={{ color: auth.accent }}>
+              {t('mweb.forgotPassword.titleAccent')}
+            </Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
-            Enter your email and we’ll send you a 6-digit OTP to reset your password.
+            {t('mweb.forgotPassword.subtitle')}
           </Typography>
         </Stack>
 
         <ForgotPasswordForm
           loading={loading}
           errorMessage={errorMessage}
-          emailError={unregistered ? 'Unregistered User' : null}
+          emailError={unregistered ? t('mweb.forgotPassword.unregistered') : null}
           onSubmit={onSubmit}
         />
 
         {unregistered ? (
           <Stack alignItems="center" spacing={1}>
             <Typography variant="body2" color="text.secondary">
-              New to Duncit?
+              {t('mweb.forgotPassword.newToDuncit')}
             </Typography>
             <Button
               component={RouterLink}
@@ -46,14 +52,14 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
               variant="contained"
               sx={{ borderRadius: '16px', px: 3, fontWeight: 700, textTransform: 'none' }}
             >
-              Create Account
+              {t('mweb.forgotPassword.createAccount')}
             </Button>
           </Stack>
         ) : (
           <Typography variant="body2" textAlign="center" color="text.secondary">
-            Remembered it?{' '}
+            {t('mweb.forgotPassword.remembered')}{' '}
             <Link component={RouterLink} to="/login" underline="hover">
-              Back to login
+              {t('mweb.auth.backToLogin')}
             </Link>
           </Typography>
         )}

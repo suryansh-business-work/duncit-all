@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 
 export interface VenueCharge {
@@ -33,6 +34,8 @@ export function VenueChargesSheet({
 }: Readonly<Props>) {
   const total = charges.reduce((sum, charge) => sum + charge.amount, 0);
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
+  const closeLabel = t('mweb.checkout.close');
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -41,7 +44,7 @@ export function VenueChargesSheet({
           <YStack
             testID={`${testID}-backdrop`}
             role="button"
-            aria-label="Close"
+            aria-label={closeLabel}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -63,13 +66,13 @@ export function VenueChargesSheet({
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="storefront" size={18} color="#ff4f73" />
                   <Text fontSize={17} fontWeight="700" color="$color">
-                    Venue Charges
+                    {t('mweb.checkout.venueCharges')}
                   </Text>
                 </XStack>
                 <XStack
                   testID={`${testID}-close`}
                   role="button"
-                  aria-label="Close"
+                  aria-label={closeLabel}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -82,7 +85,7 @@ export function VenueChargesSheet({
                 </XStack>
               </XStack>
               <Text fontSize={13.5} color="$muted" paddingTop={6}>
-                Optional venue-side charges to be paid to the Venue.
+                {t('mweb.checkout.venueChargesIntro')}
               </Text>
               <YStack paddingTop={12} gap={8}>
                 {charges.map((charge) => (
@@ -109,7 +112,7 @@ export function VenueChargesSheet({
                 <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
                 <XStack justifyContent="space-between">
                   <Text fontSize={13} fontWeight="700" color="$color">
-                    Total venue charges
+                    {t('mweb.checkout.venueChargesTotal')}
                   </Text>
                   <Text fontSize={13} fontWeight="700" color="$color">
                     {formatMoney(currency, total)}
@@ -117,7 +120,7 @@ export function VenueChargesSheet({
                 </XStack>
               </YStack>
               <Text fontSize={11.5} color="$muted" paddingTop={12}>
-                Pay this directly at the venue — it is not included in your online payment.
+                {t('mweb.checkout.venueChargesNote')}
               </Text>
             </SafeAreaView>
           </YStack>

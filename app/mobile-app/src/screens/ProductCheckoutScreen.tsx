@@ -31,6 +31,7 @@ import { useCoinRedemption } from '@/hooks/useCoinRedemption';
 import { useProductCheckout, type ProductPayment } from '@/hooks/useProductCheckout';
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useCartStore } from '@/stores/cart.store';
 import { buildBreakup, round2 } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
@@ -63,19 +64,21 @@ function addressToForm(
 /** Empty state when the cart was cleared before reaching checkout. */
 function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
   const { muted, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
+  const backLabel = t('mweb.checkout.backToCart');
   return (
     <YStack alignItems="center" gap={10} paddingVertical={64} testID="product-checkout-empty">
       <MaterialIcons name="shopping-bag" size={44} color={muted} />
       <Text fontSize={17} fontWeight="700" color="$color">
-        Nothing to checkout
+        {t('mweb.checkout.nothingToCheckout')}
       </Text>
       <Text fontSize={13} color="$muted" textAlign="center">
-        There are no products in your cart.
+        {t('mweb.checkout.noProductsInCart')}
       </Text>
       <XStack
         testID="product-checkout-back-to-cart"
         role="button"
-        aria-label="Back to cart"
+        aria-label={backLabel}
         onPress={onCart}
         paddingHorizontal={24}
         height={44}
@@ -86,7 +89,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
-          Back to cart
+          {backLabel}
         </Text>
       </XStack>
     </YStack>
@@ -97,6 +100,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
  * payment, delivery listed per warehouse (separate from the pod-membership
  * payment). RN twin of mWeb's ProductCheckoutPage. */
 export function ProductCheckoutScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const lines = useCartStore((s) => s.lines);
   const clearAll = useCartStore((s) => s.clearAll);
@@ -181,11 +185,11 @@ export function ProductCheckoutScreen() {
       if (preview?.ok) setCoupon(preview);
       else {
         setCoupon(null);
-        setCouponError(preview?.message ?? 'Invalid coupon code');
+        setCouponError(preview?.message ?? t('mweb.checkout.errorCouponInvalid'));
       }
     } catch (e) {
       setCoupon(null);
-      setCouponError(toErrorMessage(e, 'Could not apply coupon'));
+      setCouponError(toErrorMessage(e, t('mweb.checkout.errorCouponApply')));
     } finally {
       setApplyingCoupon(false);
     }
@@ -205,9 +209,9 @@ export function ProductCheckoutScreen() {
     try {
       const result = await verifyRazorpay(order.payment_doc_id, sig);
       if (result?.status === 'SUCCESS') finishSuccess(result);
-      else setError('Payment could not be verified.');
+      else setError(t('mweb.checkout.errorNotVerified'));
     } catch (e) {
-      setError(toErrorMessage(e, 'Payment could not be verified.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorNotVerified')));
     } finally {
       setSubmitting(false);
     }
@@ -226,12 +230,12 @@ export function ProductCheckoutScreen() {
       if (dummyMode) {
         const result = await payProduct(values, payContext);
         if (result?.status === 'SUCCESS') finishSuccess(result);
-        else setError('Payment failed. Please try again.');
+        else setError(t('mweb.checkout.errorFailed'));
         return;
       }
-      setError('Online payments are not configured yet. Please try again later.');
+      setError(t('mweb.checkout.errorNotConfigured'));
     } catch (e) {
-      setError(toErrorMessage(e, 'Payment failed. Please try again.'));
+      setError(toErrorMessage(e, t('mweb.checkout.errorFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -246,7 +250,7 @@ export function ProductCheckoutScreen() {
           onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
           onHome={() => navigation.navigate('Home')}
           onProfile={() => navigation.navigate('OrdersHistory')}
-          profileLabel="My orders"
+          profileLabel={t('mweb.checkout.myOrders')}
         />
       </ScrollView>
     );
@@ -298,7 +302,9 @@ export function ProductCheckoutScreen() {
           dummyMode={dummyMode}
           // The number goes ON the button — a cart summary has usually scrolled
           // away by the time the buyer reaches it.
-          payLabel={`Pay ${formatMoney(breakup.currency, coins.effectiveTotal)}`}
+          payLabel={t('mweb.checkout.pay', {
+            vars: { amount: formatMoney(breakup.currency, coins.effectiveTotal) },
+          })}
           addressRequired
           onPincodeChange={setDeliveryPincode}
           onSubmit={submit}
@@ -308,13 +314,13 @@ export function ProductCheckoutScreen() {
   } else {
     body = (
       <Text testID="product-checkout-unavailable" padding={24} color="$muted">
-        Checkout is unavailable right now. Please try again later.
+        {t('mweb.checkout.unavailable')}
       </Text>
     );
   }
 
   return (
-    <StackScreen title="Product checkout" testID="product-checkout-screen">
+    <StackScreen title={t('mweb.checkout.productTitle')} testID="product-checkout-screen">
       {body}
       <ProductDetailSheet
         productId={infoProductId}

@@ -1,5 +1,6 @@
 import { useWatch, type Control } from 'react-hook-form';
 import { Skeleton, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CheckoutContact, CheckoutForm } from './queries';
 
 interface Props {
@@ -46,6 +47,10 @@ function ContactRowSkeleton({ label }: Readonly<{ label: string }>) {
  * form state (sent on pay) but are edited from the profile, not here.
  */
 export default function ContactSummaryCard({ control, contact, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const nameLabel = t('mweb.checkout.contactName');
+  const emailLabel = t('mweb.checkout.contactEmail');
+  const phoneLabel = t('mweb.checkout.contactPhone');
   const [fullName, email, ext, phone] = useWatch({
     control,
     name: ['full_name', 'email', 'phone_extension', 'phone_number'],
@@ -59,25 +64,25 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
   return (
     <Stack spacing={1.25}>
       <Typography variant="overline" color="text.secondary" fontWeight={700}>
-        Contact details
+        {t('mweb.checkout.contactDetails')}
       </Typography>
       <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
         {loading ? (
           <>
-            <ContactRowSkeleton label="Name" />
-            <ContactRowSkeleton label="Email" />
-            <ContactRowSkeleton label="Phone" />
+            <ContactRowSkeleton label={nameLabel} />
+            <ContactRowSkeleton label={emailLabel} />
+            <ContactRowSkeleton label={phoneLabel} />
           </>
         ) : (
           <>
-            <ContactRow label="Name" value={resolvedName} />
-            <ContactRow label="Email" value={resolvedEmail} />
-            <ContactRow label="Phone" value={phoneLine} />
+            <ContactRow label={nameLabel} value={resolvedName} />
+            <ContactRow label={emailLabel} value={resolvedEmail} />
+            <ContactRow label={phoneLabel} value={phoneLine} />
           </>
         )}
       </Stack>
       <Typography variant="caption" color="text.secondary">
-        To change these, edit your profile.
+        {t('mweb.checkout.contactEditNote')}
       </Typography>
     </Stack>
   );

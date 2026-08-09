@@ -22,10 +22,12 @@ import {
 import { openRazorpayCheckout, type RazorpayOrderData, type RazorpaySignature } from './razorpayCheckout';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
 import { parseApiError } from '../../utils/parseApiError';
+import { useTranslation } from '../../i18n/useTranslation';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { podId = '' } = useParams();
@@ -93,7 +95,7 @@ export default function CheckoutPage() {
         const orderRes = await doRazorpayOrder({ variables: { input } });
         const order = orderRes.data?.createRazorpayOrder;
         if (!order) {
-          session.setError('Could not start the payment. Please try again.');
+          session.setError(t('mweb.checkout.errorStart'));
           return;
         }
         if (order.free && order.payment) {
@@ -112,10 +114,10 @@ export default function CheckoutPage() {
         const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
         const payment = res.data?.dummyCheckout;
         if (payment?.status === 'SUCCESS') session.finishSuccess(payment);
-        else session.setError('Payment failed. Please try again.');
+        else session.setError(t('mweb.checkout.errorFailed'));
         return;
       }
-      session.setError('Online payments are not configured yet. Please try again later.');
+      session.setError(t('mweb.checkout.errorNotConfigured'));
     } catch (submitError: any) {
       session.setError(parseApiError(submitError));
     } finally {
@@ -136,7 +138,15 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!checkoutPodId && !state.amount) return <EmptyCheckout onHome={() => navigate('/')} />;
+  if (!checkoutPodId && !state.amount) {
+    return (
+      <EmptyCheckout
+        onHome={() => navigate('/')}
+        title={t('mweb.checkout.nothingToCheckout')}
+        action={t('mweb.checkout.backToHome')}
+      />
+    );
+  }
   if (session.financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
 
   const headerBg = isDark
@@ -147,10 +157,10 @@ export default function CheckoutPage() {
     <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
       <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-          <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
+          <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
-            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
+            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.title')}</Typography>
+            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>{t('mweb.checkout.heading')}</Typography>
           </Box>
           <GatewayChip finance={session.finance} />
         </Stack>
@@ -199,11 +209,11 @@ export default function CheckoutPage() {
   );
 }
 
-function EmptyCheckout({ onHome }: Readonly<{ onHome: () => void }>) {
+function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () => void; title: string; action: string }>) {
   return (
     <Box sx={{ p: 4, textAlign: 'center' }}>
-      <Alert severity="info" sx={{ mb: 2 }}>Nothing to checkout.</Alert>
-      <Button onClick={onHome} variant="contained">Back to Home</Button>
+      <Alert severity="info" sx={{ mb: 2 }}>{title}</Alert>
+      <Button onClick={onHome} variant="contained">{action}</Button>
     </Box>
   );
 }

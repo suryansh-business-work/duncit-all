@@ -5,12 +5,14 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { CheckoutPod } from '@/hooks/useCheckout';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatDateTime } from '@/utils/date-format';
 
 /** Pod summary shown on the success screen — image + title + date + location, so
  * the native confirmation mirrors mWeb's pod box. */
 export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
   if (!pod) return null;
   const image = pod.pod_images_and_videos?.find((m) => m.url)?.url;
 
@@ -33,7 +35,7 @@ export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
       ) : null}
       <YStack padding={14} gap={4}>
         <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
-          Your booking
+          {t('mweb.checkout.yourBooking')}
         </Text>
         <Text fontSize={16} fontWeight="700" color="$color">
           {pod.pod_title}

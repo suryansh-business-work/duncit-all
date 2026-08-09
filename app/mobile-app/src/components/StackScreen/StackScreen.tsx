@@ -9,6 +9,7 @@ import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
 import { useGoBack } from '@/hooks/useGoBack';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface StackScreenProps {
   title: string;
@@ -31,6 +32,7 @@ export function StackScreen({
 }: Readonly<StackScreenProps>) {
   const goBack = useGoBack();
   const { color: ink } = useThemeColors();
+  const { t } = useTranslation();
 
   return (
     <YStack flex={1} testID={testID}>
@@ -47,7 +49,7 @@ export function StackScreen({
           <XStack
             testID={`${testID}-back`}
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}

@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { loginDefaults, loginSchema, type LoginFormValues } from './login.types';
+import { useTranslation } from '@/hooks/useTranslation';
+import { loginDefaults, makeLoginSchema, type LoginFormValues } from './login.types';
 
 export interface LoginFormProps {
   loading?: boolean;
@@ -14,9 +16,11 @@ export interface LoginFormProps {
 
 /** Email + password login — same fields as the mWeb login. */
 export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFormProps>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => makeLoginSchema(t), [t]);
   const { control, handleSubmit } = useForm<LoginFormValues>({
     defaultValues: loginDefaults,
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
 
@@ -25,8 +29,8 @@ export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFor
       <FormTextField
         control={control}
         name="email"
-        label="Email"
-        placeholder="hello@duncit.com"
+        label={t('mweb.auth.emailLabel')}
+        placeholder={t('mweb.auth.emailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
@@ -36,13 +40,13 @@ export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFor
       <FormTextField
         control={control}
         name="password"
-        label="Password"
-        placeholder="Enter password"
+        label={t('mweb.auth.passwordLabel')}
+        placeholder={t('mweb.login.passwordPlaceholder')}
         secureTextEntry
         autoComplete="password"
         textContentType="password"
         required
-        hint="At least 8 characters"
+        hint={t('mweb.auth.passwordHint')}
       />
 
       {errorMessage ? (
@@ -53,7 +57,7 @@ export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFor
 
       <PrimaryButton
         testID="login-submit"
-        label="Login"
+        label={t('mweb.login.submit')}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

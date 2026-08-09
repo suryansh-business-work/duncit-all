@@ -5,6 +5,7 @@ import { auth } from '@duncit/auth-tokens';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { ResetPasswordForm, type ResetPasswordValues } from '../../forms/reset-password';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   email: string;
@@ -25,16 +26,21 @@ export default function ResetPasswordCard({
   onSubmit,
   onResend,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   if (done) {
     return (
       <AuthScreenFrame center>
         <Stack spacing={2.2} alignItems="center" data-testid="reset-success">
           <CheckCircleRoundedIcon sx={{ fontSize: 72, color: 'success.main' }} />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Password reset <Box component="span" sx={{ color: 'success.main' }}>successfully</Box>
+            {t('mweb.resetPassword.successTitle')}{' '}
+            <Box component="span" sx={{ color: 'success.main' }}>
+              {t('mweb.resetPassword.successTitleAccent')}
+            </Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
-            Your password has been updated. You can now log in with your new password.
+            {t('mweb.resetPassword.successSubtitle')}
           </Typography>
           <Button
             component={RouterLink}
@@ -43,7 +49,7 @@ export default function ResetPasswordCard({
             size="large"
             sx={{ borderRadius: '16px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
           >
-            Go to login
+            {t('mweb.resetPassword.goToLogin')}
           </Button>
         </Stack>
       </AuthScreenFrame>
@@ -56,10 +62,15 @@ export default function ResetPasswordCard({
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
           <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
-            Reset <Box component="span" sx={{ color: auth.accent }}>password</Box>
+            {t('mweb.resetPassword.title')}{' '}
+            <Box component="span" sx={{ color: auth.accent }}>
+              {t('mweb.resetPassword.titleAccent')}
+            </Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
-            Enter the OTP sent to {email || 'your email'} and choose a new password.
+            {t('mweb.resetPassword.subtitle', {
+              vars: { email: email || t('mweb.resetPassword.emailFallback') },
+            })}
           </Typography>
         </Stack>
 
@@ -67,13 +78,13 @@ export default function ResetPasswordCard({
 
         <Stack spacing={0.5} alignItems="center">
           <Typography variant="body2" color="text.secondary">
-            Didn’t get it?{' '}
+            {t('mweb.resetPassword.didntGetIt')}{' '}
             <Link component="button" type="button" onClick={onResend} disabled={resending} underline="hover">
-              {resending ? 'Resending…' : 'Resend OTP'}
+              {resending ? t('mweb.resetPassword.resending') : t('mweb.resetPassword.resend')}
             </Link>
           </Typography>
           <Link component={RouterLink} to="/login" underline="hover" variant="body2">
-            Back to login
+            {t('mweb.auth.backToLogin')}
           </Link>
         </Stack>
       </Stack>

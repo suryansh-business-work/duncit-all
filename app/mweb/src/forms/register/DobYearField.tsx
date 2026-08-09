@@ -4,6 +4,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { parseISO } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { RegisterFormValues } from './register.types';
 
 interface Props {
@@ -29,9 +30,10 @@ export default function DobYearField({
   control,
   minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const maxDate = latestEligibleDob(minAge);
   const minDate = new Date(maxDate.getFullYear() - OLDEST_YEARS, 0, 1);
-  const hint = `You must be at least ${minAge} years old`;
+  const hint = t('mweb.signup.dobHint', { vars: { years: minAge } });
   return (
     <Controller
       control={control}
@@ -39,7 +41,7 @@ export default function DobYearField({
       render={({ field, fieldState }) => (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
-            label="Date of birth"
+            label={t('mweb.auth.dateOfBirth')}
             openTo="year"
             views={['year', 'month', 'day']}
             value={field.value ? parseISO(field.value) : null}

@@ -1,12 +1,14 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
+  makeResetPasswordSchema,
   resetPasswordDefaults,
-  resetPasswordSchema,
   type ResetPasswordFormValues,
 } from './reset-password.types';
 
@@ -22,40 +24,43 @@ export function ResetPasswordForm({
   errorMessage,
   onSubmit,
 }: Readonly<ResetPasswordFormProps>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => makeResetPasswordSchema(t), [t]);
   const { control, handleSubmit } = useForm<ResetPasswordFormValues>({
     defaultValues: resetPasswordDefaults,
-    resolver: zodResolver(resetPasswordSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
+  const submitLabel = loading ? t('mweb.resetPassword.submitting') : t('mweb.resetPassword.submit');
 
   return (
     <YStack gap={16}>
       <FormTextField
         control={control}
         name="otp"
-        label="6-digit OTP"
-        placeholder="123456"
+        label={t('mweb.resetPassword.otpLabel')}
+        placeholder={t('mweb.resetPassword.otpPlaceholder')}
         keyboardType="number-pad"
         maxLength={6}
         required
-        hint="6-digit code"
+        hint={t('mweb.resetPassword.otpHint')}
       />
       <FormTextField
         control={control}
         name="new_password"
-        label="New password"
-        placeholder="Create a new password"
+        label={t('mweb.resetPassword.newPasswordLabel')}
+        placeholder={t('mweb.resetPassword.newPasswordPlaceholder')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
         required
-        hint="At least 8 characters"
+        hint={t('mweb.auth.passwordHint')}
       />
       <FormTextField
         control={control}
         name="confirm_password"
-        label="Confirm new password"
-        placeholder="Re-enter new password"
+        label={t('mweb.resetPassword.confirmPasswordLabel')}
+        placeholder={t('mweb.resetPassword.confirmPasswordPlaceholder')}
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
@@ -70,7 +75,7 @@ export function ResetPasswordForm({
 
       <PrimaryButton
         testID="reset-password-submit"
-        label={loading ? 'Resetting…' : 'Reset password'}
+        label={submitLabel}
         loading={loading}
         onPress={handleSubmit(onSubmit)}
       />

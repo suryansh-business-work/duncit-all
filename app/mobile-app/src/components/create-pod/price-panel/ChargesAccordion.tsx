@@ -3,9 +3,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { EarningsStatement } from '@duncit/utils';
 import { ChargeRow, ChargeSection, sectionTint } from './ChargeSection';
-import { VENUE_SHORTFALL_MESSAGE } from './step4-copy';
+
 interface Props {
   statement: EarningsStatement;
   money: (value: number) => string;
@@ -18,7 +19,9 @@ interface Props {
  * server used, so each value can be verified by hand. mWeb twin. */
 export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
+  const govtCharges = t('mweb.createPod.govtCharges');
 
   return (
     <YStack
@@ -33,7 +36,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
       <XStack
         testID="price-panel-charges-header"
         role="button"
-        aria-label="Govt. and other charges"
+        aria-label={govtCharges}
         aria-expanded={open}
         onPress={() => setOpen((value) => !value)}
         alignItems="center"
@@ -45,7 +48,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
         <XStack alignItems="center" gap={8} flexShrink={1}>
           <MaterialIcons name="receipt-long" size={16} color={primary} />
           <Text fontSize={13.5} fontWeight="700" color="$color">
-            Govt. and other charges
+            {govtCharges}
           </Text>
         </XStack>
         <XStack alignItems="center" gap={4}>
@@ -71,7 +74,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
                 title={section.title}
                 amount={money(section.total)}
                 tint={sectionTint(isVenue, shortfall)}
-                invalidMessage={shortfall ? VENUE_SHORTFALL_MESSAGE : undefined}
+                invalidMessage={shortfall ? t('mweb.createPod.venueShortfall') : undefined}
                 testID={`price-panel-${section.key}-group`}
               >
                 {section.lines.map((line) => (
@@ -82,7 +85,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
           })}
           <XStack justifyContent="space-between" paddingHorizontal={12} paddingTop={2}>
             <Text fontSize={13} fontWeight="600" color="$color">
-              Total deductions
+              {t('mweb.createPod.totalDeductions')}
             </Text>
             <Text fontSize={13} fontWeight="700" color="$color">
               {money(statement.total_deductions)}
@@ -90,7 +93,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
           </XStack>
           {statement.reconciled ? null : (
             <Text testID="price-panel-reconcile-warning" fontSize={11.5} color="$danger">
-              These figures do not reconcile — refresh, or contact support if this persists.
+              {t('mweb.createPod.reconcileWarning')}
             </Text>
           )}
         </YStack>

@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Stack } from '@mui/material';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
-  STEP_TITLES,
-  STEP_SUBTITLES,
+  STEP_TITLE_KEYS,
+  STEP_SUBTITLE_KEYS,
   buildCreatePodInput,
   buildModerationInput,
-  createPodSchema,
   filterClubs,
   hostCategoryKeyOf,
+  makeCreatePodSchema,
   serializeDraft,
   stepForField,
 } from './create-pod.form';
+import { useTranslation } from '../../../i18n/useTranslation';
 import StepHero from './StepHero';
 import StepFooterBar from './StepFooterBar';
 import { ModerationBlockedDialog, type BlockedViolation } from '@duncit/ui';
@@ -77,8 +78,12 @@ export default function CreatePodStepper({
   onModerate,
   onPublish,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // The schema cannot call `t` at module scope, so it is built here from the
+  // reader's own catalogue — the validation messages are copy like any other.
+  const schema = useMemo(() => makeCreatePodSchema(t), [t]);
   const form = useForm<CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema),
+    resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onTouched',
   });
@@ -86,13 +91,13 @@ export default function CreatePodStepper({
   // their own), so the step list never changes shape.
   const showProducts = useFeatureFlag('is_product_visible');
 
-  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLES.length - 1));
+  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLE_KEYS.length - 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
-  const isLast = step === STEP_TITLES.length - 1;
+  const isLast = step === STEP_TITLE_KEYS.length - 1;
 
   // With products gated off, drop any product values a stale draft may carry.
   useEffect(() => {
@@ -163,7 +168,7 @@ export default function CreatePodStepper({
         message: violation.message,
         type: violation.type,
         stepIndex,
-        stepTitle: STEP_TITLES[stepIndex],
+        stepTitle: t(STEP_TITLE_KEYS[stepIndex]),
       };
     });
     setBlocked(mapped);
@@ -182,7 +187,7 @@ export default function CreatePodStepper({
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Could not create the pod.';
+      const message = e instanceof Error ? e.message : t('mweb.createPod.createFailed');
       // Surface a duplicate title inline on the title field and jump back to it.
       if (/already exists/i.test(message)) {
         dupTitleRef.current = true;
@@ -271,9 +276,9 @@ export default function CreatePodStepper({
     <Stack spacing={2.5}>
       <StepHero
         step={step}
-        total={STEP_TITLES.length}
-        title={STEP_TITLES[step]}
-        subtitle={STEP_SUBTITLES[step]}
+        total={STEP_TITLE_KEYS.length}
+        title={t(STEP_TITLE_KEYS[step])}
+        subtitle={t(STEP_SUBTITLE_KEYS[step])}
       />
       {steps[step]}
       {error && <Alert severity="error">{error}</Alert>}
@@ -296,7 +301,8 @@ export default function CreatePodStepper({
         violations={blocked}
         onJump={jumpToStep}
         onClose={() => setBlocked([])}
-        description="Our AI check found content that breaks the community guidelines, so the pod was not created. Fix the items below and try again."
+        title={t('mweb.createPod.moderationTitle')}
+        description={t('mweb.createPod.moderationDescription')}
       />
     </Stack>
   );

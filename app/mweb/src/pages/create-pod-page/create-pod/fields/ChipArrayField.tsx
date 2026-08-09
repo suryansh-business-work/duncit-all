@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { useTranslation } from '../../../../i18n/useTranslation';
 
 interface Props {
   label: string;
@@ -20,11 +21,12 @@ export default function ChipArrayField({
   value,
   onChange,
   helperText,
-  placeholder = 'Type and press Enter',
+  placeholder,
   max = 20,
   error,
 }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
+  const { t } = useTranslation();
 
   const commit = () => {
     const next = draft.trim();
@@ -62,11 +64,11 @@ export default function ChipArrayField({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
         onBlur={commit}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('mweb.createPod.chipPlaceholder')}
         size="small"
         fullWidth
         error={!!error}
-        helperText={error ?? helperText ?? `Press Enter to add. Max ${max}.`}
+        helperText={error ?? helperText ?? t('mweb.createPod.chipMaxHint', { vars: { max } })}
       />
     </Box>
   );

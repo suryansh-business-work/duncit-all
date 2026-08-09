@@ -8,6 +8,7 @@ import { FieldLabel } from '@/components/Field';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from './create-pod.form';
 import { CalendarSheet } from './DateTimeSheet';
 
@@ -34,6 +35,7 @@ export function DateTimeField({
   testID,
 }: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
+  const { t } = useTranslation();
   const { dateFormat, timeFormat } = useAppSettings();
   const [open, setOpen] = useState(false);
   const closeSheet = () => setOpen(false);
@@ -53,13 +55,13 @@ export function DateTimeField({
           borderColor={error ? '$danger' : '$borderColor'}
           value={value}
           onChangeText={onChange}
-          placeholder="YYYY-MM-DD HH:mm"
+          placeholder={t('mweb.createPod.dateTimePlaceholder')}
           aria-label={label}
         />
         <XStack
           testID={`${testID}-open`}
           role="button"
-          aria-label={`Pick ${label}`}
+          aria-label={t('mweb.createPod.pickDateTime', { vars: { label } })}
           onPress={() => setOpen(true)}
           width={44}
           height={44}
@@ -91,7 +93,7 @@ export function DateTimeField({
             <YStack
               testID={`${testID}-sheet-backdrop`}
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.auth.close')}
               onPress={closeSheet}
               position="absolute"
               top={0}

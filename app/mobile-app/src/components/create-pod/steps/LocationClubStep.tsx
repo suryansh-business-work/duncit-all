@@ -6,15 +6,11 @@ import { Text, XStack, YStack } from 'tamagui';
 import { LocationDialog } from '@/components/LocationDialog';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
 import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
-
-const MODES = [
-  { value: 'PHYSICAL', label: 'Physical' },
-  { value: 'VIRTUAL', label: 'Virtual' },
-];
 
 interface Props {
   form: CreatePodForm;
@@ -33,6 +29,11 @@ const locationLabel = (location: CreatePodLocation) =>
 export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
+  const modes = [
+    { value: 'PHYSICAL', label: t('mweb.createPod.modePhysical') },
+    { value: 'VIRTUAL', label: t('mweb.createPod.modeVirtual') },
+  ];
   const locationId = watch('location_id');
   const locality = watch('locality');
   const location = locations.find((item) => item.id === locationId);
@@ -56,23 +57,23 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
           <MaterialIcons name="place" size={18} color={primary} />
           <YStack flex={1}>
             <Text fontSize={12} fontWeight="600" color="$muted">
-              Pod location
+              {t('mweb.createPod.podLocation')}
             </Text>
             <Text testID="create-pod-location-label" fontSize={15} fontWeight="700" color="$color">
               {location
                 ? [locationLabel(location), location.state].filter(Boolean).join(', ')
-                : 'No location selected'}
+                : t('mweb.createPod.noLocationSelected')}
             </Text>
             {locality ? (
               <Text testID="create-pod-locality-label" fontSize={12} color="$muted">
-                Locality: {locality}
+                {t('mweb.createPod.localityLabel', { vars: { locality } })}
               </Text>
             ) : null}
           </YStack>
           <XStack
             testID="create-pod-change-location"
             role="button"
-            aria-label="Change location"
+            aria-label={t('mweb.createPod.changeLocation')}
             onPress={() => setPickerOpen(true)}
             paddingHorizontal={12}
             paddingVertical={8}
@@ -82,12 +83,12 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
             pressStyle={{ opacity: 0.7 }}
           >
             <Text fontSize={13} fontWeight="600" color="$color">
-              Change
+              {t('mweb.createPod.change')}
             </Text>
           </XStack>
         </XStack>
         <Text fontSize={12} color="$muted">
-          Pick your city and locality — the picker shows how many clubs each locality has.
+          {t('mweb.createPod.locationPickerHint')}
         </Text>
       </YStack>
 
@@ -103,8 +104,8 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
         name="pod_mode"
         render={({ field }) => (
           <ChipSelectField
-            label="Mode"
-            options={MODES}
+            label={t('mweb.createPod.podMode')}
+            options={modes}
             value={field.value}
             onChange={(next) => {
               field.onChange(next);

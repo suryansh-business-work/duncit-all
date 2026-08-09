@@ -7,6 +7,7 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { useTranslation } from '../../../../i18n/useTranslation';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
@@ -45,13 +46,15 @@ export default function MediaUrlsField({
   value,
   onChange,
   error,
-  label = 'Cover image',
+  label,
   required = true,
   folder = '/pods',
   subCategoryName,
   maxImages,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('mweb.createPod.coverImageLabel');
   const urls = splitLines(value ?? '');
   const addUrl = (url: string) => onChange([...urls, url].join('\n'));
   const addUrls = (picked: string[]) => {
@@ -79,13 +82,13 @@ export default function MediaUrlsField({
         color="text.secondary"
         sx={{ fontWeight: 700, letterSpacing: '0.06em' }}
       >
-        {requiredLabel(label, required)}
+        {requiredLabel(fieldLabel, required)}
       </Typography>
       {urls.length === 0 ? (
         <Box
           role="button"
           tabIndex={0}
-          aria-label="Upload an image"
+          aria-label={t('mweb.createPod.uploadImage')}
           onClick={openPicker}
           onKeyDown={openOnKey}
           sx={{
@@ -108,8 +111,8 @@ export default function MediaUrlsField({
           <Box sx={{ width: 56, height: 56, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
             <AddPhotoAlternateOutlinedIcon color="primary" />
           </Box>
-          <Typography variant="subtitle2" fontWeight={600}>Upload an image</Typography>
-          <Typography variant="caption" color="text.secondary">Min 800×400px (JPG, PNG)</Typography>
+          <Typography variant="subtitle2" fontWeight={600}>{t('mweb.createPod.uploadImage')}</Typography>
+          <Typography variant="caption" color="text.secondary">{t('mweb.createPod.uploadImageHint')}</Typography>
         </Box>
       ) : (
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
@@ -118,11 +121,11 @@ export default function MediaUrlsField({
               {VIDEO_URL_RE.test(url) ? (
                 <VideocamIcon color="action" />
               ) : (
-                <Box component="img" src={url} alt="Pod media" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Box component="img" src={url} alt={t('mweb.createPod.mediaAlt')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
               <IconButton
                 size="small"
-                aria-label="Remove media"
+                aria-label={t('mweb.createPod.removeMedia')}
                 onClick={() => removeUrl(url)}
                 sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
               >
@@ -133,7 +136,7 @@ export default function MediaUrlsField({
           <Box
             role="button"
             tabIndex={0}
-            aria-label="Add media"
+            aria-label={t('mweb.createPod.addMedia')}
             onClick={full ? undefined : openPicker}
             onKeyDown={full ? undefined : openOnKey}
             sx={{ cursor: 'pointer', width: 88, height: 88, borderRadius: '16px', border: '2px dashed', borderColor: 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}
@@ -145,14 +148,14 @@ export default function MediaUrlsField({
       {error && <FormHelperText error>{error}</FormHelperText>}
       {full && (
         <FormHelperText>
-          {`That is the maximum of ${maxImages} — remove one to add another.`}
+          {t('mweb.createPod.mediaMaxHint', { vars: { max: maxImages ?? 0 } })}
         </FormHelperText>
       )}
       <MediaPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder={folder}
-        title="Add pod media"
+        title={t('mweb.createPod.addPodMedia')}
         // The cover is a wide banner, and a pod is a group activity — so the
         // search opens on landscape photos of people doing this category.
         seedQuery={coverSearchTerm(subCategoryName)}

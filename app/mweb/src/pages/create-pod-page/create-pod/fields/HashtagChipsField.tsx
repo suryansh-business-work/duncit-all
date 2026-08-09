@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Box, Chip, TextField } from '@mui/material';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 
 /** Splits the stored hashtag text into clean tags (no #, no blanks). */
@@ -24,6 +25,7 @@ interface Props {
  * chips serialize back into the form's pod_hashtag_text. */
 export default function HashtagChipsField({ form }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
+  const { t } = useTranslation();
 
   return (
     <Controller
@@ -66,14 +68,14 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
               </Box>
             )}
             <TextField
-              label="Hashtags"
+              label={t('mweb.createPod.hashtagsLabel')}
               fullWidth
-              placeholder="Type a tag and press Enter"
+              placeholder={t('mweb.createPod.hashtagsPlaceholder')}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKeyDown}
               onBlur={commit}
-              helperText="Press Enter, space or comma to add a tag."
+              helperText={t('mweb.createPod.hashtagsHint')}
             />
           </Box>
         );

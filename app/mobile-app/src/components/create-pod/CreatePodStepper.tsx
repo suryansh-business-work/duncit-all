@@ -1,21 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
-  STEP_TITLES,
+  STEP_TITLE_KEYS,
   buildCreatePodInput,
   buildModerationInput,
-  createPodSchema,
   filterClubs,
   hostCategoryKeyOf,
+  makeCreatePodSchema,
   serializeDraft,
   stepForField,
 } from './create-pod.form';
@@ -80,21 +81,25 @@ export function CreatePodStepper({
   onModerate,
   onPublish,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // The schema cannot call `t` at module scope, so it is built here from the
+  // reader's own catalogue — the validation messages are copy like any other.
+  const schema = useMemo(() => makeCreatePodSchema(t), [t]);
   const form = useForm<CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema),
+    resolver: zodResolver(schema),
     defaultValues: initialValues,
     mode: 'onTouched',
   });
   const showProducts = useFeatureFlag('is_product_visible');
 
-  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLES.length - 1));
+  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLE_KEYS.length - 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
-  const isLast = step === STEP_TITLES.length - 1;
-  const submitLabel = busy ? 'Creating…' : 'Create Pod';
+  const isLast = step === STEP_TITLE_KEYS.length - 1;
+  const submitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
 
   // With products gated off, drop any product values a stale draft may carry.
   useEffect(() => {
@@ -165,8 +170,8 @@ export function CreatePodStepper({
         message: violation.message,
         type: violation.type,
         stepIndex,
-        // stepIndex is always an in-range STEP_TITLES index (the cast narrows the type).
-        stepTitle: STEP_TITLES[stepIndex] as string,
+        // stepIndex is always an in-range STEP_TITLE_KEYS index (the cast narrows the type).
+        stepTitle: t(STEP_TITLE_KEYS[stepIndex] as string),
       };
     });
     setBlocked(mapped);
@@ -186,7 +191,7 @@ export function CreatePodStepper({
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Could not create the pod.';
+      const message = e instanceof Error ? e.message : t('mweb.createPod.createFailed');
       if (/already exists/i.test(message)) {
         dupTitleRef.current = true;
         form.setError('pod_title', { type: 'duplicate', message });
@@ -294,7 +299,7 @@ export function CreatePodStepper({
             flex={1}
             testID="create-pod-back"
             role="button"
-            aria-label="Back"
+            aria-label={t('mweb.createPod.back')}
             onPress={() => goTo(step - 1)}
             height={52}
             borderRadius={12}
@@ -305,14 +310,14 @@ export function CreatePodStepper({
             pressStyle={{ opacity: 0.7 }}
           >
             <Text fontSize={15} fontWeight="700" color="$color">
-              Back
+              {t('mweb.createPod.back')}
             </Text>
           </XStack>
         ) : null}
         <YStack flex={2}>
           <PrimaryButton
             testID="create-pod-submit"
-            label={isLast ? submitLabel : 'Next'}
+            label={isLast ? submitLabel : t('mweb.createPod.next')}
             loading={busy}
             disabled={isLast && pricing.blocked}
             onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}

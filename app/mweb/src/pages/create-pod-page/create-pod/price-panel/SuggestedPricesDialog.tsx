@@ -16,13 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SellIcon from '@mui/icons-material/Sell';
 import { SUGGESTED_TICKET_PRICES, type SuggestedTicketPrice } from './queries';
 import SuggestedPricesTable from './SuggestedPricesTable';
-import {
-  SUGGESTED_PRICES_CLOSE,
-  SUGGESTED_PRICES_EMPTY,
-  SUGGESTED_PRICES_ERROR,
-  SUGGESTED_PRICES_NOTE,
-  SUGGESTED_PRICES_TITLE,
-} from './pricingCopy';
+import { useTranslation } from '../../../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -48,6 +42,7 @@ export default function SuggestedPricesDialog({
   symbol,
 }: Readonly<Props>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const { data, loading, error } = useQuery(SUGGESTED_TICKET_PRICES, {
     variables: { no_of_spots: noOfSpots, venue_id: venueId, venue_amount: venueAmount },
@@ -66,13 +61,13 @@ export default function SuggestedPricesDialog({
   } else if (error) {
     body = (
       <Typography variant="body2" color="error" data-testid="suggested-prices-error">
-        {SUGGESTED_PRICES_ERROR}
+        {t('mweb.createPod.suggestedPricesError')}
       </Typography>
     );
   } else if (prices.length === 0) {
     body = (
       <Typography variant="body2" color="text.secondary" data-testid="suggested-prices-empty">
-        {SUGGESTED_PRICES_EMPTY}
+        {t('mweb.createPod.suggestedPricesEmpty')}
       </Typography>
     );
   }
@@ -92,9 +87,9 @@ export default function SuggestedPricesDialog({
         sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, pr: 7 }}
       >
         <SellIcon color="primary" fontSize="small" />
-        {SUGGESTED_PRICES_TITLE}
+        {t('mweb.createPod.suggestedPricesTitle')}
         <IconButton
-          aria-label={SUGGESTED_PRICES_CLOSE}
+          aria-label={t('mweb.auth.close')}
           onClick={onClose}
           data-testid="suggested-prices-close"
           sx={{ position: 'absolute', right: 8, top: 8 }}
@@ -110,7 +105,7 @@ export default function SuggestedPricesDialog({
             sx={{ p: 1.5, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
           >
             <Typography variant="body2" fontWeight={700}>
-              {SUGGESTED_PRICES_NOTE}
+              {t('mweb.createPod.suggestedPricesNote')}
             </Typography>
           </Box>
         </Stack>

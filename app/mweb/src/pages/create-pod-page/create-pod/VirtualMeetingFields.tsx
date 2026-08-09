@@ -3,6 +3,7 @@ import { Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { formatDurationBetween, useDateFormat } from '../../../utils/dateFormat';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Virtual-pod branch of Step 3: meeting platform/link/notes + start/end pickers.
@@ -16,33 +17,34 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
     formState: { errors },
   } = form;
   const { dateFormat, timeFormat } = useDateFormat();
+  const { t } = useTranslation();
   const dateTimeFormat = `${dateFormat} ${timeFormat}`;
   const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
 
   return (
     <Stack spacing={2}>
       <TextField
-        label="Meeting platform"
+        label={t('mweb.createPod.meetingPlatform')}
         fullWidth
         {...register('meeting_platform')}
         error={!!errors.meeting_platform}
-        helperText={errors.meeting_platform?.message ?? 'e.g. Google Meet, Zoom'}
+        helperText={errors.meeting_platform?.message ?? t('mweb.createPod.meetingPlatformHint')}
       />
       <TextField
-        label={requiredLabel('Meeting link', true)}
+        label={requiredLabel(t('mweb.createPod.meetingLink'), true)}
         fullWidth
         {...register('meeting_url')}
         error={!!errors.meeting_url}
-        helperText={errors.meeting_url?.message ?? 'Attendees join through this link'}
+        helperText={errors.meeting_url?.message ?? t('mweb.createPod.meetingLinkHint')}
       />
-      <TextField label="Meeting notes" fullWidth multiline minRows={2} {...register('meeting_notes')} />
+      <TextField label={t('mweb.createPod.meetingNotes')} fullWidth multiline minRows={2} {...register('meeting_notes')} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <Controller
           control={control}
           name="pod_date_time"
           render={({ field }) => (
             <DateTimePicker
-              label={requiredLabel('Start date & time', true)}
+              label={requiredLabel(t('mweb.createPod.startDateTime'), true)}
               value={field.value}
               onChange={field.onChange}
               format={dateTimeFormat}
@@ -62,7 +64,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
           name="pod_end_date_time"
           render={({ field }) => (
             <DateTimePicker
-              label="End date & time"
+              label={t('mweb.createPod.endDateTime')}
               value={field.value}
               onChange={field.onChange}
               format={dateTimeFormat}
@@ -80,7 +82,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
       </Stack>
       {duration && (
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-          Total duration: {duration}
+          {t('mweb.createPod.totalDuration', { vars: { duration } })}
         </Typography>
       )}
     </Stack>

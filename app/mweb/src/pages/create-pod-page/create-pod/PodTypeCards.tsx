@@ -3,6 +3,7 @@ import { Box, Card, CardActionArea, Typography } from '@mui/material';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useTranslation } from '../../../i18n/useTranslation';
 import { isFreePodType, type CreatePodForm } from './create-pod.types';
 
 interface CardProps {
@@ -31,10 +32,12 @@ function TypeCard({ label, caption, icon, selected, disabled, onClick }: Readonl
  * pods can only be Paid, so the Free card is disabled for them. */
 export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const { watch, setValue } = form;
+  const { t } = useTranslation();
   const isFree = isFreePodType(watch('pod_type'));
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  // TODO(i18n) — captions below
-  const freeCaption = isPhysical ? 'Physical pods are always paid' : 'No ticket charge';
+  const freeCaption = isPhysical
+    ? t('mweb.createPod.physicalPaidCaption')
+    : t('mweb.createPod.freeCaption');
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
@@ -51,8 +54,8 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
 
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
-      <TypeCard label="Free" caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
-      <TypeCard label="Paid" caption="Charge per person" icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
+      <TypeCard label={t('mweb.createPod.podTypeFree')} caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
+      <TypeCard label={t('mweb.createPod.podTypePaid')} caption={t('mweb.createPod.paidCaption')} icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
     </Box>
   );
 }

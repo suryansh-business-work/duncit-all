@@ -5,7 +5,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { POD_AI_GUIDELINES } from './create-pod.form';
+import { useTranslation } from '@/hooks/useTranslation';
+import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
 
 interface Props {
   open: boolean;
@@ -16,6 +17,7 @@ interface Props {
  * guidelines every pod must follow, with the consequences of breaking them. */
 export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
   const { primary, danger } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -23,7 +25,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
           <YStack
             testID="pod-guidelines-backdrop"
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.auth.close')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -44,18 +46,18 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
               <XStack alignItems="center" gap={8} paddingBottom={6}>
                 <MaterialIcons name="auto-awesome" size={20} color={primary} />
                 <Text fontSize={17} fontWeight="700" color="$color">
-                  What AI monitors
+                  {t('mweb.createPod.aiMonitors')}
                 </Text>
               </XStack>
               <Text fontSize={13} color="$muted">
-                {POD_AI_GUIDELINES.intro}
+                {t('mweb.createPod.guidelinesIntro')}
               </Text>
               <YStack gap={7} paddingVertical={6}>
-                {POD_AI_GUIDELINES.rules.map((rule) => (
-                  <XStack key={rule} gap={8} alignItems="flex-start">
+                {POD_GUIDELINE_RULE_KEYS.map((key) => (
+                  <XStack key={key} gap={8} alignItems="flex-start">
                     <MaterialIcons name="block" size={15} color={danger} />
                     <Text flex={1} fontSize={12.5} color="$color">
-                      {rule}
+                      {t(key)}
                     </Text>
                   </XStack>
                 ))}
@@ -68,13 +70,13 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
                 borderColor="$borderColor"
               >
                 <Text fontSize={12} fontWeight="700" color="$danger">
-                  {POD_AI_GUIDELINES.warning}
+                  {t('mweb.createPod.guidelinesWarning')}
                 </Text>
               </YStack>
               <XStack
                 testID="pod-guidelines-close"
                 role="button"
-                aria-label="Got it"
+                aria-label={t('mweb.createPod.gotIt')}
                 onPress={onClose}
                 height={46}
                 borderRadius={12}
@@ -84,7 +86,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
                 pressStyle={{ opacity: 0.85 }}
               >
                 <Text fontSize={14} fontWeight="600" color="$onPrimary">
-                  Got it
+                  {t('mweb.createPod.gotIt')}
                 </Text>
               </XStack>
             </SafeAreaView>

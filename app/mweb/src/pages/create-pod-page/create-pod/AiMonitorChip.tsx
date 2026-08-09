@@ -1,5 +1,6 @@
 import { ButtonBase } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   onClick: () => void;
@@ -8,10 +9,11 @@ interface Props {
 /** Colourful gradient pill beside every step's eyebrow. Opens the "What AI
  * monitors" guidelines dialog. */
 export default function AiMonitorChip({ onClick }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <ButtonBase
       onClick={onClick}
-      aria-label="What AI monitors"
+      aria-label={t('mweb.createPod.aiMonitors')}
       data-testid="create-pod-ai-chip"
       sx={{
         borderRadius: 999,
@@ -27,7 +29,7 @@ export default function AiMonitorChip({ onClick }: Readonly<Props>) {
       }}
     >
       <AutoAwesomeIcon sx={{ fontSize: 14 }} />
-      AI monitoring
+      {t('mweb.createPod.aiMonitoring')}
     </ButtonBase>
   );
 }

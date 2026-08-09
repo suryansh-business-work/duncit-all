@@ -8,7 +8,9 @@ import { FieldLabel } from '@/components/Field';
 import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useUploadSettings } from '@/hooks/useUploadSettings';
+import type { Translate } from '@/i18n/fallback';
 import { CoverPickerDialog } from './cover-picker';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
@@ -20,10 +22,14 @@ const splitLines = (text: string) =>
     .filter(Boolean);
 
 /** Formats + size hint sourced from admin Upload Settings (no hardcoded copy). */
-function uploadHint(formats: string[] | undefined, maxImageMb: number | undefined): string {
-  if (!formats?.length || !maxImageMb) return 'Crop after selecting';
+function uploadHint(
+  t: Translate,
+  formats: string[] | undefined,
+  maxImageMb: number | undefined,
+): string {
+  if (!formats?.length || !maxImageMb) return t('mweb.createPod.cropAfterSelecting');
   const list = formats.map((f) => f.toUpperCase()).join(', ');
-  return `${list} · up to ${maxImageMb} MB · crop after selecting`;
+  return t('mweb.createPod.uploadFormatsHint', { vars: { formats: list, mb: maxImageMb } });
 }
 
 interface Props {
@@ -53,13 +59,15 @@ export function MediaUploadField({
   value,
   onChange,
   error,
-  label = 'Cover image (at least one image)',
+  label,
   required,
   folder = '/pods',
   subCategoryName,
   maxImages,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('mweb.createPod.coverImageLabel');
   const urls = splitLines(value ?? '');
   const settings = useUploadSettings();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -89,7 +97,7 @@ export function MediaUploadField({
 
   return (
     <YStack gap={8}>
-      <FieldLabel label={label} required={required} testID="media" />
+      <FieldLabel label={fieldLabel} required={required} testID="media" />
       {urls.length > 0 ? (
         <XStack gap={8} flexWrap="wrap">
           {urls.map((url) => (
@@ -114,7 +122,7 @@ export function MediaUploadField({
               <XStack
                 testID={`media-remove-${url}`}
                 role="button"
-                aria-label="Remove media"
+                aria-label={t('mweb.createPod.removeMedia')}
                 onPress={() => removeUrl(url)}
                 position="absolute"
                 top={2}
@@ -136,7 +144,7 @@ export function MediaUploadField({
       <YStack
         testID="media-upload-add"
         role="button"
-        aria-label="Add media"
+        aria-label={t('mweb.createPod.addMedia')}
         aria-disabled={busy || full}
         onPress={busy || full ? undefined : openPicker}
         alignItems="center"
@@ -165,12 +173,12 @@ export function MediaUploadField({
           <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
         </YStack>
         <Text fontSize={14} fontWeight="600" color="$color">
-          {full ? 'That is the maximum' : 'Add photos or a video'}
+          {full ? t('mweb.createPod.mediaAtMaximum') : t('mweb.createPod.addPhotosOrVideo')}
         </Text>
         <Text fontSize={12} color="$muted">
           {full
-            ? `Up to ${maxImages} — remove one to add another`
-            : uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
+            ? t('mweb.createPod.mediaMaxRemoveHint', { vars: { max: maxImages ?? 0 } })
+            : uploadHint(t, settings?.allowed_image_formats, settings?.max_image_mb)}
         </Text>
       </YStack>
       {upload.error && !upload.pending ? (
@@ -198,7 +206,7 @@ export function MediaUploadField({
         max={slotsLeft}
         tray={tray}
         busy={busy}
-        hint={uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
+        hint={uploadHint(t, settings?.allowed_image_formats, settings?.max_image_mb)}
         onPickDevice={() => void upload.pick(slotsLeft - tray.length)}
         onPexelsPicked={addToTray}
         onRemove={(url) => setTray((current) => current.filter((item) => item !== url))}

@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
 import {
@@ -14,7 +15,6 @@ import {
   ZeroEarningsNotice,
   type PodPricingState,
 } from '../price-panel';
-import { TICKET_PRICE_LABEL, TICKET_PRICE_PLACEHOLDER } from '../price-panel/step4-copy';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
@@ -44,9 +44,9 @@ export function PricingStep({
   spots,
 }: Readonly<Props>) {
   const { control, watch, setValue } = form;
-  // TODO(i18n) — ships as a literal until Create-a-Pod is localized. mWeb twin.
+  const { t } = useTranslation();
   const boundsHint = spots.slidable
-    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
     : undefined;
   const { color } = useThemeColors();
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -65,11 +65,13 @@ export function PricingStep({
       <FormTextField
         control={control}
         name="pod_amount_text"
-        label={TICKET_PRICE_LABEL}
+        label={t('mweb.createPod.ticketPriceLabel')}
         keyboardType="numeric"
-        placeholder={TICKET_PRICE_PLACEHOLDER}
+        placeholder={t('mweb.createPod.ticketPricePlaceholder')}
         editable={!isFree}
-        hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}
+        hint={
+          isFree ? t('mweb.createPod.ticketPriceFreeHint') : t('mweb.createPod.ticketPriceHint')
+        }
         labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
       />
       {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
@@ -91,7 +93,12 @@ export function PricingStep({
         )}
       />
       <PricePanel finance={finance} pricing={pricing} />
-      <FormTextField control={control} name="payment_terms" label="Payment terms" multiline />
+      <FormTextField
+        control={control}
+        name="payment_terms"
+        label={t('mweb.createPod.paymentTerms')}
+        multiline
+      />
       {isPhysical ? (
         <Controller
           control={control}
@@ -106,7 +113,7 @@ export function PricingStep({
           <XStack
             testID="products-enabled-toggle"
             role="button"
-            aria-label="Attach products"
+            aria-label={t('mweb.createPod.attachProducts')}
             aria-pressed={productsEnabled}
             onPress={toggleProducts}
             alignItems="center"
@@ -119,7 +126,7 @@ export function PricingStep({
               color={color}
             />
             <Text fontSize={14} fontWeight="600" color="$color">
-              Attach products to this pod
+              {t('mweb.createPod.attachProducts')}
             </Text>
           </XStack>
           {/* `products` arrives already filtered to the pod's club category, so
@@ -127,7 +134,7 @@ export function PricingStep({
               mWeb's PricingStep alert (rule 27). */}
           {productsEnabled && products.length === 0 ? (
             <Text testID="products-empty" fontSize={13} color="$muted">
-              No products available for this category.
+              {t('mweb.createPod.noProductsForCategory')}
             </Text>
           ) : null}
           {productsEnabled ? (

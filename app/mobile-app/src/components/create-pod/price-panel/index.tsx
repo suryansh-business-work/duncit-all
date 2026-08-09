@@ -3,16 +3,14 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodFinance } from '../create-pod.types';
-import { EARNINGS_ESTIMATE_NOTE } from './step4-copy';
 import { ChargesAccordion } from './ChargesAccordion';
 import { PayoutCard } from './PayoutCard';
 import type { PodPricingState } from './usePodPricing';
 
 const FREE_NOTE_BG = 'rgba(34,197,94,0.08)';
 const FREE_NOTE_BORDER = 'rgba(34,197,94,0.30)';
-const HOST_FREE_NOTE =
-  'Your spot is free — that is why the total calculation is based on the remaining available slots.';
 
 interface Props {
   finance: CreatePodFinance;
@@ -29,6 +27,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
   const { projection, waterfall, isLoading, venuePicked, ready, hostOnly, podAmount, noOfSpots } =
     pricing;
   const { success } = useThemeColors();
+  const { t } = useTranslation();
   const symbol = finance.currency_symbol;
   // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
   const money = (value: number) => formatStatementMoney(value, symbol);
@@ -48,11 +47,11 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
       <XStack alignItems="center" gap={6}>
         <MaterialIcons name="insights" size={16} color={success} />
         <Text fontSize={14} fontWeight="700" color="$color">
-          Potential earnings
+          {t('mweb.createPod.potentialEarnings')}
         </Text>
       </XStack>
       <Text fontSize={11.5} fontWeight="600" color="$muted">
-        Your take-home for the full pod
+        {t('mweb.createPod.takeHome')}
       </Text>
       {noOfSpots > 0 ? (
         <XStack
@@ -68,18 +67,18 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
         >
           <MaterialIcons name="info-outline" size={16} color={success} />
           <Text flex={1} fontSize={12} color="$color">
-            {HOST_FREE_NOTE}
+            {t('mweb.createPod.hostFreeNote')}
           </Text>
         </XStack>
       ) : null}
       {ready ? null : (
         <Text fontSize={12.5} color="$muted">
-          Set a ticket price and the number of spots to preview your earnings.
+          {t('mweb.createPod.previewPrompt')}
         </Text>
       )}
       {hostOnly ? (
         <Text testID="price-panel-host-only" fontSize={12.5} color="$muted">
-          This pod only has your own spot, which is free. Add more spots to earn.
+          {t('mweb.createPod.hostOnlyPod')}
         </Text>
       ) : null}
       {ready && isLoading ? (
@@ -92,7 +91,9 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
           <YStack gap={2}>
             <XStack justifyContent="space-between" gap={12}>
               <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
-                Total collection ({money(podAmount)} × {projection.payable_spots})
+                {t('mweb.createPod.totalCollection', {
+                  vars: { price: money(podAmount), spots: projection.payable_spots },
+                })}
               </Text>
               <Text fontSize={13} fontWeight="700" color="$success">
                 {money(waterfall.amount)}
@@ -117,7 +118,7 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
         </YStack>
       ) : null}
       <Text testID="price-panel-estimate-note" fontSize={11} color="$muted">
-        {EARNINGS_ESTIMATE_NOTE}
+        {t('mweb.createPod.earningsEstimateNote')}
       </Text>
     </YStack>
   );

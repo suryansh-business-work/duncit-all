@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 
 const TERMS_URL = 'https://duncit.com/policies/terms-of-service';
@@ -12,6 +13,7 @@ const TERMS_URL = 'https://duncit.com/policies/terms-of-service';
  * the last step's "Create Pod" action validates. Mobile twin of mWeb's. */
 export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
   const { color, primary } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Controller
       control={form.control}
@@ -21,7 +23,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
           <XStack
             testID="create-pod-terms"
             role="checkbox"
-            aria-label="Agree to Organizer Terms of Service"
+            aria-label={t('mweb.createPod.termsAria')}
             aria-checked={field.value}
             onPress={() => field.onChange(!field.value)}
             gap={10}
@@ -34,16 +36,16 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
               color={field.value ? primary : color}
             />
             <Text flex={1} fontSize={13} color="$muted">
-              I agree to the{' '}
+              {t('mweb.createPod.termsLeadIn')}{' '}
               <Text
                 testID="terms-link"
                 color="$primary"
                 fontWeight="600"
                 onPress={() => Linking.openURL(TERMS_URL)}
               >
-                Organizer Terms of Service
+                {t('mweb.createPod.termsLink')}
               </Text>{' '}
-              and confirm that I have the right to host this event at the selected venue.
+              {t('mweb.createPod.termsTail')}
             </Text>
           </XStack>
           {fieldState.error ? (

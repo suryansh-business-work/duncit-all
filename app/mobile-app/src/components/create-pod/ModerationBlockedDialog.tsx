@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** One flagged issue, resolved to the step the host must fix it on. */
 export interface BlockedViolation {
@@ -25,6 +26,8 @@ interface Props {
  * links each issue to the step it lives on (tap → jump there). */
 export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonly<Props>) {
   const { danger, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const close = t('mweb.auth.close');
   return (
     <Modal
       visible={violations.length > 0}
@@ -42,7 +45,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
           <YStack
             testID="moderation-blocked-backdrop"
             role="button"
-            aria-label="Close"
+            aria-label={close}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -63,49 +66,53 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
               <XStack alignItems="center" gap={8} paddingBottom={2}>
                 <MaterialIcons name="gpp-maybe" size={20} color={danger} />
                 <Text fontSize={17} fontWeight="700" color="$color">
-                  Fix these before publishing
+                  {t('mweb.createPod.moderationTitle')}
                 </Text>
               </XStack>
               <Text fontSize={12.5} color="$muted">
-                Our AI check found content that breaks the community guidelines, so the pod was not
-                created. Fix the items below and try again.
+                {t('mweb.createPod.moderationDescription')}
               </Text>
               <YStack gap={10} paddingTop={2}>
-                {violations.map((violation) => (
-                  <YStack
-                    key={violation.id}
-                    gap={6}
-                    backgroundColor="$surface"
-                    borderRadius={12}
-                    padding={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                  >
-                    <Text fontSize={12.5} fontWeight="700" color="$color">
-                      {violation.message}
-                    </Text>
-                    <XStack
-                      testID={`moderation-fix-${violation.id}`}
-                      role="button"
-                      aria-label={`Fix in ${violation.stepTitle}`}
-                      onPress={() => onJump(violation.stepIndex)}
-                      alignSelf="flex-start"
-                      alignItems="center"
-                      gap={4}
-                      pressStyle={{ opacity: 0.7 }}
+                {violations.map((violation) => {
+                  const fixIn = t('mweb.createPod.moderationFixIn', {
+                    vars: { step: violation.stepTitle },
+                  });
+                  return (
+                    <YStack
+                      key={violation.id}
+                      gap={6}
+                      backgroundColor="$surface"
+                      borderRadius={12}
+                      padding={12}
+                      borderWidth={1}
+                      borderColor="$borderColor"
                     >
-                      <MaterialIcons name="arrow-forward" size={14} color={primary} />
-                      <Text fontSize={12} fontWeight="600" color="$primary">
-                        Fix in {violation.stepTitle}
+                      <Text fontSize={12.5} fontWeight="700" color="$color">
+                        {violation.message}
                       </Text>
-                    </XStack>
-                  </YStack>
-                ))}
+                      <XStack
+                        testID={`moderation-fix-${violation.id}`}
+                        role="button"
+                        aria-label={fixIn}
+                        onPress={() => onJump(violation.stepIndex)}
+                        alignSelf="flex-start"
+                        alignItems="center"
+                        gap={4}
+                        pressStyle={{ opacity: 0.7 }}
+                      >
+                        <MaterialIcons name="arrow-forward" size={14} color={primary} />
+                        <Text fontSize={12} fontWeight="600" color="$primary">
+                          {fixIn}
+                        </Text>
+                      </XStack>
+                    </YStack>
+                  );
+                })}
               </YStack>
               <XStack
                 testID="moderation-blocked-close"
                 role="button"
-                aria-label="Close"
+                aria-label={close}
                 onPress={onClose}
                 height={46}
                 borderRadius={12}
@@ -116,7 +123,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                 pressStyle={{ opacity: 0.7 }}
               >
                 <Text fontSize={14} fontWeight="600" color="$color">
-                  Close
+                  {close}
                 </Text>
               </XStack>
             </SafeAreaView>

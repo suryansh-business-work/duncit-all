@@ -1,6 +1,7 @@
 import { Box, FormHelperText, IconButton, Slider, Stack, TextField, Typography } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   value: number;
@@ -33,6 +34,8 @@ export default function SpotsStepper({
   boundsHint,
   readOnly = false,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const totalSpots = t('mweb.createPod.totalSpots');
   const set = (next: number) => onChange(Math.max(min, Math.min(max, Number.isFinite(next) ? next : min)));
 
   if (slidable) {
@@ -40,9 +43,9 @@ export default function SpotsStepper({
       <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
           <Typography variant="subtitle2" fontWeight={700}>
-            Total spots
+            {totalSpots}
           </Typography>
-          <Typography variant="h6" fontWeight={700} data-testid="spots-value" aria-label="Total spots">
+          <Typography variant="h6" fontWeight={700} data-testid="spots-value" aria-label={totalSpots}>
             {value}
           </Typography>
         </Stack>
@@ -57,7 +60,7 @@ export default function SpotsStepper({
           ]}
           valueLabelDisplay="auto"
           onChange={(_e, next) => set(Array.isArray(next) ? next[0] : next)}
-          aria-label="Total spots"
+          aria-label={totalSpots}
           data-testid="spots-slider"
         />
         {boundsHint && (
@@ -80,18 +83,18 @@ export default function SpotsStepper({
         sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={700}>Total spots</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>{totalSpots}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {readOnly ? 'Set by the venue space you picked.' : 'Number of available tickets.'}
+            {readOnly ? t('mweb.createPod.spotsFixedHint') : t('mweb.createPod.spotsHint')}
           </Typography>
         </Box>
         {readOnly ? (
-          <Typography variant="h6" fontWeight={700} sx={{ px: 1.5 }} aria-label="Total spots">
+          <Typography variant="h6" fontWeight={700} sx={{ px: 1.5 }} aria-label={totalSpots}>
             {value}
           </Typography>
         ) : (
           <Stack direction="row" alignItems="center" spacing={1}>
-            <IconButton aria-label="Decrease spots" size="small" disabled={value <= min} onClick={() => set(value - 1)} sx={{ border: 1, borderColor: 'divider' }}>
+            <IconButton aria-label={t('mweb.createPod.decreaseSpots')} size="small" disabled={value <= min} onClick={() => set(value - 1)} sx={{ border: 1, borderColor: 'divider' }}>
               <RemoveIcon fontSize="small" />
             </IconButton>
             <TextField
@@ -100,9 +103,9 @@ export default function SpotsStepper({
               value={value}
               onChange={(e) => set(Number.parseInt(e.target.value, 10))}
               sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
-              inputProps={{ 'aria-label': 'Total spots', min, max }}
+              inputProps={{ 'aria-label': totalSpots, min, max }}
             />
-            <IconButton aria-label="Increase spots" size="small" disabled={value >= max} onClick={() => set(value + 1)} sx={{ border: 1, borderColor: 'divider' }}>
+            <IconButton aria-label={t('mweb.createPod.increaseSpots')} size="small" disabled={value >= max} onClick={() => set(value + 1)} sx={{ border: 1, borderColor: 'divider' }}>
               <AddIcon fontSize="small" />
             </IconButton>
           </Stack>

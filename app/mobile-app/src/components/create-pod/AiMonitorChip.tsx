@@ -2,6 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 interface Props {
   onPress: () => void;
   testID?: string;
@@ -10,11 +12,12 @@ interface Props {
 /** Colourful gradient pill that sits beside every step's title. Tapping it opens
  * the "What AI monitors" guidelines dialog. */
 export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID={testID}
       role="button"
-      aria-label="What AI monitors"
+      aria-label={t('mweb.createPod.aiMonitors')}
       onPress={onPress}
       pressStyle={{ opacity: 0.85 }}
       borderRadius={999}
@@ -34,7 +37,7 @@ export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readon
       >
         <MaterialIcons name="auto-awesome" size={13} color="#ffffff" />
         <Text fontSize={11} fontWeight="700" color="#ffffff">
-          AI monitoring
+          {t('mweb.createPod.aiMonitoring')}
         </Text>
       </LinearGradient>
     </XStack>

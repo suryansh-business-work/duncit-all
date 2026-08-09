@@ -8,6 +8,7 @@ import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
 import VirtualMeetingFields from '../VirtualMeetingFields';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
@@ -16,7 +17,9 @@ type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
 
 /** The venue's bookable spaces: its named capacity items, else the whole venue
  * as a single option. Always ≥1 when a venue is picked, so capacity selection is
- * always required before slots/prices show. Picking one fills No. of spots. */
+ * always required before slots/prices show. Picking one fills No. of spots.
+ * The whole-venue `label` stays in English: it is the stored value identifying
+ * the space, so it is translated where it is DISPLAYED instead. */
 const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   if (!venue) return [];
   const items = venue.capacity_items ?? [];
@@ -58,11 +61,16 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
     setValue,
     formState: { errors },
   } = form;
+  const { t } = useTranslation();
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
   const slotId = watch('venue_slot_id');
   const spaceLabel = watch('venue_space_label');
+  // Only the whole-venue pseudo-space carries copy of ours; a named capacity
+  // item is the venue partner's own wording and is shown as they typed it.
+  const spaceName = (space: VenueSpace) =>
+    space.slotSpaceLabel ? space.label : t('mweb.slots.wholeVenue');
 
   // Venues are scoped to the selected club's auto-matched venues (location +
   // category), then to the pod's city.
@@ -115,14 +123,13 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
   return (
     <Stack spacing={2}>
       <VenuePicker venues={clubVenues} selectedId={venueId} onSelect={selectVenue} required />
-      {clubVenues.length === 0 && (
-        <Alert severity="info">No venues match this club yet — pick another club or go virtual.</Alert>
-      )}
+      {clubVenues.length === 0 && <Alert severity="info">{t('mweb.createPod.noVenues')}</Alert>}
       {errors.venue_id && <FormHelperText error>{errors.venue_id.message}</FormHelperText>}
       {selectedVenue && (
         <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity: {selectedVenue.capacity ?? 0}
+            {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}
+            {t('mweb.createPod.totalCapacity', { vars: { count: selectedVenue.capacity ?? 0 } })}
           </Typography>
           <Controller
             control={control}
@@ -130,16 +137,16 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
             render={({ field }) => (
               <TextField
                 select
-                label={requiredLabel('Space & capacity', true)}
+                label={requiredLabel(t('mweb.createPod.spaceCapacity'), true)}
                 fullWidth
                 value={field.value}
                 onChange={(e) => pickSpace(e.target.value)}
                 error={!!errors.venue_space_label}
-                helperText={errors.venue_space_label?.message || 'Pick a space — its capacity sets No. of spots. Slots show after this.'}
+                helperText={errors.venue_space_label?.message || t('mweb.createPod.spaceHint')}
               >
                 {spaces.map((space) => (
                   <MenuItem key={space.label} value={space.label}>
-                    {space.label} · {space.capacity} spots
+                    {t('mweb.createPod.spaceOption', { vars: { label: spaceName(space), capacity: space.capacity } })}
                   </MenuItem>
                 ))}
               </TextField>
@@ -159,9 +166,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
       )}
       {selectedVenue && slotId && (
         <Alert severity={ownVenue ? 'success' : 'info'}>
-          {ownVenue
-            ? 'This is your venue — the slot books instantly and the pod goes live on publish.'
-            : 'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.'}
+          {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
         </Alert>
       )}
       {selectedVenue && <VenueContactCard venue={selectedVenue} />}
@@ -183,7 +188,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
       )}
       {duration && (
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-          Pod window from slot: {duration}
+          {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Typography>
       )}
     </Stack>

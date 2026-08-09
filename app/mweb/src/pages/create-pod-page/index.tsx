@@ -11,6 +11,7 @@ import {
   type DraftPayload,
   type CreatePodFormValues,
 } from './create-pod';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
@@ -119,6 +120,7 @@ const MODERATE_POD_CONTENT = gql`
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
 export default function CreatePodPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
   const options = useQuery(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
   const draftQuery = useQuery(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
@@ -209,11 +211,11 @@ export default function CreatePodPage() {
         severity="info"
         action={
           <Button color="inherit" size="small" onClick={() => navigate('/become-host')}>
-            Become a host
+            {t('mweb.createPod.becomeHost')}
           </Button>
         }
       >
-        Host access is required before creating pods.
+        {t('mweb.createPod.hostRequired')}
       </Alert>
     );
   }
@@ -225,14 +227,14 @@ export default function CreatePodPage() {
           <AddCircleOutlineIcon color="primary" />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-              Create a Pod
+              {t('mweb.createPod.title')}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
-              Your progress saves automatically — finish anytime from Host Management.
+              {t('mweb.createPod.autosaveNote')}
             </Typography>
           </Box>
         </Stack>
-        <IconButton aria-label="Close" onClick={() => navigate('/host/manage')}>
+        <IconButton aria-label={t('mweb.auth.close')} onClick={() => navigate('/host/manage')}>
           <CloseIcon />
         </IconButton>
       </Stack>

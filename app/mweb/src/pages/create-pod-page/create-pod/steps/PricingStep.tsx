@@ -6,6 +6,7 @@ import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-pan
 import PodTypeCards from '../PodTypeCards';
 import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { SpotsBounds } from '@duncit/utils';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
@@ -22,12 +23,12 @@ interface Props {
  * earnings panel, optional products and the Organizer Terms publish gate. */
 export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
+  const { t } = useTranslation();
   const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const productsEnabled = watch('products_enabled');
-  // TODO(i18n) — ships as a literal until Create-a-Pod is localized.
   const boundsHint = spots.slidable
-    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
     : undefined;
 
   return (
@@ -53,11 +54,11 @@ export default function PricingStep({ form, products, showProducts, preview, spo
       />
       <PricePanel preview={preview} />
       <TextField
-        label="Payment terms"
+        label={t('mweb.createPod.paymentTerms')}
         fullWidth
         multiline
         minRows={3}
-        helperText="Refund policy, cancellation, tax info."
+        helperText={t('mweb.createPod.paymentTermsHint')}
         {...register('payment_terms')}
       />
       {isPhysical && (
@@ -68,7 +69,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
             <PlaceChargesField
               value={field.value}
               onChange={field.onChange}
-              helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+              helperText={t('mweb.createPod.placeChargesHint')}
             />
           )}
         />
@@ -89,14 +90,14 @@ export default function PricingStep({ form, products, showProducts, preview, spo
                     }}
                   />
                 }
-                label="Attach products to this pod"
+                label={t('mweb.createPod.attachProducts')}
               />
             )}
           />
           {/* `products` arrives already filtered to the pod's club category, so
               empty means "none in this category", not "none at all". */}
           {productsEnabled && products.length === 0 && (
-            <Alert severity="info">No products available for this category.</Alert>
+            <Alert severity="info">{t('mweb.createPod.noProductsForCategory')}</Alert>
           )}
           {productsEnabled && (
             <Controller

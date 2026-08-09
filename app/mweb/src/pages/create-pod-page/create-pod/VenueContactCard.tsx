@@ -2,11 +2,13 @@ import { Button, Card, Link, Stack, Typography } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { mapSearchUrl } from '../../../utils/mapEmbed';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
 
 /** Venue partner card — address, a Call Venue / Get Directions action row and
  * the contact shared with the host for slot follow-up. */
 export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>) {
+  const { t } = useTranslation();
   const address = [venue.address_line1, venue.locality, venue.city, venue.state, venue.postal_code]
     .filter(Boolean)
     .join(', ');
@@ -21,16 +23,16 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         {venue.owner_phone && (
           <Button href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
-            Call Venue
+            {t('mweb.createPod.callVenue')}
           </Button>
         )}
         <Button href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
-          Get Directions
+          {t('mweb.createPod.getDirections')}
         </Button>
       </Stack>
       <Stack spacing={0.25} sx={{ mt: 1 }}>
         <Typography variant="caption" color="text.secondary" fontWeight={600}>
-          Venue contact for follow-up
+          {t('mweb.createPod.venueContact')}
         </Typography>
         <Typography variant="body2" fontWeight={600}>{venue.owner_name || venue.venue_name}</Typography>
         {venue.owner_email && (

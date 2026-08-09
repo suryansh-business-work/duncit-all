@@ -17,6 +17,7 @@ import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useApolloClient } from '@apollo/client';
 import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 
 const REEL_MAX_BYTES = 100 * 1024 * 1024; // Reel videos are capped at 100 MB.
@@ -34,7 +35,8 @@ interface Props {
 export default function PodReelAccordion({ form }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [pct, setPct] = useState<number | null>(null);
-  const [stage, setStage] = useState<'Uploading' | 'Compressing'>('Uploading');
+  const [stage, setStage] = useState<'upload' | 'compress'>('upload');
+  const { t } = useTranslation();
   const client = useApolloClient();
   const { upload, uploading } = useImagekitDirectUpload();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -46,26 +48,26 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
     e.target.value = '';
     if (!file) return;
     if (!isVideoFile(file)) {
-      setError('Please pick a video file (MP4, MOV or WebM)');
+      setError(t('mweb.createPod.reelNotVideo'));
       return;
     }
     if (file.size > REEL_MAX_BYTES) {
-      setError('Video is too large (max 100 MB)');
+      setError(t('mweb.createPod.reelTooLarge'));
       return;
     }
     setError(null);
-    setStage('Uploading');
+    setStage('upload');
     setPct(0);
     try {
       // Real byte progress, then the server-side FFmpeg pass (no-op when the
       // admin has video compression off) with its real percentage too.
       const rawUrl = await upload(file, '/pods/reels', setPct);
-      setStage('Compressing');
+      setStage('compress');
       setPct(0);
       const url = await compressUploadedVideo(client, rawUrl, '/pods/reels', 'MWEB', setPct);
       if (url) form.setValue('reel_url', url, { shouldDirty: true });
     } catch (err: any) {
-      setError(err?.message || 'Upload failed');
+      setError(err?.message || t('mweb.createPod.uploadFailed'));
     } finally {
       setPct(null);
     }
@@ -74,8 +76,14 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
   const removeReel = () => form.setValue('reel_url', '', { shouldDirty: true });
 
   const busy = uploading || pct !== null;
-  let uploadLabel = hasReel ? 'Replace video' : 'Upload video';
-  if (busy) uploadLabel = `${stage}…`;
+  const idleLabel = hasReel ? t('mweb.createPod.reelReplace') : t('mweb.createPod.reelUpload');
+  const busyLabel =
+    stage === 'upload' ? t('mweb.createPod.uploading') : t('mweb.createPod.compressing');
+  const uploadLabel = busy ? busyLabel : idleLabel;
+  const progressLabel =
+    stage === 'upload'
+      ? t('mweb.createPod.uploadingPct', { vars: { pct: pct ?? 0 } })
+      : t('mweb.createPod.compressingPct', { vars: { pct: pct ?? 0 } });
 
   return (
     <Accordion
@@ -99,14 +107,14 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
       >
         <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
           <MovieOutlinedIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" fontWeight={700}>Pod Reel</Typography>
-          {hasReel && <Chip label="Added" size="small" color="primary" />}
+          <Typography variant="subtitle2" fontWeight={700}>{t('mweb.createPod.podReel')}</Typography>
+          {hasReel && <Chip label={t('mweb.createPod.summaryAdded')} size="small" color="primary" />}
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.25}>
           <Typography variant="caption" color="text.secondary">
-            Reel video shows in Explore while this pod is live. Optional — one video up to 100 MB.
+            {t('mweb.createPod.reelHint')}
           </Typography>
           {hasReel && (
             <Box
@@ -130,7 +138,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
             <Box>
               <LinearProgress variant="determinate" value={pct} />
               <Typography variant="caption" color="text.secondary">
-                {stage}… {pct}%
+                {progressLabel}
               </Typography>
             </Box>
           )}
@@ -146,7 +154,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
             </Button>
             {hasReel && !busy && (
               <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
-                Remove
+                {t('mweb.createPod.remove')}
               </Button>
             )}
           </Stack>

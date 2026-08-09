@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from './ChipSelectField';
 import type { CreatePodProduct, PodProductRequest } from './create-pod.types';
 
@@ -35,6 +36,8 @@ const stepperBox = {
 /** Editable list of Duncit product requests (product + quantity) for a pod. */
 export function ProductRequestsField({ value, onChange, products, error }: Readonly<Props>) {
   const { color, primary, danger } = useThemeColors();
+  const { t } = useTranslation();
+  const addProduct = t('mweb.createPod.addProduct');
   // Stable per-row keys (the rows have no id) so edits don't remount inputs and
   // a middle-removal can't shuffle the wrong row — never the array index (S6479).
   const keys = useRef<string[]>([]);
@@ -53,7 +56,13 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
   };
   const options = products.map((product) => ({
     value: product.id,
-    label: `${product.product_name} (₹${product.unit_cost}, ${product.available_count} left)`,
+    label: t('mweb.createPod.productOption', {
+      vars: {
+        name: product.product_name,
+        cost: `₹${product.unit_cost}`,
+        count: product.available_count,
+      },
+    }),
   }));
 
   return (
@@ -68,21 +77,21 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
           borderColor="$borderColor"
         >
           <ChipSelectField
-            label="Product"
+            label={t('mweb.createPod.productLabel')}
             options={options}
             value={row.product_id}
             onChange={(id) => update(idx, { product_id: id })}
-            emptyHint="No products available for this category."
+            emptyHint={t('mweb.createPod.noProductsForCategory')}
             testID={`product-${idx}`}
           />
           <XStack alignItems="center" gap={10}>
             <Text fontSize={13} color="$muted">
-              Qty
+              {t('mweb.createPod.qty')}
             </Text>
             <XStack
               testID={`product-qty-dec-${idx}`}
               role="button"
-              aria-label="Decrease quantity"
+              aria-label={t('mweb.createPod.decreaseQty')}
               onPress={() => update(idx, { quantity: Math.max(1, row.quantity - 1) })}
               {...stepperBox}
             >
@@ -94,7 +103,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
             <XStack
               testID={`product-qty-inc-${idx}`}
               role="button"
-              aria-label="Increase quantity"
+              aria-label={t('mweb.createPod.increaseQty')}
               onPress={() => update(idx, { quantity: row.quantity + 1 })}
               {...stepperBox}
             >
@@ -104,7 +113,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
             <XStack
               testID={`product-remove-${idx}`}
               role="button"
-              aria-label="Remove product"
+              aria-label={t('mweb.createPod.removeProduct')}
               onPress={() => remove(idx)}
               pressStyle={{ opacity: 0.7 }}
             >
@@ -118,7 +127,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
       <XStack
         testID="product-add"
         role="button"
-        aria-label="Add product"
+        aria-label={addProduct}
         aria-disabled={noProducts}
         onPress={noProducts ? undefined : add}
         alignItems="center"
@@ -128,11 +137,13 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
       >
         <MaterialIcons name="add" size={18} color={primary} />
         <Text fontSize={13} fontWeight="600" color="$primary">
-          Add product
+          {addProduct}
         </Text>
       </XStack>
       <Text testID="product-total" fontSize={13} fontWeight="600" color="$color">
-        Total: ₹{productRequestTotal(value, products)}
+        {t('mweb.createPod.productTotal', {
+          vars: { amount: `₹${productRequestTotal(value, products)}` },
+        })}
       </Text>
       {error ? (
         <Text testID="product-error" fontSize={12} color="$danger">

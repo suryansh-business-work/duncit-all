@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { PodPlaceCharge } from '../create-pod.types';
 
 interface Props {
@@ -14,6 +15,7 @@ const blank: PodPlaceCharge = { label: '', amount: 0, note: '' };
 
 /** Optional venue-side charges (entry, table, etc.) shown separately to users. */
 export default function PlaceChargesField({ value, onChange, helperText }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Stable per-row keys (the rows have no id) so edits don't remount inputs and
   // a middle-removal can't shuffle the wrong row — never the array index (S6479).
   const keys = useRef<string[]>([]);
@@ -33,7 +35,7 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-        Place charges
+        {t('mweb.createPod.placeCharges')}
       </Typography>
       {helperText && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
@@ -49,14 +51,14 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
             alignItems={{ xs: 'stretch', sm: 'center' }}
           >
             <TextField
-              label="Label"
+              label={t('mweb.createPod.chargeLabel')}
               size="small"
               value={row.label}
               onChange={(e) => update(idx, { label: e.target.value })}
               sx={{ flex: 2 }}
             />
             <TextField
-              label="Amount (₹)"
+              label={t('mweb.createPod.chargeAmount')}
               type="number"
               size="small"
               value={row.amount}
@@ -65,19 +67,19 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
               sx={{ flex: 1 }}
             />
             <TextField
-              label="Note"
+              label={t('mweb.createPod.chargeNote')}
               size="small"
               value={row.note}
               onChange={(e) => update(idx, { note: e.target.value })}
               sx={{ flex: 2 }}
             />
-            <IconButton aria-label="Remove charge" onClick={() => remove(idx)} size="small">
+            <IconButton aria-label={t('mweb.createPod.removeCharge')} onClick={() => remove(idx)} size="small">
               <DeleteOutlineIcon fontSize="small" />
             </IconButton>
           </Stack>
         ))}
         <Button startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
-          Add charge
+          {t('mweb.createPod.addCharge')}
         </Button>
       </Stack>
     </Box>

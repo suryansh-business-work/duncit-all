@@ -2,15 +2,11 @@ import { useState } from 'react';
 import { InputAdornment, Link, Stack, TextField, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { usePricing } from '../../../../hooks/usePricing';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
 import type { EarningsPreview } from './useEarningsPreview';
 import SuggestedPricesDialog from './SuggestedPricesDialog';
 import ZeroEarningsNotice from './ZeroEarningsNotice';
-import {
-  SUGGESTED_PRICES_LINK,
-  TICKET_PRICE_LABEL,
-  TICKET_PRICE_PLACEHOLDER,
-} from './pricingCopy';
 
 interface Props {
   form: CreatePodForm;
@@ -30,12 +26,15 @@ const asTicketPrice = (value: unknown) => (value === '' || value === null ? null
 export default function TicketPriceField({ form, preview, isFree }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { currency } = usePricing();
+  const { t } = useTranslation();
   const {
     register,
     formState: { errors },
   } = form;
-  // TODO(i18n) — helper copy ships as a literal until this feature is localized.
-  const helper = isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.';
+  const helper = isFree
+    ? t('mweb.createPod.ticketPriceFreeHint')
+    : t('mweb.createPod.ticketPriceHint');
+  const suggestedLink = t('mweb.createPod.suggestedPrice');
 
   return (
     <Stack spacing={1}>
@@ -47,18 +46,18 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
           fontWeight={600}
           sx={{ minWidth: 0 }}
         >
-          {TICKET_PRICE_LABEL}
+          {t('mweb.createPod.ticketPriceLabel')}
         </Typography>
         <Link
           component="button"
           type="button"
           underline="always"
           onClick={() => setOpen(true)}
-          aria-label={SUGGESTED_PRICES_LINK}
+          aria-label={suggestedLink}
           data-testid="suggested-price-link"
           sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 700 }}
         >
-          {SUGGESTED_PRICES_LINK}
+          {suggestedLink}
           <InfoOutlinedIcon sx={{ fontSize: 15 }} />
         </Link>
       </Stack>
@@ -67,7 +66,7 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
         type="number"
         fullWidth
         disabled={isFree}
-        placeholder={TICKET_PRICE_PLACEHOLDER}
+        placeholder={t('mweb.createPod.ticketPricePlaceholder')}
         InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
         error={!!errors.pod_amount}
         helperText={errors.pod_amount?.message ?? helper}

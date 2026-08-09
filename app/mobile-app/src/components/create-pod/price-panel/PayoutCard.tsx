@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Green earnings emphasis — matches mWeb's success.main highlight. */
 const PAYOUT_BG = 'rgba(34,197,94,0.10)';
@@ -27,6 +28,7 @@ export function PayoutCard({
   totalDeductions,
 }: Readonly<Props>) {
   const { success } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <YStack
       testID="price-panel-payout"
@@ -41,11 +43,11 @@ export function PayoutCard({
         <MaterialIcons name="account-balance-wallet" size={22} color={success} />
         <YStack flex={1} minWidth={0} gap={4}>
           <Text fontSize={15.5} fontWeight="700" color="$color">
-            You will receive
+            {t('mweb.createPod.youWillReceive')}
           </Text>
           <XStack alignItems="center" gap={8} flexWrap="wrap">
             <Text fontSize={11.5} fontWeight="700" color="$muted">
-              For {payingPax} paying pax
+              {t('mweb.createPod.payingPax', { vars: { count: payingPax } })}
             </Text>
             <XStack
               borderWidth={1}
@@ -55,7 +57,7 @@ export function PayoutCard({
               paddingVertical={2}
             >
               <Text fontSize={11} fontWeight="600" color="$success">
-                {earnPct}% of collection
+                {t('mweb.createPod.shareOfCollection', { vars: { pct: earnPct } })}
               </Text>
             </XStack>
           </XStack>
@@ -67,7 +69,7 @@ export function PayoutCard({
       <YStack testID="price-panel-net-payout" gap={2} paddingHorizontal={4}>
         <XStack justifyContent="space-between">
           <Text fontSize={11.5} color="$muted">
-            Total Collection
+            {t('mweb.createPod.totalCollectionLabel')}
           </Text>
           <Text fontSize={11.5} fontWeight="700" color="$color">
             {collection}
@@ -75,7 +77,7 @@ export function PayoutCard({
         </XStack>
         <XStack justifyContent="space-between">
           <Text fontSize={11.5} color="$muted">
-            − Total Deductions
+            {t('mweb.createPod.minusTotalDeductions')}
           </Text>
           <Text fontSize={11.5} fontWeight="700" color="$color">
             {totalDeductions}
@@ -83,7 +85,7 @@ export function PayoutCard({
         </XStack>
         <XStack justifyContent="space-between">
           <Text fontSize={11.5} fontWeight="600" color="$color">
-            = You will receive
+            {t('mweb.createPod.equalsYouWillReceive')}
           </Text>
           <Text fontSize={11.5} fontWeight="700" color="$success">
             {amount}
@@ -99,7 +101,7 @@ export function PayoutCard({
         paddingVertical={7}
       >
         <Text fontSize={11.5} color="$muted">
-          Estimates at today&apos;s rates — final settlement happens after the pod completes.
+          {t('mweb.createPod.estimatesNote')}
         </Text>
       </YStack>
     </YStack>

@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Slider, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -9,12 +10,14 @@ interface SpotsSliderProps {
   min: number;
   max: number;
   value: number;
+  /** "Total spots" — computed once by the parent and passed down (rule 26g). */
+  label: string;
   onChange: (next: number) => void;
 }
 
 /** Tamagui's slider bound to whole spots. Hoisted to module scope — a component
  * defined inside another remounts on every render (S6478). */
-function SpotsSlider({ min, max, value, onChange }: Readonly<SpotsSliderProps>) {
+function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderProps>) {
   return (
     <Slider
       testID="create-pod-spots-slider"
@@ -23,7 +26,7 @@ function SpotsSlider({ min, max, value, onChange }: Readonly<SpotsSliderProps>) 
       step={1}
       value={[value]}
       onValueChange={([next]) => onChange(next ?? min)}
-      aria-label="Total spots"
+      aria-label={label}
     >
       <Slider.Track>
         <Slider.TrackActive />
@@ -94,6 +97,8 @@ export function SpotsStepper({
   readOnly = false,
 }: Readonly<Props>) {
   const { color } = useThemeColors();
+  const { t } = useTranslation();
+  const totalSpots = t('mweb.createPod.totalSpots');
   const parsed = Number.parseInt(value, 10);
   const current = Number.isFinite(parsed) ? parsed : min;
   const set = (next: number) => onChange(String(Math.max(min, Math.min(max, next))));
@@ -111,13 +116,13 @@ export function SpotsStepper({
         >
           <XStack alignItems="center" justifyContent="space-between">
             <Text fontSize={14} fontWeight="700" color="$color">
-              Total spots
+              {totalSpots}
             </Text>
             <Text testID="create-pod-spots-value" fontSize={20} fontWeight="700" color="$color">
               {current}
             </Text>
           </XStack>
-          <SpotsSlider min={min} max={max} value={current} onChange={set} />
+          <SpotsSlider min={min} max={max} value={current} label={totalSpots} onChange={set} />
           <XStack justifyContent="space-between">
             <Text fontSize={11} color="$muted">
               {min}
@@ -154,10 +159,10 @@ export function SpotsStepper({
       >
         <YStack flex={1}>
           <Text fontSize={14} fontWeight="700" color="$color">
-            Total spots
+            {totalSpots}
           </Text>
           <Text fontSize={12} color="$muted">
-            {readOnly ? 'Set by the venue space you picked.' : 'Number of available tickets.'}
+            {readOnly ? t('mweb.createPod.spotsFixedHint') : t('mweb.createPod.spotsHint')}
           </Text>
         </YStack>
         {readOnly ? (
@@ -168,7 +173,7 @@ export function SpotsStepper({
           <XStack alignItems="center" gap={10}>
             <StepButton
               testID="spots-dec"
-              label="Decrease spots"
+              label={t('mweb.createPod.decreaseSpots')}
               icon="remove"
               onPress={() => set(current - 1)}
               color={color}
@@ -187,11 +192,11 @@ export function SpotsStepper({
               // Digits only — spots are whole seats, and a fractional/garbage
               // value would feed a bogus collection into the earnings preview.
               onChangeText={(text) => onChange(text.replace(/\D/g, ''))}
-              aria-label="Total spots"
+              aria-label={totalSpots}
             />
             <StepButton
               testID="spots-inc"
-              label="Increase spots"
+              label={t('mweb.createPod.increaseSpots')}
               icon="add"
               onPress={() => set(current + 1)}
               color={color}

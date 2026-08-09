@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { StatementLine } from '@duncit/utils';
 
 /** Subtle section tints — venue-side vs everything else (both themes). */
@@ -17,6 +18,7 @@ export function ChargeRow({
   line,
   money,
 }: Readonly<{ line: StatementLine; money: (n: number) => string }>) {
+  const { t } = useTranslation();
   return (
     <YStack paddingHorizontal={12} paddingVertical={6} gap={2}>
       <XStack justifyContent="space-between" gap={12}>
@@ -28,7 +30,7 @@ export function ChargeRow({
         </Text>
       </XStack>
       <Text fontSize={10.5} color="$muted">
-        Formula: {line.formula}
+        {t('mweb.createPod.formula', { vars: { formula: line.formula } })}
       </Text>
     </YStack>
   );

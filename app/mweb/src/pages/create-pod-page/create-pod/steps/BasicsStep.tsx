@@ -9,6 +9,7 @@ import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import HostCategoryField from './HostCategoryField';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 interface Props {
@@ -26,6 +27,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
     watch,
     formState: { errors },
   } = form;
+  const { t } = useTranslation();
 
   // The host picks the category above the media field, and the server already
   // denormalised its name onto the host record — so the cover picker can open
@@ -44,22 +46,22 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           (rule 27). */}
       <HostCategoryField form={form} hostCategories={hostCategories} />
       <TextField
-        label={requiredLabel('Pod title', true)}
+        label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
         fullWidth
-        placeholder="e.g. Downtown Runners Club"
+        placeholder={t('mweb.createPod.podTitlePlaceholder')}
         {...register('pod_title')}
         error={!!errors.pod_title}
-        helperText={errors.pod_title?.message ?? 'What is this pod about? (3–120 characters)'}
+        helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
       />
       <TextField
-        label={requiredLabel('Description', true)}
+        label={requiredLabel(t('mweb.createPod.podDescriptionLabel'), true)}
         fullWidth
         multiline
         minRows={4}
-        placeholder="Describe the purpose, vibe, and what members can expect…"
+        placeholder={t('mweb.createPod.podDescriptionPlaceholder')}
         {...register('pod_description')}
         error={!!errors.pod_description}
-        helperText={errors.pod_description?.message ?? 'Tell people what to expect — agenda, vibe, who it is for'}
+        helperText={errors.pod_description?.message ?? t('mweb.createPod.podDescriptionHint')}
       />
       <Controller
         control={control}
@@ -79,12 +81,12 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
         name="what_this_pod_offers"
         render={({ field, fieldState }) => (
           <ChipArrayField
-            label="What this pod offers"
+            label={t('mweb.createPod.offersLabel')}
             required
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
-            placeholder="e.g. Coaching, Snacks, Equipment"
+            placeholder={t('mweb.createPod.offersPlaceholder')}
           />
         )}
       />

@@ -3,6 +3,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
 
 interface Props {
@@ -25,13 +26,15 @@ export function VenuePicker({
   required,
 }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
+  const { t } = useTranslation();
+  const selectVenue = t('mweb.createPod.selectVenue');
 
   if (venues.length === 0) {
     return (
       <YStack gap={8}>
-        <FieldLabel label="Select venue" required={required} testID="create-pod-venue" />
+        <FieldLabel label={selectVenue} required={required} testID="create-pod-venue" />
         <Text testID="create-pod-venue-empty" fontSize={12.5} color="$muted">
-          {emptyHint ?? 'No venues match this club yet — pick another club or go virtual.'}
+          {emptyHint ?? t('mweb.createPod.noVenues')}
         </Text>
       </YStack>
     );
@@ -39,7 +42,7 @@ export function VenuePicker({
 
   return (
     <YStack gap={8}>
-      <FieldLabel label="Select venue" required={required} testID="create-pod-venue" />
+      <FieldLabel label={selectVenue} required={required} testID="create-pod-venue" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap={10} paddingRight={10}>
           {venues.map((venue) => {
@@ -103,7 +106,7 @@ export function VenuePicker({
                       borderColor="$borderColor"
                     >
                       <Text fontSize={11} fontWeight="700" color="$muted">
-                        Up to {capacity}
+                        {t('mweb.createPod.upTo', { vars: { capacity } })}
                       </Text>
                     </XStack>
                   ) : null}

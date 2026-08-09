@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   value: string;
@@ -24,11 +25,12 @@ export function ReelPanelBody({
   onRemove,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
   const fileName = value.slice(value.lastIndexOf('/') + 1);
   return (
     <YStack gap={10}>
       <Text fontSize={12} color="$muted">
-        Your reel plays in the Explore feed while this pod is live. One video, up to 100MB.
+        {t('mweb.createPod.reelHint')}
       </Text>
       {value ? (
         <XStack
@@ -59,7 +61,7 @@ export function ReelPanelBody({
           <XStack
             testID="reel-remove"
             role="button"
-            aria-label="Remove reel"
+            aria-label={t('mweb.createPod.removeReel')}
             onPress={onRemove}
             width={28}
             height={28}
@@ -75,7 +77,7 @@ export function ReelPanelBody({
         <XStack
           testID="reel-upload-add"
           role="button"
-          aria-label="Upload a reel video"
+          aria-label={t('mweb.createPod.reelUploadAria')}
           aria-disabled={uploading}
           onPress={uploading ? undefined : onPick}
           alignItems="center"
@@ -96,7 +98,7 @@ export function ReelPanelBody({
             <MaterialIcons name="video-library" size={20} color={primary} />
           )}
           <Text fontSize={13.5} fontWeight="600" color="$color">
-            {uploading ? busyLabel : 'Upload a video'}
+            {uploading ? busyLabel : t('mweb.createPod.reelUpload')}
           </Text>
         </XStack>
       )}

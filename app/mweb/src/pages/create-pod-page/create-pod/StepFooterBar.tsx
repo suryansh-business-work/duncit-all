@@ -3,6 +3,7 @@ import { alpha } from '@mui/material/styles';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { APP_SHELL_MAX_WIDTH } from '../../../app/appLayout';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   isFirst: boolean;
@@ -27,8 +28,9 @@ export default function StepFooterBar({
   onNext,
   onSubmit,
 }: Readonly<Props>) {
-  let primaryLabel = 'Next';
-  if (isLast) primaryLabel = busy ? 'Creating…' : 'Create Pod';
+  const { t } = useTranslation();
+  const lastLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
+  const primaryLabel = isLast ? lastLabel : t('mweb.createPod.next');
   const primaryDisabled = busy || (isLast && submitDisabled);
   return (
     <Box
@@ -66,7 +68,7 @@ export default function StepFooterBar({
             startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
             sx={{ flex: 1, fontWeight: 600 }}
           >
-            Back
+            {t('mweb.createPod.back')}
           </Button>
           <Button
             variant="contained"

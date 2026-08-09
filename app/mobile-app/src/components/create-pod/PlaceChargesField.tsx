@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PodPlaceCharge } from './create-pod.types';
 
 interface Props {
@@ -21,6 +22,10 @@ const inputStyle = {
 /** Optional venue-side charges (entry, table, etc.) shown separately to users. */
 export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
   const { primary, danger } = useThemeColors();
+  const { t } = useTranslation();
+  const chargeLabel = t('mweb.createPod.chargeLabel');
+  const chargeAmount = t('mweb.createPod.chargeAmount');
+  const chargeNote = t('mweb.createPod.chargeNote');
   // Stable per-row keys (the rows have no id) so edits don't remount inputs and
   // a middle-removal can't shuffle the wrong row — never the array index (S6479).
   const keys = useRef<string[]>([]);
@@ -40,7 +45,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
   return (
     <YStack gap={10}>
       <Text fontSize={14} fontWeight="500" color="$color">
-        Place charges
+        {t('mweb.createPod.placeCharges')}
       </Text>
       {value.map((row, idx) => (
         <YStack
@@ -56,8 +61,8 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
             {...inputStyle}
             value={row.label}
             onChangeText={(text) => update(idx, { label: text })}
-            placeholder="Label"
-            aria-label="Charge label"
+            placeholder={chargeLabel}
+            aria-label={chargeLabel}
           />
           <Input
             testID={`charge-amount-${idx}`}
@@ -65,21 +70,21 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
             keyboardType="numeric"
             value={String(row.amount)}
             onChangeText={(text) => update(idx, { amount: Number(text) || 0 })}
-            placeholder="Amount (₹)"
-            aria-label="Charge amount"
+            placeholder={chargeAmount}
+            aria-label={chargeAmount}
           />
           <Input
             testID={`charge-note-${idx}`}
             {...inputStyle}
             value={row.note}
             onChangeText={(text) => update(idx, { note: text })}
-            placeholder="Note"
-            aria-label="Charge note"
+            placeholder={chargeNote}
+            aria-label={chargeNote}
           />
           <XStack
             testID={`charge-remove-${idx}`}
             role="button"
-            aria-label="Remove charge"
+            aria-label={t('mweb.createPod.removeCharge')}
             onPress={() => remove(idx)}
             alignItems="center"
             gap={4}
@@ -87,7 +92,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
           >
             <MaterialIcons name="delete-outline" size={16} color={danger} />
             <Text fontSize={13} fontWeight="700" color="$danger">
-              Remove
+              {t('mweb.createPod.remove')}
             </Text>
           </XStack>
         </YStack>
@@ -95,7 +100,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
       <XStack
         testID="charge-add"
         role="button"
-        aria-label="Add charge"
+        aria-label={t('mweb.createPod.addCharge')}
         onPress={add}
         alignItems="center"
         gap={4}
@@ -103,7 +108,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
       >
         <MaterialIcons name="add" size={18} color={primary} />
         <Text fontSize={13} fontWeight="600" color="$primary">
-          Add charge
+          {t('mweb.createPod.addCharge')}
         </Text>
       </XStack>
     </YStack>

@@ -133,19 +133,6 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'https://apis.aisensy.com',
     },
   ],
-  // The other half of EMAIL, not an addition to it: Resend is an HTTP API, so
-  // it has a key where SMTP has a host, and whichever entry is the active
-  // default is the one every email goes through.
-  RESEND: [
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'Resend → API Keys (re_…)' },
-    {
-      name: 'from_address',
-      label: 'From Address',
-      hint: 'Must sit on a domain verified in Resend, or every send is rejected',
-    },
-    { name: 'from_name', label: 'From Name' },
-    { name: 'reply_to', label: 'Reply-To' },
-  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -163,7 +150,6 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   SHIPROCKET: 'https://app.shiprocket.in/api-user',
   SLACK: 'https://api.slack.com/apps',
   AISENSY: 'https://app.aisensy.com/',
-  RESEND: 'https://resend.com/api-keys',
   TURN: 'https://github.com/coturn/coturn',
 };
 
@@ -189,8 +175,6 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SMTP_USER: { category: 'EMAIL', field: 'user' },
   SMTP_PASS: { category: 'EMAIL', field: 'password' },
   SMTP_FROM: { category: 'EMAIL', field: 'from_address' },
-  RESEND_API_KEY: { category: 'RESEND', field: 'api_key' },
-  RESEND_FROM: { category: 'RESEND', field: 'from_address' },
   GOOGLE_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'client_id' },
   GOOGLE_CLIENT_SECRET: { category: 'GOOGLE_OAUTH', field: 'client_secret' },
   GOOGLE_MAP_API: { category: 'GOOGLE_MAPS', field: 'maps_api_key' },

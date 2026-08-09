@@ -17,6 +17,7 @@ import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
+import DataClonePage from './pages/data-clone';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AisensyPage from './pages/aisensy';
 import AppShell from './components/AppShell';
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />
         <Route path="/server/terminal" element={authed(<TerminalPage />)} />
+        <Route path="/server/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
         <Route path="/aisensy" element={authed(<AisensyPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />

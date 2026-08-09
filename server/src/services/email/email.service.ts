@@ -32,7 +32,6 @@ const EMPTY_SMTP: EmailProviderConfig = {
   secure: false,
   from: '',
   replyTo: '',
-  apiKey: '',
 };
 
 export type { EmailCategory } from './email.provider';
@@ -118,10 +117,10 @@ export async function emailPreviewVars(): Promise<Record<string, string>> {
 }
 
 /**
- * Hand the message to whichever provider is configured. The Tech portal's
- * active default decides — an SMTP entry sends over SMTP, a Resend entry sends
- * over the API — and `email.provider.ts` owns both. This file only knows what
- * the message says.
+ * Hand the message to the configured mailbox. Every email leaves over SMTP;
+ * the Tech portal's active EMAIL entry decides WHICH mailbox, and
+ * `email.provider.ts` owns the transport. This file only knows what the
+ * message says.
  */
 async function deliver(
   email: {

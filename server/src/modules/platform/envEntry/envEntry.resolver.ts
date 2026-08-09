@@ -21,7 +21,6 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   SHIPROCKET: 'ShipRocket',
   SLACK: 'Slack',
   AISENSY: 'AiSensy (WhatsApp)',
-  RESEND: 'Resend (Email API)',
   TURN: 'TURN relay (staff calls)',
 };
 
@@ -112,6 +111,17 @@ export const envEntryResolvers = {
     ) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryService.setPortalAssignments(args.portalKey, args.entryIds);
+    },
+
+    testEnvConnection: async (
+      _p: unknown,
+      args: { id: string; input?: { to?: string | null } | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      // The signed-in admin is who a live test message falls back to, so the
+      // caller cannot nominate somebody else's number by omitting one.
+      return envEntryTests.connection(args.id, args.input?.to, ctx.user?.id ?? null);
     },
 
     testEnvEmail: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {

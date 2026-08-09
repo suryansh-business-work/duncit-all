@@ -242,6 +242,9 @@ const REASON_BUCKETS = {
         { $regexMatch: { input: REASON, regex: /^Refused by the mail server/ } },
         'Mail server refused'
       ),
+      // Historical only — Resend was removed and nothing writes this shape any
+      // more. The branch stays so rows from before the removal keep grouping
+      // where they always did instead of drifting into the catch-all.
       branch(
         { $regexMatch: { input: REASON, regex: /^Resend rejected the email/ } },
         'Provider rejected'

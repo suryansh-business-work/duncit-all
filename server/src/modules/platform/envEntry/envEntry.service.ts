@@ -2,6 +2,13 @@ import { GraphQLError } from 'graphql';
 import { EnvEntryModel, ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  aisensyConnection,
+  razorpayConnection,
+  shiprocketConnection,
+  slackConnection,
+  type EnvConfigReader,
+} from './envEntry.connection';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -104,7 +111,7 @@ async function clearOtherDefaults(category: EnvCategory, exceptId?: string) {
 }
 
 type TestResult = { ok: boolean; message: string };
-type ConfigStr = (k: string) => string;
+type ConfigStr = EnvConfigReader;
 
 async function probeImagekit(str: ConfigStr): Promise<TestResult> {
   if (!str('private_key')) return { ok: false, message: 'Private key is required' };
@@ -163,110 +170,16 @@ async function probeServam(str: ConfigStr): Promise<TestResult> {
   return { ok: true, message: 'Servam API key is set' };
 }
 
-async function probeRazorpay(str: ConfigStr): Promise<TestResult> {
-  if (!str('key_id') || !str('key_secret'))
-    return { ok: false, message: 'Key ID and key secret are required' };
-  const auth = 'Basic ' + Buffer.from(`${str('key_id')}:${str('key_secret')}`).toString('base64');
-  const res = await fetch('https://api.razorpay.com/v1/payments?count=1', {
-    headers: { Authorization: auth },
-  });
-  return res.ok
-    ? { ok: true, message: 'Razorpay credentials are valid' }
-    : { ok: false, message: `Razorpay rejected the credentials (HTTP ${res.status})` };
-}
-
-async function probeShiprocket(str: ConfigStr): Promise<TestResult> {
-  if (!str('email') || !str('password'))
-    return { ok: false, message: 'Account email and password are required' };
-  const res = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: str('email'), password: str('password') }),
-  });
-  const data = (await res.json().catch(() => ({}))) as { token?: string };
-  return res.ok && data.token
-    ? { ok: true, message: 'ShipRocket credentials are valid' }
-    : { ok: false, message: `ShipRocket rejected the credentials (HTTP ${res.status})` };
-}
-
-async function probeSlack(str: ConfigStr): Promise<TestResult> {
-  if (!str('bot_token')) return { ok: false, message: 'Bot token is required' };
-  const res = await fetch('https://slack.com/api/auth.test', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${str('bot_token')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
-  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; team?: string; error?: string };
-  const reason = data.error ? `: ${data.error}` : '';
-  return data.ok
-    ? { ok: true, message: `Slack workspace "${data.team ?? ''}" connected` }
-    : { ok: false, message: `Slack rejected the token${reason}` };
-}
-
-/** Expiry (ms) claimed by a JWT, 0 when it carries none, null when it isn't a
- * decodable JWT. Used to catch an expired AiSensy key before it fails a send. */
-function jwtExpiryMs(token: string): number | null {
-  const payload = token.split('.')[1];
-  if (!payload) return null;
-  try {
-    const claims = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
-    return typeof claims?.exp === 'number' ? claims.exp * 1000 : 0;
-  } catch {
-    return null;
-  }
-}
-
-/** AiSensy exposes no cheap auth-check endpoint — the campaign API is the only
- * call and it actually sends a WhatsApp message. So verify what can be checked
- * offline (key present, not expired) and leave delivery to the test send. */
-async function probeAisensy(str: ConfigStr): Promise<TestResult> {
-  if (!str('api_key')) return { ok: false, message: 'Campaign API key is required' };
-  const expiry = jwtExpiryMs(str('api_key'));
-  if (expiry && expiry < Date.now()) {
-    return { ok: false, message: `Campaign API key expired on ${new Date(expiry).toDateString()} — issue a new one in AiSensy` };
-  }
-  // The Project API is a second, optional credential: it reads campaigns and
-  // templates back, which the campaign key cannot do. Say which half is set.
-  const hasProject = !!str('project_id') && !!str('project_api_key');
-  const projectNote = hasProject
-    ? 'Project API configured for reading campaign + template details.'
-    : 'Project API not configured — campaign and template details cannot be read back.';
-  return { ok: true, message: `Campaign API key is set — run a test campaign to verify delivery. ${projectNote}` };
-}
-
 /**
- * Resend's domain list is the cheapest authenticated call there is, and it
- * answers the question that actually breaks sends: a valid key with no VERIFIED
- * domain is rejected on every message, so the probe reports the domains too
- * rather than just "the key works".
+ * Slack, ShipRocket, Razorpay and AiSensy are NOT probed here.
+ *
+ * Their checks are the same calls the Tech portal's "Test connection" button
+ * makes, so they live once in `envEntry.connection.ts` and both entry points
+ * share them — a second copy here is how the button and the table's green
+ * check end up disagreeing about the same credential (rule 34). AiSensy is
+ * called with no destination on purpose: listing entries must never spend a
+ * real WhatsApp message.
  */
-async function probeResend(str: ConfigStr): Promise<TestResult> {
-  if (!str('api_key')) return { ok: false, message: 'API key is required' };
-  const res = await fetch('https://api.resend.com/domains', {
-    headers: { Authorization: `Bearer ${str('api_key')}` },
-  });
-  const data = (await res.json().catch(() => ({}))) as {
-    data?: { name?: string; status?: string }[];
-    message?: string;
-  };
-  if (!res.ok) {
-    const reason = data.message ?? `HTTP ${res.status}`;
-    return { ok: false, message: `Resend rejected the key: ${reason}` };
-  }
-  const verified = (data.data ?? []).filter((d) => d.status === 'verified').map((d) => d.name);
-  if (verified.length === 0) {
-    return { ok: false, message: 'Key works, but no verified sending domain — every send would be rejected' };
-  }
-  const from = str('from_address');
-  const domain = from.split('@')[1] ?? '';
-  if (domain && !verified.includes(domain)) {
-    return { ok: false, message: `"${from}" is not on a verified domain (verified: ${verified.join(', ')})` };
-  }
-  return { ok: true, message: `Resend connected — verified domain(s): ${verified.join(', ')}` };
-}
-
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
@@ -276,11 +189,10 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   OPENAI: probeOpenai,
   GEMINI: probeGemini,
   SERVAM: probeServam,
-  RAZORPAY: probeRazorpay,
-  SHIPROCKET: probeShiprocket,
-  SLACK: probeSlack,
-  AISENSY: probeAisensy,
-  RESEND: probeResend,
+  RAZORPAY: razorpayConnection,
+  SHIPROCKET: shiprocketConnection,
+  SLACK: slackConnection,
+  AISENSY: (str) => aisensyConnection(str),
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

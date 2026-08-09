@@ -5,7 +5,9 @@ import { requireRole } from '@middleware/rbac';
 const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 // The web terminal runs arbitrary commands in the API container, which holds the
 // docker socket → host-root-equivalent. Restrict it to the top role only.
-const TECH_EXEC = ['SUPER_ADMIN'];
+// Exported so the other host-level Tech operations (the data clone) guard
+// themselves with this exact list rather than a second, weaker copy.
+export const TECH_EXEC = ['SUPER_ADMIN'];
 
 export const techResolvers = {
   Query: {

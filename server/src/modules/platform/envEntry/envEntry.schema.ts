@@ -30,7 +30,6 @@ const SDL_CATEGORIES = [
   'SHIPROCKET',
   'SLACK',
   'AISENSY',
-  'RESEND',
   'TURN',
 ];
 
@@ -56,7 +55,6 @@ export const envEntryTypeDefs = gql`
     SHIPROCKET
     SLACK
     AISENSY
-    RESEND
     TURN
   }
 
@@ -156,6 +154,29 @@ export const envEntryTypeDefs = gql`
     data: String
   }
 
+  """
+  The outcome of proving one entry's credentials against its vendor.
+
+  The details list carries everything that is not the headline — granted
+  scopes, live-vs-test mode, how long a token lasts. Neither field ever
+  contains a credential; both are shown in the portal and kept in the
+  entry's test history.
+  """
+  type EnvConnectionTestResult {
+    ok: Boolean!
+    message: String!
+    details: [String!]!
+  }
+
+  input EnvConnectionTestInput {
+    """
+    Where a provider whose only real credential check is a live send should
+    send it (today: AiSensy). Country code + number, digits only. Left blank,
+    the signed-in admin's own profile phone is used.
+    """
+    to: String
+  }
+
   extend type Query {
     envEntries(filter: EnvEntryFilter): [EnvEntry!]!
     envEntriesTable(query: TableQueryInput): EnvEntryTablePage!
@@ -173,6 +194,20 @@ export const envEntryTypeDefs = gql`
     testEnvEntry(id: ID!): EnvTestResult!
     "Replace the full set of entries assigned to a portal."
     setPortalEnvEntries(portalKey: String!, entryIds: [ID!]!): [EnvEntry!]!
+
+    """
+    Prove one entry's saved credentials against its vendor.
+
+    Takes the ENTRY id rather than a category on purpose: a category can hold
+    several entries and only one of them is the default, so a category-keyed
+    test would report a credential the operator is not looking at. The category
+    comes from the entry, which is what keeps this ONE mutation instead of a
+    near-identical one per provider.
+
+    Some of these perform a REAL action — AiSensy's key can make no call except
+    sending, so testing it sends a WhatsApp message.
+    """
+    testEnvConnection(id: ID!, input: EnvConnectionTestInput): EnvConnectionTestResult!
 
     "Interactive tests — these perform REAL actions (send email, place calls, upload, AI calls)."
     testEnvEmail(id: ID!, to: String!): EnvTestRichResult!

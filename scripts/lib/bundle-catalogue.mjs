@@ -14,7 +14,7 @@
  * parse zero keys and report success over nothing.
  *
  * Shared by `verify-translation-keys.mjs` (which needs the keys) and
- * `seed-localization.mjs` (which needs the English text too), so the two can
+ * `sync-localization.mjs` (which needs the English text too), so the two can
  * never disagree about what the bundle contains — a drift that would let the
  * gate pass while the seeder uploaded a different set (rule 34/40).
  */
@@ -150,4 +150,72 @@ export function catalogueEntries(repoRoot) {
 /** Just the `a.b.c` paths from the whole folder. */
 export function catalogueKeys(repoRoot) {
   return catalogueEntries(repoRoot).map((entry) => entry.key);
+}
+
+/** The server's own fallback bundle — its MJML email copy (CLAUDE.md rule 38). */
+export const EMAIL_BUNDLE_FILE = "server/src/services/email/email-i18n.ts";
+
+/**
+ * The leaves of a FLAT `Record<string, string>` literal, e.g. the server's
+ * EMAIL_FALLBACK.
+ *
+ * The nested reader above cannot do this one: its keys are dotted and
+ * double-quoted (`"email.common.greeting"`), and the file around the object has
+ * braces of its own — so the object body is sliced out first and read line by
+ * line. Throws rather than returning a short list, for the same reason
+ * `bundleEntries` does: a silent shrink here means a caller uploads fewer keys
+ * and still reports success.
+ */
+export function flatRecordEntries(source, name) {
+  const declared = source.indexOf(`const ${name}`);
+  if (declared === -1) {
+    throw new Error(`no \`const ${name}\` in the file — the bundle moved`);
+  }
+  const open = source.indexOf("{", declared);
+  const close = source.indexOf("\n};", open);
+  if (open === -1 || close === -1) {
+    throw new Error(`could not read the \`${name}\` object literal`);
+  }
+  // Same prettier unwrap as bundleEntries: `"key":` / newline / `"value",`.
+  const body = source
+    .slice(open + 1, close)
+    .replace(/:[ \t]*\r?\n[ \t]*/g, ": ");
+
+  const entries = [];
+  for (const raw of body.split("\n")) {
+    const line = raw.trim();
+    if (line.startsWith("//")) continue;
+    const leaf = /^"([^"]+)":\s*(['"`])([\s\S]*)$/.exec(line);
+    if (leaf) entries.push({ key: leaf[1], value: readLiteral(leaf[2], leaf[3]) });
+  }
+
+  const literals = body.match(/^[ \t]*"[^"]+":[ \t]*['"`]/gm) ?? [];
+  if (literals.length !== entries.length) {
+    throw new Error(
+      `parsed ${entries.length} keys from ${name} but it has ${literals.length} string entries — ` +
+        `the parser is out of step with the file's format`,
+    );
+  }
+  if (entries.length === 0) {
+    throw new Error(`parsed 0 keys from ${name} — the bundle format changed`);
+  }
+  return entries;
+}
+
+/**
+ * Every key the SERVER ships copy for, read straight from its fallback bundle.
+ *
+ * Read locally rather than fetched from a running API so the same set is pushed
+ * whether or not a server is up — and because the local code is the source of
+ * truth for what the platform's keys ARE.
+ */
+export function serverEmailEntries(repoRoot) {
+  const path = join(repoRoot, EMAIL_BUNDLE_FILE);
+  let source;
+  try {
+    source = readFileSync(path, "utf8");
+  } catch {
+    throw new Error(`no server email bundle at ${path}`);
+  }
+  return flatRecordEntries(source, "EMAIL_FALLBACK");
 }

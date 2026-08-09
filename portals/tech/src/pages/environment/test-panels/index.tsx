@@ -7,6 +7,7 @@ import CallTestPanel from './CallTestPanel';
 import AiTestPanel from './AiTestPanel';
 import GoogleMapsTest from './GoogleMapsTest';
 import GoogleOAuthTab from './GoogleOAuthTab';
+import ConnectionTestPanel from './ConnectionTestPanel';
 
 function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
   switch (entry.category) {
@@ -25,6 +26,13 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     case 'OPENAI':
     case 'GEMINI':
       return <AiTestPanel entry={entry} />;
+    // One panel, four providers: the server decides what each test does, so
+    // this list only says which categories have one (see envEntry.connection.ts).
+    case 'SLACK':
+    case 'SHIPROCKET':
+    case 'RAZORPAY':
+    case 'AISENSY':
+      return <ConnectionTestPanel entry={entry} />;
     default:
       return null;
   }

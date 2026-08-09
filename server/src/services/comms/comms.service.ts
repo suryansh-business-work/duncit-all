@@ -5,7 +5,7 @@ import { sendHtmlEmail } from '@services/email/email.service';
 /**
  * Outbound lead communications. Email goes through the same provider layer as
  * every other email in the product (`services/email/email.provider.ts`), so an
- * admin who switches from SMTP to Resend switches this too; calls go through
+ * admin who switches the active mailbox switches this too; calls go through
  * the TWILIO entry. The selected entry (provider_id) is used when active, else
  * the default. Credentials are owned by the Tech portal's Environment
  * Variables — there is no `.env` fallback.

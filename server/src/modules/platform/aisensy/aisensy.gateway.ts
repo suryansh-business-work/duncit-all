@@ -54,8 +54,16 @@ export interface CampaignMessage {
 }
 
 /** Human-readable reason out of an AiSensy error body. */
-function errorReason(body: any, status: number): string {
+export function campaignErrorReason(body: any, status: number): string {
   return String(body?.message ?? body?.errorMessage ?? body?.error ?? `HTTP ${status}`);
+}
+
+/**
+ * Did AiSensy take the message? Its own answer is the STRING `"true"` alongside
+ * HTTP 200, so an `res.ok` check on its own reports rejections as sends.
+ */
+export function campaignSucceeded(body: any): boolean {
+  return body?.success === true || body?.success === 'true';
 }
 
 /**
@@ -65,7 +73,7 @@ function errorReason(body: any, status: number): string {
  * isn't the default one" look identical from AiSensy's side.
  */
 async function failureMessage(body: any, status: number): Promise<string> {
-  const reason = errorReason(body, status);
+  const reason = campaignErrorReason(body, status);
   if (status !== 401 && status !== 403) return `AiSensy error: ${reason} (HTTP ${status})`;
   const entry = await envEntryService.resolveRuntime('AISENSY');
   const source = entry ? `entry "${entry.name}"` : 'no active default entry';
@@ -80,7 +88,7 @@ function withoutTrailingSlash(url: string): string {
 }
 
 /** The message in AiSensy's own field names. */
-function toPayload(message: CampaignMessage, key: string): Record<string, unknown> {
+export function campaignPayload(message: CampaignMessage, key: string): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     apiKey: key,
     campaignName: message.campaign_name,
@@ -91,17 +99,26 @@ function toPayload(message: CampaignMessage, key: string): Record<string, unknow
   return payload;
 }
 
+/**
+ * The campaign endpoint on a given host — blank falls back to AiSensy's own.
+ *
+ * Exported because a Tech-portal connection test has to send through ONE
+ * NAMED entry's base URL rather than the active runtime default: a category can
+ * hold several entries, and routing the test through {@link sendCampaign} would
+ * report a different key as good.
+ */
+export function campaignEndpoint(baseUrl: string): string {
+  return `${withoutTrailingSlash(baseUrl || DEFAULT_BASE_URL)}${CAMPAIGN_PATH}`;
+}
+
 /** Send one campaign message; resolves to AiSensy's submitted_message_id. */
 export async function sendCampaign(message: CampaignMessage): Promise<string> {
   const key = await apiKey();
-  const base = withoutTrailingSlash(
-    (await getRuntimeEnvValue('AISENSY_BASE_URL')) || DEFAULT_BASE_URL
-  );
+  const url = campaignEndpoint(await getRuntimeEnvValue('AISENSY_BASE_URL'));
 
-  const res = await postJson(`${base}${CAMPAIGN_PATH}`, toPayload(message, key));
+  const res = await postJson(url, campaignPayload(message, key));
 
-  const succeeded = res.data.success === true || res.data.success === 'true';
-  if (!res.ok || !succeeded) {
+  if (!res.ok || !campaignSucceeded(res.data)) {
     throw new GraphQLError(await failureMessage(res.data, res.status), {
       extensions: { code: 'BAD_GATEWAY' },
     });

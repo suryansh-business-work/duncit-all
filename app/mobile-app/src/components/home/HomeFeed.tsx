@@ -70,7 +70,7 @@ export function HomeFeed() {
   const bottomSpace = useBottomNavSpace();
   const { data: meData } = useMe();
   const saved = useSavedPodHearts();
-  const { primary } = useThemeColors();
+  const { primary, surface } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -114,10 +114,16 @@ export function HomeFeed() {
         flex={1}
         showsVerticalScrollIndicator={false}
         refreshControl={
+          // `tintColor` only colours the iOS spinner; Android draws a puck and
+          // reads `colors` + `progressBackgroundColor`. Left at their defaults
+          // that is a dark arrow on a white disc — all but invisible on the
+          // dark theme, so a pull read as "nothing happened".
           <RefreshControl
             refreshing={isLoading && hasData}
             onRefresh={refetch}
             tintColor={primary}
+            colors={[primary]}
+            progressBackgroundColor={surface}
           />
         }
       >

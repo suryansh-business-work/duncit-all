@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Button, Text, XStack, YStack } from 'tamagui';
 
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useCategoryLevel } from '@/hooks/useCategoryLevel';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { type CategoryOption } from '@/graphql/onboarding-survey';
@@ -28,6 +29,9 @@ export function CategoryPhase({
   initialScope,
 }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
+  // Same as the other phases: the Continue button is the last row of the scroll
+  // and the edge-to-edge window paints the Android navigation bar over it.
+  const bottomInset = useBottomInset();
   const disabledSet = useMemo(() => new Set(disabledIds ?? []), [disabledIds]);
   const [scope, setScope] = useState<Scope>(initialScope ?? EMPTY_SCOPE);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -104,7 +108,7 @@ export function CategoryPhase({
 
   const message = validationError || error;
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}>
       {group('Super Category *', 'super_category_id', supers)}
       {group('Category *', 'category_id', cats)}
       {group('Sub-Category *', 'sub_category_id', subs)}

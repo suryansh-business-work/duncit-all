@@ -80,7 +80,10 @@ export function ChatRoomScreen() {
   return (
     <YStack flex={1} testID="chat-room-screen">
       <AppBackground />
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+      {/* `bottom` matters as much as `top` here: the composer is the last child,
+          so under the edge-to-edge window it would otherwise sit beneath the
+          Android navigation bar. */}
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             testID="chat-room-back"

@@ -8,6 +8,7 @@ import { SuperCategoryGroup } from '@/components/survey/SuperCategoryGroup';
 import { SurveyFooter } from '@/components/survey/SurveyFooter';
 import { SurveyProgress } from '@/components/survey/SurveyProgress';
 import { MIN_PICKS } from '@/constants/survey-palette';
+import { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
 import { useSurveyData, useSurveyTree } from '@/hooks/useSurvey';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSurveyStore } from '@/stores/survey.store';
@@ -20,6 +21,10 @@ export function SurveyScreen() {
   const completeSurvey = useAuthStore((s) => s.completeSurvey);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [opError, setOpError] = useState<string | null>(null);
+  // The footer floats over the scroll and already pads itself by the device's
+  // bottom inset, so the room reserved behind it is measured rather than
+  // guessed — the same number is too small on a 3-button nav bar.
+  const { height: footerHeight, onLayout: onFooterLayout } = useMeasuredHeight();
 
   const { supers, childrenByParent, total } = useSurveyTree(data?.categoryTree);
 
@@ -79,7 +84,11 @@ export function SurveyScreen() {
 
         <ScrollView
           testID="survey-screen"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 168, paddingTop: 4 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingBottom: footerHeight + 16,
+            paddingTop: 4,
+          }}
           keyboardShouldPersistTaps="handled"
         >
           <YStack gap={4} paddingBottom={12}>
@@ -108,6 +117,7 @@ export function SurveyScreen() {
       </SafeAreaView>
 
       <SurveyFooter
+        onLayout={onFooterLayout}
         count={count}
         total={total}
         saving={saving}

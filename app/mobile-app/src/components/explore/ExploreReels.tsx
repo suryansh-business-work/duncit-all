@@ -14,6 +14,7 @@ import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useExplore } from '@/hooks/useExplore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
@@ -30,6 +31,7 @@ export function ExploreReels() {
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { primary, surface, onPrimary } = useThemeColors();
   const { openPod: navOpenPod, openClub: navOpenClub } = useDetailNav();
   const {
     pods,
@@ -103,10 +105,16 @@ export function ExploreReels() {
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
           refreshControl={
+            // Reels sit on full-screen media, so the bare iOS spinner keeps the
+            // overlay's white — `onPrimary` is that white as a token, identical
+            // in both themes. Android draws a puck instead, which takes the
+            // theme surface with the brand arrow so it stays legible either way.
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#ffffff"
+              tintColor={onPrimary}
+              colors={[primary]}
+              progressBackgroundColor={surface}
               testID="explore-refresh"
             />
           }

@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { BrandDetailSheet } from '@/components/details/BrandDetailSheet';
 import { ZoomableImageModal } from '@/components/details/ZoomableImageModal';
@@ -409,39 +410,41 @@ export function ProductDetailSheet({
   return (
     <Modal visible={!!productId} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} backgroundColor="$background" testID="product-detail-sheet">
-          <YStack flex={1}>
-            <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-              <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="700" color="$color">
-                  Product details
-                </Text>
-                <XStack
-                  testID="product-detail-close"
-                  role="button"
-                  aria-label="Close"
-                  onPress={onClose}
-                  width={32}
-                  height={32}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={16}
-                  backgroundColor="$surface"
-                >
-                  <MaterialIcons name="close" size={18} color={primary} />
+        <KeyboardScreen>
+          <YStack flex={1} backgroundColor="$background" testID="product-detail-sheet">
+            <YStack flex={1}>
+              <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+                <XStack alignItems="center" justifyContent="space-between" padding={16}>
+                  <Text fontSize={17} fontWeight="700" color="$color">
+                    Product details
+                  </Text>
+                  <XStack
+                    testID="product-detail-close"
+                    role="button"
+                    aria-label="Close"
+                    onPress={onClose}
+                    width={32}
+                    height={32}
+                    alignItems="center"
+                    justifyContent="center"
+                    borderRadius={16}
+                    backgroundColor="$surface"
+                  >
+                    <MaterialIcons name="close" size={18} color={primary} />
+                  </XStack>
                 </XStack>
-              </XStack>
 
-              {isLoading ? (
-                <YStack padding={32} alignItems="center">
-                  <Spinner testID="product-detail-loading" color="$primary" />
-                </YStack>
-              ) : (
-                loadedBody
-              )}
-            </SafeAreaView>
+                {isLoading ? (
+                  <YStack padding={32} alignItems="center">
+                    <Spinner testID="product-detail-loading" color="$primary" />
+                  </YStack>
+                ) : (
+                  loadedBody
+                )}
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
         <ZoomableImageModal images={images} index={zoomIndex} onClose={() => setZoomIndex(null)} />
         <BrandDetailSheet brandId={brandOpen} onClose={() => setBrandOpen(null)} />
       </ModalThemeScope>

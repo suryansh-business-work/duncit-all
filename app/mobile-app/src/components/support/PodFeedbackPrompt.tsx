@@ -11,7 +11,11 @@ import {
 import { Field } from '@/components/Field';
 import { AspectRatingRow } from '@/components/support/AspectRatingRow';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useTranslation } from '@/hooks/useTranslation';
+
+/** Scrim padding — the bottom edge also has to clear the on-screen keyboard. */
+const SCRIM_PADDING = 24;
 
 /**
  * After a guest attends a pod and reopens the app, ask how it went — part by
@@ -31,6 +35,9 @@ export function PodFeedbackPrompt() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The prompt is a floating scrim outside every screen scaffold, so nothing
+  // above it lifts the comment box clear of the keyboard.
+  const keyboardInset = useKeyboardInset();
 
   useEffect(() => {
     let on = true;
@@ -73,7 +80,8 @@ export function PodFeedbackPrompt() {
       backgroundColor="rgba(0,0,0,0.55)"
       alignItems="center"
       justifyContent="center"
-      padding={24}
+      padding={SCRIM_PADDING}
+      paddingBottom={SCRIM_PADDING + keyboardInset}
     >
       <YStack
         width="100%"

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostScanPodTicketDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -73,135 +74,137 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={close}>
       <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="ticket-scan-dialog">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={close}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.6)"
-          />
-          <YStack
-            width="92%"
-            maxWidth={460}
-            maxHeight="88%"
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
-          >
-            <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="700" color="$color">
-                Scan attendee tickets
-              </Text>
-              <Text
-                fontSize={12.5}
-                color="$muted"
-                paddingTop={2}
-                paddingBottom={10}
-                numberOfLines={1}
-              >
-                {pod?.pod_title}
-              </Text>
-
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <YStack gap={12} paddingBottom={6}>
-                  {busy ? <Spinner testID="ticket-scan-busy" color="$primary" /> : null}
-
-                  {!result && !busy ? (
-                    <ScannerFrame
-                      granted={!!permission?.granted}
-                      scanning={!!pod}
-                      onCode={(token) => void submit(token)}
-                    />
-                  ) : null}
-
-                  {error ? (
-                    <Text testID="ticket-scan-error" fontSize={13} color="$danger">
-                      {error}
-                    </Text>
-                  ) : null}
-
-                  {result ? (
-                    <Text
-                      testID="ticket-scan-message"
-                      fontSize={13.5}
-                      fontWeight="700"
-                      color={result.ok ? '$success' : '$danger'}
-                    >
-                      {result.message}
-                    </Text>
-                  ) : null}
-
-                  {attendee ? (
-                    <ScannedAttendeeCard
-                      attendee={attendee}
-                      alreadyCheckedIn={!!result?.already_checked_in}
-                      ticketCode={result?.ticket?.ticket_code}
-                      seats={result?.ticket?.seats ?? 1}
-                      onOpenProfile={() => onOpenProfile(attendee.user_id)}
-                    />
-                  ) : null}
-
-                  {result?.requires_companions && pendingToken ? (
-                    <CompanionsForm
-                      seats={result.ticket?.seats ?? 1}
-                      required={result.companions_required}
-                      busy={busy}
-                      onSubmit={(companions) => void submit(pendingToken, companions)}
-                    />
-                  ) : null}
-                </YStack>
-              </ScrollView>
-
-              <XStack gap={12} paddingTop={12}>
-                <XStack
-                  testID="ticket-scan-close"
-                  role="button"
-                  aria-label="Close"
-                  onPress={close}
-                  flex={1}
-                  height={46}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={12}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  pressStyle={{ opacity: 0.85 }}
+        <KeyboardScreen>
+          <YStack flex={1} alignItems="center" justifyContent="center" testID="ticket-scan-dialog">
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={close}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.6)"
+            />
+            <YStack
+              width="92%"
+              maxWidth={460}
+              maxHeight="88%"
+              backgroundColor="$background"
+              borderRadius={20}
+              padding={18}
+            >
+              <SafeAreaView edges={[]}>
+                <Text fontSize={17} fontWeight="700" color="$color">
+                  Scan attendee tickets
+                </Text>
+                <Text
+                  fontSize={12.5}
+                  color="$muted"
+                  paddingTop={2}
+                  paddingBottom={10}
+                  numberOfLines={1}
                 >
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    Close
-                  </Text>
-                </XStack>
-                {result ? (
+                  {pod?.pod_title}
+                </Text>
+
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <YStack gap={12} paddingBottom={6}>
+                    {busy ? <Spinner testID="ticket-scan-busy" color="$primary" /> : null}
+
+                    {!result && !busy ? (
+                      <ScannerFrame
+                        granted={!!permission?.granted}
+                        scanning={!!pod}
+                        onCode={(token) => void submit(token)}
+                      />
+                    ) : null}
+
+                    {error ? (
+                      <Text testID="ticket-scan-error" fontSize={13} color="$danger">
+                        {error}
+                      </Text>
+                    ) : null}
+
+                    {result ? (
+                      <Text
+                        testID="ticket-scan-message"
+                        fontSize={13.5}
+                        fontWeight="700"
+                        color={result.ok ? '$success' : '$danger'}
+                      >
+                        {result.message}
+                      </Text>
+                    ) : null}
+
+                    {attendee ? (
+                      <ScannedAttendeeCard
+                        attendee={attendee}
+                        alreadyCheckedIn={!!result?.already_checked_in}
+                        ticketCode={result?.ticket?.ticket_code}
+                        seats={result?.ticket?.seats ?? 1}
+                        onOpenProfile={() => onOpenProfile(attendee.user_id)}
+                      />
+                    ) : null}
+
+                    {result?.requires_companions && pendingToken ? (
+                      <CompanionsForm
+                        seats={result.ticket?.seats ?? 1}
+                        required={result.companions_required}
+                        busy={busy}
+                        onSubmit={(companions) => void submit(pendingToken, companions)}
+                      />
+                    ) : null}
+                  </YStack>
+                </ScrollView>
+
+                <XStack gap={12} paddingTop={12}>
                   <XStack
-                    testID="ticket-scan-next"
+                    testID="ticket-scan-close"
                     role="button"
-                    aria-label="Scan next"
-                    onPress={() => {
-                      setResult(null);
-                      setError(null);
-                    }}
+                    aria-label="Close"
+                    onPress={close}
                     flex={1}
                     height={46}
                     alignItems="center"
                     justifyContent="center"
                     borderRadius={12}
-                    backgroundColor="$primary"
+                    borderWidth={1}
+                    borderColor="$borderColor"
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                      Scan next
+                    <Text fontSize={14} fontWeight="600" color="$color">
+                      Close
                     </Text>
                   </XStack>
-                ) : null}
-              </XStack>
-            </SafeAreaView>
+                  {result ? (
+                    <XStack
+                      testID="ticket-scan-next"
+                      role="button"
+                      aria-label="Scan next"
+                      onPress={() => {
+                        setResult(null);
+                        setError(null);
+                      }}
+                      flex={1}
+                      height={46}
+                      alignItems="center"
+                      justifyContent="center"
+                      borderRadius={12}
+                      backgroundColor="$primary"
+                      pressStyle={{ opacity: 0.85 }}
+                    >
+                      <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                        Scan next
+                      </Text>
+                    </XStack>
+                  ) : null}
+                </XStack>
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

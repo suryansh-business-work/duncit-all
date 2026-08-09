@@ -87,7 +87,10 @@ export function ProfileScreen() {
   return (
     <YStack flex={1} testID="profile-screen">
       <AppBackground />
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+      {/* Pushed screen with no floating tab bar, so it owns both edges — the
+          edge-to-edge window would otherwise clip the last row of the grid
+          behind the Android navigation bar. */}
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             testID="profile-back"

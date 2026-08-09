@@ -9,7 +9,7 @@
  * as a command, so seeding can be part of setting an environment up.
  *
  * What it sends:
- *   - every key in the client fallback catalogue (packages/i18n/src/bundles.ts)
+ *   - every key in the client fallback catalogue (packages/i18n/src/bundles/)
  *   - every key the SERVER ships copy for (its MJML email templates), read back
  *     from the `serverTranslationSeed` query so the two never drift
  *
@@ -25,14 +25,12 @@
  * The token must belong to a user with admin write access; it is read from the
  * environment and never written to disk or committed.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { bundleEntries } from "./lib/bundle-catalogue.mjs";
+import { catalogueEntries } from "./lib/bundle-catalogue.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BUNDLES = join(ROOT, "packages/i18n/src/bundles.ts");
 
 const GRAPHQL_URL =
   process.env.DUNCIT_GRAPHQL_URL ?? "http://localhost:2001/graphql";
@@ -111,7 +109,7 @@ if (!TOKEN) {
 console.log(`seed-localization: target ${GRAPHQL_URL}`);
 
 try {
-  const clientEntries = bundleEntries(readFileSync(BUNDLES, "utf8"));
+  const clientEntries = catalogueEntries(ROOT);
   const locale = await resolveDefaultLocale();
 
   // The server's own email copy is fetched rather than duplicated here, so the

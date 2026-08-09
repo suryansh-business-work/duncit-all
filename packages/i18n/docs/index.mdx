@@ -290,8 +290,10 @@ two ordinary rows. `count` is also injected as a `{count}` var automatically, so
 
 ## Adding a key: bundle first, then code
 
-1. Add it to the right nested bundle in `src/bundles.ts` — `MWEB_BUNDLE` (mWeb **and** native),
-   `SHELL_BUNDLE` (portal chrome), `WEBSITE_BUNDLE` (Astro sites).
+1. Add it to the right nested bundle under `src/bundles/` — one file per namespace, so two
+   people adding keys to two surfaces never touch the same lines: `mweb.ts` (mWeb **and**
+   native), `shell.ts` (portal chrome), `website.ts` (Astro sites), `media.ts`, `grievance.ts`.
+   `src/bundles.ts` only assembles them into `SURFACE_BUNDLES`.
 2. Press **Import app keys** in Admin → Localization → Translations. That seeds every shipped
    key (client bundles via `allFallbackEntries`, plus the server's email keys) against the
    default locale without overwriting existing translations.
@@ -306,11 +308,13 @@ A portal adds its **own** namespace by passing `i18nFallback` to `mountPortal`; 
 
 `npm test` in this package runs `node scripts/verify-translation-keys.mjs` **before** vitest.
 It scans `app/`, `packages/`, `portals/` and `website/` for `t('…')` call sites and fails if a
-key in `bundles.ts` is never rendered anywhere. An unused key is worse than a missing one — an
-admin sees it, pays to translate it, and the translation appears on no screen.
+key in `src/bundles/` is never rendered anywhere. An unused key is worse than a missing one — an
+admin sees it, pays to translate it, and the translation appears on no screen. The gate reads the
+whole FOLDER and throws when it finds no bundle file, so a split that moved the copy can never
+leave it silently checking nothing.
 
 Coverage is 100/100/100/100 on `src/**` with the barrels excluded (`src/index.ts`,
-`src/**/index.ts`), so `catalogue.ts`, `translator.ts` and `bundles.ts` are each fully covered.
+`src/**/index.ts`), so `catalogue.ts`, `translator.ts` and every `bundles/*.ts` are fully covered.
 
 ## The server keeps its own copy — deliberately
 

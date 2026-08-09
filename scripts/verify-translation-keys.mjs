@@ -9,10 +9,11 @@
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { bundleKeys } from "./lib/bundle-catalogue.mjs";
+import { BUNDLE_DIR, catalogueKeys } from "./lib/bundle-catalogue.mjs";
 
 const ROOT = resolve(process.argv[2] ?? ".");
-const BUNDLES = join(ROOT, "packages/i18n/src/bundles.ts");
+/** The catalogue itself defines keys; it never renders them. */
+const BUNDLES = join(ROOT, BUNDLE_DIR);
 
 /** Source roots that render copy. Generated + vendored trees are skipped. */
 const SEARCH_ROOTS = ["app", "packages", "portals", "website"];
@@ -45,22 +46,16 @@ function* sourceFiles(dir) {
 
 let keys;
 try {
-  keys = bundleKeys(readFileSync(BUNDLES, "utf8"));
+  keys = catalogueKeys(ROOT);
 } catch (error) {
   console.error(`verify-translation-keys: ${error.message}`);
-  process.exit(1);
-}
-if (keys.length === 0) {
-  console.error(
-    "verify-translation-keys: parsed 0 keys — the bundle format changed",
-  );
   process.exit(1);
 }
 
 const used = new Set();
 for (const root of SEARCH_ROOTS) {
   for (const file of sourceFiles(join(ROOT, root))) {
-    if (file.endsWith("bundles.ts")) continue;
+    if (file.startsWith(BUNDLES) || file.endsWith("bundles.ts")) continue;
     const text = readFileSync(file, "utf8");
     for (const key of keys) {
       // `t('key')` in code, `{{t:key}}` in an MJML template.

@@ -7,68 +7,26 @@
  * Localization > Translations, pays to have it translated, and the translation
  * never appears anywhere. Run from the repo root.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { bundleKeys } from "./lib/bundle-catalogue.mjs";
 
-const ROOT = resolve(process.argv[2] ?? '.');
-const BUNDLES = join(ROOT, 'packages/i18n/src/bundles.ts');
+const ROOT = resolve(process.argv[2] ?? ".");
+const BUNDLES = join(ROOT, "packages/i18n/src/bundles.ts");
 
 /** Source roots that render copy. Generated + vendored trees are skipped. */
-const SEARCH_ROOTS = ['app', 'packages', 'portals', 'website'];
+const SEARCH_ROOTS = ["app", "packages", "portals", "website"];
 const SKIP_DIR = new Set([
-  'node_modules',
-  'dist',
-  'build',
-  '.astro',
-  'coverage',
-  'generated',
-  'open-wa-server',
-  '__tests__',
+  "node_modules",
+  "dist",
+  "build",
+  ".astro",
+  "coverage",
+  "generated",
+  "open-wa-server",
+  "__tests__",
 ]);
 const SOURCE_EXT = /\.(tsx?|astro|mjml)$/;
-
-/** Leaf keys of the nested literals in bundles.ts, as `a.b.c` paths. */
-function bundleKeys(source) {
-  const keys = [];
-  const path = [];
-  // Prettier wraps a long entry as `key:` / newline / `'value',`. Join those
-  // back onto one line first — otherwise the leaf matches nothing, the key is
-  // skipped WITHOUT a diagnostic, and the gate passes while missing it.
-  // (`key: {` keeps its brace on the same line, so objects are unaffected.)
-  source = source.replace(/:[ \t]*\r?\n[ \t]*/g, ': ');
-
-  // The file is a small set of plain object literals, so brace depth plus the
-  // `name:` before each brace reconstructs every path without a TS parser.
-  for (const raw of source.split('\n')) {
-    const line = raw.trim();
-    if (line.startsWith('//') || line.startsWith('*') || line.startsWith('/*')) continue;
-
-    const open = /^(?:export const \w+: NestedCatalogue = )?(?:'([^']+)'|(\w+)):?\s*\{$/.exec(line);
-    if (open) {
-      path.push(open[1] ?? open[2]);
-      continue;
-    }
-    if (line.startsWith('}')) {
-      path.pop();
-      continue;
-    }
-    const leaf = /^(?:'([^']+)'|(\w+)):\s*['"`]/.exec(line);
-    if (leaf) keys.push([...path, leaf[1] ?? leaf[2]].join('.'));
-  }
-
-  // Self-check: every string-valued entry in the file must have produced a key.
-  // Without this, a future formatting change silently shrinks the checked set
-  // and the gate still prints a reassuring pass.
-  const literals = source.match(/^[ \t]*(?:'[^']+'|\w+):[ \t]*['"`]/gm) ?? [];
-  if (literals.length !== keys.length) {
-    console.error(
-      `verify-translation-keys: parsed ${keys.length} keys but the bundle has ` +
-        `${literals.length} string entries — the parser is out of step with the file's format`,
-    );
-    process.exit(1);
-  }
-  return keys;
-}
 
 function* sourceFiles(dir) {
   let entries;
@@ -85,20 +43,29 @@ function* sourceFiles(dir) {
   }
 }
 
-const keys = bundleKeys(readFileSync(BUNDLES, 'utf8'));
+let keys;
+try {
+  keys = bundleKeys(readFileSync(BUNDLES, "utf8"));
+} catch (error) {
+  console.error(`verify-translation-keys: ${error.message}`);
+  process.exit(1);
+}
 if (keys.length === 0) {
-  console.error('verify-translation-keys: parsed 0 keys — the bundle format changed');
+  console.error(
+    "verify-translation-keys: parsed 0 keys — the bundle format changed",
+  );
   process.exit(1);
 }
 
 const used = new Set();
 for (const root of SEARCH_ROOTS) {
   for (const file of sourceFiles(join(ROOT, root))) {
-    if (file.endsWith('bundles.ts')) continue;
-    const text = readFileSync(file, 'utf8');
+    if (file.endsWith("bundles.ts")) continue;
+    const text = readFileSync(file, "utf8");
     for (const key of keys) {
       // `t('key')` in code, `{{t:key}}` in an MJML template.
-      if (text.includes(`'${key}'`) || text.includes(`{{t:${key}}}`)) used.add(key);
+      if (text.includes(`'${key}'`) || text.includes(`{{t:${key}}}`))
+        used.add(key);
     }
   }
 }
@@ -106,7 +73,7 @@ for (const root of SEARCH_ROOTS) {
 const unused = keys.filter((k) => !used.has(k));
 if (unused.length > 0) {
   console.error(
-    `verify-translation-keys: ${unused.length} shipped key(s) nothing renders:\n  ${unused.join('\n  ')}`,
+    `verify-translation-keys: ${unused.length} shipped key(s) nothing renders:\n  ${unused.join("\n  ")}`,
   );
   process.exit(1);
 }

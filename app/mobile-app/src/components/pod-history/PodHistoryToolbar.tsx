@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   filterCount: number;
@@ -13,13 +14,14 @@ interface Props {
  * badge while a Super/Category filter is applied. */
 export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Props>) {
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const filterActive = filterCount > 0;
   return (
     <XStack gap={8} alignItems="center">
       <XStack
         testID="pod-history-filter-button"
         role="button"
-        aria-label="Filter"
+        aria-label={t('mweb.podHistory.filter')}
         onPress={onFilter}
         alignItems="center"
         gap={4}
@@ -41,7 +43,7 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
       <XStack
         testID="pod-history-sort-button"
         role="button"
-        aria-label="Sort"
+        aria-label={t('mweb.podHistory.sort')}
         onPress={onSort}
         alignItems="center"
         justifyContent="center"

@@ -5,14 +5,15 @@ export type PodHistorySort = 'DATE_DESC' | 'DATE_ASC' | 'PRICE_ASC' | 'PRICE_DES
 
 export interface PodHistorySortOption {
   value: PodHistorySort;
-  label: string;
+  /** Translation key — the menu resolves it through `t`. */
+  labelKey: string;
 }
 
 export const POD_HISTORY_SORTS: readonly PodHistorySortOption[] = [
-  { value: 'DATE_DESC', label: 'Date · Newest first' },
-  { value: 'DATE_ASC', label: 'Date · Oldest first' },
-  { value: 'PRICE_ASC', label: 'Price · Low to High' },
-  { value: 'PRICE_DESC', label: 'Price · High to Low' },
+  { value: 'DATE_DESC', labelKey: 'mweb.podHistory.sortDateNewest' },
+  { value: 'DATE_ASC', labelKey: 'mweb.podHistory.sortDateOldest' },
+  { value: 'PRICE_ASC', labelKey: 'mweb.podHistory.sortPriceLowHigh' },
+  { value: 'PRICE_DESC', labelKey: 'mweb.podHistory.sortPriceHighLow' },
 ];
 
 export interface PodHistoryFilters {

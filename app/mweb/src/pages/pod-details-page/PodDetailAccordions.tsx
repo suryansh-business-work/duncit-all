@@ -19,6 +19,7 @@ import { isPodExpired } from '../../utils/podStatus';
 import PodHostsSection from '../../components/pod-details/PodHostsSection';
 import PodPlaceChargesSection from '../../components/pod-details/PodPlaceChargesSection';
 import PodPaymentDetailsSection from '../../components/pod-details/PodPaymentDetailsSection';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -44,6 +45,7 @@ export default function PodDetailAccordions({
   priceCompute,
   categoryCrumbs,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const offers: string[] = pod.what_this_pod_offers ?? [];
   const perks: string[] = pod.available_perks ?? [];
   const charges = pod.place_charges ?? [];
@@ -52,17 +54,17 @@ export default function PodDetailAccordions({
   const sections = useMemo(
     () =>
       [
-        { id: 'about', title: 'About this pod', icon: <InfoIcon fontSize="small" />, render: () => <PodAboutSection description={pod.pod_description} info={pod.pod_info} /> },
-        { id: 'club', title: 'Club details', icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} categoryCrumbs={categoryCrumbs} /> },
-        { id: 'offers', title: 'What this pod offers', icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText="Details coming soon." color="primary" /> },
-        { id: 'hosts', title: 'Hosts', icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
-        { id: 'attendees', title: 'Attendees', icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} expired={isPodExpired(pod.pod_date_time)} spotFills={spotFills} seatsByUser={seatsByUser} seatsTaken={pod.seats_taken ?? undefined} /> },
-        { id: 'perks', title: 'Available perks', icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText="No additional perks listed." color="success" /> },
-        { id: 'payment', title: 'Payment details', icon: <PaymentIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
-        ...(paymentTerms ? [{ id: 'terms', title: 'Payment terms', icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),
-        ...(charges.length > 0 ? [{ id: 'charges', title: 'Place charges', icon: <ReceiptLongIcon fontSize="small" />, render: () => <PodPlaceChargesSection charges={charges} /> }] : []),
+        { id: 'about', title: t('mweb.podDetails.sectionAbout'), icon: <InfoIcon fontSize="small" />, render: () => <PodAboutSection description={pod.pod_description} info={pod.pod_info} /> },
+        { id: 'club', title: t('mweb.podDetails.sectionClub'), icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} categoryCrumbs={categoryCrumbs} /> },
+        { id: 'offers', title: t('mweb.podDetails.sectionOffers'), icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText={t('mweb.podDetails.offersEmpty')} color="primary" /> },
+        { id: 'hosts', title: t('mweb.podDetails.sectionHosts'), icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
+        { id: 'attendees', title: t('mweb.podDetails.sectionAttendees'), icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} expired={isPodExpired(pod.pod_date_time)} spotFills={spotFills} seatsByUser={seatsByUser} seatsTaken={pod.seats_taken ?? undefined} /> },
+        { id: 'perks', title: t('mweb.podDetails.sectionPerks'), icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText={t('mweb.podDetails.perksEmpty')} color="success" /> },
+        { id: 'payment', title: t('mweb.podDetails.sectionPayment'), icon: <PaymentIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
+        ...(paymentTerms ? [{ id: 'terms', title: t('mweb.podDetails.sectionTerms'), icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),
+        ...(charges.length > 0 ? [{ id: 'charges', title: t('mweb.podDetails.sectionCharges'), icon: <ReceiptLongIcon fontSize="small" />, render: () => <PodPlaceChargesSection charges={charges} /> }] : []),
       ] as const,
-    [pod, club, hosts, attendees, spotFills, seatsByUser, isFree, priceCompute, offers, perks, charges, paymentTerms, categoryCrumbs]
+    [pod, club, hosts, attendees, spotFills, seatsByUser, isFree, priceCompute, offers, perks, charges, paymentTerms, categoryCrumbs, t]
   );
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['about']));
@@ -86,20 +88,20 @@ export default function PodDetailAccordions({
           startIcon={<UnfoldMoreIcon />}
           onClick={expandAll}
           disabled={allOpen}
-          aria-label="Expand all sections"
+          aria-label={t('mweb.podDetails.expandAllSections')}
           sx={{ minHeight: 36 }}
         >
-          Expand all
+          {t('mweb.podDetails.expandAll')}
         </Button>
         <Button
           size="small"
           startIcon={<UnfoldLessIcon />}
           onClick={collapseAll}
           disabled={expanded.size === 0}
-          aria-label="Collapse all sections"
+          aria-label={t('mweb.podDetails.collapseAllSections')}
           sx={{ minHeight: 36 }}
         >
-          Collapse all
+          {t('mweb.podDetails.collapseAll')}
         </Button>
       </Stack>
       {sections.map((sec) => (

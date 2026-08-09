@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -62,19 +63,23 @@ export function PodSocialBar({
   onToggleLike,
   onOpenComments,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const likeLabel = liked
+    ? t('mweb.podDetails.likedCount', { vars: { count: likeCount } })
+    : t('mweb.podDetails.likeCount', { vars: { count: likeCount } });
   return (
     <XStack paddingHorizontal={16} gap={12} flexWrap="wrap">
       <SocialButton
         testID="pod-like-btn"
         icon={liked ? 'favorite' : 'favorite-border'}
-        label={`${liked ? 'Liked' : 'Like'} · ${likeCount}`}
+        label={likeLabel}
         active={liked}
         onPress={onToggleLike}
       />
       <SocialButton
         testID="pod-comment-btn"
         icon="chat-bubble-outline"
-        label={`Comment · ${commentCount}`}
+        label={t('mweb.podDetails.commentCount', { vars: { count: commentCount } })}
         onPress={onOpenComments}
       />
     </XStack>

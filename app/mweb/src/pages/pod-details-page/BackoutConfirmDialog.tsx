@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import PolicyRenderer from '../../components/PolicyRenderer';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -52,6 +53,7 @@ export default function BackoutConfirmDialog({
   currency = '₹',
   deductionPct = 0,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const held = Math.max(1, Math.floor(mySeats) || 1);
   // Default to releasing everything — that is what Backout meant before a
   // booking could cover several people, and it stays the common case.
@@ -66,46 +68,45 @@ export default function BackoutConfirmDialog({
   const releasing = Math.min(seats, held);
   const partial = releasing < held;
   const estimate = partial && refundPerSeat != null ? money(refundPerSeat * releasing) : refundAmount;
+  const kept = held - releasing;
+  const keptKey = kept === 1 ? 'mweb.podDetails.keepSeatsOne' : 'mweb.podDetails.keepSeatsMany';
+  const partialHint = t(keptKey, { vars: { count: kept } });
+  const keptHint = partial ? partialHint : t('mweb.podDetails.releasingAll');
+  const estimateKey =
+    releasing === 1 ? 'mweb.podDetails.refundEstimateOne' : 'mweb.podDetails.refundEstimateMany';
+  const estimateLine = t(estimateKey, {
+    vars: { amount: `${currency}${estimate}`, count: releasing, pct: deductionPct },
+  });
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>Backout from Pod?</DialogTitle>
+      <DialogTitle sx={{ pr: 6 }}>{t('mweb.podDetails.backoutTitle')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5 }}>
-          You will get the refund only if someone fills your spot.
+          {t('mweb.podDetails.backoutRefundOnlyIfFilled')}
         </Typography>
         {held > 1 && (
           <TextField
             select
             fullWidth
             size="small"
-            label="Seats to release"
+            label={t('mweb.podDetails.seatsToRelease')}
             value={releasing}
             onChange={(event) => setSeats(Number(event.target.value))}
             disabled={busy}
-            helperText={
-              partial
-                ? `You keep ${held - releasing} seat${held - releasing === 1 ? '' : 's'} and stay in this pod.`
-                : 'Releasing your whole booking — you leave the pod.'
-            }
+            helperText={keptHint}
             sx={{ mb: 2 }}
           >
             {Array.from({ length: held }, (_, index) => index + 1).map((count) => (
               <MenuItem key={count} value={count}>
-                {count} of {held}
+                {t('mweb.podDetails.seatsOfHeld', { vars: { count, held } })}
               </MenuItem>
             ))}
           </TextField>
         )}
         {estimate != null && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            If the refund is done, you will get{' '}
-            <b>
-              {currency}
-              {estimate}
-            </b>{' '}
-            for {releasing} seat{releasing === 1 ? '' : 's'} (after the {deductionPct}% backout
-            deduction).
+            {estimateLine}
           </Alert>
         )}
         <Box sx={{ maxHeight: 280, overflowY: 'auto', pr: 1 }}>
@@ -114,21 +115,21 @@ export default function BackoutConfirmDialog({
 
         <Divider sx={{ my: 2 }} />
         <Typography variant="caption" color="text.secondary">
-          Read the full{' '}
+          {t('mweb.podDetails.readTheFull')}{' '}
           <Link
             component={RouterLink}
             to="/policies/backout-terms"
             onClick={onClose}
             underline="hover"
           >
-            Backout Terms &amp; Conditions
+            {t('mweb.podDetails.backoutTerms')}
           </Link>
           .
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} disabled={busy}>
-          Close
+          {t('mweb.podDetails.close')}
         </Button>
         <Button
           variant="contained"
@@ -136,7 +137,7 @@ export default function BackoutConfirmDialog({
           onClick={() => onConfirm(releasing)}
           disabled={busy}
         >
-          {busy ? 'Backing out…' : 'Confirm Backout'}
+          {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
         </Button>
       </DialogActions>
     </Dialog>

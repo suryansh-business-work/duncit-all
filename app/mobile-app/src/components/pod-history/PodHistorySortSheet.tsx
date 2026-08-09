@@ -5,8 +5,9 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
-import { POD_HISTORY_SORTS, type PodHistorySort } from '@/utils/pod-history';
+import { podHistorySorts, type PodHistorySort } from '@/utils/pod-history';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -18,13 +19,14 @@ interface Props {
 /** Bottom-sheet single-select sort for Pod History (date / price). */
 export function PodHistorySortSheet({ open, value, onClose, onSelect }: Readonly<Props>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
         <YStack flex={1} justifyContent="flex-end" testID="pod-history-sort-sheet">
           <YStack
             role="button"
-            aria-label="Close sort"
+            aria-label={t('mweb.podHistory.closeSort')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -37,12 +39,12 @@ export function PodHistorySortSheet({ open, value, onClose, onSelect }: Readonly
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={17} fontWeight="700" color="$color">
-                  Sort
+                  {t('mweb.podHistory.sort')}
                 </Text>
                 <XStack
                   testID="pod-history-sort-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podHistory.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -58,7 +60,7 @@ export function PodHistorySortSheet({ open, value, onClose, onSelect }: Readonly
                 <OptionChipRow
                   layout="column"
                   testIDPrefix="ph-sort"
-                  options={POD_HISTORY_SORTS}
+                  options={podHistorySorts(t)}
                   value={value}
                   onSelect={(next) => {
                     onSelect(next);

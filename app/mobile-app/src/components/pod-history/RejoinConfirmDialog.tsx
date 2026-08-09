@@ -5,6 +5,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface RejoinConfirmDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ export function RejoinConfirmDialog({
   onConfirm,
 }: Readonly<RejoinConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
 
   return (
     <Modal
@@ -33,7 +35,7 @@ export function RejoinConfirmDialog({
         <YStack flex={1} testID="rejoin-dialog">
           <YStack
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.podHistory.close')}
             onPress={busy ? undefined : onClose}
             position="absolute"
             top={0}
@@ -54,12 +56,12 @@ export function RejoinConfirmDialog({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={18} fontWeight="700" color="$color">
-                  Rejoin this pod?
+                  {t('mweb.podHistory.rejoinTitle')}
                 </Text>
                 <XStack
                   testID="rejoin-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podHistory.close')}
                   onPress={busy ? undefined : onClose}
                   width={32}
                   height={32}
@@ -71,15 +73,14 @@ export function RejoinConfirmDialog({
               </XStack>
 
               <Text fontSize={14} lineHeight={22} color="$color" paddingHorizontal={16}>
-                You&apos;ll rejoin this pod for free — no payment is required. Your spot is restored
-                and stays active until the pod completes.
+                {t('mweb.podHistory.rejoinBody')}
               </Text>
 
               <XStack padding={16} gap={12}>
                 <XStack
                   testID="rejoin-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label={t('mweb.podHistory.cancel')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onClose}
                   flex={1}
@@ -93,13 +94,13 @@ export function RejoinConfirmDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Cancel
+                    {t('mweb.podHistory.cancel')}
                   </Text>
                 </XStack>
                 <XStack
                   testID="rejoin-confirm"
                   role="button"
-                  aria-label="Confirm rejoin"
+                  aria-label={t('mweb.podHistory.confirmRejoin')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onConfirm}
                   flex={2}
@@ -114,7 +115,7 @@ export function RejoinConfirmDialog({
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                    {busy ? 'Rejoining…' : 'Rejoin for free'}
+                    {busy ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinFree')}
                   </Text>
                 </XStack>
               </XStack>

@@ -64,8 +64,7 @@ export default function PodHistoryActions({
     <>
       {isDeleted && (
         <Alert severity="info" sx={{ mb: 1.5 }}>
-          This pod was removed. Your booking record stays here — download your invoice or contact
-          support.
+          {t('mweb.podHistory.podRemovedNotice')}
         </Alert>
       )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
@@ -78,7 +77,7 @@ export default function PodHistoryActions({
               variant="contained"
               endIcon={<ArrowForwardIcon />}
             >
-              Go to Pod Details
+              {t('mweb.podHistory.goToPodDetails')}
             </Button>
             {canBackout && (
               <Button
@@ -88,7 +87,7 @@ export default function PodHistoryActions({
                 variant="outlined"
                 startIcon={<RestartAltIcon />}
               >
-                {backingOut ? 'Backing out...' : 'Backout Pod'}
+                {backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
               </Button>
             )}
             {canRejoin && (
@@ -99,12 +98,12 @@ export default function PodHistoryActions({
                 variant="contained"
                 startIcon={<ReplayIcon />}
               >
-                {rejoining ? 'Rejoining...' : 'Rejoin Pod'}
+                {rejoining ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinPod')}
               </Button>
             )}
             {showRefundState && (
               <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={onShowRefundStatus}>
-                Refund Status: {refundLabel}
+                {t('mweb.podHistory.refundChip', { vars: { status: refundLabel } })}
               </Button>
             )}
             {item.status === 'JOINED' && (
@@ -129,7 +128,7 @@ export default function PodHistoryActions({
           variant="outlined"
           startIcon={<ReceiptLongIcon />}
         >
-          {invoiceLoading ? 'Downloading...' : 'Invoice'}
+          {invoiceLoading ? t('mweb.podHistory.downloading') : t('mweb.podHistory.invoice')}
         </Button>
         <Button
           component={RouterLink}
@@ -137,7 +136,7 @@ export default function PodHistoryActions({
           variant="outlined"
           startIcon={<ContactSupportIcon />}
         >
-          Contact Support
+          {t('mweb.podHistory.contactSupport')}
         </Button>
       </Stack>
     </>

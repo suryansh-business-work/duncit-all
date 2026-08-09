@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { formatRelative } from './helpers';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const activateOnKey = (fn: () => void) => (e: KeyboardEvent) => {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -27,11 +28,13 @@ export default function CommentsList({
   onRequestDelete,
   onOpenProfile,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <List>
       {comments.map((c: any) => {
         const mine = !!viewerId && c.author_id === viewerId;
         const liked = !!c.liked_by_me;
+        const authorName = c.author_name || t('mweb.podDetails.anon');
         return (
           <ListItem key={c.id} alignItems="flex-start" sx={{ gap: 1.25, '&:hover .ph-del': { opacity: 1 } }}>
             <Avatar
@@ -40,7 +43,7 @@ export default function CommentsList({
               onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
               role="button"
               tabIndex={0}
-              aria-label={`Open ${c.author_name || 'user'} profile`}
+              aria-label={t('mweb.podDetails.openProfileOf', { vars: { name: authorName } })}
               sx={{ cursor: 'pointer', flex: '0 0 auto' }}
             >
               {(c.author_name || '?').slice(0, 1).toUpperCase()}
@@ -55,7 +58,7 @@ export default function CommentsList({
                   tabIndex={0}
                   sx={{ cursor: 'pointer' }}
                 >
-                  {c.author_name || 'Anon'}
+                  {authorName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {formatRelative(c.created_at)}
@@ -66,7 +69,11 @@ export default function CommentsList({
               </Typography>
             </Box>
             <Stack alignItems="center" sx={{ flex: '0 0 auto' }}>
-              <IconButton size="small" aria-label="Like comment" onClick={() => onToggleLike(c.id)}>
+              <IconButton
+                size="small"
+                aria-label={t('mweb.podDetails.likeComment')}
+                onClick={() => onToggleLike(c.id)}
+              >
                 {liked ? (
                   <FavoriteIcon fontSize="small" color="primary" />
                 ) : (
@@ -82,7 +89,7 @@ export default function CommentsList({
                 <IconButton
                   className="ph-del"
                   size="small"
-                  aria-label="Delete comment"
+                  aria-label={t('mweb.podDetails.deleteComment')}
                   onClick={() => onRequestDelete(c.id)}
                   sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 150ms' }}
                 >

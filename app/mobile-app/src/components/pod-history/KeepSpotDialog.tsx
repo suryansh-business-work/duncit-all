@@ -5,6 +5,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface KeepSpotDialogProps {
   open: boolean;
@@ -28,6 +29,7 @@ export function KeepSpotDialog({
   error = null,
 }: Readonly<KeepSpotDialogProps>) {
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
 
   return (
     <Modal
@@ -40,7 +42,7 @@ export function KeepSpotDialog({
         <YStack flex={1} testID="keep-spot-dialog">
           <YStack
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.podDetails.close')}
             onPress={busy ? undefined : onClose}
             position="absolute"
             top={0}
@@ -62,12 +64,12 @@ export function KeepSpotDialog({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={18} fontWeight="700" color="$color">
-                  Change of plans?
+                  {t('mweb.podDetails.changeOfPlans')}
                 </Text>
                 <XStack
                   testID="keep-spot-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podDetails.close')}
                   onPress={busy ? undefined : onClose}
                   width={32}
                   height={32}
@@ -80,9 +82,7 @@ export function KeepSpotDialog({
 
               <YStack paddingHorizontal={16} gap={10}>
                 <Text fontSize={14} lineHeight={22} color="$color">
-                  Do you want us to stop searching for a replacement and keep this spot for you?
-                  (NOTE: If you wish you Backout from the Pod again, you can only do it for up to{' '}
-                  {attemptsLeft} more times)
+                  {t('mweb.podDetails.keepSpotBody', { vars: { count: attemptsLeft } })}
                 </Text>
                 {error ? (
                   <Text testID="keep-spot-error" fontSize={13} fontWeight="600" color="$danger">
@@ -95,7 +95,7 @@ export function KeepSpotDialog({
                 <XStack
                   testID="keep-spot-cancel"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podDetails.close')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onClose}
                   flex={1}
@@ -109,13 +109,13 @@ export function KeepSpotDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Close
+                    {t('mweb.podDetails.close')}
                   </Text>
                 </XStack>
                 <XStack
                   testID="keep-spot-confirm"
                   role="button"
-                  aria-label="Keep my spot"
+                  aria-label={t('mweb.podDetails.keepMySpot')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onConfirm}
                   flex={2}
@@ -130,7 +130,7 @@ export function KeepSpotDialog({
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                    {busy ? 'Restoring…' : 'Keep My Spot'}
+                    {busy ? t('mweb.podDetails.restoring') : t('mweb.podDetails.keepMySpot')}
                   </Text>
                 </XStack>
               </XStack>

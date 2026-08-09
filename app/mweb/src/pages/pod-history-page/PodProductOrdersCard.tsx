@@ -3,11 +3,13 @@ import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import PodProductOrderItem from './PodProductOrderItem';
 import { MY_PRODUCT_ORDERS_FOR_POD, type ProductOrder } from './productOrders';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** "Products & tracking" — the add-on products the buyer purchased in this pod
  * with their fulfilment/tracking. Renders nothing when there are no product
  * orders (the common case), so it never clutters a plain booking. */
 export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: string }>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_PRODUCT_ORDERS_FOR_POD, {
     variables: { podId: podId ?? '' },
     skip: !podId,
@@ -23,7 +25,7 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
           <Stack direction="row" spacing={1} alignItems="center">
             <CircularProgress size={18} />
             <Typography variant="body2" color="text.secondary">
-              Loading your products…
+              {t('mweb.podHistory.loadingProducts')}
             </Typography>
           </Stack>
         </CardContent>
@@ -38,12 +40,12 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <ShoppingBagIcon color="primary" fontSize="small" />
           <Typography variant="subtitle1" fontWeight={700}>
-            Products &amp; tracking
+            {t('mweb.podHistory.productsAndTracking')}
           </Typography>
         </Stack>
         {error && (
           <Alert severity="warning" sx={{ mb: 1 }}>
-            Couldn&apos;t refresh tracking just now.
+            {t('mweb.podHistory.trackingRefreshError')}
           </Alert>
         )}
         <Stack spacing={1.25}>

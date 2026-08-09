@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import MomentTile from '../moments/MomentTile';
 import MomentLightbox from '../moments/MomentLightbox';
 import CategoryBreadcrumb from '../CategoryBreadcrumb';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   club: any;
@@ -13,11 +14,12 @@ interface Props {
 
 export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<Props>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {
     return (
       <Typography variant="body2" color="text.secondary">
-        Club details unavailable.
+        {t('mweb.podDetails.clubUnavailable')}
       </Typography>
     );
   }
@@ -67,7 +69,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
           onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
           sx={{ minHeight: 36, alignSelf: { xs: 'stretch', sm: 'center' } }}
         >
-          Open
+          {t('mweb.podDetails.viewClub')}
         </Button>
       </Stack>
       {moments.length > 0 && (

@@ -1,4 +1,5 @@
 import { Alert, Button, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   /** True while the released seat has not been rebooked (restore still possible). */
@@ -13,25 +14,21 @@ interface Props {
  * restored via "Keep My Spot" until the seat is rebooked.
  */
 export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!canCancel) {
-    return (
-      <Alert severity="info">
-        A replacement has been confirmed — this Backout request can no longer be cancelled. Your
-        refund will be processed as per the backout policy.
-      </Alert>
-    );
+    return <Alert severity="info">{t('mweb.podDetails.backoutLocked')}</Alert>;
   }
   return (
     <Stack spacing={1}>
       <Alert severity="warning">
-        <b>Backout in process.</b> We are searching for a replacement — you will get the refund
-        only if someone fills your spot.
+        <b>{t('mweb.podDetails.backoutInProcessLead')}</b>{' '}
+        {t('mweb.podDetails.backoutSearchingNote')}
       </Alert>
       <Button variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 700 }}>
-        Keep My Spot
+        {t('mweb.podDetails.keepMySpot')}
       </Button>
       <Typography variant="caption" color="text.secondary">
-        Changed your mind? Keep your spot to stop the replacement search and restore your booking.
+        {t('mweb.podDetails.changedYourMind')}
       </Typography>
     </Stack>
   );

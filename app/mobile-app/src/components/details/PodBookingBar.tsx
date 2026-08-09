@@ -7,6 +7,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
 import { SeatPicker } from '@/components/details/SeatPicker';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
 
 interface Props {
@@ -101,20 +102,21 @@ export function PodBookingBar({
  * CTA jumps into Host Studio instead (mirrors mWeb's PodActionPanel). */
 function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>) {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <>
       <YStack flex={1}>
         <Text fontSize={11} color="$muted">
-          You're hosting
+          {t('mweb.podDetails.youreHosting')}
         </Text>
         <Text fontSize={16} fontWeight="700" color="$color">
-          Your Pod
+          {t('mweb.podDetails.yourPod')}
         </Text>
       </YStack>
       <XStack
         testID="pod-go-dashboard"
         role="button"
-        aria-label="Go to Dashboard"
+        aria-label={t('mweb.podDetails.goToDashboard')}
         onPress={onGoToDashboard}
         alignItems="center"
         justifyContent="center"
@@ -125,7 +127,7 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={15} fontWeight="700" color={onPrimary}>
-          Go to Dashboard
+          {t('mweb.podDetails.goToDashboard')}
         </Text>
       </XStack>
     </>
@@ -134,11 +136,12 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
 
 /** Past-date state: booking is closed, no CTA. */
 function ClosedNotice() {
+  const { t } = useTranslation();
   return (
     <XStack flex={1} alignItems="center" gap={8} testID="pod-booking-closed">
       <MaterialIcons name="event-busy" size={20} color={semantic.warning} />
       <Text flex={1} fontSize={13.5} fontWeight="600" color="$muted">
-        This pod has already taken place — booking is closed.
+        {t('mweb.podDetails.bookingClosed')}
       </Text>
     </XStack>
   );
@@ -156,12 +159,13 @@ function MemberBar({
   isExpired,
   onBackout,
 }: Readonly<{ canBackout: boolean; isExpired: boolean; onBackout: () => void }>) {
+  const { t } = useTranslation();
   let note: string | null = null;
   if (!canBackout) {
-    note = isExpired
-      ? 'This pod has already taken place.'
-      : 'You have reached the maximum number of Backout attempts allowed for this Pod.';
+    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : t('mweb.podDetails.backoutMaxed');
   }
+  const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
+  const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
 
   return (
     <>
@@ -169,10 +173,10 @@ function MemberBar({
         <MaterialIcons name="check-circle" size={22} color={semantic.success} />
         <YStack flex={1}>
           <Text fontSize={11} color="$muted">
-            {isExpired ? 'You went' : "You're going"}
+            {overline}
           </Text>
           <Text fontSize={16} fontWeight="700" color="$color" testID="pod-booked-label">
-            {isExpired ? 'Pod Visited' : 'Pod Booked'}
+            {badge}
           </Text>
           {note ? (
             <Text fontSize={10.5} color="$muted" testID="pod-backout-maxed">
@@ -185,7 +189,7 @@ function MemberBar({
         <XStack
           testID="pod-backout"
           role="button"
-          aria-label="Backout from pod"
+          aria-label={t('mweb.podDetails.backoutFromPod')}
           onPress={onBackout}
           alignItems="center"
           justifyContent="center"
@@ -197,7 +201,7 @@ function MemberBar({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="700" color="$danger">
-            Backout
+            {t('mweb.podDetails.backout')}
           </Text>
         </XStack>
       ) : null}
@@ -227,18 +231,21 @@ function BookBar({
   onCheckout,
 }: Readonly<BookBarProps>) {
   const { onPrimary } = useThemeColors();
-  const freeOrBookAria = isFree ? 'Join pod' : 'Book pod';
-  const bookAriaLabel = isFull ? 'Pod is full' : freeOrBookAria;
-  const freeOrBookText = isFree ? 'Join' : 'Book now';
-  const bookText = isFull ? 'Pod is full' : freeOrBookText;
+  const { t } = useTranslation();
+  const freeOrBookAria = isFree ? t('mweb.podDetails.joinPod') : t('mweb.podDetails.bookPod');
+  const bookAriaLabel = isFull ? t('mweb.podDetails.podIsFull') : freeOrBookAria;
+  const freeOrBookText = isFree ? t('mweb.podDetails.join') : t('mweb.podDetails.bookNow');
+  const bookText = isFull ? t('mweb.podDetails.podIsFull') : freeOrBookText;
+  const priceCaption = isFree ? t('mweb.podDetails.entry') : t('mweb.podDetails.price');
+  const priceValue = isFree ? t('mweb.podDetails.free') : `₹${podAmount * seats}`;
   return (
     <>
       <YStack flex={1}>
         <Text fontSize={11} color="$muted">
-          {isFree ? 'Entry' : 'Price'}
+          {priceCaption}
         </Text>
         <Text fontSize={18} fontWeight="700" color="$color">
-          {isFree ? 'Free' : `₹${podAmount * seats}`}
+          {priceValue}
         </Text>
       </YStack>
       <SeatPicker value={seats} onChange={onSeatsChange} maxSeats={maxSeats} disabled={isFull} />

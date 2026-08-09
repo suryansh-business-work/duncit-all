@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   value: string;
@@ -26,7 +27,11 @@ export function CommentComposer({
   viewerPhoto,
 }: Readonly<Props>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const canSend = !disabled && !posting && !!value.trim();
+  const placeholder = disabled
+    ? t('mweb.podDetails.signInToComment')
+    : t('mweb.podDetails.addComment');
   return (
     <XStack
       gap={8}
@@ -55,19 +60,19 @@ export function CommentComposer({
       )}
       <Input
         testID="pod-comment-input"
-        aria-label="Comment"
+        aria-label={t('mweb.podDetails.comment')}
         flex={1}
         value={value}
         onChangeText={onChange}
         disabled={disabled}
-        placeholder={disabled ? 'Sign in to comment' : 'Add a comment…'}
+        placeholder={placeholder}
         placeholderTextColor="$muted"
         onSubmitEditing={onSubmit}
       />
       <XStack
         testID="pod-comment-send"
         role="button"
-        aria-label="Send comment"
+        aria-label={t('mweb.podDetails.sendComment')}
         onPress={onSubmit}
         width={42}
         height={42}

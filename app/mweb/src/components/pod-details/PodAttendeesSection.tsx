@@ -98,21 +98,28 @@ export default function PodAttendeesSection({
   // Seats, not faces: one person can be bringing three more, and the number
   // beside "of N spots" has to mean the same thing the capacity does.
   const count = seatsTaken ?? people.reduce((sum, person) => sum + (person.seats ?? 1), 0);
-  const noun = expired ? 'attended' : 'going';
+  const withTotal = expired ? 'mweb.podDetails.attendeesAttended' : 'mweb.podDetails.attendeesGoing';
+  const withoutTotal = expired
+    ? 'mweb.podDetails.attendeesAttendedNoTotal'
+    : 'mweb.podDetails.attendeesGoingNoTotal';
+  const countLine =
+    totalSpots > 0
+      ? t(withTotal, { vars: { count, total: totalSpots } })
+      : t(withoutTotal, { vars: { count } });
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
-        {totalSpots > 0 ? `${count} / ${totalSpots} ${noun}` : `${count} ${noun}`}
+        {countLine}
       </Typography>
       {count === 0 ? (
         <Typography variant="caption" color="text.secondary">
-          Be the first to join!
+          {t('mweb.podDetails.beFirstToJoin')}
         </Typography>
       ) : (
         <ButtonBase
           onClick={() => setOpen(true)}
-          aria-label="View all attendees"
+          aria-label={t('mweb.podDetails.viewAllAttendees')}
           sx={{ alignSelf: 'flex-start', borderRadius: 999, p: 0.5 }}
         >
           <AvatarGroup
@@ -132,7 +139,7 @@ export default function PodAttendeesSection({
               <Avatar
                 key={person.user_id}
                 src={person.profile_photo || undefined}
-                alt={person.full_name || 'Attendee'}
+                alt={person.full_name || t('mweb.podDetails.attendee')}
                 sx={
                   person.is_host
                     ? { boxShadow: '0 0 0 2px rgba(255,79,115,0.85)', zIndex: 1 }
@@ -144,7 +151,7 @@ export default function PodAttendeesSection({
             ))}
           </AvatarGroup>
           <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 600 }}>
-            View all
+            {t('mweb.podDetails.viewAll')}
           </Typography>
         </ButtonBase>
       )}

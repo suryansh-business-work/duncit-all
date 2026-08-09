@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { usePricing } from '../hooks/usePricing';
+import { useTranslation } from '../i18n/useTranslation';
 import { categoryPath } from '../utils/category-match';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import KeepSpotDialog from './pod-details-page/KeepSpotDialog';
@@ -40,6 +41,7 @@ export default function PodDetailsPage() {
   const { clubSlug = '', podSlug = '' } = useParams();
   const navigate = useNavigate();
   const { setMode } = useStudioMode();
+  const { t } = useTranslation();
   const { openPodPicker } = useStatusUpload();
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
@@ -113,7 +115,7 @@ export default function PodDetailsPage() {
   const detailsPending = !!id && !error && (loading || !data);
   if (slugResolution.loading || detailsPending) return <PodDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!pod) return <Alert severity="warning">Pod not found.</Alert>;
+  if (!pod) return <Alert severity="warning">{t('mweb.podDetails.notFound')}</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
   const clubCategoryCrumbs = categoryPath(
@@ -238,7 +240,7 @@ export default function PodDetailsPage() {
         }
         sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
       >
-        Contact support about this pod
+        {t('mweb.podDetails.contactSupport')}
       </Button>
 
       <StickyPodActionPanel

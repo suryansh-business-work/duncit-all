@@ -23,6 +23,7 @@ import {
   type PodHistoryFilters,
 } from './podHistoryFilter';
 import type { PodHistoryCategory } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   filters: PodHistoryFilters;
@@ -35,9 +36,15 @@ interface Props {
 export default function PodHistoryToolbar({ filters, categories, onChange, onReset }: Readonly<Props>) {
   const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null);
+  const { t } = useTranslation();
   const supers = superCategories(categories);
   const cats = categoriesUnder(categories, filters.superId);
   const count = activePodHistoryFilterCount(filters);
+  const filterLabel = count
+    ? t('mweb.podHistory.filterCount', { vars: { count } })
+    : t('mweb.podHistory.filter');
+  const superLabel = t('mweb.podHistory.superCategory');
+  const categoryLabel = t('mweb.podHistory.category');
 
   const selectSuper = (e: SelectChangeEvent) => onChange({ ...filters, superId: e.target.value, categoryId: '' });
   const selectCategory = (e: SelectChangeEvent) => onChange({ ...filters, categoryId: e.target.value });
@@ -52,7 +59,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         onClick={(e) => setFilterAnchor(e.currentTarget)}
         sx={{ fontWeight: 600, borderRadius: 999 }}
       >
-        {count ? `Filter (${count})` : 'Filter'}
+        {filterLabel}
       </Button>
       <Button
         size="small"
@@ -62,7 +69,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         onClick={(e) => setSortAnchor(e.currentTarget)}
         sx={{ fontWeight: 600, borderRadius: 999 }}
       >
-        Sort
+        {t('mweb.podHistory.sort')}
       </Button>
 
       <Popover
@@ -74,13 +81,13 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
       >
         <Box sx={{ p: 2, width: 290 }}>
           <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-            Filter by category
+            {t('mweb.podHistory.filterByCategory')}
           </Typography>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-            <InputLabel id="ph-super-label">Super Category</InputLabel>
-            <Select labelId="ph-super-label" label="Super Category" value={filters.superId} onChange={selectSuper}>
+            <InputLabel id="ph-super-label">{superLabel}</InputLabel>
+            <Select labelId="ph-super-label" label={superLabel} value={filters.superId} onChange={selectSuper}>
               <MenuItem value="">
-                <em>None</em>
+                <em>{t('mweb.podHistory.none')}</em>
               </MenuItem>
               {supers.map((s) => (
                 <MenuItem key={s.id} value={s.id}>
@@ -90,10 +97,10 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
             </Select>
           </FormControl>
           <FormControl fullWidth size="small" sx={{ mt: 2 }} disabled={!filters.superId}>
-            <InputLabel id="ph-cat-label">Category</InputLabel>
-            <Select labelId="ph-cat-label" label="Category" value={filters.categoryId} onChange={selectCategory}>
+            <InputLabel id="ph-cat-label">{categoryLabel}</InputLabel>
+            <Select labelId="ph-cat-label" label={categoryLabel} value={filters.categoryId} onChange={selectCategory}>
               <MenuItem value="">
-                <em>All</em>
+                <em>{t('mweb.podHistory.all')}</em>
               </MenuItem>
               {cats.map((c) => (
                 <MenuItem key={c.id} value={c.id}>
@@ -104,12 +111,12 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
           </FormControl>
           {!filters.superId && (
             <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: 'block' }}>
-              Please select a Super Category first.
+              {t('mweb.podHistory.selectSuperFirst')}
             </Typography>
           )}
           <Divider sx={{ my: 1.5 }} />
           <Button fullWidth size="small" onClick={onReset} disabled={count === 0}>
-            Reset
+            {t('mweb.podHistory.reset')}
           </Button>
         </Box>
       </Popover>
@@ -124,7 +131,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
               setSortAnchor(null);
             }}
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </MenuItem>
         ))}
       </Menu>

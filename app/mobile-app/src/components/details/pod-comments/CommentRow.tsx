@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PressScale } from '@/animations/PressScale';
 import type { PodComment } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function relativeTime(iso: string): string {
   const date = new Date(iso);
@@ -31,7 +32,9 @@ export function CommentRow({
   onOpenProfile,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
   const liked = comment.liked_by_me;
+  const authorName = comment.author_name || t('mweb.podDetails.anon');
   return (
     <XStack
       testID={`comment-row-${comment.id}`}
@@ -42,7 +45,7 @@ export function CommentRow({
     >
       <PressScale
         testID={`comment-avatar-${comment.id}`}
-        accessibilityLabel={comment.author_name || 'Open profile'}
+        accessibilityLabel={comment.author_name || t('mweb.podDetails.openProfile')}
         onPress={onOpenProfile}
       >
         {comment.author_photo ? (
@@ -70,13 +73,13 @@ export function CommentRow({
           <Text
             testID={`comment-name-${comment.id}`}
             role="button"
-            aria-label={`Open ${comment.author_name || 'profile'}`}
+            aria-label={t('mweb.podDetails.openProfileOf', { vars: { name: authorName } })}
             onPress={onOpenProfile}
             fontSize={13.5}
             fontWeight="600"
             color="$color"
           >
-            {comment.author_name || 'Anon'}
+            {authorName}
           </Text>
           <Text fontSize={11.5} color="$muted">
             {relativeTime(comment.created_at)}
@@ -89,7 +92,7 @@ export function CommentRow({
       <XStack
         testID={`comment-like-${comment.id}`}
         role="button"
-        aria-label="Like comment"
+        aria-label={t('mweb.podDetails.likeComment')}
         onPress={onToggleLike}
         alignItems="center"
         gap={3}

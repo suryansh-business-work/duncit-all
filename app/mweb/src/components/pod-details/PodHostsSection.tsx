@@ -1,5 +1,6 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Host {
   user_id: string;
@@ -14,10 +15,11 @@ interface Props {
 
 export default function PodHostsSection({ hosts }: Readonly<Props>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   if (!hosts || hosts.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
-        No hosts assigned.
+        {t('mweb.podDetails.hostsEmpty')}
       </Typography>
     );
   }
@@ -45,10 +47,10 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
           </Avatar>
           <Box sx={{ flex: 1 }}>
             <Typography variant="body2" fontWeight={600}>
-              {h.full_name || 'Host'}
+              {h.full_name || t('mweb.podDetails.host')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Host
+              {t('mweb.podDetails.host')}
             </Typography>
           </Box>
         </Stack>

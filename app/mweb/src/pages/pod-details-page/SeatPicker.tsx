@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { MenuItem, TextField } from '@mui/material';
 import { seatOptions } from '@duncit/utils';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   value: number;
@@ -18,6 +19,7 @@ interface Props {
  * Hidden when only one seat is left: a picker with a single option is furniture.
  */
 export default function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
+  const { t } = useTranslation();
   const options = seatOptions(maxSeats);
   // Clamping only what is DISPLAYED left the parent holding the larger number,
   // so a picker showing 3 could submit 5 and the pod would reject the booking
@@ -31,12 +33,12 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
     <TextField
       select
       size="small"
-      label="Seats"
+      label={t('mweb.podDetails.seats')}
       value={capped}
       onChange={(event) => onChange(Number(event.target.value))}
       disabled={disabled}
       sx={{ width: 96, flex: '0 0 auto' }}
-      inputProps={{ 'aria-label': 'Number of seats' }}
+      inputProps={{ 'aria-label': t('mweb.podDetails.numberOfSeats') }}
     >
       {options.map((count) => (
         <MenuItem key={count} value={count}>

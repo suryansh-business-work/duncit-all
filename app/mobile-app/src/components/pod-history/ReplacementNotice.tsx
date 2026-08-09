@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   deductionPct: number;
@@ -14,18 +15,19 @@ interface Props {
 export function ReplacementNotice({ deductionPct }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { color, success } = useThemeColors();
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(100, Number(deductionPct) || 0));
 
   return (
     <YStack gap={4} testID="ph-replacement">
       <XStack alignItems="center" gap={6}>
         <Text fontSize={13} fontWeight="600" color="$color">
-          We are finding your replacement
+          {t('mweb.podHistory.findingReplacement')}
         </Text>
         <XStack
           testID="ph-replacement-info"
           role="button"
-          aria-label="Refund details"
+          aria-label={t('mweb.podHistory.refundDetails')}
           aria-expanded={open}
           onPress={() => setOpen((prev) => !prev)}
           padding={2}
@@ -35,8 +37,7 @@ export function ReplacementNotice({ deductionPct }: Readonly<Props>) {
       </XStack>
       {open ? (
         <Text testID="ph-replacement-detail" fontSize={12} fontWeight="700" color={success}>
-          We are finding your replacement. If someone fills your spot, the refund will be initiated
-          with {pct}% deduction.
+          {t('mweb.podHistory.replacementRefundNote', { vars: { pct } })}
         </Text>
       ) : null}
     </YStack>

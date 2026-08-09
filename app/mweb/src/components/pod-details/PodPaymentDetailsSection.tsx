@@ -1,4 +1,5 @@
 import { Box, Divider, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   amount: number;
@@ -19,10 +20,11 @@ export default function PodPaymentDetailsSection({
   isFree,
   priceCompute,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (isFree || !Number(amount)) {
     return (
       <Typography variant="body2" color="text.secondary">
-        This pod is free to join. No payment required.
+        {t('mweb.podDetails.freeToJoin')}
       </Typography>
     );
   }
@@ -31,7 +33,7 @@ export default function PodPaymentDetailsSection({
     <Box>
       <Stack direction="row" justifyContent="space-between" sx={{ py: 0.5 }}>
         <Typography variant="body2" color="text.secondary">
-          {`GST (${p.gstPct}%)`}
+          {t('mweb.checkout.gst', { vars: { pct: p.gstPct } })}
         </Typography>
         <Typography variant="body2" fontWeight={500}>
           {`${p.currency}${p.gst.toFixed(2)}`}
@@ -46,7 +48,7 @@ export default function PodPaymentDetailsSection({
           buyer and only one of them was what they would be charged.
         */}
         <Typography variant="subtitle2" fontWeight={700}>
-          Price per seat
+          {t('mweb.podDetails.pricePerSeat')}
         </Typography>
         <Typography variant="subtitle2" fontWeight={700}>
           {p.currency}
@@ -54,7 +56,7 @@ export default function PodPaymentDetailsSection({
         </Typography>
       </Stack>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-        Price is inclusive of GST.
+        {t('mweb.podDetails.inclusiveOfGst')}
       </Typography>
     </Box>
   );

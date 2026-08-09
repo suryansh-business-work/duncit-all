@@ -27,6 +27,7 @@ import { applyPodHistory, DEFAULT_POD_HISTORY_FILTERS, type PodHistoryFilters } 
 import PodHistoryToolbar from './PodHistoryToolbar';
 import { parseApiError } from '../../utils/parseApiError';
 import { useDateFormat } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function PodHistoryPage() {
   const { data, loading, error } = useQuery<{ myPodMemberships: PodHistoryItem[] }>(MY_POD_MEMBERSHIPS, {
@@ -37,6 +38,7 @@ export default function PodHistoryPage() {
   });
   const [filters, setFilters] = useState<PodHistoryFilters>(DEFAULT_POD_HISTORY_FILTERS);
   const { formatDateTime } = useDateFormat();
+  const { t } = useTranslation();
 
   const items = useMemo(() => {
     const byPodId = new Map<string, PodHistoryItem>();
@@ -59,7 +61,7 @@ export default function PodHistoryPage() {
   }
   if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
   if (items.length === 0) {
-    return <Alert severity="info">Pods you have joined will appear here.</Alert>;
+    return <Alert severity="info">{t('mweb.podHistory.empty')}</Alert>;
   }
 
   return (
@@ -67,13 +69,13 @@ export default function PodHistoryPage() {
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0 }}>
-            Pods
+            {t('mweb.podHistory.overline')}
           </Typography>
           <Typography variant="h5" fontWeight={700}>
-            Joined Pods
+            {t('mweb.podHistory.joinedPods')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Tap any pod you joined to view details, actions, refund status, and timeline.
+            {t('mweb.podHistory.subtitle')}
           </Typography>
         </Box>
         <PodHistoryToolbar
@@ -87,7 +89,7 @@ export default function PodHistoryPage() {
       <TextField
         size="small"
         fullWidth
-        placeholder="Search joined pods…"
+        placeholder={t('mweb.podHistory.searchPlaceholder')}
         value={filters.search}
         onChange={(event) => setFilters({ ...filters, search: event.target.value })}
         InputProps={{
@@ -97,16 +99,13 @@ export default function PodHistoryPage() {
             </InputAdornment>
           ),
         }}
-        inputProps={{ 'aria-label': 'Search joined pods' }}
+        inputProps={{ 'aria-label': t('mweb.podHistory.searchAria') }}
       />
 
       {visible.length === 0 ? (
         <Alert severity="info" icon={false}>
-          <Typography fontWeight={700}>No Pods Found</Typography>
-          <Typography variant="body2">
-            We couldn't find any enrolled Pods matching your search or filters. Try a different search or change your
-            filters to explore more of your Pod history.
-          </Typography>
+          <Typography fontWeight={700}>{t('mweb.podHistory.noPodsFound')}</Typography>
+          <Typography variant="body2">{t('mweb.podHistory.noPodsFoundBody')}</Typography>
         </Alert>
       ) : (
         <Stack spacing={1.25}>
@@ -120,10 +119,12 @@ export default function PodHistoryPage() {
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography fontWeight={700} noWrap>
-                        {item.pod?.pod_title ?? 'Pod'}
+                        {item.pod?.pod_title ?? t('mweb.podHistory.pod')}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Joined {formatDateTime(item.joined_at)}
+                        {t('mweb.podHistory.joinedOn', {
+                          vars: { date: formatDateTime(item.joined_at) },
+                        })}
                       </Typography>
                     </Box>
                     <ArrowForwardIcon color="action" fontSize="small" />

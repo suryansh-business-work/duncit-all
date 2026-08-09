@@ -10,6 +10,7 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePodComments, type PodComment } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { CommentComposer } from './CommentComposer';
 import { CommentRow } from './CommentRow';
@@ -34,6 +35,7 @@ export function PodCommentsSheet({
   onCountChange,
 }: Readonly<Props>) {
   const { color } = useThemeColors();
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { comments, isLoading, error, add, remove, toggleLike } = usePodComments(podId, open);
   const [text, setText] = useState('');
@@ -86,7 +88,7 @@ export function PodCommentsSheet({
   } else if (comments.length === 0) {
     commentsBody = (
       <Text padding={16} color="$muted" testID="pod-comments-empty">
-        No comments yet. Be the first to comment.
+        {t('mweb.podDetails.commentsEmpty')}
       </Text>
     );
   } else {
@@ -116,7 +118,7 @@ export function PodCommentsSheet({
           <YStack flex={1} testID="pod-comments-sheet">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.podDetails.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -144,12 +146,12 @@ export function PodCommentsSheet({
                   paddingBottom={8}
                 >
                   <Text fontSize={18} fontWeight="700" color="$color">
-                    Comments
+                    {t('mweb.podDetails.comments')}
                   </Text>
                   <XStack
                     testID="pod-comments-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.podDetails.close')}
                     onPress={onClose}
                     width={32}
                     height={32}
@@ -195,16 +197,16 @@ export function PodCommentsSheet({
                   backgroundColor="$background"
                 >
                   <Text fontSize={16} fontWeight="700" color="$color">
-                    Delete comment?
+                    {t('mweb.podDetails.deleteCommentTitle')}
                   </Text>
                   <Text fontSize={13} color="$muted">
-                    This comment will be permanently removed.
+                    {t('mweb.podDetails.deleteCommentBody')}
                   </Text>
                   <XStack gap={10} marginTop={12} justifyContent="flex-end">
                     <XStack
                       testID="comment-delete-cancel"
                       role="button"
-                      aria-label="Cancel"
+                      aria-label={t('mweb.podDetails.cancel')}
                       onPress={() => setDeleteTarget(null)}
                       height={42}
                       paddingHorizontal={18}
@@ -215,13 +217,13 @@ export function PodCommentsSheet({
                       borderColor="$borderColor"
                     >
                       <Text fontSize={14} fontWeight="600" color="$color">
-                        Cancel
+                        {t('mweb.podDetails.cancel')}
                       </Text>
                     </XStack>
                     <XStack
                       testID="comment-delete-confirm-btn"
                       role="button"
-                      aria-label="Delete"
+                      aria-label={t('mweb.podDetails.delete')}
                       onPress={() => confirmDelete(deleteTarget)}
                       height={42}
                       paddingHorizontal={18}
@@ -231,7 +233,7 @@ export function PodCommentsSheet({
                       backgroundColor="$danger"
                     >
                       <Text fontSize={14} fontWeight="700" color="#ffffff">
-                        Delete
+                        {t('mweb.podDetails.delete')}
                       </Text>
                     </XStack>
                   </XStack>

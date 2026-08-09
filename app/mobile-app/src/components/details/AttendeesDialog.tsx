@@ -58,11 +58,13 @@ function AttendeeRow({
   label,
   onPress,
 }: Readonly<{ person: AttendeePerson; label: string; onPress: () => void }>) {
+  const { t } = useTranslation();
+  const name = person.full_name || t('mweb.podDetails.attendee');
   return (
     <XStack
       testID={`attendee-row-${person.user_id}`}
       role="button"
-      aria-label={person.full_name || 'Attendee'}
+      aria-label={name}
       onPress={onPress}
       alignItems="center"
       gap={12}
@@ -96,10 +98,10 @@ function AttendeeRow({
           color="$color"
           numberOfLines={1}
         >
-          {person.full_name || 'Attendee'}
+          {name}
         </Text>
         <Text fontSize={11.5} color="$muted">
-          {label || 'View profile'}
+          {label || t('mweb.podDetails.viewProfile')}
         </Text>
       </YStack>
       {person.is_host ? (
@@ -110,7 +112,7 @@ function AttendeeRow({
           paddingVertical={3}
         >
           <Text fontSize={11} fontWeight="700" color="$onPrimary">
-            Host
+            {t('mweb.podDetails.host')}
           </Text>
         </YStack>
       ) : null}
@@ -187,7 +189,7 @@ export function AttendeesDialog({
         <YStack flex={1} alignItems="center" justifyContent="center" testID="attendees-dialog">
           <YStack
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.podDetails.close')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -207,12 +209,12 @@ export function AttendeesDialog({
             <SafeAreaView edges={[]}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
                 <Text fontSize={16} fontWeight="700" color="$color">
-                  Attendees ({people.length})
+                  {t('mweb.podDetails.attendeesCount', { vars: { count: people.length } })}
                 </Text>
                 <XStack
                   testID="attendees-dialog-close"
                   role="button"
-                  aria-label="Close attendees"
+                  aria-label={t('mweb.podDetails.closeAttendees')}
                   onPress={onClose}
                   width={34}
                   height={34}
@@ -228,7 +230,7 @@ export function AttendeesDialog({
               <ScrollView showsVerticalScrollIndicator={false}>
                 {people.length === 0 ? (
                   <Text testID="attendees-dialog-empty" fontSize={13} color="$muted" padding={10}>
-                    No attendees yet.
+                    {t('mweb.podDetails.noAttendeesYet')}
                   </Text>
                 ) : (
                   people.map((person) => (

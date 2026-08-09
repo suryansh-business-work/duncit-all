@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { podSeatsTaken } from '@duncit/utils';
 import { podModeLabel, podPriceLabel, podTimeChip, type TimeTone } from '@/utils/pod-format';
 
@@ -70,12 +71,13 @@ export function PodInfo({
   pod,
   categoryCrumbs,
 }: Readonly<{ pod: PodDetail; categoryCrumbs: readonly string[] }>) {
+  const { t } = useTranslation();
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const attendees = podSeatsTaken(pod);
   const hasSpots = pod.no_of_spots > 0;
   const remaining = hasSpots ? Math.max(pod.no_of_spots - attendees, 0) : 0;
-  const time = podTimeChip(pod.pod_date_time);
+  const time = podTimeChip(pod.pod_date_time, t);
 
   return (
     <YStack
@@ -92,13 +94,13 @@ export function PodInfo({
       </Text>
       {host ? (
         <Text fontSize={13.5} color="$muted">
-          Hosted by {host}
+          {t('mweb.podDetails.hostedBy', { vars: { names: host } })}
         </Text>
       ) : null}
       <CategoryBreadcrumb crumbs={categoryCrumbs} />
       <XStack gap={8} flexWrap="wrap">
-        <Chip label={podPriceLabel(pod)} primary />
-        <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode)} />
+        <Chip label={podPriceLabel(pod, t)} primary />
+        <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode, t)} />
         {time ? (
           <Chip
             icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
@@ -108,14 +110,14 @@ export function PodInfo({
         ) : null}
       </XStack>
       <XStack gap={10}>
-        <StatBox label="People in" value={attendees} />
-        <StatBox label="Spots left" value={remaining} />
+        <StatBox label={t('mweb.podDetails.peopleIn')} value={attendees} />
+        <StatBox label={t('mweb.podDetails.spotsLeft')} value={remaining} />
       </XStack>
       <XStack gap={8} flexWrap="wrap">
         {hasSpots ? (
           <Chip
             icon="confirmation-number"
-            label={`${remaining} spots left`}
+            label={t('mweb.podDetails.spotsLeftCount', { vars: { count: remaining } })}
             tone={remaining <= 3 ? TONE.warning : undefined}
           />
         ) : null}

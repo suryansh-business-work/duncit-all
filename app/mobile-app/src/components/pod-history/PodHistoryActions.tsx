@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { canRejoin, podHistoryGate, refundLabel, type PodMembership } from '@/utils/pod-history';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
@@ -91,12 +92,13 @@ function LivePodActions({
   onRefundStatus,
   onTicket,
 }: Readonly<LiveActionsProps>) {
+  const { t } = useTranslation();
   return (
     <>
       <ActionButton
         testID="ph-pod-details"
         icon="arrow-forward"
-        label="Go to Pod Details"
+        label={t('mweb.podHistory.goToPodDetails')}
         variant="contained"
         disabled={!item.pod?.id}
         onPress={onPodDetails}
@@ -105,7 +107,7 @@ function LivePodActions({
         <ActionButton
           testID="ph-backout"
           icon="restart-alt"
-          label={backingOut ? 'Backing out…' : 'Backout Pod'}
+          label={backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
           variant="danger"
           disabled={item.status !== 'JOINED' || backingOut}
           onPress={onBackout}
@@ -115,7 +117,7 @@ function LivePodActions({
         <ActionButton
           testID="ph-rejoin"
           icon="replay"
-          label={rejoining ? 'Rejoining…' : 'Rejoin Pod'}
+          label={rejoining ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinPod')}
           variant="contained"
           disabled={rejoining}
           onPress={onRejoin}
@@ -125,14 +127,14 @@ function LivePodActions({
         <ActionButton
           testID="ph-refund"
           icon="receipt-long"
-          label={`Refund: ${refundText}`}
+          label={t('mweb.podHistory.refundChip', { vars: { status: refundText } })}
           onPress={onRefundStatus}
         />
       ) : null}
       <ActionButton
         testID="ph-ticket"
         icon="confirmation-number"
-        label={ticketBusy ? 'Downloading…' : 'Ticket'}
+        label={ticketBusy ? t('mweb.podHistory.downloading') : t('mweb.podHistory.ticket')}
         variant="contained"
         disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
         onPress={onTicket}
@@ -180,6 +182,7 @@ export function PodHistoryActions({
   onTicket,
   onSupport,
 }: Readonly<PodHistoryActionsProps>) {
+  const { t } = useTranslation();
   // A deleted pod keeps its booking record but only allows Invoice + Support.
   const isDeleted = !!item.pod?.is_deleted;
   const showRejoin = canRejoin(item);
@@ -191,7 +194,7 @@ export function PodHistoryActions({
           item={item}
           canBackout={gate.canBackout}
           showRefundState={gate.showRefundState}
-          refundText={refundLabel(gate.refundStatus)}
+          refundText={refundLabel(gate.refundStatus, t)}
           showRejoin={showRejoin}
           backingOut={backingOut}
           rejoining={rejoining}
@@ -206,14 +209,14 @@ export function PodHistoryActions({
       <ActionButton
         testID="ph-invoice"
         icon="receipt-long"
-        label={invoiceBusy ? 'Downloading…' : 'Invoice'}
+        label={invoiceBusy ? t('mweb.podHistory.downloading') : t('mweb.podHistory.invoice')}
         disabled={!item.payment_id || invoiceBusy}
         onPress={onInvoice}
       />
       <ActionButton
         testID="ph-support"
         icon="contact-support"
-        label="Contact Support"
+        label={t('mweb.podHistory.contactSupport')}
         onPress={onSupport}
       />
     </XStack>

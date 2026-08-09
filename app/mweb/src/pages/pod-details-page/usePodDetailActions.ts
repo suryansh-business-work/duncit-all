@@ -14,6 +14,7 @@ import {
   TOGGLE_SAVED_POD_DETAIL,
 } from './queries';
 import { podUrl } from '../../utils/seoUrls';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** The pod's date/time as this surface renders it, for the share message. */
 function shareWhenText(pod: any): string | null {
@@ -57,6 +58,7 @@ export function usePodDetailActions({
   refetch,
   navigate,
 }: Args) {
+  const { t } = useTranslation();
   const [incHits] = useMutation(INC_HITS);
   const [joinFree, joinState] = useMutation(JOIN_FREE);
   const [backout, backoutState] = useMutation(BACKOUT);
@@ -86,12 +88,12 @@ export function usePodDetailActions({
     if (!referralFromUrl || !id) return;
     redeem({ variables: { token: referralFromUrl } })
       .then(() => {
-        setSnack('Joined via referral');
+        setSnack(t('mweb.podDetails.joinedViaReferral'));
         setConfettiOpen(true);
         refetch();
       })
       .catch((e) => setSnack(e.message));
-  }, [referralFromUrl, id, redeem, refetch]);
+  }, [referralFromUrl, id, redeem, refetch, t]);
 
   const onToggleSave = async () => {
     if (!pod) return;
@@ -120,7 +122,7 @@ export function usePodDetailActions({
 
   const onShare = async () => {
     const url = globalThis.window.location.href;
-    const title = pod?.pod_title ?? 'Duncit Pod';
+    const title = pod?.pod_title ?? t('mweb.podDetails.duncitPod');
     // The link is part of `text` as well as the `url` field: a target app that
     // ignores `url` (most chat apps do) would otherwise receive the details
     // with no way to open the pod.
@@ -129,7 +131,7 @@ export function usePodDetailActions({
       if (navigator.share) await navigator.share({ title, text, url });
       else {
         await navigator.clipboard.writeText(text);
-        setSnack('Link copied');
+        setSnack(t('mweb.podDetails.linkCopied'));
       }
     } catch {
       // user cancelled native share sheet
@@ -141,7 +143,7 @@ export function usePodDetailActions({
     try {
       await joinFree({ variables: { id: pod.id, referral: referralFromUrl, seats } });
       setConfettiOpen(true);
-      setSnack('Joined!');
+      setSnack(t('mweb.podDetails.joinedSnack'));
       await refetch();
     } catch (e: any) {
       setSnack(e.message);
@@ -175,7 +177,7 @@ export function usePodDetailActions({
     if (!pod) return;
     const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${token}`;
     navigator.clipboard?.writeText(url);
-    setSnack('Referral link copied');
+    setSnack(t('mweb.podDetails.referralLinkCopied'));
   };
 
   // `seats` releases part of a multi-seat booking; omitting it releases all of
@@ -185,7 +187,7 @@ export function usePodDetailActions({
     try {
       await backout({ variables: { id: pod.id, seats: seats ?? null } });
       setBackoutOpen(false);
-      setSnack('Backout in process — your seat is now open for booking.');
+      setSnack(t('mweb.podDetails.backoutStarted'));
       await refetch();
     } catch (e: any) {
       setBackoutOpen(false);
@@ -201,7 +203,7 @@ export function usePodDetailActions({
     try {
       await cancelBackout({ variables: { id: pod.id } });
       setKeepSpotOpen(false);
-      setSnack('Your booking is restored.');
+      setSnack(t('mweb.podDetails.bookingRestored'));
       await refetch();
     } catch (e: any) {
       setKeepSpotError(e.message);

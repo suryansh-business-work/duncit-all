@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { OrderTrackingTimeline } from './OrderTrackingTimeline';
 import {
   buildOrderTimeline,
@@ -36,9 +37,10 @@ function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) 
  * PodProductOrderItem. */
 export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
   const isShip = order.fulfilment_method === 'SHIP';
   const track = trackingUrl(order.shiprocket.awb);
-  const steps = buildOrderTimeline(order);
+  const steps = buildOrderTimeline(order, t);
 
   return (
     <YStack
@@ -50,8 +52,8 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
       gap={8}
     >
       <XStack gap={6} alignItems="center" flexWrap="wrap">
-        <Chip label={fulfilmentLabel(order.fulfilment_method)} filled />
-        <Chip label={statusLabel(order.fulfilment_status)} />
+        <Chip label={fulfilmentLabel(order.fulfilment_method, t)} filled />
+        <Chip label={statusLabel(order.fulfilment_status, t)} />
         <YStack flex={1} />
         <Text fontSize={11} color="$muted">
           #{order.order_no}
@@ -91,14 +93,14 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
         <YStack gap={4}>
           {order.shiprocket.awb ? (
             <Text fontSize={11} color="$muted">
-              AWB {order.shiprocket.awb}
+              {t('mweb.podHistory.awb', { vars: { awb: order.shiprocket.awb } })}
               {order.shiprocket.courier_name ? ` · ${order.shiprocket.courier_name}` : ''}
             </Text>
           ) : null}
           <XStack
             testID={`po-track-${order.id}`}
             role="button"
-            aria-label="Track shipment"
+            aria-label={t('mweb.podHistory.trackShipment')}
             aria-disabled={!track}
             opacity={track ? 1 : 0.5}
             alignItems="center"
@@ -109,13 +111,13 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
           >
             <MaterialIcons name="open-in-new" size={14} color={primary} />
             <Text fontSize={12.5} fontWeight="600" color="$primary">
-              Track shipment
+              {t('mweb.podHistory.trackShipment')}
             </Text>
           </XStack>
         </YStack>
       ) : (
         <Text fontSize={11} color="$muted">
-          Pickup code: {order.pickup_ref || '—'}
+          {t('mweb.podHistory.pickupCode')} {order.pickup_ref || '—'}
           {order.pickup_location_id ? ` · ${order.pickup_location_id}` : ''}
         </Text>
       )}

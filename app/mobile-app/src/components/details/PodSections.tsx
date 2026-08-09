@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { type HostPerson } from './AttendeesSection';
 
 export { AttendeesSection, buildAttendeePeople, buildHostPeople } from './AttendeesSection';
@@ -50,10 +51,11 @@ export function ChipList({
 
 /** About — description + extra info (or a placeholder). */
 export function AboutSection({ pod }: Readonly<{ pod: PodDetail }>) {
+  const { t } = useTranslation();
   const text = [pod.pod_description, pod.pod_info].filter(Boolean).join('\n\n');
   return (
     <Text fontSize={13.5} color="$color" lineHeight={20}>
-      {text || 'Details coming soon.'}
+      {text || t('mweb.podDetails.aboutEmpty')}
     </Text>
   );
 }
@@ -63,13 +65,14 @@ function HostRow({
   host,
   onOpenProfile,
 }: Readonly<{ host: HostPerson; onOpenProfile: (userId: string) => void }>) {
-  const name = host.full_name || 'Host';
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
+  const name = host.full_name || t('mweb.podDetails.host');
   return (
     <XStack
       testID={`host-row-${host.user_id}`}
       role="button"
-      aria-label={`View ${name}'s profile`}
+      aria-label={t('mweb.podDetails.viewProfileOf', { vars: { name } })}
       onPress={() => onOpenProfile(host.user_id)}
       alignItems="center"
       gap={10}
@@ -98,7 +101,7 @@ function HostRow({
           {name}
         </Text>
         <Text fontSize={11.5} color="$muted">
-          Host
+          {t('mweb.podDetails.host')}
         </Text>
       </YStack>
       <MaterialIcons name="chevron-right" size={20} color={muted} />
@@ -111,10 +114,11 @@ export function HostsSection({
   hosts,
   onOpenProfile,
 }: Readonly<{ hosts: HostPerson[]; onOpenProfile: (userId: string) => void }>) {
+  const { t } = useTranslation();
   if (hosts.length === 0)
     return (
       <Text fontSize={13} color="$muted">
-        Host info coming soon.
+        {t('mweb.podDetails.hostsEmpty')}
       </Text>
     );
   return (

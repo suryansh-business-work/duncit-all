@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type PodClub = NonNullable<PodDetail['club']>;
 
@@ -18,6 +19,7 @@ export function PodClubCard({
   onOpenClub,
 }: Readonly<{ club: PodClub; categoryCrumbs?: readonly string[]; onOpenClub: () => void }>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const logo = club.club_feature_images_and_videos[0]?.url || '';
   const initial = (club.club_name[0] ?? 'C').toUpperCase();
 
@@ -56,7 +58,7 @@ export function PodClubCard({
       <XStack
         testID="pod-view-club"
         role="button"
-        aria-label="View club"
+        aria-label={t('mweb.podDetails.viewClub')}
         onPress={onOpenClub}
         alignItems="center"
         gap={8}
@@ -65,7 +67,7 @@ export function PodClubCard({
       >
         <MaterialIcons name="groups" size={18} color={primary} />
         <Text fontSize={14} fontWeight="600" color="$primary">
-          View club
+          {t('mweb.podDetails.viewClub')}
         </Text>
       </XStack>
     </YStack>

@@ -6,6 +6,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import { TOGGLE_POD_LIKE } from './queries';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   podId: string;
@@ -22,6 +23,7 @@ export default function PodSocialBar({
   initialCommentCount,
   viewerId,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(!!initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount || 0);
   const [commentCount, setCommentCount] = useState(initialCommentCount || 0);
@@ -50,6 +52,10 @@ export default function PodSocialBar({
     }
   };
 
+  const likeLabel = liked
+    ? t('mweb.podDetails.likedCount', { vars: { count: likeCount } })
+    : t('mweb.podDetails.likeCount', { vars: { count: likeCount } });
+
   return (
     <>
       <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -59,7 +65,7 @@ export default function PodSocialBar({
           startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
           onClick={onLike}
         >
-          {liked ? 'Liked' : 'Like'} · {likeCount}
+          {likeLabel}
         </Button>
         <Button
           variant="outlined"
@@ -67,7 +73,7 @@ export default function PodSocialBar({
           startIcon={<CommentIcon />}
           onClick={() => setCommentsOpen(true)}
         >
-          Comment · {commentCount}
+          {t('mweb.podDetails.commentCount', { vars: { count: commentCount } })}
         </Button>
       </Stack>
       <PodCommentsSheet

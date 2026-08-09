@@ -13,6 +13,7 @@ import {
 import { StackScreen } from '@/components/StackScreen';
 import { usePodHistory, usePodHistoryCategories } from '@/hooks/usePodHistory';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   activePodHistoryFilterCount,
   applyPodHistory,
@@ -28,6 +29,7 @@ import { toErrorMessage } from '@/utils/errors';
 export function PodHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const { uniqueItems, isLoading, error } = usePodHistory();
   const categories = usePodHistoryCategories();
   const [filters, setFilters] = useState<PodHistoryFilters>(DEFAULT_POD_HISTORY_FILTERS);
@@ -67,10 +69,10 @@ export function PodHistoryScreen() {
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
         <YStack gap={2} marginBottom={4}>
           <Text fontSize={20} fontWeight="700" color="$color">
-            Joined Pods
+            {t('mweb.podHistory.joinedPods')}
           </Text>
           <Text fontSize={13} color="$muted">
-            Tap any pod you joined to view details, actions, refund status, and timeline.
+            {t('mweb.podHistory.subtitle')}
           </Text>
         </YStack>
         <XStack
@@ -87,12 +89,12 @@ export function PodHistoryScreen() {
           <MaterialIcons name="search" size={20} color={muted} />
           <Input
             testID="pod-history-search"
-            aria-label="Search joined pods"
+            aria-label={t('mweb.podHistory.searchAria')}
             flex={1}
             unstyled
             value={filters.search}
             onChangeText={(search) => setFilters((f) => ({ ...f, search }))}
-            placeholder="Search joined pods…"
+            placeholder={t('mweb.podHistory.searchPlaceholder')}
             placeholderTextColor="$muted"
             color="$color"
             fontSize={15}
@@ -102,11 +104,10 @@ export function PodHistoryScreen() {
         {visible.length === 0 ? (
           <YStack testID="pod-history-no-match" gap={4} paddingVertical={24} alignItems="center">
             <Text fontSize={16} fontWeight="700" color="$color">
-              No Pods Found
+              {t('mweb.podHistory.noPodsFound')}
             </Text>
             <Text fontSize={13} color="$muted" textAlign="center">
-              We couldn't find any enrolled Pods matching your search or filters. Try a different
-              search or change your filters to explore more of your Pod history.
+              {t('mweb.podHistory.noPodsFoundBody')}
             </Text>
           </YStack>
         ) : (
@@ -123,13 +124,13 @@ export function PodHistoryScreen() {
   } else {
     body = (
       <Text testID="pod-history-empty" padding={24} color="$muted">
-        Pods you have joined will appear here.
+        {t('mweb.podHistory.empty')}
       </Text>
     );
   }
 
   return (
-    <StackScreen title="Pod History" testID="pod-history-screen" right={toolbar}>
+    <StackScreen title={t('mweb.podHistory.title')} testID="pod-history-screen" right={toolbar}>
       {body}
       <PodHistoryFilterSheet
         open={filterOpen}

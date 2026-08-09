@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { isPodPast } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   canRejoin,
   podHistoryGate,
@@ -44,11 +45,12 @@ export interface PodHistoryDetailsProps {
 type StatusTone = 'success' | 'warning';
 
 /** Booking-status chip copy — "Backout in process" is its own visible state
- * (computed once here so children stay branch-free; mirrors mWeb). */
+ * (computed once here so children stay branch-free; mirrors mWeb). `label` is a
+ * translation key: the words live in @duncit/i18n so the two apps agree. */
 const STATUS_CHIP: Record<PodMembership['status'], { label: string; tone: StatusTone }> = {
-  JOINED: { label: 'Joined', tone: 'success' },
-  BACKOUT_IN_PROCESS: { label: 'Backout in process', tone: 'warning' },
-  BACKED_OUT: { label: 'Backed out', tone: 'warning' },
+  JOINED: { label: 'mweb.podHistory.statusJoined', tone: 'success' },
+  BACKOUT_IN_PROCESS: { label: 'mweb.podHistory.statusBackoutInProcess', tone: 'warning' },
+  BACKED_OUT: { label: 'mweb.podHistory.statusBackedOut', tone: 'warning' },
 };
 
 function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warning' | 'muted' }>) {
@@ -102,13 +104,16 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
     ordersLoading,
   } = props;
   const { onPrimary, primary } = useThemeColors();
+  const { t } = useTranslation();
   const pod = item.pod;
   const image = pod?.pod_images_and_videos?.[0]?.url;
   const gate = podHistoryGate(item);
   // "Visited" once the pod has happened — "Joined" is a promise about something
   // still ahead.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
-  const statusLabel = visited ? 'Visited' : STATUS_CHIP[item.status].label;
+  const statusLabel = visited
+    ? t('mweb.podHistory.statusVisited')
+    : t(STATUS_CHIP[item.status].label);
   // Neither notice belongs on a pod that has already happened: nobody can fill
   // that seat now, and the refund question is already settled.
   const podPast = isPodPast(pod?.pod_date_time);
@@ -144,28 +149,35 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
                   word comes from the request rather than the booking — the
                   booking's own copy is never written for a partial. */}
               {gate.showRefundState ? (
-                <Chip label={`Refund: ${refundLabel(gate.refundStatus)}`} tone="muted" />
+                <Chip
+                  label={t('mweb.podHistory.refundChip', {
+                    vars: { status: refundLabel(gate.refundStatus, t) },
+                  })}
+                  tone="muted"
+                />
               ) : null}
             </XStack>
             <Text fontSize={16} fontWeight="700" color="$color">
-              {pod?.pod_title ?? 'Pod details'}
+              {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
             </Text>
             <Text fontSize={13} color="$muted">
-              {pod?.pod_date_time ? formatDateTime(pod.pod_date_time) : 'Date not available'}
+              {pod?.pod_date_time
+                ? formatDateTime(pod.pod_date_time)
+                : t('mweb.podHistory.dateNotAvailable')}
             </Text>
             <Text fontSize={12} color="$muted">
-              {podPriceCaption(pod?.pod_type, pod?.pod_amount)}
+              {podPriceCaption(pod?.pod_type, pod?.pod_amount, t)}
             </Text>
           </YStack>
         </XStack>
       </Card>
 
-      <Card title="Actions">
+      <Card title={t('mweb.podHistory.actions')}>
         <PodHistoryActions {...props} />
         {showReplacement ? <ReplacementNotice deductionPct={deductionPct} /> : null}
         {!podPast && gate.refundStatus === 'PENDING' ? (
           <Text testID="ph-refund-pending" fontSize={12} color="$muted">
-            Refund is waiting for criteria completion. Support can help if the status looks wrong.
+            {t('mweb.podHistory.refundPendingNote')}
           </Text>
         ) : null}
         {notice ? (
@@ -177,7 +189,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
       <PodProductOrdersCard orders={productOrders ?? []} loading={ordersLoading ?? false} />
 
-      <Card title="Timeline">
+      <Card title={t('mweb.podHistory.timeline')}>
         <PodHistoryTimeline item={item} />
       </Card>
 
@@ -185,24 +197,24 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
         <Text
           testID="ph-backout-terms"
           role="button"
-          aria-label="Backout terms and conditions"
+          aria-label={t('mweb.podHistory.backoutTerms')}
           onPress={onBackoutTerms}
           fontSize={13}
           fontWeight="600"
           color="$primary"
         >
-          Backout Terms &amp; Conditions
+          {t('mweb.podHistory.backoutTerms')}
         </Text>
         <Text
           testID="ph-general-terms"
           role="button"
-          aria-label="General terms"
+          aria-label={t('mweb.podHistory.generalTerms')}
           onPress={onGeneralTerms}
           fontSize={13}
           fontWeight="600"
           color={primary}
         >
-          General Terms
+          {t('mweb.podHistory.generalTerms')}
         </Text>
       </XStack>
     </YStack>

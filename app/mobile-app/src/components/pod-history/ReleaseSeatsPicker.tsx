@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Seats the booking holds. */
@@ -20,9 +21,12 @@ interface Props {
  */
 export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly<Props>) {
   const { color: ink } = useThemeColors();
+  const { t } = useTranslation();
   if (held <= 1) return null;
   const seats = Math.min(Math.max(value, 1), held);
   const kept = held - seats;
+  const keptKey = kept === 1 ? 'mweb.podDetails.keepSeatsOne' : 'mweb.podDetails.keepSeatsMany';
+  const partialHint = t(keptKey, { vars: { count: kept } });
   const step = (next: number) => {
     if (disabled) return;
     onChange(Math.min(Math.max(next, 1), held));
@@ -31,7 +35,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
   return (
     <YStack gap={6} testID="backout-seat-picker">
       <Text fontSize={13} fontWeight="600" color="$color">
-        Seats to release
+        {t('mweb.podDetails.seatsToRelease')}
       </Text>
       <XStack alignItems="center" gap={12}>
         <XStack
@@ -45,7 +49,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
           <XStack
             testID="backout-seat-minus"
             role="button"
-            aria-label="One seat fewer"
+            aria-label={t('mweb.podDetails.oneSeatFewer')}
             aria-disabled={seats <= 1}
             onPress={() => step(seats - 1)}
             width={38}
@@ -69,7 +73,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
           <XStack
             testID="backout-seat-plus"
             role="button"
-            aria-label="One seat more"
+            aria-label={t('mweb.podDetails.oneSeatMore')}
             aria-disabled={seats >= held}
             onPress={() => step(seats + 1)}
             width={38}
@@ -83,9 +87,7 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
         </XStack>
       </XStack>
       <Text fontSize={12} color="$muted">
-        {kept > 0
-          ? `You keep ${kept} seat${kept === 1 ? '' : 's'} and stay in this pod.`
-          : 'Releasing your whole booking — you leave the pod.'}
+        {kept > 0 ? partialHint : t('mweb.podDetails.releasingAll')}
       </Text>
     </YStack>
   );

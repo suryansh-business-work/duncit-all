@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack } from 'tamagui';
 
 import {
@@ -16,6 +15,9 @@ interface Props {
   requestId?: string | null;
   /** Live status of the request — PENDING is the only state with buttons. */
   status?: string | null;
+  /** The row is unread, so it is painted with the primary gradient — the text
+   * buttons take its ink instead of colours that vanish on it. */
+  unreadRow?: boolean;
   /** Lets the inbox re-read once the request is answered. */
   onAnswered: () => void;
 }
@@ -27,9 +29,10 @@ export function FollowRequestActions({
   actionType,
   requestId,
   status,
+  unreadRow,
   onAnswered,
 }: Readonly<Props>) {
-  const { color: ink, onPrimary, primary } = useThemeColors();
+  const { muted, onPrimary, primary } = useThemeColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -67,45 +70,36 @@ export function FollowRequestActions({
 
   if (busy) return <Spinner testID="follow-request-busy" size="small" color={primary} />;
 
+  // Text buttons, not filled ones: the row is already a large tappable card, so
+  // a solid button fights it. Accept leads in the primary colour, Deny sits back
+  // in grey. mWeb twin (rule 27).
   return (
-    <XStack gap={8} paddingTop={8}>
-      <XStack
+    <XStack gap={18} paddingTop={10}>
+      <Text
         testID="follow-request-accept"
         role="button"
         aria-label={t('mweb.follow.accept')}
         onPress={() => void answer(true)}
-        alignItems="center"
-        gap={6}
-        paddingHorizontal={14}
-        paddingVertical={7}
-        borderRadius={999}
-        backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
+        fontSize={13.5}
+        fontWeight="800"
+        color={unreadRow ? onPrimary : primary}
+        pressStyle={{ opacity: 0.6 }}
       >
-        <MaterialIcons name="check" size={15} color={onPrimary} />
-        <Text fontSize={13} fontWeight="700" color={onPrimary}>
-          {t('mweb.follow.accept')}
-        </Text>
-      </XStack>
-      <XStack
+        {t('mweb.follow.accept')}
+      </Text>
+      <Text
         testID="follow-request-reject"
         role="button"
         aria-label={t('mweb.follow.reject')}
         onPress={() => void answer(false)}
-        alignItems="center"
-        gap={6}
-        paddingHorizontal={14}
-        paddingVertical={7}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        pressStyle={{ opacity: 0.85 }}
+        fontSize={13.5}
+        fontWeight="800"
+        color={unreadRow ? onPrimary : muted}
+        opacity={unreadRow ? 0.75 : 1}
+        pressStyle={{ opacity: 0.6 }}
       >
-        <MaterialIcons name="close" size={15} color={ink} />
-        <Text fontSize={13} fontWeight="700" color="$color">
-          {t('mweb.follow.reject')}
-        </Text>
-      </XStack>
+        {t('mweb.follow.reject')}
+      </Text>
     </XStack>
   );
 }

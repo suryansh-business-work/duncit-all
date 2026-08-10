@@ -109,6 +109,7 @@ export function NotificationRow({
           actionType={notification.action_type}
           requestId={notification.action_ref_id}
           status={notification.action_status}
+          unreadRow={unread}
           onAnswered={() => onAnswered?.()}
         />
       </YStack>

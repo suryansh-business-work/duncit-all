@@ -21,9 +21,22 @@
  * grievance filings, the Reported-Problem reporter snapshot, pod audit actors),
  * and the mirrored copies that back admin-table search. Those are still read.
  */
+import 'dotenv/config';
 import mongoose from 'mongoose';
 
 const DRY = process.argv.includes('--dry-run');
+/** Point at a database explicitly, e.g. a local restore of a production dump:
+ *   npm run migrate:drop-user-copies:dry -- --uri mongodb://127.0.0.1:27017/duncit
+ * Without it the script uses MONGO_URI from `server/.env`, like every other
+ * migration here. */
+const uriArg = process.argv.indexOf('--uri');
+const URI_OVERRIDE = uriArg !== -1 ? process.argv[uriArg + 1] : undefined;
+const FORCE_REMOTE = process.argv.includes('--i-know-this-is-production');
+
+/** Is this connection string pointing at a database on this machine? */
+function isLocal(uri: string): boolean {
+  return /^mongodb:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])[:/]/i.test(uri.trim());
+}
 
 /** Collection name → the dead fields on it. Raw collection names, because this
  * runs against documents the models no longer describe. */
@@ -53,12 +66,33 @@ function estimateBytes(field: string): number {
 }
 
 async function main(): Promise<void> {
-  const uri = process.env.MONGO_URI;
+  const uri = URI_OVERRIDE ?? process.env.MONGO_URI;
   if (!uri) {
-    console.error('MONGO_URI is not set.');
+    console.error('No database. Set MONGO_URI in server/.env, or pass --uri <connection-string>.');
     process.exit(1);
   }
+  // A WRITE against a remote cluster needs saying out loud.
+  //
+  // `$unset` is the one step in this whole change that a redeploy cannot undo,
+  // and the default `.env` here points at the hosted cluster — so the easiest
+  // possible mistake is running the real thing against production while meaning
+  // to rehearse. Local writes are unguarded; anything else must be deliberate.
+  if (!DRY && !isLocal(uri) && !FORCE_REMOTE) {
+    console.error(
+      'Refusing to write to a non-local database.\n' +
+        'Rehearse on a local restore first:\n' +
+        '  npm run migrate:drop-user-copies:local:dry\n' +
+        '  npm run migrate:drop-user-copies:local\n' +
+        'When production is genuinely the target, re-run with --i-know-this-is-production.'
+    );
+    process.exit(1);
+  }
+
   await mongoose.connect(uri);
+  // Name the target before touching it: this is meant to be rehearsed on a local
+  // restore first, and "which database did I just run that against?" is not a
+  // question anyone should have to answer afterwards.
+  console.log(`Connected to ${mongoose.connection.name} (${DRY ? 'DRY RUN' : 'WRITING'})\n`);
   const db = mongoose.connection.db;
   if (!db) throw new Error('No database handle after connect');
 

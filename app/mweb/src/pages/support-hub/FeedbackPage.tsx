@@ -15,7 +15,22 @@ export default function FeedbackPage() {
   const [sent, setSent] = useState(false);
 
   const onSubmit = async (values: FeedbackValues) => {
-    await submit({ variables: { input: buildAppFeedbackInput({ ...values, platform: 'web' }) } });
+    // `media_text` is the field's newline-joined form — the mutation takes a
+    // list, same as native sends.
+    const media_urls = values.media_text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    await submit({
+      variables: {
+        input: buildAppFeedbackInput({
+          category: values.category,
+          message: values.message,
+          platform: 'web',
+          media_urls,
+        }),
+      },
+    });
     setSent(true);
   };
 

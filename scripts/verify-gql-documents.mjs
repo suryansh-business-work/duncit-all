@@ -54,6 +54,36 @@ function walk(dir, out = []) {
   return out;
 }
 
+/**
+ * Every `const NAME = \`…\`` in a file, so an interpolated selection can be
+ * substituted for real rather than papered over with a placeholder.
+ *
+ * Plain string literals only — a template that itself interpolates is left for
+ * the placeholder path, which still balances braces.
+ */
+function readConstants(source) {
+  const map = new Map();
+  const re = /(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*`([^`]*)`/g;
+  let m;
+  while ((m = re.exec(source)) !== null) map.set(m[1], m[2]);
+  return map;
+}
+
+/** Replace `${NAME}` with the constant's text, repeatedly, so a selection built
+ * from another selection resolves too. Bounded, because a constant that refers
+ * to itself would otherwise spin forever. */
+function resolveConstants(text, constants) {
+  let out = text;
+  for (let pass = 0; pass < 5; pass++) {
+    const next = out.replaceAll(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, (whole, name) =>
+      constants.has(name) ? constants.get(name) : whole
+    );
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 const failures = [];
 let parsed = 0;
 
@@ -61,9 +91,20 @@ for (const file of ROOTS.flatMap((root) => walk(root))) {
   const source = readFileSync(file, 'utf8');
   TEMPLATE.lastIndex = 0;
   let match;
+  const constants = readConstants(source);
+  TEMPLATE.lastIndex = 0;
   while ((match = TEMPLATE.exec(source)) !== null) {
-    // A placeholder field keeps the braces balanced without inventing a schema.
-    const doc = match[1].replaceAll(/\$\{[^}]*\}/g, '__interpolated');
+    // Substitute the REAL value of any `${CONST}` whose template literal is
+    // declared in this file, before falling back to a placeholder.
+    //
+    // This is the check that was missing. Replacing every interpolation with a
+    // placeholder FIELD keeps the braces balanced by construction, so a shared
+    // selection carrying one closing brace too many parsed here and blew up in
+    // the browser — which is exactly what took admin and partners-app down: the
+    // extracted `ATTENDEE_SELECTION` and its four siblings each swallowed the
+    // root field's `}`, and the query template closed it a second time.
+    const resolved = resolveConstants(match[1], constants);
+    const doc = resolved.replaceAll(/\$\{[^}]*\}/g, '__interpolated');
     // Only a template that OPENS with an operation/fragment keyword is a
     // document. The regex also matches graphqlRequest(...) and similar, whose
     // backticks hold ordinary strings.
@@ -71,7 +112,7 @@ for (const file of ROOTS.flatMap((root) => walk(root))) {
     // A document-level interpolation is a fragment being appended, where a
     // field placeholder is not valid — accept either reading, so long as ONE
     // parses. Both keep the braces balanced, which is the check that matters.
-    const alternative = match[1].replaceAll(/\$\{[^}]*\}/g, '');
+    const alternative = resolved.replaceAll(/\$\{[^}]*\}/g, '');
     try {
       try {
         parse(doc);

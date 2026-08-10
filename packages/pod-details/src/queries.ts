@@ -57,7 +57,6 @@ export const ATTENDEE_SELECTION = `
           }
         }
       }
-    }
 `;
 
 export const AUDIT_SELECTION = `
@@ -68,7 +67,6 @@ export const AUDIT_SELECTION = `
       note
       ai_risk
       created_at
-    }
 `;
 
 export const HOST_SELECTION = `
@@ -78,7 +76,6 @@ export const HOST_SELECTION = `
       email
       phone
       status
-    }
 `;
 
 export const PAYMENTS_SELECTION = `
@@ -100,7 +97,6 @@ export const PAYMENTS_SELECTION = `
       total
       page
       page_size
-    }
 `;
 
 export const FEEDBACK_SELECTION = `
@@ -127,7 +123,6 @@ export const FEEDBACK_SELECTION = `
           rating
         }
       }
-    }
 `;
 
 import type { PodParticipationFields } from '@duncit/utils';

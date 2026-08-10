@@ -36,6 +36,13 @@ export default function StudioPodRow({ pod, currencySymbol }: Readonly<Props>) {
 
   const hosts = pod.host_names.filter(Boolean).join(', ');
   const hostValue = hosts || t('mweb.studioPods.hostsNone');
+  // A FREE pod reads as free, not as a zero price — native already did this,
+  // and rule 27 says the two must not word the same pod differently. Hoisted
+  // out of the JSX so the conditional sits at nesting 0 (Sonar S3358).
+  const priceLabel =
+    pod.pod_type === 'FREE'
+      ? t('mweb.podDetails.free')
+      : formatMoney(pod.pod_amount, { symbol: currencySymbol });
 
   return (
     <Stack
@@ -86,7 +93,7 @@ export default function StudioPodRow({ pod, currencySymbol }: Readonly<Props>) {
         <PodFact label={t('mweb.studioPods.people')} value={String(pod.pod_attendees.length)} />
         <PodFact
           label={t('mweb.studioPods.ticket')}
-          value={formatMoney(pod.pod_amount, { symbol: currencySymbol })}
+          value={priceLabel}
         />
       </Stack>
     </Stack>

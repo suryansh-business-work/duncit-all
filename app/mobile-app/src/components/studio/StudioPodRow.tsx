@@ -76,7 +76,7 @@ export function StudioPodRow({ pod, when, currencySymbol, testID }: Readonly<Stu
       </XStack>
 
       <Text fontSize={12} color="$muted" numberOfLines={1}>
-        {when}
+        {pod.owner_name ? `${when} · ${pod.owner_name}` : when}
       </Text>
 
       <Text fontSize={12} color="$muted" numberOfLines={1}>

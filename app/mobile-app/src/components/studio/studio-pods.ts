@@ -27,13 +27,15 @@ export interface StudioPod {
   /** Attendee user ids; its length is the PEOPLE count (extra seats excluded). */
   pod_attendees: readonly string[];
   host_names: readonly string[];
+  /** The venue or club this pod sits under, aliased in both queries so one row
+   * type renders both studios (and mWeb shows the same line). */
+  owner_name: string;
   bucket: string;
 }
 
 /**
- * The figures strip. Field-for-field the server's ClubPodSummary, so the club
- * section passes it straight through and the venue section derives the same
- * shape from its list — the two studios can never show different arithmetic.
+ * The figures strip. Field-for-field the server summary that BOTH studios now
+ * return, so neither client does arithmetic and the two cannot disagree.
  */
 export interface StudioPodFiguresData {
   /** Venues (Venue Studio) or clubs (Club Studio) in scope. */
@@ -103,47 +105,23 @@ export function bucketTone(bucket: string): string {
   return isBucket(bucket) ? BUCKET_TONES[bucket] : BUCKET_TONES.UPCOMING;
 }
 
-const countOf = (pods: readonly StudioPod[], bucket: StudioPodBucket): number =>
-  pods.filter((pod) => pod.bucket === bucket).length;
-
-/** Soonest upcoming start, ISO — null when nothing is scheduled. */
-function nextPodDateTime(pods: readonly StudioPod[]): string | null {
-  return pods
-    .filter((pod) => pod.bucket === 'UPCOMING' && !!pod.pod_date_time)
-    .reduce<string | null>((soonest, pod) => {
-      if (!soonest) return pod.pod_date_time;
-      return new Date(pod.pod_date_time) < new Date(soonest) ? pod.pod_date_time : soonest;
-    }, null);
-}
-
-/**
- * The venue side's summary, derived from its own list.
- *
- * Every rule here is the server's ClubPodSummary rule: cancelled pods count
- * only in `cancelled` — their spots were never sold — so capacity, fill and
- * attendees are measured over the non-cancelled pods alone. Revenue stays null
- * because no pod field carries collected money.
- */
-export function summariseStudioPods(
-  pods: readonly StudioPod[],
-  scope: number,
-): StudioPodFiguresData {
-  const live = pods.filter((pod) => pod.bucket !== 'CANCELLED');
-  const totalSpots = live.reduce((sum, pod) => sum + pod.no_of_spots, 0);
-  const filledSpots = live.reduce((sum, pod) => sum + pod.attendee_count, 0);
-  return {
-    scope,
-    total: pods.length,
-    upcoming: countOf(pods, 'UPCOMING'),
-    ongoing: countOf(pods, 'ONGOING'),
-    completed: countOf(pods, 'COMPLETED'),
-    cancelled: countOf(pods, 'CANCELLED'),
-    total_spots: totalSpots,
-    filled_spots: filledSpots,
-    total_attendees: live.reduce((sum, pod) => sum + pod.pod_attendees.length, 0),
-    fill_rate: totalSpots > 0 ? filledSpots / totalSpots : 0,
-    next_pod_date_time: nextPodDateTime(pods),
-    total_revenue: null,
-    currency_symbol: null,
-  };
+/** The server summary shape both studios return (venuePodsSummary /
+ * myClubPodsSummary). The roll-up used to be computed here AND in mWeb AND on
+ * the server for clubs — three versions of one set of rules, and the two client
+ * copies folded the CAPPED list, so a venue past 500 pods reported a total of
+ * 500 under a caption promising the figures counted them all. */
+export interface StudioPodSummaryResult {
+  scope_count: number;
+  total: number;
+  upcoming: number;
+  ongoing: number;
+  completed: number;
+  cancelled: number;
+  total_spots: number;
+  filled_spots: number;
+  total_attendees: number;
+  fill_rate: number;
+  next_pod_date_time?: string | null;
+  total_revenue: number;
+  currency_symbol: string;
 }

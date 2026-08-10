@@ -2,7 +2,6 @@ import { Alert, Button, Card, CardContent, CircularProgress, Stack, Typography }
 import { useTranslation } from '../../i18n/useTranslation';
 import StudioPodRow from './StudioPodRow';
 import StudioPodsFigures from './StudioPodsFigures';
-import { STUDIO_POD_LIST_CAP } from './summary';
 import type { StudioPod, StudioPodSummary } from './types';
 
 interface BodyProps {
@@ -91,7 +90,10 @@ export default function StudioPodsSection({
   onRetry,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const capped = pods.length >= STUDIO_POD_LIST_CAP;
+  // The summary counts every pod in scope while the list is capped, so this is
+  // exact — the old `pods.length >= CAP` also fired on a scope of exactly 500
+  // where nothing was truncated. Native uses the same test.
+  const capped = summary.total > pods.length;
 
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
@@ -106,7 +108,10 @@ export default function StudioPodsSection({
             </Typography>
           </Stack>
 
-          <StudioPodsFigures summary={summary} scopeLabel={scopeLabel} />
+          {/* Hidden while the first load runs: a strip reading "Total 0 /
+              None scheduled" under a spinner states something false. Native
+              already withheld it. */}
+          {!loading && <StudioPodsFigures summary={summary} scopeLabel={scopeLabel} />}
 
           {capped && (
             <Typography variant="caption" color="text.secondary">

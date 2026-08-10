@@ -59,8 +59,14 @@ export function VenueManageScreen() {
             </Text>
             <SimpleBarChart testID="venue-pods-chart" data={buildMonthlyCounts(podDates)} />
           </YStack>
-          {/* The bookings behind that chart, pod by pod, with their figures. */}
-          <StudioPodsSection variant="VENUE" state={podsState} testID="venue-studio-pods" />
+          {/* The bookings behind that chart, pod by pod, with their figures.
+              Hidden when there is no venue at all: the empty copy says "no pods
+              have been booked at your venue", which asserts a venue they do not
+              have — and it fired a needless authenticated round trip. mWeb
+              gates it the same way (rule 27). */}
+          {venues.length > 0 ? (
+            <StudioPodsSection variant="VENUE" state={podsState} testID="venue-studio-pods" />
+          ) : null}
           {!isLoading && venues.length === 0 ? (
             <Text testID="venue-dashboard-empty" fontSize={13} color="$muted">
               No venues yet — register one to start hosting pods.

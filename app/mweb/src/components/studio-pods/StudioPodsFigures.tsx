@@ -42,11 +42,13 @@ interface Props {
  */
 export default function StudioPodsFigures({ summary, scopeLabel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormat();
+  // Date AND time: a studio owner needs to know WHEN the next pod starts, and
+  // native already showed both (rule 27).
+  const { formatDateTime } = useDateFormat();
   const pct = fillPercent(summary);
 
   const nextPod = summary.next_pod_date_time
-    ? formatDate(summary.next_pod_date_time)
+    ? formatDateTime(summary.next_pod_date_time)
     : t('mweb.studioPods.noneScheduled');
 
   const figures: Figure[] = [

@@ -28,6 +28,30 @@ const STUDIO_POD_FIELDS = `
   created_at
 `;
 
+/**
+ * The figures, identical on both studios and computed SERVER-SIDE.
+ *
+ * Neither client rolls these up any more. They used to fold the returned list,
+ * which is capped at 500 rows — so a venue owner past that cap saw a total of
+ * 500 and a fill rate drawn from a truncated set, under a caption promising the
+ * figures counted them all.
+ */
+const STUDIO_SUMMARY_FIELDS = `
+  scope_count
+  total
+  upcoming
+  ongoing
+  completed
+  cancelled
+  total_spots
+  filled_spots
+  total_attendees
+  fill_rate
+  next_pod_date_time
+  total_revenue
+  currency_symbol
+`;
+
 /** Pods booked at the caller's venue — Venue Studio. */
 export const VENUE_STUDIO_PODS = gql`
   query VenueStudioPods($venue_id: ID) {
@@ -36,14 +60,13 @@ export const VENUE_STUDIO_PODS = gql`
       owner_id: venue_id
       owner_name: venue_name
     }
+    studioSummary: venuePodsSummary(venue_id: $venue_id) {
+      ${STUDIO_SUMMARY_FIELDS}
+    }
   }
 `;
 
-/**
- * Pods across the clubs the caller administers — Club Studio. The summary is
- * fetched alongside the list because the server computes it over EVERY pod in
- * scope while the list itself is capped at 500 rows.
- */
+/** Pods across the clubs the caller administers — Club Studio. */
 export const CLUB_STUDIO_PODS = gql`
   query ClubStudioPods($club_id: ID) {
     studioPods: myClubPods(club_id: $club_id) {
@@ -52,19 +75,7 @@ export const CLUB_STUDIO_PODS = gql`
       owner_name: club_name
     }
     studioSummary: myClubPodsSummary(club_id: $club_id) {
-      clubs
-      total
-      upcoming
-      ongoing
-      completed
-      cancelled
-      total_spots
-      filled_spots
-      total_attendees
-      fill_rate
-      next_pod_date_time
-      total_revenue
-      currency_symbol
+      ${STUDIO_SUMMARY_FIELDS}
     }
   }
 `;

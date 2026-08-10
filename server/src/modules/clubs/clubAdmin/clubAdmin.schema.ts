@@ -161,8 +161,11 @@ export const clubAdminTypeDefs = /* GraphQL */ `
   revenue.
   """
   type ClubPodSummary {
-    "Clubs in scope — 1 when club_id narrows to a single club."
-    clubs: Int!
+    """
+    Clubs in scope — 1 when club_id narrows to a single club. Named to match
+    VenuePodSummary so one client component reads both.
+    """
+    scope_count: Int!
     total: Int!
     upcoming: Int!
     "Running right now (the ONGOING bucket)."

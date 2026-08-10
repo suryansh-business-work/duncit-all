@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { buildStudioPodSummary } from '@modules/pods/pod/studio-summary';
 import { Types } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { mapClubToPublic, clubService } from '@modules/clubs/club/club.service';
@@ -391,44 +392,13 @@ const EMPTY_CLUB_POD_SUMMARY = {
  * the non-cancelled pods (a cancelled pod's payments were refunded). Callers
  * pass an ALREADY-SCOPED club id list. */
 async function buildClubPodSummary(clubIds: string[]) {
-  if (clubIds.length === 0) return { ...EMPTY_CLUB_POD_SUMMARY };
-  const clubOids = clubIds.map((id) => new Types.ObjectId(id));
-  const pods = await PodModel.find({ club_id: { $in: clubOids } })
-    .setOptions({ includeDeleted: true })
-    .select('_id pod_date_time pod_end_date_time completed_at deleted_at no_of_spots pod_attendees extra_seats')
-    .lean();
-  const now = Date.now();
-  const tally: ClubPodTally = {
-    counts: { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 },
-    total_spots: 0,
-    filled_spots: 0,
-    total_attendees: 0,
-    next_at: null,
-  };
-  for (const pod of pods as any[]) {
-    foldClubPod(tally, pod, now);
-  }
-  const livePodIds = (pods as any[]).filter((p) => !p.deleted_at).map((p) => p._id);
-  const payments = await PaymentModel.find({ pod_id: { $in: livePodIds }, status: 'SUCCESS' })
-    .select('total currency_symbol')
-    .lean();
-  const total_revenue = (payments as any[]).reduce((sum, p) => sum + (p.total ?? 0), 0);
-  return {
-    clubs: clubIds.length,
-    total: pods.length,
-    upcoming: tally.counts.upcoming,
-    ongoing: tally.counts.ongoing,
-    completed: tally.counts.completed,
-    cancelled: tally.counts.cancelled,
-    total_spots: tally.total_spots,
-    filled_spots: tally.filled_spots,
-    total_attendees: tally.total_attendees,
-    fill_rate: tally.total_spots > 0 ? tally.filled_spots / tally.total_spots : 0,
-    next_pod_date_time: tally.next_at === null ? null : new Date(tally.next_at).toISOString(),
-    total_revenue,
-    currency_symbol:
-      (payments[0] as any)?.currency_symbol || EMPTY_CLUB_POD_SUMMARY.currency_symbol,
-  };
+  // Shared with Venue Studio — see studio-summary.ts for why the arithmetic
+  // lives in exactly one place.
+  const summary = await buildStudioPodSummary(
+    { club_id: { $in: clubIds.map((id) => new Types.ObjectId(id)) } },
+    clubIds.length,
+  );
+  return summary;
 }
 
 export const clubAdminService = {

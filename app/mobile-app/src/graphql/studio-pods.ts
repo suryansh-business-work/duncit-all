@@ -25,13 +25,28 @@ export const VenueStudioPodsDocument = gql(`
       attendee_count
       pod_attendees
       host_names
-      venue_id
-      venue_name
+      owner_id: venue_id
+      owner_name: venue_name
       bucket
       is_active
       completed_at
       cancelled_at
       created_at
+    }
+    venuePodsSummary {
+      scope_count
+      total
+      upcoming
+      ongoing
+      completed
+      cancelled
+      total_spots
+      filled_spots
+      total_attendees
+      fill_rate
+      next_pod_date_time
+      total_revenue
+      currency_symbol
     }
   }
 `);
@@ -58,8 +73,8 @@ export const ClubStudioPodsDocument = gql(`
       attendee_count
       pod_attendees
       host_names
-      club_id
-      club_name
+      owner_id: club_id
+      owner_name: club_name
       bucket
       is_active
       completed_at
@@ -67,7 +82,7 @@ export const ClubStudioPodsDocument = gql(`
       created_at
     }
     myClubPodsSummary {
-      clubs
+      scope_count
       total
       upcoming
       ongoing

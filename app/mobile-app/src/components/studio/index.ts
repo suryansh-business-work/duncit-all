@@ -5,9 +5,9 @@ export { useClubStudioPods, useVenueStudioPods, type StudioPodsState } from './u
 export {
   bucketLabelKey,
   bucketTone,
-  summariseStudioPods,
   EMPTY_STUDIO_FIGURES,
   type StudioPod,
   type StudioPodBucket,
   type StudioPodFiguresData,
+  type StudioPodSummaryResult,
 } from './studio-pods';

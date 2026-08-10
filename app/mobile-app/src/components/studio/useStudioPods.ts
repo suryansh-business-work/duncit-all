@@ -4,9 +4,9 @@ import { ClubStudioPodsDocument, VenueStudioPodsDocument } from '@/graphql/studi
 import { graphqlRequest } from '@/services/graphql.client';
 import {
   EMPTY_STUDIO_FIGURES,
-  summariseStudioPods,
   type StudioPod,
   type StudioPodFiguresData,
+  type StudioPodSummaryResult,
 } from './studio-pods';
 
 export interface StudioPodsState {
@@ -18,19 +18,38 @@ export interface StudioPodsState {
   refetch: () => void;
 }
 
+/** The server summary as the strip reads it. Both studios return the same
+ * shape, so there is one mapper and no per-studio arithmetic. */
+function toFigures(summary: StudioPodSummaryResult): StudioPodFiguresData {
+  return {
+    scope: summary.scope_count,
+    total: summary.total,
+    upcoming: summary.upcoming,
+    ongoing: summary.ongoing,
+    completed: summary.completed,
+    cancelled: summary.cancelled,
+    total_spots: summary.total_spots,
+    filled_spots: summary.filled_spots,
+    total_attendees: summary.total_attendees,
+    fill_rate: summary.fill_rate,
+    next_pod_date_time: summary.next_pod_date_time ?? null,
+    total_revenue: summary.total_revenue,
+    currency_symbol: summary.currency_symbol,
+  };
+}
+
 interface StudioPodsPayload {
   pods: StudioPod[];
   figures: StudioPodFiguresData;
 }
 
-/** Venue Studio: the pods booked at every venue the caller owns. The venue side
- * has no summary query, so the figures are derived from the list with exactly
- * the rules the server applies to the club summary. */
+/** Venue Studio: the pods booked at every venue the caller owns. The figures
+ * come from the server, computed over EVERY approved booking while the list is
+ * capped — the client used to fold the capped list and report a total of 500
+ * for a busy venue. */
 async function fetchVenueStudioPods(): Promise<StudioPodsPayload> {
   const data = await graphqlRequest(VenueStudioPodsDocument, undefined, { auth: true });
-  const pods = data.venuePods;
-  const venues = new Set(pods.map((pod) => pod.venue_id));
-  return { pods, figures: summariseStudioPods(pods, venues.size) };
+  return { pods: data.venuePods, figures: toFigures(data.venuePodsSummary) };
 }
 
 /** Club Studio: the pods across every club the caller administers. The roll-up
@@ -38,25 +57,7 @@ async function fetchVenueStudioPods(): Promise<StudioPodsPayload> {
  * owns the one figure a pod row cannot carry — collected revenue. */
 async function fetchClubStudioPods(): Promise<StudioPodsPayload> {
   const data = await graphqlRequest(ClubStudioPodsDocument, undefined, { auth: true });
-  const summary = data.myClubPodsSummary;
-  return {
-    pods: data.myClubPods,
-    figures: {
-      scope: summary.clubs,
-      total: summary.total,
-      upcoming: summary.upcoming,
-      ongoing: summary.ongoing,
-      completed: summary.completed,
-      cancelled: summary.cancelled,
-      total_spots: summary.total_spots,
-      filled_spots: summary.filled_spots,
-      total_attendees: summary.total_attendees,
-      fill_rate: summary.fill_rate,
-      next_pod_date_time: summary.next_pod_date_time ?? null,
-      total_revenue: summary.total_revenue,
-      currency_symbol: summary.currency_symbol,
-    },
-  };
+  return { pods: data.myClubPods, figures: toFigures(data.myClubPodsSummary) };
 }
 
 /** Shared load/retry state machine for both studios — one fetch, one error flag,

@@ -42,47 +42,30 @@ const EMPTY_COUNTS: Record<StudioPodBucket, number> = {
  * Cancelled pods count in `cancelled` only: their spots were never sold, so
  * they stay out of capacity, fill and head-count — matching the server.
  */
-export function summarizeStudioPods(
-  pods: readonly StudioPod[],
-  currencySymbol: string,
-): StudioPodSummary {
-  const counts = { ...EMPTY_COUNTS };
-  // Venues these pods are actually spread across — the tile reads "Venues
-  // booked", not every venue the owner has listed.
-  const owners = new Set<string>();
-  let totalSpots = 0;
-  let filledSpots = 0;
-  let totalAttendees = 0;
-  let nextPod: string | null = null;
-
-  for (const pod of pods) {
-    owners.add(pod.owner_id);
-    counts[pod.bucket] += 1;
-    if (pod.bucket === 'CANCELLED') continue;
-    totalSpots += pod.no_of_spots;
-    filledSpots += pod.attendee_count;
-    totalAttendees += pod.pod_attendees.length;
-    // Server timestamps are ISO-8601 UTC, so a string compare is a time compare.
-    const soonest = pod.bucket === 'UPCOMING' && (nextPod === null || pod.pod_date_time < nextPod);
-    if (soonest) nextPod = pod.pod_date_time;
-  }
-
-  return {
-    scope_count: owners.size,
-    total: pods.length,
-    upcoming: counts.UPCOMING,
-    ongoing: counts.ONGOING,
-    completed: counts.COMPLETED,
-    cancelled: counts.CANCELLED,
-    total_spots: totalSpots,
-    filled_spots: filledSpots,
-    total_attendees: totalAttendees,
-    fill_rate: totalSpots > 0 ? filledSpots / totalSpots : 0,
-    next_pod_date_time: nextPod,
-    total_revenue: null,
-    currency_symbol: currencySymbol,
-  };
-}
+/**
+ * Blank figures while the query is in flight.
+ *
+ * The roll-up itself is gone: it lived here AND in the native app AND on the
+ * server for clubs — three versions of one set of rules. Worse, the client
+ * copies folded the CAPPED list, so a venue past 500 pods reported a total of
+ * 500 under a caption promising the figures counted them all. Both studios now
+ * read the server figure, computed over every pod in scope.
+ */
+export const EMPTY_STUDIO_SUMMARY: StudioPodSummary = {
+  scope_count: 0,
+  total: 0,
+  upcoming: 0,
+  ongoing: 0,
+  completed: 0,
+  cancelled: 0,
+  total_spots: 0,
+  filled_spots: 0,
+  total_attendees: 0,
+  fill_rate: 0,
+  next_pod_date_time: null,
+  total_revenue: 0,
+  currency_symbol: '',
+};
 
 /** Whole-percent fill, for the meter and its caption. */
 export function fillPercent(summary: Readonly<StudioPodSummary>): number {

@@ -142,5 +142,16 @@ export const eventTicketTypeDefs = /* GraphQL */ `
       "Details for the other people the ticket admits — send on the second scan."
       companions: [PodCompanionInput!]
     ): HostTicketScanResult!
+    """
+    Club Admin marks a member present WITHOUT a scan.
+
+    The host's path is QR-only on purpose: a scan is proof the person was at the
+    door, and the host is paid on the result. This is the override for when that
+    proof cannot be produced — a dead phone, a lost ticket — and it is limited
+    to the club's admin, who is accountable for the club rather than for this
+    pod's payout. Every forced mark records who forced it and notifies the
+    member, so it is contestable rather than silent.
+    """
+    clubAdminForceAttendance(pod_doc_id: ID!, membership_id: ID!): EventTicket!
   }
 `;

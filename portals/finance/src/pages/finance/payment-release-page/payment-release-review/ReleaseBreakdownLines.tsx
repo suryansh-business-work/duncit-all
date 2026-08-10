@@ -14,8 +14,24 @@ const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
   const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
   const isHost = kind === 'HOST_PAYMENT';
   const partyLabel = isHost ? 'Host amount (pool remainder)' : 'Venue amount (booked slot price)';
+  // Attendance is what the payout stands on: a pod settles on the seats a host
+  // scanned in, so "collected" and "settled on" can legitimately differ. Both
+  // are shown — a reviewer seeing only the smaller number would read a correct
+  // payout as a shortfall. Frozen at completion, so a later scan cannot move it.
+  const attendanceLines: BreakdownLine[] =
+    Number(b.booked_seats || 0) > 0
+      ? [
+          {
+            key: 'attendance',
+            label: 'Attendance at completion',
+            value: `${Number(b.attended_seats || 0)} of ${Number(b.booked_seats || 0)} seats`,
+          },
+          { key: 'attended-total', label: 'Settled on (attended seats)', value: money(b.attended_total) },
+        ]
+      : [];
   return [
     { key: 'collected', label: 'Customer collected', value: money(b.collected_total) },
+    ...attendanceLines,
     { key: 'gst', label: `− GST (${Number(b.gst_pct || 0).toFixed(2)}%)`, value: `− ${money(b.gst_amount)}` },
     { key: 'fee', label: `− Platform fee (${Number(b.platform_fee_pct || 0).toFixed(2)}%)`, value: `− ${money(b.platform_fee_amount)}` },
     { key: 'pool', label: 'Remaining pool', value: money(b.pool_amount) },

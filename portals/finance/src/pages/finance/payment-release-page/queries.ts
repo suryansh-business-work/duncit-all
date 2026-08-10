@@ -41,6 +41,9 @@ export const PAYMENT_RELEASE_REQUESTS = gql`
         commission_pct
         commission_amount
         duncit_revenue
+        attended_seats
+        booked_seats
+        attended_total
       }
     }
   }

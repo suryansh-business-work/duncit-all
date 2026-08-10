@@ -235,6 +235,38 @@ async function pdfFor(t: ITicket): Promise<Buffer> {
   );
 }
 
+/**
+ * Tell the attendee their attendance was recorded.
+ *
+ * Attendance now decides what a completed pod pays out, so it is no longer a
+ * private note the host keeps — the person it is about is told, and can say
+ * something if it is wrong before completion freezes it. Best-effort: the scan
+ * at the door is what counts, and a notification failure must never make a host
+ * think the guest was not let in.
+ */
+async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
+  try {
+    const [{ notificationService }, { PodModel }] = await Promise.all([
+      import('@modules/engagement/notification/notification.service'),
+      import('@modules/pods/pod/pod.model'),
+    ]);
+    const pod = await PodModel.findById(ticket.pod_id).select('pod_title').lean();
+    await notificationService.create({
+      title: 'Attendance marked',
+      body: `Your attendance is marked for ${(pod as any)?.pod_title ?? 'this pod'}.`,
+      link_url: `/pod/${String(ticket.pod_id)}`,
+      scope: 'USER',
+      target_user_ids: [String(ticket.user_id)],
+    });
+  } catch (err) {
+    logs.server.error('ticket.service', 'notifyAttendanceMarked', {
+      error: err,
+      msg: 'attendance notification failed',
+      ticket_id: String((ticket as any)?._id ?? ''),
+    });
+  }
+}
+
 export const ticketService = {
   toPub,
 
@@ -488,6 +520,7 @@ export const ticketService = {
       t.checked_in_at = new Date();
       t.checked_in_by = new Types.ObjectId(hostUserId);
       await t.save();
+      await notifyAttendanceMarked(t);
     }
 
     const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
@@ -540,7 +573,61 @@ export const ticketService = {
       t.checked_in_at = new Date();
       t.checked_in_by = new Types.ObjectId(adminId);
       await t.save();
+      await notifyAttendanceMarked(t);
     }
+    return toPub(t);
+  },
+
+  /**
+   * Club Admin marks a member present WITHOUT a scan.
+   *
+   * The host's path is deliberately QR-only: a scan is proof the person was at
+   * the door. This is the override for when that proof cannot be produced — a
+   * dead phone, a lost ticket — and it is limited to the club's admin, who is
+   * accountable for the club rather than for this pod's payout. The host, who
+   * IS paid on the result, can never mark someone present by hand.
+   *
+   * Every forced mark is stamped with who forced it (`checked_in_by`) and the
+   * member is notified, so it is contestable rather than silent.
+   */
+  async clubAdminForceAttendance(
+    podDocId: string,
+    membershipId: string,
+    actor: { id: string; roles: string[] }
+  ) {
+    const { clubAdminService } = await import('@modules/clubs/clubAdmin/clubAdmin.service');
+    await clubAdminService.assertClubAdminForPod(actor as any, podDocId);
+
+    if (!Types.ObjectId.isValid(membershipId)) {
+      throw new GraphQLError('Invalid member', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const membership = await PodMemberModel.findOne({
+      _id: new Types.ObjectId(membershipId),
+      pod_id: new Types.ObjectId(podDocId),
+      status: 'JOINED',
+    });
+    if (!membership) {
+      throw new GraphQLError('This member is not on the pod', { extensions: { code: 'NOT_FOUND' } });
+    }
+
+    const t = await TicketModel.findOne({ membership_id: membership._id });
+    if (!t) throw new GraphQLError('Ticket not found', { extensions: { code: 'NOT_FOUND' } });
+    if (t.status === 'CANCELLED') {
+      throw new GraphQLError('Ticket is cancelled', { extensions: { code: 'BAD_REQUEST' } });
+    }
+    if (t.status === 'CHECKED_IN') return toPub(t);
+
+    t.status = 'CHECKED_IN';
+    t.checked_in_at = new Date();
+    t.checked_in_by = new Types.ObjectId(actor.id);
+    await t.save();
+    await notifyAttendanceMarked(t);
+    logs.server.info('ticket.service', 'clubAdminForceAttendance', {
+      msg: 'attendance forced without a scan',
+      pod_doc_id: podDocId,
+      membership_id: membershipId,
+      actor_id: actor.id,
+    });
     return toPub(t);
   },
 };

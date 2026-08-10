@@ -23,6 +23,7 @@ export const PODS = gql`
       reel_url
       pod_hits
       pod_attendees
+      attendance { attended_seats booked_seats recorded }
       pod_description
       pod_date_time
       pod_end_date_time
@@ -67,6 +68,8 @@ export interface PodRow {
   pod_images_and_videos?: { url: string; type: string }[] | null;
   pod_hits: number;
   pod_attendees?: string[] | null;
+  /** Seats scanned in at the door — what a completed pod settles on. */
+  attendance?: { attended_seats: number; booked_seats: number; recorded: boolean } | null;
   pod_date_time?: string | null;
   pod_type: string;
   pod_amount: number;
@@ -108,6 +111,7 @@ const POD_ROW_FIELDS = gql`
     reel_url
     pod_hits
     pod_attendees
+    attendance { attended_seats booked_seats recorded }
     pod_description
     pod_date_time
     pod_end_date_time

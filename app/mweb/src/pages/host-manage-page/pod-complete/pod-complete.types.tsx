@@ -40,11 +40,28 @@ export interface PodFinanceWaterfall {
   host_earn_pct: number;
 }
 
+/** One booking on the completion roster. Attendance comes from the door scan,
+ * so `attended` is true only once a host has scanned that ticket. */
+export interface PodSettlementAttendee {
+  membership_id: string;
+  user_id: string;
+  name: string;
+  seats: number;
+  attended: boolean;
+  attended_at: string | null;
+  amount: number;
+}
+
 export interface PodSettlement {
   currency_symbol: string;
   collected_total: number;
   has_venue: boolean;
-  /** Guests who actually paid — the host's free seat excluded. */
+  /** Seats the settlement was computed on — the ones scanned in. */
   paying_attendees: number;
+  attended_seats: number;
+  booked_seats: number;
+  /** Money from the attended bookings: what the payout was computed from. */
+  attended_total: number;
+  attendees: PodSettlementAttendee[];
   waterfall: PodFinanceWaterfall;
 }

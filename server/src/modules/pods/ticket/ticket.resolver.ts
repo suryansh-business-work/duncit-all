@@ -46,5 +46,19 @@ export const eventTicketResolvers = {
       const u = requireAuth(ctx);
       return ticketService.hostScan(args.pod_doc_id, args.token, u.id);
     },
+    // Authorisation is the service's own assertClubAdminForPod — CLUB_ADMIN is
+    // a membership of a club, not a role on the user, so requireRole cannot
+    // express it.
+    clubAdminForceAttendance: (
+      _p: unknown,
+      args: { pod_doc_id: string; membership_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return ticketService.clubAdminForceAttendance(args.pod_doc_id, args.membership_id, {
+        id: u.id,
+        roles: u.roles ?? [],
+      });
+    },
   },
 };

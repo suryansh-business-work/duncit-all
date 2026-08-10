@@ -1,5 +1,6 @@
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { AttendanceChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import PodActionButtons from './PodActionButtons';
 import type { PodRow } from './queries';
@@ -159,6 +160,19 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       valueGetter: (p) => (p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'),
     },
     { field: 'no_of_spots', headerName: 'Spots', width: 100, valueGetter: spotsValue },
+    {
+      // What a completed pod is settled on — booked seats alone no longer
+      // explain the payout, so the scanned count sits beside them.
+      field: 'attendance',
+      headerName: 'Attendance',
+      sortable: false,
+      width: 150,
+      cellRenderer: (p: PodRow) => <AttendanceChip attendance={p.attendance} />,
+      valueGetter: (p: PodRow) =>
+        p.attendance?.booked_seats
+          ? `${p.attendance.attended_seats}/${p.attendance.booked_seats}`
+          : '',
+    },
     { field: 'pod_hits', headerName: 'Hits', width: 90, cellRenderer: renderHits, valueGetter: (p) => p.pod_hits },
     {
       field: 'is_active',

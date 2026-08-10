@@ -38,6 +38,18 @@ export interface IPaymentReleaseBreakdown {
   commission_pct: number;
   commission_amount: number;
   duncit_revenue: number;
+  /**
+   * The attendance this payout was computed from, frozen at completion.
+   *
+   * A pod settles on the seats a host scanned in, so without these a reviewer
+   * reading the release later cannot tell a small payout from a wrong one —
+   * and re-deriving it is impossible, because a later scan would change the
+   * answer. 0 on v1/v2 docs written before attendance drove the money.
+   */
+  attended_seats: number;
+  booked_seats: number;
+  /** Money from the attended bookings — the amount the waterfall started from. */
+  attended_total: number;
 }
 
 export interface IPaymentRelease extends Document {
@@ -98,6 +110,9 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     commission_pct: { type: Number, default: 0 },
     commission_amount: { type: Number, default: 0 },
     duncit_revenue: { type: Number, default: 0 },
+    attended_seats: { type: Number, default: 0 },
+    booked_seats: { type: Number, default: 0 },
+    attended_total: { type: Number, default: 0 },
   },
   { _id: false }
 );

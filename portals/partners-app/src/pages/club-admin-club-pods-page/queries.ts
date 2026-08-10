@@ -47,6 +47,7 @@ export const CLUB_ADMIN_PODS = gql`
       products_enabled
       product_requests { product_id quantity }
       pod_attendees
+      attendance { attended_seats booked_seats recorded }
       is_active
       completed_at
     }
@@ -86,6 +87,7 @@ const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     products_enabled
     product_requests { product_id quantity }
     pod_attendees
+    attendance { attended_seats booked_seats recorded }
     is_active
     is_deleted
     venue_approval_status

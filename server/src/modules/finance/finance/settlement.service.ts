@@ -8,7 +8,6 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
 import {
   computePodFinanceBreakdown,
-  payingSeats,
   type BreakdownOptions,
   type BreakdownRates,
   type PodFinanceBreakdown,
@@ -75,10 +74,18 @@ export interface PodSettlement {
   venue: SettlementParty | null;
   has_venue: boolean;
   waterfall: SettlementWaterfall;
-  /** SEATS that attended and paid — the host's own free seat excluded. Seats,
-   * not people: one booking can cover several, and a completed pod settles on
-   * what it COLLECTED, which is priced per seat. */
+  /** SEATS the settlement was computed on — the ones a host scanned in. Kept
+   * under its original name for older consumers; `attended_seats` is the same
+   * number under the name that now describes it. */
   paying_attendees: number;
+  /** Seats a host scanned in. The settlement basis. */
+  attended_seats: number;
+  /** Seats booked on the pod, attended or not — the denominator beside it. */
+  booked_seats: number;
+  /** Money from the attended bookings: what the waterfall was computed from. */
+  attended_total: number;
+  /** Every JOINED booking, attended first — the completion roster. */
+  attendees: SettlementAttendee[];
 }
 
 /** Engine version stamped on new settlement snapshots — v2 = venue slot price
@@ -94,6 +101,114 @@ export async function collectedForPod(podId: string | Types.ObjectId): Promise<n
     { $group: { _id: null, total: { $sum: '$total' } } },
   ]);
   return round2(rows[0]?.total ?? 0);
+}
+
+/** One booking on the completion roster: who, how many seats, whether a host
+ * scanned them in, and what that booking paid. */
+export interface SettlementAttendee {
+  membership_id: string;
+  user_id: string;
+  name: string;
+  seats: number;
+  attended: boolean;
+  attended_at: string | null;
+  /** What this booking paid. Zero for a free pod or an unpaid legacy row. */
+  amount: number;
+}
+
+export interface PodAttendanceRoster {
+  rows: SettlementAttendee[];
+  attended_seats: number;
+  booked_seats: number;
+  /** Money from bookings a host scanned in — the settlement basis. */
+  attended_total: number;
+  /** Money from every successful payment on the pod, attended or not. */
+  collected_total: number;
+}
+
+/**
+ * Who turned up, and what their bookings paid.
+ *
+ * Attendance is NOT stored on the membership: it happens when a host scans a
+ * ticket at the door, so the EventTicket is the only record of it (the same
+ * source `attendanceForMembership` reads for a member's own history). A booking
+ * counts as attended when its ticket reads CHECKED_IN.
+ *
+ * Seats, not people: one booking can admit several, and the money it paid is
+ * priced per seat — so a roster counted in people could never reconcile against
+ * the amount collected.
+ */
+export async function podAttendanceRoster(podDocId: string): Promise<PodAttendanceRoster> {
+  const podId = new Types.ObjectId(String(podDocId));
+  const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
+  const { TicketModel } = await import('@modules/pods/ticket/ticket.model');
+
+  // BACKED_OUT bookings are gone from the pod and were refunded on their own
+  // path — they are neither owed a seat here nor part of what completion pays.
+  const members = await PodMemberModel.find({ pod_id: podId, status: 'JOINED' })
+    .select('_id user_id seats payment_id')
+    .lean();
+
+  const memberIds = members.map((m: any) => m._id);
+  const [tickets, payments, users] = await Promise.all([
+    TicketModel.find({ membership_id: { $in: memberIds }, status: 'CHECKED_IN' })
+      .select('membership_id checked_in_at')
+      .lean(),
+    PaymentModel.find({ pod_id: podId, status: 'SUCCESS' }).select('_id total').lean(),
+    UserModel.find({ _id: { $in: members.map((m: any) => m.user_id) } })
+      .select('_id profile.first_name profile.last_name')
+      .lean(),
+  ]);
+
+  const checkedIn = new Map(
+    tickets.map((t: any) => [String(t.membership_id), t.checked_in_at ?? null])
+  );
+  const paidBy = new Map(payments.map((p: any) => [String(p._id), Number(p.total) || 0]));
+  const nameOf = new Map(
+    users.map((u: any) => [
+      String(u._id),
+      `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+    ])
+  );
+
+  let attendedSeats = 0;
+  let bookedSeats = 0;
+  let attendedTotal = 0;
+  const rows: SettlementAttendee[] = members.map((m: any) => {
+    const id = String(m._id);
+    const seats = Math.max(1, Math.floor(Number(m.seats) || 1));
+    const attended = checkedIn.has(id);
+    const amount = m.payment_id ? (paidBy.get(String(m.payment_id)) ?? 0) : 0;
+    bookedSeats += seats;
+    if (attended) {
+      attendedSeats += seats;
+      attendedTotal += amount;
+    }
+    return {
+      membership_id: id,
+      user_id: String(m.user_id),
+      name: nameOf.get(String(m.user_id)) || 'Member',
+      seats,
+      attended,
+      attended_at: attended ? (checkedIn.get(id)?.toISOString?.() ?? null) : null,
+      amount: round2(amount),
+    };
+  });
+
+  // Attended first, then the people still to be scanned — the completion screen
+  // reads top-down and the unmarked rows are the ones that need an action.
+  rows.sort((a, b) => {
+    if (a.attended !== b.attended) return a.attended ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return {
+    rows,
+    attended_seats: attendedSeats,
+    booked_seats: bookedSeats,
+    attended_total: round2(attendedTotal),
+    collected_total: round2(payments.reduce((sum: number, p: any) => sum + (Number(p.total) || 0), 0)),
+  };
 }
 
 /**
@@ -204,11 +319,16 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
   if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
   const fs = await getFinanceSettings();
-  const collected = await collectedForPod(pod._id);
+  const roster = await podAttendanceRoster(String(pod._id));
+  // THE BASIS IS ATTENDANCE, not what was collected. A pod settles on the
+  // bookings a host actually scanned in — money from a no-show is not paid out
+  // to the host or the venue, even though it was collected and is not refunded.
+  // `collected_total` is still reported so the completion screen can show both
+  // and the difference is visible rather than silent.
+  const collected = roster.collected_total;
+  const basis = roster.attended_total;
   // The bill is evidence (and the legacy venue-amount fallback) — it may
-  // legitimately exceed a small pod's collection (offline venue costs). The
-  // paise engine clamps the venue amount to the pool, so a large bill can never
-  // create money; rejecting it here used to dead-end free/low-collection pods.
+  // legitimately exceed a small pod's collection (offline venue costs).
   const venueBill = Math.max(0, round2(venueBillAmount));
 
   const hasVenue = !!pod.venue_id;
@@ -218,7 +338,15 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
   });
   const venueAmount = await venueAmountForPod(pod, venueBill);
   const waterfall = toWaterfall(
-    computePodFinanceBreakdown(toPaise(collected), Math.max(0, toPaise(venueAmount)), rates)
+    computePodFinanceBreakdown(toPaise(basis), Math.max(0, toPaise(venueAmount)), rates, {
+      // The venue is owed its BOOKED slot price whatever the pod took at the
+      // door — it held the room. Clamping it to the pool is what silently paid a
+      // venue less than the price it agreed, and settling on attendance only
+      // makes that pool smaller. Unclamped, a shortfall lands where it belongs:
+      // on the host's side, shown as a negative host amount rather than quietly
+      // taken off the venue.
+      clampVenueToPool: false,
+    })
   );
 
   // Legacy party lines, derived from the waterfall so older consumers keep a
@@ -260,10 +388,14 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
     venue,
     has_venue: hasVenue,
     waterfall,
-    // The head count behind `collected` — the host sits in pod_attendees and
-    // never paid, so their seat is dropped. Counted in SEATS, because `collected`
-    // is priced per seat: a person count beside it could never reconcile on a pod
-    // where anyone booked for more than themselves.
-    paying_attendees: payingSeats(pod.pod_attendees, pod.pod_hosts_id, pod.extra_seats),
+    // The head count behind the settlement. Now the seats a host SCANNED IN,
+    // because that is what the waterfall above was computed from — reporting
+    // booked seats beside an attendance-based payout is the mismatch that made
+    // completion look wrong.
+    paying_attendees: roster.attended_seats,
+    attended_seats: roster.attended_seats,
+    booked_seats: roster.booked_seats,
+    attended_total: roster.attended_total,
+    attendees: roster.rows,
   };
 }

@@ -2,6 +2,7 @@ import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { MWEB_BUNDLE } from './bundles/mweb';
+import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { SHELL_BUNDLE } from './bundles/shell';
 import { WEBSITE_BUNDLE } from './bundles/website';
 
@@ -26,13 +27,21 @@ import { WEBSITE_BUNDLE } from './bundles/website';
  * Each surface still SHIPS its bundle — it re-exports the slice it renders, so
  * the copy is compiled into that build and available offline.
  */
-export { GRIEVANCE_BUNDLE, MEDIA_BUNDLE, MWEB_BUNDLE, SHELL_BUNDLE, WEBSITE_BUNDLE };
+export {
+  GRIEVANCE_BUNDLE,
+  MEDIA_BUNDLE,
+  MWEB_BUNDLE,
+  POD_PRODUCT_BUNDLE,
+  SHELL_BUNDLE,
+  WEBSITE_BUNDLE,
+};
 
 /** Every client bundle, by the surface that ships it. */
 export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   grievance: GRIEVANCE_BUNDLE,
   media: MEDIA_BUNDLE,
   mweb: MWEB_BUNDLE,
+  podProduct: POD_PRODUCT_BUNDLE,
   shell: SHELL_BUNDLE,
   website: WEBSITE_BUNDLE,
 };

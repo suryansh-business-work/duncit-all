@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
+import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 import {
   CreatePodStepper,
   blankCreatePodForm,
@@ -81,16 +82,10 @@ const CREATE_POD_OPTIONS = gql`
       min_pax
     }
     availablePodProducts {
-      id
-      product_name
-      unit_cost
-      available_count
-      image_url
-      super_category_id
-      sub_category_id
-      categories { super_category_id sub_category_id }
+      ...PodPickerProductFields
     }
   }
+  ${POD_PICKER_PRODUCT_FIELDS}
 `;
 const MY_POD_DRAFT = gql`
   query MyPodDraftForEdit($draft_id: ID!) {

@@ -11,7 +11,6 @@ function clearPhysicalFields(values: PodFormValues, setValue: UseFormSetValue<Po
   if (values.location_id) setValue('location_id', '');
   if (values.zone_name) setValue('zone_name', '');
   if (values.place_charges.length > 0) setValue('place_charges', []);
-  if (values.products_enabled) setValue('products_enabled', false);
   if (values.product_requests.length > 0) setValue('product_requests', []);
 }
 
@@ -27,7 +26,7 @@ function clearVirtualFields(values: PodFormValues, setValue: UseFormSetValue<Pod
  * - clears venue/meeting/place/product fields when the pod mode flips
  * - resets venue when the club no longer links the selected venue
  * - forces pod_amount = 0 for FREE pod types
- * - clears product requests when products are disabled
+ * - drops product rows the newly-selected club does not offer
  */
 export default function CascadeEffect() {
   const { clubs, products, getClubVenueIds } = usePodFormData();
@@ -36,7 +35,6 @@ export default function CascadeEffect() {
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
   const podType = useWatch({ control, name: 'pod_type' });
-  const productsEnabled = useWatch({ control, name: 'products_enabled' });
 
   useEffect(() => {
     const values = getValues();
@@ -63,12 +61,6 @@ export default function CascadeEffect() {
       setValue('pod_amount', 0);
     }
   }, [podType]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!productsEnabled && getValues('product_requests').length > 0) {
-      setValue('product_requests', []);
-    }
-  }, [productsEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Switching club switches which products the pod may carry, so rows the new
   // club does not offer are dropped. Without this they survive unrenderable and

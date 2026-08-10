@@ -5,21 +5,8 @@ import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
 import { ChipArrayField } from '@/components/create-pod/ChipArrayField';
 import { ClubSearchField } from '@/components/create-pod/ClubSearchField';
 import { PlaceChargesField } from '@/components/create-pod/PlaceChargesField';
-import {
-  ProductRequestsField,
-  productRequestTotal,
-} from '@/components/create-pod/ProductRequestsField';
-import type {
-  CreatePodProduct,
-  PodPlaceCharge,
-  PodProductRequest,
-} from '@/components/create-pod/create-pod.types';
+import type { PodPlaceCharge } from '@/components/create-pod/create-pod.types';
 import { renderWithProviders } from '@/utils/test-utils';
-
-const products: CreatePodProduct[] = [
-  { id: 'p1', product_name: 'Water', unit_cost: 20, available_count: 10 },
-  { id: 'p2', product_name: 'Cap', unit_cost: 100, available_count: 5 },
-];
 
 describe('ChipSelectField', () => {
   it('selects options and shows error + empty hint states', () => {
@@ -142,44 +129,6 @@ describe('PlaceChargesField', () => {
   });
 });
 
-function ProductHarness({ list = products }: { list?: CreatePodProduct[] }) {
-  const [value, setValue] = useState<PodProductRequest[]>([]);
-  return <ProductRequestsField value={value} onChange={setValue} products={list} error="" />;
-}
-
-describe('ProductRequestsField', () => {
-  it('totals selected requests, ignoring unknown products and zero quantities', () => {
-    expect(productRequestTotal([{ product_id: 'p1', quantity: 2 }], products)).toBe(40);
-    expect(productRequestTotal([{ product_id: 'gone', quantity: 2 }], products)).toBe(0);
-    expect(productRequestTotal([{ product_id: 'p1', quantity: 0 }], products)).toBe(0);
-  });
-
-  it('adds rows, selects a product, steps quantity and removes', () => {
-    renderWithProviders(<ProductHarness />);
-    fireEvent.press(screen.getByTestId('product-add'));
-    fireEvent.press(screen.getByTestId('product-add'));
-    // Editing row 0 leaves row 1 untouched (the map's non-matching branch).
-    fireEvent.press(screen.getByTestId('product-0-p1'));
-    fireEvent.press(screen.getByTestId('product-qty-inc-0'));
-    expect(screen.getByTestId('product-qty-0')).toHaveTextContent('2');
-    fireEvent.press(screen.getByTestId('product-qty-dec-0'));
-    fireEvent.press(screen.getByTestId('product-qty-dec-0'));
-    expect(screen.getByTestId('product-qty-0')).toHaveTextContent('1');
-    fireEvent.press(screen.getByTestId('product-remove-1'));
-    fireEvent.press(screen.getByTestId('product-remove-0'));
-    expect(screen.queryByTestId('product-qty-0')).toBeNull();
-  });
-
-  it('shows the error message and the empty-products hint', () => {
-    renderWithProviders(
-      <ProductRequestsField
-        value={[{ product_id: '', quantity: 1 }]}
-        onChange={jest.fn()}
-        products={[]}
-        error="Add at least one product"
-      />,
-    );
-    expect(screen.getByTestId('product-error')).toBeOnTheScreen();
-    expect(screen.getByTestId('product-0-empty')).toBeOnTheScreen();
-  });
-});
+// The ProductRequestsField suite that lived here is gone with the component:
+// Step 4's products block is now the full-page picker (product-picker/), whose
+// derivations are covered in @duncit/utils.

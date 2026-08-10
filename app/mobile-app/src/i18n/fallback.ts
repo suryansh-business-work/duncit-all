@@ -3,6 +3,7 @@ import {
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
   MWEB_BUNDLE,
+  POD_PRODUCT_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -18,8 +19,14 @@ import {
  * Add a key to the shared bundle AND to Admin > Localization > Translations
  * BEFORE using it.
  */
-// Same grievance namespace mWeb ships — one copy, two surfaces (rule 27).
-export const NATIVE_FALLBACK: NestedCatalogue = { ...MWEB_BUNDLE, ...GRIEVANCE_BUNDLE };
+// Same grievance and pod-product namespaces mWeb ships — one copy, two surfaces
+// (rule 27). `podProduct.*` is also what the MUI picker resolves in the admin
+// and Club Admin portals, so all four surfaces read the same sentences.
+export const NATIVE_FALLBACK: NestedCatalogue = {
+  ...MWEB_BUNDLE,
+  ...GRIEVANCE_BUNDLE,
+  ...POD_PRODUCT_BUNDLE,
+};
 
 /** Flat, runtime-ready form of the bundle above. */
 export const NATIVE_FALLBACK_FLAT = flattenCatalogue(NATIVE_FALLBACK);

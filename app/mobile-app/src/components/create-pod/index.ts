@@ -2,7 +2,14 @@ export { ChipSelectField } from './ChipSelectField';
 export { ChipArrayField } from './ChipArrayField';
 export { ClubSearchField } from './ClubSearchField';
 export { PlaceChargesField } from './PlaceChargesField';
-export { ProductRequestsField, productRequestTotal } from './ProductRequestsField';
+export {
+  AttachedProductRow,
+  PodProductsField,
+  ProductPickerCard,
+  ProductPickerDialog,
+  ProductPickerFilters,
+  ProductQuantityBar,
+} from './product-picker';
 export { SlotPicker } from './SlotPicker';
 export { VenuePicker } from './VenuePicker';
 export { VenueContactCard } from './VenueContactCard';

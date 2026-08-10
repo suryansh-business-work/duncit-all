@@ -4,9 +4,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Button,
-  FormControlLabel,
   Stack,
-  Switch,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -52,9 +50,8 @@ function buildSections(isVirtual: boolean, showProducts: boolean): SectionDef[] 
 
 export default function PodSections() {
   const { config, onPickImage, onPickVideo } = usePodFormData();
-  const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
+  const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
-  const productsEnabled = useWatch({ control, name: 'products_enabled' });
   const isVirtual = podMode === 'VIRTUAL';
   const sections = buildSections(isVirtual, config.showProducts).map((section, index) => ({
     ...section,
@@ -62,8 +59,7 @@ export default function PodSections() {
   }));
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
-  const expandable = sections.filter((section) => section.id !== 'products' || productsEnabled);
-  const allOpen = expandable.length > 0 && expandable.every((section) => expanded.has(section.id));
+  const allOpen = sections.length > 0 && sections.every((section) => expanded.has(section.id));
 
   const toggleOne = (id: string, open: boolean) =>
     setExpanded((prev) => {
@@ -115,15 +111,11 @@ export default function PodSections() {
         />
       )}
       {sections.map((section) => {
-        const isProducts = section.id === 'products';
         return (
           <Accordion
             key={section.id}
-            expanded={isProducts ? productsEnabled && expanded.has(section.id) : expanded.has(section.id)}
-            onChange={(_, open) => {
-              if (isProducts && !productsEnabled) return;
-              toggleOne(section.id, open);
-            }}
+            expanded={expanded.has(section.id)}
+            onChange={(_, open) => toggleOne(section.id, open)}
             disableGutters
             square
             sx={{
@@ -137,28 +129,14 @@ export default function PodSections() {
               '&.Mui-expanded': { mb: 1.5 },
             }}
           >
+            {/* The products section used to carry an "Enable" switch that both
+                gated this accordion and drove `products_enabled`. Attaching a
+                product IS enabling them now, so the switch is gone and the flag
+                is derived in buildPodInput — this section opens like any other. */}
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
-                {isProducts && (
-                  <FormControlLabel
-                    onClick={(event) => event.stopPropagation()}
-                    onFocus={(event) => event.stopPropagation()}
-                    control={
-                      <Switch
-                        checked={productsEnabled}
-                        onChange={(event) => {
-                          setValue('products_enabled', event.target.checked);
-                          toggleOne('products', event.target.checked);
-                        }}
-                      />
-                    }
-                    label="Enable"
-                  />
-                )}
-              </Stack>
+              <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
             </AccordionSummary>
-            <AccordionDetails>{(!isProducts || productsEnabled) && section.render()}</AccordionDetails>
+            <AccordionDetails>{section.render()}</AccordionDetails>
           </Accordion>
         );
       })}

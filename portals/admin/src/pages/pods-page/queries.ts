@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 
 export const PODS = gql`
   query Pods($filter: PodFilterInput) {
@@ -219,26 +220,15 @@ export const APPROVED_VENUES = gql`
 export const INVENTORY_PRODUCTS = gql`
   query InventoryProductsForPods {
     inventoryProducts(activeOnly: true) {
-      id
-      product_name
-      sku
-      unit_cost
+      ...PodPickerProductFields
       inventory_count
       requested_count
-      available_count
       is_active
       listing_review_status
       listing_submitted_by_name
-      super_category_id
-      category_id
-      sub_category_id
-      categories {
-        super_category_id
-        category_id
-        sub_category_id
-      }
     }
   }
+  ${POD_PICKER_PRODUCT_FIELDS}
 `;
 export const USERS = gql`
   query AllUsersForPods {

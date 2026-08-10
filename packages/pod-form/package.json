@@ -11,6 +11,7 @@
   "peerDependencies": {
     "@apollo/client": ">=3",
     "@duncit/category": "workspace:*",
+    "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@hookform/resolvers": ">=3",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@mui/icons-material": "^5.15.18",

@@ -3,6 +3,7 @@ import {
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
   MWEB_BUNDLE,
+  POD_PRODUCT_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
@@ -19,10 +20,15 @@ import {
  * BEFORE using it.
  */
 // The grievance form renders here, in native AND on the website, so its copy
-// is its own namespace rather than a second copy inside mweb.*. The two
-// namespaces are disjoint (`mweb` and `grievance`), so a shallow merge is the
-// whole of it — no key can shadow another.
-export const MWEB_FALLBACK: NestedCatalogue = { ...MWEB_BUNDLE, ...GRIEVANCE_BUNDLE };
+// is its own namespace rather than a second copy inside mweb.*. The pod product
+// picker is the same story across mWeb, native and the two portals. The
+// namespaces are disjoint (`mweb`, `grievance`, `podProduct`), so a shallow
+// merge is the whole of it — no key can shadow another.
+export const MWEB_FALLBACK: NestedCatalogue = {
+  ...MWEB_BUNDLE,
+  ...GRIEVANCE_BUNDLE,
+  ...POD_PRODUCT_BUNDLE,
+};
 
 /** Flat, runtime-ready form of the bundle above. */
 export const MWEB_FALLBACK_FLAT = flattenCatalogue(MWEB_FALLBACK);

@@ -35,7 +35,7 @@ const placeChargeSchema = z.object({
 });
 
 const productRequestSchema = z.object({
-  product_id: z.string().min(1, 'Select product'),
+  product_id: z.string().min(1, 'Please select a product to continue.'),
   quantity: z.preprocess(
     toNumber,
     z.number({ invalid_type_error: 'Quantity required' }).min(1).max(10000),
@@ -109,13 +109,17 @@ function refineReel(values: PodFormValues, ctx: z.RefinementCtx, config: PodForm
   }
 }
 
-/** Duncit product-request rules (config-gated). */
+/** Duncit product-request rules (config-gated).
+ *
+ * The two rules that used to live here both policed the "Attach products"
+ * switch against the row list — switch on with no rows, switch off with rows.
+ * Neither state exists any more: `products_enabled` is derived from the rows in
+ * buildPodInput, so the list IS the flag. What remains is the row rule in
+ * `productRequestSchema`, which the picker also makes unreachable but is kept as
+ * the invariant for anything else building these values. */
 function refineProducts(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
-  if (config.showProducts && values.products_enabled && values.product_requests.length < 1) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Select at least one Duncit product' });
-  }
-  if (config.showProducts && !values.products_enabled && values.product_requests.length > 0) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Remove the Duncit products' });
+  if (config.showProducts && values.pod_mode === 'VIRTUAL' && values.product_requests.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'A virtual pod cannot carry products' });
   }
 }
 

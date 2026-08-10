@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 
 export const CLUB_ADMIN_POD_LOOKUPS = gql`
   query ClubAdminPodLookups {
@@ -11,21 +12,11 @@ export const CLUB_ADMIN_POD_LOOKUPS = gql`
     }
     myVenues { id venue_name city locality status is_active }
     availablePodProducts {
-      id
-      product_name
-      unit_cost
-      available_count
+      ...PodPickerProductFields
       listing_review_status
-      super_category_id
-      category_id
-      sub_category_id
-      categories {
-        super_category_id
-        category_id
-        sub_category_id
-      }
     }
   }
+  ${POD_PICKER_PRODUCT_FIELDS}
 `;
 
 export const CLUB_ADMIN_PODS = gql`

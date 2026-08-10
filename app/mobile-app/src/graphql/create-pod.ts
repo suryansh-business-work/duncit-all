@@ -88,6 +88,15 @@ export const CreatePodOptionsDocument = gql(`
       product_name
       unit_cost
       available_count
+      brand_name
+      sku
+      short_description
+      description
+      image_url
+      images
+      unit_type
+      weight_volume
+      tags
       super_category_id
       sub_category_id
       categories {

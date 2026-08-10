@@ -150,13 +150,9 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
 
 /** Products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
-  if (values.products_enabled && values.product_requests.length === 0) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['product_requests'],
-      message: t('mweb.createPod.validation.productsRequired'),
-    });
-  }
+  // Products are optional and `products_enabled` is derived from the rows, so
+  // there is no longer a "switch on but nothing chosen" state to catch here.
+  // The per-row rule in the schema is what guards an incomplete association.
   if (!hasImageLine(values.media_text)) {
     ctx.addIssue({
       code: 'custom',
@@ -231,7 +227,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       product_requests: z
         .array(
           z.object({
-            product_id: z.string().min(1, t('mweb.createPod.validation.productRequired')),
+            product_id: z.string().min(1, t('podProduct.selectFirst')),
             quantity: z.number().min(1).max(10000),
           }),
         )
@@ -364,8 +360,13 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
-    products_enabled: values.products_enabled,
-    product_requests: values.products_enabled ? values.product_requests : [],
+    // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
+    // is open exactly when it carries products. Guarding on the rows rather than
+    // the flag also means a stale draft that still holds `products_enabled: true`
+    // with nothing attached publishes as closed instead of half-configured.
+    // mWeb twin.
+    products_enabled: values.product_requests.length > 0,
+    product_requests: values.product_requests,
     is_active: true,
   };
 }

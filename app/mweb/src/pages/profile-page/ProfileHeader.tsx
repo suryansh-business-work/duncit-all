@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ShareIcon from '@mui/icons-material/Share';
 import FollowListDialog from '../../components/FollowListDialog';
@@ -80,9 +81,17 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           onChanged={onChanged}
         />
         <Box sx={{ width: '100%', textAlign: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-            {displayName}
-          </Typography>
+          {/* The tick beside the NAME is now the only thing that says the email
+              is verified — the "Your email is verified." band below is gone.
+              Native shows the same mark in the same place (rule 27). */}
+          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+              {displayName}
+            </Typography>
+            {me.is_email_verified && (
+              <VerifiedIcon color="primary" sx={{ fontSize: 20 }} titleAccess="Email verified" />
+            )}
+          </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {me.email ?? `@${me.user_id}`}
           </Typography>

@@ -5,6 +5,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { VenueModel } from './venue.model';
 import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
+import { buildStudioPodSummary } from '@modules/pods/pod/studio-summary';
 
 /**
  * Partners → Venues → Pods: every pod booked at the caller's venues, ALL
@@ -16,7 +17,14 @@ import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 const VENUE_POD_LIMIT = 500;
 
 export const venuePodsService = {
-  async listForOwner(userId: string, venueId?: string | null) {
+  /**
+   * The caller's venues, optionally narrowed to one they own.
+   *
+   * One helper for the list and the summary: two scoping rules for the same
+   * data is how one of them ends up wrong, and this one decides what a venue
+   * owner may read.
+   */
+  async ownedVenues(userId: string, venueId?: string | null) {
     if (venueId && !Types.ObjectId.isValid(venueId)) {
       throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
     }
@@ -26,6 +34,11 @@ export const venuePodsService = {
     if (venueId && venues.length === 0) {
       throw new GraphQLError('You do not own this venue', { extensions: { code: 'FORBIDDEN' } });
     }
+    return venues;
+  },
+
+  async listForOwner(userId: string, venueId?: string | null) {
+    const venues = await this.ownedVenues(userId, venueId);
     if (venues.length === 0) return [];
     const venueNameById = new Map<string, string>(
       venues.map((v: any) => [String(v._id), v.venue_name]),
@@ -74,5 +87,23 @@ export const venuePodsService = {
       cancelled_at: pod.deleted_at?.toISOString?.() ?? null,
       created_at: pod.created_at?.toISOString?.() ?? '',
     }));
+  },
+  /**
+   * Header figures for the Venue Studio pods section.
+   *
+   * Computed over EVERY approved booking at the owner's venues, while
+   * listForOwner stays capped at 500 rows. The apps used to fold the capped
+   * list themselves, so an owner past that cap saw a total of 500 and a fill
+   * rate drawn from a truncated set — under a caption promising otherwise.
+   */
+  async summaryForOwner(userId: string, venueId?: string | null) {
+    const venues = await this.ownedVenues(userId, venueId);
+    return buildStudioPodSummary(
+      {
+        venue_id: { $in: venues.map((v: any) => v._id) },
+        venue_approval_status: 'APPROVED',
+      },
+      venues.length,
+    );
   },
 };

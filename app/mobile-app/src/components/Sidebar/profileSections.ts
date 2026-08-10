@@ -211,9 +211,21 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
       },
     ],
   },
-  // Club administration lives on the partner portal — the Earn card already
-  // sends it there — so this role has no in-app studio: Withdrawal alone.
-  { mode: 'CLUB', role: 'CLUB_ADMIN', key: 'club', title: 'Club Admin Menu', items: [] },
+  {
+    mode: 'CLUB',
+    role: 'CLUB_ADMIN',
+    key: 'club',
+    title: 'Club Admin Menu',
+    items: [
+      {
+        key: 'club-studio',
+        label: 'Club Studio',
+        caption: '',
+        icon: 'groups',
+        route: 'ClubManage',
+      },
+    ],
+  },
 ];
 
 /**

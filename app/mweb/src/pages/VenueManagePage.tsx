@@ -1,154 +1,20 @@
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { Link as RouterLink } from 'react-router-dom';
+import { useQuery } from '@apollo/client';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
-import HealthMeter from '../components/health/HealthMeter';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ChairIcon from '@mui/icons-material/Chair';
-import EditIcon from '@mui/icons-material/Edit';
 import InsightsIcon from '@mui/icons-material/Insights';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
-import { venueUrl } from '../utils/seoUrls';
-
-const PODS_AT_VENUE = gql`
-  query PodsAtMyVenue($venue_id: ID!) {
-    pods(filter: { venue_id: $venue_id, is_active: true }) {
-      id
-      pod_date_time
-    }
-  }
-`;
-
-const MY_VENUE_DETAILS = gql`
-  query MyVenueDetails {
-    myVenue {
-      id
-      venue_name
-      venue_type
-      capacity
-      description
-      cover_image_url
-      country
-      city
-      state
-      locality
-      postal_code
-      amenities
-      tags
-      status
-      approved_at
-    }
-  }
-`;
-
-function bandHeadline(band: HealthScore['band']): string {
-  if (band === 'GREEN') return 'Venue is in great shape.';
-  if (band === 'YELLOW') return 'A few things to polish.';
-  return 'Needs attention.';
-}
-
-interface VenueListBodyProps {
-  showSpinner: boolean;
-  error?: { message: string };
-  venue: any;
-}
-
-function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProps>) {
-  if (showSpinner) {
-    return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
-        <CircularProgress size={22} />
-      </Stack>
-    );
-  }
-  if (error) {
-    return <Alert severity="error">{error.message}</Alert>;
-  }
-  if (!venue) {
-    return (
-      <Alert severity="info">
-        You haven't registered a venue yet.
-        <Box sx={{ mt: 1.5 }}>
-          <Button component={RouterLink} to="/register-venue" variant="contained" size="small">
-            Register a venue
-          </Button>
-        </Box>
-      </Alert>
-    );
-  }
-  return (
-    <Box
-      sx={{
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack direction="row" spacing={1.25}>
-        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '16px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
-        <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }} noWrap>
-            {venue.venue_name}
-          </Typography>
-        </Stack>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
-          {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
-        </Typography>
-        {venue.postal_code && (
-          <Typography variant="caption" color="text.secondary">
-            PIN: {venue.postal_code}
-          </Typography>
-        )}
-        {venue.tags?.length > 0 && (
-          <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-            {venue.tags.map((tag: string) => <Chip key={tag} size="small" label={tag} variant="outlined" />)}
-          </Stack>
-        )}
-        {typeof venue.capacity === 'number' && (
-          <Typography variant="caption" color="text.secondary">
-            Capacity: {venue.capacity}
-          </Typography>
-        )}
-        {venue.description && (
-          <Typography variant="body2" sx={{ mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} color="text.primary">
-            {venue.description}
-          </Typography>
-        )}
-        </Stack>
-      </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
-          Edit
-        </Button>
-        {venue?.status === 'APPROVED' && (
-          <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
-            Public link
-          </Button>
-        )}
-      </Stack>
-    </Box>
-  );
-}
+import VenueHealthCard from './venue-manage-page/VenueHealthCard';
+import VenueListBody from './venue-manage-page/VenueListBody';
+import VenuePodsSection from './venue-manage-page/VenuePodsSection';
+import { MY_VENUE_DETAILS, PODS_AT_VENUE } from './venue-manage-page/queries';
 
 export default function VenueManagePage() {
-  const navigate = useNavigate();
   const { data, loading, error } = useQuery(MY_VENUE_DETAILS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -204,6 +70,8 @@ export default function VenueManagePage() {
 
       <VenueEarningsLinkCard />
 
+      {venue?.id && <VenuePodsSection venueId={venue.id} />}
+
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -216,40 +84,7 @@ export default function VenueManagePage() {
         </CardContent>
       </Card>
 
-      {health && venue?.id && (
-        <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-          <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-              <HealthMeter
-                score={health.total_score}
-                band={health.band}
-                size={140}
-                label="Venue Health"
-                onClick={() => navigate(`/venues/${venue.id}/health`)}
-                caption="Tap for details"
-              />
-              <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  {bandHeadline(health.band)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Base activity: {health.base_score}
-                  {health.delta_sum !== 0 && (
-                    <>
-                      {' '}· Admin adjustment: {health.delta_sum > 0 ? `+${health.delta_sum}` : health.delta_sum}
-                    </>
-                  )}
-                </Typography>
-                {health.adjustments.length > 0 && (
-                  <Typography variant="caption" color="text.secondary">
-                    {health.adjustments.length} admin remark{health.adjustments.length === 1 ? '' : 's'} — tap the meter to read.
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
+      {health && venue?.id && <VenueHealthCard health={health} venueId={venue.id} />}
 
       <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>

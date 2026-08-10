@@ -65,6 +65,8 @@ export const venueResolvers = {
       venueService.tableMine(uid(ctx), args.query),
     venuePods: async (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) =>
       venuePodsService.listForOwner(uid(ctx), args.venue_id),
+    venuePodsSummary: async (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) =>
+      venuePodsService.summaryForOwner(uid(ctx), args.venue_id),
     venueRegistrationConfig: async () => venueService.registrationConfig(),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);

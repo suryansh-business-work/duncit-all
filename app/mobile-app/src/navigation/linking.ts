@@ -78,6 +78,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenueManage: 'venues/manage',
       VenueEarnings: 'venues/earnings',
       ProductsManage: 'products/manage',
+      ClubManage: 'clubs/manage',
       BeClubAdmin: 'be-club-admin',
       Support: 'support',
       Sos: 'support/sos',

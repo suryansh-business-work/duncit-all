@@ -85,16 +85,10 @@ export function EmailVerificationSection({
     }
   };
 
-  if (verified) {
-    return (
-      <XStack testID="email-verified" alignItems="center" gap={8}>
-        <MaterialIcons name="verified" size={18} color={primary} />
-        <Text fontSize={13} fontWeight="700" color="$color">
-          Your email is verified.
-        </Text>
-      </XStack>
-    );
-  }
+  // Verified needs no row of its own. The tick beside the name in ProfileHeader
+  // already says it, and repeating it as a sentence spent a full row of the
+  // profile restating something the header had covered.
+  if (verified) return null;
 
   const idleSendLabel = requested ? 'Resend OTP' : 'Send OTP';
   const sendLabel = sending ? 'Sending…' : idleSendLabel;

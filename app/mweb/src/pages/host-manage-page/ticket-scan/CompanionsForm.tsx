@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,18 +8,25 @@ import { useTranslation } from '../../../i18n/useTranslation';
 /** Same rule the server enforces on a companion's number (6-15 digits). */
 const PHONE = /^\d{6,15}$/;
 
-const schema = z.object({
-  companions: z
-    .array(
-      z.object({
-        name: z.string().trim().min(2, 'Enter the full name').max(120),
-        phone_number: z.string().trim().regex(PHONE, 'Enter a valid phone number'),
-      }),
-    )
-    .min(1),
-});
+/**
+ * Built per render rather than at module scope so the messages come from the
+ * bundle. A module-level schema cannot reach `t`, which is how the first
+ * version ended up with two shipped keys nothing rendered — caught by
+ * verify-translation-keys, not by tsc.
+ */
+const buildSchema = (t: (key: string) => string) =>
+  z.object({
+    companions: z
+      .array(
+        z.object({
+          name: z.string().trim().min(2, t('mweb.hostScan.nameInvalid')).max(120),
+          phone_number: z.string().trim().regex(PHONE, t('mweb.hostScan.phoneInvalid')),
+        }),
+      )
+      .min(1),
+  });
 
-export type CompanionValues = z.infer<typeof schema>;
+export type CompanionValues = z.infer<ReturnType<typeof buildSchema>>;
 
 interface Props {
   /** People this ticket admits, including the buyer. */
@@ -39,6 +47,7 @@ interface Props {
  */
 export default function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
+  const schema = useMemo(() => buildSchema(t), [t]);
   const { control, register, handleSubmit, formState } = useForm<CompanionValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
@@ -66,19 +75,28 @@ export default function CompanionsForm({ seats, required, busy, onSubmit }: Read
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
             {t('mweb.hostScan.companionsHeading', { vars: { index: index + 1 } })}
           </Typography>
+          {/* `required` on both: the ticket cannot check in without them, and
+              the asterisk says so before a failed submit rather than after. */}
           <TextField
             size="small"
+            required
             label={t('mweb.hostScan.companionName')}
             error={!!formState.errors.companions?.[index]?.name}
-            helperText={formState.errors.companions?.[index]?.name?.message}
+            helperText={
+              formState.errors.companions?.[index]?.name?.message ?? t('mweb.hostScan.fieldRequired')
+            }
             {...register(`companions.${index}.name` as const)}
           />
           <TextField
             size="small"
+            required
             label={t('mweb.hostScan.companionPhone')}
             inputMode="numeric"
             error={!!formState.errors.companions?.[index]?.phone_number}
-            helperText={formState.errors.companions?.[index]?.phone_number?.message}
+            helperText={
+              formState.errors.companions?.[index]?.phone_number?.message ??
+              t('mweb.hostScan.fieldRequired')
+            }
             {...register(`companions.${index}.phone_number` as const)}
           />
         </Stack>

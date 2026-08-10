@@ -271,6 +271,25 @@ export const venueTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+
+  "Roll-up figures for exactly the venuePods scope, over every pod in it."
+  type VenuePodSummary {
+    "Venues the figures cover."
+    scope_count: Int!
+    total: Int!
+    upcoming: Int!
+    ongoing: Int!
+    completed: Int!
+    cancelled: Int!
+    total_spots: Int!
+    filled_spots: Int!
+    total_attendees: Int!
+    fill_rate: Float!
+    next_pod_date_time: String
+    total_revenue: Float!
+    currency_symbol: String!
+  }
+
   "Outcome of a venue owner cancelling a pod booked at their venue."
   type VenueCancelPodResult {
     "The cancelled pod's id."
@@ -289,6 +308,11 @@ export const venueTypeDefs = /* GraphQL */ `
     myVenues: [Venue!]!
     "Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue."
     venuePods(venue_id: ID): [VenuePod!]!
+    """
+    Header figures for Venue Studio, over EVERY approved booking at the caller's
+    venues — the list is capped at 500 rows, these numbers are not.
+    """
+    venuePodsSummary(venue_id: ID): VenuePodSummary!
     "Owner-scoped table page over the caller's venues (shared table engine)."
     myVenuesTable(query: TableQueryInput): VenueTablePage!
     venues(status: VenueStatus): [Venue!]!

@@ -16,6 +16,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import CompanionsForm from './CompanionsForm';
 import ScannedAttendeeCard from './ScannedAttendeeCard';
 import ScannerViewport from './ScannerViewport';
+import { useTranslation } from '../../../i18n/useTranslation';
 import {
   HOST_SCAN_POD_TICKET,
   type HostTicketScanResult,
@@ -32,9 +33,21 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * How a result should read.
+ *
+ * A ticket that needs the rest of the group is not an error — it is the next
+ * step, and colouring it red made a working scan look broken.
+ */
+function resultSeverity(result: HostTicketScanResult): 'success' | 'info' | 'error' {
+  if (result.ok) return 'success';
+  return result.requires_companions ? 'info' : 'error';
+}
+
 /** Camera check-in for one pod: scan a ticket QR, mark the attendee present and
  * show who they are. Stays open so a host can work through a queue at the door. */
 export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [result, setResult] = useState<HostTicketScanResult | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [scan, scanState] = useMutation(HOST_SCAN_POD_TICKET);
@@ -66,6 +79,22 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
     setPendingToken(null);
     onClose();
   };
+
+  // What a successful scan actually says. The server's `message` is written for
+  // the failure cases; on success it left the host reading the same neutral line
+  // whether one person or a group of four had just been checked in.
+  const seats = result?.ticket?.seats ?? 1;
+  const who = result?.attendee?.full_name ?? '';
+  let confirmation = t('mweb.hostScan.attendanceMarked');
+  if (result?.already_checked_in) {
+    confirmation = t('mweb.hostScan.alreadyMarked');
+  } else if (seats > 1) {
+    confirmation = t('mweb.hostScan.attendanceMarkedGroup', {
+      vars: { name: who, count: seats - 1 },
+    });
+  } else if (who) {
+    confirmation = t('mweb.hostScan.attendanceMarkedOne', { vars: { name: who } });
+  }
 
   return (
     <Dialog open={!!pod} onClose={close} fullWidth maxWidth="xs">
@@ -99,7 +128,13 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
 
           {result && (
             <>
-              <Alert severity={result.ok ? 'success' : 'error'}>{result.message}</Alert>
+              {/* "Add the other person" is an INSTRUCTION, not a failure. Showing
+                  it in red read as "the scan broke", and with the attendee card
+                  between it and the form in an xs dialog, the form below was
+                  missed entirely — reported as "nothing happens". */}
+              <Alert severity={resultSeverity(result)}>
+                {result.ok ? confirmation : result.message}
+              </Alert>
               {result.attendee && (
                 <ScannedAttendeeCard
                   attendee={result.attendee}

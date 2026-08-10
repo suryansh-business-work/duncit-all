@@ -15,6 +15,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { downloadBase64File } from '@duncit/utils';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import EventTicketsTable from './EventTicketsTable';
+import CompanionsDialog, { type CompanionValue } from './CompanionsDialog';
 import {
   CHECK_IN_EVENT_TICKET,
   EVENT_TICKETS_TABLE,
@@ -29,7 +30,9 @@ export default function EventTicketsPage() {
   const [token, setToken] = useState('');
   const [verifyResult, setVerifyResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [verifyQr] = useMutation(VERIFY_EVENT_TICKET);
-  const [checkIn] = useMutation(CHECK_IN_EVENT_TICKET);
+  const [checkIn, checkInState] = useMutation(CHECK_IN_EVENT_TICKET);
+  // The multi-seat ticket whose group still needs naming, if any.
+  const [group, setGroup] = useState<{ ticket: EventTicketRow; required: number } | null>(null);
 
   const fetchRows = useApolloTableFetch<EventTicketRow>(client, EVENT_TICKETS_TABLE, 'eventTicketsTable');
 
@@ -41,12 +44,29 @@ export default function EventTicketsPage() {
       notifyError(e.message ?? 'Could not download ticket');
     }
   };
-  const onCheckIn = async (t: EventTicketRow) => {
+  /**
+   * Check a ticket in, collecting the rest of the group when it admits more
+   * than one.
+   *
+   * The server has always refused a group check-in without those details. This
+   * console only showed the refusal as a toast, so the operator read "add the
+   * other 1 person" with nowhere to add them — the check-in simply could not be
+   * completed here. COMPANIONS_REQUIRED now opens the form and re-submits.
+   */
+  const onCheckIn = async (t: EventTicketRow, companions?: CompanionValue[]) => {
     try {
-      await checkIn({ variables: { input: { ticket_doc_id: t.id } } });
+      await checkIn({
+        variables: { input: { ticket_doc_id: t.id, companions: companions ?? null } },
+      });
       notifySuccess(`Checked in ${t.ticket_code}`);
+      setGroup(null);
       refetchRef.current?.();
     } catch (e: any) {
+      const detail = e?.graphQLErrors?.[0]?.extensions;
+      if (detail?.code === 'COMPANIONS_REQUIRED') {
+        setGroup({ ticket: t, required: Number(detail.companions_required ?? 1) });
+        return;
+      }
       notifyError(e.message ?? 'Could not check in');
     }
   };
@@ -118,6 +138,16 @@ export default function EventTicketsPage() {
         refetchRef={refetchRef}
         onDownload={onDownload}
         onCheckIn={onCheckIn}
+      />
+
+      <CompanionsDialog
+        ticketCode={group?.ticket.ticket_code ?? null}
+        required={group?.required ?? 1}
+        busy={checkInState.loading}
+        onClose={() => setGroup(null)}
+        onSubmit={(companions) => {
+          if (group) onCheckIn(group.ticket, companions);
+        }}
       />
     </Stack>
   );

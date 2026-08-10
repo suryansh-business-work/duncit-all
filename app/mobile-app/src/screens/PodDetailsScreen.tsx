@@ -189,8 +189,12 @@ export function PodDetailsScreen() {
     /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
-      const { message, url } = podShareMessage(pod);
-      await Share.share({ message, url, title: pod.pod_title });
+      const { message } = podShareMessage(pod);
+      // Deliberately NO `url` — `message` already ends with the pod link, and
+      // passing both makes iOS's sheet carry the link as a second item, which
+      // is how the shared text arrived with the link written twice. mWeb omits
+      // its Web Share `url` field for the same reason (rule 27).
+      await Share.share({ message, title: pod.pod_title });
     } catch {
       /* user cancelled */
     }

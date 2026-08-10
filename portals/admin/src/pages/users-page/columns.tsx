@@ -1,6 +1,7 @@
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import GoogleIcon from '@mui/icons-material/Google';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { StatusChip } from '@duncit/ui';
@@ -32,6 +33,17 @@ const renderUser = (u: UserRow) => (
           {u.email || 'No email'}
         </Typography>
       </Stack>
+      {/* Both ways in, side by side. An account can hold a password AND a linked
+          Google address, and they need not be the same address — support has to
+          see which Gmail actually signs this account in. */}
+      {u.google_email && (
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }} component="span">
+          <GoogleIcon sx={{ fontSize: 13, color: '#4285f4' }} />
+          <Typography variant="caption" color="text.secondary" noWrap component="span">
+            {u.google_email}
+          </Typography>
+        </Stack>
+      )}
     </Box>
   </Stack>
 );
@@ -147,6 +159,14 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
       width: 120,
       cellRenderer: renderStatus,
       valueGetter: (u) => u.status || 'ACTIVE',
+    },
+    {
+      field: 'google_email',
+      headerName: 'Google Account',
+      filter: { type: 'text' },
+      hide: true,
+      minWidth: 220,
+      valueGetter: (u) => u.google_email ?? '',
     },
     { field: 'city', headerName: 'City', filter: { type: 'text' }, hide: true, minWidth: 130 },
     { field: 'zone', headerName: 'Zone', filter: { type: 'text' }, hide: true, minWidth: 130 },

@@ -57,6 +57,26 @@ export const authTypeDefs = gql`
     zone: String
   }
 
+  "The Google account currently linked to a Duncit account."
+  type ConnectedGoogleAccount {
+    "The Gmail address the user is prompted with. Falls back to the account email for accounts created by Google signup, which predate the stored field."
+    google_email: String!
+    "ISO timestamp of when the link was granted. Null for Google-signup accounts linked before this was recorded."
+    linked_at: String
+  }
+
+  """
+  What a user can currently sign in with.
+
+  has_password is what makes Google safe to disconnect: an account with no
+  password has Google as its ONLY way in, so unlinking would lock the user out.
+  """
+  type ConnectedAccounts {
+    email: String
+    has_password: Boolean!
+    google: ConnectedGoogleAccount
+  }
+
   type SeedAdminResult {
     created: Boolean!
     emailed: Boolean!
@@ -82,6 +102,17 @@ export const authTypeDefs = gql`
     portal_key: String
   }
 
+  extend type Query {
+    """
+    Auth-required: what the signed-in account can sign in with.
+
+    Reads the password hash's PRESENCE (it is select:false, so the generic
+    user mapper cannot see it) which is why this is its own query rather than a
+    field on User.
+    """
+    myConnectedAccounts: ConnectedAccounts!
+  }
+
   extend type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
@@ -97,7 +128,27 @@ export const authTypeDefs = gql`
     "Trade a correct code for the same session a password would have produced."
     loginWithPortalOtp(input: PortalLoginOtpInput!): AuthPayload!
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
+    """
+    Grant Google sign-in to an existing email/password account, then sign in.
+
+    This is the "allow" half of the consent step loginWithGoogle triggers with
+    EMAIL_LOGIN_REQUIRED. Deliberately UNAUTHENTICATED: the caller has just
+    proved control of the Google account, and verifyGoogleIdToken refuses a
+    token whose email Google has not verified — so a verified address matching
+    an account IS the proof. The password is never touched; the account keeps
+    both ways in.
+    """
+    linkGoogleAccount(input: GoogleAuthInput!): AuthPayload!
     signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
+    "Auth-required: link a Google account from Profile > Connected Accounts."
+    connectGoogleAccount(input: GoogleAuthInput!): ConnectedAccounts!
+    """
+    Auth-required: unlink the Google account.
+
+    Refused when the account has no password — Google would be the only way in,
+    and unlinking it would lock the user out of their own account.
+    """
+    disconnectGoogleAccount: ConnectedAccounts!
     requestPasswordResetOtp(email: String!): OtpRequestResult!
     resetPasswordWithOtp(input: ResetPasswordInput!): Boolean!
     "Auth-required: verify the current password and email a change-confirmation OTP."

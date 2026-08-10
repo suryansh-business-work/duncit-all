@@ -11,6 +11,31 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
+      // Profile > Connected accounts. mWeb and native render the same section
+      // (rule 27) over the same myConnectedAccounts query.
+      connected: {
+        title: 'Connected accounts',
+        subtitle: 'Services you can use to sign in to Duncit.',
+        emailLabel: 'Email and password',
+        emailOn: 'Active',
+        emailOff: 'Not set',
+        googleLabel: 'Google',
+        googleNotConnected: 'Not connected',
+        linkedOn: 'Connected on {date}',
+        connect: 'Connect',
+        disconnect: 'Disconnect',
+        connected: 'Google connected',
+        disconnected: 'Google disconnected',
+        // The lock-out guard: Google is the only way in, so the action is
+        // disabled rather than allowed to strand the user.
+        onlyMethodHint:
+          'Google is currently the only way to sign in to this account. Set a password before disconnecting it.',
+        disconnectTitle: 'Disconnect Google?',
+        disconnectMessage:
+          'You will no longer be able to sign in with Google. Your email and password keep working.',
+        connectFailed: 'Could not connect Google. Please try again.',
+        disconnectFailed: 'Could not disconnect Google. Please try again.',
+      },
     },
     // The auth journey — login, signup, forgot password, reset password. mWeb
     // and the native app render the SAME screens (rule 27), so a key here is
@@ -80,8 +105,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleNotFoundTitle: 'Google account not found',
       googleNotFoundBody: 'User is not in our system. Please sign up first.',
       googleNotFoundAction: 'Sign up',
-      emailLoginTitle: 'Use email login',
-      emailLoginBody: 'Please login with email. You registered with us using email and password.',
+      // The consent step. An email/password account whose address matches a
+      // verified Google account is offered the link rather than turned away —
+      // granting it is the user's decision, so it is asked for in plain words.
+      linkConsentTitle: 'Also sign in with Google?',
+      linkConsentBody:
+        'You registered {email} with an email and password. Allow Google to sign you in to this same account?',
+      linkConsentDetail:
+        'Your password keeps working. You can disconnect Google at any time from Profile → Connected accounts.',
+      linkConsentAllow: 'Allow and continue',
+      linkConsentDeny: 'Not now',
+      linkConsentDenied:
+        'Google was not connected. Sign in with your email and password, or try Google again to allow it.',
+      linkConsentFailed: 'Could not connect Google. Please try again.',
     },
     signup: {
       title: 'Join',
@@ -1169,21 +1205,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       chargeNote: 'Note',
       addCharge: 'Add charge',
       removeCharge: 'Remove charge',
-      // Products attached to the pod. The list arrives already filtered to the
-      // pod's club category, so empty means "none in this category".
-      attachProducts: 'Attach products to this pod',
-      noProductsForCategory: 'No products available for this category.',
-      productLabel: 'Approved product',
-      productOption: '{name} ({cost} / unit, {count} left)',
-      qty: 'Qty',
-      // mWeb only — its row shows a read-only line total per product.
-      cost: 'Cost',
-      // Native only — its quantity is a stepper, not a number input.
-      decreaseQty: 'Decrease quantity',
-      increaseQty: 'Increase quantity',
-      addProduct: 'Add product',
-      removeProduct: 'Remove product',
-      productTotal: 'Total: {amount}',
+      // Step 4's products block moved to the shared full-page picker, whose copy
+      // is the `podProduct.*` namespace — the switch, the dropdown row and their
+      // labels are gone with it.
       // The publish gate. The link must stay tappable inside the sentence, so
       // it is assembled from parts rather than one template with markup in it.
       termsLeadIn: 'I agree to the',
@@ -1251,10 +1275,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         amountRange: 'Amount must be 0–1999',
         spotsRange: 'Spots must be 0–10000',
         offersRequired: 'Add at least one thing this pod offers',
-        productRequired: 'Select a product',
+        // The product rules moved to `podProduct.*` with the picker: a row can
+        // no longer exist without a product, so `podProduct.selectFirst` is the
+        // one message left.
         // mWeb only — its quantity input can be emptied.
         quantityRequired: 'Quantity required',
-        productsRequired: 'Add at least one product',
         chargeLabelRequired: 'Label required',
         imageRequired: 'Add at least one image URL',
         termsRequired: 'Accept the Organizer Terms to publish',

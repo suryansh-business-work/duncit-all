@@ -8,6 +8,7 @@ import {
   AccountInfoRow,
   AccountProfileHeader,
   CompletionMeter,
+  ConnectedAccountsSection,
   EditAccountDialog,
   LanguageSection,
   PrivacyToggleCard,
@@ -92,6 +93,7 @@ export function AccountScreen() {
 
         <YStack height={1} backgroundColor="$borderColor" />
         <LanguageSection />
+        <ConnectedAccountsSection />
         <SecuritySection />
       </ScrollView>
     );

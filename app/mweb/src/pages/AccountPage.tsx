@@ -24,6 +24,7 @@ import CompletionMeter from './account-page/CompletionMeter';
 import { toDobInput } from './account-page/account-edit';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
+import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
@@ -177,6 +178,7 @@ export default function AccountPage() {
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
       <LanguageSection />
+      <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog
         open={editOpen}

@@ -41,8 +41,11 @@ function toApiError(error: unknown): ApiError {
     return new ApiError('The request timed out. Please try again.');
   }
   if (error instanceof ClientError) {
-    const message = error.response.errors?.[0]?.message ?? 'Request failed.';
-    return new ApiError(message, error.response.status);
+    const first = error.response.errors?.[0];
+    const message = first?.message ?? 'Request failed.';
+    // Extensions travel with the error: callers branch on `extensions.code`,
+    // which the message alone cannot carry reliably.
+    return new ApiError(message, error.response.status, first?.extensions);
   }
   return new ApiError('Network error. Check your connection and try again.');
 }

@@ -131,10 +131,13 @@ export default function PodActionPanel({
             startIcon={<ShareIcon />}
             onClick={() => {
               const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`;
+              // No `url` field — see the note in usePodDetailActions.onShare:
+              // targets that take `url` drop `text`, which would strip the
+              // referral share back to a bare link too. The link (with its
+              // ?ref) is the last line of the text.
               return (navigator as any).share({
                 title: pod.pod_title,
                 text: buildPodShareText(pod, url),
-                url,
               });
             }}
             sx={compactButtonSx}

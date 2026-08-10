@@ -62,6 +62,17 @@ const authSchema = new Schema(
     portal_login_otp_portal: { type: String, select: false },
     password: { type: String, select: false },
     google_id: { type: String },
+    /**
+     * The Gmail address of the linked Google account, and when it was linked.
+     *
+     * Kept alongside `google_id` rather than inferred from `auth.email`: an
+     * email/password account can link a Google account whose address differs
+     * from the one it signed up with, and Connected Accounts has to name the
+     * address the user will actually be prompted with. Google-signup accounts
+     * predate this field, so readers fall back to `auth.email` for them.
+     */
+    google_email: { type: String },
+    google_linked_at: { type: Date, default: null },
     last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },
     last_login_at: { type: Date, default: null },
     // Optional: phone is no longer collected at signup. When present, the
@@ -249,6 +260,8 @@ const legacyVirtuals: Record<string, string> = {
   is_email_verified: 'auth.is_email_verified',
   password: 'auth.password',
   google_id: 'auth.google_id',
+  google_email: 'auth.google_email',
+  google_linked_at: 'auth.google_linked_at',
   last_login_provider: 'auth.last_login_provider',
   last_login_at: 'auth.last_login_at',
   email_verification_otp_hash: 'auth.email_verification_otp_hash',

@@ -123,12 +123,14 @@ export function usePodDetailActions({
   const onShare = async () => {
     const url = globalThis.window.location.href;
     const title = pod?.pod_title ?? t('mweb.podDetails.duncitPod');
-    // The link is part of `text` as well as the `url` field: a target app that
-    // ignores `url` (most chat apps do) would otherwise receive the details
-    // with no way to open the pod.
     const text = buildPodShareText(pod, url);
     try {
-      if (navigator.share) await navigator.share({ title, text, url });
+      // Deliberately NO `url` field. The Web Share API lets a target choose what
+      // it takes, and the common ones (iOS Safari's sheet, WhatsApp) prefer
+      // `url` and drop `text` entirely when both are set — which is exactly how
+      // a share carrying title, time and map link arrived as a bare link. The
+      // URL is the last line of `text`, so every target gets all four parts.
+      if (navigator.share) await navigator.share({ title, text });
       else {
         await navigator.clipboard.writeText(text);
         setSnack(t('mweb.podDetails.linkCopied'));

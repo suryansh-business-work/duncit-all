@@ -22,9 +22,7 @@ export const POD_PRODUCT_BUNDLE: NestedCatalogue = {
     dialogTitle: 'Add a product',
     dialogSubtitle: 'Products approved for this pod’s category.',
     close: 'Close',
-    back: 'Back',
     searchPlaceholder: 'Search products, brands or SKU',
-    filters: 'Filters',
     clearFilters: 'Clear filters',
     activeFilters: '{count} active',
     brand: 'Brand',
@@ -36,27 +34,20 @@ export const POD_PRODUCT_BUNDLE: NestedCatalogue = {
     sortStock: 'Availability',
     inStockOnly: 'In stock only',
     resultCount: '{count} products',
-    resultCountOne: '1 product',
     // Empty states. The list arrives already narrowed to the pod's Super + Sub
     // category, so "none" means "none in this category", never "none at all".
     emptyCategory: 'No products available for this category.',
     emptySearch: 'No products match your search.',
-    emptyAllAdded: 'Every product in this category is already attached.',
     // The product card + detail pane.
     perUnit: '{cost} / unit',
     unitsLeft: '{count} left',
     outOfStock: 'Out of stock',
     alreadyAdded: 'Added',
-    select: 'Select',
-    selected: 'Selected',
-    viewDetails: 'View details',
     details: 'Product details',
-    descriptionHeading: 'Description',
     noDescription: 'No description provided.',
     sku: 'SKU',
     unitType: 'Unit',
     weightVolume: 'Weight / volume',
-    tags: 'Tags',
     // Quantity — disabled until a product is picked, and reset when the pick
     // changes so a quantity can never outlive the product it was chosen for.
     quantity: 'Quantity',
@@ -66,14 +57,11 @@ export const POD_PRODUCT_BUNDLE: NestedCatalogue = {
     maxQtyHint: 'Only {count} available.',
     lineTotal: 'Total: {amount}',
     addToPod: 'Add to pod',
-    // Validation.
+    // Validation. The picker makes an empty row impossible and clamps quantity
+    // to stock, so this is the only message the flow can still produce.
     selectFirst: 'Please select a product to continue.',
-    quantityMin: 'Quantity must be at least 1.',
-    quantityMax: 'Only {count} units are available.',
     // The attached list on Step 4.
     removeProduct: 'Remove product',
-    editQuantity: 'Edit quantity',
     productTotal: 'Total: {amount}',
-    qtyShort: 'Qty {count}',
   },
 };

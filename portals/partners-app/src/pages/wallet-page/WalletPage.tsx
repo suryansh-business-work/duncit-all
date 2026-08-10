@@ -52,6 +52,13 @@ export default function WalletPage() {
   const wallet = data?.myWallet;
   const currency = wallet?.currency_symbol ?? '₹';
   const balance = wallet?.balance ?? 0;
+  // The role-wise floor, decided SERVER-SIDE. This console is where Venue
+  // Owners, E-Commerce Brands and Club Admins actually withdraw — three of the
+  // four roles the minimums apply to — so gating only mWeb and native would
+  // leave exactly those people with an enabled button and a raw server error.
+  const minWithdrawal = wallet?.min_withdrawal_amount ?? 0;
+  const canWithdraw = wallet?.can_withdraw ?? balance > 0;
+  const belowMinimum = !canWithdraw && minWithdrawal > 0;
   const transactions = data?.myWalletTransactions ?? [];
   const withdrawals = data?.myWithdrawals ?? [];
 
@@ -87,12 +94,17 @@ export default function WalletPage() {
           <Box sx={{ mt: 1.5 }}>
             <Button
               variant="contained"
-              disabled={balance <= 0}
+              disabled={!canWithdraw}
               onClick={() => setOpen(true)}
               sx={{ borderRadius: 999, fontWeight: 900 }}
             >
               Withdraw
             </Button>
+            {belowMinimum && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                {`You can withdraw once your balance reaches ${currency}${minWithdrawal.toFixed(2)}.`}
+              </Typography>
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -166,6 +178,7 @@ export default function WalletPage() {
       <WithdrawForm
         open={open}
         maxAmount={balance}
+        minAmount={minWithdrawal}
         currency={currency}
         onClose={() => setOpen(false)}
         onDone={() => {

@@ -15,6 +15,7 @@ import {
   PaymentLogsPage,
   PaymentReleasePage,
   WithdrawalsPage,
+  WithdrawalSettingsPage,
   InvoiceManagementPage,
   InvoiceTemplatePage,
   LedgerPage,
@@ -44,6 +45,7 @@ export default function App() {
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
+      <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />
       <Route path="/invoices" element={authed(<InvoiceManagementPage />)} />
       <Route path="/invoices/venue" element={authed(<InvoiceTemplatePage kind="venue" />)} />
       <Route path="/invoices/host" element={authed(<InvoiceTemplatePage kind="host" />)} />

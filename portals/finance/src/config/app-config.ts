@@ -41,7 +41,14 @@ export const appConfig = {
     },
     { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
     { label: 'Payment Release', to: '/payment-release', icon: 'payments' },
-    { label: 'Withdrawals', to: '/withdrawals', icon: 'payments' },
+    {
+      label: 'Withdrawal',
+      icon: 'payments',
+      children: [
+        { label: 'Withdrawal Payments', to: '/withdrawals', icon: 'payments' },
+        { label: 'Withdrawal Settings', to: '/withdrawals/settings', icon: 'tune' },
+      ],
+    },
     {
       label: 'Invoices',
       icon: 'description',

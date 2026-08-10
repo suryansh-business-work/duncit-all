@@ -3,6 +3,7 @@ import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { formatMoney } from '@duncit/utils';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -11,6 +12,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { RequestWithdrawalDocument } from '@/graphql/wallet';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   blankWithdrawValues,
@@ -23,6 +25,8 @@ import {
 interface Props {
   open: boolean;
   maxAmount: number;
+  /** Role-wise Minimum Withdrawal Amount as sent by the server. 0 = no floor. */
+  minAmount: number;
   currency: string;
   onClose: () => void;
   onDone: () => void;
@@ -30,15 +34,34 @@ interface Props {
 
 const METHODS: WithdrawMethod[] = ['UPI', 'IMPS', 'NEFT'];
 
-export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: Readonly<Props>) {
+export function WithdrawDialog({
+  open,
+  maxAmount,
+  minAmount,
+  currency,
+  onClose,
+  onDone,
+}: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, setValue, watch } = useForm<WithdrawValues>({
-    resolver: zodResolver(buildWithdrawSchema(maxAmount)),
+    resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount)),
     defaultValues: blankWithdrawValues,
   });
   const method = watch('payout_method');
+  const minHint =
+    minAmount > 0
+      ? t('mweb.wallet.minimumHint', {
+          vars: { amount: formatMoney(minAmount, { symbol: currency }) },
+        })
+      : undefined;
+  // Both hints when a floor applies, not one INSTEAD of the other — the ceiling
+  // is still true and the user needs both bounds. mWeb shows the same pair
+  // (rule 27: the two must not tell the same wallet different things).
+  const ceilingHint = `Up to ${formatMoney(maxAmount, { symbol: currency })}`;
+  const amountHint = minHint ? `${minHint} · ${ceilingHint}` : ceilingHint;
 
   const submit = handleSubmit(async (values) => {
     setBusy(true);
@@ -96,7 +119,7 @@ export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: R
                       label="Amount"
                       keyboardType="numeric"
                       required
-                      hint={`Up to ${currency}${maxAmount.toFixed(2)}`}
+                      hint={amountHint}
                     />
                     <XStack gap={8}>
                       {METHODS.map((m) => (

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { WithdrawerRole } from './roles';
 
 export const WITHDRAWALS = gql`
   query Withdrawals($status: WithdrawalStatus) {
@@ -8,6 +9,7 @@ export const WITHDRAWALS = gql`
       beneficiary_name
       beneficiary_email
       amount
+      withdrawer_role
       status
       payout_method
       account_holder_name
@@ -28,6 +30,7 @@ export interface WithdrawalRow {
   beneficiary_name: string;
   beneficiary_email: string;
   amount: number;
+  withdrawer_role: WithdrawerRole;
   status: 'PENDING' | 'PAID' | 'REJECTED';
   payout_method: string;
   account_holder_name: string;
@@ -47,6 +50,7 @@ const WITHDRAWAL_ROW_FIELDS = gql`
     beneficiary_name
     beneficiary_email
     amount
+    withdrawer_role
     status
     payout_method
     account_holder_name
@@ -76,6 +80,44 @@ export const REVIEW_WITHDRAWAL = gql`
     reviewWithdrawal(withdrawal_id: $id, input: $input) {
       id
       status
+    }
+  }
+`;
+
+/** Role-wise minimum withdrawal amounts, one value per role. */
+export interface WithdrawalMinimums {
+  host: number;
+  venue_owner: number;
+  ecomm_manager: number;
+  club_admin: number;
+}
+
+export const WITHDRAWAL_MINIMUMS = gql`
+  query WithdrawalMinimums {
+    withdrawalMinimums {
+      host
+      venue_owner
+      ecomm_manager
+      club_admin
+    }
+    # The symbol the amounts are entered in — a configured setting, never a literal.
+    publicFinanceSettings {
+      currency_symbol
+    }
+  }
+`;
+
+/**
+ * Every input field is optional server-side, so a save sends ONLY the role that
+ * was edited — the other three keep their stored value.
+ */
+export const UPDATE_WITHDRAWAL_MINIMUMS = gql`
+  mutation UpdateWithdrawalMinimums($input: UpdateWithdrawalMinimumsInput!) {
+    updateWithdrawalMinimums(input: $input) {
+      host
+      venue_owner
+      ecomm_manager
+      club_admin
     }
   }
 `;

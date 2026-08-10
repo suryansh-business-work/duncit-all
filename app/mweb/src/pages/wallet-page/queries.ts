@@ -7,6 +7,8 @@ export const MY_WALLET = gql`
       currency_symbol
       payout_mode
       next_payout_at
+      min_withdrawal_amount
+      can_withdraw
     }
     myWalletTransactions {
       id

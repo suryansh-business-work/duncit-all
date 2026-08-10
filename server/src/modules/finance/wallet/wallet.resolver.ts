@@ -1,7 +1,10 @@
 import { walletService } from './wallet.service';
+import type { IMinWithdrawal } from '@modules/finance/finance/finance.model';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
+// Same set updateFinanceSettings guards the finance singleton with — the
+// withdrawal minimums live on that singleton, so they answer to the same roles.
 const FINANCE_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 
 export const walletResolvers = {
@@ -26,6 +29,10 @@ export const walletResolvers = {
       requireRole(ctx, FINANCE_RW);
       return walletService.withdrawalsTable(args.query);
     },
+    withdrawalMinimums: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.getWithdrawalMinimums();
+    },
   },
   Mutation: {
     requestWithdrawal: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -39,6 +46,14 @@ export const walletResolvers = {
     ) => {
       const user = requireRole(ctx, FINANCE_RW);
       return walletService.reviewWithdrawal(args.withdrawal_id, args.input.status, args.input.reason, user.id);
+    },
+    updateWithdrawalMinimums: async (
+      _p: unknown,
+      args: { input: Partial<IMinWithdrawal> },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.updateWithdrawalMinimums(args.input);
     },
   },
 };

@@ -7,7 +7,14 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
-const props = { open: true, maxAmount: 1000, currency: '₹', onClose: jest.fn(), onDone: jest.fn() };
+const props = {
+  open: true,
+  maxAmount: 1000,
+  minAmount: 0,
+  currency: '₹',
+  onClose: jest.fn(),
+  onDone: jest.fn(),
+};
 
 beforeEach(() => {
   jest.clearAllMocks();

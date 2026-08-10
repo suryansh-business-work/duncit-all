@@ -30,13 +30,21 @@ const METHOD: Record<WithdrawMethod, WithdrawalMethod> = {
 
 /** Withdrawal schema — amount must be within the wallet balance, and the right
  * payout details are required for the chosen method. */
-export const buildWithdrawSchema = (max: number) =>
+/**
+ * @param max The wallet balance — nobody may withdraw more than they hold.
+ * @param min The role-wise floor from the server. The server enforces TWO
+   rules (balance >= min AND amount >= min); validating only the balance here
+   let someone with a healthy balance submit an under-floor amount and meet a
+   raw server error instead of a field message. 0 disables the floor.
+ */
+export const buildWithdrawSchema = (max: number, min = 0) =>
   z
     .object({
       amount: z
         .string()
         .refine((v) => Number(v) > 0, 'Enter an amount')
-        .refine((v) => Number(v) <= max, `Max ${max}`),
+        .refine((v) => Number(v) <= max, `Max ${max}`)
+        .refine((v) => min <= 0 || Number(v) >= min, `Minimum ${min}`),
       payout_method: z.enum(['UPI', 'IMPS', 'NEFT']),
       upi_id: z.string().trim(),
       account_holder_name: z.string().trim(),

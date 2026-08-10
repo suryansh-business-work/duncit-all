@@ -11,11 +11,44 @@ export const walletTypeDefs = /* GraphQL */ `
     NEFT
   }
 
+  """
+  The capacity a payout was withdrawn in. Stamped on the withdrawal when it is
+  requested and never resolved live, so it cannot change with the user's roles.
+  """
+  enum WithdrawerRole {
+    HOST
+    VENUE_OWNER
+    ECOMM_MANAGER
+    CLUB_ADMIN
+  }
+
   type Wallet {
     balance: Float!
     currency_symbol: String!
     payout_mode: PayoutMode!
     next_payout_at: String!
+    "Which of the four capacities this wallet withdraws in (precedence: VENUE_OWNER, CLUB_ADMIN, ECOMM_MANAGER, HOST)."
+    withdrawer_role: WithdrawerRole!
+    "Role-wise minimum withdrawal amount that applies to this wallet."
+    min_withdrawal_amount: Float!
+    "balance >= min_withdrawal_amount, decided server-side — clients must not re-derive it."
+    can_withdraw: Boolean!
+  }
+
+  "Role-wise minimum withdrawal amounts (Finance → Withdrawals → Withdrawal Settings)."
+  type WithdrawalMinimums {
+    host: Float!
+    venue_owner: Float!
+    ecomm_manager: Float!
+    club_admin: Float!
+  }
+
+  "Every role is optional: the ones sent are updated, the rest keep their stored value."
+  input UpdateWithdrawalMinimumsInput {
+    host: Float
+    venue_owner: Float
+    ecomm_manager: Float
+    club_admin: Float
   }
 
   type WalletTransaction {
@@ -36,6 +69,7 @@ export const walletTypeDefs = /* GraphQL */ `
     beneficiary_name: String!
     beneficiary_email: String!
     amount: Float!
+    withdrawer_role: WithdrawerRole!
     status: WithdrawalStatus!
     payout_method: WithdrawalMethod!
     account_holder_name: String!
@@ -78,10 +112,12 @@ export const walletTypeDefs = /* GraphQL */ `
     myWithdrawals: [WalletWithdrawal!]!
     withdrawalRequests(status: WithdrawalStatus): [WalletWithdrawal!]!
     withdrawalRequestsTable(query: TableQueryInput): WalletWithdrawalTablePage!
+    withdrawalMinimums: WithdrawalMinimums!
   }
 
   extend type Mutation {
     requestWithdrawal(input: RequestWithdrawalInput!): WalletWithdrawal!
     reviewWithdrawal(withdrawal_id: ID!, input: ReviewWithdrawalInput!): WalletWithdrawal!
+    updateWithdrawalMinimums(input: UpdateWithdrawalMinimumsInput!): WithdrawalMinimums!
   }
 `;

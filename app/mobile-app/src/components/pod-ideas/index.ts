@@ -11,3 +11,8 @@ export { IdeaDeleteConfirm } from './IdeaDeleteConfirm';
 export { IdeaDetailsBody } from './IdeaDetailsBody';
 export { IdeaDetailsSheet } from './IdeaDetailsSheet';
 export { IdeasList } from './IdeasList';
+export {
+  IdeaStatusFilter,
+  ideaMatchesStatus,
+  type IdeaStatusFilterValue,
+} from './IdeaStatusFilter';

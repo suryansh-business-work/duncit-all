@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
-import { FinanceWaterfallList, buildWaterfallLines } from '../../components/finance-waterfall';
+import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
 import SectionCard from './SectionCard';
 import { POD_FINANCE_BREAKDOWN } from './queries';
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import { FinanceWaterfallList, buildWaterfallLines } from '../../../components/finance-waterfall';
+import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
 import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
 

@@ -130,6 +130,27 @@ async function canViewMeeting(parent: any, ctx: GraphQLContext) {
 export const podResolvers = {
   Pod: {
     pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    /**
+     * Resolved from the SAME roster the settlement is computed from, so a pod's
+     * detail view and the payout can never quote different attendance. Live,
+     * not stored: a scan after this read changes the answer, which is exactly
+     * why the completed release freezes its own copy.
+     */
+    attendance: async (parent: any) => {
+      const id = parent?.id ?? parent?._id;
+      if (!id) return { attended_seats: 0, booked_seats: 0, recorded: false };
+      const { podAttendanceRoster } = await import(
+        '@modules/finance/finance/settlement.service'
+      );
+      const roster = await podAttendanceRoster(String(id));
+      return {
+        attended_seats: roster.attended_seats,
+        booked_seats: roster.booked_seats,
+        // "Nobody scanned" is not "nobody came" — a virtual pod, or a host who
+        // never opened the scanner, must not read as total absence.
+        recorded: roster.attended_seats > 0,
+      };
+    },
     club: async (parent: any) => {
       if (!parent.club_id) return null;
       try {

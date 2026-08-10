@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Link, Stack, TableCell, TableRow, Typography } from '@mui/material';
+import { Avatar, Button, Link, Stack, TableCell, TableRow, Typography } from '@mui/material';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import AttendeeParticipationRow, { ParticipationToggle } from './AttendeeParticipationRow';
@@ -22,10 +22,22 @@ interface Props {
   podDateTime?: string | null;
   /** Table columns, so the expanded story spans the whole width. */
   colSpan: number;
+  /** Club Admin only: mark this booking present without a scan. Absent for
+   * everyone else — the host must scan, because the host is paid on the
+   * result. */
+  onForceAttendance?: (membershipId: string) => void;
+  forcing?: boolean;
 }
 
 /** One person on the pod, with their participation story folded underneath. */
-export default function AttendeeRow({ row, statusText, podDateTime, colSpan }: Readonly<Props>) {
+export default function AttendeeRow({
+  row,
+  statusText,
+  podDateTime,
+  colSpan,
+  onForceAttendance,
+  forcing,
+}: Readonly<Props>) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const struck = row.status === 'BACKED_OUT';
@@ -103,7 +115,23 @@ export default function AttendeeRow({ row, statusText, podDateTime, colSpan }: R
           </Typography>
         </TableCell>
         <TableCell>
-          <StatusChip status={statusText} colorMap={STATUS_COLORS} />
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <StatusChip status={statusText} colorMap={STATUS_COLORS} />
+            {/* Club Admin's override, and only theirs — the host has to scan,
+                because attendance decides what the host is paid. Offered only
+                while this booking is un-scanned and still on the pod. */}
+            {onForceAttendance && row.member_id && !row.participation?.attended && !struck && (
+              <Button
+                size="small"
+                variant="text"
+                disabled={forcing}
+                onClick={() => onForceAttendance(row.member_id as string)}
+                sx={{ fontWeight: 800, textTransform: 'none' }}
+              >
+                {forcing ? 'Marking…' : 'Mark present'}
+              </Button>
+            )}
+          </Stack>
         </TableCell>
         <TableCell>{row.source ?? '—'}</TableCell>
         <TableCell>{fmtDateTime(row.joined_at)}</TableCell>

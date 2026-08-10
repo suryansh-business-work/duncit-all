@@ -44,7 +44,12 @@ describe('SettlementPreview (waterfall v2)', () => {
   it('renders the finance-engine waterfall lines', async () => {
     render(
       <MockedProvider mocks={mocks} addTypename={false}>
-        <SettlementPreview podId="pod1" venueBillAmount={0} />
+        <SettlementPreview
+          podId="pod1"
+          venueBillAmount={0}
+          refreshToken={0}
+          onScan={() => undefined}
+        />
       </MockedProvider>,
     );
     expect(await screen.findByText('Customer Paid')).toBeInTheDocument();

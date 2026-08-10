@@ -4,20 +4,27 @@ import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import { StatusChip } from '@duncit/ui';
 import SectionCard from './SectionCard';
-import { POD_HOST_PROFILE, type AdminPodAttendeeRow } from './queries';
+import { type AdminPodAttendeeRow } from './queries';
+import { usePodDetailsScope } from './scope';
 
 interface HostRowProps {
   userId: string;
   name: string;
   primary: boolean;
   contact?: AdminPodAttendeeRow;
+  /** Threaded through because the club-admin host lookup is scoped to the pod:
+   * a club admin may read the host running THEIR pod, not any host by id. */
+  podId: string;
 }
 
 /** One host line: contact from the attendee list plus the approved host
  * profile (host number + status) when one exists. */
-function HostRow({ userId, name, primary, contact }: Readonly<HostRowProps>) {
+function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProps>) {
   const navigate = useNavigate();
-  const { data } = useQuery(POD_HOST_PROFILE, { variables: { user_id: userId } });
+  const scopeDocs = usePodDetailsScope();
+  const { data } = useQuery(scopeDocs.hostProfile, {
+    variables: { user_id: userId, pod_id: podId },
+  });
   const profile = data?.hostByUser;
 
   return (
@@ -76,6 +83,7 @@ export default function PodHostsCard({ pod, attendees }: Readonly<Props>) {
             name={contactByUser.get(id)?.full_name ?? hostNames[index] ?? 'Host'}
             primary={index === 0}
             contact={contactByUser.get(id)}
+            podId={pod.id}
           />
         ))}
       </Stack>

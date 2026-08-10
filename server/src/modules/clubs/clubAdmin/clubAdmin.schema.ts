@@ -134,6 +134,34 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     clubAdminPodsTable(club_id: ID, query: TableQueryInput): PodTablePage!
     "Full action trail of one pod in the caller's clubs, newest first."
     clubAdminPodAuditLogs(pod_doc_id: ID!): [PodAuditLog!]!
+    """
+    Attendees of one pod in the caller's clubs — the club-admin twin of
+    adminPodAttendees.
+
+    Its own query rather than a role added to the admin one: CLUB_ADMIN is a
+    membership of a club, not a role on the user, so requireRole cannot express
+    it. Gated on assertClubAdminForPod, which is what keeps a club admin inside
+    their own club.
+    """
+    clubAdminPodAttendees(pod_doc_id: ID!): [AdminPodAttendee!]!
+    """
+    Payments for ONE pod in the caller's clubs.
+
+    Deliberately takes a pod id instead of the admin paymentsTable's free-form
+    TableQueryInput: that input can express "every payment on the platform", and
+    handing it to a club admin would let them read other clubs' money. The pod
+    filter is applied server-side and cannot be overridden by the caller.
+    """
+    clubAdminPodPayments(pod_doc_id: ID!, query: TableQueryInput): PaymentTablePage!
+    "Rating + review summary for one pod in the caller's clubs."
+    clubAdminPodFeedback(pod_doc_id: ID!, limit: Int): PodFeedbackSummary!
+    """
+    The host profile behind one of this pod's hosts.
+
+    Scoped to the pod, not to an arbitrary user id: a club admin may read the
+    host running their pod, not look up any host on the platform.
+    """
+    clubAdminPodHost(pod_doc_id: ID!, user_id: ID!): Host
     "Aggregated metrics for the signed-in Club Admin's clubs."
     clubAdminDashboard(from: String, to: String): ClubAdminDashboard!
     "Table page over the dashboard's computed per-club breakdown rows."

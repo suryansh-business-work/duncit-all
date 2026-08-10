@@ -3,7 +3,8 @@ import { Divider, Rating, Stack, Typography } from '@mui/material';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import { POD_FEEDBACK_ASPECT_LABEL, type PodFeedbackAspect } from '@duncit/utils';
 import SectionCard from './SectionCard';
-import { POD_FEEDBACK_SUMMARY, type PodAspectRating, type PodFeedbackRow } from './queries';
+import { type PodAspectRating, type PodFeedbackRow } from './queries';
+import { usePodDetailsScope } from './scope';
 import PodFeedbackEntry from './PodFeedbackEntry';
 
 const aspectLabel = (aspect: string) =>
@@ -36,7 +37,8 @@ function AspectAverage({ row }: Readonly<{ row: PodAspectRating }>) {
  * why.
  */
 export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }>) {
-  const { data, loading, error } = useQuery(POD_FEEDBACK_SUMMARY, {
+  const scopeDocs = usePodDetailsScope();
+  const { data, loading, error } = useQuery(scopeDocs.feedback, {
     variables: { pod_id: podId },
     skip: !podId,
     fetchPolicy: 'cache-and-network',

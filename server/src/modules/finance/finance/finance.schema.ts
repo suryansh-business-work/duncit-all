@@ -171,6 +171,18 @@ export const financeTypeDefs = /* GraphQL */ `
     commission_pct: Float!
     commission_amount: Float!
     duncit_revenue: Float!
+    """
+    The attendance this payout was computed from, frozen at completion.
+
+    A pod settles on the seats a host scanned in, and a later scan changes the
+    pod's attendance — so these cannot be re-derived when the release is
+    reviewed, only read back. 0 on snapshots written before attendance drove
+    the money.
+    """
+    attended_seats: Int!
+    booked_seats: Int!
+    "Money from the attended bookings — what the waterfall started from."
+    attended_total: Float!
   }
 
   # The complete GST-inclusive money waterfall for one pod (engine v2):
@@ -349,11 +361,37 @@ export const financeTypeDefs = /* GraphQL */ `
     has_venue: Boolean!
     waterfall: PodFinanceWaterfall!
     """
-    SEATS that attended and paid — the host's own free seat excluded. Seats, not
-    people: one booking can cover several, and a completed pod settles on what it
-    COLLECTED, which is priced per seat.
+    SEATS the settlement was computed on — the ones a host scanned in. Kept
+    under its original name for older consumers; attended_seats is the same
+    number under the name that now describes it.
     """
     paying_attendees: Int!
+    "Seats a host scanned in at the door. The settlement basis."
+    attended_seats: Int!
+    "Seats booked on the pod, attended or not — the denominator beside it."
+    booked_seats: Int!
+    "Money from the attended bookings: what the waterfall was computed from."
+    attended_total: Float!
+    "Every JOINED booking, attended first — the completion roster."
+    attendees: [PodSettlementAttendee!]!
+  }
+
+  """
+  One booking on the completion roster.
+
+  Attendance is not stored on the membership — it happens when a host scans a
+  ticket at the door, so a booking counts as attended when its ticket reads
+  CHECKED_IN. Seats, not people: one booking can admit several.
+  """
+  type PodSettlementAttendee {
+    membership_id: ID!
+    user_id: ID!
+    name: String!
+    seats: Int!
+    attended: Boolean!
+    attended_at: String
+    "What this booking paid. Zero on a free pod."
+    amount: Float!
   }
 
   type PodSettlementResult {

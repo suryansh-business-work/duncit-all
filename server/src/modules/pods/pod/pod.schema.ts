@@ -90,6 +90,21 @@ export const podTypeDefs = /* GraphQL */ `
     profile_photo: String
   }
 
+  """
+  How many of a pod's booked seats were actually scanned in at the door.
+
+  Seats, not people: one booking can admit several, and a completed pod settles
+  per seat. The recorded flag tells "nobody turned up" apart from "nobody
+  scanned" — a virtual pod, or a host who never opened the scanner, is not a
+  pod where everyone was absent.
+  """
+  type PodAttendanceSummary {
+    attended_seats: Int!
+    booked_seats: Int!
+    "False when no ticket on this pod has ever been scanned."
+    recorded: Boolean!
+  }
+
   type Pod {
     id: ID!
     pod_id: String!
@@ -116,6 +131,15 @@ export const podTypeDefs = /* GraphQL */ `
     pod_attendees: [ID!]!
     "Seats taken — attendees plus every extra seat a multi-seat booking holds."
     seats_taken: Int!
+    """
+    Seats a host has scanned in at the door, out of the seats booked.
+
+    Attendance is not stored on the pod or the membership — it is the door scan
+    on each EventTicket — so this is resolved live. It is what a completed pod
+    settles on, which is why a pod's own detail view reports it beside the
+    booking count rather than leaving the two to be reconciled elsewhere.
+    """
+    attendance: PodAttendanceSummary!
     "Seats still bookable (0 when the pod has unlimited spots)."
     seats_available: Int!
     "Users who liked this pod — powers the 'who liked' list (explore item 8)."

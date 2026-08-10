@@ -176,6 +176,7 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB
       commission_pct: 0,
       commission_amount: 0,
       duncit_revenue: w.duncit_revenue,
+      ...attendanceOf(s),
     };
   }
   const isHost = party === 'HOST';
@@ -203,8 +204,18 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB
     commission_pct: isHost ? w.host_commission_pct : w.venue_commission_pct,
     commission_amount: isHost ? w.host_commission_amount : w.venue_commission_amount,
     duncit_revenue: w.duncit_revenue,
+    ...attendanceOf(s),
   };
 };
+
+/** The attendance the payout was computed from, frozen onto the release. A
+ * later scan changes the pod's attendance, so a reviewer could never re-derive
+ * what this payout actually stood on — it has to be stamped. */
+const attendanceOf = (s: PodSettlement) => ({
+  attended_seats: s.attended_seats,
+  booked_seats: s.booked_seats,
+  attended_total: s.attended_total,
+});
 
 function statementTypeLabel(kind: PaymentReleaseKind): string {
   if (kind === 'HOST_PAYMENT') return 'host commission';
@@ -560,6 +571,27 @@ export const paymentReleaseService = {
 
     const settlement = await computePodSettlement(String(pod._id), Number(input.venue_bill_amount) || 0);
 
+    // A pod settles on the seats a host scanned in, so completing with nothing
+    // scanned would pay everyone zero and freeze that as the answer — a
+    // one-way mistake, since the release is what Finance later reviews. Refuse
+    // it while it is still fixable. Only pods that HAD bookings are gated: a
+    // pod nobody booked has nothing to scan and must still be completable.
+    if (settlement.booked_seats > 0 && settlement.attended_seats === 0) {
+      throw new GraphQLError(
+        'No attendance has been recorded for this pod. Scan each guest’s ticket before completing it — the payout is calculated from who attended.',
+        { extensions: { code: 'ATTENDANCE_REQUIRED' } }
+      );
+    }
+
+    // The venue is now paid its full booked price rather than being clamped to
+    // the pool, so a pod that took less at the door than the room cost leaves
+    // the host side NEGATIVE. That is honest in the statement — the shortfall is
+    // shown — but a release is money moving out, and a negative one would credit
+    // a wallet backwards. Floor it: the host is owed nothing, never owes.
+    // Recovering a shortfall is a separate decision, not a side effect of
+    // completing a pod.
+    const hostPayout = Math.max(0, settlement.host.payout_amount);
+
     const releases: IPaymentRelease[] = [];
     const hostBeneficiary = await beneficiaryFor('HOST_PAYMENT', pod, input.host_user_id);
     releases.push(
@@ -572,7 +604,7 @@ export const paymentReleaseService = {
         host_user_id: hostBeneficiary.host_user_id,
         beneficiary_name: hostBeneficiary.name,
         beneficiary_email: hostBeneficiary.email,
-        amount_requested: settlement.host.payout_amount,
+        amount_requested: hostPayout,
         bill_url: '',
         evidence_media: evidence,
         notes: clean(input.notes),

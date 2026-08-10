@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import MediaUrlsField from '../../create-pod-page/create-pod/fields/MediaUrlsField';
+import TicketScanDialog from '../ticket-scan/TicketScanDialog';
 import SettlementPreview from './SettlementPreview';
 import { blankPodCompleteValues, type HostPodForComplete, type PodCompleteValues } from './pod-complete.types';
 
@@ -92,6 +93,10 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
     defaultValues: blankPodCompleteValues,
   });
   const [complete, completeState] = useMutation(COMPLETE_POD);
+  const [scanOpen, setScanOpen] = useState(false);
+  // Bumped when the scanner closes so the preview re-reads: a scan changes who
+  // attended, and the payout is computed from exactly that.
+  const [scansDone, setScansDone] = useState(0);
 
   useEffect(() => {
     reset(blankPodCompleteValues);
@@ -139,7 +144,14 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
               />
             )}
           />
-          {pod && <SettlementPreview podId={pod.id} venueBillAmount={billAmount} />}
+          {pod && (
+            <SettlementPreview
+              podId={pod.id}
+              venueBillAmount={billAmount}
+              refreshToken={scansDone}
+              onScan={() => setScanOpen(true)}
+            />
+          )}
           {completeState.error && <Alert severity="error">{completeState.error.message}</Alert>}
         </Stack>
       </DialogContent>
@@ -157,6 +169,17 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
           {completeState.loading ? 'Completing…' : 'Complete pod'}
         </Button>
       </DialogActions>
+      {/* Attendance is only ever created by scanning a ticket — the same
+          check-in dialog the host uses at the door. Closing it re-reads the
+          preview, so a newly scanned guest moves into the attended list and the
+          payout recomputes. */}
+      <TicketScanDialog
+        pod={scanOpen && pod ? { id: pod.id, pod_title: pod.pod_title } : null}
+        onClose={() => {
+          setScanOpen(false);
+          setScansDone((n) => n + 1);
+        }}
+      />
     </Dialog>
   );
 }

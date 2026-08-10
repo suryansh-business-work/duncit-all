@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { AttendanceChip } from '@duncit/ui';
 
 /** Minimal row shape shared by the partner + club-admin pods tables. */
 export interface PodRowBase {
@@ -13,6 +14,8 @@ export interface PodRowBase {
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  /** Seats scanned in at the door — what a completed pod settles on. */
+  attendance?: { attended_seats: number; booked_seats: number; recorded: boolean } | null;
   is_active: boolean;
   completed_at?: string | null;
   /** Optional booking-cycle state — the club-admin list shows every stage, the
@@ -106,6 +109,19 @@ export default function PodsTable<T extends PodRowBase>({
         valueGetter: dateValue,
       },
       { field: 'attendees', headerName: 'Attendees', sortable: false, width: 110, valueGetter: attendeesValue },
+      {
+        // Booked seats alone no longer explain a completed pod's payout — it is
+        // settled on the seats scanned at the door, so both are shown.
+        field: 'attendance',
+        headerName: 'Attendance',
+        sortable: false,
+        width: 150,
+        cellRenderer: (p: PodRowBase) => <AttendanceChip attendance={p.attendance} />,
+        valueGetter: (p: PodRowBase) =>
+          p.attendance?.booked_seats
+            ? `${p.attendance.attended_seats}/${p.attendance.booked_seats}`
+            : '',
+      },
       {
         field: 'is_active',
         headerName: 'Status',

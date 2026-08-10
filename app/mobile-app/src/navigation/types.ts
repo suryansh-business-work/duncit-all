@@ -41,6 +41,8 @@ export type RootStackParamList = {
   Earn: undefined;
   ListProduct: undefined;
   BeClubAdmin: undefined;
+  /** Club Studio — pods across the clubs the signed-in user administers. */
+  ClubManage: undefined;
   ProductsManage: undefined;
   Support: undefined;
   Sos: undefined;

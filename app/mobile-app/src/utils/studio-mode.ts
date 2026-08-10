@@ -36,13 +36,11 @@ export function resolveMode(mode: StudioMode, roles: string[]): StudioMode {
   return availableModes(roles).some((option) => option.mode === mode) ? mode : 'USER';
 }
 
-/** Landing screen for each mode — switching roles jumps straight to its dashboard.
- * Club administration itself lives on the partner portal, so the club mode lands
- * on the one destination it does own in-app: its payouts. */
+/** Landing screen for each mode — switching roles jumps straight to its dashboard. */
 export const STUDIO_HOME_ROUTE = {
   USER: 'Home',
   HOST: 'HostManage',
   VENUE: 'VenueManage',
   ECOMM: 'ProductsManage',
-  CLUB: 'Wallet',
+  CLUB: 'ClubManage',
 } as const;

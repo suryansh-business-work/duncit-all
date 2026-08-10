@@ -1373,5 +1373,51 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       minimumHint: 'Minimum withdrawal {amount}.',
       minimumBlocked: 'You need at least {amount} in your wallet to withdraw.',
     },
+    // The pod sections of the two partner studios: Venue Studio's "Pods hosted
+    // on your Venue" and Club Studio's "Your Pods". ONE namespace because both
+    // sections show the same figures over the same row shape (VenuePod and
+    // ClubPod are field-for-field twins) — only the four scope words differ, so
+    // mWeb and native render identical sentences from identical keys (rule 27).
+    studioPods: {
+      // Club Studio's screen/page title. Venue Studio already has its own.
+      clubStudio: 'Club Studio',
+      venueTitle: 'Pods hosted on your Venue',
+      venueSubtitle: 'Every pod booked at your venues — newest first.',
+      venueEmpty: 'No pods have been booked at your venue yet.',
+      // Venues these pods are spread across — NOT every venue the owner has
+      // listed (Venue Studio already counts those separately), so the word is
+      // "booked" rather than a second, contradictory "Venues".
+      venues: 'Venues booked',
+      clubTitle: 'Your Pods',
+      clubSubtitle: 'Every pod across the clubs you administer — newest first.',
+      clubEmpty: 'No pods in your clubs yet.',
+      clubs: 'Clubs',
+      // The figures strip.
+      total: 'Total pods',
+      spotsFilled: 'Spots filled',
+      fillRate: '{pct}% full',
+      attendees: 'Attendees',
+      nextPod: 'Next pod',
+      noneScheduled: 'None scheduled',
+      // Collected money. Only the club query exposes it, so the venue strip
+      // simply ends without this tile.
+      collected: 'Collected',
+      // The four lifecycle buckets — the state chip on a row AND the count
+      // tiles in the strip, so a chip and its tile can never disagree.
+      bucketUpcoming: 'Upcoming',
+      bucketLive: 'Live now',
+      bucketPast: 'Past',
+      bucketCancelled: 'Cancelled',
+      // One pod row.
+      hosts: 'Hosts',
+      hostsNone: 'No host assigned',
+      spots: 'Spots',
+      people: 'People',
+      ticket: 'Ticket',
+      // The list is capped server-side while the figures count every pod.
+      showingLatest: 'Showing the latest {pods} pods — the figures above count them all.',
+      error: 'Could not load these pods. Please try again.',
+      retry: 'Try again',
+    },
   },
 };

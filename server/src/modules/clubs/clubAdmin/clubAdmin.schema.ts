@@ -116,6 +116,75 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     email: String
   }
 
+  """
+  One pod under a club the caller administers — the Club Studio "Your Pods" row.
+
+  Field-for-field identical to VenuePod, with club_id/club_name where that type
+  carries venue_id/venue_name, so Club Studio and Venue Studio render the same
+  row through ONE component in mWeb and native (rules 27 + 34).
+
+  It reuses VenuePodBucket rather than declaring a club-named twin of the same
+  four values: the bucket describes the POD's lifecycle, not who is looking at
+  it, and a second enum is how the two client unions drift apart.
+  """
+  type ClubPod {
+    id: ID!
+    pod_slug: String!
+    pod_title: String!
+    pod_date_time: String!
+    pod_end_date_time: String
+    pod_amount: Int!
+    pod_type: PodType!
+    no_of_spots: Int!
+    "Seats taken — attendees plus the extra seats they bought."
+    attendee_count: Int!
+    "Attendee user ids — resolve names via publicUsersByIds."
+    pod_attendees: [ID!]!
+    host_names: [String!]!
+    club_id: ID!
+    club_name: String!
+    bucket: VenuePodBucket!
+    is_active: Boolean!
+    completed_at: String
+    "Set when the pod was cancelled (soft-deleted)."
+    cancelled_at: String
+    created_at: String!
+  }
+
+  """
+  Roll-up figures behind the Club Studio "Your Pods" header, computed over EVERY
+  pod in scope (the list itself is capped) so the apps never re-derive money or
+  state counts themselves.
+
+  Cancelled pods count in the cancelled field only: their spots were never sold
+  and their payments were refunded, so they stay out of capacity, fill and
+  revenue.
+  """
+  type ClubPodSummary {
+    "Clubs in scope — 1 when club_id narrows to a single club."
+    clubs: Int!
+    total: Int!
+    upcoming: Int!
+    "Running right now (the ONGOING bucket)."
+    ongoing: Int!
+    "Finished (the COMPLETED bucket)."
+    completed: Int!
+    cancelled: Int!
+    "Capacity across non-cancelled pods."
+    total_spots: Int!
+    "Seats taken across non-cancelled pods (attendees + extra seats)."
+    filled_spots: Int!
+    "People in those pods — extra seats excluded."
+    total_attendees: Int!
+    "filled_spots / total_spots (0..1); 0 when there is no capacity."
+    fill_rate: Float!
+    "Start of the soonest upcoming pod, ISO. Null when nothing is scheduled."
+    next_pod_date_time: String
+    "Collected from SUCCESS payments on the non-cancelled pods in scope."
+    total_revenue: Float!
+    currency_symbol: String!
+  }
+
   extend type Query {
     "Clubs the signed-in user administers (CLUB_ADMIN scope)."
     myAdminClubs: [Club!]!
@@ -132,6 +201,18 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     in the booking cycle. Pass club_id to narrow to one of their clubs.
     """
     clubAdminPodsTable(club_id: ID, query: TableQueryInput): PodTablePage!
+    """
+    Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
+    section, newest first — the club-side twin of venuePods. Every stage shows,
+    cancelled and awaiting-venue-approval included, matching clubAdminPodsTable.
+
+    Scope is derived SERVER-SIDE from the caller's club memberships; club_id
+    only NARROWS within them and throws FORBIDDEN for a club they do not
+    administer (the same rule clubAdminPodsTable applies).
+    """
+    myClubPods(club_id: ID): [ClubPod!]!
+    "Roll-up figures for exactly the myClubPods scope, over every pod in it."
+    myClubPodsSummary(club_id: ID): ClubPodSummary!
     "Full action trail of one pod in the caller's clubs, newest first."
     clubAdminPodAuditLogs(pod_doc_id: ID!): [PodAuditLog!]!
     """

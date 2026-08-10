@@ -20,6 +20,7 @@ import {
   type TableQueryInput,
 } from '@utils/table-query';
 import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
+import { bucketForPod, type HostStatusCounts } from '@modules/finance/finance/breakdown.service';
 
 type Actor = { id: string; roles?: string[] };
 
@@ -282,6 +283,154 @@ const EMPTY_KPIS = {
   currency_symbol: '₹',
 };
 
+const fullNameOf = (u: any) =>
+  `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim();
+
+/** The Club Studio list is a section, not an archive — the same cap venuePods
+ * uses, so both studios page the same way. Summary figures are NOT capped. */
+const CLUB_POD_LIMIT = 500;
+
+/** Pods across `clubIds`, newest first, at every lifecycle stage (cancelled and
+ * awaiting-venue-approval included, like clubAdminPodsTable). The row shape
+ * mirrors venuePodsService.listForOwner field-for-field so Club Studio and
+ * Venue Studio share one client component. Callers pass an ALREADY-SCOPED club
+ * id list — this function does no permission work. */
+async function buildClubPods(clubIds: string[]) {
+  if (clubIds.length === 0) return [];
+  const clubOids = clubIds.map((id) => new Types.ObjectId(id));
+  const [clubs, pods] = await Promise.all([
+    ClubModel.find({ _id: { $in: clubOids } }).select('club_name').lean(),
+    // lean(): plain DB shapes, so legacy pods keep their genuinely-missing fields.
+    PodModel.find({ club_id: { $in: clubOids } })
+      .setOptions({ includeDeleted: true })
+      .sort({ pod_date_time: -1 })
+      .limit(CLUB_POD_LIMIT)
+      .lean(),
+  ]);
+  const clubNameById = new Map<string, string>(
+    (clubs as any[]).map((c) => [String(c._id), c.club_name])
+  );
+  const hostIds = [...new Set((pods as any[]).flatMap((p) => (p.pod_hosts_id ?? []).map(String)))];
+  const hosts = await UserModel.find({ _id: { $in: hostIds } })
+    .select('profile.first_name profile.last_name')
+    .lean();
+  const hostNameById = new Map<string, string>(
+    (hosts as any[]).map((u) => [String(u._id), fullNameOf(u)])
+  );
+  const now = Date.now();
+  return (pods as any[]).map((pod) => ({
+    id: String(pod._id),
+    pod_slug: pod.pod_id,
+    pod_title: pod.pod_title,
+    pod_date_time: pod.pod_date_time?.toISOString?.() ?? '',
+    pod_end_date_time: pod.pod_end_date_time?.toISOString?.() ?? null,
+    pod_amount: pod.pod_amount ?? 0,
+    pod_type: pod.pod_type,
+    no_of_spots: pod.no_of_spots ?? 0,
+    attendee_count: podSeatsTaken(pod),
+    pod_attendees: (pod.pod_attendees ?? []).map(String),
+    host_names: (pod.pod_hosts_id ?? [])
+      .map((id: any) => hostNameById.get(String(id)))
+      .filter(Boolean) as string[],
+    club_id: String(pod.club_id),
+    // The pods query is filtered to those clubs above, so the lookup always
+    // hits — hence the non-null assertion instead of a dead fallback.
+    club_name: clubNameById.get(String(pod.club_id))!,
+    bucket: bucketForPod(pod, now).toUpperCase(),
+    is_active: !!pod.is_active,
+    completed_at: pod.completed_at?.toISOString?.() ?? null,
+    cancelled_at: pod.deleted_at?.toISOString?.() ?? null,
+    created_at: pod.created_at?.toISOString?.() ?? '',
+  }));
+}
+
+type ClubPodTally = {
+  counts: HostStatusCounts;
+  total_spots: number;
+  filled_spots: number;
+  total_attendees: number;
+  /** Start time of the soonest upcoming pod, ms. */
+  next_at: number | null;
+};
+
+/** Fold one pod into the summary tally. A cancelled pod counts in `counts` and
+ * nowhere else: its spots were never sold, so it must not dilute fill rate. */
+function foldClubPod(tally: ClubPodTally, pod: any, now: number) {
+  const bucket = bucketForPod(pod, now);
+  tally.counts[bucket] += 1;
+  if (bucket === 'cancelled') return;
+  tally.total_spots += pod.no_of_spots ?? 0;
+  tally.filled_spots += podSeatsTaken(pod);
+  tally.total_attendees += pod.pod_attendees?.length ?? 0;
+  if (bucket !== 'upcoming') return;
+  // A pod with an unreadable date buckets as upcoming (bucketForPod's fallback)
+  // but must never become `next` — NaN would blow up toISOString().
+  const start = +new Date(pod.pod_date_time);
+  if (Number.isNaN(start)) return;
+  if (tally.next_at === null || start < tally.next_at) tally.next_at = start;
+}
+
+const EMPTY_CLUB_POD_SUMMARY = {
+  clubs: 0,
+  total: 0,
+  upcoming: 0,
+  ongoing: 0,
+  completed: 0,
+  cancelled: 0,
+  total_spots: 0,
+  filled_spots: 0,
+  total_attendees: 0,
+  fill_rate: 0,
+  next_pod_date_time: null as string | null,
+  total_revenue: 0,
+  currency_symbol: EMPTY_KPIS.currency_symbol,
+};
+
+/** Header figures for the Club Studio pods section, over EVERY pod in scope —
+ * the list is capped, these numbers are not. Revenue is the SUCCESS payments on
+ * the non-cancelled pods (a cancelled pod's payments were refunded). Callers
+ * pass an ALREADY-SCOPED club id list. */
+async function buildClubPodSummary(clubIds: string[]) {
+  if (clubIds.length === 0) return { ...EMPTY_CLUB_POD_SUMMARY };
+  const clubOids = clubIds.map((id) => new Types.ObjectId(id));
+  const pods = await PodModel.find({ club_id: { $in: clubOids } })
+    .setOptions({ includeDeleted: true })
+    .select('_id pod_date_time pod_end_date_time completed_at deleted_at no_of_spots pod_attendees extra_seats')
+    .lean();
+  const now = Date.now();
+  const tally: ClubPodTally = {
+    counts: { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 },
+    total_spots: 0,
+    filled_spots: 0,
+    total_attendees: 0,
+    next_at: null,
+  };
+  for (const pod of pods as any[]) {
+    foldClubPod(tally, pod, now);
+  }
+  const livePodIds = (pods as any[]).filter((p) => !p.deleted_at).map((p) => p._id);
+  const payments = await PaymentModel.find({ pod_id: { $in: livePodIds }, status: 'SUCCESS' })
+    .select('total currency_symbol')
+    .lean();
+  const total_revenue = (payments as any[]).reduce((sum, p) => sum + (p.total ?? 0), 0);
+  return {
+    clubs: clubIds.length,
+    total: pods.length,
+    upcoming: tally.counts.upcoming,
+    ongoing: tally.counts.ongoing,
+    completed: tally.counts.completed,
+    cancelled: tally.counts.cancelled,
+    total_spots: tally.total_spots,
+    filled_spots: tally.filled_spots,
+    total_attendees: tally.total_attendees,
+    fill_rate: tally.total_spots > 0 ? tally.filled_spots / tally.total_spots : 0,
+    next_pod_date_time: tally.next_at === null ? null : new Date(tally.next_at).toISOString(),
+    total_revenue,
+    currency_symbol:
+      (payments[0] as any)?.currency_symbol || EMPTY_CLUB_POD_SUMMARY.currency_symbol,
+  };
+}
+
 export const clubAdminService = {
   /** Clubs the user administers (admin_user_ids membership), public-shaped so the
    * existing `Club` field resolvers can read them. */
@@ -433,24 +582,46 @@ export const clubAdminService = {
       .lean();
     return users.map((u: any) => ({
       user_id: String(u._id),
-      full_name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+      full_name: fullNameOf(u),
       email: u.auth?.email ?? null,
     }));
   },
 
   /**
+   * THE club-scoping rule: every club id a pod read may touch. `clubId` only
+   * NARROWS within the actor's own clubs (assertClubAdmin throws FORBIDDEN for
+   * one they do not administer); omitted means all of them. SUPER_ADMIN with no
+   * clubs still sees nothing without a club_id — the Admin portal is that
+   * role's surface.
+   *
+   * Deliberately one function shared by the portal table and the app section:
+   * two implementations of the same scope is how one of them ends up wrong.
+   */
+  async scopedClubIds(actor: Actor, clubId?: string | null): Promise<string[]> {
+    if (!clubId) return this.adminClubIds(actor.id);
+    await this.assertClubAdmin(actor, clubId);
+    return [clubId];
+  },
+
+  /**
    * Pods across the actor's clubs, at every stage. Scope is resolved HERE and
    * pinned into the query's baseFilter, so a client filter can never widen it
-   * to a club the actor does not administer. `club_id` narrows to one of their
-   * clubs (guarded); SUPER_ADMIN with no clubs still sees nothing here — the
-   * Admin portal is that role's surface.
+   * to a club the actor does not administer.
    */
   async podsTable(actor: Actor, clubId: string | null | undefined, query?: any) {
-    if (clubId) {
-      await this.assertClubAdmin(actor, clubId);
-      return podService.tableForClubAdmin([clubId], query);
-    }
-    return podService.tableForClubAdmin(await this.adminClubIds(actor.id), query);
+    return podService.tableForClubAdmin(await this.scopedClubIds(actor, clubId), query);
+  },
+
+  /** Club Studio → "Your Pods": the same scope as podsTable, rendered as a flat
+   * app-shaped list instead of a portal table page. */
+  async myPods(actor: Actor, clubId?: string | null) {
+    return buildClubPods(await this.scopedClubIds(actor, clubId));
+  },
+
+  /** Header figures for that section, so the apps never compute money or state
+   * counts themselves. */
+  async myPodsSummary(actor: Actor, clubId?: string | null) {
+    return buildClubPodSummary(await this.scopedClubIds(actor, clubId));
   },
 
   /** The AI-monitored action trail of one pod in the actor's clubs. */

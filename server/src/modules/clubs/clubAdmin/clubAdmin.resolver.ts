@@ -44,6 +44,10 @@ export const clubAdminResolvers = {
       args: { club_id?: string | null; query?: any },
       ctx: GraphQLContext
     ) => clubAdminService.podsTable(actorOf(ctx), args.club_id, args.query),
+    myClubPods: (_p: unknown, args: { club_id?: string | null }, ctx: GraphQLContext) =>
+      clubAdminService.myPods(actorOf(ctx), args.club_id),
+    myClubPodsSummary: (_p: unknown, args: { club_id?: string | null }, ctx: GraphQLContext) =>
+      clubAdminService.myPodsSummary(actorOf(ctx), args.club_id),
     clubAdminPodAuditLogs: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
       clubAdminService.podAuditLogs(actorOf(ctx), args.pod_doc_id),
     clubAdminPodAttendees: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>

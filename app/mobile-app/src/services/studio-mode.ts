@@ -2,7 +2,7 @@ import { getItem, setItem } from '@/services/secure-storage';
 import type { StudioMode } from '@/utils/studio-mode';
 
 const KEY = 'duncit.studio_mode';
-const VALID = new Set<StudioMode>(['USER', 'HOST', 'VENUE', 'ECOMM']);
+const VALID = new Set<StudioMode>(['USER', 'HOST', 'VENUE', 'ECOMM', 'CLUB']);
 
 /** Read the persisted studio mode, or null when none/invalid. */
 export async function getStudioMode(): Promise<StudioMode | null> {

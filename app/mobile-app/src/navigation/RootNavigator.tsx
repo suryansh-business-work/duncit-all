@@ -69,6 +69,7 @@ import { EarnScreen } from '@/screens/EarnScreen';
 import { MenuScreen } from '@/screens/MenuScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
+import { ClubManageScreen } from '@/screens/ClubManageScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
 import { reportJourneyStep } from '@/services/short-link-attribution';
@@ -148,6 +149,7 @@ export function RootNavigator() {
       <Stack.Screen name="Earn" component={EarnScreen} />
       <Stack.Screen name="ListProduct" component={ListProductScreen} />
       <Stack.Screen name="BeClubAdmin" component={BeClubAdminScreen} />
+      <Stack.Screen name="ClubManage" component={ClubManageScreen} />
       <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />

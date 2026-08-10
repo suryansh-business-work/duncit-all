@@ -87,6 +87,7 @@ const TourGuidePage = lazy(() => import('../pages/tour-guide-page'));
 const ProductsManagePage = lazy(() => import('../pages/products-manage-page'));
 const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
 const ClubsPage = lazy(() => import('../pages/ClubsPage'));
+const ClubStudioPage = lazy(() => import('../pages/club-studio'));
 const ChatsPage = lazy(() => import('../pages/ChatsPage'));
 const ChatRoomPage = lazy(() => import('../pages/ChatRoomPage'));
 const MenuPage = lazy(() => import('../pages/menu-page'));
@@ -156,6 +157,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
+        {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit
+            under the `/club/:clubSlug` pattern and shadow a real club slug. */}
+        <Route path="/clubs/manage" element={withAuth(<ClubStudioPage />)} />
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />

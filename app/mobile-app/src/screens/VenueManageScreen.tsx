@@ -2,6 +2,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
+import { StudioPodsSection, useVenueStudioPods } from '@/components/studio';
 import { useVenueDashboard } from '@/hooks/useStudioDashboards';
 
 /** Stat tile shared by the studio dashboards. */
@@ -28,6 +29,7 @@ export function StatTile({ label, value }: Readonly<{ label: string; value: stri
 /** Venue studio dashboard — venues, capacity, status + bookings chart (B3-1). */
 export function VenueManageScreen() {
   const { venues, podDates, isLoading } = useVenueDashboard();
+  const podsState = useVenueStudioPods();
   const approved = venues.filter((venue) => venue.status === 'APPROVED' && venue.is_active);
   const capacity = venues.reduce((sum, venue) => sum + (venue.capacity ?? 0), 0);
 
@@ -57,6 +59,8 @@ export function VenueManageScreen() {
             </Text>
             <SimpleBarChart testID="venue-pods-chart" data={buildMonthlyCounts(podDates)} />
           </YStack>
+          {/* The bookings behind that chart, pod by pod, with their figures. */}
+          <StudioPodsSection variant="VENUE" state={podsState} testID="venue-studio-pods" />
           {!isLoading && venues.length === 0 ? (
             <Text testID="venue-dashboard-empty" fontSize={13} color="$muted">
               No venues yet — register one to start hosting pods.

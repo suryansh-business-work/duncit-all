@@ -9,10 +9,20 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostScanPodTicketDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { CompanionsForm, type CompanionValue } from './CompanionsForm';
 import { ScannedAttendeeCard } from './ScannedAttendeeCard';
 import { ScannerFrame } from './ScannerFrame';
 import type { HostTicketScanResult } from './scan.types';
+
+/**
+ * How a result should read. A ticket that needs the rest of the group is the
+ * next step, not a failure — mWeb applies the same rule.
+ */
+function resultTone(result: HostTicketScanResult): string {
+  if (result.ok) return '$success';
+  return result.requires_companions ? '$color' : '$danger';
+}
 
 export interface ScanTarget {
   id: string;
@@ -29,6 +39,7 @@ interface Props {
  * show who they are. Twin of mWeb's TicketScanDialog (rule 27). */
 export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [result, setResult] = useState<HostTicketScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +81,22 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   };
 
   const attendee = result?.attendee ?? null;
+
+  // What a successful scan actually says. The server's `message` is written for
+  // the failure cases; on success it left the host reading the same neutral line
+  // whether one person or a group of four had just been checked in.
+  const seats = result?.ticket?.seats ?? 1;
+  const who = attendee?.full_name ?? '';
+  let confirmation = t('mweb.hostScan.attendanceMarked');
+  if (result?.already_checked_in) {
+    confirmation = t('mweb.hostScan.alreadyMarked');
+  } else if (seats > 1) {
+    confirmation = t('mweb.hostScan.attendanceMarkedGroup', {
+      vars: { name: who, count: seats - 1 },
+    });
+  } else if (who) {
+    confirmation = t('mweb.hostScan.attendanceMarkedOne', { vars: { name: who } });
+  }
 
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={close}>
@@ -127,14 +154,17 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                       </Text>
                     ) : null}
 
+                    {/* "Add the other person" is an INSTRUCTION, not a failure —
+                        colouring it red made a working scan look broken, and the
+                        form below it was missed entirely. mWeb reads the same. */}
                     {result ? (
                       <Text
                         testID="ticket-scan-message"
                         fontSize={13.5}
                         fontWeight="700"
-                        color={result.ok ? '$success' : '$danger'}
+                        color={resultTone(result)}
                       >
-                        {result.message}
+                        {result.ok ? confirmation : result.message}
                       </Text>
                     ) : null}
 

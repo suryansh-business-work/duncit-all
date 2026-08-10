@@ -63,6 +63,9 @@ export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Pro
           <Text fontSize={12} fontWeight="700" color="$muted">
             {t('mweb.hostScan.companionsHeading', { vars: { index: index + 1 } })}
           </Text>
+          <Text fontSize={11.5} color="$muted">
+            {t('mweb.hostScan.companionName')} · {t('mweb.hostScan.fieldRequired')}
+          </Text>
           <Input
             testID={`companion-name-${index}`}
             value={row.name}
@@ -70,6 +73,9 @@ export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Pro
             placeholder={t('mweb.hostScan.companionName')}
             size="$4"
           />
+          <Text fontSize={11.5} color="$muted">
+            {t('mweb.hostScan.companionPhone')} · {t('mweb.hostScan.fieldRequired')}
+          </Text>
           <Input
             testID={`companion-phone-${index}`}
             value={row.phone_number}

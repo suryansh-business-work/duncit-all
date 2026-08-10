@@ -1309,11 +1309,22 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // are all standing there — so the ticket does not check in until they are.
       companionsTitle: 'Who else is coming in?',
       companionsBody: 'This ticket admits {seats}. Add the other {count} to mark attendance.',
-      companionName: 'Full name',
-      companionPhone: 'Phone number',
+      companionName: 'Name',
+      companionPhone: 'Phone',
       companionsSubmit: 'Mark attendance',
       companionsIncomplete: 'Fill in every name and phone number.',
       companionsHeading: 'Person {index}',
+      // Both fields are required, and the form says so rather than only
+      // objecting after a failed submit.
+      fieldRequired: 'Required',
+      nameInvalid: 'Enter the name',
+      phoneInvalid: 'Enter a phone number — digits only, 6 to 15',
+      // The confirmation. A scan that only swaps one line of text reads as
+      // "nothing happened", which is exactly how this was reported.
+      attendanceMarked: 'Attendance marked',
+      attendanceMarkedOne: '{name} is checked in.',
+      attendanceMarkedGroup: '{name} and {count} more are checked in.',
+      alreadyMarked: 'Already checked in',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

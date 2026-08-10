@@ -824,6 +824,27 @@ export const paymentService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
+  /**
+   * The same table page as `table`, permanently narrowed to ONE pod.
+   *
+   * The pod filter is the BASE filter, not something the caller supplies, so a
+   * caller who may only see one pod's money cannot widen it through the query
+   * input the way `table` allows. Used by the club-admin pod detail, whose
+   * reader is trusted with their own club and nothing else.
+   */
+  async tableForPod(podDocId: string, input?: TableQueryInput | null) {
+    if (!Types.ObjectId.isValid(podDocId)) {
+      return { rows: [], total: 0, page: 1, page_size: 0 };
+    }
+    const { docs, total, page, page_size } = await runTableQuery<IPayment>(
+      PaymentModel,
+      { pod_id: new Types.ObjectId(podDocId) },
+      input,
+      PAYMENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
   async getById(id: string) {
     const d = await PaymentModel.findById(id);
     return d ? toPub(d) : null;

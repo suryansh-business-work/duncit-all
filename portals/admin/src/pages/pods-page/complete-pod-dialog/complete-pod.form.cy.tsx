@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCompleteInput, buildCompleteSchema, mediaTextToInput } from './complete-pod.form';
 import type { CompletePodValues } from './complete-pod.types';
-import { buildWaterfallLines, type PodFinanceWaterfall } from '../../../components/finance-waterfall';
+import { buildWaterfallLines, type PodFinanceWaterfall } from '@duncit/ui';
 
 const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   host_user_id: 'u1',

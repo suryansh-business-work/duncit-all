@@ -29,3 +29,5 @@ export { LanguageSelect } from './LanguageSelect';
 export type { LanguageOption, LanguageSelectProps } from './LanguageSelect';
 export { default as AttendanceChip } from './AttendanceChip';
 export type { PodAttendanceSummary } from './AttendanceChip';
+export { FinanceWaterfallList, buildWaterfallLines } from './finance-waterfall';
+export type { PodFinanceWaterfall, WaterfallLine } from './finance-waterfall';

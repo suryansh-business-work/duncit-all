@@ -1,4 +1,135 @@
 import { gql } from '@apollo/client';
+
+/**
+ * The FIELD SELECTIONS, shared by the admin queries below and by their
+ * club-scoped twins in queries.club-admin.ts.
+ *
+ * Held as strings rather than duplicated into both documents: the two sets
+ * feed the SAME components, so a field added to one and missed on the other
+ * renders a blank cell for one audience only — the drift rule 34 exists to
+ * stop. Interpolated into a gql template, so they are still parsed once.
+ */
+export const ATTENDEE_SELECTION = `
+      member_id
+      seats
+      companions {
+        name
+        phone_extension
+        phone_number
+      }
+      user_id
+      full_name
+      email
+      phone
+      profile_photo
+      is_host
+      status
+      joined_at
+      backed_out_at
+      source
+      refund_status
+      payment_id
+      backout_no
+      replaced_by_user_id
+      replaced_by_name
+      participation {
+        joined_at
+        attended
+        attended_at
+        attendance_recorded
+        pod_cancelled_by
+        pod_cancelled_at
+        cancel_refund_status
+        backouts {
+          backout_no
+          status
+          attempt_no
+          seats
+          seats_before
+          refund_amount
+          refund_status
+          deduction_pct
+          refund_processed_at
+          created_at
+          events {
+            status
+            at
+          }
+        }
+      }
+    }
+`;
+
+export const AUDIT_SELECTION = `
+      id
+      action
+      source
+      actor_name
+      note
+      ai_risk
+      created_at
+    }
+`;
+
+export const HOST_SELECTION = `
+      id
+      host_no
+      full_name
+      email
+      phone
+      status
+    }
+`;
+
+export const PAYMENTS_SELECTION = `
+      rows {
+        id
+        payment_id
+        invoice_no
+        user_id
+        user_name
+        user_email
+        total
+        currency_symbol
+        status
+        gateway
+        coupon_code
+        paid_at
+        created_at
+      }
+      total
+      page
+      page_size
+    }
+`;
+
+export const FEEDBACK_SELECTION = `
+      pod_id
+      total
+      overall_average
+      aspects {
+        aspect
+        average
+        count
+      }
+      recent {
+        id
+        rating
+        message
+        created_at
+        category
+        user {
+          id
+          name
+        }
+        ratings {
+          aspect
+          rating
+        }
+      }
+    }
+`;
+
 import type { PodParticipationFields } from '@duncit/utils';
 
 export const POD_DETAIL = gql`
@@ -48,68 +179,14 @@ export const POD_DETAIL = gql`
 export const POD_ATTENDEES_ADMIN = gql`
   query AdminPodAttendees($id: ID!) {
     adminPodAttendees(pod_doc_id: $id) {
-      member_id
-      seats
-      companions {
-        name
-        phone_extension
-        phone_number
-      }
-      user_id
-      full_name
-      email
-      phone
-      profile_photo
-      is_host
-      status
-      joined_at
-      backed_out_at
-      source
-      refund_status
-      payment_id
-      backout_no
-      replaced_by_user_id
-      replaced_by_name
-      participation {
-        joined_at
-        attended
-        attended_at
-        attendance_recorded
-        pod_cancelled_by
-        pod_cancelled_at
-        cancel_refund_status
-        backouts {
-          backout_no
-          status
-          attempt_no
-          seats
-          seats_before
-          refund_amount
-          refund_status
-          deduction_pct
-          refund_processed_at
-          created_at
-          events {
-            status
-            at
-          }
-        }
-      }
-    }
+      ${ATTENDEE_SELECTION}
   }
 `;
 
 export const POD_AUDIT_TRAIL = gql`
   query AdminPodAuditTrail($id: ID!) {
     podAuditLogs(pod_doc_id: $id) {
-      id
-      action
-      source
-      actor_name
-      note
-      ai_risk
-      created_at
-    }
+      ${AUDIT_SELECTION}
   }
 `;
 
@@ -131,38 +208,14 @@ export const POD_CLUB_DETAIL = gql`
 export const POD_HOST_PROFILE = gql`
   query AdminPodHostProfile($user_id: ID!) {
     hostByUser(user_id: $user_id) {
-      id
-      host_no
-      full_name
-      email
-      phone
-      status
-    }
+      ${HOST_SELECTION}
   }
 `;
 
 export const POD_PAYMENTS_TABLE = gql`
   query AdminPodPaymentsTable($query: TableQueryInput) {
     paymentsTable(query: $query) {
-      rows {
-        id
-        payment_id
-        invoice_no
-        user_id
-        user_name
-        user_email
-        total
-        currency_symbol
-        status
-        gateway
-        coupon_code
-        paid_at
-        created_at
-      }
-      total
-      page
-      page_size
-    }
+      ${PAYMENTS_SELECTION}
   }
 `;
 
@@ -227,30 +280,7 @@ export interface PodAuditEntry {
 export const POD_FEEDBACK_SUMMARY = gql`
   query AdminPodFeedbackSummary($pod_id: ID!) {
     podFeedbackSummary(pod_id: $pod_id) {
-      pod_id
-      total
-      overall_average
-      aspects {
-        aspect
-        average
-        count
-      }
-      recent {
-        id
-        rating
-        message
-        created_at
-        category
-        user {
-          id
-          name
-        }
-        ratings {
-          aspect
-          rating
-        }
-      }
-    }
+      ${FEEDBACK_SELECTION}
   }
 `;
 

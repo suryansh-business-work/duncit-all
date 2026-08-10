@@ -5,7 +5,8 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import SectionCard from './SectionCard';
-import { POD_PAYMENTS_TABLE, type PodPaymentRow } from './queries';
+import { type PodPaymentRow } from './queries';
+import { usePodDetailsScope } from './scope';
 import { fmtDateTime, money } from './format';
 
 const PAYMENT_STATUS_COLORS: StatusColorMap = {
@@ -44,14 +45,20 @@ interface Props {
 /** Every payment transaction of this pod — bookings, failures and refunds. */
 export default function PodPaymentsSection({ podId }: Readonly<Props>) {
   const client = useApolloClient();
+  const scopeDocs = usePodDetailsScope();
   const refetchRef = useRef<(() => void) | null>(null);
 
   const fetchRows = useApolloTableFetch<PodPaymentRow>(
     client,
-    POD_PAYMENTS_TABLE,
+    scopeDocs.payments,
     'paymentsTable',
-    { extraFilters: [{ field: 'pod_id', op: 'eq', value: podId }] },
-    [podId],
+    // ADMIN filters the platform-wide table down to this pod. CLUB_ADMIN hits an
+    // operation that only ever reads ONE pod, so the pod travels as a variable
+    // the server applies — a filter the caller could drop would be a hole.
+    scopeDocs.scope === 'CLUB_ADMIN'
+      ? { extraVariables: { pod_id: podId } }
+      : { extraFilters: [{ field: 'pod_id', op: 'eq', value: podId }] },
+    [podId, scopeDocs.scope],
   );
 
   const columns = useMemo<DuncitColumn<PodPaymentRow>[]>(

@@ -46,6 +46,23 @@ export const clubAdminResolvers = {
     ) => clubAdminService.podsTable(actorOf(ctx), args.club_id, args.query),
     clubAdminPodAuditLogs: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
       clubAdminService.podAuditLogs(actorOf(ctx), args.pod_doc_id),
+    clubAdminPodAttendees: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
+      clubAdminService.podAttendees(actorOf(ctx), args.pod_doc_id),
+    clubAdminPodPayments: (
+      _p: unknown,
+      args: { pod_doc_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => clubAdminService.podPayments(actorOf(ctx), args.pod_doc_id, args.query),
+    clubAdminPodFeedback: (
+      _p: unknown,
+      args: { pod_doc_id: string; limit?: number | null },
+      ctx: GraphQLContext
+    ) => clubAdminService.podFeedback(actorOf(ctx), args.pod_doc_id, args.limit),
+    clubAdminPodHost: (
+      _p: unknown,
+      args: { pod_doc_id: string; user_id: string },
+      ctx: GraphQLContext
+    ) => clubAdminService.podHost(actorOf(ctx), args.pod_doc_id, args.user_id),
   },
   Mutation: {
     clubAdminCreatePod: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

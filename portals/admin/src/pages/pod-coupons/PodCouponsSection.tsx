@@ -4,7 +4,7 @@ import { Button } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import SectionCard from './SectionCard';
+import { SectionCard } from '@duncit/pod-details';
 import CouponsTable from '../coupons-page/CouponsTable';
 import CouponFormDialog from '../coupons-page/CouponFormDialog';
 import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';

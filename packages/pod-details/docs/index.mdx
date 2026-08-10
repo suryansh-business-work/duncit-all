@@ -1,0 +1,81 @@
+---
+name: '@duncit/pod-details'
+summary: 'The pod detail view — overview, timeline, attendees, payments, finance, feedback — rendered identically by the admin portal and by Club Admin for their own club.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'PodDetailsPage'
+  - 'PodDetailsScopeProvider'
+  - 'usePodDetailsScope'
+  - 'SectionCard'
+  - 'POD_DETAIL'
+---
+
+## What this is
+
+One pod detail page, rendered by two portals. Admin sees every pod on the platform;
+a Club Admin sees the pods of the clubs they administer — the **same** sections, the
+same layout, the same numbers.
+
+## Scope is not cosmetic
+
+`scope` picks which query set the self-fetching sections run:
+
+```tsx
+<PodDetailsPage />                       // ADMIN (default)
+<PodDetailsPage scope="CLUB_ADMIN" />    // club-scoped twins
+```
+
+This exists because **CLUB_ADMIN is a membership of a club, not a role on the user.**
+The admin operations are guarded by `requireRole`, which cannot express "administers
+this pod's club" — so they refuse a club admin outright. Five queries therefore have
+club-scoped twins, each gated server-side on `assertClubAdminForPod`:
+
+| Admin | Club Admin |
+| --- | --- |
+| `adminPodAttendees` | `clubAdminPodAttendees` |
+| `podAuditLogs` | `clubAdminPodAuditLogs` |
+| `hostByUser` | `clubAdminPodHost` |
+| `paymentsTable` | `clubAdminPodPayments` |
+| `podFeedbackSummary` | `clubAdminPodFeedback` |
+
+Every club-admin root field is **aliased to the admin field name**, so the components
+read one response shape and never branch on who is looking.
+
+### Two deliberate asymmetries
+
+- **Payments take a pod id, not a query input.** The admin `paymentsTable` accepts a
+  free-form `TableQueryInput` that can express *"every payment on the platform"*.
+  Handing that to a club admin would be a hole, so `clubAdminPodPayments` applies the
+  pod filter server-side where the caller cannot widen it.
+- **The host profile is scoped to the pod.** A club admin may read the host running
+  *their* pod, not look up any host by id.
+
+## Selections are shared, not duplicated
+
+The field selections live once in `queries.ts` and are interpolated into both document
+sets. The two sets feed the **same** components, so a field added to one and missed on
+the other renders a blank cell for one audience only (rule 34).
+
+## Slots
+
+Coupons are **not** in this package: managing them is platform-wide (`ADMIN_RW`
+create/delete) and reaches into the admin coupons page. Admin injects it:
+
+```tsx
+<PodDetailsPage footer={(pod) => <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />} />
+```
+
+## Force-marking attendance
+
+At `CLUB_ADMIN` scope only, each un-scanned booking gets a **Mark present** action
+(`clubAdminForceAttendance`). The host has no such button anywhere, on purpose:
+attendance decides what a completed pod pays the host, so a host who could mark by hand
+would be writing their own payout. A scan is proof; this is the override for when that
+proof cannot be produced. Every forced mark records who forced it and notifies the
+member.

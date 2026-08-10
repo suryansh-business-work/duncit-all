@@ -5,7 +5,8 @@ import type { StatusColorMap } from '@duncit/ui';
 import SectionCard, { SectionEmpty } from './SectionCard';
 import PodLifecycleStrip, { type LifecycleStep } from './PodLifecycleStrip';
 import PodActivityFeed from './PodActivityFeed';
-import { POD_AUDIT_TRAIL, type PodAuditEntry } from './queries';
+import { type PodAuditEntry } from './queries';
+import { usePodDetailsScope } from './scope';
 
 const ACTION_COLORS: StatusColorMap = {
   CREATE: 'success',
@@ -44,7 +45,8 @@ interface Props {
 /** Lifecycle strip (Created → Pod date → Completed/Cancelled) + the pod's full
  * audit activity, including who cancelled it and why. */
 export default function PodTimelineSection({ pod }: Readonly<Props>) {
-  const { data, loading, error } = useQuery(POD_AUDIT_TRAIL, {
+  const scopeDocs = usePodDetailsScope();
+  const { data, loading, error } = useQuery(scopeDocs.auditTrail, {
     variables: { id: pod.id },
     fetchPolicy: 'cache-and-network',
   });

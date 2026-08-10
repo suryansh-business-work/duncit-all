@@ -362,6 +362,49 @@ export const clubAdminService = {
     await this.assertClubAdmin(actor, String((pod as any).club_id));
   },
 
+  /**
+   * The pod-detail reads a Club Admin gets for a pod in one of THEIR clubs.
+   *
+   * Each is the club-admin twin of an admin query that `requireRole` guards.
+   * They exist separately rather than as extra roles on the admin ones because
+   * CLUB_ADMIN is a membership of a club, not a role on the user — there is no
+   * role to add. Every one of them gates on `assertClubAdminForPod` FIRST, so
+   * the pod itself is what proves the caller may read any of this.
+   */
+  async podAttendees(actor: Actor, podDocId: string) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
+    return podMemberService.listAdminAttendees(podDocId);
+  },
+
+  async podPayments(actor: Actor, podDocId: string, query?: any) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    const { paymentService } = await import('@modules/finance/payment/payment.service');
+    // tableForPod, never table: the pod filter must not be something the
+    // caller can widen through the query input.
+    return paymentService.tableForPod(podDocId, query);
+  },
+
+  async podFeedback(actor: Actor, podDocId: string, limit?: number | null) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    const { bouncerService } = await import('@modules/support/bouncer/bouncer.service');
+    return bouncerService.podFeedback(podDocId, limit ?? 20);
+  },
+
+  /** The host profile behind one of THIS pod's hosts. Scoped to the pod so a
+   * club admin cannot look up an arbitrary host by id. */
+  async podHost(actor: Actor, podDocId: string, userId: string) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    const pod = await PodModel.findById(podDocId)
+      .setOptions({ includeDeleted: true })
+      .select('pod_hosts_id')
+      .lean();
+    const hosts = ((pod as any)?.pod_hosts_id ?? []).map(String);
+    if (!hosts.includes(String(userId))) return null;
+    const { hostService } = await import('@modules/venues/host/host.service');
+    return hostService.getByUser(String(userId));
+  },
+
   /** Approved hosts matching the search, for the club admin assign-host picker.
    * Guarded on administering at least one club (SUPER_ADMIN bypasses). */
   async searchHosts(actor: Actor, search?: string | null) {

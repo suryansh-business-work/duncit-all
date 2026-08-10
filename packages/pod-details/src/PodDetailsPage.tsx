@@ -1,10 +1,13 @@
-import { useQuery } from '@apollo/client';
+import { useState, type ReactNode } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import { useFeatureFlag } from '@duncit/app-settings';
-import { POD_ATTENDEES_ADMIN, POD_DETAIL, type AdminPodAttendeeRow } from './queries';
+import { POD_DETAIL, type AdminPodAttendeeRow } from './queries';
+import { PodDetailsScopeProvider, usePodDetailsScope, type PodDetailsScope } from './scope';
+import { CLUB_ADMIN_FORCE_ATTENDANCE } from './queries.club-admin';
 import PodStatusChips from './PodStatusChips';
 import PodOverviewCard from './PodOverviewCard';
 import PodTimelineSection from './PodTimelineSection';
@@ -12,23 +15,55 @@ import PodAttendeesSection from './PodAttendeesSection';
 import PodPaymentsSection from './PodPaymentsSection';
 import PodHostsCard from './PodHostsCard';
 import PodClubCard from './PodClubCard';
-import PodCouponsSection from './PodCouponsSection';
 import PodFinanceSection from './PodFinanceSection';
 import PodFeedbackSection from './PodFeedbackSection';
 
 /** One gap for the whole page, so nothing is 2 here and 3 there. */
 const GAP = 2.5;
 
-export default function PodDetailsPage() {
+export interface PodDetailsViewProps {
+  /** Who is reading — picks the admin or the club-scoped query set. */
+  scope?: PodDetailsScope;
+  /** Where Back goes. Defaults to the admin pods list. */
+  backTo?: string;
+  backLabel?: string;
+  /** Where Edit goes. Omit to hide the action entirely — a reader whose portal
+   * has no edit route should not be shown a button that goes nowhere. */
+  editTo?: (podId: string) => string;
+  /** Rendered under the tables. The admin portal puts its coupons section here;
+   * it stays out of this package because coupon management is platform-wide
+   * (ADMIN_RW create/delete) and reaches into the admin coupons page. */
+  footer?: (pod: { id: string; pod_title: string }) => ReactNode;
+}
+
+/** Wraps the view in its scope, so every self-fetching section below reads the
+ * query set its audience is actually allowed to run. */
+export default function PodDetailsPage(props: Readonly<PodDetailsViewProps>) {
+  return (
+    <PodDetailsScopeProvider scope={props.scope ?? 'ADMIN'}>
+      <PodDetailsView {...props} />
+    </PodDetailsScopeProvider>
+  );
+}
+
+function PodDetailsView({
+  backTo = '/pods',
+  backLabel = 'Pods',
+  editTo = (podId: string) => `/pods?edit=${podId}`,
+  footer,
+}: Readonly<PodDetailsViewProps>) {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const scopeDocs = usePodDetailsScope();
   const showProducts = useFeatureFlag('is_product_visible');
+  const [forceAttendance, forceState] = useMutation(CLUB_ADMIN_FORCE_ATTENDANCE);
+  const [forcingId, setForcingId] = useState<string | null>(null);
   const { data, loading, error } = useQuery(POD_DETAIL, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const attendeesQuery = useQuery(POD_ATTENDEES_ADMIN, {
+  const attendeesQuery = useQuery(scopeDocs.attendees, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
@@ -57,7 +92,7 @@ export default function PodDetailsPage() {
           >
             <Stack spacing={1.25} sx={{ minWidth: 0 }}>
               <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-                <BackButton onClick={() => navigate('/pods')}>Pods</BackButton>
+                <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
                 <Typography variant="h5" fontWeight={900} noWrap>
                   {pod.pod_title}
                 </Typography>
@@ -70,7 +105,7 @@ export default function PodDetailsPage() {
             <Button
               variant="contained"
               startIcon={<EditIcon />}
-              onClick={() => navigate(`/pods?edit=${pod.id}`)}
+              onClick={() => navigate(editTo(pod.id))}
               sx={{ flexShrink: 0 }}
             >
               Edit pod
@@ -105,10 +140,29 @@ export default function PodDetailsPage() {
             rows={attendeeRows}
             loading={attendeesQuery.loading}
             podDateTime={pod.pod_date_time}
-            errorText={attendeesQuery.error?.message}
+            errorText={attendeesQuery.error?.message || forceState.error?.message}
+            // Offered ONLY at club-admin scope. The host has no button here on
+            // purpose: attendance decides what the host is paid, so a host who
+            // could mark by hand would be writing their own payout.
+            onForceAttendance={
+              scopeDocs.scope === 'CLUB_ADMIN'
+                ? (membershipId) => {
+                    setForcingId(membershipId);
+                    forceAttendance({
+                      variables: { pod_doc_id: pod.id, membership_id: membershipId },
+                    })
+                      // Re-read so the row moves to attended and every
+                      // attendance-derived figure on the page follows it.
+                      .then(() => attendeesQuery.refetch())
+                      .catch(() => undefined)
+                      .finally(() => setForcingId(null));
+                  }
+                : undefined
+            }
+            forcingId={forcingId}
           />
           <PodPaymentsSection podId={pod.id} />
-          <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
+          {footer?.(pod)}
         </Stack>
       )}
     </QueryGuard>

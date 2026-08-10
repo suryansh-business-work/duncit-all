@@ -28,6 +28,12 @@ interface Props {
   loading: boolean;
   podDateTime?: string | null;
   errorText?: string;
+  /** Club Admin only: mark a booking present without a scan. Absent for
+   * everyone else — the host must scan, because the host is paid on the
+   * result. */
+  onForceAttendance?: (membershipId: string) => void;
+  /** The membership currently being marked, so only its button shows busy. */
+  forcingId?: string | null;
 }
 
 /** Everyone on the pod with contacts. A member whose seat was rebooked renders
@@ -38,6 +44,8 @@ export default function PodAttendeesSection({
   loading,
   podDateTime,
   errorText,
+  onForceAttendance,
+  forcingId,
 }: Readonly<Props>) {
   return (
     <SectionCard
@@ -67,6 +75,8 @@ export default function PodAttendeesSection({
                 statusText={statusLabel(row, podDateTime)}
                 podDateTime={podDateTime}
                 colSpan={COLUMNS.length}
+                onForceAttendance={onForceAttendance}
+                forcing={!!row.member_id && forcingId === row.member_id}
               />
             ))}
           </TableBody>

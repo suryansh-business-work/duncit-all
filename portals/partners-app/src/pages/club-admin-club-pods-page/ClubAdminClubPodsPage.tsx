@@ -8,6 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import HistoryIcon from '@mui/icons-material/History';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { PodEditorDialog, useMediaPickerBridge } from '@duncit/pod-form';
@@ -80,6 +81,15 @@ export default function ClubAdminClubPodsPage() {
 
   const renderActions = (pod: PodRowBase) => (
     <Stack direction="row" justifyContent="flex-end" component="span">
+      <Tooltip title="Pod details">
+        <IconButton
+          size="small"
+          component={RouterLink}
+          to={`/club-admin/clubs/${clubId}/pods/${pod.id}`}
+        >
+          <VisibilityIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
       <Tooltip title="Activity & AI monitoring">
         <IconButton size="small" onClick={() => setTrailPod(pod)}>
           <HistoryIcon fontSize="small" />

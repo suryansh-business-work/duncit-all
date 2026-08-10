@@ -107,9 +107,9 @@ async function main(): Promise<void> {
   await mongoose.disconnect();
 }
 
-try {
-  await main();
-} catch (error) {
+// `main().catch(...)` rather than top-level await: the server compiles to
+// CommonJS, where a top-level await is a syntax error.
+main().catch((error) => {
   console.error(error);
   process.exit(1);
-}
+});

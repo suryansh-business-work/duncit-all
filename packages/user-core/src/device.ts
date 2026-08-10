@@ -31,6 +31,33 @@ export function makeDeviceId(): string {
 }
 
 /**
+ * This browser's DUID, minting one on first read.
+ *
+ * Lives here rather than in `@duncit/utils` because the native app consumes
+ * utils through npm `file:` links and npm cannot resolve the `workspace:*`
+ * protocol a cross-package dependency needs — so nothing the app imports may
+ * depend on another `@duncit/*` package. Device identity is this package's job
+ * anyway.
+ *
+ * Native has its own reader in `app/mobile-app/src/services/device.ts`: the
+ * Keychain is async. Same key, same generator.
+ */
+export function getOrCreateDuid(): string {
+  if (globalThis.window === undefined) return '';
+  try {
+    const existing = globalThis.localStorage.getItem(DUID_STORAGE_KEY);
+    if (existing && existing.length > 0) return existing;
+    const fresh = makeDeviceId();
+    globalThis.localStorage.setItem(DUID_STORAGE_KEY, fresh);
+    return fresh;
+  } catch {
+    // Private mode / disabled storage: still return a value for headers, even
+    // though it will not be stable across reloads.
+    return makeDeviceId();
+  }
+}
+
+/**
  * Normalise whatever a platform probe read into the one device shape.
  *
  * Every field lands as a string, never undefined: this object is attached to

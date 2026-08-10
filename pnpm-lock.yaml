@@ -1610,10 +1610,6 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/utils:
-    dependencies:
-      '@duncit/user-core':
-        specifier: workspace:*
-        version: link:../user-core
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1

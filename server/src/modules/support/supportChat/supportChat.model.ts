@@ -59,8 +59,6 @@ export interface ISupportChatMessage extends Document {
   session_id: Types.ObjectId;
   sender_id: Types.ObjectId;
   sender_role: SupportChatSenderRole;
-  sender_name: string;
-  sender_photo: string;
   text: string;
   attachments: string[];
   /** AGENT-role messages authored by the AI assistant rather than a human. */
@@ -71,10 +69,12 @@ export interface ISupportChatMessage extends Document {
 const messageSchema = new Schema<ISupportChatMessage>(
   {
     session_id: { type: Schema.Types.ObjectId, ref: 'SupportChatSession', required: true, index: true },
+    // The id, and only the id — the sender's name and photo are resolved from
+    // the account at read time (`userDisplayMap`). They used to be copied here
+    // at write time, so an agent who changed their name kept the old one in
+    // every conversation they had already handled.
     sender_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     sender_role: { type: String, enum: ['USER', 'AGENT', 'SYSTEM'], required: true },
-    sender_name: { type: String, default: '' },
-    sender_photo: { type: String, default: '' },
     text: { type: String, default: '' },
     attachments: { type: [String], default: [] },
     is_ai: { type: Boolean, default: false },

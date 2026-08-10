@@ -8,7 +8,13 @@ export {
   initials,
   normalizeMe,
 } from './derive';
-export { DUID_STORAGE_KEY, deviceTimezone, makeDevice, makeDeviceId } from './device';
+export {
+  DUID_STORAGE_KEY,
+  deviceTimezone,
+  getOrCreateDuid,
+  makeDevice,
+  makeDeviceId,
+} from './device';
 export {
   USER_CHANGED_EVENT,
   parseUserChangedFrame,

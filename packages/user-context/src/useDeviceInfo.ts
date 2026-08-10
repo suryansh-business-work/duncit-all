@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { deviceTimezone, makeDevice, type SessionDevice } from '@duncit/user-core';
-import { getOrCreateDuid } from '@duncit/utils';
+import { deviceTimezone, getOrCreateDuid, makeDevice, type SessionDevice } from '@duncit/user-core';
 
 /**
  * What the app version resolves to on a surface that never defined it.

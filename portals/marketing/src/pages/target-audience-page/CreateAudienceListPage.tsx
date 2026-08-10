@@ -47,7 +47,7 @@ export default function CreateAudienceListPage() {
   );
 
   const owners = data?.audienceListOwners ?? [];
-  const defaultOwnerId = user?.id ?? '';
+  const defaultOwnerId = user?.user_id ?? '';
   const filterCount = activeFilterCount(filters);
 
   const backToLists = () => navigate('/audience');

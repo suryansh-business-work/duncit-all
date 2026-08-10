@@ -2,6 +2,12 @@ import { GraphQLError } from 'graphql';
 import { chatService } from './chat.service';
 import type { GraphQLContext } from '@context';
 import { emitToPod } from './chat.socket';
+import {
+  displayFrom,
+  userDisplayMap,
+  userDisplayOf,
+  type UserDisplay,
+} from '@modules/access/user/user.display';
 
 function requireAuth(ctx: GraphQLContext) {
   if (!ctx.user?.id) {
@@ -12,13 +18,25 @@ function requireAuth(ctx: GraphQLContext) {
   return ctx.user.id;
 }
 
-function shape(doc: any) {
+/**
+ * Shape a message for both GraphQL and the socket.
+ *
+ * The name and photo are resolved from the account NOW rather than read off the
+ * row, which no longer stores them. `display` is passed in so a page of
+ * messages costs one user query instead of one per message.
+ *
+ * Both paths go through here on purpose: the socket pushes this object
+ * straight to connected clients, so a field resolver would never run for the
+ * realtime copy and a renamed user would appear correctly on refresh and
+ * wrongly the moment they posted.
+ */
+function shape(doc: any, display: UserDisplay) {
   return {
     id: String(doc._id || doc.id),
     pod_id: String(doc.pod_id),
     user_id: String(doc.user_id),
-    user_name: doc.user_name || '',
-    user_photo: doc.user_photo || '',
+    user_name: display.name,
+    user_photo: display.photo,
     type: doc.type,
     text: doc.text || '',
     image_url: doc.image_url || '',
@@ -77,7 +95,8 @@ export const chatResolvers = {
     ) => {
       const uid = requireAuth(ctx);
       const docs = await chatService.listMessages(args.pod_id, uid, args.limit, args.before);
-      return docs.map(shape);
+      const display = await userDisplayMap(docs.map((d: any) => d.user_id));
+      return docs.map((d: any) => shape(d, displayFrom(display, d.user_id)));
     },
   },
   Mutation: {
@@ -94,7 +113,7 @@ export const chatResolvers = {
         text: args.text,
         imageUrl: args.image_url,
       });
-      const shaped = shape(doc);
+      const shaped = shape(doc, await userDisplayOf(uid));
       emitToPod(args.pod_id, 'message', shaped);
       return shaped;
     },
@@ -109,7 +128,10 @@ export const chatResolvers = {
         userId: uid,
         emoji: args.emoji,
       });
-      const shaped = shape(doc);
+      // The message's AUTHOR, not the reacting user — a reaction rebroadcasts
+      // the whole message, and resolving `uid` here would relabel someone
+      // else's message with the name of whoever last tapped an emoji on it.
+      const shaped = shape(doc, await userDisplayOf(doc.user_id));
       emitToPod(shaped.pod_id, 'reaction', shaped);
       return shaped;
     },
@@ -121,7 +143,7 @@ export const chatResolvers = {
       const uid = requireAuth(ctx);
       const doc = await chatService.deleteMessage(args.message_id, uid);
       if (!doc) return null;
-      const shaped = shape(doc);
+      const shaped = shape(doc, await userDisplayOf(doc.user_id));
       emitToPod(shaped.pod_id, 'deleted', shaped);
       return shaped;
     },

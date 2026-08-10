@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button, CircularProgress, Stack, Typography } from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from '../../../i18n/useTranslation';
 import {
   ANSWER_FOLLOW_REQUEST,
@@ -15,6 +13,9 @@ interface Props {
   requestId?: string | null;
   /** Live status of the request — PENDING is the only state with buttons. */
   status?: string | null;
+  /** The row is unread, so it is painted with the primary gradient — the text
+   * buttons inherit its ink instead of using palette colours that vanish on it. */
+  unreadRow?: boolean;
   /** Lets the inbox re-read counts/rows once the request is answered. */
   onAnswered: () => void;
 }
@@ -26,6 +27,7 @@ export default function FollowRequestActions({
   actionType,
   requestId,
   status,
+  unreadRow,
   onAnswered,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -65,26 +67,37 @@ export default function FollowRequestActions({
 
   return (
     <Stack spacing={0.5} sx={{ mt: 1 }} onClick={(event) => event.stopPropagation()}>
-      <Stack direction="row" spacing={1}>
+      {/* Text buttons, not filled ones: the row is already a large tappable
+          card (and an unread one carries a gradient), so a solid button fights
+          it. Accept leads in the primary colour, Deny sits back in grey. */}
+      <Stack direction="row" spacing={0.5} sx={{ ml: -0.5 }}>
         <Button
           size="small"
-          variant="contained"
-          color="primary"
+          variant="text"
           disabled={busy}
-          startIcon={busy ? <CircularProgress size={13} color="inherit" /> : <CheckIcon />}
+          startIcon={busy ? <CircularProgress size={13} color="inherit" /> : undefined}
           onClick={() => void answer(accept)}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
+          sx={{
+            fontWeight: 800,
+            textTransform: 'none',
+            // `inherit` on an unread row: its gradient already sets a light ink,
+            // and primary.main on that background is unreadable.
+            color: unreadRow ? 'inherit' : 'primary.main',
+          }}
         >
           {t('mweb.follow.accept')}
         </Button>
         <Button
           size="small"
-          variant="outlined"
-          color="inherit"
+          variant="text"
           disabled={busy}
-          startIcon={<CloseIcon />}
           onClick={() => void answer(reject)}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
+          sx={{
+            fontWeight: 800,
+            textTransform: 'none',
+            color: unreadRow ? 'inherit' : 'text.secondary',
+            opacity: unreadRow ? 0.75 : 1,
+          }}
         >
           {t('mweb.follow.reject')}
         </Button>

@@ -24,6 +24,13 @@ const toPub = (n: INotification) => ({
   body: n.body,
   image_url: n.image_url ?? null,
   link_url: n.link_url ?? null,
+  // The inline-action pair. Stored by create() and exposed by the schema, but
+  // absent here until now — so every read returned action_type: null, the
+  // Accept/Reject buttons gated themselves off, and a follow request rendered
+  // as an ordinary "open me" row. `action_status` resolves off action_type, so
+  // it was collateral: it returned null too.
+  action_type: n.action_type ?? null,
+  action_ref_id: n.action_ref_id ? String(n.action_ref_id) : null,
   scope: n.scope,
   silent: !!n.silent,
   location_id: n.location_id ? String(n.location_id) : null,

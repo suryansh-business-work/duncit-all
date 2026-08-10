@@ -183,7 +183,6 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     listing_submitted_by_id: product.listing_submitted_by_id ?? null,
     listing_submitted_by_name: product.listing_submitted_by_name ?? '',
     listing_reviewed_by_id: product.listing_reviewed_by_id ?? null,
-    listing_reviewed_by_name: product.listing_reviewed_by_name ?? '',
     is_duncit_delivery_partner: !!product.is_duncit_delivery_partner,
     ownership: product.ownership ?? 'DUNCIT',
     size_label: product.size_label ?? '',
@@ -1198,7 +1197,6 @@ export const inventoryService = {
     doc.listing_review_status = approved ? 'APPROVED' : 'DENIED';
     doc.listing_review_notes = cleanText(notes, 1000);
     doc.listing_reviewed_by_id = info.id;
-    doc.listing_reviewed_by_name = info.name;
     doc.status = approved ? 'ACTIVE' : 'ARCHIVED';
     doc.visibility = approved ? 'PUBLIC' : 'INTERNAL';
     doc.is_active = approved;

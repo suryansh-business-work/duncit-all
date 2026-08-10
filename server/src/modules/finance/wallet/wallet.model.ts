@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { WITHDRAWER_ROLES, type WithdrawerRole } from '@modules/finance/finance/finance.model';
 
 export type WalletTxnType = 'CREDIT' | 'DEBIT';
 export type WalletTxnSource = 'POD_COMPLETION' | 'WITHDRAWAL' | 'WITHDRAWAL_REVERSAL';
@@ -32,6 +33,7 @@ export interface IWalletWithdrawal extends Document {
   beneficiary_name: string;
   beneficiary_email: string;
   amount: number;
+  withdrawer_role: WithdrawerRole;
   status: WithdrawalStatus;
   payout_method: WithdrawalMethod;
   account_holder_name: string;
@@ -80,6 +82,11 @@ const withdrawalSchema = new Schema<IWalletWithdrawal>(
     beneficiary_name: { type: String, default: '', trim: true, maxlength: 160 },
     beneficiary_email: { type: String, default: '', trim: true, lowercase: true },
     amount: { type: Number, required: true, min: 1 },
+    // The capacity the money was withdrawn in. STAMPED AT REQUEST TIME and never
+    // resolved live: a withdrawal is a payout record, and which capacity someone
+    // withdrew in must not change if their roles change later. Indexed because
+    // the Finance withdrawals table filters on it.
+    withdrawer_role: { type: String, enum: WITHDRAWER_ROLES, default: 'HOST', index: true },
     status: { type: String, enum: ['PENDING', 'PAID', 'REJECTED'], default: 'PENDING', index: true },
     payout_method: { type: String, enum: ['UPI', 'IMPS', 'NEFT'], default: 'UPI' },
     account_holder_name: { type: String, default: '', trim: true, maxlength: 120 },

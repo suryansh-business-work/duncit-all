@@ -49,7 +49,12 @@
     "migrate:email-fragments": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-fragments.ts",
     "migrate:email-fragments:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-fragments.ts --dry-run",
     "migrate:club-admins": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-admin-profiles.ts",
-    "migrate:club-admins:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-admin-profiles.ts --dry-run"
+    "migrate:club-admins:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-admin-profiles.ts --dry-run",
+    "migrate:drop-user-copies": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts",
+    "migrate:drop-user-copies:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --dry-run",
+    "migrate:drop-user-copies:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --uri mongodb://127.0.0.1:27017/duncit-local",
+    "migrate:drop-user-copies:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
+    "seed:dead-user-copies": "ts-node -r tsconfig-paths/register --transpile-only scripts/seed-dead-user-copies.ts --uri mongodb://127.0.0.1:27017/duncit-local"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

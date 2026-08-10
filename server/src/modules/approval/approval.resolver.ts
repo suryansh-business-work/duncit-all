@@ -1,3 +1,4 @@
+import { userDisplayOf } from '@modules/access/user/user.display';
 import { approvalService } from './approval.service';
 import type { ApprovalStatus } from './approval.model';
 import type { GraphQLContext } from '@context';
@@ -12,6 +13,17 @@ const ECOMM_PORTAL = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 const WAREHOUSE_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 
 export const approvalResolvers = {
+  ApprovalRequest: {
+    /**
+     * Who decided this request, resolved from the stored reviewer id.
+     *
+     * Its requested_by_name sibling stays stored: that one is a searchField
+     * on the approvals inbox, and Mongo cannot search a value that is not on
+     * the row. syncUserMirrors keeps that copy correct instead.
+     */
+    reviewed_by_name: async (parent: { reviewed_by?: string | null }) =>
+      parent.reviewed_by ? (await userDisplayOf(parent.reviewed_by)).name : null,
+  },
   Query: {
     approvalRequests: (
       _p: unknown,

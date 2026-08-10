@@ -1231,8 +1231,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       searchPexels: 'Search Pexels',
       noPhotos: 'No photos matched. Try a different word.',
       loadMore: 'Load more',
-      pexelsUnreachable: 'Could not reach Pexels',
       photoImportFailed: 'Could not add that photo',
+      // Shown instead of the transport's own wording ("The request timed out"),
+      // which tells the user what the network did rather than what they can do.
+      photoSearchFailed: 'Could not load photos. Check your connection and search again.',
       photoCredit: 'Photo by {name} on Pexels',
       photoBy: 'Photo by {name}',
       pexelsNotice:

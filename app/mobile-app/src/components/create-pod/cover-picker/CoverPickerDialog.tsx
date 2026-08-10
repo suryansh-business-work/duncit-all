@@ -195,7 +195,13 @@ export function CoverPickerDialog({
                   )}
                 </ScrollView>
 
-                <XStack gap={12} paddingTop={8}>
+                {/* flexShrink 0: letting the grid shrink (above) is only half
+                    the answer — React Native still shrinks THIS row when a
+                    freshly-loaded page of Pexels results overflows the sheet,
+                    which is how "Use these images" disappeared as the images
+                    came in. The action row is the one thing that must never
+                    give way. */}
+                <XStack gap={12} paddingTop={8} flexShrink={0}>
                   <XStack
                     testID="cover-picker-cancel"
                     role="button"

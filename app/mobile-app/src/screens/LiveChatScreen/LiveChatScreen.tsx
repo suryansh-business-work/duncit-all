@@ -7,6 +7,7 @@ import {
 import { Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { SupportChatComposer } from '@/components/support-chat/SupportChatComposer';
 import { JumpToLatestButton } from '@/components/support-chat/JumpToLatestButton';
 import { useSupportChat } from '@/hooks/useSupportChat';
@@ -126,65 +127,72 @@ export function LiveChatScreen() {
       testID="live-chat-screen"
       right={session ? headerActions : undefined}
     >
-      <YStack flex={1}>
-        {session?.ticket_no ? (
-          <Text
-            testID="chat-ticket-no"
-            fontSize={12}
-            color="$muted"
-            paddingHorizontal={16}
-            paddingTop={8}
-          >
-            {session.ticket_no} · {closed ? 'Resolved' : 'Open'}
-          </Text>
-        ) : null}
+      {/* The composer is bottom-anchored, and since Expo SDK 54 Android always
+          runs edge-to-edge — the window no longer resizes, so the keyboard is
+          drawn straight over it. Every other composer in the app already lifts
+          through KeyboardScreen; this screen was missing it, which is why the
+          input sat behind the keyboard here. */}
+      <KeyboardScreen>
+        <YStack flex={1}>
+          {session?.ticket_no ? (
+            <Text
+              testID="chat-ticket-no"
+              fontSize={12}
+              color="$muted"
+              paddingHorizontal={16}
+              paddingTop={8}
+            >
+              {session.ticket_no} · {closed ? 'Resolved' : 'Open'}
+            </Text>
+          ) : null}
 
-        <ChatBody
-          ref={scrollRef}
-          isLoading={isLoading}
-          error={error}
-          messages={messages}
-          session={session}
-          timeZone={timeZone}
-          typing={typing}
-          aiThinking={aiThinking}
-          onRetry={(m) => {
-            retry(m);
-          }}
-          onScroll={onScroll}
-          onContentSizeChange={handleContentSizeChange}
-        />
+          <ChatBody
+            ref={scrollRef}
+            isLoading={isLoading}
+            error={error}
+            messages={messages}
+            session={session}
+            timeZone={timeZone}
+            typing={typing}
+            aiThinking={aiThinking}
+            onRetry={(m) => {
+              retry(m);
+            }}
+            onScroll={onScroll}
+            onContentSizeChange={handleContentSizeChange}
+          />
 
-        {showJump ? (
-          <JumpToLatestButton testID="chat-jump-bottom" bottom={84} onPress={jumpToLatest} />
-        ) : null}
+          {showJump ? (
+            <JumpToLatestButton testID="chat-jump-bottom" bottom={84} onPress={jumpToLatest} />
+          ) : null}
 
-        {sendError ? (
-          <Text
-            testID="support-chat-send-error"
-            color="$danger"
-            fontSize={12}
-            paddingHorizontal={16}
-          >
-            {sendError}
-          </Text>
-        ) : null}
+          {sendError ? (
+            <Text
+              testID="support-chat-send-error"
+              color="$danger"
+              fontSize={12}
+              paddingHorizontal={16}
+            >
+              {sendError}
+            </Text>
+          ) : null}
 
-        {closed ? (
-          <ClosedNote reopenAllowed={!!reopenAllowed} deadlineLabel={reopenDeadlineLabel} />
-        ) : null}
+          {closed ? (
+            <ClosedNote reopenAllowed={!!reopenAllowed} deadlineLabel={reopenDeadlineLabel} />
+          ) : null}
 
-        <SupportChatComposer
-          busy={busy}
-          locked={!!closed}
-          attachments={attachments}
-          onRemoveAttachment={(url) => setAttachments((prev) => prev.filter((u) => u !== url))}
-          onSendText={onSendText}
-          onAttach={() => void attach()}
-          onAttachDocument={() => void attachDocument()}
-          onTyping={emitTyping}
-        />
-      </YStack>
+          <SupportChatComposer
+            busy={busy}
+            locked={!!closed}
+            attachments={attachments}
+            onRemoveAttachment={(url) => setAttachments((prev) => prev.filter((u) => u !== url))}
+            onSendText={onSendText}
+            onAttach={() => void attach()}
+            onAttachDocument={() => void attachDocument()}
+            onTyping={emitTyping}
+          />
+        </YStack>
+      </KeyboardScreen>
 
       <ChatModals
         actions={a}

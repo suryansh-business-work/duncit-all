@@ -3,6 +3,7 @@ import { Avatar, Badge, Box, IconButton, Stack, Tooltip, Typography } from '@mui
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
 import HeaderCartButton from '../cart/HeaderCartButton';
+import { initials, normalizeMe } from '@duncit/user-core';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** A labelled circular header action (mock): the button with a tiny caption. */
@@ -23,7 +24,15 @@ interface Props {
   locationId: string;
   zoneName: string;
   onToast: (t: { title?: string; body?: string } | null) => void;
-  me?: { full_name?: string | null; first_name?: string | null; profile_photo?: string | null } | null;
+  // `user_id` is what `normalizeMe` keys on — an account without one is a
+  // malformed answer, not an anonymous visitor, and the avatar falls back.
+  me?: {
+    user_id?: string | null;
+    full_name?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    profile_photo?: string | null;
+  } | null;
   onOpenMenu: () => void;
 }
 
@@ -89,7 +98,7 @@ export default function HeaderQuickActions({
                 boxShadow: '0 0 0 3px rgba(255,79,115,0.24)',
               }}
             >
-              {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
+              {initials(normalizeMe(me))}
             </Avatar>
           </Badge>
         </IconButton>

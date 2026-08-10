@@ -14,6 +14,7 @@ import {
   FollowRequestModel,
 } from './relations';
 import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
+import { emitUserChanged } from '../../../realtime/user.events';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
   LoginDTO,
@@ -609,6 +610,9 @@ async function toPublic(u: any) {
     bio: profile.bio ?? legacy.bio ?? null,
     // Dormant since the schema was written; now the users language choice.
     locale: profile.locale ?? 'en-IN',
+    // Documents written before the field existed have none; '' tells the client
+    // to use the device zone rather than guessing one for them.
+    timezone: profile.timezone ?? '',
     profile_links: (u.profile_links ?? []).map((link: any) => ({
       label: link.label ?? '',
       url: link.url ?? '',
@@ -646,6 +650,52 @@ async function toPublic(u: any) {
     updated_at:
       (meta.updated_at ?? legacy.updated_at)?.toISOString?.() ?? '',
   };
+}
+
+/**
+ * The fields the shared session context actually renders.
+ *
+ * Kept as an explicit list rather than "the whole public user" because this
+ * goes out on a socket to every tab the account has open: `saved_pod_ids` and
+ * the follow graphs can be thousands of ids, and none of them is session state.
+ */
+const SESSION_FIELDS = [
+  'first_name',
+  'last_name',
+  'full_name',
+  'email',
+  'phone_number',
+  'phone_extension',
+  'profile_photo',
+  'bio',
+  'roles',
+  'locale',
+  'timezone',
+  'country',
+  'city',
+  'state',
+  'zone',
+  'assigned_city',
+  'assigned_zones',
+  'selected_location_id',
+  'is_email_verified',
+  'is_phone_verified',
+  'onboarding_survey_completed',
+  'updated_at',
+] as const;
+
+/**
+ * Announce a profile change to the account's other surfaces, then hand the
+ * public user straight back so a resolver can `return publishSession(pub)`.
+ */
+function publishSession<T extends Record<string, any> | null>(pub: T): T {
+  if (!pub?.user_id) return pub;
+  const patch: Record<string, unknown> = {};
+  for (const key of SESSION_FIELDS) {
+    if (pub[key] !== undefined) patch[key] = pub[key];
+  }
+  emitUserChanged(String(pub.user_id), patch);
+  return pub;
 }
 
 async function authPayload(u: any) {
@@ -1232,7 +1282,7 @@ export const userService = {
     }
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    return publishSession(await toPublic(updated));
   },
 
   async requestEmailVerificationOtp(user_id: string) {
@@ -2197,7 +2247,9 @@ export const userService = {
       { new: true }
     );
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    // The one change a user makes on one device and expects to see on the next:
+    // the language switch is exactly what `user:changed` exists for.
+    return publishSession(await toPublic(updated));
   },
 
   // True when `viewerId` already follows `targetId`.

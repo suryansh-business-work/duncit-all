@@ -51,6 +51,7 @@ COPY packages/portal-pod-form/package.json ./packages/portal-pod-form/
 COPY packages/pod-form/package.json ./packages/pod-form/
 COPY packages/slots/package.json ./packages/slots/
 COPY packages/club-form/package.json ./packages/club-form/
+COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/pod-product-picker/package.json ./packages/pod-product-picker/

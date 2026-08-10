@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { gql, useQuery } from '@apollo/client';
 
 export const PUBLIC_FEATURE_FLAGS = gql`
@@ -28,4 +29,21 @@ export function useFeatureFlag(key: string, defaultValue = false): boolean {
   const flag = list.find((f) => f.key === key);
   if (!flag) return defaultValue;
   return flag.enabled === true;
+}
+
+/**
+ * The whole flag set as a map, for `useSession()`.
+ *
+ * Shares the query and the cache with `useFeatureFlag` — a component that reads
+ * one flag and a header that reads the session do not cause two round trips.
+ */
+export function useFeatureFlags(): Record<string, boolean> {
+  const { data } = useQuery<{ publicFeatureFlags: PublicFlag[] }>(PUBLIC_FEATURE_FLAGS, {
+    fetchPolicy: 'cache-first',
+  });
+  return useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const flag of data?.publicFeatureFlags ?? []) map[flag.key] = flag.enabled === true;
+    return map;
+  }, [data]);
 }

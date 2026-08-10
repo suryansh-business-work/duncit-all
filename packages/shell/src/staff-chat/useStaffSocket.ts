@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { socketOrigin } from '../lib/socket-origin';
 import { playMessagePing } from './sounds';
 import type { StaffMessage } from './queries';
 
@@ -24,15 +25,6 @@ interface Options {
   meId?: string | null;
   /** The conversation on screen; no ping for the one you are looking at. */
   openPeerId?: string | null;
-}
-
-function socketOrigin(graphqlUrl: string): string {
-  try {
-    const url = new URL(graphqlUrl);
-    return `${url.protocol}//${url.host}`;
-  } catch {
-    return '';
-  }
 }
 
 export function useStaffSocket({

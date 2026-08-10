@@ -1,7 +1,25 @@
 export { AppLocaleProvider } from './AppLocaleProvider';
 export { PUBLIC_APP_SETTINGS, useDateFormat } from './useDateFormat';
 export type { DateInput, UseDateFormatOptions } from './useDateFormat';
-export { PUBLIC_FEATURE_FLAGS, useFeatureFlag } from './useFeatureFlag';
+export { PUBLIC_FEATURE_FLAGS, useFeatureFlag, useFeatureFlags } from './useFeatureFlag';
+export { useSession } from './useSession';
+export type { SessionValue } from './useSession';
+// The session shape and its pure derivations, re-exported so a surface reads
+// one package rather than importing @duncit/user-core alongside this one.
+export {
+  accountEmail,
+  accountName,
+  can,
+  canAny,
+  hasAppAccess,
+  initials,
+  normalizeMe,
+  type FeatureFlags,
+  type SessionDevice,
+  type SessionSnapshot,
+  type SessionStatus,
+  type SessionUser,
+} from '@duncit/user-core';
 // Re-exported so every portal gets the shared clock/formatter from one place.
 export {
   DEFAULT_TIME_SOURCE,

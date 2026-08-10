@@ -41,7 +41,19 @@ export function initSocketServer(httpServer: http.Server): Server {
     }
   });
 
+  // Every authenticated socket sits in its own room, joined here rather than by
+  // a feature handler: `user:changed` has to reach a portal tab that never
+  // opened a chat, and the room is the only thing that guarantees it.
+  io.on('connection', (socket: AuthedSocket) => {
+    if (socket.userId) socket.join(userRoom(socket.userId));
+  });
+
   return io;
+}
+
+/** The per-account room. One place, so an emitter and a joiner cannot drift. */
+export function userRoom(userId: string): string {
+  return `user:${userId}`;
 }
 
 export function getIo(): Server {

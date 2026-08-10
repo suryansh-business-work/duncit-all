@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { urlConfigs } from '../../config/url-configs';
-
-function getSocketUrl() {
-  try {
-    const u = new URL(urlConfigs.graphqlUrl);
-    return `${u.protocol}//${u.host}`;
-  } catch {
-    return globalThis.window.location.origin;
-  }
-}
+import { getSocketUrl } from '../../lib/socket-url';
 
 /** Live typing signal from a peer in the session room (B14a). */
 export interface TypingPayload {

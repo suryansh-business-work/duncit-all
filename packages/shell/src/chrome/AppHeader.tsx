@@ -104,7 +104,7 @@ export function AppHeader({
               <SearchIcon fontSize="small" />
             </IconButton>
             {isStaff && onToggleChat && (
-              <StaffChatButton meId={user?.id} open={chatOpen} onToggle={onToggleChat} />
+              <StaffChatButton meId={user?.user_id} open={chatOpen} onToggle={onToggleChat} />
             )}
             <Tooltip title="Apps">
               <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">

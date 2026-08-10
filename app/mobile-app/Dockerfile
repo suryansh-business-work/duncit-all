@@ -28,6 +28,7 @@ COPY packages/slack ./packages/slack
 COPY packages/datetime ./packages/datetime
 COPY packages/fallback-icons ./packages/fallback-icons
 COPY packages/i18n ./packages/i18n
+COPY packages/user-core ./packages/user-core
 COPY packages/utils ./packages/utils
 COPY packages/onboarding ./packages/onboarding
 COPY packages/tours ./packages/tours

@@ -87,6 +87,9 @@ importers:
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../../packages/user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -363,6 +366,9 @@ importers:
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../user-context
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../user-core
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -1221,6 +1227,9 @@ importers:
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../user-context
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../user-core
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
@@ -1525,6 +1534,13 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/user-context:
+    dependencies:
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../user-core
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -1581,7 +1597,23 @@ importers:
         specifier: ^1.4.0
         version: 1.7.1
 
+  packages/user-core:
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
+
   packages/utils:
+    dependencies:
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../user-core
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1

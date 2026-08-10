@@ -1,0 +1,141 @@
+---
+name: '@duncit/user-core'
+summary: 'The session shape, the shared `me` selection, the device/DUID helpers and the real-time contract — framework-free, so the native app, mWeb and all 17 portals read one account.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/*'
+  - 'packages/app-settings'
+  - 'packages/user-context'
+  - 'packages/utils'
+exports:
+  - 'normalizeMe'
+  - 'accountName'
+  - 'accountEmail'
+  - 'initials'
+  - 'can'
+  - 'canAny'
+  - 'hasAppAccess'
+  - 'ME_FIELDS'
+  - 'buildMeQuerySource'
+  - 'DUID_STORAGE_KEY'
+  - 'makeDeviceId'
+  - 'makeDevice'
+  - 'deviceTimezone'
+  - 'USER_CHANGED_EVENT'
+  - 'parseUserChangedFrame'
+  - 'subscribeUserChanged'
+---
+
+# @duncit/user-core
+
+Everything about "who is using this, on what" that does not depend on React,
+Apollo, MUI or Tamagui. The React bindings live where they can compose:
+
+| Surface | Hook | Package |
+| --- | --- | --- |
+| mWeb + the 17 portals | `useSession()` | `@duncit/app-settings` |
+| Native app | `useSession()` | `app/mobile-app/src/hooks/useSession.ts` |
+
+Both return the same `SessionSnapshot`.
+
+## Why it exists
+
+Three surfaces answered the same questions from three different shapes. The
+portals' `DuncitUser` carried an `id` field that no query selected and the
+server has never had — so `user?.id ?? ''` compiled, the shell handed staff chat
+an empty `meId`, and every message rendered as somebody else's. mWeb had 24
+separate `me { … }` selections, two of which omitted `locale`, so the account
+language silently failed to follow the user into those surfaces.
+
+## The session shape
+
+```ts
+import { normalizeMe, type SessionUser } from '@duncit/user-core';
+
+const user: SessionUser | null = normalizeMe(rawMe);
+// user.user_id — the server's identity field. There is no `id`.
+```
+
+`normalizeMe` returns `null` for anything without a `user_id`: a malformed
+answer is not an anonymous user, and treating it as one is how the empty-`meId`
+bug spread. It also flattens the empty-vs-null traps `toPublic` emits by design
+(`email` may be null, `city` may be `''`) and renames `profile_photo` to
+`avatar`, so consumers use one name.
+
+## The `me` selection
+
+```ts
+import { ME_FIELDS, buildMeQuerySource } from '@duncit/user-core';
+```
+
+A plain string, not a `gql` document — the native app cannot import
+`@apollo/client`. Web wraps it (`buildSessionMeQuery` in `@duncit/user-context`
+does exactly that); native's codegen document lists the same fields literally,
+because a typed document has to be a static string.
+
+## Derivations
+
+```ts
+import { accountName, initials, can, canAny, hasAppAccess } from '@duncit/user-core';
+
+accountName(user);            // 'Asha Rao'  — never empty
+initials(user);               // 'AR'        — one or two letters, upper case
+can(user.roles, 'ADMIN');     // holds EVERY named role
+canAny(user.roles, 'HOST', 'VENUE');
+hasAppAccess(user.roles, []); // true — an empty requirement means "any signed-in account"
+```
+
+Roles **are** the authorisation model: the server gates on `requireRole` and
+there is no permission collection, so `can` resolves to the roles the server
+actually enforces rather than a second client-side vocabulary that could
+disagree with it.
+
+## Device
+
+```ts
+import { DUID_STORAGE_KEY, makeDevice, makeDeviceId, deviceTimezone } from '@duncit/user-core';
+```
+
+The DUID identifies the **device, not the person**, and the storage key is
+shared across surfaces because a browser that visits mWeb and then a portal is
+one device. Two consequences worth knowing:
+
+- Signing out must **not** clear it. `clearAllStorages()` in
+  `@duncit/user-context` preserves it; wiping it minted a fresh id on every
+  logout, so one person on one browser counted as a new device each time.
+- Native mints it against the same key with the same generator, so the app now
+  sends `x-duid` on every request — it never did before, and no app session
+  counted toward unique devices or carried attribution.
+
+`makeDevice` fills every field with a string, never `undefined`. This object is
+attached to bug reports and log frames, and an `undefined` model silently
+vanishes from the JSON.
+
+## Real time
+
+The server emits `user:changed` to a per-account socket room from every mutation
+that moves a session-visible field (`publishSession` in `user.service.ts`):
+
+```ts
+import { subscribeUserChanged } from '@duncit/user-core';
+
+const off = subscribeUserChanged(socket, myUserId, (patch) => store.apply(patch));
+```
+
+`socket` is typed structurally (`SocketLike`), so this package takes no
+socket.io dependency and each surface keeps owning connection setup — mWeb,
+native and the portals all already build their own.
+
+The frame is validated before it is applied: it must name **this** user, and
+`user_id` itself is not patchable. One socket is shared with whatever else the
+app does next, and a misrouted frame writing another account's name into the
+header would turn a display bug into an authorisation one.
+
+The payload is a **partial**, deliberately. A full `me` would need the
+seven-collection read `toPublic` performs, on every keystroke of a profile form,
+for a client that only cares about the two fields that moved.

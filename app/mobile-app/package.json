@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.50.28",
+  "version": "1.50.29",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -57,6 +57,7 @@
     "@duncit/slack": "file:../../packages/slack",
     "@duncit/slots": "file:../../packages/slots",
     "@duncit/tours": "file:../../packages/tours",
+    "@duncit/user-core": "file:../../packages/user-core",
     "@duncit/utils": "file:../../packages/utils",
     "@duncit/virtual-scroll": "file:../../packages/virtual-scroll",
     "@expo/vector-icons": "^15.0.3",

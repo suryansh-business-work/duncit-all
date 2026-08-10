@@ -39,6 +39,7 @@
   "dependencies": {
     "@duncit/datetime": "workspace:*",
     "@duncit/i18n": "workspace:*",
-    "@duncit/user-context": "workspace:*"
+    "@duncit/user-context": "workspace:*",
+    "@duncit/user-core": "workspace:*"
   }
 }

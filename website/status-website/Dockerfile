@@ -39,6 +39,7 @@ COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 
 COPY packages/logs/package.json ./packages/logs/
+COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
@@ -51,6 +52,7 @@ RUN pnpm install --frozen-lockfile
 COPY website/status-website ./website/status-website
 COPY packages/logs ./packages/logs
 # @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/user-core ./packages/user-core
 COPY packages/utils ./packages/utils
 ARG VITE_SERVER_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL

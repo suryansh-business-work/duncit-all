@@ -93,6 +93,11 @@ export const userTypeDefs = gql`
     bio: String
     "BCP-47 language the user picked (e.g. en-IN). Drives every surface."
     locale: String
+    """
+    IANA zone the account is pinned to (e.g. Asia/Kolkata). Empty means the
+    surface should fall back to the device zone.
+    """
+    timezone: String
     profile_links: [ProfileLink!]!
 
     pet_profile: PetProfile

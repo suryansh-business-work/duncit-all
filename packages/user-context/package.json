@@ -41,5 +41,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/user-context"
+  },
+  "dependencies": {
+    "@duncit/user-core": "workspace:*",
+    "@duncit/utils": "workspace:*"
   }
 }

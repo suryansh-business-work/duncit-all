@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { clearAllStorages, readCachedUser, writeCachedUser, DEFAULT_STORAGE_KEY } from './storage';
 import { AUTH_CHANGED_EVENT } from './auth-events';
+import { useUserRealtime } from './useUserRealtime';
 import UserDataNotLoadedDialog from './UserDataNotLoadedDialog';
 import type { DuncitUser } from './types';
 
@@ -199,6 +200,11 @@ export function UserProvider({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Real-time: a profile change made on any of this account's other surfaces
+  // (the phone, another portal tab) lands here without a refetch. `update`
+  // already persists to the cache, so a reload keeps what the socket delivered.
+  useUserRealtime(userState?.user_id, update);
 
   const hasLoadFailure = useMemo(
     // Fire only when authed, the first load attempt has finished, and we have

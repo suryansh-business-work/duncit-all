@@ -2512,7 +2512,12 @@ export const userService = {
       });
     }
     const fresh = await UserModel.findById(user_id);
-    return toPublic(fresh);
+    // Admin edits move the same fields a user can change about themselves —
+    // name, email, phone, roles — so they must reach the same two places: that
+    // person's open sessions, and the mirrored copies the admin tables search.
+    // Without this, an admin renaming someone left every venue and approval row
+    // showing the old name until that person next edited their own profile.
+    return publishSession(await toPublic(fresh));
   },
 
   async remove(user_id: string) {

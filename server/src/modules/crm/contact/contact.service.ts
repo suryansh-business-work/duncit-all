@@ -76,7 +76,7 @@ export const contactService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    await ContactSubmissionModel.create(payload);
+    const doc = await ContactSubmissionModel.create(payload);
 
     /*
       The same message, in the queue an agent actually watches.
@@ -87,7 +87,11 @@ export const contactService = {
       submission is already saved, and the acknowledgement email still goes.
     */
     try {
-      await ticketFromContact(payload);
+      // Recorded on the submission, so "did this reach Support?" is answerable
+      // from the row itself — the CRM list and the backfill both read it
+      // instead of guessing from email + subject.
+      const ticketId = await ticketFromContact(payload);
+      await ContactSubmissionModel.updateOne({ _id: doc._id }, { $set: { ticket_id: ticketId } });
     } catch (e) {
       /*
         ERROR, not warn.

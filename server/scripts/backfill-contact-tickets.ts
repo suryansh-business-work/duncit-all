@@ -30,19 +30,53 @@ const DRY = process.argv.includes('--dry-run');
 /** The subject `ticketFromContact` writes when the visitor left it blank. */
 const DEFAULT_SUBJECT = 'Message from the website';
 
+/**
+ * Raise the missing tickets, recording each on its submission.
+ *
+ * One failure is reported and skipped rather than thrown: a single
+ * unrecoverable row (a malformed legacy submission, say) must not strand every
+ * message behind it.
+ */
+async function raiseAll(db: any, missing: any[]): Promise<number> {
+  let raised = 0;
+  for (const s of missing) {
+    try {
+      const ticketId = await ticketFromContact({
+        name: String(s.name ?? ''),
+        email: String(s.email ?? ''),
+        subject: String(s.subject ?? ''),
+        message: String(s.message ?? ''),
+        attachments: Array.isArray(s.attachments) ? s.attachments : [],
+      });
+      await db
+        .collection('contactsubmissions')
+        .updateOne({ _id: s._id }, { $set: { ticket_id: ticketId } });
+      raised += 1;
+    } catch (error) {
+      console.error(`  FAILED for ${s.email}:`, error instanceof Error ? error.message : error);
+    }
+  }
+  return raised;
+}
+
 async function main(): Promise<void> {
   const connection = await connectForMigration({ dry: DRY });
   const db = connection.db;
   if (!db) throw new Error('No database handle after connect');
 
+  // Only rows with no ticket recorded. `ticket_id` is written the moment the
+  // ticket is raised, so this is exact for anything submitted since — the
+  // email+subject match below is the fallback for rows that predate the field.
   const submissions = await db
     .collection('contactsubmissions')
-    .find({})
+    .find({ $or: [{ ticket_id: null }, { ticket_id: { $exists: false } }] })
     .sort({ created_at: 1 })
     .toArray();
 
   if (submissions.length === 0) {
-    console.log('No contact submissions on record.');
+    // Not "no submissions" — the query above already excluded every one that
+    // records its ticket. This is the good outcome.
+    console.log('Every contact submission already has its Support ticket.');
     await mongoose.disconnect();
     return;
   }
@@ -72,22 +106,7 @@ async function main(): Promise<void> {
   }
 
   if (!DRY && missing.length > 0) {
-    let raised = 0;
-    for (const s of missing as any[]) {
-      try {
-        await ticketFromContact({
-          name: String(s.name ?? ''),
-          email: String(s.email ?? ''),
-          subject: String(s.subject ?? ''),
-          message: String(s.message ?? ''),
-          attachments: Array.isArray(s.attachments) ? s.attachments : [],
-        });
-        raised += 1;
-      } catch (error) {
-        // Report and continue: one unrecoverable row must not strand the rest.
-        console.error(`  FAILED for ${s.email}:`, error instanceof Error ? error.message : error);
-      }
-    }
+    const raised = await raiseAll(db, missing as any[]);
     console.log(`\nRaised ${raised} of ${missing.length}.`);
   }
 

@@ -26,6 +26,16 @@ export const appConfig = {
     { label: 'Callback Requests', to: '/callbacks', icon: 'callback' },
     { label: 'Tickets', to: '/tickets', icon: 'ticket' },
     { label: 'Chat with Us', to: '/live-chat', icon: 'chat' },
+    {
+      // A group header, not a link: the two children are the list and the
+      // config that decides what the app's form even offers.
+      label: 'Reported Problems',
+      icon: 'ticket',
+      children: [
+        { label: 'Problems', to: '/reported-problems', icon: 'ticket' },
+        { label: 'Settings', to: '/reported-problems/settings', icon: 'settings' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

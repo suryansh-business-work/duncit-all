@@ -5,6 +5,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { config } from '@/constants/config';
 import { ApiError } from '@/utils/errors';
 import { getAuthToken } from '@/services/auth-token';
+import { getDuid } from '@/services/device';
 
 /**
  * Up to 2 retries (3 attempts) for transient transport failures on read-only
@@ -89,6 +90,11 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
     const token = await getAuthToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
+  // The anonymous device id, on EVERY request including the signed-out ones —
+  // this is what web has always sent and native never did, so no app session
+  // counted toward unique devices or carried attribution.
+  const duid = await getDuid();
+  if (duid) headers['x-duid'] = duid;
 
   const canRetry = isQuery(document as DocumentNode);
   let lastError: unknown;

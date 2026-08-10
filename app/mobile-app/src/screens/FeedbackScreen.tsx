@@ -15,11 +15,11 @@ export function FeedbackScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const onSubmit = async (values: { category: string; message: string }) => {
+  const onSubmit = async (values: { category: string; message: string; media_urls: string[] }) => {
     setSubmitting(true);
     setError('');
     try {
-      await submitAppFeedback(values.category, values.message);
+      await submitAppFeedback(values.category, values.message, values.media_urls);
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send feedback. Please try again.');

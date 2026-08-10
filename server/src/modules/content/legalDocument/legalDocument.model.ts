@@ -8,7 +8,6 @@ export interface ILegalDocumentVersion {
   description: string;
   content: string;
   updated_by: Types.ObjectId | null;
-  updated_by_name: string;
   created_at: Date;
 }
 
@@ -19,7 +18,6 @@ const versionSchema = new Schema<ILegalDocumentVersion>(
     description: { type: String, default: '' },
     content: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    updated_by_name: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );
@@ -85,9 +83,7 @@ export interface ILegalDocument extends Document {
    */
   signed_at: Date | null;
   created_by: Types.ObjectId | null;
-  created_by_name: string;
   updated_by: Types.ObjectId | null;
-  updated_by_name: string;
   versions: Types.DocumentArray<ILegalDocumentVersion>;
   created_at: Date;
   updated_at: Date;
@@ -102,9 +98,7 @@ const legalDocumentSchema = new Schema<ILegalDocument>(
     description: { type: String, default: '', trim: true, maxlength: 1000 },
     content: { type: String, default: '' },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    created_by_name: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    updated_by_name: { type: String, default: '' },
     versions: { type: [versionSchema], default: [] },
     signatories: { type: [signatorySchema], default: [] },
     signed_at: { type: Date, default: null, index: true },

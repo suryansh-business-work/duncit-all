@@ -15,7 +15,28 @@ export default function FeedbackPage() {
   const [sent, setSent] = useState(false);
 
   const onSubmit = async (values: FeedbackValues) => {
-    await submit({ variables: { input: buildAppFeedbackInput({ ...values, platform: 'web' }) } });
+    // `media_text` is the field's newline-joined form — the mutation takes a
+    // list, same as native sends.
+    const media_urls = values.media_text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    await submit({
+      variables: {
+        input: buildAppFeedbackInput({
+          category: values.category,
+          message: values.message,
+          platform: 'web',
+          media_urls,
+          // The browser is the device here. Support needs it for the same
+          // reason native sends the handset: a report you cannot reproduce on
+          // is a report you cannot act on.
+          device_os: globalThis.navigator?.userAgent ?? '',
+          device_model: `${globalThis.screen?.width ?? 0}x${globalThis.screen?.height ?? 0}`,
+          source_screen: globalThis.location?.pathname ?? '',
+        }),
+      },
+    });
     setSent(true);
   };
 

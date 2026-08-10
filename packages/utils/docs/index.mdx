@@ -1,6 +1,6 @@
 ---
 name: '@duncit/utils'
-summary: 'Framework-free browser and money helpers — device id, API error parsing, INR formatting, file download/read, pod spot economics and the shared earnings statement.'
+summary: 'Framework-free browser and money helpers — API error parsing, INR formatting, file download/read, pod spot economics and the shared earnings statement.'
 category: 'platform'
 zeroDeps: true
 frameworkFree: true
@@ -15,7 +15,6 @@ consumers:
   - 'packages/media-picker'
   - 'packages/ad-request-form'
 exports:
-  - 'getOrCreateDuid'
   - 'parseApiError'
   - 'isNetworkFailureMessage'
   - 'OFFLINE_MESSAGE'
@@ -54,7 +53,9 @@ exports:
 ## Why this exists
 
 Each of these modules replaced a byte-for-byte copy that had been pasted into every surface.
-`duid.ts` existed once in mWeb and once in all sixteen portals. `parse-api-error.ts` the same.
+`parse-api-error.ts` existed once in mWeb and once in all sixteen portals.
+(`duid.ts` lived here too, until the native app started sharing the id — it moved to
+`@duncit/user-core`, which the app can consume without a transitive `@duncit/*` dependency.)
 The base64 → Blob → anchor-click download flow was rewritten in admin, finance, crm (twice),
 support and legal. `fileToDataUrl` had eight implementations, one of them inside
 `@duncit/media-picker`. Money formatting had a `formatMoney`, a `money(symbol, v)` and a `fmt`
@@ -74,9 +75,8 @@ Zero runtime dependencies, on purpose. `parse-api-error.ts` types the Apollo err
 From `app/mweb/src/apollo.ts` and `portals/crm/src/components/ExcelImportDialog.tsx`:
 
 ```ts
-import { getOrCreateDuid, fileToBase64, parseApiError, formatMoney } from '@duncit/utils';
+import { fileToBase64, parseApiError, formatMoney } from '@duncit/utils';
 
-headers.set('x-duncit-duid', getOrCreateDuid());
 
 try {
   const base64 = await fileToBase64(file);
@@ -377,7 +377,6 @@ Three things to read off that output:
 | `clubCategoryKey` | `(club) => ClubCategoryKey \| null` | — | Super+Sub pair, `null` for legacy clubs. |
 | `productMatchesClub` | `(product, key) => boolean` | — | Fails closed: `false` when `key` is `null` or the product has no category data. |
 | `filterProductsForClub` | `(products, club) => products` | — | The product-picker filter. |
-| `getOrCreateDuid` | `() => string` | — | Per-device analytics id; `''` outside a browser. |
 | `formatMjml` | `(mjml: string) => string` | — | Pretty-prints an MJML template. |
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |

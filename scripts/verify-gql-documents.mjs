@@ -19,11 +19,17 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 // Resolved from the server workspace: this script runs at the repo root, which
 // has no direct graphql dependency of its own.
 const require = createRequire(import.meta.url);
-const { parse } = require(require.resolve('graphql', { paths: ['server', 'app/mweb', '.'] }));
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const { parse } = require(
+  require.resolve('graphql', {
+    paths: [path.join(repoRoot, 'server'), path.join(repoRoot, 'app', 'mweb'), repoRoot],
+  }),
+);
 
 // Client documents only. The server's SDL has its own gate (server check:schema),
 // which builds the real executable schema rather than parsing text.

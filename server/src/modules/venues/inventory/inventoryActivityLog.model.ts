@@ -11,7 +11,6 @@ export type InventoryActivityAction =
 export interface IInventoryActivityLog extends Document {
   product_id: Types.ObjectId;
   user_id: string | null;
-  user_name: string;
   action: InventoryActivityAction;
   changed_fields: string[];
   notes: string;
@@ -22,7 +21,6 @@ const schema = new Schema<IInventoryActivityLog>(
   {
     product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true, index: true },
     user_id: { type: String, default: null },
-    user_name: { type: String, default: '' },
     action: {
       type: String,
       enum: ['CREATE', 'UPDATE', 'ARCHIVE', 'RESTORE', 'DUPLICATE', 'DELETE'],

@@ -14,13 +14,15 @@ import { AppLocaleProvider } from '@duncit/app-settings';
 import { SHELL_FALLBACK_FLAT } from './i18n/fallback';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { UserProvider, PortalModeGate } from '@duncit/user-context';
+import { io } from 'socket.io-client';
+import { UserProvider, PortalModeGate, configureSessionSocket } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { loadGoogleClientId } from './lib/google-client-id';
 import { ShellRuntimeProvider } from './lib/runtime';
+import { socketOrigin } from './lib/socket-origin';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
@@ -81,6 +83,17 @@ export function mountPortal(opts: MountPortalOptions): void {
   installAttributionLinkDecorator();
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);
+
+  // Real-time session: a profile change made on the phone or in another console
+  // lands in this tab's header without a refetch. Configured here rather than
+  // per portal — all 17 mount through this function, and 17 copies of the same
+  // four lines is 17 chances for one to be forgotten.
+  configureSessionSocket(() => {
+    const token = localStorage.getItem(config.tokenKey);
+    const origin = socketOrigin(graphqlUrl);
+    if (!token || !origin) return null;
+    return io(origin, { path: '/socket.io', auth: { token }, transports: ['websocket', 'polling'] });
+  });
 
   const routed = (
     <>

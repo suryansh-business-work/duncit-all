@@ -75,14 +75,12 @@ export const chatService = {
     if (type === 'IMAGE' && !opts.imageUrl) {
       throw new GraphQLError('Image URL required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const u: any = await UserModel.findById(opts.userId)
-      .select('profile.first_name profile.last_name profile.profile_photo')
-      .lean();
+    // Only the id is stored. The name and photo are resolved at read time by
+    // `userDisplayMap`, so a user who renames themselves is renamed everywhere
+    // they have ever posted rather than in nothing they have already sent.
     const doc = await PodMessageModel.create({
       pod_id: opts.podId,
       user_id: opts.userId,
-      user_name: u ? `${u.profile?.first_name || ''} ${u.profile?.last_name || ''}`.trim() : '',
-      user_photo: u?.profile?.profile_photo || '',
       type,
       text: type === 'TEXT' || type === 'STICKER' ? text : '',
       image_url: type === 'IMAGE' ? opts.imageUrl : '',

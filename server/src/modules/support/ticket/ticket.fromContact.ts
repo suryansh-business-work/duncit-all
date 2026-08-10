@@ -39,7 +39,10 @@ export async function ticketFromContact(input: {
   await TicketModel.create({
     user_id: account?._id ?? null,
     source: 'WEBSITE',
-    guest_name: input.name,
+    // The message no longer stores an author name — it is resolved from the
+    // account, and a website visitor has none. `guest_name` is what stands in,
+    // so it carries the full fallback rather than a possibly-empty input.
+    guest_name: authorName,
     guest_email: input.email,
     subject: input.subject || 'Message from the website',
     category: 'GENERAL',
@@ -51,8 +54,6 @@ export async function ticketFromContact(input: {
         // not, because a message has to say who wrote it and a guest has no id.
         author_id: (account?._id as Types.ObjectId | undefined) ?? new Types.ObjectId(),
         author_role: 'USER',
-        author_name: authorName,
-        author_photo: '',
         body_text: input.message,
         body_html: '',
         attachments: input.attachments,

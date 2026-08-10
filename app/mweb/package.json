@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.50.24",
+  "version": "1.50.31",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,6 +39,7 @@
     "@duncit/tours": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
+    "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@duncit/virtual-scroll": "workspace:*",
     "@emotion/react": "^11.11.4",

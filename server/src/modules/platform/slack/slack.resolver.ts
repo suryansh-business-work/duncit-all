@@ -26,7 +26,18 @@ export const slackResolvers = {
     // from the token, not the client, so this needs no Slack-manage role.
     submitAppFeedback: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return slackService.sendFeedback(user, args.input);
+      // Saves the report, then announces it best-effort. The return shape is
+      // unchanged so the app and mWeb keep working; `ok` now means "filed",
+      // which is the thing the reporter actually cares about.
+      return feedbackSubmit(user, args.input);
     },
   },
 };
+
+/** Kept out of the resolver map so the slack module does not import the support
+ * module at load time — they are otherwise independent. */
+async function feedbackSubmit(user: { id: string; email?: string | null }, input: any) {
+  const { feedbackService } = await import('@modules/support/feedback/feedback.service');
+  const report = await feedbackService.submit(user, input);
+  return { ok: true, channel: report.report_no, ts: report.slack_ts ?? '' };
+}

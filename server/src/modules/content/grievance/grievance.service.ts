@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { UserModel } from '@modules/access/user/user.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -37,7 +36,8 @@ const toPub = (g: IGrievanceTicket) => ({
   status: g.status,
   resolution: g.resolution ?? '',
   resolved_at: g.resolved_at ? g.resolved_at.toISOString() : null,
-  handled_by_name: g.handled_by_name ?? '',
+  // The id the GrievanceTicket field resolver turns into a name.
+  handled_by: g.handled_by ?? null,
   created_at: g.created_at?.toISOString?.() ?? '',
   updated_at: g.updated_at?.toISOString?.() ?? '',
 });
@@ -81,12 +81,6 @@ const GRIEVANCE_TABLE_CONFIG: TableEntityConfig = {
   // Oldest open first: the redressal clock runs from when it was received.
   defaultSort: { created_at: -1 },
 };
-
-async function actorName(userId: string): Promise<string> {
-  const user = await UserModel.findById(userId).select('profile.first_name profile.last_name').lean();
-  const profile = (user as any)?.profile ?? {};
-  return [profile.first_name, profile.last_name].filter(Boolean).join(' ').trim() || 'Unknown';
-}
 
 interface SubmitInput {
   name?: string;
@@ -225,7 +219,6 @@ export const grievanceService = {
     }
     if (input.resolution !== undefined) doc!.resolution = String(input.resolution).slice(0, 5000);
     doc!.handled_by = new Types.ObjectId(userId);
-    doc!.handled_by_name = await actorName(userId);
     await doc!.save();
     return toPub(doc!);
   },

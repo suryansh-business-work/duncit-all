@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { UserModel } from '@modules/access/user/user.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -20,8 +19,10 @@ const toPub = (c: IContract) => ({
   counterparty: c.counterparty ?? '',
   effective_from: c.effective_from ? c.effective_from.toISOString() : null,
   effective_to: c.effective_to ? c.effective_to.toISOString() : null,
-  created_by_name: c.created_by_name ?? '',
-  updated_by_name: c.updated_by_name ?? '',
+  // The ids the Contract field resolvers turn into names. Not selectable
+  // themselves — the schema exposes only the labels.
+  created_by: c.created_by ?? null,
+  updated_by: c.updated_by ?? null,
   created_at: c.created_at?.toISOString?.() ?? '',
   updated_at: c.updated_at?.toISOString?.() ?? '',
 });
@@ -51,12 +52,6 @@ const CONTRACT_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { updated_at: -1 },
 };
-
-async function actorName(userId: string): Promise<string> {
-  const user = await UserModel.findById(userId).select('profile.first_name profile.last_name').lean();
-  const profile = (user as any)?.profile ?? {};
-  return [profile.first_name, profile.last_name].filter(Boolean).join(' ').trim() || 'Unknown';
-}
 
 const asStatus = (value: unknown): ContractStatus => {
   const status = String(value ?? '').toUpperCase() as ContractStatus;
@@ -103,7 +98,6 @@ export const contractService = {
   ) {
     const title = String(input.title ?? '').trim();
     if (!title) fail('BAD_USER_INPUT', 'Title is required');
-    const who = await actorName(userId);
     // `create` runs the pre-save hook, which is what mints the id. An
     // insertMany or an upsert would skip it and leave a contract with none.
     const doc = await ContractModel.create({
@@ -115,9 +109,7 @@ export const contractService = {
       effective_from: asDate(input.effective_from),
       effective_to: asDate(input.effective_to),
       created_by: new Types.ObjectId(userId),
-      created_by_name: who,
       updated_by: new Types.ObjectId(userId),
-      updated_by_name: who,
     });
     return toPub(doc);
   },
@@ -152,7 +144,6 @@ export const contractService = {
     if (input.effective_to !== undefined) doc!.effective_to = asDate(input.effective_to);
     // The id is never among the editable fields — that is what "immutable" means.
     doc!.updated_by = new Types.ObjectId(userId);
-    doc!.updated_by_name = await actorName(userId);
     await doc!.save();
     return toPub(doc);
   },

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getOrCreateDuid } from '../src/duid';
+import { getOrCreateDuid } from '../src/device';
 
 afterEach(() => {
   vi.unstubAllGlobals();

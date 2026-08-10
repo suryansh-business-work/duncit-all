@@ -1,4 +1,10 @@
 import { GraphQLError } from 'graphql';
+import {
+  displayFrom,
+  userDisplayMap,
+  userDisplayOf,
+  type UserDisplay,
+} from '@modules/access/user/user.display';
 import { Types } from 'mongoose';
 import { ProductReviewModel, type IProductReview } from './productReview.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -11,7 +17,7 @@ const fail = (code: string, message: string) => {
   throw new GraphQLError(message, { extensions: { code } });
 };
 
-function toPub(r: IProductReview, viewerId: string | null) {
+function toPub(r: IProductReview, viewerId: string | null, display: UserDisplay) {
   const up = r.up_voter_ids ?? [];
   const down = r.down_voter_ids ?? [];
   let myVote = 0;
@@ -21,7 +27,9 @@ function toPub(r: IProductReview, viewerId: string | null) {
     id: String(r._id),
     product_id: String(r.product_id),
     user_id: String(r.user_id),
-    user_name: r.user_name ?? '',
+    // Resolved from the account, not stored — a reviewer who renames themselves
+    // is renamed on every review they have written.
+    user_name: display.name || 'Duncit user',
     rating: r.rating,
     comment: r.comment ?? '',
     images: Array.isArray(r.images) ? r.images : [],
@@ -37,7 +45,8 @@ function toPub(r: IProductReview, viewerId: string | null) {
 export const productReviewService = {
   async listByProduct(productId: string, viewerId: string | null) {
     const docs = await ProductReviewModel.find({ product_id: oid(productId) }).sort({ created_at: -1 });
-    return docs.map((d) => toPub(d, viewerId));
+    const display = await userDisplayMap(docs.map((d) => String(d.user_id)));
+    return docs.map((d) => toPub(d, viewerId, displayFrom(display, d.user_id)));
   },
 
   async summary(productId: string) {
@@ -61,9 +70,6 @@ export const productReviewService = {
   async create(userId: string, input: { product_id: string; rating: number; comment?: string | null; images?: string[] | null }) {
     const rating = Math.round(Number(input.rating));
     if (!(rating >= 1 && rating <= 5)) fail('BAD_USER_INPUT', 'Rating must be between 1 and 5');
-    const user: any = await UserModel.findById(userId).select('profile.first_name profile.last_name').lean();
-    const userName =
-      [user?.profile?.first_name, user?.profile?.last_name].filter(Boolean).join(' ').trim() || 'Duncit user';
     const doc = await ProductReviewModel.findOneAndUpdate(
       { product_id: oid(input.product_id), user_id: oid(userId) },
       {
@@ -71,12 +77,11 @@ export const productReviewService = {
           rating,
           comment: (input.comment ?? '').trim(),
           images: Array.isArray(input.images) ? input.images.filter(Boolean) : [],
-          user_name: userName,
         },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
-    return toPub(doc, userId);
+    return toPub(doc, userId, await userDisplayOf(userId));
   },
 
   async vote(userId: string, reviewId: string, vote: number) {
@@ -88,7 +93,7 @@ export const productReviewService = {
     if (vote > 0) review.up_voter_ids.push(oid(userId));
     else if (vote < 0) review.down_voter_ids.push(oid(userId));
     await review.save();
-    return toPub(review, userId);
+    return toPub(review, userId, await userDisplayOf(String(review.user_id)));
   },
 
   async reply(userId: string, reviewId: string, reply: string) {
@@ -107,6 +112,6 @@ export const productReviewService = {
     review.seller_reply = text;
     review.seller_reply_at = new Date();
     await review.save();
-    return toPub(review, userId);
+    return toPub(review, userId, await userDisplayOf(String(review.user_id)));
   },
 };

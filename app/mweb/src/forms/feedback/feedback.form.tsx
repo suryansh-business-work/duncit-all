@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
-import { FEEDBACK_CATEGORIES } from '@duncit/slack';
+import { Alert, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import MediaUrlsField from '../../pages/create-pod-page/create-pod/fields/MediaUrlsField';
 import RhfTextField from '../components/RhfTextField';
-import { feedbackDefaults, feedbackSchema, type FeedbackValues } from './feedback.types';
+import { useReportProblemConfig } from './useReportProblemConfig';
+import { buildFeedbackSchema, feedbackDefaults, type FeedbackValues } from './feedback.types';
 
 interface Props {
   loading?: boolean;
@@ -12,15 +13,37 @@ interface Props {
   onSubmit: (values: FeedbackValues) => Promise<void> | void;
 }
 
-/** Report-a-problem / feedback form (RHF + Zod + MUI). Category is a shared
- * enum; the parent wires `onSubmit` to the submitAppFeedback mutation. */
+/**
+ * Report-a-problem / feedback form (RHF + Zod + MUI).
+ *
+ * Twin of the native FeedbackForm, and deliberately the same SHAPE: category
+ * chips (not a dropdown — the two surfaces had drifted), the same prompt, the
+ * same screenshot picker. All three come from `reportProblemConfig`, so Support
+ * editing them in the portal changes both surfaces at once instead of either
+ * needing a release.
+ */
 export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const { config, loading: configLoading } = useReportProblemConfig();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { control, handleSubmit } = useForm<FeedbackValues>({
+
+  // The minimum length is configuration, so the resolver is rebuilt when it
+  // changes rather than frozen at whatever the first render saw.
+  const schema = useMemo(
+    () => buildFeedbackSchema(config.message_min_length),
+    [config.message_min_length]
+  );
+  const { control, handleSubmit, setValue, watch } = useForm<FeedbackValues>({
     defaultValues: feedbackDefaults,
-    resolver: zodResolver(feedbackSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
+
+  const category = watch('category');
+  // Default to the first chip the server offers, once it has answered.
+  useEffect(() => {
+    const first = config.categories[0];
+    if (!category && first) setValue('category', first.label);
+  }, [category, config.categories, setValue]);
 
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
@@ -38,35 +61,66 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           control={control}
           name="category"
           render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              select
-              fullWidth
-              size="small"
-              label="Category"
-              required
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message ?? ' '}
-            >
-              {FEEDBACK_CATEGORIES.map((category) => (
-                <MenuItem key={category} value={category}>
-                  {category}
-                </MenuItem>
-              ))}
-            </TextField>
+            <Stack spacing={0.75}>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                Category
+              </Typography>
+              {configLoading && config.categories.length === 0 ? (
+                <CircularProgress size={18} />
+              ) : (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {config.categories.map((option) => (
+                    <Chip
+                      key={option.key || option.label}
+                      label={option.label}
+                      data-testid={`feedback-cat-${option.label}`}
+                      color={field.value === option.label ? 'primary' : 'default'}
+                      variant={field.value === option.label ? 'filled' : 'outlined'}
+                      onClick={() => field.onChange(option.label)}
+                      sx={{ fontWeight: 700 }}
+                    />
+                  ))}
+                </Stack>
+              )}
+              {fieldState.error && (
+                <Typography variant="caption" color="error">
+                  {fieldState.error.message}
+                </Typography>
+              )}
+            </Stack>
           )}
         />
+
         <RhfTextField
           control={control}
           name="message"
-          label="What's going on?"
+          label={config.message_label}
           required
           multiline
           minRows={4}
           placeholder="Describe the problem or share your idea"
-          hint="At least 10 characters"
+          hint={config.message_hint}
           size="small"
         />
+
+        {config.allow_media && (
+          <Controller
+            control={control}
+            name="media_text"
+            render={({ field, fieldState }) => (
+              <MediaUrlsField
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error?.message}
+                label="Screenshots (optional)"
+                required={false}
+                folder="/feedback"
+                maxImages={config.max_media}
+              />
+            )}
+          />
+        )}
+
         <Button
           type="submit"
           variant="contained"

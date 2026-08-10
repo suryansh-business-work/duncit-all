@@ -11,9 +11,10 @@ const ReactionSchema = new Schema(
 const PodMessageSchema = new Schema(
   {
     pod_id: { type: String, required: true, index: true },
+    // The id, and only the id — the poster's name and photo are resolved from
+    // the account at read time (`userDisplayMap`). They used to be copied here
+    // at write time and never updated again.
     user_id: { type: String, required: true, index: true },
-    user_name: { type: String, default: '' },
-    user_photo: { type: String, default: '' },
     type: {
       type: String,
       enum: ['TEXT', 'IMAGE', 'STICKER', 'SYSTEM'],

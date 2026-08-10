@@ -1,4 +1,5 @@
 import { gql, type ApolloClient, type DocumentNode } from '@apollo/client';
+import { ME_FIELDS } from '@duncit/user-core';
 import type { DuncitUser } from './types';
 
 /**
@@ -18,18 +19,14 @@ export function buildSessionMeQuery(
   operationName = 'SessionMe',
   extraFields: readonly string[] = [],
 ): DocumentNode {
+  // The selection itself lives in @duncit/user-core so mWeb, the native app and
+  // the 17 portals read the same account. This query used to name eight fields;
+  // `timezone`, the verification flags and the assigned city/zones the shell
+  // gates on were simply absent, so a portal could not tell them from unset.
   const extra = extraFields.length ? `\n      ${extraFields.join('\n      ')}` : '';
   return gql(`
   query ${operationName} {
-    me {
-      user_id
-      full_name
-      first_name
-      last_name
-      email
-      roles
-      locale
-      profile_photo${extra}
+    me {${ME_FIELDS}${extra}
     }
   }
 `);

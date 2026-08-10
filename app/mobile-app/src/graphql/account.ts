@@ -9,16 +9,29 @@ export const MobileMeDocument = gql(`
   query MobileMe {
     me {
       user_id
-      full_name
       first_name
+      last_name
+      full_name
       email
-      is_email_verified
-      profile_photo
       phone_number
       phone_extension
-      selected_location_id
+      profile_photo
+      bio
       roles
       locale
+      timezone
+      country
+      city
+      state
+      zone
+      assigned_city
+      assigned_zones
+      selected_location_id
+      is_email_verified
+      is_phone_verified
+      onboarding_survey_completed
+      created_at
+      updated_at
       saved_pod_ids
     }
   }

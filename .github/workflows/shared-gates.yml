@@ -44,12 +44,6 @@ jobs:
         run: node scripts/verify-fallback-icons.mjs packages/shell/src/fallback-icons
 
       # Rule 38: no shipped translation key that nothing renders.
-      # A gql template is an opaque string to tsc AND to Vite, and the portals
-      # parse it at module load — so a malformed document type-checks, builds,
-      # ships, and throws in the browser console. Every other gate was green
-      # for exactly that.
-      - name: GraphQL documents parse
-        run: node scripts/verify-gql-documents.mjs
       - name: Translation keys are rendered
         run: node scripts/verify-translation-keys.mjs .
 
@@ -103,3 +97,11 @@ jobs:
       # a malformed doc only breaks for whoever next runs `pnpm docs`.
       - name: Docs site builds
         run: pnpm --filter duncit-docs build
+
+      # A gql template is an opaque string to tsc AND to Vite, and the portals
+      # parse it at module load — so a malformed document type-checks, builds,
+      # ships, and throws in the browser console with a minified stack. This
+      # lives HERE rather than in the gates job above because it needs a real
+      # GraphQL parser, and that job installs nothing on purpose.
+      - name: GraphQL documents parse
+        run: node scripts/verify-gql-documents.mjs

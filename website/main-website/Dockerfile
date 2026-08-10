@@ -29,6 +29,7 @@ COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 
 COPY packages/logs/package.json ./packages/logs/
+COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 # @duncit/media-picker now localises its own copy, so its dependency closure
@@ -65,6 +66,7 @@ ENV PUBLIC_GRAPHQL_URL=$PUBLIC_GRAPHQL_URL \
 COPY website/main-website ./website/main-website
 COPY packages/logs ./packages/logs
 # @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/user-core ./packages/user-core
 COPY packages/utils ./packages/utils
 # The i18n SOURCE, not just its package.json: the site imports @duncit/i18n from
 # an .astro page now, so Vite has to resolve the module during the build.

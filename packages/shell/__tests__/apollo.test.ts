@@ -50,7 +50,7 @@ vi.mock('@apollo/client/link/retry', () => ({
     return { __retry: true };
   }),
 }));
-vi.mock('@duncit/utils', () => ({ getOrCreateDuid: () => 'DUID-1' }));
+vi.mock('@duncit/user-core', () => ({ getOrCreateDuid: () => 'DUID-1' }));
 
 import { apolloErrorLink, createApolloClient } from '../src/lib/apollo';
 

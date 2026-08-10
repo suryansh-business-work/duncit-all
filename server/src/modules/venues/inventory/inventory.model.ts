@@ -150,7 +150,6 @@ export interface IInventoryProduct extends Document {
   is_active: boolean;
 
   last_updated_by_id: string | null;
-  last_updated_by_name: string;
 
   created_at: Date;
   updated_at: Date;
@@ -307,7 +306,6 @@ const productSchema = new Schema<IInventoryProduct>(
     is_active: { type: Boolean, default: true },
 
     last_updated_by_id: { type: String, default: null },
-    last_updated_by_name: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

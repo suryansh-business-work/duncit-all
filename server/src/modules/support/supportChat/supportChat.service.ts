@@ -8,6 +8,11 @@ import {
   type SupportChatStatus,
 } from './supportChat.model';
 import { UserModel } from '@modules/access/user/user.model';
+import {
+  displayFrom,
+  userDisplayMap,
+  type UserDisplay,
+} from '@modules/access/user/user.display';
 import { emitToSupportAgents, emitToSupportUser, emitToSupportSession } from './supportChat.socket';
 import { ticketNo } from './unifiedTickets.service';
 import { aiSupportReply, isOpenAiConfigured, type SupportAiTurn } from './supportChat.ai';
@@ -92,14 +97,26 @@ async function sessionPub(doc: ISupportChatSession) {
   };
 }
 
-function messagePub(doc: ISupportChatMessage) {
+/**
+ * Shape a message for GraphQL and for the socket.
+ *
+ * The sender's name and photo are resolved from the account now — the row
+ * stores only `sender_id`. `display` is passed in so a transcript costs one
+ * user query rather than one per message.
+ *
+ * The assistant is the exception: `AI_SENDER_ID` is a synthetic id with no
+ * account behind it, so resolving it would blank the bot's name out of every
+ * conversation it has ever had.
+ */
+function messagePub(doc: ISupportChatMessage, display: UserDisplay) {
+  const isAi = !!doc.is_ai;
   return {
     id: String(doc._id),
     session_id: String(doc.session_id),
     sender_id: String(doc.sender_id),
     sender_role: doc.sender_role,
-    sender_name: doc.sender_name || '',
-    sender_photo: doc.sender_photo || null,
+    sender_name: isAi ? AI_NAME : display.name,
+    sender_photo: isAi ? null : display.photo || null,
     text: doc.text || '',
     attachments: doc.attachments || [],
     is_ai: !!doc.is_ai,
@@ -196,8 +213,9 @@ export const supportChatService = {
         session_id: session!._id,
         sender_id: new Types.ObjectId(agentId),
         sender_role: 'SYSTEM',
-        sender_name: meta.name,
-        sender_photo: meta.photo,
+        // The name goes into the bubble TEXT, which is a statement of what
+        // happened ("Picked up by …") and stays as written. Only the sender's
+        // live display fields are resolved, and they are no longer stored.
         text: claimNotice(meta.name),
         attachments: [],
       });
@@ -205,7 +223,7 @@ export const supportChatService = {
       session!.last_message_preview = sysMsg.text;
       await session!.save();
       const pubSession = await sessionPub(session);
-      emitToSupportSession(String(session!._id), 'support_chat:message', messagePub(sysMsg));
+      emitToSupportSession(String(session!._id), 'support_chat:message', messagePub(sysMsg, meta));
       emitToSupportAgents('support_chat:session_update', pubSession);
       emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pubSession);
     }
@@ -240,8 +258,6 @@ export const supportChatService = {
       session_id: session!._id,
       sender_id: new Types.ObjectId(senderId),
       sender_role: isAgent ? 'AGENT' : 'USER',
-      sender_name: meta.name,
-      sender_photo: meta.photo,
       text,
       attachments,
     });
@@ -252,7 +268,7 @@ export const supportChatService = {
     applyUnreadCounters(session, isAgent, senderId, aiHandling);
     await session!.save();
 
-    const pubMsg = messagePub(msg);
+    const pubMsg = messagePub(msg, meta);
     const pubSession = await sessionPub(session);
     emitToSupportSession(String(session!._id), 'support_chat:message', pubMsg);
     emitToSupportAgents('support_chat:session_update', pubSession);
@@ -301,7 +317,9 @@ export const supportChatService = {
     const docs = await SupportChatMessageModel.find(q)
       .sort({ created_at: -1 })
       .limit(Math.min(200, Math.max(1, limit)));
-    return docs.reverse().map(messagePub);
+    // One user query for the whole page, not one per bubble.
+    const display = await userDisplayMap(docs.map((d) => String(d.sender_id)));
+    return docs.reverse().map((d) => messagePub(d, displayFrom(display, d.sender_id)));
   },
 
   async close(sessionId: string) {
@@ -359,8 +377,6 @@ export const supportChatService = {
       session_id: session._id,
       sender_id: opts.senderId,
       sender_role: opts.role,
-      sender_name: opts.name,
-      sender_photo: opts.photo || '',
       text: opts.text,
       attachments: opts.attachments ?? [],
       is_ai: !!opts.isAi,
@@ -371,7 +387,10 @@ export const supportChatService = {
       session.unread_for_user = (session.unread_for_user || 0) + 1;
     }
     await session.save();
-    const pubMsg = messagePub(msg);
+    // Every caller is the assistant (`AI_SENDER_ID` has no account), so the
+    // display is whatever `opts` supplied — `messagePub` substitutes the bot's
+    // name for an `is_ai` bubble regardless.
+    const pubMsg = messagePub(msg, { name: opts.name, photo: opts.photo ?? '' });
     const pubSession = await sessionPub(session);
     emitToSupportSession(String(session._id), 'support_chat:message', pubMsg);
     emitToSupportAgents('support_chat:session_update', pubSession);
@@ -495,11 +514,12 @@ export const supportChatService = {
       buildUser(session!.user_id),
       SupportChatMessageModel.find({ session_id: session!._id }).sort({ created_at: 1 }),
     ]);
+    const display = await userDisplayMap(msgs.map((m) => String(m.sender_id)));
     const lines = msgs.map((m) => {
       let who: string;
       if (m.sender_role === 'USER') who = user.name || 'You';
       else if (m.sender_role === 'SYSTEM') who = 'System';
-      else who = m.is_ai ? AI_NAME : m.sender_name || 'Support';
+      else who = m.is_ai ? AI_NAME : displayFrom(display, m.sender_id).name || 'Support';
       const body =
         m.text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
       return { who, when: m.created_at?.toISOString?.() ?? '', body };

@@ -1,10 +1,15 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { userDisplayOf } from '@modules/access/user/user.display';
 import { grievanceService } from './grievance.service';
 
 const LEGAL_ROLES = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
 
 export const grievanceResolvers = {
+  GrievanceTicket: {
+    handled_by_name: async (parent: { handled_by?: unknown }) =>
+      parent.handled_by ? (await userDisplayOf(String(parent.handled_by))).name : '',
+  },
   Query: {
     grievanceTicketsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, LEGAL_ROLES);

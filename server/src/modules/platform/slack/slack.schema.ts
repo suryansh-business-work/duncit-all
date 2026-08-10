@@ -57,12 +57,26 @@ export const slackTypeDefs = gql`
     platform: String
     "JSON array of Block Kit blocks (stringified) the client composed for the body."
     blocks_json: String
+    "Screenshots the reporter attached — a picture of the broken screen is most of the report."
+    media_urls: [String!]
+    app_version: String
+    "Device context — a bug report without it cannot be reproduced."
+    device_os: String
+    device_model: String
+    "The screen the reporter was on when they opened the form."
+    source_screen: String
   }
 
   extend type Mutation {
     "Post a message to a Slack channel (full message surface)."
     sendSlackMessage(input: SendSlackMessageInput!): SlackSendResult!
-    "Post in-app feedback to Slack. Any signed-in user; identity is server-stamped."
+    """
+    File an in-app problem report. Any signed-in user; identity is server-stamped.
+
+    The report is SAVED first and read in the Support portal; the Slack post is a
+    notification whose failure is recorded on the row. It used to be Slack-only,
+    so an unconfigured channel threw the report away.
+    """
     submitAppFeedback(input: AppFeedbackInput!): SlackSendResult!
   }
 `;

@@ -29,6 +29,7 @@ COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 
 COPY packages/logs/package.json ./packages/logs/
+COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 # @duncit/media-picker now localises its own copy, so its dependency closure
@@ -57,6 +58,7 @@ ENV PUBLIC_MAIN_SITE_URL=$PUBLIC_MAIN_SITE_URL
 COPY website/ads-website ./website/ads-website
 COPY packages/logs ./packages/logs
 # @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/user-core ./packages/user-core
 COPY packages/utils ./packages/utils
 # @duncit/brand — the header/footer logo components. SOURCE, not just the
 # manifest: Astro resolves the .astro files during the build.

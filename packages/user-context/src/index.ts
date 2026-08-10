@@ -11,3 +11,6 @@ export { PortalModeGate, MaintenanceScreen, UnderDevelopmentScreen } from './por
 export type { PortalModeGateProps, PortalModeState } from './portal-mode';
 export { buildSessionMeQuery, createSessionUserLoader } from './session-user';
 export type { SessionUserLoaderOptions } from './session-user';
+export { useDeviceInfo } from './useDeviceInfo';
+export { configureSessionSocket, useUserRealtime } from './useUserRealtime';
+export type { SessionSocketFactory } from './useUserRealtime';

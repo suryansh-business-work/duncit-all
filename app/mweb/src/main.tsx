@@ -8,7 +8,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { UserProvider, PortalModeGate } from '@duncit/user-context';
+import { io } from 'socket.io-client';
+import {
+  UserProvider,
+  PortalModeGate,
+  buildSessionMeQuery,
+  configureSessionSocket,
+} from '@duncit/user-context';
+import { getSocketUrl } from './lib/socket-url';
 import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
 import { installAttributionLinkDecorator } from '@duncit/utils';
@@ -53,24 +60,11 @@ document.addEventListener(
   true // capture phase — fires before React synthetic events
 );
 
-// Mirrors the fields existing mweb screens read off `me`. Kept here (not in
-// app-header/queries.ts) so the provider doesn't depend on a sibling module.
-const ME_QUERY = gql`
-  query MwebSessionMe {
-    me {
-      user_id
-      full_name
-      first_name
-      last_name
-      email
-      is_email_verified
-      profile_photo
-      city
-      roles
-      following_user_ids
-    }
-  }
-`;
+// The shared session selection (@duncit/user-core) plus the one field only mWeb
+// reads. This list used to be hand-maintained here and silently omitted
+// `locale`, so a language chosen on the phone never followed the account back
+// into mWeb.
+const ME_QUERY = buildSessionMeQuery('MwebSessionMe', ['following_user_ids']);
 
 const isAuthed = () => !!localStorage.getItem('token');
 
@@ -78,6 +72,20 @@ const loadUser = async () => {
   const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
   return data?.me ?? null;
 };
+
+// Real-time: a profile change made in a portal or on the phone lands in this
+// tab without a refetch. The factory is what keeps `@duncit/user-context` free
+// of a socket.io dependency — each surface opens its own connection.
+configureSessionSocket(() => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  return io(getSocketUrl(), {
+    path: '/socket.io',
+    auth: { token },
+    // Same fallback as the chat sockets: some networks block WebSockets.
+    transports: ['websocket', 'polling'],
+  });
+});
 
 // Ship structured, file-level logs to SignOz (via the server /logs ingest).
 // environment + url + host are auto-detected from the browser at each call.

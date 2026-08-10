@@ -105,3 +105,12 @@ jobs:
       # GraphQL parser, and that job installs nothing on purpose.
       - name: GraphQL documents parse
         run: node scripts/verify-gql-documents.mjs
+
+      # Parsing is not enough. A document that parses can still ask for a field
+      # the schema does not have, or pass an argument by the wrong name — both
+      # green above, both a runtime error in the browser. This validates every
+      # resolvable client document AGAINST the schema the server boots with.
+      # It found `publicUsersByIds(ids:)` on a live mWeb page, where the schema
+      # has always wanted `user_ids`.
+      - name: GraphQL documents match the schema
+        run: npm --prefix server run check:client-documents

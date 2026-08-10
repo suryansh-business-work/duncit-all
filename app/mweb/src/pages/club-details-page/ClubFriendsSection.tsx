@@ -18,7 +18,7 @@ import PeopleIcon from '@mui/icons-material/People';
 
 const PUBLIC_USERS_BY_IDS = gql`
   query FriendProfiles($ids: [ID!]!) {
-    publicUsersByIds(ids: $ids) {
+    publicUsersByIds(user_ids: $ids) {
       user_id
       full_name
       profile_photo

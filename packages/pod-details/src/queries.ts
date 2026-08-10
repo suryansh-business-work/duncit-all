@@ -180,6 +180,7 @@ export const POD_ATTENDEES_ADMIN = gql`
   query AdminPodAttendees($id: ID!) {
     adminPodAttendees(pod_doc_id: $id) {
       ${ATTENDEE_SELECTION}
+    }
   }
 `;
 
@@ -187,6 +188,7 @@ export const POD_AUDIT_TRAIL = gql`
   query AdminPodAuditTrail($id: ID!) {
     podAuditLogs(pod_doc_id: $id) {
       ${AUDIT_SELECTION}
+    }
   }
 `;
 
@@ -209,6 +211,7 @@ export const POD_HOST_PROFILE = gql`
   query AdminPodHostProfile($user_id: ID!) {
     hostByUser(user_id: $user_id) {
       ${HOST_SELECTION}
+    }
   }
 `;
 
@@ -216,6 +219,7 @@ export const POD_PAYMENTS_TABLE = gql`
   query AdminPodPaymentsTable($query: TableQueryInput) {
     paymentsTable(query: $query) {
       ${PAYMENTS_SELECTION}
+    }
   }
 `;
 
@@ -281,6 +285,7 @@ export const POD_FEEDBACK_SUMMARY = gql`
   query AdminPodFeedbackSummary($pod_id: ID!) {
     podFeedbackSummary(pod_id: $pod_id) {
       ${FEEDBACK_SELECTION}
+    }
   }
 `;
 

@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { ZERO_EARNINGS_BODY, ZERO_EARNINGS_TITLE } from './pricingCopy';
+import { useTranslation } from '../../../../i18n/useTranslation';
 
 /**
  * Shown under the Ticket Price field when the server projects a take-home of
@@ -10,6 +10,7 @@ import { ZERO_EARNINGS_BODY, ZERO_EARNINGS_TITLE } from './pricingCopy';
  */
 export default function ZeroEarningsNotice() {
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -28,10 +29,10 @@ export default function ZeroEarningsNotice() {
       <InfoOutlinedIcon fontSize="small" color="warning" />
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle2" fontWeight={600}>
-          {ZERO_EARNINGS_TITLE}
+          {t('mweb.createPod.zeroEarningsTitle')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {ZERO_EARNINGS_BODY}
+          {t('mweb.createPod.zeroEarningsBody')}
         </Typography>
       </Box>
     </Stack>

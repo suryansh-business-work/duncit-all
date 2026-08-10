@@ -3,6 +3,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   onBack: () => void;
@@ -24,7 +25,9 @@ const overlayBtn = {
 };
 
 export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggleSave, onShare }: Readonly<Props>) {
+  const { t } = useTranslation();
   const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
+  const saveLabel = saved ? t('mweb.podDetails.saved') : t('mweb.podDetails.save');
   return (
     <Stack
       direction="row"
@@ -40,20 +43,20 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
         '& > *': { pointerEvents: 'auto' },
       }}
     >
-      <IconButton size="small" onClick={onBack} aria-label="Back" sx={overlayBtn}>
+      <IconButton size="small" onClick={onBack} aria-label={t('mweb.podDetails.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>
       <Stack direction="row" spacing={0.75}>
         <IconButton
           size="small"
-          aria-label={saved ? 'Saved' : 'Save'}
+          aria-label={saveLabel}
           onClick={onToggleSave}
           disabled={saveLoading}
           sx={overlayBtn}
         >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </IconButton>
-        <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
+        <IconButton size="small" aria-label={t('mweb.podDetails.share')} onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />
         </IconButton>
       </Stack>

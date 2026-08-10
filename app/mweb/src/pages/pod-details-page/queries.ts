@@ -44,6 +44,12 @@ export const POD_DETAILS = gql`
       club_slug
       location_id
       venue_id
+      # The venue's own label + detail. Selected for the SHARE message: without
+      # them buildPodShareMessage silently drops both the "Where" and the map
+      # link, which is why the shared text used to arrive as a bare URL. Native
+      # has always selected them (rule 27).
+      place_label
+      place_detail
       what_this_pod_offers
       available_perks
       payment_terms

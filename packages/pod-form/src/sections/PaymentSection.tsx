@@ -17,12 +17,14 @@ export default function PaymentSection() {
   const podAmount = useWatch({ control, name: 'pod_amount' });
   const noOfSpots = useWatch({ control, name: 'no_of_spots' });
   const podMode = useWatch({ control, name: 'pod_mode' });
-  const productsEnabled = useWatch({ control, name: 'products_enabled' });
   const productRequests = useWatch({ control, name: 'product_requests' });
   const isActive = useWatch({ control, name: 'is_active' });
   const isEdit = !!getValues('pod_id');
   const isFree = podType.includes('FREE');
-  const productCost = config.showInventory && productsEnabled
+  // Priced off the ROWS, not `products_enabled` — the switch that used to drive
+  // that flag is gone and buildPodInput now derives it, so watching it here
+  // would leave the breakdown at ₹0 no matter what the admin attached.
+  const productCost = config.showInventory
     ? getProductRequestTotal(productRequests, products)
     : 0;
   // The activity's minimum and the booked space's capacity. A slider only when

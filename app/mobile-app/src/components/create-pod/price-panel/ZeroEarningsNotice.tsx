@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ZERO_EARNINGS_BODY, ZERO_EARNINGS_TITLE } from './step4-copy';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Amber "heads up" tint — the same warning weight the mWeb twin renders. */
 const WARN = '#f59e0b';
@@ -14,6 +14,7 @@ const WARN_BORDER = 'rgba(245,158,11,0.40)';
  * price clears it automatically. mWeb twin.
  */
 export function ZeroEarningsNotice() {
+  const { t } = useTranslation();
   return (
     <XStack
       testID="create-pod-zero-earnings"
@@ -30,10 +31,10 @@ export function ZeroEarningsNotice() {
       <MaterialIcons name="info-outline" size={18} color={WARN} />
       <YStack flex={1} gap={3}>
         <Text fontSize={13} fontWeight="600" color="$color">
-          {ZERO_EARNINGS_TITLE}
+          {t('mweb.createPod.zeroEarningsTitle')}
         </Text>
         <Text fontSize={12} color="$muted">
-          {ZERO_EARNINGS_BODY}
+          {t('mweb.createPod.zeroEarningsBody')}
         </Text>
       </YStack>
     </XStack>

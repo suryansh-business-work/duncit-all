@@ -4,6 +4,8 @@ import { addMonths, format } from 'date-fns';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = [0, 15, 30, 45];
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -27,6 +29,7 @@ interface SheetProps {
 
 /** Calendar grid + hour/minute chips — the body of the date-time sheet. */
 export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<SheetProps>) {
+  const { t } = useTranslation();
   const seed = initial ?? new Date();
   const [view, setView] = useState(new Date(seed.getFullYear(), seed.getMonth(), 1));
   const [day, setDay] = useState(seed.getDate());
@@ -48,7 +51,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         <XStack
           testID={`${testID}-prev-month`}
           role="button"
-          aria-label="Previous month"
+          aria-label={t('mweb.slots.previousMonth')}
           onPress={() => setView((v) => addMonths(v, -1))}
           padding={8}
           pressStyle={{ opacity: 0.7 }}
@@ -61,7 +64,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         <XStack
           testID={`${testID}-next-month`}
           role="button"
-          aria-label="Next month"
+          aria-label={t('mweb.slots.nextMonth')}
           onPress={() => setView((v) => addMonths(v, 1))}
           padding={8}
           pressStyle={{ opacity: 0.7 }}
@@ -76,7 +79,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
             key={`${view.getMonth()}-${index}`}
             testID={d ? `${testID}-day-${d}` : undefined}
             role={d ? 'button' : undefined}
-            aria-label={d ? `Day ${d}` : undefined}
+            aria-label={d ? t('mweb.createPod.dayAria', { vars: { day: d } }) : undefined}
             onPress={d ? () => setDay(d) : undefined}
             width="14.28%"
             height={38}
@@ -100,7 +103,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         ))}
       </XStack>
       <Text fontSize={12} fontWeight="700" color="$muted">
-        TIME
+        {t('mweb.createPod.timeHeading')}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap={6}>
@@ -109,7 +112,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
               key={h}
               testID={`${testID}-hour-${h}`}
               role="button"
-              aria-label={`Hour ${h}`}
+              aria-label={t('mweb.createPod.hourAria', { vars: { hour: h } })}
               onPress={() => setHour(h)}
               paddingHorizontal={12}
               paddingVertical={7}
@@ -128,7 +131,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
             key={m}
             testID={`${testID}-minute-${m}`}
             role="button"
-            aria-label={`Minute ${m}`}
+            aria-label={t('mweb.createPod.minuteAria', { vars: { minute: m } })}
             onPress={() => setMinute(m)}
             paddingHorizontal={14}
             paddingVertical={7}
@@ -143,7 +146,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
       <XStack
         testID={`${testID}-done`}
         role="button"
-        aria-label="Done"
+        aria-label={t('mweb.createPod.done')}
         onPress={() => onDone(new Date(view.getFullYear(), view.getMonth(), day, hour, minute))}
         height={46}
         alignItems="center"
@@ -153,7 +156,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">
-          Done
+          {t('mweb.createPod.done')}
         </Text>
       </XStack>
     </YStack>

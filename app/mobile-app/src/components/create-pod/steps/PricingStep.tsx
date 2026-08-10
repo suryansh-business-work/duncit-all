@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
 import {
@@ -14,8 +13,7 @@ import {
   ZeroEarningsNotice,
   type PodPricingState,
 } from '../price-panel';
-import { TICKET_PRICE_LABEL, TICKET_PRICE_PLACEHOLDER } from '../price-panel/step4-copy';
-import { ProductRequestsField } from '../ProductRequestsField';
+import { PodProductsField } from '../product-picker';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
 import type { SpotsBounds } from '@duncit/utils';
@@ -44,20 +42,13 @@ export function PricingStep({
   spots,
 }: Readonly<Props>) {
   const { control, watch, setValue } = form;
-  // TODO(i18n) — ships as a literal until Create-a-Pod is localized. mWeb twin.
+  const { t } = useTranslation();
   const boundsHint = spots.slidable
-    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
     : undefined;
-  const { color } = useThemeColors();
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const isFree = watch('pod_type') === 'FREE';
-  const productsEnabled = watch('products_enabled');
-  const toggleProducts = () => {
-    const next = !productsEnabled;
-    setValue('products_enabled', next);
-    if (!next) setValue('product_requests', []);
-  };
 
   return (
     <YStack gap={14}>
@@ -65,11 +56,13 @@ export function PricingStep({
       <FormTextField
         control={control}
         name="pod_amount_text"
-        label={TICKET_PRICE_LABEL}
+        label={t('mweb.createPod.ticketPriceLabel')}
         keyboardType="numeric"
-        placeholder={TICKET_PRICE_PLACEHOLDER}
+        placeholder={t('mweb.createPod.ticketPricePlaceholder')}
         editable={!isFree}
-        hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}
+        hint={
+          isFree ? t('mweb.createPod.ticketPriceFreeHint') : t('mweb.createPod.ticketPriceHint')
+        }
         labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
       />
       {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
@@ -91,7 +84,12 @@ export function PricingStep({
         )}
       />
       <PricePanel finance={finance} pricing={pricing} />
-      <FormTextField control={control} name="payment_terms" label="Payment terms" multiline />
+      <FormTextField
+        control={control}
+        name="payment_terms"
+        label={t('mweb.createPod.paymentTerms')}
+        multiline
+      />
       {isPhysical ? (
         <Controller
           control={control}
@@ -102,49 +100,26 @@ export function PricingStep({
         />
       ) : null}
       {showProducts ? (
-        <>
-          <XStack
-            testID="products-enabled-toggle"
-            role="button"
-            aria-label="Attach products"
-            aria-pressed={productsEnabled}
-            onPress={toggleProducts}
-            alignItems="center"
-            gap={8}
-            pressStyle={{ opacity: 0.7 }}
-          >
-            <MaterialIcons
-              name={productsEnabled ? 'check-box' : 'check-box-outline-blank'}
-              size={22}
-              color={color}
+        // The "Attach products to this pod" checkbox is gone: attaching IS
+        // adding a product, so `products_enabled` is derived from the row list
+        // on submit rather than toggled here. `products` arrives already
+        // filtered to the pod's club category, and the field says so when it is
+        // empty. mWeb twin (rule 27).
+        <Controller
+          control={control}
+          name="product_requests"
+          render={({ field, fieldState }) => (
+            <PodProductsField
+              value={field.value}
+              onChange={(next) => {
+                field.onChange(next);
+                setValue('products_enabled', next.length > 0);
+              }}
+              products={products}
+              error={fieldState.error?.message}
             />
-            <Text fontSize={14} fontWeight="600" color="$color">
-              Attach products to this pod
-            </Text>
-          </XStack>
-          {/* `products` arrives already filtered to the pod's club category, so
-              empty means "none in this category", not "none at all". Twin of
-              mWeb's PricingStep alert (rule 27). */}
-          {productsEnabled && products.length === 0 ? (
-            <Text testID="products-empty" fontSize={13} color="$muted">
-              No products available for this category.
-            </Text>
-          ) : null}
-          {productsEnabled ? (
-            <Controller
-              control={control}
-              name="product_requests"
-              render={({ field, fieldState }) => (
-                <ProductRequestsField
-                  value={field.value}
-                  onChange={field.onChange}
-                  products={products}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-          ) : null}
-        </>
+          )}
+        />
       ) : null}
       <TermsAgreement form={form} />
       <SuggestedPricesModal

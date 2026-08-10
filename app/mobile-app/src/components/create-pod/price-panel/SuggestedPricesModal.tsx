@@ -5,15 +5,9 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSuggestedTicketPrices } from '@/hooks/useSuggestedTicketPrices';
 import { SuggestedPricesTable } from './SuggestedPricesTable';
-import {
-  SUGGESTED_PRICES_CLOSE,
-  SUGGESTED_PRICES_EMPTY,
-  SUGGESTED_PRICES_ERROR,
-  SUGGESTED_PRICES_NOTE,
-  SUGGESTED_PRICES_TITLE,
-} from './step4-copy';
 
 const NOTE_BG = 'rgba(99,102,241,0.10)';
 
@@ -41,6 +35,8 @@ export function SuggestedPricesModal({
   symbol,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const close = t('mweb.auth.close');
   const { prices, isLoading, error } = useSuggestedTicketPrices(
     open,
     noOfSpots,
@@ -54,13 +50,13 @@ export function SuggestedPricesModal({
   } else if (error) {
     body = (
       <Text testID="suggested-prices-error" fontSize={12.5} color="$danger">
-        {SUGGESTED_PRICES_ERROR}
+        {t('mweb.createPod.suggestedPricesError')}
       </Text>
     );
   } else if (prices.length === 0) {
     body = (
       <Text testID="suggested-prices-empty" fontSize={12.5} color="$muted">
-        {SUGGESTED_PRICES_EMPTY}
+        {t('mweb.createPod.suggestedPricesEmpty')}
       </Text>
     );
   }
@@ -77,7 +73,7 @@ export function SuggestedPricesModal({
           <YStack
             testID="suggested-prices-backdrop"
             role="button"
-            aria-label={SUGGESTED_PRICES_CLOSE}
+            aria-label={close}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -100,13 +96,13 @@ export function SuggestedPricesModal({
                 <XStack alignItems="center" gap={8} flexShrink={1}>
                   <MaterialIcons name="sell" size={20} color={primary} />
                   <Text fontSize={16.5} fontWeight="700" color="$color" flexShrink={1}>
-                    {SUGGESTED_PRICES_TITLE}
+                    {t('mweb.createPod.suggestedPricesTitle')}
                   </Text>
                 </XStack>
                 <XStack
                   testID="suggested-prices-close"
                   role="button"
-                  aria-label={SUGGESTED_PRICES_CLOSE}
+                  aria-label={close}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -127,7 +123,7 @@ export function SuggestedPricesModal({
                     padding={12}
                   >
                     <Text fontSize={12.5} fontWeight="700" color="$color">
-                      {SUGGESTED_PRICES_NOTE}
+                      {t('mweb.createPod.suggestedPricesNote')}
                     </Text>
                   </YStack>
                 </YStack>

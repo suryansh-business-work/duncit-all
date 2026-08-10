@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Spinner, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -66,6 +67,7 @@ export function DetailHero({
   children?: ReactNode;
 }>) {
   const { width } = useWindowDimensions();
+  const { t } = useTranslation();
   const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
   const [index, setIndex] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -84,7 +86,7 @@ export function DetailHero({
             <XStack
               testID={`detail-hero-image-${i}`}
               role="button"
-              aria-label="View image"
+              aria-label={t('mweb.podDetails.viewImage')}
               onPress={() => setViewerIndex(i)}
               width={width}
               height={height}

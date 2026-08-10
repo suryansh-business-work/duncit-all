@@ -1,5 +1,6 @@
 import { Alert, Button, Stack, Typography } from '@mui/material';
 import { compactButtonSx } from './buttonSx';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   /** The pod's own date has passed — nothing about the seat can change now. */
@@ -25,13 +26,14 @@ export default function MemberPanel({
   deductionPct,
   onBackout,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1}>
       <Stack direction="row" spacing={1}>
         {/* Same word Pod History uses for the same booking: "Joined" is a
             promise about something still ahead. */}
         <Button variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
-          {isExpired ? 'Visited' : 'Joined'}
+          {isExpired ? t('mweb.podDetails.visited') : t('mweb.podDetails.joined')}
         </Button>
         {canBackout && (
           <Button
@@ -42,7 +44,7 @@ export default function MemberPanel({
             fullWidth
             sx={compactButtonSx}
           >
-            Backout
+            {t('mweb.podDetails.backout')}
           </Button>
         )}
       </Stack>
@@ -56,24 +58,20 @@ function MemberNote({
   canBackout,
   deductionPct,
 }: Readonly<{ isExpired: boolean; canBackout: boolean; deductionPct: number }>) {
+  const { t } = useTranslation();
   if (canBackout) {
     return (
       <Typography variant="caption" color="text.secondary">
-        Backing out releases your seat — you will get the refund only if someone fills your spot (
-        {deductionPct}% deduction applies on paid pods).
+        {t('mweb.podDetails.backoutNote', { vars: { pct: deductionPct } })}
       </Typography>
     );
   }
   if (isExpired) {
     return (
       <Typography variant="caption" color="text.secondary">
-        This pod has already taken place.
+        {t('mweb.podDetails.alreadyTakenPlace')}
       </Typography>
     );
   }
-  return (
-    <Alert severity="info">
-      You have reached the maximum number of Backout attempts allowed for this Pod.
-    </Alert>
-  );
+  return <Alert severity="info">{t('mweb.podDetails.backoutMaxed')}</Alert>;
 }

@@ -67,6 +67,8 @@ export const userTypeDefs = gql`
     is_phone_verified: Boolean
 
     auth_providers: [AuthProvider!]!
+    "The Gmail address linked to this account, or null when Google is not connected. Shown beside the email in the admin user list so support can see both ways in."
+    google_email: String
     last_login_provider: AuthProvider
     last_login_at: String
 

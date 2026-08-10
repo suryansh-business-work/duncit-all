@@ -3,11 +3,13 @@ import { Alert, Box, ButtonBase, Collapse, Stack, Typography } from '@mui/materi
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { EarningsStatement, StatementLine } from '@duncit/utils';
 
 /** One auditable row: label + amount, with the formula that produced it
  * underneath. Context rows (the taxable base) render muted, not bold. */
 function ChargeRow({ line, money }: Readonly<{ line: StatementLine; money: (n: number) => string }>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ px: 1.5, py: 0.75 }}>
       <Stack direction="row" justifyContent="space-between" spacing={2}>
@@ -19,7 +21,7 @@ function ChargeRow({ line, money }: Readonly<{ line: StatementLine; money: (n: n
         </Typography>
       </Stack>
       <Typography variant="caption" color="text.secondary" component="div">
-        Formula: {line.formula}
+        {t('mweb.createPod.formula', { vars: { formula: line.formula } })}
       </Typography>
     </Box>
   );
@@ -99,6 +101,7 @@ interface Props {
  */
 export default function ChargesAccordion({ statement, money, venueError }: Readonly<Props>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
 
   return (
@@ -119,7 +122,7 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
         <Stack direction="row" alignItems="center" spacing={1}>
           <ReceiptLongOutlinedIcon fontSize="small" color="primary" />
           <Typography variant="subtitle2" fontWeight={700}>
-            Govt. and other charges
+            {t('mweb.createPod.govtCharges')}
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -153,7 +156,7 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
           })}
           <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, pt: 0.5 }}>
             <Typography variant="body2" fontWeight={600}>
-              Total deductions
+              {t('mweb.createPod.totalDeductions')}
             </Typography>
             <Typography variant="body2" fontWeight={700}>
               {money(statement.total_deductions)}
@@ -161,7 +164,7 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
           </Stack>
           {!statement.reconciled && (
             <Alert severity="warning" data-testid="price-panel-reconcile-warning">
-              These figures do not reconcile — refresh, or contact support if this persists.
+              {t('mweb.createPod.reconcileWarning')}
             </Alert>
           )}
         </Stack>

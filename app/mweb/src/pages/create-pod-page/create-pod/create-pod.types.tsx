@@ -1,5 +1,6 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
+import type { PodPickerProduct } from '@duncit/utils';
 
 // TODO(i18n) — labels
 export const POD_TYPES = [
@@ -197,12 +198,10 @@ export interface CreatePodSubCategory {
   min_pax: number;
 }
 
-export interface CreatePodProduct {
-  id: string;
-  product_name: string;
-  unit_cost: number;
-  available_count: number;
-  image_url?: string | null;
-}
+/** The catalogue row Step 4's product picker renders. Aliased to the shared
+ * shape so the fields the query selects (image, brand, description, stock) and
+ * the fields the picker reads cannot drift apart — and so native's twin is the
+ * same type, not a second hand-kept copy (rules 27 + 40). */
+export type CreatePodProduct = PodPickerProduct;
 
 export type CreatePodForm = UseFormReturn<CreatePodFormValues>;

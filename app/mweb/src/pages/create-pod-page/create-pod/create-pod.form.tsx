@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TICKET_PRICE_MIN, TICKET_PRICE_REQUIRED } from './price-panel/pricingCopy';
+import { fallbackT, type Translate } from '../../../i18n/fallback';
 import {
   POD_TYPE_VALUES,
   blankCreatePodForm,
@@ -23,22 +23,22 @@ export const hasImageLine = (mediaText: string) =>
 /** Physical pods need a venue, a space/capacity and an approved slot; virtual pods
  * need a valid meeting link. Extracted from the schema's superRefine to keep it
  * under the cognitive-complexity limit. */
-function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_mode === 'PHYSICAL') {
     if (!values.venue_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
+      ctx.addIssue({ code: 'custom', path: ['venue_id'], message: t('mweb.createPod.validation.venueRequired') });
     } else if (!values.venue_space_label) {
       // A space (capacity) is chosen after the venue and gates the slot list.
-      ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: 'Pick a space / capacity' });
+      ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: t('mweb.createPod.validation.spaceRequired') });
     }
     if (!values.venue_slot_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: 'Pick an available slot from the venue calendar' });
+      ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
     }
   } else if (values.pod_mode === 'VIRTUAL') {
     if (!values.meeting_url) {
-      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link is required' });
+      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: t('mweb.createPod.validation.meetingUrlRequired') });
     } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
-      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link must be valid' });
+      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: t('mweb.createPod.validation.meetingUrlInvalid') });
     }
   }
 }
@@ -46,102 +46,133 @@ function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx)
 /** The ticket price is blank until the host types one, so a PAID pod can never
  * be published at ₹0 by default — only a FREE pod (whose field is locked to 0)
  * may carry no price. Native twin (rule 27). */
-function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_type === 'FREE') {
     if (values.pod_amount !== 0) {
-      ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: 'Free pods must have amount 0' });
+      ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: t('mweb.createPod.validation.freeAmountZero') });
     }
     return;
   }
   if (values.pod_amount === null) {
-    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: TICKET_PRICE_REQUIRED });
+    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: t('mweb.createPod.validation.ticketPriceRequired') });
   } else if (values.pod_amount <= 0) {
-    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: TICKET_PRICE_MIN });
+    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: t('mweb.createPod.validation.ticketPriceMin') });
+  }
+}
+
+/** The pod-type, product, media and Organizer Terms rules of the publish step.
+ * Split out of the superRefine so it stays under the complexity limit. */
+function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (!POD_TYPE_VALUES.has(values.pod_type)) {
+    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.podTypeInvalid') });
+  }
+  if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
+    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.physicalMustBePaid') });
+  }
+  refineTicketPrice(values, ctx, t);
+  // Products are optional and `products_enabled` is derived from the rows, so
+  // there is no longer a "switch on but nothing chosen" state to catch here.
+  // The per-row rule below is what guards an incomplete association.
+  if (!hasImageLine(values.media_text)) {
+    ctx.addIssue({ code: 'custom', path: ['media_text'], message: t('mweb.createPod.validation.imageRequired') });
+  }
+  if (!values.agreed_to_terms) {
+    ctx.addIssue({ code: 'custom', path: ['agreed_to_terms'], message: t('mweb.createPod.validation.termsRequired') });
   }
 }
 
 /** Zod schema for the host Create Pod stepper — mirrors the server's
- * createPartnerPod rules (venue for physical, link for virtual, paid amounts). */
-export const createPodSchema = z
-  .object({
-    location_id: z.string().min(1, 'Select a location'),
-    locality: z.string(),
-    // Required in the SCHEMA, not just by a marker on the label: a pod without
-    // a category can't be matched to clubs or products, and the stepper's own
-    // guard only fired when the host already had categories to choose from.
-    host_category_key: z.string().min(1, 'Select a category'),
-    pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
-    club_id: z.string().min(1, 'Select a club'),
-    pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
-    venue_id: z.string(),
-    venue_slot_id: z.string(),
-    meeting_platform: z.string().trim().max(80),
-    meeting_url: z.string().trim(),
-    meeting_notes: z.string().trim().max(1000),
-    pod_description: z.string().trim().min(10, 'Add a longer description'),
-    pod_info: z.string().max(2000),
-    pod_date_time: z.date({ invalid_type_error: 'Start date/time required' }),
-    pod_end_date_time: z.date().nullable(),
-    pod_type: z.string().min(1, 'Select a pod type'),
-    pod_amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(1999).nullable(),
-    venue_space_label: z.string(),
-    no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
-    pod_hashtag_text: z.string().max(500),
-    media_text: z.string(),
-    reel_url: z.string(),
-    what_this_pod_offers: z
-      .array(z.string().trim().min(1).max(40))
-      .min(1, 'Add at least one thing this pod offers')
-      .max(20),
-    available_perks: z.array(z.string().trim().min(1).max(40)).max(20),
-    products_enabled: z.boolean(),
-    product_requests: z
-      .array(
-        z.object({
-          product_id: z.string().min(1, 'Select a product'),
-          quantity: z.number({ invalid_type_error: 'Quantity required' }).min(1).max(10000),
-        })
-      )
-      .max(20),
-    place_charges: z
-      .array(
-        z.object({
-          label: z.string().trim().min(1, 'Label required').max(80),
-          amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(100000),
-          note: z.string().trim().max(200),
-        })
-      )
-      .max(10),
-    payment_terms: z.string().max(4000),
-    agreed_to_terms: z.boolean(),
-  })
-  .superRefine((values, ctx) => {
-    refineVenueOrMeeting(values, ctx);
-    if (values.pod_date_time.getTime() <= Date.now()) {
-      ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: 'Start date/time must be in the future' });
-    }
-    if (values.pod_end_date_time && values.pod_end_date_time <= values.pod_date_time) {
-      ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: 'End must be after start' });
-    }
-    if (!POD_TYPE_VALUES.has(values.pod_type)) {
-      // TODO(i18n)
-      ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Select Free or Paid' });
-    }
-    if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
-      // TODO(i18n)
-      ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Physical pods must be paid' });
-    }
-    refineTicketPrice(values, ctx);
-    if (values.products_enabled && values.product_requests.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['product_requests'], message: 'Add at least one product' });
-    }
-    if (!hasImageLine(values.media_text)) {
-      ctx.addIssue({ code: 'custom', path: ['media_text'], message: 'Add at least one image URL' });
-    }
-    if (!values.agreed_to_terms) {
-      ctx.addIssue({ code: 'custom', path: ['agreed_to_terms'], message: 'Accept the Organizer Terms to publish' });
-    }
-  });
+ * createPartnerPod rules (venue for physical, link for virtual, paid amounts).
+ *
+ * The messages are copy, so they come from the shared catalogue (rule 38): the
+ * stepper passes its live `t`, and the export below resolves against the
+ * bundled English for callers that parse the schema outside React. */
+export function makeCreatePodSchema(t: Translate = fallbackT) {
+  return z
+    .object({
+      location_id: z.string().min(1, t('mweb.createPod.validation.locationRequired')),
+      locality: z.string(),
+      // Required in the SCHEMA, not just by a marker on the label: a pod without
+      // a category can't be matched to clubs or products, and the stepper's own
+      // guard only fired when the host already had categories to choose from.
+      host_category_key: z.string().min(1, t('mweb.createPod.validation.categoryRequired')),
+      pod_title: z
+        .string()
+        .trim()
+        .min(3, t('mweb.createPod.validation.titleShort'))
+        .max(120, t('mweb.createPod.validation.titleLong')),
+      club_id: z.string().min(1, t('mweb.createPod.validation.clubRequired')),
+      pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
+      venue_id: z.string(),
+      venue_slot_id: z.string(),
+      meeting_platform: z.string().trim().max(80),
+      meeting_url: z.string().trim(),
+      meeting_notes: z.string().trim().max(1000),
+      pod_description: z.string().trim().min(10, t('mweb.createPod.validation.descriptionShort')),
+      pod_info: z.string().max(2000),
+      pod_date_time: z.date({ invalid_type_error: t('mweb.createPod.validation.startRequired') }),
+      pod_end_date_time: z.date().nullable(),
+      pod_type: z.string().min(1, t('mweb.createPod.validation.podTypeRequired')),
+      pod_amount: z
+        .number({ invalid_type_error: t('mweb.createPod.validation.amountNumber') })
+        .min(0)
+        .max(1999)
+        .nullable(),
+      venue_space_label: z.string(),
+      no_of_spots: z
+        .number({ invalid_type_error: t('mweb.createPod.validation.spotsNumber') })
+        .min(0)
+        .max(10000),
+      pod_hashtag_text: z.string().max(500),
+      media_text: z.string(),
+      reel_url: z.string(),
+      what_this_pod_offers: z
+        .array(z.string().trim().min(1).max(40))
+        .min(1, t('mweb.createPod.validation.offersRequired'))
+        .max(20),
+      available_perks: z.array(z.string().trim().min(1).max(40)).max(20),
+      products_enabled: z.boolean(),
+      product_requests: z
+        .array(
+          z.object({
+            product_id: z.string().min(1, t('podProduct.selectFirst')),
+            quantity: z
+              .number({ invalid_type_error: t('mweb.createPod.validation.quantityRequired') })
+              .min(1)
+              .max(10000),
+          })
+        )
+        .max(20),
+      place_charges: z
+        .array(
+          z.object({
+            label: z.string().trim().min(1, t('mweb.createPod.validation.chargeLabelRequired')).max(80),
+            amount: z
+              .number({ invalid_type_error: t('mweb.createPod.validation.amountNumber') })
+              .min(0)
+              .max(100000),
+            note: z.string().trim().max(200),
+          })
+        )
+        .max(10),
+      payment_terms: z.string().max(4000),
+      agreed_to_terms: z.boolean(),
+    })
+    .superRefine((values, ctx) => {
+      refineVenueOrMeeting(values, ctx, t);
+      if (values.pod_date_time.getTime() <= Date.now()) {
+        ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: t('mweb.createPod.validation.startFuture') });
+      }
+      if (values.pod_end_date_time && values.pod_end_date_time <= values.pod_date_time) {
+        ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: t('mweb.createPod.validation.endAfterStart') });
+      }
+      refinePublish(values, ctx, t);
+    });
+}
+
+/** The schema resolved against the bundled English — for callers that parse it
+ * outside React (and the module-level export the stepper's tests use). */
+export const createPodSchema = makeCreatePodSchema();
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
@@ -151,20 +182,27 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
 
-export const STEP_TITLES = [
-  'Pod Basics',
-  'Location, Category & Club',
-  'Venue & Slot',
-  'Pricing & Publish',
+/** Catalogue keys for the four step titles, in step order. Components translate
+ * these with their own `t`; the arrays below are the English resolution for
+ * callers outside the stepper (the Host Management draft cards). */
+export const STEP_TITLE_KEYS = [
+  'mweb.createPod.step1Title',
+  'mweb.createPod.step2Title',
+  'mweb.createPod.step3Title',
+  'mweb.createPod.step4Title',
 ];
 
 /** One-line intro under each step title — mirrors the mobile stepper. */
-export const STEP_SUBTITLES = [
-  'Start with the core details so people understand what this pod is about.',
-  'Where and what are you playing — location, category and the club it belongs to.',
-  'Pick a partner venue and lock in your date & time from its calendar.',
-  'Decide how much to charge, then review and publish your pod.',
+export const STEP_SUBTITLE_KEYS = [
+  'mweb.createPod.step1Subtitle',
+  'mweb.createPod.step2Subtitle',
+  'mweb.createPod.step3Subtitle',
+  'mweb.createPod.step4Subtitle',
 ];
+
+export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
+
+export const STEP_SUBTITLES = STEP_SUBTITLE_KEYS.map((key) => fallbackT(key));
 
 /** Maps the validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
@@ -203,8 +241,12 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
-    products_enabled: values.products_enabled,
-    product_requests: values.products_enabled ? values.product_requests : [],
+    // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
+    // is open exactly when it carries products. Guarding on the rows rather than
+    // the flag also means a stale draft that still holds `products_enabled: true`
+    // with nothing attached publishes as closed instead of half-configured.
+    products_enabled: values.product_requests.length > 0,
+    product_requests: values.product_requests,
     is_active: true,
   };
 }
@@ -280,21 +322,16 @@ export const stepForField = (field: keyof CreatePodFormValues): number => {
   return Math.max(index, 0);
 };
 
-/** Copy for the "AI monitoring" chip's guidelines dialog (shared with mobile). */
-export const POD_AI_GUIDELINES = {
-  intro:
-    "When you tap Create Pod, our AI (GPT-4o) deep-checks everything you entered — title, description, details, hashtags and uploaded images — against Duncit's community guidelines.",
-  rules: [
-    'No phone numbers, emails or personal contact details.',
-    'No external, social or payment links.',
-    'No payment handles (UPI, Paytm, GPay, PhonePe, bank details).',
-    'No abusive, hateful, sexual or offensive wording.',
-    'No nude, explicit or unwanted images.',
-    'Never ask people to contact or pay you off the platform.',
-  ],
-  warning:
-    'If your content breaks these rules the pod will not be created, your Account Health can drop, and repeat violations can get your account temporarily or permanently blocked.',
-};
+/** The rules the "AI monitoring" chip's guidelines dialog lists, one catalogue
+ * key per rule so a translator edits the same rows an admin sees. */
+export const POD_GUIDELINE_RULE_KEYS = [
+  'mweb.createPod.guidelinesRule1',
+  'mweb.createPod.guidelinesRule2',
+  'mweb.createPod.guidelinesRule3',
+  'mweb.createPod.guidelinesRule4',
+  'mweb.createPod.guidelinesRule5',
+  'mweb.createPod.guidelinesRule6',
+];
 
 /** Serialises the live form state for a server draft (Dates -> ISO strings). */
 export function serializeDraft(values: CreatePodFormValues, step: number) {

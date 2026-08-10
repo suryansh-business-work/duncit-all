@@ -1,10 +1,8 @@
 import { Box, Chip, FormHelperText, Stack, Typography } from '@mui/material';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { hostCategoryKeyOf } from '../create-pod.form';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
-
-/** Why the host is picking, not what went wrong. Twin: the native field. */
-export const CATEGORY_HINT = 'In which you want to host your session';
 
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
@@ -24,6 +22,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
     watch,
     formState: { errors },
   } = form;
+  const { t } = useTranslation();
   const selectedKey = watch('host_category_key');
 
   const pickCategory = (key: string) => {
@@ -37,7 +36,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={600}>
-        {requiredLabel('Select Category', true)}
+        {requiredLabel(t('mweb.createPod.categoryLabel'), true)}
       </Typography>
       <Typography
         variant="caption"
@@ -45,7 +44,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
         display="block"
         data-testid="create-pod-category-hint"
       >
-        {CATEGORY_HINT}
+        {t('mweb.createPod.categoryHint')}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
         {hostCategories.length > 0 ? (
@@ -65,7 +64,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
             );
           })
         ) : (
-          <Chip label="Assigned after host onboarding" variant="outlined" data-testid="create-pod-category-empty" />
+          <Chip label={t('mweb.createPod.categoryEmpty')} variant="outlined" data-testid="create-pod-category-empty" />
         )}
       </Stack>
       {errors.host_category_key && <FormHelperText error>{errors.host_category_key.message}</FormHelperText>}

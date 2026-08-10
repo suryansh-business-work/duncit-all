@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LinearProgress, Stack, Typography } from '@mui/material';
 import AiMonitorChip from './AiMonitorChip';
 import PodGuidelinesDialog from './PodGuidelinesDialog';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   step: number;
@@ -15,17 +16,25 @@ interface Props {
  * one-line intro — the reskinned header of the Create Pod stepper. */
 export default function StepHero({ step, total, title, subtitle }: Readonly<Props>) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const { t } = useTranslation();
+  // One sentence for both surfaces (rule 27); the eyebrow keeps its caps in CSS
+  // rather than in the copy, which a translator would have to re-shout.
+  const counter = t('mweb.createPod.stepCounter', { vars: { step: step + 1, total } });
   return (
     <Stack spacing={0.75}>
       <LinearProgress
         variant="determinate"
         value={((step + 1) / total) * 100}
-        aria-label={`Step ${step + 1} of ${total}`}
+        aria-label={counter}
         sx={{ height: 6, borderRadius: 999 }}
       />
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mt: 0.5 }}>
-        <Typography variant="caption" color="primary" sx={{ fontWeight: 700, letterSpacing: '0.14em' }}>
-          STEP {step + 1} OF {total}
+        <Typography
+          variant="caption"
+          color="primary"
+          sx={{ fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}
+        >
+          {counter}
         </Typography>
         <AiMonitorChip onClick={() => setGuideOpen(true)} />
       </Stack>

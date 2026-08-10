@@ -82,16 +82,20 @@ export default function PodAttendeesDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
         <Typography component="span" sx={{ flex: 1, fontWeight: 700 }}>
-          Attendees ({people.length})
+          {t('mweb.podDetails.attendeesCount', { vars: { count: people.length } })}
         </Typography>
-        <IconButton size="small" aria-label="Close attendees" onClick={onClose}>
+        <IconButton
+          size="small"
+          aria-label={t('mweb.podDetails.closeAttendees')}
+          onClick={onClose}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers sx={{ p: 1 }}>
         {people.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-            No attendees yet.
+            {t('mweb.podDetails.noAttendeesYet')}
           </Typography>
         ) : (
           <List disablePadding>
@@ -117,7 +121,7 @@ export default function PodAttendeesDialog({
                 <ListItemText
                   primary={
                     <>
-                      {person.full_name || 'Attendee'}
+                      {person.full_name || t('mweb.podDetails.attendee')}
                       {(person.seats ?? 1) > 1 && (
                         <Typography
                           component="span"
@@ -130,12 +134,17 @@ export default function PodAttendeesDialog({
                       )}
                     </>
                   }
-                  secondary="View profile"
+                  secondary={t('mweb.podDetails.viewProfile')}
                   primaryTypographyProps={{ fontWeight: person.is_host ? 700 : 600, fontSize: 14 }}
                   secondaryTypographyProps={{ fontSize: 12 }}
                 />
                 {person.is_host && (
-                  <Chip size="small" color="primary" label="Host" sx={{ fontWeight: 700 }} />
+                  <Chip
+                    size="small"
+                    color="primary"
+                    label={t('mweb.podDetails.host')}
+                    sx={{ fontWeight: 700 }}
+                  />
                 )}
               </ListItemButton>
             ))}

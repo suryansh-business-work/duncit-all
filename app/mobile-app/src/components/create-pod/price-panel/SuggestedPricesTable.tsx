@@ -1,12 +1,9 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { formatMoney } from '@duncit/utils';
 
+import { useTranslation } from '@/hooks/useTranslation';
 import type { SuggestedTicketPrice } from '@/hooks/useSuggestedTicketPrices';
-import {
-  SUGGESTED_PRICES_PAYOUT_COLUMN,
-  SUGGESTED_PRICES_PRICE_COLUMN,
-  tierDescription,
-} from './step4-copy';
+import { SUGGESTED_PRICE_TIER_KEYS } from './step4-copy';
 
 interface RowProps {
   price: string;
@@ -52,7 +49,14 @@ interface Props {
 /** The two-column suggestions table — Suggested Price | What You Get. The
  * top rung is the open end of the ladder, so it reads "₹499+". mWeb twin. */
 export function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
+  const { t } = useTranslation();
   const lastIndex = prices.length - 1;
+  // The server caps the ladder at 5 rows, so a higher index only happens if
+  // that cap ever moves — it degrades to no line.
+  const tierText = (index: number) => {
+    const key = SUGGESTED_PRICE_TIER_KEYS[index];
+    return key ? t(key) : '';
+  };
   return (
     <YStack
       testID="suggested-prices-table"
@@ -69,10 +73,10 @@ export function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
         backgroundColor="$surface"
       >
         <Text fontSize={12} fontWeight="700" color="$muted">
-          {SUGGESTED_PRICES_PRICE_COLUMN}
+          {t('mweb.createPod.suggestedPrice')}
         </Text>
         <Text fontSize={12} fontWeight="700" color="$muted">
-          {SUGGESTED_PRICES_PAYOUT_COLUMN}
+          {t('mweb.createPod.whatYouGet')}
         </Text>
       </XStack>
       {prices.map((row, index) => {
@@ -84,7 +88,7 @@ export function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
             testID={`suggested-price-${row.price}`}
             price={price}
             payout={formatMoney(row.host_receives, { symbol })}
-            description={tierDescription(index)}
+            description={tierText(index)}
           />
         );
       })}

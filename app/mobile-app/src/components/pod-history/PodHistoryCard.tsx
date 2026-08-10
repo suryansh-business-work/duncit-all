@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
 
@@ -13,13 +14,15 @@ export function PodHistoryCard({
   onPress,
 }: Readonly<{ item: PodMembership; onPress: () => void }>) {
   const { muted, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const image = item.pod?.pod_images_and_videos?.[0]?.url;
+  const title = item.pod?.pod_title ?? t('mweb.podHistory.pod');
 
   return (
     <XStack
       testID={`pod-history-card-${item.id}`}
       role="button"
-      aria-label={item.pod?.pod_title ?? 'Pod'}
+      aria-label={title}
       onPress={onPress}
       gap={12}
       padding={12}
@@ -51,10 +54,10 @@ export function PodHistoryCard({
       </YStack>
       <YStack flex={1} gap={2}>
         <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
-          {item.pod?.pod_title ?? 'Pod'}
+          {title}
         </Text>
         <Text fontSize={12} color="$muted">
-          Joined {formatDateTime(item.joined_at)}
+          {t('mweb.podHistory.joinedOn', { vars: { date: formatDateTime(item.joined_at) } })}
         </Text>
       </YStack>
       <MaterialIcons name="arrow-forward" size={18} color={muted} />

@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { IconButton, Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { commentSchema } from './helpers';
+import { makeCommentSchema } from './helpers';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface SubmitHelpers {
   resetForm: () => void;
@@ -15,9 +17,11 @@ interface Props {
 }
 
 export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => makeCommentSchema(t), [t]);
   const { control, handleSubmit, watch, reset } = useForm<{ text: string }>({
     defaultValues: { text: '' },
-    resolver: zodResolver(commentSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 
@@ -48,7 +52,9 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
               {...field}
               fullWidth
               size="small"
-              placeholder={viewerId ? 'Add a comment…' : 'Sign in to comment'}
+              placeholder={
+                viewerId ? t('mweb.podDetails.addComment') : t('mweb.podDetails.signInToComment')
+              }
               disabled={!viewerId}
               error={!!fieldState.error}
               helperText={fieldState.error?.message}

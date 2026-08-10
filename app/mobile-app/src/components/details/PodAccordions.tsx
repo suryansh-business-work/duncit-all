@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodDetail, PodPerson, PodSpotFill } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { inclusiveGst } from '@/utils/checkout-math';
 import { isPodExpired } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
@@ -34,10 +35,11 @@ function PaymentDetails({
   gstPct,
   currency,
 }: Readonly<{ amount: number; isFree: boolean; gstPct: number; currency: string }>) {
+  const { t } = useTranslation();
   if (isFree || amount <= 0) {
     return (
       <Text fontSize={13.5} color="$muted">
-        This pod is free to join. No payment required.
+        {t('mweb.podDetails.freeToJoin')}
       </Text>
     );
   }
@@ -46,7 +48,7 @@ function PaymentDetails({
     <YStack gap={6}>
       <XStack justifyContent="space-between">
         <Text fontSize={13.5} color="$muted">
-          GST ({gstPct}%)
+          {t('mweb.checkout.gst', { vars: { pct: gstPct } })}
         </Text>
         <Text fontSize={13.5} color="$color">
           {money(inclusiveGst(amount, gstPct))}
@@ -60,14 +62,14 @@ function PaymentDetails({
           and only one of them was what they would be charged.
         */}
         <Text fontSize={14} fontWeight="600" color="$color">
-          Price per seat
+          {t('mweb.podDetails.pricePerSeat')}
         </Text>
         <Text fontSize={14} fontWeight="600" color="$color">
           {money(amount)}
         </Text>
       </XStack>
       <Text fontSize={11.5} color="$muted">
-        Price is inclusive of GST.
+        {t('mweb.podDetails.inclusiveOfGst')}
       </Text>
     </YStack>
   );
@@ -102,6 +104,7 @@ export function PodAccordions({
   onOpenProfile: (userId: string) => void;
 }>) {
   const { primary, success } = useThemeColors();
+  const { t } = useTranslation();
 
   const sections: Section[] = useMemo(() => {
     const charges = pod.place_charges ?? [];
@@ -114,10 +117,15 @@ export function PodAccordions({
     );
     const hostPeople = buildHostPeople(people, pod.pod_hosts_id);
     const list: Section[] = [
-      { id: 'about', title: 'About this pod', icon: 'info', content: <AboutSection pod={pod} /> },
+      {
+        id: 'about',
+        title: t('mweb.podDetails.sectionAbout'),
+        icon: 'info',
+        content: <AboutSection pod={pod} />,
+      },
       {
         id: 'club',
-        title: 'Club details',
+        title: t('mweb.podDetails.sectionClub'),
         icon: 'place',
         content: pod.club ? (
           <PodClubCard club={pod.club} categoryCrumbs={categoryCrumbs} onOpenClub={onOpenClub} />
@@ -125,7 +133,7 @@ export function PodAccordions({
           <XStack
             testID="pod-view-club"
             role="button"
-            aria-label="View club"
+            aria-label={t('mweb.podDetails.viewClub')}
             onPress={onOpenClub}
             alignItems="center"
             gap={8}
@@ -133,32 +141,32 @@ export function PodAccordions({
           >
             <MaterialIcons name="groups" size={18} color={primary} />
             <Text fontSize={14} fontWeight="600" color="$primary">
-              View club
+              {t('mweb.podDetails.viewClub')}
             </Text>
           </XStack>
         ),
       },
       {
         id: 'offers',
-        title: 'What this pod offers',
+        title: t('mweb.podDetails.sectionOffers'),
         icon: 'star',
         content: (
           <ChipList
             items={pod.what_this_pod_offers}
-            emptyText="Details coming soon."
+            emptyText={t('mweb.podDetails.offersEmpty')}
             tint={primary}
           />
         ),
       },
       {
         id: 'hosts',
-        title: 'Hosts',
+        title: t('mweb.podDetails.sectionHosts'),
         icon: 'person',
         content: <HostsSection hosts={hostPeople} onOpenProfile={onOpenProfile} />,
       },
       {
         id: 'attendees',
-        title: 'Attendees',
+        title: t('mweb.podDetails.sectionAttendees'),
         icon: 'groups',
         content: (
           <AttendeesSection
@@ -173,19 +181,19 @@ export function PodAccordions({
       },
       {
         id: 'perks',
-        title: 'Available perks',
+        title: t('mweb.podDetails.sectionPerks'),
         icon: 'card-giftcard',
         content: (
           <ChipList
             items={pod.available_perks}
-            emptyText="No additional perks listed."
+            emptyText={t('mweb.podDetails.perksEmpty')}
             tint={success}
           />
         ),
       },
       {
         id: 'payment',
-        title: 'Payment details',
+        title: t('mweb.podDetails.sectionPayment'),
         icon: 'payments',
         content: (
           <PaymentDetails
@@ -200,7 +208,7 @@ export function PodAccordions({
     if (terms) {
       list.push({
         id: 'terms',
-        title: 'Payment terms',
+        title: t('mweb.podDetails.sectionTerms'),
         icon: 'payment',
         content: (
           <Text fontSize={13.5} color="$muted">
@@ -212,7 +220,7 @@ export function PodAccordions({
     if (charges.length > 0) {
       list.push({
         id: 'charges',
-        title: 'Place charges',
+        title: t('mweb.podDetails.sectionCharges'),
         icon: 'receipt-long',
         content: <ChargesSection charges={charges} />,
       });
@@ -231,6 +239,7 @@ export function PodAccordions({
     onOpenProfile,
     primary,
     success,
+    t,
   ]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));
@@ -248,24 +257,24 @@ export function PodAccordions({
         <Text
           testID="pod-expand-all"
           role="button"
-          aria-label="Expand all"
+          aria-label={t('mweb.podDetails.expandAll')}
           onPress={() => setOpen(new Set(sections.map((s) => s.id)))}
           fontSize={13}
           fontWeight="600"
           color="$primary"
         >
-          Expand all
+          {t('mweb.podDetails.expandAll')}
         </Text>
         <Text
           testID="pod-collapse-all"
           role="button"
-          aria-label="Collapse all"
+          aria-label={t('mweb.podDetails.collapseAll')}
           onPress={() => setOpen(new Set())}
           fontSize={13}
           fontWeight="600"
           color="$muted"
         >
-          Collapse all
+          {t('mweb.podDetails.collapseAll')}
         </Text>
       </XStack>
       {sections.map((s) => (

@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Splits the stored hashtag text into clean tags (no #, no blanks). */
@@ -27,7 +28,9 @@ interface Props {
  * comma) to add it. Serializes back into pod_hashtag_text, same as mWeb. */
 export function HashtagChipsField({ form }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
+  const hashtags = t('mweb.createPod.hashtagsLabel');
 
   return (
     <Controller
@@ -52,7 +55,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
         return (
           <YStack gap={8}>
             <Text fontSize={14} fontWeight="500" color="$color">
-              Hashtags
+              {hashtags}
             </Text>
             {tags.length > 0 ? (
               <XStack gap={6} flexWrap="wrap">
@@ -73,7 +76,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
                     <XStack
                       testID={`hashtag-remove-${tag}`}
                       role="button"
-                      aria-label={`Remove ${tag}`}
+                      aria-label={t('mweb.createPod.removeTag', { vars: { tag } })}
                       onPress={() => removeTag(tag)}
                       pressStyle={{ opacity: 0.7 }}
                     >
@@ -90,16 +93,16 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
               color="$color"
               placeholderTextColor="$muted"
               borderColor="$borderColor"
-              placeholder="Type a tag and press Enter"
+              placeholder={t('mweb.createPod.hashtagsPlaceholder')}
               value={draft}
               onChangeText={onChangeText}
               onSubmitEditing={() => commit(draft)}
               onBlur={() => commit(draft)}
               autoCapitalize="none"
-              aria-label="Hashtags"
+              aria-label={hashtags}
             />
             <Text fontSize={12} color="$muted">
-              Press Enter, space or comma to add a tag.
+              {t('mweb.createPod.hashtagsHint')}
             </Text>
           </YStack>
         );

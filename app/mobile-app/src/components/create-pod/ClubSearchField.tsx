@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from './ChipSelectField';
 import type { CreatePodClub } from './create-pod.types';
 
@@ -16,6 +17,7 @@ interface Props {
 /** Searchable club picker — a filter box over a chip list (host's own clubs). */
 export function ClubSearchField({ clubs, value, onChange, error, required }: Readonly<Props>) {
   const [query, setQuery] = useState('');
+  const { t } = useTranslation();
   const term = query.trim().toLowerCase();
   const filtered = term
     ? clubs.filter((club) => club.club_name.toLowerCase().includes(term))
@@ -23,7 +25,11 @@ export function ClubSearchField({ clubs, value, onChange, error, required }: Rea
 
   return (
     <YStack gap={6}>
-      <FieldLabel label="Club" required={required} testID="create-pod-club-field" />
+      <FieldLabel
+        label={t('mweb.createPod.clubLabel')}
+        required={required}
+        testID="create-pod-club-field"
+      />
       <Input
         testID="create-pod-club-search"
         size="$4"
@@ -33,8 +39,8 @@ export function ClubSearchField({ clubs, value, onChange, error, required }: Rea
         borderColor="$borderColor"
         value={query}
         onChangeText={setQuery}
-        placeholder="Search your clubs"
-        aria-label="Search clubs"
+        placeholder={t('mweb.createPod.clubSearchPlaceholder')}
+        aria-label={t('mweb.createPod.clubSearchAria')}
       />
       <ChipSelectField
         label=""
@@ -42,7 +48,7 @@ export function ClubSearchField({ clubs, value, onChange, error, required }: Rea
         value={value}
         onChange={onChange}
         error={error}
-        emptyHint="No clubs match your search."
+        emptyHint={t('mweb.createPod.clubsEmpty')}
         testID="create-pod-club"
       />
     </YStack>

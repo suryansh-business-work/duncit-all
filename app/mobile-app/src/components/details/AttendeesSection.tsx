@@ -130,13 +130,22 @@ export function AttendeesSection({
   const previews = people.slice(0, MAX_AVATAR_PREVIEW);
   const extra = going - previews.length;
   const fillRows = buildSpotFillRows(spotFills, t);
+  const withTotal = expired
+    ? 'mweb.podDetails.attendeesAttended'
+    : 'mweb.podDetails.attendeesGoing';
+  const withoutTotal = expired
+    ? 'mweb.podDetails.attendeesAttendedNoTotal'
+    : 'mweb.podDetails.attendeesGoingNoTotal';
+  const countLine =
+    spots > 0
+      ? t(withTotal, { vars: { count: going, total: spots } })
+      : t(withoutTotal, { vars: { count: going } });
 
   return (
     <YStack gap={8}>
       {showCount ? (
         <Text fontSize={13.5} fontWeight="700" color="$color">
-          {going}
-          {spots > 0 ? ` / ${spots}` : ''} {expired ? 'attended' : 'going'}
+          {countLine}
         </Text>
       ) : null}
       {spots > 0 ? (
@@ -146,13 +155,13 @@ export function AttendeesSection({
       ) : null}
       {going === 0 ? (
         <Text fontSize={12} color="$muted">
-          Be the first to join!
+          {t('mweb.podDetails.beFirstToJoin')}
         </Text>
       ) : (
         <XStack
           testID="attendees-avatar-group"
           role="button"
-          aria-label="View all attendees"
+          aria-label={t('mweb.podDetails.viewAllAttendees')}
           onPress={() => setOpen(true)}
           alignItems="center"
           gap={8}
@@ -181,7 +190,7 @@ export function AttendeesSection({
             ) : null}
           </XStack>
           <Text fontSize={12.5} fontWeight="600" color="$primary">
-            View all
+            {t('mweb.podDetails.viewAll')}
           </Text>
         </XStack>
       )}

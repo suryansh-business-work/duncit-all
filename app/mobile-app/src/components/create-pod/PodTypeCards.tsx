@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
@@ -48,9 +49,13 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
 /** Free / Paid selector cards for Step 4 — the pod-type selector. FREE is
  * virtual-only, so physical pods only see the Paid card. mWeb twin. */
 export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
+  const { t } = useTranslation();
   const isFree = form.watch('pod_type') === 'FREE';
   const isPhysical = form.watch('pod_mode') === 'PHYSICAL';
   const typeError = form.formState.errors.pod_type?.message;
+  const paidCaption = isPhysical
+    ? t('mweb.createPod.physicalPaidCaption')
+    : t('mweb.createPod.paidCaption');
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
@@ -71,8 +76,8 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
         {isPhysical ? null : (
           <TypeCard
             testID="create-pod-free"
-            label="Free" // TODO(i18n)
-            caption="No ticket charge" // TODO(i18n)
+            label={t('mweb.createPod.podTypeFree')}
+            caption={t('mweb.createPod.freeCaption')}
             icon="volunteer-activism"
             selected={isFree}
             onPress={() => choose(true)}
@@ -80,8 +85,8 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
         )}
         <TypeCard
           testID="create-pod-paid"
-          label="Paid" // TODO(i18n)
-          caption={isPhysical ? 'Physical pods are always paid' : 'Charge per person'} // TODO(i18n)
+          label={t('mweb.createPod.podTypePaid')}
+          caption={paidCaption}
           icon="payments"
           selected={!isFree}
           onPress={() => choose(false)}

@@ -7,6 +7,7 @@ import {
 } from '@duncit/utils';
 
 import type { MyPodMembershipsDocument, PodHistoryCategoriesDocument } from '@/graphql/pod-history';
+import { fallbackT, type Translate } from '@/i18n/fallback';
 import { makeCategoryMatcher } from '@/utils/category-match';
 
 export type PodMembership = ResultOf<typeof MyPodMembershipsDocument>['myPodMemberships'][number];
@@ -17,13 +18,20 @@ export type PodHistoryCategory = ResultOf<
 
 export type PodHistorySort = 'DATE_DESC' | 'DATE_ASC' | 'PRICE_ASC' | 'PRICE_DESC';
 
-/** [value, label] pairs for the Pod History sort sheet (single source of truth). */
-export const POD_HISTORY_SORTS: readonly (readonly [PodHistorySort, string])[] = [
-  ['DATE_DESC', 'Date · Newest first'],
-  ['DATE_ASC', 'Date · Oldest first'],
-  ['PRICE_ASC', 'Price · Low to High'],
-  ['PRICE_DESC', 'Price · High to Low'],
+/** [value, translation key] pairs for the Pod History sort sheet (single source
+ * of truth). The words live in @duncit/i18n so mWeb's menu reads identically. */
+const POD_HISTORY_SORT_KEYS: readonly (readonly [PodHistorySort, string])[] = [
+  ['DATE_DESC', 'mweb.podHistory.sortDateNewest'],
+  ['DATE_ASC', 'mweb.podHistory.sortDateOldest'],
+  ['PRICE_ASC', 'mweb.podHistory.sortPriceLowHigh'],
+  ['PRICE_DESC', 'mweb.podHistory.sortPriceHighLow'],
 ];
+
+/** [value, label] pairs for the sort sheet, in the reader's language. */
+export const podHistorySorts = (
+  t: Translate = fallbackT,
+): readonly (readonly [PodHistorySort, string])[] =>
+  POD_HISTORY_SORT_KEYS.map(([value, key]) => [value, t(key)] as const);
 
 export interface PodHistoryFilters {
   /** Free-text query typed in the Pod History search box. */
@@ -107,17 +115,18 @@ export const categoriesUnder = (
 export const activePodHistoryFilterCount = (filters: PodHistoryFilters): number =>
   (filters.superId ? 1 : 0) + (filters.categoryId ? 1 : 0);
 
-/** Human labels for each refund status — mirrors mWeb's refundLabel map. */
+/** Translation KEYS for each refund status — mirrors mWeb's map. The words live
+ * in @duncit/i18n so the two apps cannot describe one refund differently. */
 export const REFUND_LABEL: Record<PodRefundStatus, string> = {
-  NONE: 'Not started',
-  PENDING: 'Criteria pending',
-  PROCESSED: 'Refund initiated',
-  NOT_ELIGIBLE: 'Not initiated',
+  NONE: 'mweb.podHistory.refundNotStarted',
+  PENDING: 'mweb.podHistory.refundPending',
+  PROCESSED: 'mweb.podHistory.refundProcessed',
+  NOT_ELIGIBLE: 'mweb.podHistory.refundNotEligible',
 };
 
 /** Refund label for a status, defaulting to the NONE label for unknown values. */
-export function refundLabel(status: PodRefundStatus): string {
-  return REFUND_LABEL[status] ?? REFUND_LABEL.NONE;
+export function refundLabel(status: PodRefundStatus, t: Translate = fallbackT): string {
+  return t(REFUND_LABEL[status] ?? REFUND_LABEL.NONE);
 }
 
 /**
@@ -135,8 +144,13 @@ export function canRejoin(item: PodMembership): boolean {
 }
 
 /** Price caption for a pod — "Free pod" or "Paid pod ₹<amount>". */
-export function podPriceCaption(podType?: string | null, amount?: number | null): string {
-  return podType === 'FREE' ? 'Free pod' : `Paid pod ₹${amount ?? 0}`;
+export function podPriceCaption(
+  podType?: string | null,
+  amount?: number | null,
+  t: Translate = fallbackT,
+): string {
+  if (podType === 'FREE') return t('mweb.podHistory.freePod');
+  return t('mweb.podHistory.paidPod', { vars: { amount: `₹${amount ?? 0}` } });
 }
 
 /** De-duplicate memberships by pod (keep the first per pod) — mWeb list behaviour. */

@@ -1,10 +1,12 @@
 import { Controller } from 'react-hook-form';
 import { Box, Checkbox, FormControlLabel, FormHelperText, Link, Typography } from '@mui/material';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Client-side publish gate — the host must accept the Organizer Terms before
  * the last step's "Create Pod" action validates. */
 export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
+  const { t } = useTranslation();
   return (
     <Controller
       control={form.control}
@@ -18,16 +20,16 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
                 sx={{ pt: 0.25 }}
-                inputProps={{ 'aria-label': 'Agree to Organizer Terms of Service' }}
+                inputProps={{ 'aria-label': t('mweb.createPod.termsAria') }}
               />
             }
             label={
               <Typography variant="body2" color="text.secondary">
-                I agree to the{' '}
+                {t('mweb.createPod.termsLeadIn')}{' '}
                 <Link href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
-                  Organizer Terms of Service
+                  {t('mweb.createPod.termsLink')}
                 </Link>{' '}
-                and confirm that I have the right to host this event at the selected venue.
+                {t('mweb.createPod.termsTail')}
               </Typography>
             }
           />

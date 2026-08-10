@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
+import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 import {
   CreatePodStepper,
   blankCreatePodForm,
@@ -11,6 +12,7 @@ import {
   type DraftPayload,
   type CreatePodFormValues,
 } from './create-pod';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
@@ -80,16 +82,10 @@ const CREATE_POD_OPTIONS = gql`
       min_pax
     }
     availablePodProducts {
-      id
-      product_name
-      unit_cost
-      available_count
-      image_url
-      super_category_id
-      sub_category_id
-      categories { super_category_id sub_category_id }
+      ...PodPickerProductFields
     }
   }
+  ${POD_PICKER_PRODUCT_FIELDS}
 `;
 const MY_POD_DRAFT = gql`
   query MyPodDraftForEdit($draft_id: ID!) {
@@ -119,6 +115,7 @@ const MODERATE_POD_CONTENT = gql`
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
 export default function CreatePodPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
   const options = useQuery(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
   const draftQuery = useQuery(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
@@ -209,11 +206,11 @@ export default function CreatePodPage() {
         severity="info"
         action={
           <Button color="inherit" size="small" onClick={() => navigate('/become-host')}>
-            Become a host
+            {t('mweb.createPod.becomeHost')}
           </Button>
         }
       >
-        Host access is required before creating pods.
+        {t('mweb.createPod.hostRequired')}
       </Alert>
     );
   }
@@ -225,14 +222,14 @@ export default function CreatePodPage() {
           <AddCircleOutlineIcon color="primary" />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-              Create a Pod
+              {t('mweb.createPod.title')}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
-              Your progress saves automatically — finish anytime from Host Management.
+              {t('mweb.createPod.autosaveNote')}
             </Typography>
           </Box>
         </Stack>
-        <IconButton aria-label="Close" onClick={() => navigate('/host/manage')}>
+        <IconButton aria-label={t('mweb.auth.close')} onClick={() => navigate('/host/manage')}>
           <CloseIcon />
         </IconButton>
       </Stack>

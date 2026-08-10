@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ProductOrder } from '@/utils/product-orders';
 import { PodProductOrderItem } from './PodProductOrderItem';
 
@@ -13,6 +14,7 @@ export function PodProductOrdersCard({
   loading,
 }: Readonly<{ orders: ProductOrder[]; loading: boolean }>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
 
   if (loading && orders.length === 0) {
     return (
@@ -43,7 +45,7 @@ export function PodProductOrdersCard({
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="shopping-bag" size={18} color={primary} />
         <Text fontSize={15} fontWeight="700" color="$color">
-          Products &amp; tracking
+          {t('mweb.podHistory.productsAndTracking')}
         </Text>
       </XStack>
       {orders.map((o) => (

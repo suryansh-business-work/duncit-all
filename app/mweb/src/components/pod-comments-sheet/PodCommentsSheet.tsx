@@ -20,6 +20,7 @@ import {
 import ConfirmDialog from '../ConfirmDialog';
 import CommentsList from './CommentsList';
 import CommentInput from './CommentInput';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   podId: string;
@@ -37,6 +38,7 @@ export default function PodCommentsSheet({
   onCountChange,
 }: Readonly<Props>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(POD_COMMENTS, {
     variables: { id: podId },
     fetchPolicy: 'cache-and-network',
@@ -113,7 +115,7 @@ export default function PodCommentsSheet({
         justifyContent="space-between"
         sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Typography variant="h6">Comments</Typography>
+        <Typography variant="h6">{t('mweb.podDetails.comments')}</Typography>
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
@@ -128,7 +130,7 @@ export default function PodCommentsSheet({
         {error && <Alert severity="error" sx={{ m: 2 }}>{error.message}</Alert>}
         {!loading && comments.length === 0 && (
           <Typography sx={{ p: 4, textAlign: 'center' }} color="text.secondary">
-            Be the first to comment.
+            {t('mweb.podDetails.commentsEmpty')}
           </Typography>
         )}
         <CommentsList
@@ -148,10 +150,10 @@ export default function PodCommentsSheet({
       )}
       <ConfirmDialog
         open={!!deleteId}
-        title="Delete comment?"
-        message="This comment will be permanently removed."
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t('mweb.podDetails.deleteCommentTitle')}
+        message={t('mweb.podDetails.deleteCommentBody')}
+        confirmLabel={t('mweb.podDetails.delete')}
+        cancelLabel={t('mweb.podDetails.cancel')}
         destructive
         onConfirm={onConfirmDelete}
         onClose={() => setDeleteId(null)}

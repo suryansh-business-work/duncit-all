@@ -1,5 +1,6 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
+import type { PodPickerProduct } from '@duncit/utils';
 
 /** The only pod types — FREE is virtual-only, physical pods are always PAID. */
 export const POD_TYPES = [
@@ -196,11 +197,10 @@ export interface CreatePodSubCategory {
   min_pax: number;
 }
 
-export interface CreatePodProduct {
-  id: string;
-  product_name: string;
-  unit_cost: number;
-  available_count: number;
-}
+/** The catalogue row Step 4's product picker renders. Aliased to the shared
+ * shape so the fields the query selects (image, brand, description, stock) and
+ * the fields the picker reads cannot drift apart — and so mWeb's twin is the
+ * same type, not a second hand-kept copy (rules 27 + 40). */
+export type CreatePodProduct = PodPickerProduct;
 
 export type CreatePodForm = UseFormReturn<CreatePodFormValues>;

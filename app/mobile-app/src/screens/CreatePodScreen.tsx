@@ -8,6 +8,7 @@ import { PodVenueApproval } from '@/generated/graphql/graphql';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { useCreatePod } from '@/hooks/useCreatePod';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -18,6 +19,7 @@ import { fireAndForget } from '@/utils/fire-and-forget';
  * or on the venue-approval waiting screen when the slot request is PENDING. */
 export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
   const {
     isHost,
@@ -40,7 +42,7 @@ export function CreatePodScreen() {
   } = useCreatePod(route.params?.draftId);
 
   return (
-    <StackScreen title="Create a Pod" testID="create-pod-screen">
+    <StackScreen title={t('mweb.createPod.title')} testID="create-pod-screen">
       {isLoading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner testID="create-pod-loading" color="$primary" />
@@ -49,11 +51,11 @@ export function CreatePodScreen() {
       {!isLoading && !isHost ? (
         <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
           <Text testID="create-pod-not-host" textAlign="center" color="$muted">
-            An approved host profile is required before creating pods.
+            {t('mweb.createPod.hostRequired')}
           </Text>
           <PrimaryButton
             testID="create-pod-become-host"
-            label="Become a host"
+            label={t('mweb.createPod.becomeHost')}
             onPress={() => navigation.navigate('BecomeHost')}
           />
         </YStack>

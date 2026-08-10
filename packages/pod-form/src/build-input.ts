@@ -39,7 +39,12 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     .split(/[\s,]+/)
     .map((s) => s.replace(/^#/, '').trim())
     .filter(Boolean);
-  const productsOn = isPhysical && config.showProducts && values.products_enabled;
+  // `products_enabled` is DERIVED, not chosen: the "Attach products" switch is
+  // gone and attaching a product IS enabling them. A pod with rows has its shop
+  // open, a pod without has it closed — the two can no longer disagree, which is
+  // what let a switch-on/no-rows pod reach the server.
+  const productsOn =
+    isPhysical && config.showProducts && values.product_requests.some((item) => item.product_id);
 
   const input: Record<string, unknown> = {
     pod_title: values.pod_title.trim(),

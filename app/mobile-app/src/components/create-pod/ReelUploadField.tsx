@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ReelPanelBody } from './ReelPanelBody';
 
 /** Reels stream directly to ImageKit (multipart) — the 100MB cap is checked
@@ -24,15 +25,19 @@ interface Props {
 export function ReelUploadField({ value, onChange }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState<{ stage: string; pct: number } | null>(null);
+  const [progress, setProgress] = useState<{ stage: 'upload' | 'compress'; pct: number } | null>(
+    null,
+  );
   const [error, setError] = useState<string | undefined>();
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
+  const podReel = t('mweb.createPod.podReel');
 
   const pickAndUpload = async () => {
     setError(undefined);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError('Media access is needed to upload a reel.');
+      setError(t('mweb.createPod.reelPermission'));
       return;
     }
     // Videos only, no base64 — the file streams from its URI in the multipart body.
@@ -41,7 +46,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     if (!asset) return;
     // fileSize can be missing on some pickers — skip the cap check then.
     if (asset.fileSize != null && asset.fileSize > MAX_REEL_BYTES) {
-      setError('That video is over 100MB — pick a smaller reel.');
+      setError(t('mweb.createPod.reelTooLarge'));
       return;
     }
     setUploading(true);
@@ -55,15 +60,15 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           type: asset.mimeType ?? 'video/mp4',
         },
         REEL_FOLDER,
-        (pct) => setProgress({ stage: 'Uploading', pct }),
+        (pct) => setProgress({ stage: 'upload', pct }),
       );
-      setProgress({ stage: 'Compressing', pct: 0 });
+      setProgress({ stage: 'compress', pct: 0 });
       const url = await compressUploadedVideo(rawUrl, REEL_FOLDER, (pct) =>
-        setProgress({ stage: 'Compressing', pct }),
+        setProgress({ stage: 'compress', pct }),
       );
       onChange(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setError(err instanceof Error ? err.message : t('mweb.createPod.uploadFailed'));
     } finally {
       setUploading(false);
       setProgress(null);
@@ -75,12 +80,19 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     onChange('');
   };
 
+  const pctVars = { vars: { pct: progress?.pct ?? 0 } };
+  const stageLabel =
+    progress?.stage === 'compress'
+      ? t('mweb.createPod.compressingPct', pctVars)
+      : t('mweb.createPod.uploadingPct', pctVars);
+  const busyLabel = progress ? stageLabel : t('mweb.createPod.uploading');
+
   return (
     <YStack borderWidth={1} borderColor="$borderColor" borderRadius={12} overflow="hidden">
       <XStack
         testID="optional-reel"
         role="button"
-        aria-label="Pod Reel"
+        aria-label={podReel}
         aria-expanded={open}
         onPress={() => setOpen(!open)}
         padding={12}
@@ -100,15 +112,15 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
         </YStack>
         <YStack flex={1}>
           <Text fontSize={14} fontWeight="700" color="$color">
-            Pod Reel
+            {podReel}
           </Text>
           <Text fontSize={12} color="$muted">
-            A short video shown in Explore.
+            {t('mweb.createPod.reelSubtitle')}
           </Text>
         </YStack>
         {value ? (
           <Text fontSize={12} fontWeight="600" color="$primary">
-            Added
+            {t('mweb.createPod.summaryAdded')}
           </Text>
         ) : (
           <MaterialIcons name={open ? 'expand-less' : 'chevron-right'} size={22} color={color} />
@@ -119,7 +131,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           <ReelPanelBody
             value={value}
             uploading={uploading}
-            busyLabel={progress ? `${progress.stage}… ${progress.pct}%` : 'Uploading…'}
+            busyLabel={busyLabel}
             error={error}
             onPick={() => void pickAndUpload()}
             onRemove={removeReel}

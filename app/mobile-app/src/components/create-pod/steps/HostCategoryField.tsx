@@ -2,10 +2,8 @@ import { Controller } from 'react-hook-form';
 
 import { ChipSelectField } from '../ChipSelectField';
 import { hostCategoryKeyOf } from '../create-pod.form';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
-
-/** Why the host is picking, not what went wrong. Twin: the mWeb field. */
-export const CATEGORY_HINT = 'In which you want to host your session';
 
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
@@ -21,6 +19,7 @@ interface Props {
  * this pod is for. Changing it resets the club/venue/slot picks. */
 export function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
   const { control, setValue } = form;
+  const { t } = useTranslation();
   const categoryOptions = hostCategories.map((category) => ({
     value: hostCategoryKeyOf(category),
     label: categoryPath(category),
@@ -40,14 +39,14 @@ export function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
       name="host_category_key"
       render={({ field, fieldState }) => (
         <ChipSelectField
-          label="Select Category"
-          hint={CATEGORY_HINT}
+          label={t('mweb.createPod.categoryLabel')}
+          hint={t('mweb.createPod.categoryHint')}
           required
           options={categoryOptions}
           // A host with no approved category has nothing to pick, and the
           // schema now blocks the step rather than letting them publish an
           // uncategorised pod.
-          emptyHint="Assigned after host onboarding"
+          emptyHint={t('mweb.createPod.categoryEmpty')}
           value={field.value}
           onChange={pickCategory}
           error={fieldState.error?.message}

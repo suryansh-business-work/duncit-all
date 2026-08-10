@@ -4,6 +4,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   label: string;
@@ -29,6 +30,7 @@ export function ChipArrayField({
 }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
 
   const commit = () => {
     const next = draft.trim();
@@ -48,7 +50,7 @@ export function ChipArrayField({
               key={tag}
               testID={`${testID}-chip-${tag}`}
               role="button"
-              aria-label={`Remove ${tag}`}
+              aria-label={t('mweb.createPod.removeTag', { vars: { tag } })}
               onPress={() => onChange(value.filter((item) => item !== tag))}
               alignItems="center"
               gap={4}
@@ -77,7 +79,7 @@ export function ChipArrayField({
         onChangeText={setDraft}
         onSubmitEditing={commit}
         onBlur={commit}
-        placeholder={placeholder ?? 'Type and press enter'}
+        placeholder={placeholder ?? t('mweb.createPod.chipPlaceholder')}
         aria-label={label}
       />
       {error ? (

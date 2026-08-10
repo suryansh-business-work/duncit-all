@@ -1,0 +1,105 @@
+---
+name: '@duncit/pod-product-picker'
+summary: 'The full-page "Add a Product" dialog for Create a Pod — category-scoped browsing with search, brand/stock filters and a quantity that only unlocks once a product is picked.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'portals/admin'
+  - 'portals/partners-app'
+  - 'packages/pod-form'
+exports:
+  - 'PodProductsField'
+  - 'PodProductDialog'
+  - 'POD_PICKER_PRODUCT_FIELDS'
+  - 'formatMoney'
+  - 'useTranslation'
+---
+
+## What this is
+
+Step 4 of Create a Pod used to carry an **"Attach products to this pod"** switch and a
+row of dropdowns. A host could flip the switch, press *Add product*, and walk away with a
+row that had a quantity but no product — an incomplete association the server then
+rejected at publish.
+
+This package is the replacement. The switch is gone; **"Add a Product"** is the only door,
+and it opens a full-page browser of exactly the products this pod may stock.
+
+## The rules it enforces
+
+- Only products matching the pod's **Super Category → Category → Sub Category** are
+  listed. The caller narrows the catalogue with `filterProductsForClub` from
+  `@duncit/utils`; this package never widens it.
+- **Selection is explicit.** The host picks by clicking a product card, which highlights it.
+- **Quantity is inert until something is picked** — both stepper buttons are disabled and
+  the rail says why.
+- **Changing the pick resets the quantity to 1**, so a count chosen for one product can
+  never ride along to another.
+- Pressing **Add to pod** with nothing picked does not add; it says
+  *"Please select a product to continue."* The button is deliberately left enabled — a
+  disabled button swallows the click and the message would be unreachable.
+- Quantity is clamped to the product's remaining stock by `clampPodProductQty`.
+
+## Usage
+
+```tsx
+import { PodProductsField } from '@duncit/pod-product-picker';
+import { filterProductsForClub } from '@duncit/utils';
+
+const eligible = filterProductsForClub(allProducts, selectedClub);
+
+<Controller
+  control={control}
+  name="product_requests"
+  render={({ field, fieldState }) => (
+    <PodProductsField
+      value={field.value}
+      onChange={field.onChange}
+      products={eligible}
+      error={fieldState.error?.message}
+    />
+  )}
+/>;
+```
+
+`products_enabled` is no longer a control the host touches — derive it:
+
+```ts
+products_enabled: values.product_requests.length > 0;
+```
+
+## Querying the catalogue
+
+Every MUI surface selects the same fields through one fragment, so none of them can end up
+without `image_url` and silently render placeholder cards:
+
+```ts
+import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
+
+const LOOKUPS = gql`
+  query PodLookups {
+    availablePodProducts { ...PodPickerProductFields }
+  }
+  ${POD_PICKER_PRODUCT_FIELDS}
+`;
+```
+
+## Where the logic lives
+
+The derivations — search, brand/stock filtering, sorting, facets, quantity clamping,
+totals, image and blurb resolution — are **not** in this package. They live in
+`@duncit/utils` (`pod-product-picker.ts`) because the native app renders the same picker in
+Tamagui and cannot import MUI. This package is the MUI shell over them; the app's
+`ProductPickerDialog` is the Tamagui shell over the same functions, which is what keeps
+mWeb and native identical (rule 27).
+
+## Localization
+
+Copy lives in the shared `podProduct.*` namespace (`packages/i18n/src/bundles/pod-product.ts`)
+and is layered in by this package's own `useTranslation`, the same way `@duncit/media-picker`
+does it — mWeb mounts `mweb.*` and the portals mount `shell.*`, so neither host provider
+knows these keys. The native twin merges `POD_PRODUCT_BUNDLE` into its fallback, so all four
+surfaces resolve one copy.

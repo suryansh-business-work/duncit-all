@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 import { seatOptions } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   value: number;
@@ -22,6 +23,7 @@ interface Props {
  */
 export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
+  const { t } = useTranslation();
   const options = seatOptions(maxSeats);
   const top = options.length;
   const seats = top > 0 ? Math.min(Math.max(value, 1), top) : value;
@@ -51,7 +53,7 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       <XStack
         testID="pod-seat-minus"
         role="button"
-        aria-label="One seat fewer"
+        aria-label={t('mweb.podDetails.oneSeatFewer')}
         aria-disabled={seats <= 1}
         onPress={() => step(seats - 1)}
         width={38}
@@ -75,7 +77,7 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       <XStack
         testID="pod-seat-plus"
         role="button"
-        aria-label="One seat more"
+        aria-label={t('mweb.podDetails.oneSeatMore')}
         aria-disabled={seats >= top}
         onPress={() => step(seats + 1)}
         width={38}

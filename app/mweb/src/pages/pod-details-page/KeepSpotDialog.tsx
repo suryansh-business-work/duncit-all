@@ -7,6 +7,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -32,14 +33,13 @@ export default function KeepSpotDialog({
   attemptsLeft,
   error = null,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>Change of plans?</DialogTitle>
+      <DialogTitle sx={{ pr: 6 }}>{t('mweb.podDetails.changeOfPlans')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2">
-          Do you want us to stop searching for a replacement and keep this spot for you? (NOTE: If
-          you wish you Backout from the Pod again, you can only do it for up to {attemptsLeft} more
-          times)
+          {t('mweb.podDetails.keepSpotBody', { vars: { count: attemptsLeft } })}
         </Typography>
         {error && (
           <Alert severity="warning" sx={{ mt: 2 }}>
@@ -49,10 +49,10 @@ export default function KeepSpotDialog({
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} disabled={busy}>
-          Close
+          {t('mweb.podDetails.close')}
         </Button>
         <Button variant="contained" onClick={onConfirm} disabled={busy}>
-          {busy ? 'Restoring…' : 'Keep My Spot'}
+          {busy ? t('mweb.podDetails.restoring') : t('mweb.podDetails.keepMySpot')}
         </Button>
       </DialogActions>
     </Dialog>

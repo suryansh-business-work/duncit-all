@@ -4,6 +4,7 @@ import {
   RequestPasswordResetOtpDocument,
   ResetPasswordWithOtpDocument,
   SignupWithGoogleDocument,
+  LinkGoogleAccountDocument,
   LoginWithGoogleDocument,
 } from '@/graphql/auth';
 import { graphqlRequest } from './graphql.client';
@@ -112,6 +113,20 @@ export async function loginWithGoogle(idToken: string): Promise<AuthOutcome> {
   return {
     token: data.loginWithGoogle.token,
     surveyCompleted: data.loginWithGoogle.user.onboarding_survey_completed,
+  };
+}
+
+/**
+ * The "allow" half of the login consent step: grants Google sign-in to an
+ * existing email/password account and returns the same session a login would
+ * have. Sent with the SAME id_token loginWithGoogle just refused. mWeb twin.
+ */
+export async function linkGoogleAccount(idToken: string): Promise<AuthOutcome> {
+  const data = await graphqlRequest(LinkGoogleAccountDocument, { input: { id_token: idToken } });
+  await setAuthToken(data.linkGoogleAccount.token);
+  return {
+    token: data.linkGoogleAccount.token,
+    surveyCompleted: data.linkGoogleAccount.user.onboarding_survey_completed,
   };
 }
 

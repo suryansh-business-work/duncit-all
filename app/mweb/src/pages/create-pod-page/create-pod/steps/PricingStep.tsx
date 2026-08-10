@@ -1,11 +1,12 @@
 import { Controller } from 'react-hook-form';
-import { Alert, FormControlLabel, Stack, Switch, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
+import { PodProductsField } from '@duncit/pod-product-picker';
 import PlaceChargesField from '../fields/PlaceChargesField';
-import ProductRequestsField from '../fields/ProductRequestsField';
 import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
 import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { SpotsBounds } from '@duncit/utils';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
@@ -22,12 +23,11 @@ interface Props {
  * earnings panel, optional products and the Organizer Terms publish gate. */
 export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
+  const { t } = useTranslation();
   const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  const productsEnabled = watch('products_enabled');
-  // TODO(i18n) — ships as a literal until Create-a-Pod is localized.
   const boundsHint = spots.slidable
-    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    ? t('mweb.createPod.spotsBoundsHint', { vars: { min: spots.min, max: spots.max } })
     : undefined;
 
   return (
@@ -53,11 +53,11 @@ export default function PricingStep({ form, products, showProducts, preview, spo
       />
       <PricePanel preview={preview} />
       <TextField
-        label="Payment terms"
+        label={t('mweb.createPod.paymentTerms')}
         fullWidth
         multiline
         minRows={3}
-        helperText="Refund policy, cancellation, tax info."
+        helperText={t('mweb.createPod.paymentTermsHint')}
         {...register('payment_terms')}
       />
       {isPhysical && (
@@ -68,51 +68,31 @@ export default function PricingStep({ form, products, showProducts, preview, spo
             <PlaceChargesField
               value={field.value}
               onChange={field.onChange}
-              helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+              helperText={t('mweb.createPod.placeChargesHint')}
             />
           )}
         />
       )}
       {showProducts && (
-        <>
-          <Controller
-            control={control}
-            name="products_enabled"
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={field.value}
-                    onChange={(e) => {
-                      field.onChange(e.target.checked);
-                      if (!e.target.checked) setValue('product_requests', []);
-                    }}
-                  />
-                }
-                label="Attach products to this pod"
-              />
-            )}
-          />
-          {/* `products` arrives already filtered to the pod's club category, so
-              empty means "none in this category", not "none at all". */}
-          {productsEnabled && products.length === 0 && (
-            <Alert severity="info">No products available for this category.</Alert>
-          )}
-          {productsEnabled && (
-            <Controller
-              control={control}
-              name="product_requests"
-              render={({ field, fieldState }) => (
-                <ProductRequestsField
-                  value={field.value}
-                  onChange={field.onChange}
-                  products={products}
-                  error={fieldState.error?.message}
-                />
-              )}
+        // The "Attach products to this pod" switch is gone: attaching IS adding
+        // a product, so `products_enabled` is derived from the row list on
+        // submit rather than toggled here. `products` arrives already filtered
+        // to the pod's club category, and the field says so when it is empty.
+        <Controller
+          control={control}
+          name="product_requests"
+          render={({ field, fieldState }) => (
+            <PodProductsField
+              value={field.value}
+              onChange={(next) => {
+                field.onChange(next);
+                setValue('products_enabled', next.length > 0);
+              }}
+              products={products}
+              error={fieldState.error?.message}
             />
           )}
-        </>
+        />
       )}
       <TermsAgreement form={form} />
     </Stack>

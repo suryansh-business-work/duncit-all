@@ -7,6 +7,7 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
+import { useTranslation } from '../../i18n/useTranslation';
 import { podSeatsTaken } from '@duncit/utils';
 
 interface Props {
@@ -20,25 +21,39 @@ interface Props {
 }
 
 function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
+  const { t } = useTranslation();
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
   if (ms < 0) {
-    return <Chip color="error" variant="filled" icon={<EventBusyIcon />} label="Pod expired" />;
+    return (
+      <Chip
+        color="error"
+        variant="filled"
+        icon={<EventBusyIcon />}
+        label={t('mweb.podDetails.podExpired')}
+      />
+    );
   }
 
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
   const hours = Math.ceil(ms / (1000 * 60 * 60));
-  const hoursLabel = hours > 1 ? `${hours} hours remaining` : 'Starting soon';
-  const label = days > 1 ? `${days} days remaining` : hoursLabel;
+  const hoursLabel =
+    hours > 1
+      ? t('mweb.podDetails.hoursRemaining', { vars: { hours } })
+      : t('mweb.podDetails.startingSoon');
+  const label =
+    days > 1 ? t('mweb.podDetails.daysRemaining', { vars: { days } }) : hoursLabel;
 
   return <Chip color={days <= 1 ? 'warning' : 'info'} icon={<HourglassBottomIcon />} label={label} />;
 }
 
 export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus, categoryCrumbs = [] }: Readonly<Props>) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const isDark = theme.palette.mode === 'dark';
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
+  const modeLabel = pod.pod_mode === 'VIRTUAL' ? t('mweb.podDetails.virtual') : t('mweb.podDetails.physical');
   const spotsTaken = podSeatsTaken(pod);
   const spotsTotal = pod.no_of_spots ?? 0;
   const textColor = theme.palette.text.primary;
@@ -66,7 +81,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           <Typography variant="h4" fontWeight={700} sx={{ lineHeight: 1.05 }}>
         {pod.pod_title}
       </Typography>
-          {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>Hosted by {hostLine}</Typography>}
+          {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>{t('mweb.podDetails.hostedBy', { vars: { names: hostLine } })}</Typography>}
           {categoryCrumbs.length > 0 && (
             <Box sx={{ mt: 0.6, color: mutedColor }}>
               <CategoryBreadcrumb crumbs={categoryCrumbs} />
@@ -75,29 +90,29 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         </Box>
         {isHost && (
           <Button size="small" variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onAddStatus} sx={{ borderRadius: 999, bgcolor: chipBg, color: textColor, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.2)' : alpha(theme.palette.primary.main, 0.14) } }}>
-            Add status
+            {t('mweb.podDetails.addStatus')}
           </Button>
         )}
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         <Chip
-          label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
+          label={isFree ? t('mweb.podDetails.free') : priceFormat(pod.pod_amount)}
           sx={{ fontWeight: 700, fontSize: '1rem', px: 0.5, height: 32, bgcolor: isDark ? '#fff' : alpha(theme.palette.primary.main, 0.12), color: isDark ? '#111827' : 'primary.dark' }}
         />
         <Chip
           icon={pod.pod_mode === 'VIRTUAL' ? <VideocamIcon /> : <PlaceIcon />}
-          label={pod.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'}
+          label={modeLabel}
           sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }}
         />
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
         <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
-          <Typography variant="caption" sx={{ color: mutedColor }}>People in</Typography>
+          <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.peopleIn')}</Typography>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{spotsTaken}</Typography>
         </Box>
         <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
-          <Typography variant="caption" sx={{ color: mutedColor }}>Spots left</Typography>
+          <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.spotsLeft')}</Typography>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
         </Box>
       </Stack>

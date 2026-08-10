@@ -2,7 +2,13 @@ import nodemailer from 'nodemailer';
 import { GraphQLError } from 'graphql';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
 import { signImagekitUpload } from '@modules/platform/upload/upload.service';
+import { UserModel } from '@modules/access/user/user.model';
 import { EnvEntryModel, type EnvCategory } from './envEntry.model';
+import {
+  isConnectionTestable,
+  runEnvConnectionCheck,
+  type EnvConnectionResult,
+} from './envEntry.connection';
 import type { EnvEntryConfig } from './envEntry.service';
 
 export interface EnvTestRichResult {
@@ -12,14 +18,20 @@ export interface EnvTestRichResult {
   data?: string | null;
 }
 
-/** Load an entry's raw config (incl. secrets) or throw. */
-async function rawConfig(id: string, expected: EnvCategory): Promise<EnvEntryConfig> {
+/** Load an entry's category + raw config (incl. secrets) or throw. */
+async function rawEntry(id: string): Promise<{ category: EnvCategory; config: EnvEntryConfig }> {
   const doc = await EnvEntryModel.findById(id);
   if (!doc) throw new GraphQLError('Environment entry not found', { extensions: { code: 'NOT_FOUND' } });
-  if (doc.category !== expected) {
+  return { category: doc.category as EnvCategory, config: (doc.config ?? {}) as EnvEntryConfig };
+}
+
+/** Load an entry's raw config (incl. secrets) or throw. */
+async function rawConfig(id: string, expected: EnvCategory): Promise<EnvEntryConfig> {
+  const entry = await rawEntry(id);
+  if (entry.category !== expected) {
     throw new GraphQLError(`Entry is not a ${expected} entry`, { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  return (doc.config ?? {}) as EnvEntryConfig;
+  return entry.config;
 }
 
 const str = (config: EnvEntryConfig, key: string) => (config[key] == null ? '' : String(config[key]));
@@ -34,15 +46,78 @@ async function record(id: string, ok: boolean) {
 }
 
 /** Run a test fn and persist its pass/fail outcome before returning it. */
-async function tracked(id: string, fn: () => Promise<EnvTestRichResult>): Promise<EnvTestRichResult> {
+async function tracked<T extends { ok: boolean }>(id: string, fn: () => Promise<T>): Promise<T> {
   const result = await fn();
   await record(id, result.ok);
   return result;
 }
 
+/** Digits only — every provider here wants a country code + number, no separators. */
+const digits = (value: string) => value.replaceAll(/\D/g, '');
+
+/**
+ * Where a live test message goes.
+ *
+ * A number typed into the dialog wins. Otherwise the SIGNED-IN admin's own
+ * profile phone is used, so the common case needs no typing — and so no test
+ * number is ever baked into the code, which is how a stale one ends up
+ * messaging a stranger.
+ */
+async function testDestination(provided: string | null | undefined, userId: string | null) {
+  const typed = digits(provided ?? '');
+  if (typed) return typed;
+  if (!userId) return '';
+  const user: any = await UserModel.findById(userId).select('auth.phone').lean();
+  const phone = user?.auth?.phone;
+  if (!phone?.number) return '';
+  return digits(`${phone.extension ?? ''}${phone.number}`);
+}
+
 const SMTP_TEST_SUBJECT = 'Duncit Tech — SMTP test email';
 
 const impl = {
+  /**
+   * Prove one entry's credentials against its vendor.
+   *
+   * Dispatches on the entry's OWN category, so a single mutation covers every
+   * provider a connection test makes sense for instead of four near-identical
+   * ones. The check itself lives in `envEntry.connection.ts`; this function
+   * owns only what needs the database — which entry, whose phone number, and
+   * stamping the outcome.
+   */
+  async connection(
+    id: string,
+    to: string | null | undefined,
+    userId: string | null
+  ): Promise<EnvConnectionResult> {
+    const { category, config } = await rawEntry(id);
+    // Thrown, not returned: "this category has no connection test" is a bad
+    // request, and returning it would stamp a red cross on an entry whose
+    // credentials were never actually tried.
+    if (!isConnectionTestable(category)) {
+      throw new GraphQLError(`${category} has no connection test`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    let destination = '';
+    if (category === 'AISENSY') {
+      destination = await testDestination(to, userId);
+      if (!destination) {
+        return {
+          ok: false,
+          message:
+            'A WhatsApp number is required — enter one, or add a phone number to your own profile',
+          details: [],
+        };
+      }
+    }
+    const result = await runEnvConnectionCheck(category, (key) => str(config, key), {
+      to: destination,
+    });
+    if (result.ok) await touch(id);
+    return result;
+  },
+
   /**
    * Send a real email through the entry's SMTP config.
    *
@@ -269,6 +344,8 @@ const impl = {
  * `rawConfig` throwing (not-found / category mismatch) propagates unchanged.
  */
 export const envEntryTests = {
+  connection: (id: string, to: string | null | undefined, userId: string | null) =>
+    tracked(id, () => impl.connection(id, to, userId)),
   email: (id: string, to: string) => tracked(id, () => impl.email(id, to)),
   imagekitUpload: (id: string, fileBase64: string, fileName: string) =>
     tracked(id, () => impl.imagekitUpload(id, fileBase64, fileName)),

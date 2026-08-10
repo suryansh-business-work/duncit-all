@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ImportRemoteImageDocument, PexelsSearchDocument } from '@/graphql/pexels';
+import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export interface PexelsPhoto {
@@ -25,6 +26,7 @@ const PER_PAGE = 24;
  * nothing.
  */
 export function usePexelsPhotos(seed: string, orientation: string, active: boolean) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(seed);
   const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
   const [page, setPage] = useState(1);
@@ -53,12 +55,12 @@ export function usePexelsPhotos(seed: string, orientation: string, active: boole
         setPage(nextPage);
         setHasMore(!!data?.next_page);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not reach Pexels');
+        setError(err instanceof Error ? err.message : t('mweb.createPod.pexelsUnreachable'));
       } finally {
         setSearching(false);
       }
     },
-    [orientation],
+    [orientation, t],
   );
 
   // The seed arrives with the dialog and changes when the host goes back and

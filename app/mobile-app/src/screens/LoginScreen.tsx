@@ -7,14 +7,15 @@ import { AuthAvatarsStrip } from '@/components/AuthAvatarsStrip';
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { GoogleLinkConsentModal } from '@/components/GoogleLinkConsentModal';
 import { LegalLinks } from '@/components/LegalLinks';
 import { LoginForm, type LoginFormValues } from '@/forms/login';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
-import { login as loginService, loginWithGoogle } from '@/services/auth.service';
+import { linkGoogleAccount, login as loginService, loginWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { appVersion } from '@/utils/app-version';
-import { toErrorMessage } from '@/utils/errors';
+import { errorCode, toErrorMessage } from '@/utils/errors';
 
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -22,6 +23,12 @@ export function LoginScreen() {
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // The pending consent grant. Holds the id_token loginWithGoogle just refused
+  // so "Allow" can spend it on linkGoogleAccount without a second Google round
+  // trip — Google id tokens stay valid for an hour, far longer than this step.
+  const [consent, setConsent] = useState<{ idToken: string; email: string } | null>(null);
+  const [consentError, setConsentError] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
 
   // Setting the token + survey flag flips the navigation gate to the survey or
   // app group automatically — no imperative navigation needed.
@@ -44,8 +51,40 @@ export function LoginScreen() {
       const result = await loginWithGoogle(idToken);
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
+      // Not a dead end any more — the account exists and Google has verified
+      // this address, so we ask whether to grant Google sign-in to it.
+      if (errorCode(e) === 'EMAIL_LOGIN_REQUIRED') {
+        const matched = (e as { extensions?: { email?: string } }).extensions?.email;
+        setConsentError(null);
+        setConsent({ idToken, email: matched ?? '' });
+        return;
+      }
       setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
     }
+  };
+
+  const allowGoogleLink = async () => {
+    if (!consent) return;
+    setConsentError(null);
+    setLinking(true);
+    try {
+      const result = await linkGoogleAccount(consent.idToken);
+      setConsent(null);
+      authenticate(result.token, result.surveyCompleted);
+    } catch (e) {
+      // Kept open with the reason: closing would look like the grant worked.
+      setConsentError(toErrorMessage(e, t('mweb.login.linkConsentFailed')));
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  // Denying changes nothing about the account. Back to the form with a warning
+  // that says both what happened and how to get here again.
+  const denyGoogleLink = () => {
+    setConsent(null);
+    setConsentError(null);
+    setError(t('mweb.login.linkConsentDenied'));
   };
 
   return (
@@ -88,6 +127,16 @@ export function LoginScreen() {
           {t('mweb.login.createOne')}
         </Text>
       </XStack>
+      <GoogleLinkConsentModal
+        open={!!consent}
+        email={consent?.email ?? ''}
+        busy={linking}
+        error={consentError}
+        onAllow={() => {
+          allowGoogleLink().catch(() => undefined);
+        }}
+        onDeny={denyGoogleLink}
+      />
       <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
       <Text testID="login-app-version" textAlign="center" fontSize={12} color="$muted">
         {t('mweb.auth.appVersion', { vars: { version: appVersion() } })}

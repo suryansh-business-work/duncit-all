@@ -5,6 +5,7 @@ import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { usePexelsPhotos, type PexelsPhoto } from './usePexelsPhotos';
 
 const TILE = 104;
@@ -42,6 +43,8 @@ export function PexelsTab({
   onError,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const loadMore = t('mweb.createPod.loadMore');
   const pexels = usePexelsPhotos(seed, orientation, active);
   const [importingId, setImportingId] = useState<string | null>(null);
   const [pickedIds, setPickedIds] = useState<string[]>([]);
@@ -57,7 +60,7 @@ export function PexelsTab({
       setPickedIds((current) => [...current, String(photo.id)]);
       setPreview(null);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not add that photo');
+      onError(err instanceof Error ? err.message : t('mweb.createPod.photoImportFailed'));
     } finally {
       setImportingId(null);
     }
@@ -67,7 +70,7 @@ export function PexelsTab({
   const previewPicked = !!previewId && pickedIds.includes(previewId);
   const previewSource = preview?.src_large ?? preview?.src_medium ?? preview?.src_tiny ?? '';
   const previewCredit = preview?.photographer
-    ? `Photo by ${preview.photographer} on Pexels`
+    ? t('mweb.createPod.photoCredit', { vars: { name: preview.photographer } })
     : undefined;
 
   return (
@@ -92,7 +95,7 @@ export function PexelsTab({
             onChangeText={pexels.setQuery}
             onSubmitEditing={pexels.search}
             returnKeyType="search"
-            placeholder="Search photos"
+            placeholder={t('mweb.createPod.searchPhotos')}
             color="$color"
             placeholderTextColor="$muted"
             height={40}
@@ -101,7 +104,7 @@ export function PexelsTab({
         <XStack
           testID="cover-pexels-go"
           role="button"
-          aria-label="Search Pexels"
+          aria-label={t('mweb.createPod.searchPexels')}
           onPress={pexels.search}
           height={40}
           paddingHorizontal={14}
@@ -112,7 +115,7 @@ export function PexelsTab({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={13} fontWeight="700" color="$onPrimary">
-            Search
+            {t('mweb.createPod.search')}
           </Text>
         </XStack>
       </XStack>
@@ -131,7 +134,7 @@ export function PexelsTab({
 
       {!pexels.searching && pexels.photos.length === 0 ? (
         <Text fontSize={12.5} color="$muted">
-          No photos matched. Try a different word.
+          {t('mweb.createPod.noPhotos')}
         </Text>
       ) : null}
 
@@ -145,7 +148,10 @@ export function PexelsTab({
               key={id}
               testID={`cover-pexels-${id}`}
               role="button"
-              aria-label={photo.alt || `Photo by ${photo.photographer ?? 'Pexels'}`}
+              aria-label={
+                photo.alt ||
+                t('mweb.createPod.photoBy', { vars: { name: photo.photographer ?? 'Pexels' } })
+              }
               aria-disabled={frozen}
               onPress={frozen ? undefined : () => setPreview(photo)}
               width={TILE}
@@ -190,7 +196,7 @@ export function PexelsTab({
         <XStack
           testID="cover-pexels-more"
           role="button"
-          aria-label="Load more photos"
+          aria-label={loadMore}
           onPress={pexels.loadMore}
           height={42}
           alignItems="center"
@@ -201,13 +207,13 @@ export function PexelsTab({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={13} fontWeight="600" color="$color">
-            {pexels.searching ? 'Loading…' : 'Load more'}
+            {pexels.searching ? t('mweb.createPod.loading') : loadMore}
           </Text>
         </XStack>
       ) : null}
 
       <Text fontSize={11} color="$muted">
-        Photos provided by Pexels. Picked photos are copied into your own media library.
+        {t('mweb.createPod.pexelsNotice')}
       </Text>
 
       {/* Look before committing: the import (and the tray slot it takes) only
@@ -221,7 +227,11 @@ export function PexelsTab({
         action={
           previewPicked
             ? undefined
-            : { label: 'Use this image', onPress: () => void confirmPreview(), busy: !!importingId }
+            : {
+                label: t('mweb.createPod.useThisImage'),
+                onPress: () => void confirmPreview(),
+                busy: !!importingId,
+              }
         }
       />
     </YStack>

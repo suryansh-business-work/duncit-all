@@ -2,6 +2,7 @@ import { Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/materia
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
 
 interface Props {
@@ -14,10 +15,11 @@ interface Props {
 /** Step 3 venue picker — approved partner venues in the pod's city as a
  * horizontal card rail; tapping a card selects it (and clears the old slot). */
 export default function VenuePicker({ venues, selectedId, onSelect, required }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={600}>
-        {requiredLabel('Select venue', required)}
+        {requiredLabel(t('mweb.createPod.selectVenue'), required)}
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.25, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
         {venues.map((venue) => {
@@ -68,7 +70,11 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
                 <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
                   {venue.venue_type && <Chip size="small" label={venue.venue_type} variant="outlined" />}
                   {typeof venue.capacity === 'number' && venue.capacity > 0 && (
-                    <Chip size="small" label={`Up to ${venue.capacity}`} variant="outlined" />
+                    <Chip
+                      size="small"
+                      label={t('mweb.createPod.upTo', { vars: { capacity: venue.capacity } })}
+                      variant="outlined"
+                    />
                   )}
                 </Stack>
               </CardActionArea>

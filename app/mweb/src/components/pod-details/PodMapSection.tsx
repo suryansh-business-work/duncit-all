@@ -7,6 +7,7 @@ import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
 import { formatMeetingPlatform } from '../../utils/meetingPlatform';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -46,6 +47,7 @@ const venueParts = (venue: any) => [
 ];
 
 export default function PodMapSection({ pod, location, venue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const locationName = venue?.venue_name ?? location?.location_name ?? null;
   const zone = (location?.location_zones ?? []).find(
@@ -59,12 +61,12 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
       <Stack direction="row" spacing={0.75} alignItems="center">
         <EventIcon color="primary" sx={{ fontSize: 20 }} />
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Time &amp; Venue
+          {t('mweb.podDetails.timeAndVenue')}
         </Typography>
       </Stack>
       <Stack spacing={0.25}>
         <Typography variant="caption" color="text.secondary">
-          When
+          {t('mweb.podDetails.when')}
         </Typography>
         <Typography variant="body2" fontWeight={500}>
           {formatStart(pod.pod_date_time)}
@@ -77,10 +79,10 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
         <Stack spacing={1}>
           <Stack spacing={0.25}>
             <Typography variant="caption" color="text.secondary">
-              Meeting
+              {t('mweb.podDetails.meeting')}
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {formatMeetingPlatform(pod.meeting_platform)}
+              {formatMeetingPlatform(pod.meeting_platform, t)}
             </Typography>
           </Stack>
           {pod.meeting_url ? (
@@ -92,11 +94,11 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
               rel="noreferrer"
               sx={{ alignSelf: 'flex-start' }}
             >
-              Join meeting
+              {t('mweb.podDetails.joinMeeting')}
             </Button>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              Meeting link will be visible after joining this pod.
+              {t('mweb.podDetails.meetingLinkAfterJoin')}
             </Typography>
           )}
           {pod.meeting_notes && (
@@ -109,7 +111,7 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
         <>
           <Stack spacing={0.25}>
             <Typography variant="caption" color="text.secondary">
-              Where
+              {t('mweb.podDetails.where')}
             </Typography>
             <Typography variant="body2" fontWeight={500}>
               {placeText ?? '\u2014'}
@@ -118,7 +120,7 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
           {venue ? (
             <Stack spacing={1}>
               <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ alignSelf: 'flex-start' }}>
-                Venue details
+                {t('mweb.podDetails.venueDetails')}
               </Button>
               <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
             </Stack>

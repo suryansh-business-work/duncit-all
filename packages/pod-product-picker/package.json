@@ -1,0 +1,52 @@
+{
+  "name": "@duncit/pod-product-picker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The full-page 'Add a Product' dialog for Create a Pod — searchable, filterable, category-scoped product browsing with a selection-gated quantity. Rendered by mWeb, the admin portal and Club Admin. One copy, not three.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/pod-product-picker"
+  },
+  "dependencies": {
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/i18n": "workspace:*",
+    "@duncit/utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "graphql": ">=16",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.10.4",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "graphql": "^16.8.1",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
+}

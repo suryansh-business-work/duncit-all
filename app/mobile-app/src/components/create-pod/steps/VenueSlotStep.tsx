@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { FieldLabel } from '@/components/Field';
 import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { formatDurationBetween } from '@/utils/date-format';
 import { DateTimeField } from '../DateTimeField';
@@ -27,7 +28,12 @@ type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
 
 /** The venue's bookable spaces: its named capacity items, else the whole venue
  * as a single option. Always ≥1 when a venue is picked, so capacity selection is
- * always required before slots/prices show. Picking one fills No. of spots. */
+ * always required before slots/prices show. Picking one fills No. of spots.
+ *
+ * The whole-venue `label` stays in English on purpose: it is the value stored on
+ * the form (and in the draft) that identifies the space, so translating it would
+ * stop a draft resumed in another language from matching. It is translated where
+ * it is DISPLAYED instead. */
 const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   if (!venue) return [];
   const items = venue.capacity_items ?? [];
@@ -69,23 +75,33 @@ function VirtualMeetingFields({
   control,
   duration,
 }: Readonly<{ control: Control<CreatePodFormValues>; duration: string | null }>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={14}>
-      <FormTextField control={control} name="meeting_platform" label="Meeting platform" />
+      <FormTextField
+        control={control}
+        name="meeting_platform"
+        label={t('mweb.createPod.meetingPlatform')}
+      />
       <FormTextField
         control={control}
         name="meeting_url"
-        label="Meeting link"
+        label={t('mweb.createPod.meetingLink')}
         required
-        hint="Starts with https://"
+        hint={t('mweb.createPod.meetingLinkHint')}
       />
-      <FormTextField control={control} name="meeting_notes" label="Meeting notes" multiline />
+      <FormTextField
+        control={control}
+        name="meeting_notes"
+        label={t('mweb.createPod.meetingNotes')}
+        multiline
+      />
       <Controller
         control={control}
         name="pod_date_time_text"
         render={({ field, fieldState }) => (
           <DateTimeField
-            label="Start date & time"
+            label={t('mweb.createPod.startDateTime')}
             required
             value={field.value}
             onChange={field.onChange}
@@ -99,7 +115,7 @@ function VirtualMeetingFields({
         name="pod_end_date_time_text"
         render={({ field, fieldState }) => (
           <DateTimeField
-            label="End date & time (optional)"
+            label={t('mweb.createPod.endDateTime')}
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
@@ -109,24 +125,36 @@ function VirtualMeetingFields({
       />
       {duration ? (
         <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
-          Total duration: {duration}
+          {t('mweb.createPod.totalDuration', { vars: { duration } })}
         </Text>
       ) : null}
     </YStack>
   );
 }
 
-/** One bookable space — its capacity is the pod's No. of spots. */
+/** One bookable space — its capacity is the pod's No. of spots. `name` is the
+ * space as the host reads it (the whole-venue pseudo-space is ours to word; a
+ * named capacity item is the venue partner's own). */
 function SpaceChip({
   space,
+  name,
   selected,
   onPick,
-}: Readonly<{ space: VenueSpace; selected: boolean; onPick: (space: VenueSpace) => void }>) {
+}: Readonly<{
+  space: VenueSpace;
+  name: string;
+  selected: boolean;
+  onPick: (space: VenueSpace) => void;
+}>) {
+  const { t } = useTranslation();
+  const label = t('mweb.createPod.spaceOption', {
+    vars: { label: name, capacity: space.capacity },
+  });
   return (
     <XStack
       testID={`create-pod-space-${space.label}`}
       role="button"
-      aria-label={`${space.label} ${space.capacity} spots`}
+      aria-label={label}
       aria-pressed={selected}
       onPress={() => onPick(space)}
       paddingHorizontal={12}
@@ -138,7 +166,7 @@ function SpaceChip({
       pressStyle={{ opacity: 0.85 }}
     >
       <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
-        {space.label} · {space.capacity} spots
+        {label}
       </Text>
     </XStack>
   );
@@ -158,6 +186,9 @@ function VenueSpaceCard({
   spaceError?: string;
   onPick: (space: VenueSpace) => void;
 }>) {
+  const { t } = useTranslation();
+  const spaceName = (space: VenueSpace) =>
+    space.slotSpaceLabel ? space.label : t('mweb.slots.wholeVenue');
   return (
     <YStack
       gap={8}
@@ -168,22 +199,24 @@ function VenueSpaceCard({
       borderColor="$borderColor"
     >
       <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="600" color="$color">
-        {venue.venue_type ? `${venue.venue_type} · ` : ''}Total capacity: {venue.capacity ?? 0}
+        {venue.venue_type ? `${venue.venue_type} · ` : ''}
+        {t('mweb.createPod.totalCapacity', { vars: { count: venue.capacity ?? 0 } })}
       </Text>
       <YStack gap={6}>
-        <FieldLabel label="Space & capacity" required testID="create-pod-space" />
+        <FieldLabel label={t('mweb.createPod.spaceCapacity')} required testID="create-pod-space" />
         <XStack gap={6} flexWrap="wrap">
           {spaces.map((space) => (
             <SpaceChip
               key={space.label}
               space={space}
+              name={spaceName(space)}
               selected={spaceLabel === space.label}
               onPick={onPick}
             />
           ))}
         </XStack>
         <Text fontSize={12} color={spaceError ? '$danger' : '$muted'}>
-          {spaceError ?? 'Pick a space — its capacity sets No. of spots. Slots show after this.'}
+          {spaceError ?? t('mweb.createPod.spaceHint')}
         </Text>
       </YStack>
     </YStack>
@@ -192,11 +225,10 @@ function VenueSpaceCard({
 
 /** Own venues book instantly; every other venue approves the slot first. */
 function SlotApprovalNote({ ownVenue }: Readonly<{ ownVenue: boolean }>) {
+  const { t } = useTranslation();
   return (
     <Text testID="create-pod-approval-note" fontSize={12.5} fontWeight="700" color="$muted">
-      {ownVenue
-        ? 'This is your venue — the slot books instantly and the pod goes live on publish.'
-        : 'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.'}
+      {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
     </Text>
   );
 }
@@ -219,6 +251,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
     setValue,
     formState: { errors },
   } = form;
+  const { t } = useTranslation();
   const spaceError = errors.venue_space_label?.message;
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
@@ -321,7 +354,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}
       {duration ? (
         <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
-          Pod window from slot: {duration}
+          {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Text>
       ) : null}
     </YStack>

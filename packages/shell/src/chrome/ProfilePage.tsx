@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Avatar,
@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import EditIcon from '@mui/icons-material/Edit';
+import GoogleIcon from '@mui/icons-material/Google';
 import { useUserData } from '@duncit/user-context';
 import { useBranding } from '../hooks/useBranding';
 import { accountEmail, accountName, initials } from './user-display';
@@ -31,6 +32,19 @@ const UPDATE_MY_PROFILE = gql`
       email
       profile_photo
       roles
+    }
+  }
+`;
+
+/** The signed-in account's linked Gmail, if any. Its own query because the
+ * password hash it reports on is select:false and so invisible to the user
+ * mapper the shell's session already holds. */
+const MY_CONNECTED_ACCOUNTS = gql`
+  query ShellMyConnectedAccounts {
+    myConnectedAccounts {
+      google {
+        google_email
+      }
     }
   }
 `;
@@ -62,6 +76,8 @@ export function ProfilePage() {
   const name = accountName(user, 'User');
   const email = accountEmail(user);
   const roles = user?.roles ?? [];
+  const { data: connected } = useQuery(MY_CONNECTED_ACCOUNTS);
+  const googleEmail: string | null = connected?.myConnectedAccounts?.google?.google_email ?? null;
 
   const startEdit = () => {
     setFirstName(user?.first_name ?? '');
@@ -98,6 +114,18 @@ export function ProfilePage() {
             <Typography color="text.secondary" noWrap>
               {email || '—'}
             </Typography>
+            {/* Read-only on purpose: the consoles sign in with a password or an
+                emailed code, never with Google, so there is nothing to connect
+                here. What the line answers is "which Gmail also opens this
+                account", which mWeb and the app can grant. */}
+            {googleEmail && (
+              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                <GoogleIcon sx={{ fontSize: 14, color: '#4285f4' }} />
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {googleEmail}
+                </Typography>
+              </Stack>
+            )}
             <Typography variant="caption" color="text.secondary">
               Signed in to {branding.appName || 'Duncit'}
             </Typography>

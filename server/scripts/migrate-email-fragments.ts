@@ -4,6 +4,7 @@
  *   npm run migrate:email-fragments:dry     # report only, touches nothing
  *   npm run migrate:email-fragments         # write to the database
  *   npm run migrate:email-fragments -- --disk   # rewrite the on-disk .mjml too
+ *   npm run migrate:email-fragments:dry -- --assign-unmapped=transactional
  *
  * Every template carried its own copy of the logo section and the copyright
  * section. That is one place to edit a support address multiplied by
@@ -15,17 +16,48 @@
  * lifted into `footer_note` on the template, and the fragment's footer renders
  * them. A template with none falls back to its category's generic note.
  *
- * Idempotent: a template with no logo section and no copyright section is
- * already migrated and is skipped. Safe to re-run against any environment.
+ * `--assign-unmapped=<fragment key>` covers the templates this repo does not
+ * ship: anything an admin creates in Tech > Emails > Templates gets
+ * `fragment_key: null` from the model default, so it sends with no logo, no
+ * support line and no copyright — and because its slug is in no category map,
+ * every run of this script used to report it and move on, forever. The flag is
+ * the deliberate answer to "and what wraps THOSE?", and it stays a flag rather
+ * than a default because picking a footer silently is how a campaign ends up
+ * carrying the internal one.
+ *
+ * Idempotent: a template with no logo section and no copyright section, already
+ * pointed at the fragment it should be, is reported as `already` and not
+ * written. Safe to re-run against any environment.
+ *
+ * The action column, which is the whole point of running the dry form first:
+ *   already      nothing to do
+ *   linked       gains a fragment; its body is untouched
+ *   stripped     gains a fragment AND loses the header/footer it drew itself
+ *   skipped      uncategorised, no fallback given — left exactly as it is
+ *   no-fragment  names a fragment this database does not have; NOT written,
+ *                because the key alone would send the email bare
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import mongoose from 'mongoose';
 import { EmailTemplateModel } from '@modules/content/emailTemplate/emailTemplate.model';
+import { EmailFragmentModel } from '@modules/content/emailFragment/emailFragment.model';
+import { EMAIL_CATEGORIES } from '@services/email/email.provider';
 import { TEMPLATE_CATEGORIES } from '@services/email/template-categories';
+
+/** `--flag=value` or `--flag value`, whichever the operator typed. */
+function argValue(flag: string): string | null {
+  const inline = process.argv.find((arg) => arg.startsWith(`${flag}=`));
+  if (inline) return inline.slice(flag.length + 1).trim() || null;
+  const index = process.argv.indexOf(flag);
+  const next = index === -1 ? '' : (process.argv[index + 1] ?? '');
+  return next && !next.startsWith('-') ? next.trim() : null;
+}
 
 const DRY = process.argv.includes('--dry-run');
 const DISK = process.argv.includes('--disk');
+/** The fragment an admin's own template gets when it names none. */
+const ASSIGN_UNMAPPED = argValue('--assign-unmapped');
 const TEMPLATES_DIR = path.join(__dirname, '..', 'src', 'services', 'email', 'templates');
 
 export interface StripResult {
@@ -173,55 +205,116 @@ function migrateDisk(): Row[] {
   return rows;
 }
 
-/** What one stored template needs, decided before anything is written. */
-function planDocument(doc: {
-  slug: string;
-  mjml: string;
-  fragment_key?: string | null;
-  footer_note?: string;
-}): { row: Row; changes?: { mjml: string; category: string; note?: string } } {
-  const category = TEMPLATE_CATEGORIES[doc.slug];
-  const result = stripChrome(doc.mjml);
-  const touched = result.removedHeader || result.removedFooter;
+/**
+ * The fragment this template should end up naming, or null when there is
+ * nothing to point it at.
+ *
+ * A slug this repo ships always follows the category map, so a wrong pick is
+ * corrected on the next run. Anything else is somebody's own template: it keeps
+ * a fragment that still exists, and takes the fallback only when it has none —
+ * which is what stops a re-run from overwriting a choice an admin made in the
+ * editor's fragment picker.
+ *
+ * A key naming a fragment that is gone survives the last line so the caller can
+ * say so. Reporting it as uncategorised would be the one wrong answer: it IS
+ * categorised, at something that no longer renders.
+ */
+function targetKey(
+  slug: string,
+  current: string | null | undefined,
+  known: ReadonlySet<string>,
+  fallback: string | null
+): string | null {
+  const mapped = TEMPLATE_CATEGORIES[slug];
+  if (mapped) return mapped;
+  if (current && known.has(current)) return current;
+  if (fallback) return fallback;
+  return current ?? null;
+}
 
-  // An unmapped slug is a template nobody has categorised. Report it and leave
-  // it exactly as it is rather than guessing where it belongs.
-  if (!category) {
+/** What one stored template needs, decided before anything is written. */
+function planDocument(
+  doc: { slug: string; mjml: string; fragment_key?: string | null; footer_note?: string },
+  known: ReadonlySet<string>,
+  fallback: string | null
+): { row: Row; changes?: { mjml: string; key: string; note?: string } } {
+  const result = stripChrome(doc.mjml);
+  const note = doc.footer_note ?? '';
+  const key = targetKey(doc.slug, doc.fragment_key, known, fallback);
+
+  // Nobody has categorised this template and no fallback was given. Report it
+  // and leave it exactly as it is rather than guessing where it belongs.
+  if (!key) {
     return {
       row: { slug: doc.slug, category: '(unmapped)', note: result.footerNote, action: 'skipped' },
     };
   }
 
-  const needsCategory = doc.fragment_key !== category;
-  const needsNote = !doc.footer_note && !!result.footerNote;
-  if (!touched && !needsCategory && !needsNote) {
-    return { row: { slug: doc.slug, category, note: doc.footer_note ?? '', action: 'already' } };
+  // The fragment is not in this database. Writing the key regardless is what
+  // makes an email send bare with nothing to show why: `emailFragmentService.
+  // wrap` returns the body untouched for a key it cannot find, and says nothing.
+  if (!known.has(key)) {
+    return { row: { slug: doc.slug, category: key, note, action: 'no-fragment' } };
+  }
+
+  const touched = result.removedHeader || result.removedFooter;
+  const needsKey = doc.fragment_key !== key;
+  const needsNote = !note && !!result.footerNote;
+  if (!touched && !needsKey && !needsNote) {
+    return { row: { slug: doc.slug, category: key, note, action: 'already' } };
   }
 
   return {
     row: {
       slug: doc.slug,
-      category,
-      note: needsNote ? result.footerNote : (doc.footer_note ?? ''),
+      category: key,
+      note: needsNote ? result.footerNote : note,
       action: touched ? 'stripped' : 'linked',
     },
     changes: {
       mjml: result.mjml,
-      category,
+      key,
       ...(needsNote ? { note: result.footerNote } : {}),
     },
   };
 }
 
-async function migrateDatabase(): Promise<Row[]> {
+/**
+ * Every fragment key the database holds, active or not.
+ *
+ * Not filtered by `is_active`: switching a fragment off is a deliberate choice
+ * an admin makes instead of deleting it, and a template pointed at it is one
+ * toggle away from being right again. A key with no row behind it is the only
+ * broken case, and it is the one this set exists to catch.
+ */
+async function fragmentKeys(): Promise<Set<string>> {
+  const docs = await EmailFragmentModel.find().select('key').lean();
+  return new Set(docs.map((doc) => String(doc.key)));
+}
+
+/**
+ * The nine that ship are seeded by the server on boot. Run this against a
+ * database no new server has started against and they are simply not there —
+ * every template would be linked to a key with nothing behind it, every email
+ * would send bare, and this script would report a clean migration.
+ */
+function reportFragments(known: ReadonlySet<string>): void {
+  console.log(`Fragments in this database: ${known.size}`);
+  const missing = EMAIL_CATEGORIES.filter((category) => !known.has(category));
+  if (missing.length === 0) return;
+  console.log(`  MISSING: ${missing.join(', ')}`);
+  console.log('  Start the server once against this database — it seeds them on boot.');
+}
+
+async function migrateDatabase(known: ReadonlySet<string>, fallback: string | null): Promise<Row[]> {
   const rows: Row[] = [];
   const docs = await EmailTemplateModel.find().sort({ slug: 1 }).exec();
   for (const doc of docs) {
-    const { row, changes } = planDocument(doc);
+    const { row, changes } = planDocument(doc, known, fallback);
     rows.push(row);
     if (!changes || DRY) continue;
     doc.mjml = changes.mjml;
-    doc.fragment_key = changes.category;
+    doc.fragment_key = changes.key;
     if (changes.note !== undefined) doc.footer_note = changes.note;
     await doc.save();
   }
@@ -246,8 +339,21 @@ async function main(): Promise<void> {
 
   await mongoose.connect(uri, { dbName: process.env.MONGO_DB_NAME });
   try {
-    console.log('Stored templates:');
-    const rows = await migrateDatabase();
+    const known = await fragmentKeys();
+    reportFragments(known);
+
+    // Refused before a single template is read: a fallback nobody can render is
+    // worse than no fallback, and the operator has almost certainly typed a
+    // category name that this database spells differently.
+    if (ASSIGN_UNMAPPED && !known.has(ASSIGN_UNMAPPED)) {
+      const available = [...known].sort((a, b) => a.localeCompare(b)).join(', ');
+      console.log(`\nNo fragment "${ASSIGN_UNMAPPED}" here. Available: ${available || '(none)'}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log('\nStored templates:');
+    const rows = await migrateDatabase(known, ASSIGN_UNMAPPED);
     report(rows);
     const counts = rows.reduce<Record<string, number>>((acc, r) => {
       acc[r.action] = (acc[r.action] ?? 0) + 1;

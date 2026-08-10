@@ -11,6 +11,31 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
+      // Profile > Connected accounts. mWeb and native render the same section
+      // (rule 27) over the same myConnectedAccounts query.
+      connected: {
+        title: 'Connected accounts',
+        subtitle: 'Services you can use to sign in to Duncit.',
+        emailLabel: 'Email and password',
+        emailOn: 'Active',
+        emailOff: 'Not set',
+        googleLabel: 'Google',
+        googleNotConnected: 'Not connected',
+        linkedOn: 'Connected on {date}',
+        connect: 'Connect',
+        disconnect: 'Disconnect',
+        connected: 'Google connected',
+        disconnected: 'Google disconnected',
+        // The lock-out guard: Google is the only way in, so the action is
+        // disabled rather than allowed to strand the user.
+        onlyMethodHint:
+          'Google is currently the only way to sign in to this account. Set a password before disconnecting it.',
+        disconnectTitle: 'Disconnect Google?',
+        disconnectMessage:
+          'You will no longer be able to sign in with Google. Your email and password keep working.',
+        connectFailed: 'Could not connect Google. Please try again.',
+        disconnectFailed: 'Could not disconnect Google. Please try again.',
+      },
     },
     // The auth journey — login, signup, forgot password, reset password. mWeb
     // and the native app render the SAME screens (rule 27), so a key here is
@@ -80,8 +105,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleNotFoundTitle: 'Google account not found',
       googleNotFoundBody: 'User is not in our system. Please sign up first.',
       googleNotFoundAction: 'Sign up',
-      emailLoginTitle: 'Use email login',
-      emailLoginBody: 'Please login with email. You registered with us using email and password.',
+      // The consent step. An email/password account whose address matches a
+      // verified Google account is offered the link rather than turned away —
+      // granting it is the user's decision, so it is asked for in plain words.
+      linkConsentTitle: 'Also sign in with Google?',
+      linkConsentBody:
+        'You registered {email} with an email and password. Allow Google to sign you in to this same account?',
+      linkConsentDetail:
+        'Your password keeps working. You can disconnect Google at any time from Profile → Connected accounts.',
+      linkConsentAllow: 'Allow and continue',
+      linkConsentDeny: 'Not now',
+      linkConsentDenied:
+        'Google was not connected. Sign in with your email and password, or try Google again to allow it.',
+      linkConsentFailed: 'Could not connect Google. Please try again.',
     },
     signup: {
       title: 'Join',
@@ -236,6 +272,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       includeOutOfStock: 'Include out of stock',
       searchPlaceholder: 'Search products or brands…',
     },
+    // The pod page: hero, overview, schedule, the accordion stack, the booking
+    // bar in every state it has, the backout/keep-spot dialogs and the comments
+    // sheet. mWeb and the native app render the SAME journey (rule 27), so a key
+    // here is used by BOTH surfaces unless its comment says which surface
+    // renders it.
+    //
+    // Plurals ship as explicit One/Many pairs: the key-verification gate needs
+    // every leaf rendered via a literal t('…'), which the translator's
+    // `.one/.other` siblings would fail.
     podDetails: {
       spotFilled: 'Spot filled',
       spotFilledBy: 'Spot filled by {name}',
@@ -246,6 +291,365 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // avatars, or the same booking gets counted twice on screen.
       otherMembersOne: '+1 other member',
       otherMembersMany: '+{count} other members',
+      // Page chrome. A pod that cannot be shown says so the same way on both
+      // surfaces — the reader cannot act on the difference between "missing"
+      // and "unavailable".
+      notFound: 'Pod not found.',
+      contactSupport: 'Contact support about this pod',
+      close: 'Close',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      // The share sheet's title when the pod has none of its own.
+      duncitPod: 'Duncit Pod',
+      // The hero. mWeb only — the native hero buttons carry testIDs rather than
+      // accessible names, and its carousel pages by swipe instead of arrows.
+      back: 'Back',
+      save: 'Save',
+      saved: 'Saved',
+      share: 'Share',
+      previousImage: 'Previous',
+      nextImage: 'Next',
+      // Native only — tapping a hero image opens the full-screen viewer.
+      viewImage: 'View image',
+      // The overview card.
+      hostedBy: 'Hosted by {names}',
+      // mWeb only — posting a status from the pod is a host affordance the
+      // native pod screen does not carry.
+      addStatus: 'Add status',
+      free: 'Free',
+      virtual: 'Virtual',
+      physical: 'Physical',
+      // The countdown chip. The number is the pod's own, only the words are copy.
+      podExpired: 'Pod expired',
+      daysRemaining: '{days} days remaining',
+      hoursRemaining: '{hours} hours remaining',
+      startingSoon: 'Starting soon',
+      peopleIn: 'People in',
+      spotsLeft: 'Spots left',
+      spotsLeftCount: '{count} spots left',
+      // Time & venue.
+      timeAndVenue: 'Time & Venue',
+      when: 'When',
+      meeting: 'Meeting',
+      // Stands in for a meeting platform we have no name for.
+      online: 'Online',
+      joinMeeting: 'Join meeting',
+      meetingLinkAfterJoin: 'Meeting link will be visible after joining this pod.',
+      where: 'Where',
+      venueDetails: 'Venue details',
+      // Native only — mWeb formats the schedule through the browser's own
+      // locale formatter, which has an em dash for a missing date.
+      datePending: 'Date pending',
+      // mWeb only — the native map is a plain embed with no chrome of its own.
+      mapPreview: 'Map preview',
+      openInMaps: 'Open in Maps',
+      locationMap: 'Pod location map',
+      // The accordion stack.
+      expandAll: 'Expand all',
+      collapseAll: 'Collapse all',
+      // mWeb only — its buttons are icon+text and name themselves more fully.
+      expandAllSections: 'Expand all sections',
+      collapseAllSections: 'Collapse all sections',
+      sectionAbout: 'About this pod',
+      sectionClub: 'Club details',
+      sectionOffers: 'What this pod offers',
+      sectionHosts: 'Hosts',
+      sectionAttendees: 'Attendees',
+      sectionPerks: 'Available perks',
+      sectionPayment: 'Payment details',
+      sectionTerms: 'Payment terms',
+      sectionCharges: 'Place charges',
+      aboutEmpty: 'No description provided.',
+      offersEmpty: 'Details coming soon.',
+      perksEmpty: 'No additional perks listed.',
+      // mWeb only — it truncates a long description behind a Read more toggle
+      // and gives the pod's extra info a heading of its own.
+      readMore: 'Read more',
+      showLess: 'Show less',
+      whatToExpect: 'What to expect',
+      // Club.
+      viewClub: 'View club',
+      // mWeb only — native falls back to the View club action instead.
+      clubUnavailable: 'Club details unavailable.',
+      // Hosts.
+      host: 'Host',
+      hostsEmpty: 'No hosts assigned.',
+      // Native only — mWeb's host rows are named by the text inside them.
+      viewProfileOf: "View {name}'s profile",
+      // Attendees. The whole line is one key: word order around the two numbers
+      // is not the same in every language.
+      attendeesGoing: '{count} / {total} going',
+      attendeesGoingNoTotal: '{count} going',
+      attendeesAttended: '{count} / {total} attended',
+      attendeesAttendedNoTotal: '{count} attended',
+      beFirstToJoin: 'Be the first to join!',
+      viewAll: 'View all',
+      viewAllAttendees: 'View all attendees',
+      attendeesCount: 'Attendees ({count})',
+      noAttendeesYet: 'No attendees yet.',
+      attendee: 'Attendee',
+      viewProfile: 'View profile',
+      closeAttendees: 'Close attendees',
+      // Payment details. The tax line reuses `checkout.gst` — it is the same
+      // sentence about the same tax, and a second copy would drift.
+      freeToJoin: 'This pod is free to join. No payment required.',
+      pricePerSeat: 'Price per seat',
+      inclusiveOfGst: 'Price is inclusive of GST.',
+      // mWeb only — the native charges section only renders when there are any.
+      noVenueCharges: 'No additional venue charges listed.',
+      // The booking bar — host state.
+      goToDashboard: 'Go to Dashboard',
+      // Native only — its bar pairs every CTA with a caption on the left.
+      youreHosting: "You're hosting",
+      yourPod: 'Your Pod',
+      // Closed state.
+      bookingClosed: 'This pod has already taken place — booking is closed.',
+      // Backout-in-process state.
+      backoutLocked:
+        'A replacement has been confirmed — this Backout request can no longer be cancelled. Your refund will be processed as per the backout policy.',
+      backoutInProcess: 'Backout in process',
+      // mWeb only — it leads its alert with the state as a bold sentence.
+      backoutInProcessLead: 'Backout in process.',
+      backoutSearchingNote:
+        'We are searching for a replacement — you will get the refund only if someone fills your spot.',
+      // Native only — the caption above its badge.
+      searchingForReplacement: 'Searching for a replacement',
+      keepMySpot: 'Keep My Spot',
+      // mWeb only — the native bar has no room for a footnote.
+      changedYourMind:
+        'Changed your mind? Keep your spot to stop the replacement search and restore your booking.',
+      // Member state. mWeb states the membership as a disabled button; native
+      // pairs a caption with a badge, so each names what it actually shows.
+      joined: 'Joined',
+      visited: 'Visited',
+      youreGoing: "You're going",
+      youWent: 'You went',
+      podBooked: 'Pod Booked',
+      podVisited: 'Pod Visited',
+      backout: 'Backout',
+      // Native only — its Backout control is a pressable stack.
+      backoutFromPod: 'Backout from pod',
+      // mWeb only — native has no room for the note under its bar.
+      backoutNote:
+        'Backing out releases your seat — you will get the refund only if someone fills your spot ({pct}% deduction applies on paid pods).',
+      alreadyTakenPlace: 'This pod has already taken place.',
+      backoutMaxed: 'You have reached the maximum number of Backout attempts allowed for this Pod.',
+      // mWeb only — refilling your own released seat by referral is a web flow;
+      // the native bar has no backed-out state.
+      backedOutRefundLead: 'You have backed out. Refund status:',
+      referFriend:
+        'Refer a friend to refill your spot — your refund is initiated once your spot is filled.',
+      copyReferralLink: 'Copy referral link',
+      // Book state.
+      podIsFull: 'Pod is full',
+      // The two surfaces size this button very differently — mWeb's is full
+      // width and prices the booking, native's sits beside a price column — so
+      // each says what fits rather than sharing a label that would overflow.
+      joinFreePod: 'Join free pod',
+      bookAndPay: 'Book & Pay {amount}',
+      join: 'Join',
+      bookNow: 'Book now',
+      // Native only — its CTA is a pressable stack and needs its own name.
+      joinPod: 'Join pod',
+      bookPod: 'Book pod',
+      entry: 'Entry',
+      price: 'Price',
+      // The seat picker. mWeb is a labelled select, native a stepper.
+      seats: 'Seats',
+      numberOfSeats: 'Number of seats',
+      oneSeatFewer: 'One seat fewer',
+      oneSeatMore: 'One seat more',
+      // Native only — mWeb joins a free pod through the same snackbar as the
+      // rest of its actions.
+      couldNotJoin: 'Could not join this pod.',
+      // The social bar. The count sits inside the label, so the whole label is
+      // one key rather than a word plus a separator.
+      likeCount: 'Like · {count}',
+      likedCount: 'Liked · {count}',
+      commentCount: 'Comment · {count}',
+      // The comments sheet.
+      comments: 'Comments',
+      commentsEmpty: 'No comments yet. Be the first to comment.',
+      addComment: 'Add a comment…',
+      signInToComment: 'Sign in to comment',
+      // Native only — its input is unlabelled on screen.
+      comment: 'Comment',
+      sendComment: 'Send comment',
+      openProfile: 'Open profile',
+      likeComment: 'Like comment',
+      // mWeb only — native deletes a comment by long-pressing it.
+      deleteComment: 'Delete comment',
+      openProfileOf: 'Open {name} profile',
+      anon: 'Anon',
+      deleteCommentTitle: 'Delete comment?',
+      deleteCommentBody: 'This comment will be permanently removed.',
+      // The backout dialog, shared by the pod page and Pod History.
+      backoutTitle: 'Backout from Pod?',
+      backoutRefundOnlyIfFilled: 'You will get the refund only if someone fills your spot.',
+      seatsToRelease: 'Seats to release',
+      // mWeb only — its release count is a select, native's a stepper.
+      seatsOfHeld: '{count} of {held}',
+      keepSeatsOne: 'You keep 1 seat and stay in this pod.',
+      keepSeatsMany: 'You keep {count} seats and stay in this pod.',
+      releasingAll: 'Releasing your whole booking — you leave the pod.',
+      refundEstimateOne:
+        'If the refund is done, you will get {amount} for 1 seat (after the {pct}% backout deduction).',
+      refundEstimateMany:
+        'If the refund is done, you will get {amount} for {count} seats (after the {pct}% backout deduction).',
+      backingOut: 'Backing out…',
+      confirmBackout: 'Confirm Backout',
+      backoutTerms: 'Backout Terms & Conditions',
+      // mWeb only — its link sits inside a sentence, so the lead-in is its own
+      // part rather than markup inside one template.
+      readTheFull: 'Read the full',
+      // Native only — it renders the policy text itself and links out in full.
+      readFullBackoutTerms: 'Read the full Backout Terms & Conditions',
+      reviewBackoutTerms: 'Review the backout terms before confirming.',
+      viewBackoutTerms: 'View backout terms',
+      // The keep-my-spot dialog.
+      changeOfPlans: 'Change of plans?',
+      keepSpotBody:
+        'Do you want us to stop searching for a replacement and keep this spot for you? (NOTE: If you wish you Backout from the Pod again, you can only do it for up to {count} more times)',
+      restoring: 'Restoring…',
+      // mWeb only — it reports every action through one snackbar; native
+      // re-renders the bar instead.
+      joinedViaReferral: 'Joined via referral',
+      linkCopied: 'Link copied',
+      joinedSnack: 'Joined!',
+      referralLinkCopied: 'Referral link copied',
+      backoutStarted: 'Backout in process — your seat is now open for booking.',
+      bookingRestored: 'Your booking is restored.',
+      // Zod messages. mWeb only — the native composer sends whatever is typed
+      // and lets the server refuse it.
+      validation: {
+        commentRequired: 'Required',
+        commentMax: 'Max 1000 chars',
+      },
+    },
+    // Pod History — the pods the viewer has joined, and everything one booking
+    // can still be told or asked. mWeb and the native app render the SAME
+    // journey (rule 27), so a key here is used by BOTH surfaces unless its
+    // comment says which surface renders it.
+    podHistory: {
+      // The list page.
+      title: 'Pod History',
+      // mWeb only — its page carries an overline above the heading.
+      overline: 'Pods',
+      joinedPods: 'Joined Pods',
+      subtitle: 'Tap any pod you joined to view details, actions, refund status, and timeline.',
+      searchPlaceholder: 'Search joined pods…',
+      searchAria: 'Search joined pods',
+      empty: 'Pods you have joined will appear here.',
+      noPodsFound: 'No Pods Found',
+      noPodsFoundBody:
+        "We couldn't find any enrolled Pods matching your search or filters. Try a different search or change your filters to explore more of your Pod history.",
+      pod: 'Pod',
+      joinedOn: 'Joined {date}',
+      notFound: 'Pod history record not found.',
+      // mWeb only — the native list is inside a stack screen with its own back.
+      backToPodHistory: 'Back to pod history',
+      // Filter + sort. mWeb opens popovers, native bottom sheets, so a few of
+      // these are rendered by one surface only.
+      filter: 'Filter',
+      filterCount: 'Filter ({count})',
+      sort: 'Sort',
+      filterByCategory: 'Filter by category',
+      superCategory: 'Super Category',
+      category: 'Category',
+      // mWeb only — its selects need an explicit "no choice" row.
+      none: 'None',
+      all: 'All',
+      selectSuperFirst: 'Please select a Super Category first.',
+      reset: 'Reset',
+      // Native only — its sheet controls are pressable stacks.
+      resetFilters: 'Reset filters',
+      applyFilters: 'Apply filters',
+      closeFilters: 'Close filters',
+      closeSort: 'Close sort',
+      done: 'Done',
+      close: 'Close',
+      sortDateNewest: 'Date · Newest first',
+      sortDateOldest: 'Date · Oldest first',
+      sortPriceLowHigh: 'Price · Low to High',
+      sortPriceHighLow: 'Price · High to Low',
+      // The booking's own state. "Visited" replaces "Joined" once the pod has
+      // happened — Joined is a promise about something still ahead.
+      statusJoined: 'Joined',
+      statusVisited: 'Visited',
+      statusBackoutInProcess: 'Backout in process',
+      statusBackedOut: 'Backed out',
+      // The refund words come from the request rather than the booking.
+      refundNotStarted: 'Not started',
+      refundPending: 'Criteria pending',
+      refundProcessed: 'Refund initiated',
+      refundNotEligible: 'Not initiated',
+      refundChip: 'Refund: {status}',
+      refundStatusToast: 'Refund status: {status}',
+      refundPendingNote:
+        'Refund is waiting for criteria completion. Support can help if the status looks wrong.',
+      // The summary card.
+      podDetailsTitle: 'Pod details',
+      dateNotAvailable: 'Date not available',
+      freePod: 'Free pod',
+      paidPod: 'Paid pod {amount}',
+      // mWeb only — native shows the seat count inside the backout sheet.
+      seatsChip: '{count} seats',
+      actions: 'Actions',
+      timeline: 'Timeline',
+      // mWeb only — the native actions row simply drops to Invoice + Support.
+      podRemovedNotice:
+        'This pod was removed. Your booking record stays here — download your invoice or contact support.',
+      goToPodDetails: 'Go to Pod Details',
+      backoutPod: 'Backout Pod',
+      backingOut: 'Backing out…',
+      rejoinPod: 'Rejoin Pod',
+      rejoining: 'Rejoining…',
+      invoice: 'Invoice',
+      downloading: 'Downloading…',
+      contactSupport: 'Contact Support',
+      // Native only — mWeb's ticket button says what the file contains.
+      ticket: 'Ticket',
+      // mWeb only — its ticket query fails before the PDF is even requested.
+      ticketNotAvailableForBooking: 'Ticket not available for this booking',
+      backoutTerms: 'Backout Terms & Conditions',
+      generalTerms: 'General Terms',
+      backoutRecorded: 'Backout request recorded',
+      rejoinedSuccess: 'Rejoined pod successfully',
+      // The rejoin dialog.
+      rejoinTitle: 'Rejoin this pod?',
+      rejoinBody:
+        "You'll rejoin this pod for free — no payment is required. Your spot is restored and stays active until the pod completes.",
+      rejoinFree: 'Rejoin for free',
+      cancel: 'Cancel',
+      // Native only — its confirm control is a pressable stack.
+      confirmRejoin: 'Confirm rejoin',
+      // The replacement notice beside a released seat.
+      findingReplacement: 'We are finding your replacement',
+      refundDetails: 'Refund details',
+      replacementRefundNote:
+        'We are finding your replacement. If someone fills your spot, the refund will be initiated with {pct}% deduction.',
+      // Products bought with the booking, and where they are.
+      productsAndTracking: 'Products & tracking',
+      // mWeb only — the native card is handed its orders already loaded.
+      loadingProducts: 'Loading your products…',
+      trackingRefreshError: "Couldn't refresh tracking just now.",
+      trackShipment: 'Track shipment',
+      pickupCode: 'Pickup code:',
+      awb: 'AWB {awb}',
+      fulfilShip: 'Ship to me',
+      fulfilPickup: 'Pick up at venue',
+      statusOrderPlaced: 'Order placed',
+      statusPreparingShipment: 'Preparing shipment',
+      statusCourierAssigned: 'Courier assigned',
+      statusPickupScheduled: 'Pickup scheduled',
+      statusShipped: 'Shipped',
+      statusOutForDelivery: 'Out for delivery',
+      statusDelivered: 'Delivered',
+      statusReadyForPickup: 'Ready for pickup',
+      statusPickedUp: 'Picked up',
+      statusCancelled: 'Cancelled',
+      statusReturnedToOrigin: 'Returned to origin',
+      statusFulfilmentFailed: 'Fulfilment failed',
     },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
@@ -525,6 +929,360 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         billingEmailMax: 'Billing email is too long',
         gstinInvalid: 'Enter a valid 15-character GSTIN',
         gstinMax: 'GSTIN is too long',
+      },
+    },
+    // Creating a pod — the host's 4-step stepper (Basics → Location/Category/
+    // Club → Venue & Slot → Pricing & Publish), its fields, its cover picker
+    // and its pricing panel. mWeb and the native app render the SAME journey
+    // (rule 27), so a key here is used by BOTH surfaces unless its comment says
+    // which surface renders it.
+    //
+    // Plurals ship as explicit One/Many pairs: the key-verification gate needs
+    // every leaf rendered via a literal t('…'), which the translator's
+    // `.one/.other` siblings would fail.
+    createPod: {
+      // Page chrome.
+      title: 'Create a Pod',
+      // mWeb only — the native screen header is the title alone.
+      autosaveNote: 'Your progress saves automatically — finish anytime from Host Management.',
+      hostRequired: 'An approved host profile is required before creating pods.',
+      becomeHost: 'Become a host',
+      createFailed: 'Could not create the pod.',
+      // Stepper chrome. The step titles are also the label the Host Management
+      // draft cards put on a half-finished pod.
+      stepCounter: 'Step {step} of {total}',
+      step1Title: 'Pod Basics',
+      step2Title: 'Location, Category & Club',
+      step3Title: 'Venue & Slot',
+      step4Title: 'Pricing & Publish',
+      step1Subtitle: 'Start with the core details so people understand what this pod is about.',
+      step2Subtitle:
+        'Where and what are you playing — location, category and the club it belongs to.',
+      step3Subtitle: 'Pick a partner venue and lock in your date & time from its calendar.',
+      step4Subtitle: 'Decide how much to charge, then review and publish your pod.',
+      back: 'Back',
+      next: 'Next',
+      createPod: 'Create Pod',
+      creating: 'Creating…',
+      cancel: 'Cancel',
+      done: 'Done',
+      remove: 'Remove',
+      change: 'Change',
+      search: 'Search',
+      loading: 'Loading…',
+      // The AI content check: the chip on every step, and the guidelines dialog
+      // it opens. The rules are listed one per key so a translator edits the
+      // same rows an admin sees, rather than one blob.
+      aiMonitoring: 'AI monitoring',
+      aiMonitors: 'What AI monitors',
+      gotIt: 'Got it',
+      guidelinesIntro:
+        "When you tap Create Pod, our AI (GPT-4o) deep-checks everything you entered — title, description, details, hashtags and uploaded images — against Duncit's community guidelines.",
+      guidelinesRule1: 'No phone numbers, emails or personal contact details.',
+      guidelinesRule2: 'No external, social or payment links.',
+      guidelinesRule3: 'No payment handles (UPI, Paytm, GPay, PhonePe, bank details).',
+      guidelinesRule4: 'No abusive, hateful, sexual or offensive wording.',
+      guidelinesRule5: 'No nude, explicit or unwanted images.',
+      guidelinesRule6: 'Never ask people to contact or pay you off the platform.',
+      guidelinesWarning:
+        'If your content breaks these rules the pod will not be created, your Account Health can drop, and repeat violations can get your account temporarily or permanently blocked.',
+      moderationTitle: 'Fix these before publishing',
+      moderationDescription:
+        'Our AI check found content that breaks the community guidelines, so the pod was not created. Fix the items below and try again.',
+      // Native only — mWeb's dialog is the shared @duncit/ui one, which writes
+      // this line itself.
+      moderationFixIn: 'Fix in {step}',
+      // Step 1 — Pod Basics.
+      categoryLabel: 'Select Category',
+      categoryHint: 'In which you want to host your session',
+      categoryEmpty: 'Assigned after host onboarding',
+      noOptions: 'No options available.',
+      podTitleLabel: 'Pod title',
+      // mWeb only — the native title field carries no placeholder.
+      podTitlePlaceholder: 'e.g. Downtown Runners Club',
+      podTitleHint: 'What is this pod about? (3–120 characters)',
+      podDescriptionLabel: 'Pod description',
+      // mWeb only — the native description field carries no placeholder.
+      podDescriptionPlaceholder: 'Describe the purpose, vibe, and what members can expect…',
+      podDescriptionHint: 'Tell people what to expect — agenda, vibe, who it is for',
+      // The cover media field. The two surfaces upload differently — mWeb opens
+      // a dropzone over the shared MUI picker, native opens a phone/Pexels
+      // sheet — so each names the controls it actually has.
+      coverImageLabel: 'Cover image (at least one image)',
+      addPodMedia: 'Add pod media',
+      addMedia: 'Add media',
+      removeMedia: 'Remove media',
+      // mWeb only.
+      uploadImage: 'Upload an image',
+      uploadImageHint: 'Min 800×400px (JPG, PNG)',
+      mediaAlt: 'Pod media',
+      mediaMaxHint: 'That is the maximum of {max} — remove one to add another.',
+      // Native only.
+      addPhotosOrVideo: 'Add photos or a video',
+      mediaAtMaximum: 'That is the maximum',
+      removeOneToAdd: 'Remove one to add another',
+      mediaMaxRemoveHint: 'Up to {max} — remove one to add another',
+      cropAfterSelecting: 'Crop after selecting',
+      uploadFormatsHint: '{formats} · up to {mb} MB · crop after selecting',
+      // Chip lists: what the pod offers, its perks, its hashtags.
+      offersLabel: 'What this pod offers',
+      offersPlaceholder: 'e.g. Coaching, Snacks, Equipment',
+      chipPlaceholder: 'Type and press Enter',
+      // mWeb only — the native chip field has no helper line.
+      chipMaxHint: 'Press Enter to add. Max {max}.',
+      // Native only — its chips are pressable stacks and need their own name.
+      removeTag: 'Remove {tag}',
+      hashtagsLabel: 'Hashtags',
+      hashtagsPlaceholder: 'Type a tag and press Enter',
+      hashtagsHint: 'Press Enter, space or comma to add a tag.',
+      optionalSettings: 'OPTIONAL SETTINGS',
+      additionalInfoTitle: 'Additional Info',
+      additionalInfoSubtitle: 'Rules, requirements, or what to bring.',
+      perksTitle: 'Perks',
+      perksSubtitle: 'Member benefits',
+      // Native only — mWeb's perks chips sit under the card title, unlabelled.
+      perksFieldLabel: 'Available perks',
+      perksPlaceholder: 'e.g. Free parking, Goodies',
+      summaryAdd: 'Add',
+      summaryAdded: 'Added',
+      summaryCount: '{count} added',
+      podInfoLabel: 'Pod info / additional notes',
+      // mWeb only — the native info field carries no helper line.
+      podInfoHint: 'Logistics, what to bring, parking notes, etc.',
+      // The optional Pod Reel — one short video, uploaded straight to ImageKit.
+      podReel: 'Pod Reel',
+      // Native only — its card carries a subtitle under the title.
+      reelSubtitle: 'A short video shown in Explore.',
+      reelHint:
+        'Reel video shows in Explore while this pod is live. Optional — one video up to 100 MB.',
+      reelUpload: 'Upload video',
+      // mWeb only — native replaces a reel by removing it first.
+      reelReplace: 'Replace video',
+      // Native only — its upload target is a pressable stack.
+      reelUploadAria: 'Upload a reel video',
+      removeReel: 'Remove reel',
+      // mWeb only — the native picker only offers videos, so the wrong file
+      // type can never be chosen.
+      reelNotVideo: 'Please pick a video file (MP4, MOV or WebM)',
+      reelTooLarge: 'That video is over 100MB — pick a smaller reel.',
+      // Native only — the OS asks for media permission before the picker opens.
+      reelPermission: 'Media access is needed to upload a reel.',
+      uploadFailed: 'Upload failed',
+      uploading: 'Uploading…',
+      compressing: 'Compressing…',
+      uploadingPct: 'Uploading… {pct}%',
+      compressingPct: 'Compressing… {pct}%',
+      // Step 2 — Location, Category & Club.
+      podLocation: 'Pod location',
+      noLocationSelected: 'No location selected',
+      localityLabel: 'Locality: {locality}',
+      // Native only — its change control is a pressable stack.
+      changeLocation: 'Change location',
+      // Native only — mWeb's card has no explanatory line under it.
+      locationPickerHint:
+        'Pick your city and locality — the picker shows how many clubs each locality has.',
+      podMode: 'Pod mode',
+      modePhysical: 'Physical',
+      modeVirtual: 'Virtual',
+      clubLabel: 'Club',
+      // mWeb only — its club field is one autocomplete with a helper line.
+      clubHint: 'Search and select the club this pod belongs to',
+      // Native only — its club field is a search box over a chip list.
+      clubSearchPlaceholder: 'Search your clubs',
+      clubSearchAria: 'Search clubs',
+      clubsEmpty: 'No clubs match your search.',
+      venueOne: '1 venue',
+      venueMany: '{count} venues',
+      viewClubDetails: 'View club details',
+      closeClubDetails: 'Close club details',
+      noDescription: 'No description yet.',
+      // Step 3 — Venue & Slot.
+      selectVenue: 'Select venue',
+      noVenues: 'No venues match this club yet — pick another club or go virtual.',
+      upTo: 'Up to {capacity}',
+      totalCapacity: 'Total capacity: {count}',
+      spaceCapacity: 'Space & capacity',
+      spaceHint: 'Pick a space — its capacity sets No. of spots. Slots show after this.',
+      spaceOption: '{label} · {capacity} spots',
+      ownVenueNote: 'This is your venue — the slot books instantly and the pod goes live on publish.',
+      venueApprovalNote:
+        'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.',
+      callVenue: 'Call Venue',
+      getDirections: 'Get Directions',
+      venueContact: 'Venue contact for follow-up',
+      podWindow: 'Pod window from slot: {duration}',
+      // The virtual branch of step 3 — there is no venue calendar to book, so
+      // the schedule is entered by hand.
+      meetingPlatform: 'Meeting platform',
+      // mWeb only — the native platform field carries no helper line.
+      meetingPlatformHint: 'e.g. Google Meet, Zoom',
+      meetingLink: 'Meeting link',
+      meetingLinkHint: 'Attendees join through this link',
+      meetingNotes: 'Meeting notes',
+      startDateTime: 'Start date & time',
+      endDateTime: 'End date & time (optional)',
+      totalDuration: 'Total duration: {duration}',
+      // Native only — mWeb schedules with MUI X's picker, which supplies its own
+      // placeholder, calendar labels and confirm button.
+      dateTimePlaceholder: 'YYYY-MM-DD HH:mm',
+      pickDateTime: 'Pick {label}',
+      dayAria: 'Day {day}',
+      timeHeading: 'TIME',
+      hourAria: 'Hour {hour}',
+      minuteAria: 'Minute {minute}',
+      // Step 4 — Pricing & Publish.
+      podTypeFree: 'Free',
+      podTypePaid: 'Paid',
+      freeCaption: 'No ticket charge',
+      paidCaption: 'Charge per person',
+      physicalPaidCaption: 'Physical pods are always paid',
+      ticketPriceLabel: 'Ticket price (₹ per person)',
+      ticketPricePlaceholder: 'Enter ticket price',
+      ticketPriceHint: 'Gross ticket price, max 1999.',
+      ticketPriceFreeHint: 'Free pods are ₹0.',
+      // The suggested-price ladder: the link beside the label, the modal it
+      // opens, and one description per rung (cheapest first).
+      suggestedPrice: 'Suggested Price',
+      suggestedPricesTitle: 'Suggested Ticket Prices',
+      whatYouGet: 'What You Get',
+      suggestedPricesEmpty:
+        'Set the number of spots first — suggestions need the pod size to project your earnings.',
+      suggestedPricesError: 'Could not load suggested prices. Please try again.',
+      suggestedPricesNote:
+        'Choose an optimal ticket price for your Pod to maximize both participation and revenue.',
+      priceTier1: 'Most affordable — the easiest price to fill every spot.',
+      priceTier2: 'Balanced — a good mix of participation and earnings.',
+      priceTier3: 'Better earnings — still comfortable for most guests.',
+      priceTier4: 'Premium — fewer but more committed guests.',
+      priceTier5: 'Best for high-value pods and exclusive experiences.',
+      // The two rules that keep Create Pod disabled: a ₹0 projected payout, and
+      // a pod worth less than the venue slot it books.
+      zeroEarningsTitle: 'No Earnings Generated',
+      zeroEarningsBody:
+        'Based on the current Ticket Price, your estimated earnings are ₹0 after applicable deductions. Please increase the Ticket Price to earn from this Pod.',
+      venueShortfall:
+        'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.',
+      earningsEstimateNote:
+        'This is an estimate based on the spots you set. When you complete the pod we recalculate it on the people who actually attended — your own spot is always free.',
+      totalSpots: 'Total spots',
+      spotsHint: 'Number of available tickets.',
+      spotsFixedHint: 'Set by the venue space you picked.',
+      spotsBoundsHint: 'This activity needs at least {min}, and the space you booked holds {max}.',
+      decreaseSpots: 'Decrease spots',
+      increaseSpots: 'Increase spots',
+      // The earnings panel. Every number on it is a server waterfall value —
+      // only the words around them are copy.
+      potentialEarnings: 'Potential earnings',
+      takeHome: 'Your take-home for the full pod',
+      hostFreeNote:
+        'Your spot is free — that is why the total calculation is based on the remaining available slots.',
+      previewPrompt: 'Set a ticket price and the number of spots to preview your earnings.',
+      hostOnlyPod: 'This pod only has your own spot, which is free. Add more spots to earn.',
+      totalCollection: 'Total collection ({price} × {spots})',
+      govtCharges: 'Govt. and other charges',
+      totalDeductions: 'Total deductions',
+      reconcileWarning:
+        'These figures do not reconcile — refresh, or contact support if this persists.',
+      formula: 'Formula: {formula}',
+      youWillReceive: 'You will receive',
+      payingPax: 'For {count} paying pax',
+      shareOfCollection: '{pct}% of collection',
+      totalCollectionLabel: 'Total Collection',
+      minusTotalDeductions: '− Total Deductions',
+      equalsYouWillReceive: '= You will receive',
+      estimatesNote:
+        "Estimates at today's rates — final settlement happens after the pod completes.",
+      paymentTerms: 'Payment terms',
+      // mWeb only — the native payment-terms field carries no helper line.
+      paymentTermsHint: 'Refund policy, cancellation, tax info.',
+      // Venue-side charges settled at the door — never part of the online price.
+      placeCharges: 'Place charges',
+      // mWeb only — the native charges field carries no helper line.
+      placeChargesHint:
+        'Optional venue-side charges (entry, table, etc.) shown separately to users.',
+      chargeLabel: 'Label',
+      chargeAmount: 'Amount (₹)',
+      chargeNote: 'Note',
+      addCharge: 'Add charge',
+      removeCharge: 'Remove charge',
+      // Step 4's products block moved to the shared full-page picker, whose copy
+      // is the `podProduct.*` namespace — the switch, the dropdown row and their
+      // labels are gone with it.
+      // The publish gate. The link must stay tappable inside the sentence, so
+      // it is assembled from parts rather than one template with markup in it.
+      termsLeadIn: 'I agree to the',
+      termsLink: 'Organizer Terms of Service',
+      termsTail: 'and confirm that I have the right to host this event at the selected venue.',
+      termsAria: 'Agree to Organizer Terms of Service',
+      // The native cover picker — the Tamagui twin of the MUI media picker,
+      // which the app cannot import. mWeb renders the shared dialog instead, so
+      // these are native-only.
+      tabFromPhone: 'From phone',
+      tabPexels: 'Pexels',
+      chooseFromPhone: 'Choose from your phone',
+      useSelectedImages: 'Use selected images',
+      useThisImage: 'Use this image',
+      useTheseCount: 'Use these {count}',
+      selected: 'Selected',
+      selectedCount: '{count} of {max}',
+      firstIsCover: 'The first one is the cover.',
+      pickUpTo: 'Pick up to {max} — from your phone, from Pexels, or both.',
+      searchPhotos: 'Search photos',
+      searchPexels: 'Search Pexels',
+      noPhotos: 'No photos matched. Try a different word.',
+      loadMore: 'Load more',
+      pexelsUnreachable: 'Could not reach Pexels',
+      photoImportFailed: 'Could not add that photo',
+      photoCredit: 'Photo by {name} on Pexels',
+      photoBy: 'Photo by {name}',
+      pexelsNotice:
+        'Photos provided by Pexels. Picked photos are copied into your own media library.',
+      // Zod messages. They are copy like any other — the person who reads them
+      // is the host filling the stepper in. The two surfaces hold a few fields
+      // differently (mWeb keeps real Dates and numbers, native keeps text), so
+      // a handful are rendered by one surface only.
+      validation: {
+        locationRequired: 'Select a location',
+        categoryRequired: 'Select a category',
+        titleShort: 'Title is too short',
+        titleLong: 'Title is too long',
+        clubRequired: 'Select a club',
+        descriptionShort: 'Add a longer description',
+        venueRequired: 'Select a venue',
+        spaceRequired: 'Pick a space / capacity',
+        slotRequired: 'Pick an available slot from the venue calendar',
+        meetingUrlRequired: 'Meeting link is required',
+        meetingUrlInvalid: 'Meeting link must be valid',
+        // mWeb only — its picker hands back a Date, so a blank one is the only
+        // way the start can be wrong.
+        startRequired: 'Start date/time required',
+        startFuture: 'Start date/time must be in the future',
+        endAfterStart: 'End must be after start',
+        // Native only — its schedule is typed as text and must parse first.
+        dateTimeFormat: 'Use YYYY-MM-DD HH:mm',
+        // mWeb only — its pod type can be cleared, native's is always one of two.
+        podTypeRequired: 'Select a pod type',
+        podTypeInvalid: 'Select Free or Paid',
+        physicalMustBePaid: 'Physical pods must be paid',
+        freeAmountZero: 'Free pods must have amount 0',
+        ticketPriceRequired: 'Enter a ticket price to continue',
+        ticketPriceMin: 'Ticket price must be more than ₹0',
+        // mWeb only — its amount and spots are numbers, so the wrong TYPE is
+        // the failure; native holds them as text and checks the RANGE.
+        amountNumber: 'Amount must be a number',
+        spotsNumber: 'Spots must be a number',
+        // Native only.
+        amountRange: 'Amount must be 0–1999',
+        spotsRange: 'Spots must be 0–10000',
+        offersRequired: 'Add at least one thing this pod offers',
+        // The product rules moved to `podProduct.*` with the picker: a row can
+        // no longer exist without a product, so `podProduct.selectFirst` is the
+        // one message left.
+        // mWeb only — its quantity input can be emptied.
+        quantityRequired: 'Quantity required',
+        chargeLabelRequired: 'Label required',
+        imageRequired: 'Add at least one image URL',
+        termsRequired: 'Accept the Organizer Terms to publish',
       },
     },
     // The Follow button's three states. REQUESTED only ever appears on a

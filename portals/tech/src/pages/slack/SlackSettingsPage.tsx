@@ -105,6 +105,8 @@ export default function SlackSettingsPage() {
       </Box>
       {isConfigured ? (
         <>
+          {/* The server names the exact Slack error and the missing bot scope,
+              so the raw message is the actionable text — render it as-is. */}
           {error && <Alert severity="error">{error.message}</Alert>}
           {copied && (
             <Alert severity="success" onClose={() => setCopied('')}>
@@ -116,7 +118,9 @@ export default function SlackSettingsPage() {
               <CircularProgress />
             </Stack>
           ) : null}
-          {!loading && channels.length === 0 ? (
+          {/* Only an empty SUCCESS is an empty workspace. Showing this next to a
+              failed query made a missing scope look like "no channels". */}
+          {!loading && !error && channels.length === 0 ? (
             <Alert severity="info">No channels the bot can see yet — invite it to a channel.</Alert>
           ) : null}
           <Stack spacing={1}>

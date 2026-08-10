@@ -8,6 +8,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import HeroOverlayActions from './HeroOverlayActions';
 import VideoMedia from '../../components/media/VideoMedia';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const arrowBtn = {
   position: 'absolute' as const,
@@ -25,16 +26,28 @@ const arrowBtn = {
 };
 
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label="Previous" sx={{ ...arrowBtn, left: 10 }}>
+    <IconButton
+      size="small"
+      onClick={onClick}
+      aria-label={t('mweb.podDetails.previousImage')}
+      sx={{ ...arrowBtn, left: 10 }}
+    >
       <ChevronLeftIcon />
     </IconButton>
   );
 }
 
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label="Next" sx={{ ...arrowBtn, right: 10 }}>
+    <IconButton
+      size="small"
+      onClick={onClick}
+      aria-label={t('mweb.podDetails.nextImage')}
+      sx={{ ...arrowBtn, right: 10 }}
+    >
       <ChevronRightIcon />
     </IconButton>
   );

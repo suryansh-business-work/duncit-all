@@ -343,4 +343,51 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       },
     },
   },
+  /**
+   * Tech portal copy. It rides in THIS bundle rather than a `tech.ts` of its
+   * own because mountPortal already layers SHELL_FALLBACK_FLAT into every
+   * portal — a separate namespace file would mean a new @duncit/i18n
+   * dependency (and lockfile churn) on the Tech portal for one page.
+   */
+  tech: {
+    dataClone: {
+      title: 'Data Clone',
+      subtitle:
+        'Copy the production database into staging. The copy runs on the server, so this page can be closed while it works.',
+      source: 'Source (production)',
+      target: 'Target (staging)',
+      notConfigured: 'Data clone is not configured on this server.',
+      start: 'Start clone',
+      starting: 'Starting…',
+      confirmTitle: 'Replace the staging data?',
+      confirmMessage:
+        'Every collection is dropped in {target} and refilled from {source}. Staging data that is not in production is lost. This cannot be undone.',
+      confirmAction: 'Clone now',
+      cancel: 'Cancel',
+      statusRunning: 'Cloning',
+      statusSucceeded: 'Finished',
+      statusFailed: 'Failed',
+      copying: 'Copying {name}',
+      collectionsProgress: '{done} of {total} collections',
+      documentsCopied: 'Documents copied',
+      dataCopied: 'Data copied',
+      startedAt: 'Started {when}',
+      finishedAt: 'Finished {when}',
+      startedBy: 'Started by {who}',
+      collections: 'Collections',
+      empty: 'No clone has run on this server yet.',
+      excludedTitle: 'Never cloned ({total})',
+      excludedHint:
+        'Credentials, live one-time codes, device push tokens and logs are skipped, so staging can never act as production or reach real users. These collections keep whatever staging already has.',
+      rowPending: 'Waiting',
+      rowCopying: 'Copying',
+      rowDone: 'Done',
+      rowFailed: 'Failed',
+      leaveTitle: 'A clone is still running',
+      leaveMessage:
+        'The clone keeps running on the server, so leaving does not stop it — you just stop seeing its progress. Do not restart or redeploy the server until it finishes, or staging is left with half-copied data.',
+      leaveStay: 'Stay on this page',
+      leaveAnyway: 'Leave anyway',
+    },
+  },
 };

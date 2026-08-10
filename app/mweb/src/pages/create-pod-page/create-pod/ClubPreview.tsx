@@ -14,6 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 
 interface Props {
@@ -24,11 +25,17 @@ interface Props {
  * showing the club's gallery and description (create-pod step 2). */
 export default function ClubPreview({ club }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   if (!club) return null;
   const images = (club.club_feature_images_and_videos ?? []).filter(
     (item) => (item.type ?? 'IMAGE') === 'IMAGE'
   );
   const cover = images[0]?.url;
+  const venueCount = club.matched_venues_count ?? 0;
+  const venueLabel =
+    venueCount === 1
+      ? t('mweb.createPod.venueOne')
+      : t('mweb.createPod.venueMany', { vars: { count: venueCount } });
 
   return (
     <Stack
@@ -49,10 +56,10 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             size="small"
             variant="outlined"
             icon={<StorefrontOutlinedIcon />}
-            label={`${club.matched_venues_count ?? 0} ${(club.matched_venues_count ?? 0) === 1 ? 'venue' : 'venues'}`}
+            label={venueLabel}
           />
           <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 700 }}>
-            View club details
+            {t('mweb.createPod.viewClubDetails')}
           </Button>
         </Stack>
       </Box>
@@ -62,7 +69,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
           <Typography component="span" sx={{ flex: 1, fontWeight: 700 }} noWrap>
             {club.club_name}
           </Typography>
-          <IconButton size="small" aria-label="Close club details" onClick={() => setOpen(false)}>
+          <IconButton size="small" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
@@ -82,7 +89,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
               </Stack>
             )}
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-              {club.club_description?.trim() || 'No description yet.'}
+              {club.club_description?.trim() || t('mweb.createPod.noDescription')}
             </Typography>
           </Stack>
         </DialogContent>

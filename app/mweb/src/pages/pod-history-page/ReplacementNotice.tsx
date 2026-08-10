@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Collapse, IconButton, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   deductionPct: number;
@@ -12,17 +13,18 @@ interface Props {
  * Deductions → Backouts). */
 export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(100, Number(deductionPct) || 0));
 
   return (
     <Box sx={{ mt: 1.5 }}>
       <Stack direction="row" alignItems="center" spacing={0.5}>
         <Typography variant="body2" fontWeight={600}>
-          We are finding your replacement
+          {t('mweb.podHistory.findingReplacement')}
         </Typography>
         <IconButton
           size="small"
-          aria-label="Refund details"
+          aria-label={t('mweb.podHistory.refundDetails')}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
         >
@@ -31,8 +33,7 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
       </Stack>
       <Collapse in={open}>
         <Typography variant="body2" color="success.main" fontWeight={600} sx={{ mt: 0.5 }}>
-          We are finding your replacement. If someone fills your spot, the refund will be initiated
-          with {pct}% deduction.
+          {t('mweb.podHistory.replacementRefundNote', { vars: { pct } })}
         </Typography>
       </Collapse>
     </Box>

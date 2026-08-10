@@ -12,6 +12,7 @@ import MemberPanel from './MemberPanel';
 import { compactButtonSx, gradientButtonSx } from './buttonSx';
 import { buildPodShareText } from './usePodDetailActions';
 import SeatPicker from './SeatPicker';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -52,6 +53,7 @@ export default function PodActionPanel({
   onCopyReferral,
   onGoToDashboard,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const ms = membershipState;
   const isMember = ms?.is_member;
   const inProcess = !!ms?.backout_in_process;
@@ -69,7 +71,7 @@ export default function PodActionPanel({
         onClick={onGoToDashboard}
         sx={gradientButtonSx}
       >
-        Go to Dashboard
+        {t('mweb.podDetails.goToDashboard')}
       </Button>
     );
   }
@@ -81,7 +83,7 @@ export default function PodActionPanel({
   if (isExpired && !isMember && !inProcess) {
     return (
       <Alert severity="warning" sx={{ borderRadius: '16px' }}>
-        This pod has already taken place — booking is closed.
+        {t('mweb.podDetails.bookingClosed')}
       </Alert>
     );
   }
@@ -112,18 +114,16 @@ export default function PodActionPanel({
     return (
       <Stack spacing={1}>
         <Alert severity="warning">
-          You have backed out. Refund status: <b>{m.refund_status}</b>
+          {t('mweb.podDetails.backedOutRefundLead')} <b>{m.refund_status}</b>
         </Alert>
-        <Typography variant="body2">
-          Refer a friend to refill your spot — your refund is initiated once your spot is filled.
-        </Typography>
+        <Typography variant="body2">{t('mweb.podDetails.referFriend')}</Typography>
         <Button
           variant="outlined"
           startIcon={<ContentCopyIcon />}
           onClick={() => onCopyReferral(referralToken)}
           sx={compactButtonSx}
         >
-          Copy referral link
+          {t('mweb.podDetails.copyReferralLink')}
         </Button>
         {(navigator as any).share && (
           <Button
@@ -131,15 +131,18 @@ export default function PodActionPanel({
             startIcon={<ShareIcon />}
             onClick={() => {
               const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`;
+              // No `url` field — see the note in usePodDetailActions.onShare:
+              // targets that take `url` drop `text`, which would strip the
+              // referral share back to a bare link too. The link (with its
+              // ?ref) is the last line of the text.
               return (navigator as any).share({
                 title: pod.pod_title,
                 text: buildPodShareText(pod, url),
-                url,
               });
             }}
             sx={compactButtonSx}
           >
-            Share
+            {t('mweb.podDetails.share')}
           </Button>
         )}
       </Stack>
@@ -147,6 +150,9 @@ export default function PodActionPanel({
   }
 
   const maxSeats = Number(ms?.max_seats_per_booking ?? 1);
+  const payLabel = t('mweb.podDetails.bookAndPay', {
+    vars: { amount: priceFormat(Number(pod.pod_amount || 0) * seats) },
+  });
 
   if (isFree) {
     return (
@@ -165,7 +171,9 @@ export default function PodActionPanel({
           onClick={onJoinFree}
           sx={gradientButtonSx}
         >
-          {ms?.can_join === false ? 'Pod is full' : 'Join free pod'}
+          {ms?.can_join === false
+            ? t('mweb.podDetails.podIsFull')
+            : t('mweb.podDetails.joinFreePod')}
         </Button>
       </Stack>
     );
@@ -187,9 +195,7 @@ export default function PodActionPanel({
         onClick={onPaidCheckout}
         sx={gradientButtonSx}
       >
-        {ms?.can_join === false
-          ? 'Pod is full'
-          : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0) * seats)}`}
+        {ms?.can_join === false ? t('mweb.podDetails.podIsFull') : payLabel}
       </Button>
     </Stack>
   );

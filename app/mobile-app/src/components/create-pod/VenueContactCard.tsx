@@ -3,12 +3,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
 
 /** Venue partner card — address, a Call Venue / Get Directions action row and
  * the contact shared with the host for slot follow-up. mWeb twin. */
 export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
+  const callVenue = t('mweb.createPod.callVenue');
+  const getDirections = t('mweb.createPod.getDirections');
   const address = [venue.address_line1, venue.locality, venue.city, venue.state, venue.postal_code]
     .filter(Boolean)
     .join(', ');
@@ -38,7 +42,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           <XStack
             testID="venue-call"
             role="button"
-            aria-label="Call venue"
+            aria-label={callVenue}
             onPress={() => Linking.openURL(`tel:${venue.owner_phone}`)}
             alignItems="center"
             gap={4}
@@ -46,14 +50,14 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           >
             <MaterialIcons name="phone" size={16} color={primary} />
             <Text fontSize={13} fontWeight="600" color="$primary">
-              Call Venue
+              {callVenue}
             </Text>
           </XStack>
         ) : null}
         <XStack
           testID="venue-directions"
           role="button"
-          aria-label="Get directions"
+          aria-label={getDirections}
           onPress={() => Linking.openURL(directions)}
           alignItems="center"
           gap={4}
@@ -61,13 +65,13 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
         >
           <MaterialIcons name="directions" size={16} color={primary} />
           <Text fontSize={13} fontWeight="600" color="$primary">
-            Get Directions
+            {getDirections}
           </Text>
         </XStack>
       </XStack>
       <YStack gap={2}>
         <Text fontSize={12} fontWeight="600" color="$muted">
-          Venue contact for follow-up
+          {t('mweb.createPod.venueContact')}
         </Text>
         <Text fontSize={14} fontWeight="600" color="$color">
           {venue.owner_name || venue.venue_name}

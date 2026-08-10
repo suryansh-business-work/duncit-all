@@ -10,6 +10,7 @@ import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelUploadField } from '../ReelUploadField';
 import { HostCategoryField } from './HostCategoryField';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
  * required "what this pod offers" list, with optional extras (info, perks). */
 export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const { control, watch } = form;
+  const { t } = useTranslation();
   // The host picks the category above the media field, and the server already
   // denormalised its name onto the host record — so the cover picker can open on
   // a search for it without another query. `coverCategoryName` falls back to the
@@ -39,17 +41,17 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
       <FormTextField
         control={control}
         name="pod_title"
-        label="Pod title"
+        label={t('mweb.createPod.podTitleLabel')}
         required
-        hint="3–120 characters"
+        hint={t('mweb.createPod.podTitleHint')}
       />
       <FormTextField
         control={control}
         name="pod_description"
-        label="Pod description"
+        label={t('mweb.createPod.podDescriptionLabel')}
         multiline
         required
-        hint="At least 10 characters"
+        hint={t('mweb.createPod.podDescriptionHint')}
       />
       <Controller
         control={control}
@@ -70,12 +72,12 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
         name="what_this_pod_offers"
         render={({ field, fieldState }) => (
           <ChipArrayField
-            label="What this pod offers"
+            label={t('mweb.createPod.offersLabel')}
             required
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
-            placeholder="e.g. Coaching, Snacks, Equipment"
+            placeholder={t('mweb.createPod.offersPlaceholder')}
             testID="create-pod-offers"
           />
         )}

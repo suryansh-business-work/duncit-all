@@ -1,8 +1,19 @@
 import { z } from 'zod';
+import { fallbackT, type Translate } from '../../i18n/fallback';
 
-export const commentSchema = z.object({
-  text: z.string().trim().min(1, 'Required').max(1000, 'Max 1000 chars'),
-});
+/**
+ * The comment field's rules, built with the reader's `t` so the messages are in
+ * their language. Schemas are parsed outside React, so the bundled English is
+ * the default — a module-level import still produces real copy, never a key.
+ */
+export const makeCommentSchema = (t: Translate = fallbackT) =>
+  z.object({
+    text: z
+      .string()
+      .trim()
+      .min(1, t('mweb.podDetails.validation.commentRequired'))
+      .max(1000, t('mweb.podDetails.validation.commentMax')),
+  });
 
 export const formatRelative = (iso: string) => {
   const d = new Date(iso);

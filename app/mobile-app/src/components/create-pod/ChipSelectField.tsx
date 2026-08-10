@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface ChipOption {
   value: string;
@@ -34,6 +35,7 @@ export function ChipSelectField({
   required,
   testID,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={6}>
       <FieldLabel label={label} required={required} testID={testID} />
@@ -44,7 +46,7 @@ export function ChipSelectField({
       ) : null}
       {options.length === 0 ? (
         <Text testID={`${testID}-empty`} fontSize={12.5} color="$muted">
-          {emptyHint ?? 'No options available.'}
+          {emptyHint ?? t('mweb.createPod.noOptions')}
         </Text>
       ) : (
         <XStack gap={6} flexWrap="wrap">

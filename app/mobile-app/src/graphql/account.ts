@@ -210,3 +210,47 @@ export const MobileVerifyEmailVerificationOtpDocument = gql(`
     }
   }
 `);
+
+/**
+ * Profile > Connected accounts — what this account can sign in with, plus the
+ * connect/disconnect pair. `has_password` is what decides whether Google may be
+ * disconnected: without one it is the only way in. mWeb twin.
+ */
+export const MobileMyConnectedAccountsDocument = gql(`
+  query MobileMyConnectedAccounts {
+    myConnectedAccounts {
+      email
+      has_password
+      google {
+        google_email
+        linked_at
+      }
+    }
+  }
+`);
+
+export const MobileConnectGoogleAccountDocument = gql(`
+  mutation MobileConnectGoogleAccount($input: GoogleAuthInput!) {
+    connectGoogleAccount(input: $input) {
+      email
+      has_password
+      google {
+        google_email
+        linked_at
+      }
+    }
+  }
+`);
+
+export const MobileDisconnectGoogleAccountDocument = gql(`
+  mutation MobileDisconnectGoogleAccount {
+    disconnectGoogleAccount {
+      email
+      has_password
+      google {
+        google_email
+        linked_at
+      }
+    }
+  }
+`);

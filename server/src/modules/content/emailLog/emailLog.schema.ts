@@ -21,7 +21,7 @@ export const emailLogTypeDefs = /* GraphQL */ `
     status: String!
     "Why, in one line, whenever the status is not SENT."
     reason: String!
-    "smtp, resend, or none when it never left."
+    "smtp, or none when it never left. Older rows may name a retired provider."
     provider: String!
     "The provider's own id, for tracing a delivery complaint back to them."
     message_id: String!

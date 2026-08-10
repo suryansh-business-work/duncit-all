@@ -1,11 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import type { SuggestedTicketPrice } from './queries';
-import {
-  SUGGESTED_PRICES_PAYOUT_COLUMN,
-  SUGGESTED_PRICES_PRICE_COLUMN,
-  tierDescription,
-} from './pricingCopy';
+import { SUGGESTED_PRICE_TIER_KEYS } from './pricingCopy';
+import { useTranslation } from '../../../../i18n/useTranslation';
 
 interface RowProps {
   price: string;
@@ -54,7 +51,14 @@ interface Props {
 /** The two-column suggestions table — Suggested Price | What You Get. The top
  * rung is the open end of the ladder, so it reads "₹499+". Native twin. */
 export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
+  const { t } = useTranslation();
   const lastIndex = prices.length - 1;
+  // The server caps the ladder at 5 rows, so a higher index only happens if
+  // that cap ever moves — it degrades to no line.
+  const tierText = (index: number) => {
+    const key = SUGGESTED_PRICE_TIER_KEYS[index];
+    return key ? t(key) : '';
+  };
   return (
     <Box
       data-testid="suggested-prices-table"
@@ -67,10 +71,10 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
         sx={{ px: 1.5, py: 1.125, bgcolor: 'action.hover' }}
       >
         <Typography variant="caption" fontWeight={700} color="text.secondary">
-          {SUGGESTED_PRICES_PRICE_COLUMN}
+          {t('mweb.createPod.suggestedPrice')}
         </Typography>
         <Typography variant="caption" fontWeight={700} color="text.secondary">
-          {SUGGESTED_PRICES_PAYOUT_COLUMN}
+          {t('mweb.createPod.whatYouGet')}
         </Typography>
       </Stack>
       {prices.map((row, index) => {
@@ -82,7 +86,7 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
             testId={`suggested-price-${row.price}`}
             price={price}
             payout={formatMoney(row.host_receives, { symbol })}
-            description={tierDescription(index)}
+            description={tierText(index)}
           />
         );
       })}

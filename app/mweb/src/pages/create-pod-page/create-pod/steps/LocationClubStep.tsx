@@ -12,6 +12,7 @@ import LocationDialog from '../../../../components/app-header/LocationDialog';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import ClubPreview from '../ClubPreview';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
 
 interface Props {
@@ -31,6 +32,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
     watch,
     formState: { errors },
   } = form;
+  const { t } = useTranslation();
   const locationId = watch('location_id');
   const locality = watch('locality');
   const location = locations.find((item) => item.id === locationId) ?? null;
@@ -63,18 +65,18 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
         <Stack direction="row" spacing={1.25} alignItems="center">
           <PlaceIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600}>Pod location</Typography>
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>{t('mweb.createPod.podLocation')}</Typography>
             <Typography variant="subtitle2" fontWeight={700} noWrap data-testid="create-pod-location-label">
-              {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : 'No location selected'}
+              {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : t('mweb.createPod.noLocationSelected')}
             </Typography>
             {locality && (
               <Typography variant="caption" color="text.secondary" noWrap data-testid="create-pod-locality-label">
-                Locality: {locality}
+                {t('mweb.createPod.localityLabel', { vars: { locality } })}
               </Typography>
             )}
           </Box>
           <Button size="small" variant="outlined" startIcon={<EditLocationAltIcon />} onClick={openPicker} data-testid="create-pod-change-location">
-            Change
+            {t('mweb.createPod.change')}
           </Button>
         </Stack>
         {errors.location_id && <FormHelperText error>{errors.location_id.message}</FormHelperText>}
@@ -82,13 +84,13 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
 
       {location && (
         <VenueMapPreview
-          title={location.location_name || location.city || 'Pod location'}
+          title={location.location_name || location.city || t('mweb.createPod.podLocation')}
           parts={[location.location_name, location.city, location.state, location.country]}
         />
       )}
 
       <Box>
-        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.75 }}>Pod mode</Typography>
+        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.75 }}>{t('mweb.createPod.podMode')}</Typography>
         <Controller
           control={control}
           name="pod_mode"
@@ -110,8 +112,8 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
                 }
               }}
             >
-              <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 600 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> Physical</ToggleButton>
-              <ToggleButton value="VIRTUAL" sx={{ py: 1.25, fontWeight: 600 }}><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual</ToggleButton>
+              <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 600 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> {t('mweb.createPod.modePhysical')}</ToggleButton>
+              <ToggleButton value="VIRTUAL" sx={{ py: 1.25, fontWeight: 600 }}><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> {t('mweb.createPod.modeVirtual')}</ToggleButton>
             </ToggleButtonGroup>
           )}
         />
@@ -128,7 +130,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
             onChange={(_e, next) => field.onChange(next?.id ?? '')}
             isOptionEqualToValue={(option, selected) => option.id === selected.id}
             renderInput={(params) => (
-              <TextField {...params} label={requiredLabel('Club', true)} error={!!errors.club_id} helperText={errors.club_id?.message ?? 'Search and select the club this pod belongs to'} />
+              <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message ?? t('mweb.createPod.clubHint')} />
             )}
           />
         )}

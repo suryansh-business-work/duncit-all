@@ -13,6 +13,7 @@ export const USERS = gql`
       profile_photo
       is_email_verified
       auth_providers
+      google_email
       last_login_provider
       last_login_at
       city
@@ -39,6 +40,8 @@ export interface UserRow {
   roles?: string[] | null;
   profile_photo?: string | null;
   auth_providers?: string[] | null;
+  /** The linked Gmail, or null when Google is not connected. */
+  google_email?: string | null;
   last_login_provider?: string | null;
   last_login_at?: string | null;
   city?: string | null;
@@ -60,6 +63,7 @@ const USER_ROW_FIELDS = gql`
     profile_photo
     is_email_verified
     auth_providers
+    google_email
     last_login_provider
     last_login_at
     city

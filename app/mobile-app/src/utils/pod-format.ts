@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { buildPodShareMessage } from '@duncit/utils';
 
 import { PodOccurrence } from '@/generated/graphql/graphql';
+import { fallbackT, type Translate } from '@/i18n/fallback';
 import type { HomePod } from '@/hooks/useHomeFeed';
 
 /** First image (preferred) or first media url for a pod, else null. */
@@ -19,9 +20,11 @@ export function podDateLabel(pod: HomePod): string {
   return Number.isNaN(date.getTime()) ? 'Date pending' : format(date, 'EEE, d MMM · h:mm a');
 }
 
-/** "Free" for a free pod, else the rupee amount. */
-export function podPriceLabel(pod: HomePod): string {
-  return pod.pod_type === 'FREE' ? 'Free' : `₹${pod.pod_amount}`;
+/** "Free" for a free pod, else the rupee amount. `t` comes from the rendering
+ * screen so the word follows the reader's language; the bundled English is the
+ * default for call sites that have none. */
+export function podPriceLabel(pod: HomePod, t: Translate = fallbackT): string {
+  return pod.pod_type === 'FREE' ? t('mweb.podDetails.free') : `₹${pod.pod_amount}`;
 }
 
 /** "Free" / "Paid" from the pod type. */
@@ -34,6 +37,8 @@ export function podPlaceLabel(pod: HomePod): string {
   return [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
 }
 
+// Product names, which are the same in every language — only "Online", the
+// stand-in for a platform we have no name for, is copy.
 const MEETING_PLATFORM_LABELS: Record<string, string> = {
   GOOGLE_MEET: 'Google Meet',
   ZOOM: 'Zoom',
@@ -41,13 +46,12 @@ const MEETING_PLATFORM_LABELS: Record<string, string> = {
   TEAMS: 'Microsoft Teams',
   SKYPE: 'Skype',
   WEBEX: 'Webex',
-  OTHER: 'Online',
 };
 
 /** Maps a meeting-platform enum (e.g. GOOGLE_MEET) to a human label. Falls back
  * to a title-cased value, never the raw SCREAMING_SNAKE enum. Mirrors mWeb. */
-export function formatMeetingPlatform(value?: string | null): string {
-  if (!value) return 'Online';
+export function formatMeetingPlatform(value?: string | null, t: Translate = fallbackT): string {
+  if (!value || value === 'OTHER') return t('mweb.podDetails.online');
   return (
     MEETING_PLATFORM_LABELS[value] ??
     value
@@ -59,8 +63,8 @@ export function formatMeetingPlatform(value?: string | null): string {
 }
 
 /** "Virtual" / "Physical" from the pod mode. */
-export function podModeLabel(mode?: string | null): string {
-  return mode === 'VIRTUAL' ? 'Virtual' : 'Physical';
+export function podModeLabel(mode?: string | null, t: Translate = fallbackT): string {
+  return mode === 'VIRTUAL' ? t('mweb.podDetails.virtual') : t('mweb.podDetails.physical');
 }
 
 /** Human labels for every PodOccurrence enum value — single source of truth so
@@ -116,26 +120,33 @@ export type TimeTone = 'error' | 'warning' | 'info';
 
 /** Countdown chip data for the pod start: expired / soon / N days · hours.
  * Mirrors mWeb's PodOverview TimeChip. Null when the date is unknown. */
-export function podTimeChip(iso?: string | null): { label: string; tone: TimeTone } | null {
+export function podTimeChip(
+  iso?: string | null,
+  t: Translate = fallbackT,
+): { label: string; tone: TimeTone } | null {
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
-  if (ms < 0) return { label: 'Pod expired', tone: 'error' };
+  if (ms < 0) return { label: t('mweb.podDetails.podExpired'), tone: 'error' };
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
   const hours = Math.ceil(ms / (1000 * 60 * 60));
   let label: string;
-  if (days > 1) label = `${days} days remaining`;
-  else if (hours > 1) label = `${hours} hours remaining`;
-  else label = 'Starting soon';
+  if (days > 1) label = t('mweb.podDetails.daysRemaining', { vars: { days } });
+  else if (hours > 1) label = t('mweb.podDetails.hoursRemaining', { vars: { hours } });
+  else label = t('mweb.podDetails.startingSoon');
   return { label, tone: days <= 1 ? 'warning' : 'info' };
 }
 
 /** Long schedule label, e.g. "Tuesday, 2 June 2026 at 19:00 → 21:00" in the
  * device timezone. */
-export function podScheduleLabel(start?: string | null, end?: string | null): string {
-  if (!start) return 'Date pending';
+export function podScheduleLabel(
+  start?: string | null,
+  end?: string | null,
+  t: Translate = fallbackT,
+): string {
+  if (!start) return t('mweb.podDetails.datePending');
   const startDate = new Date(start);
-  if (Number.isNaN(startDate.getTime())) return 'Date pending';
+  if (Number.isNaN(startDate.getTime())) return t('mweb.podDetails.datePending');
   let label = format(startDate, "EEEE, d MMMM yyyy 'at' h:mm a");
   if (end) {
     const endDate = new Date(end);

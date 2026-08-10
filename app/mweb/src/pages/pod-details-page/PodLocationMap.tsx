@@ -1,6 +1,7 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { mapEmbedUrl, mapSearchUrl } from '../../utils/mapEmbed';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   locationName?: string | null;
@@ -12,6 +13,7 @@ interface Props {
 // Renders nothing only when the location is unknown; the map itself falls back
 // to a keyless embed when no API key is configured.
 export default function PodLocationMap({ locationName, zoneName, pincode }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!locationName?.trim()) return null;
 
   const query = [zoneName, locationName, pincode, 'India'].filter(Boolean).join(', ');
@@ -22,7 +24,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
     <Box sx={{ mt: 1.5 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.75 }}>
         <Typography variant="caption" color="text.secondary">
-          Map preview
+          {t('mweb.podDetails.mapPreview')}
         </Typography>
         <Button
           href={mapUrl}
@@ -32,12 +34,12 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
           endIcon={<OpenInNewIcon fontSize="small" />}
           sx={{ minHeight: 32, px: 1 }}
         >
-          Open in Maps
+          {t('mweb.podDetails.openInMaps')}
         </Button>
       </Stack>
       <Box
         component="iframe"
-        title="Pod location map"
+        title={t('mweb.podDetails.locationMap')}
         src={src}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

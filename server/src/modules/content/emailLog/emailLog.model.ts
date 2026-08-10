@@ -58,7 +58,11 @@ export interface IEmailLog extends Document {
    * operator actually reads.
    */
   reason: string;
-  /** Which provider carried it — smtp, resend, or none when it never left. */
+  /**
+   * Which provider carried it — `smtp`, or none when it never left. Kept a free
+   * string, not an enum: rows written before Resend was removed still say
+   * `resend`, and history has to stay readable.
+   */
   provider: string;
   /** The provider's own id, for tracing a delivery complaint back to them. */
   message_id: string;

@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Charge {
   label: string;
@@ -12,10 +13,11 @@ interface Props {
 }
 
 export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!charges || charges.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
-        No additional venue charges listed.
+        {t('mweb.podDetails.noVenueCharges')}
       </Typography>
     );
   }

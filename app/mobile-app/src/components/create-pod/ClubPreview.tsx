@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
  * showing the club's gallery and description. Mirrors mWeb's ClubPreview. */
 export function ClubPreview({ club }: Readonly<Props>) {
   const { color: ink, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   if (!club) return null;
@@ -24,6 +26,11 @@ export function ClubPreview({ club }: Readonly<Props>) {
     (item) => (item.type ?? 'IMAGE') === 'IMAGE',
   );
   const cover = images[0]?.url;
+  const venueCount = club.matched_venues_count ?? 0;
+  const venueLabel =
+    venueCount === 1
+      ? t('mweb.createPod.venueOne')
+      : t('mweb.createPod.venueMany', { vars: { count: venueCount } });
 
   return (
     <XStack
@@ -57,20 +64,19 @@ export function ClubPreview({ club }: Readonly<Props>) {
         <XStack alignItems="center" gap={4}>
           <MaterialIcons name="storefront" size={13} color={ink} />
           <Text testID="club-preview-venue-count" fontSize={12} fontWeight="700" color="$muted">
-            {club.matched_venues_count ?? 0}{' '}
-            {(club.matched_venues_count ?? 0) === 1 ? 'venue' : 'venues'}
+            {venueLabel}
           </Text>
         </XStack>
         <Text
           testID="club-preview-details"
           role="button"
-          aria-label="View club details"
+          aria-label={t('mweb.createPod.viewClubDetails')}
           onPress={() => setOpen(true)}
           fontSize={12.5}
           fontWeight="700"
           color="$primary"
         >
-          View club details
+          {t('mweb.createPod.viewClubDetails')}
         </Text>
       </YStack>
 
@@ -79,7 +85,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
           <YStack flex={1} alignItems="center" justifyContent="center" testID="club-preview-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.auth.close')}
               onPress={close}
               position="absolute"
               top={0}
@@ -104,7 +110,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
                   <XStack
                     testID="club-preview-close"
                     role="button"
-                    aria-label="Close club details"
+                    aria-label={t('mweb.createPod.closeClubDetails')}
                     onPress={close}
                     width={34}
                     height={34}
@@ -132,7 +138,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
                     </ScrollView>
                   ) : null}
                   <Text fontSize={13.5} color="$muted" lineHeight={20}>
-                    {club.club_description?.trim() || 'No description yet.'}
+                    {club.club_description?.trim() || t('mweb.createPod.noDescription')}
                   </Text>
                 </ScrollView>
               </SafeAreaView>

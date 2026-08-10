@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   description?: string | null;
@@ -9,6 +10,7 @@ interface Props {
 const TRUNCATE = 320;
 
 export default function PodAboutSection({ description, info }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const text = (description ?? '').trim();
   const isLong = text.length > TRUNCATE;
@@ -23,19 +25,19 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
           </Typography>
           {isLong && (
             <Button size="small" onClick={() => setExpanded((v) => !v)} sx={{ mt: 0.5, p: 0 }}>
-              {expanded ? 'Show less' : 'Read more'}
+              {expanded ? t('mweb.podDetails.showLess') : t('mweb.podDetails.readMore')}
             </Button>
           )}
         </Box>
       ) : (
         <Typography variant="body2" color="text.secondary">
-          No description provided.
+          {t('mweb.podDetails.aboutEmpty')}
         </Typography>
       )}
       {info && (
         <Box>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            What to expect
+            {t('mweb.podDetails.whatToExpect')}
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
             {info}

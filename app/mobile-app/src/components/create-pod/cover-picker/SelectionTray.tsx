@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   urls: string[];
@@ -17,11 +18,12 @@ interface Props {
  * ones were chosen leaves "which one shows on the card?" unanswered.
  */
 export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={6} testID="cover-selection-tray">
       <XStack alignItems="center" gap={8}>
         <Text fontSize={12.5} fontWeight="700" color="$color">
-          Selected
+          {t('mweb.createPod.selected')}
         </Text>
         <YStack
           paddingHorizontal={8}
@@ -30,18 +32,18 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
           backgroundColor={urls.length ? '$primary' : '$surface'}
         >
           <Text fontSize={11.5} fontWeight="700" color={urls.length ? '$onPrimary' : '$muted'}>
-            {urls.length} of {max}
+            {t('mweb.createPod.selectedCount', { vars: { count: urls.length, max } })}
           </Text>
         </YStack>
         {urls.length > 0 ? (
           <Text fontSize={11.5} color="$muted">
-            The first one is the cover.
+            {t('mweb.createPod.firstIsCover')}
           </Text>
         ) : null}
       </XStack>
       {urls.length === 0 ? (
         <Text fontSize={11.5} color="$muted">
-          Pick up to {max} — from your phone, from Pexels, or both.
+          {t('mweb.createPod.pickUpTo', { vars: { max } })}
         </Text>
       ) : (
         <XStack gap={8} flexWrap="wrap">
@@ -72,7 +74,7 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
               <XStack
                 testID={`cover-tray-remove-${index}`}
                 role="button"
-                aria-label="Remove"
+                aria-label={t('mweb.createPod.remove')}
                 onPress={() => onRemove(url)}
                 position="absolute"
                 top={2}

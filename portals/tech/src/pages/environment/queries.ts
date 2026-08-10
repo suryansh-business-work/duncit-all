@@ -62,6 +62,17 @@ export const TEST_ENV_ENTRY = gql`
   }
 `;
 
+/**
+ * One mutation covers every provider whose credentials can be proven with a
+ * request — the server dispatches on the entry's own category, so a new
+ * provider needs no portal change (see envEntry.connection.ts).
+ */
+export const TEST_ENV_CONNECTION = gql`
+  mutation TestEnvConnection($id: ID!, $input: EnvConnectionTestInput) {
+    testEnvConnection(id: $id, input: $input) { ok message details }
+  }
+`;
+
 const RICH = `{ ok message url data }`;
 
 export const TEST_ENV_EMAIL = gql`
@@ -90,6 +101,13 @@ export interface RichTestResult {
   message: string;
   url?: string | null;
   data?: string | null;
+}
+
+/** Pass/fail plus the findings that did not fit in the headline. */
+export interface ConnectionTestResult {
+  ok: boolean;
+  message: string;
+  details: string[];
 }
 
 /**

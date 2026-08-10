@@ -14,6 +14,7 @@ import {
   type PodHistoryFilters,
 } from '@/utils/pod-history';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -37,6 +38,7 @@ export function PodHistoryFilterSheet({
   onClose,
 }: Readonly<Props>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const superOptions = useMemo(() => toOptions(superCategories(categories)), [categories]);
   const categoryOptions = useMemo(
     () => toOptions(categoriesUnder(categories, filters.superId)),
@@ -55,7 +57,7 @@ export function PodHistoryFilterSheet({
         <YStack flex={1} justifyContent="flex-end" testID="pod-history-filter-sheet">
           <YStack
             role="button"
-            aria-label="Close filters"
+            aria-label={t('mweb.podHistory.closeFilters')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -73,12 +75,12 @@ export function PodHistoryFilterSheet({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={17} fontWeight="700" color="$color">
-                  Filter by category
+                  {t('mweb.podHistory.filterByCategory')}
                 </Text>
                 <XStack
                   testID="pod-history-filter-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podHistory.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -92,7 +94,7 @@ export function PodHistoryFilterSheet({
               </XStack>
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
-                  <Section title="Super Category">
+                  <Section title={t('mweb.podHistory.superCategory')}>
                     <OptionChipRow
                       testIDPrefix="ph-super"
                       options={superOptions}
@@ -100,7 +102,7 @@ export function PodHistoryFilterSheet({
                       onSelect={selectSuper}
                     />
                   </Section>
-                  <Section title="Category">
+                  <Section title={t('mweb.podHistory.category')}>
                     {filters.superId ? (
                       <OptionChipRow
                         testIDPrefix="ph-cat"
@@ -110,7 +112,7 @@ export function PodHistoryFilterSheet({
                       />
                     ) : (
                       <Text testID="ph-cat-hint" fontSize={12.5} color="$muted">
-                        Please select a Super Category first.
+                        {t('mweb.podHistory.selectSuperFirst')}
                       </Text>
                     )}
                   </Section>
@@ -120,7 +122,7 @@ export function PodHistoryFilterSheet({
                 <XStack
                   testID="pod-history-filter-reset"
                   role="button"
-                  aria-label="Reset filters"
+                  aria-label={t('mweb.podHistory.resetFilters')}
                   onPress={onReset}
                   flex={1}
                   height={46}
@@ -133,13 +135,13 @@ export function PodHistoryFilterSheet({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Reset
+                    {t('mweb.podHistory.reset')}
                   </Text>
                 </XStack>
                 <XStack
                   testID="pod-history-filter-done"
                   role="button"
-                  aria-label="Apply filters"
+                  aria-label={t('mweb.podHistory.applyFilters')}
                   onPress={onClose}
                   flex={1}
                   height={46}
@@ -150,7 +152,7 @@ export function PodHistoryFilterSheet({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="700" color="$onPrimary">
-                    Done
+                    {t('mweb.podHistory.done')}
                   </Text>
                 </XStack>
               </XStack>

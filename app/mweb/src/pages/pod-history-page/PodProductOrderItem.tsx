@@ -6,18 +6,20 @@ import OrderTrackingTimeline from './OrderTrackingTimeline';
 import {
   buildOrderTimeline,
   formatMoney,
-  FULFILMENT_LABEL,
+  fulfilmentLabel,
   statusLabel,
   trackingUrl,
   type ProductOrder,
 } from './productOrders';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** One product order: fulfilment/status chips, line items, the ship/pickup
  * tracking block, then the fulfilment timeline. */
 export default function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>) {
+  const { t } = useTranslation();
   const isShip = order.fulfilment_method === 'SHIP';
   const track = trackingUrl(order.shiprocket.awb);
-  const steps = buildOrderTimeline(order);
+  const steps = buildOrderTimeline(order, t);
 
   return (
     <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
@@ -25,9 +27,9 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
         <Chip
           size="small"
           icon={isShip ? <LocalShippingIcon /> : <StorefrontIcon />}
-          label={FULFILMENT_LABEL[order.fulfilment_method]}
+          label={fulfilmentLabel(order.fulfilment_method, t)}
         />
-        <Chip size="small" color="primary" variant="outlined" label={statusLabel(order.fulfilment_status)} />
+        <Chip size="small" color="primary" variant="outlined" label={statusLabel(order.fulfilment_status, t)} />
         <Box sx={{ flex: 1 }} />
         <Typography variant="caption" color="text.secondary">
           #{order.order_no}
@@ -60,7 +62,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
         <Stack spacing={0.5} sx={{ mb: 1 }}>
           {order.shiprocket.awb && (
             <Typography variant="caption" color="text.secondary">
-              AWB {order.shiprocket.awb}
+              {t('mweb.podHistory.awb', { vars: { awb: order.shiprocket.awb } })}
               {order.shiprocket.courier_name ? ` · ${order.shiprocket.courier_name}` : ''}
             </Typography>
           )}
@@ -75,12 +77,12 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
             disabled={!track}
             sx={{ alignSelf: 'flex-start' }}
           >
-            Track shipment
+            {t('mweb.podHistory.trackShipment')}
           </Button>
         </Stack>
       ) : (
         <Typography variant="caption" sx={{ mb: 1, display: 'block' }} color="text.secondary">
-          Pickup code: <b>{order.pickup_ref || '—'}</b>
+          {t('mweb.podHistory.pickupCode')} <b>{order.pickup_ref || '—'}</b>
           {order.pickup_location_id ? ` · ${order.pickup_location_id}` : ''}
         </Typography>
       )}

@@ -7,6 +7,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePolicy } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { stripHtml } from '@/utils/html';
 import { ReleaseSeatsPicker } from './ReleaseSeatsPicker';
 
@@ -40,6 +41,7 @@ export function BackoutConfirmDialog({
   deductionPct = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
   const terms = stripHtml(data?.policyBySlug?.content);
   const held = Math.max(1, Math.floor(mySeats) || 1);
@@ -56,6 +58,11 @@ export function BackoutConfirmDialog({
     releasing < held && refundPerSeat != null
       ? Math.round(refundPerSeat * releasing * 100) / 100
       : refundAmount;
+  const estimateKey =
+    releasing === 1 ? 'mweb.podDetails.refundEstimateOne' : 'mweb.podDetails.refundEstimateMany';
+  const estimateLine = t(estimateKey, {
+    vars: { amount: `₹${estimate}`, count: releasing, pct: deductionPct },
+  });
 
   return (
     <Modal
@@ -68,7 +75,7 @@ export function BackoutConfirmDialog({
         <YStack flex={1} testID="backout-dialog">
           <YStack
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.podDetails.close')}
             onPress={busy ? undefined : onClose}
             position="absolute"
             top={0}
@@ -90,12 +97,12 @@ export function BackoutConfirmDialog({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={18} fontWeight="700" color="$color">
-                  Backout from Pod?
+                  {t('mweb.podDetails.backoutTitle')}
                 </Text>
                 <XStack
                   testID="backout-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.podDetails.close')}
                   onPress={busy ? undefined : onClose}
                   width={32}
                   height={32}
@@ -108,7 +115,7 @@ export function BackoutConfirmDialog({
 
               <YStack paddingHorizontal={16} gap={8}>
                 <Text fontSize={14} fontWeight="600" color="$color">
-                  You will get the refund only if someone fills your spot.
+                  {t('mweb.podDetails.backoutRefundOnlyIfFilled')}
                 </Text>
                 <ReleaseSeatsPicker
                   held={held}
@@ -123,8 +130,7 @@ export function BackoutConfirmDialog({
                     fontWeight="600"
                     color="$primary"
                   >
-                    If the refund is done, you will get ₹{estimate} for {releasing} seat
-                    {releasing === 1 ? '' : 's'} (after the {deductionPct}% backout deduction).
+                    {estimateLine}
                   </Text>
                 )}
               </YStack>
@@ -137,7 +143,7 @@ export function BackoutConfirmDialog({
                   <Spinner testID="backout-terms-loading" color="$primary" />
                 ) : (
                   <Text fontSize={14} lineHeight={22} color="$color">
-                    {terms || 'Review the backout terms before confirming.'}
+                    {terms || t('mweb.podDetails.reviewBackoutTerms')}
                   </Text>
                 )}
               </ScrollView>
@@ -146,13 +152,13 @@ export function BackoutConfirmDialog({
                 <Text
                   testID="backout-view-terms"
                   role="button"
-                  aria-label="View backout terms"
+                  aria-label={t('mweb.podDetails.viewBackoutTerms')}
                   onPress={onViewTerms}
                   fontSize={12}
                   fontWeight="600"
                   color="$primary"
                 >
-                  Read the full Backout Terms &amp; Conditions
+                  {t('mweb.podDetails.readFullBackoutTerms')}
                 </Text>
               </XStack>
 
@@ -160,7 +166,7 @@ export function BackoutConfirmDialog({
                 <XStack
                   testID="backout-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label={t('mweb.podDetails.close')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onClose}
                   flex={1}
@@ -174,13 +180,13 @@ export function BackoutConfirmDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Close
+                    {t('mweb.podDetails.close')}
                   </Text>
                 </XStack>
                 <XStack
                   testID="backout-confirm"
                   role="button"
-                  aria-label="Confirm backout"
+                  aria-label={t('mweb.podDetails.confirmBackout')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : () => onConfirm(releasing)}
                   flex={2}
@@ -195,7 +201,7 @@ export function BackoutConfirmDialog({
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                    {busy ? 'Backing out…' : 'Confirm Backout'}
+                    {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
                   </Text>
                 </XStack>
               </XStack>

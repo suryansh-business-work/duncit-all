@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { MapEmbed } from '@/components/MapEmbed';
 import type { PodDetail, PodLocation, PodVenue } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatMeetingPlatform, podScheduleLabel } from '@/utils/pod-format';
 
 interface Props {
@@ -43,6 +44,7 @@ function venueParts(v: PodVenue): string[] {
  * PodMapSection — handles both pod modes and degrades gracefully. */
 export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Props>) {
   const { primary, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const zone = location?.location_zones.find((z) => z.zone_name === pod.zone_name);
   const pincode = zone?.pincode || location?.location_pincode || '';
@@ -75,27 +77,27 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="event" size={20} color={primary} />
         <Text fontSize={16} fontWeight="700" color="$color">
-          Time &amp; Venue
+          {t('mweb.podDetails.timeAndVenue')}
         </Text>
       </XStack>
-      <Field label="When">
+      <Field label={t('mweb.podDetails.when')}>
         <Text fontSize={14} fontWeight="700" color="$color">
-          {podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time)}
+          {podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time, t)}
         </Text>
       </Field>
 
       {isVirtual ? (
         <>
-          <Field label="Meeting">
+          <Field label={t('mweb.podDetails.meeting')}>
             <Text fontSize={14} fontWeight="700" color="$color">
-              {formatMeetingPlatform(pod.meeting_platform)}
+              {formatMeetingPlatform(pod.meeting_platform, t)}
             </Text>
           </Field>
           {pod.meeting_url ? (
             <XStack
               testID="pod-join-meeting"
               role="button"
-              aria-label="Join meeting"
+              aria-label={t('mweb.podDetails.joinMeeting')}
               onPress={() => Linking.openURL(pod.meeting_url as string)}
               alignSelf="flex-start"
               alignItems="center"
@@ -108,12 +110,12 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
             >
               <MaterialIcons name="videocam" size={18} color={onPrimary} />
               <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                Join meeting
+                {t('mweb.podDetails.joinMeeting')}
               </Text>
             </XStack>
           ) : (
             <Text fontSize={13} color="$muted">
-              Meeting link will be visible after joining this pod.
+              {t('mweb.podDetails.meetingLinkAfterJoin')}
             </Text>
           )}
           {pod.meeting_notes ? (
@@ -124,7 +126,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
         </>
       ) : (
         <>
-          <Field label="Where">
+          <Field label={t('mweb.podDetails.where')}>
             <Text fontSize={14} fontWeight="700" color="$color">
               {placeText || '—'}
             </Text>
@@ -133,7 +135,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
             <XStack
               testID="pod-venue-details"
               role="button"
-              aria-label="Venue details"
+              aria-label={t('mweb.podDetails.venueDetails')}
               onPress={() => onOpenVenue?.(venue.id)}
               alignItems="center"
               gap={6}
@@ -141,7 +143,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
               pressStyle={{ opacity: 0.7 }}
             >
               <Text fontSize={14} fontWeight="600" color="$primary">
-                Venue details
+                {t('mweb.podDetails.venueDetails')}
               </Text>
               <MaterialIcons name="open-in-new" size={14} color={primary} />
             </XStack>

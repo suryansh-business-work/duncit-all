@@ -54,6 +54,7 @@ export const appConfig = {
         { label: 'Info', to: '/server/info', icon: 'info' },
         { label: 'Docker', to: '/server/docker', icon: 'docker' },
         { label: 'Terminal', to: '/server/terminal', icon: 'terminal' },
+        { label: 'Data Clone', to: '/server/data-clone', icon: 'warehouse' },
       ],
     },
     { label: 'Slack', to: '/slack', icon: 'chat' },

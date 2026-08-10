@@ -7,10 +7,11 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PexelsTab } from './PexelsTab';
 import { SelectionTray } from './SelectionTray';
 
-const TABS = ['From phone', 'Pexels'] as const;
+const TAB_KEYS = ['mweb.createPod.tabFromPhone', 'mweb.createPod.tabPexels'];
 
 interface Props {
   open: boolean;
@@ -54,9 +55,16 @@ export function CoverPickerDialog({
   onClose,
 }: Readonly<Props>) {
   const { color, muted, primary, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const atLimit = tray.length >= max;
+  const close = t('mweb.auth.close');
+  const chooseFromPhone = t('mweb.createPod.chooseFromPhone');
+  const doneLabel =
+    tray.length > 1
+      ? t('mweb.createPod.useTheseCount', { vars: { count: tray.length } })
+      : t('mweb.createPod.useThisImage');
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -65,7 +73,7 @@ export function CoverPickerDialog({
           <YStack flex={1} justifyContent="flex-end" testID="cover-picker">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={close}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -84,12 +92,12 @@ export function CoverPickerDialog({
               <SafeAreaView edges={['bottom']}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
                   <Text fontSize={17} fontWeight="700" color="$color">
-                    Add pod media
+                    {t('mweb.createPod.addPodMedia')}
                   </Text>
                   <XStack
                     testID="cover-picker-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={close}
                     onPress={onClose}
                     width={32}
                     height={32}
@@ -101,12 +109,12 @@ export function CoverPickerDialog({
                 </XStack>
 
                 <XStack gap={8} paddingBottom={12}>
-                  {TABS.map((label, index) => (
+                  {TAB_KEYS.map((key, index) => (
                     <XStack
-                      key={label}
+                      key={key}
                       testID={`cover-tab-${index}`}
                       role="button"
-                      aria-label={label}
+                      aria-label={t(key)}
                       onPress={() => setTab(index)}
                       flex={1}
                       height={40}
@@ -123,7 +131,7 @@ export function CoverPickerDialog({
                         fontWeight="700"
                         color={tab === index ? onPrimary : color}
                       >
-                        {label}
+                        {t(key)}
                       </Text>
                     </XStack>
                   ))}
@@ -152,7 +160,7 @@ export function CoverPickerDialog({
                     <YStack
                       testID="cover-device-add"
                       role="button"
-                      aria-label="Choose from phone"
+                      aria-label={chooseFromPhone}
                       aria-disabled={busy || atLimit}
                       onPress={busy || atLimit ? undefined : onPickDevice}
                       alignItems="center"
@@ -169,10 +177,10 @@ export function CoverPickerDialog({
                     >
                       <MaterialIcons name="add-photo-alternate" size={26} color={primary} />
                       <Text fontSize={14} fontWeight="600" color="$color">
-                        {atLimit ? 'That is the maximum' : 'Choose from your phone'}
+                        {atLimit ? t('mweb.createPod.mediaAtMaximum') : chooseFromPhone}
                       </Text>
                       <Text fontSize={12} color={muted}>
-                        {atLimit ? 'Remove one to add another' : hint}
+                        {atLimit ? t('mweb.createPod.removeOneToAdd') : hint}
                       </Text>
                     </YStack>
                   ) : (
@@ -191,7 +199,7 @@ export function CoverPickerDialog({
                   <XStack
                     testID="cover-picker-cancel"
                     role="button"
-                    aria-label="Cancel"
+                    aria-label={t('mweb.createPod.cancel')}
                     onPress={onClose}
                     flex={1}
                     height={48}
@@ -203,13 +211,13 @@ export function CoverPickerDialog({
                     pressStyle={{ opacity: 0.85 }}
                   >
                     <Text fontSize={14} fontWeight="600" color="$color">
-                      Cancel
+                      {t('mweb.createPod.cancel')}
                     </Text>
                   </XStack>
                   <XStack
                     testID="cover-picker-done"
                     role="button"
-                    aria-label="Use selected images"
+                    aria-label={t('mweb.createPod.useSelectedImages')}
                     aria-disabled={tray.length === 0}
                     onPress={tray.length === 0 ? undefined : onDone}
                     flex={2}
@@ -222,7 +230,7 @@ export function CoverPickerDialog({
                     pressStyle={{ opacity: 0.85 }}
                   >
                     <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                      {tray.length > 1 ? `Use these ${tray.length}` : 'Use this image'}
+                      {doneLabel}
                     </Text>
                   </XStack>
                 </XStack>

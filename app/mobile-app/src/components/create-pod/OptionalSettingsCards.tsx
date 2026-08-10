@@ -5,25 +5,39 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ChipArrayField } from './ChipArrayField';
 import type { CreatePodForm } from './create-pod.types';
 
 type PanelKey = 'info' | 'perks';
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
-const PANELS: { key: PanelKey; title: string; subtitle: string; icon: IconName }[] = [
+const PANELS: { key: PanelKey; titleKey: string; subtitleKey: string; icon: IconName }[] = [
   {
     key: 'info',
-    title: 'Additional Info',
-    subtitle: 'Rules, requirements, or what to bring.',
+    titleKey: 'mweb.createPod.additionalInfoTitle',
+    subtitleKey: 'mweb.createPod.additionalInfoSubtitle',
     icon: 'info-outline',
   },
-  { key: 'perks', title: 'Perks', subtitle: 'Member benefits', icon: 'star-outline' },
+  {
+    key: 'perks',
+    titleKey: 'mweb.createPod.perksTitle',
+    subtitleKey: 'mweb.createPod.perksSubtitle',
+    icon: 'star-outline',
+  },
 ];
 
 function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: CreatePodForm }>) {
+  const { t } = useTranslation();
   if (panelKey === 'info') {
-    return <FormTextField control={form.control} name="pod_info" label="Pod info" multiline />;
+    return (
+      <FormTextField
+        control={form.control}
+        name="pod_info"
+        label={t('mweb.createPod.podInfoLabel')}
+        multiline
+      />
+    );
   }
   return (
     <Controller
@@ -31,11 +45,11 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
       name="available_perks"
       render={({ field, fieldState }) => (
         <ChipArrayField
-          label="Available perks"
+          label={t('mweb.createPod.perksFieldLabel')}
           value={field.value}
           onChange={field.onChange}
           error={fieldState.error?.message}
-          placeholder="e.g. Free parking, Goodies"
+          placeholder={t('mweb.createPod.perksPlaceholder')}
           testID="create-pod-perks"
         />
       )}
@@ -49,23 +63,27 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
 export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const [active, setActive] = useState<PanelKey | null>(null);
   const { color, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const info = form.watch('pod_info');
   const perks = form.watch('available_perks');
 
+  const filledFor = (key: PanelKey) => (key === 'info' ? info.trim().length > 0 : perks.length > 0);
   const summaryFor = (key: PanelKey): string => {
-    if (key === 'info') return info.trim() ? 'Added' : 'Add';
-    return perks.length > 0 ? `${perks.length} added` : 'Add';
+    if (!filledFor(key)) return t('mweb.createPod.summaryAdd');
+    if (key === 'info') return t('mweb.createPod.summaryAdded');
+    return t('mweb.createPod.summaryCount', { vars: { count: perks.length } });
   };
 
   return (
     <YStack gap={10}>
       <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
-        OPTIONAL SETTINGS
+        {t('mweb.createPod.optionalSettings')}
       </Text>
       {PANELS.map((panel) => {
         const open = active === panel.key;
         const summary = summaryFor(panel.key);
-        const filled = summary !== 'Add';
+        const filled = filledFor(panel.key);
+        const title = t(panel.titleKey);
         return (
           <YStack
             key={panel.key}
@@ -77,7 +95,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
             <XStack
               testID={`optional-${panel.key}`}
               role="button"
-              aria-label={panel.title}
+              aria-label={title}
               aria-expanded={open}
               onPress={() => setActive(open ? null : panel.key)}
               padding={12}
@@ -97,10 +115,10 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
               </YStack>
               <YStack flex={1}>
                 <Text fontSize={14} fontWeight="700" color="$color">
-                  {panel.title}
+                  {title}
                 </Text>
                 <Text fontSize={12} color="$muted">
-                  {panel.subtitle}
+                  {t(panel.subtitleKey)}
                 </Text>
               </YStack>
               {filled ? (

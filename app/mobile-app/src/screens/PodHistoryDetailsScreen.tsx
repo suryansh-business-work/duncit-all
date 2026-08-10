@@ -20,6 +20,7 @@ import {
   usePodTicket,
 } from '@/hooks/usePodHistory';
 import { useProductOrders } from '@/hooks/useProductOrders';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { refundLabel } from '@/utils/pod-history';
@@ -31,6 +32,7 @@ const GENERAL_TERMS_URL = 'https://duncit.com/terms';
 export function PodHistoryDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'PodHistoryDetails'>>();
   const membershipId = route.params?.membershipId ?? '';
   const { items, isLoading, error, refetch } = usePodHistory();
@@ -44,14 +46,14 @@ export function PodHistoryDetailsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const selected = items.find((item) => item.id === membershipId) ?? null;
-  const title = selected?.pod?.pod_title ?? 'Details';
+  const title = selected?.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle');
   const { orders: productOrders, isLoading: ordersLoading } = useProductOrders(selected?.pod?.id);
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
     try {
       await backout(selected.pod.id, seats);
-      setNotice('Backout request recorded');
+      setNotice(t('mweb.podHistory.backoutRecorded'));
       setBackoutOpen(false);
       await refetch();
     } catch (backoutError) {
@@ -64,7 +66,7 @@ export function PodHistoryDetailsScreen() {
     if (!selected?.pod?.id) return;
     try {
       await rejoin(selected.pod.id);
-      setNotice('Rejoined pod successfully');
+      setNotice(t('mweb.podHistory.rejoinedSuccess'));
       setRejoinOpen(false);
       await refetch();
     } catch (rejoinError) {
@@ -121,7 +123,13 @@ export function PodHistoryDetailsScreen() {
           onPodDetails={() => openPod(selected.pod?.club_slug, selected.pod?.pod_id)}
           onBackout={() => setBackoutOpen(true)}
           onRejoin={() => setRejoinOpen(true)}
-          onRefundStatus={() => setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)}
+          onRefundStatus={() =>
+            setNotice(
+              t('mweb.podHistory.refundStatusToast', {
+                vars: { status: refundLabel(selected.refund_status, t) },
+              }),
+            )
+          }
           onInvoice={downloadInvoice}
           onTicket={downloadTicket}
           onSupport={() =>
@@ -138,7 +146,7 @@ export function PodHistoryDetailsScreen() {
   } else {
     body = (
       <Text testID="pod-history-details-missing" padding={24} color="$muted">
-        Pod history record not found.
+        {t('mweb.podHistory.notFound')}
       </Text>
     );
   }

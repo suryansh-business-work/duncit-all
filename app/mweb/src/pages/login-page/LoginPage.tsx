@@ -13,7 +13,8 @@ import {
   redirectPathFromLocation,
   type RedirectLocation,
 } from '../../utils/redirect';
-import { LOGIN, LOGIN_GOOGLE } from './queries';
+import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
+import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
 import LoginCard from './LoginCard';
 
 export default function LoginPage() {
@@ -22,12 +23,18 @@ export default function LoginPage() {
   const location = useLocation();
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
   const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
+  const [linkGoogle, { loading: linking }] = useMutation(LINK_GOOGLE_ACCOUNT);
   const [gError, setGError] = useState<string | null>(null);
   const [gNotice, setGNotice] = useState<{
     title: string;
     message: string;
     action?: string;
   } | null>(null);
+  // The pending consent grant. Holds the id_token loginWithGoogle just refused
+  // so "Allow" can spend it on linkGoogleAccount without a second Google round
+  // trip — Google id tokens stay valid for an hour, far longer than this step.
+  const [consent, setConsent] = useState<{ idToken: string; email: string } | null>(null);
+  const [consentError, setConsentError] = useState<string | null>(null);
 
   const finishLogin = (token: string, user: any) => {
     localStorage.setItem('token', token);
@@ -66,14 +73,39 @@ export default function LoginPage() {
           action: t('mweb.login.googleNotFoundAction'),
         });
       } else if (code === 'EMAIL_LOGIN_REQUIRED') {
-        setGNotice({
-          title: t('mweb.login.emailLoginTitle'),
-          message: t('mweb.login.emailLoginBody'),
-        });
+        // Not a dead end any more — the account exists and Google has verified
+        // this address, so we ask whether to grant Google sign-in to it.
+        const matched = e.graphQLErrors?.[0]?.extensions?.email as string | undefined;
+        setConsentError(null);
+        setConsent({ idToken, email: matched ?? '' });
       } else {
         setGError(parseApiError(e));
       }
     }
+  };
+
+  const allowGoogleLink = async () => {
+    if (!consent) return;
+    setConsentError(null);
+    try {
+      const res = await linkGoogle({ variables: { input: { id_token: consent.idToken } } });
+      const token = res.data?.linkGoogleAccount?.token;
+      if (token) {
+        setConsent(null);
+        finishLogin(token, res.data?.linkGoogleAccount?.user);
+      }
+    } catch (e) {
+      // Kept open with the reason: closing would look like the grant worked.
+      setConsentError(parseApiError(e));
+    }
+  };
+
+  // Denying changes nothing about the account. Back to the form with a warning
+  // that says both what happened and how to get here again.
+  const denyGoogleLink = () => {
+    setConsent(null);
+    setConsentError(null);
+    setGError(t('mweb.login.linkConsentDenied'));
   };
 
   return (
@@ -87,6 +119,17 @@ export default function LoginPage() {
         gLoading={gLoading}
         gError={gError}
         onGoogleCredential={handleGoogle}
+      />
+
+      <GoogleLinkConsentDialog
+        open={!!consent}
+        email={consent?.email ?? ''}
+        busy={linking}
+        error={consentError}
+        onAllow={() => {
+          allowGoogleLink().catch(() => undefined);
+        }}
+        onDeny={denyGoogleLink}
       />
 
       <GoogleAuthNoticeDialog

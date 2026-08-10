@@ -584,6 +584,11 @@ async function toPublic(u: any) {
     phone_extension: phone.extension ?? legacy.phone_extension ?? '',
     is_phone_verified: !!(phone.is_verified ?? legacy.is_phone_verified),
     auth_providers: authProviders.length ? authProviders : ['EMAIL'],
+    // Accounts created by Google signup predate `auth.google_email`, and their
+    // Google address is the address they signed up with — so a linked account
+    // with no stored Gmail reads as its account email rather than as "not
+    // connected", which is what the admin list would otherwise show.
+    google_email: auth.google_id ? (auth.google_email ?? auth.email ?? null) : null,
     last_login_provider: auth.last_login_provider ?? legacy.last_login_provider ?? null,
     last_login_at:
       (auth.last_login_at ?? legacy.last_login_at)?.toISOString?.() ?? null,
@@ -653,6 +658,31 @@ async function authPayload(u: any) {
     assigned_zones: pub.assigned_zones,
   });
   return { token, user: pub };
+}
+
+/**
+ * Map a user document to what Profile > Connected Accounts renders.
+ *
+ * The document MUST have been loaded with `+auth.password` — the hash is
+ * `select: false`, and `has_password` silently reads false without it, which
+ * would tell a password-holder that Google is their only way in and hide the
+ * Disconnect action from them.
+ */
+function connectedAccountsOf(u: any) {
+  const auth = u?.auth ?? {};
+  const linked = !!auth.google_id;
+  return {
+    email: auth.email ?? null,
+    has_password: !!auth.password,
+    google: linked
+      ? {
+          // Google-signup accounts predate `google_email`; theirs is the address
+          // they signed up with.
+          google_email: auth.google_email ?? auth.email ?? '',
+          linked_at: auth.google_linked_at?.toISOString?.() ?? null,
+        }
+      : null,
+  };
 }
 
 // Shape a CreateUserDTO / RegisterDTO into the nested storage layout.
@@ -910,8 +940,15 @@ export const userService = {
     if (!user) {
       const emailUser = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
       if (emailUser && (emailUser as any).auth?.password) {
+        // Not a dead end any more: the caller has proved control of a Google
+        // account whose email Google verified and which matches this account,
+        // so linking is offered. The client shows the consent step and, on
+        // "allow", calls linkGoogleAccount with this same id_token. `email` is
+        // echoed back so the consent screen can name the account — it is the
+        // address the caller just authenticated with, so it reveals nothing
+        // they did not supply.
         throw new GraphQLError('Please login with email. You registered using email and password.', {
-          extensions: { code: 'EMAIL_LOGIN_REQUIRED' },
+          extensions: { code: 'EMAIL_LOGIN_REQUIRED', email },
         });
       }
       throw new GraphQLError('User is not in our system. Please sign up first.', {
@@ -932,6 +969,162 @@ export const userService = {
     const payload = await authPayload(fresh);
     assertPortalLogin(portalKey, payload.user.roles);
     return payload;
+  },
+
+  /**
+   * The "allow" half of the login consent step.
+   *
+   * Unauthenticated on purpose: `verifyGoogleIdToken` refuses any token whose
+   * email Google has not verified, so a verified Google address that matches an
+   * account IS proof of control — the same proof `loginWithGoogle` accepts for
+   * an already-linked account. What the consent step adds is INTENT, which the
+   * client collects before calling this.
+   *
+   * The password is never read or written: the account ends up with both ways
+   * in, which is the whole point.
+   */
+  async linkGoogleAccount(idToken: string, portalKey?: string | null) {
+    const info = await verifyGoogleIdToken(idToken);
+    const email = info.email.toLowerCase();
+
+    // Already linked to this Google identity — treat as a plain login so a
+    // double-tap on "Allow" (or a retry after a dropped response) signs in
+    // instead of failing on the uniqueness guard below.
+    const alreadyLinked = await UserModel.findOne({ 'auth.google_id': info.sub });
+    if (alreadyLinked) {
+      return this.loginWithGoogle(idToken, portalKey);
+    }
+
+    const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
+    if (!user) {
+      throw new GraphQLError('User is not in our system. Please sign up first.', {
+        extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
+      });
+    }
+    if ((user as any).metadata?.status !== 'ACTIVE') {
+      throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
+    }
+    if ((user as any).auth?.google_id) {
+      throw new GraphQLError(
+        'This account is already linked to a different Google account. Disconnect it from your profile first.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.google_id': info.sub,
+          'auth.google_email': email,
+          'auth.google_linked_at': new Date(),
+          // Google vouched for this address, which is the same address the
+          // account holds — so it is verified whether or not we had asked.
+          'auth.is_email_verified': true,
+          'auth.last_login_provider': 'GOOGLE',
+          'auth.last_login_at': new Date(),
+          ...(user.profile?.profile_photo || !info.picture
+            ? {}
+            : { 'profile.profile_photo': info.picture }),
+        },
+      }
+    );
+    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    const payload = await authPayload(fresh);
+    assertPortalLogin(portalKey, payload.user.roles);
+    return payload;
+  },
+
+  /** Auth-required: what the signed-in account can sign in with. */
+  async myConnectedAccounts(userId: string) {
+    const user = await UserModel.findById(userId).select('+auth.password');
+    if (!user) {
+      throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return connectedAccountsOf(user);
+  },
+
+  /**
+   * Auth-required: link a Google account from Profile > Connected Accounts.
+   *
+   * The Gmail need not match the account's own email — a user may sign in with
+   * a Google address they never registered with — but it must not already be
+   * linked elsewhere, and this account must not already hold a different one.
+   */
+  async connectGoogleAccount(userId: string, idToken: string) {
+    const info = await verifyGoogleIdToken(idToken);
+    const email = info.email.toLowerCase();
+    const user = await UserModel.findById(userId).select('+auth.password');
+    if (!user) {
+      throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const existingId = (user as any).auth?.google_id as string | undefined;
+    if (existingId === info.sub) {
+      return connectedAccountsOf(user);
+    }
+    if (existingId) {
+      throw new GraphQLError(
+        'A Google account is already connected. Disconnect it before connecting another.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+    const takenBy = await UserModel.findOne({ 'auth.google_id': info.sub });
+    if (takenBy && String(takenBy._id) !== String(user._id)) {
+      throw new GraphQLError('This Google account is already connected to another Duncit account.', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.google_id': info.sub,
+          'auth.google_email': email,
+          'auth.google_linked_at': new Date(),
+        },
+      }
+    );
+    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    return connectedAccountsOf(fresh);
+  },
+
+  /**
+   * Auth-required: unlink the Google account.
+   *
+   * Refused without a password: Google would be the account's only way in, and
+   * disconnecting it would lock the user out of their own account with no
+   * self-serve way back.
+   */
+  async disconnectGoogleAccount(userId: string) {
+    const user = await UserModel.findById(userId).select('+auth.password');
+    if (!user) {
+      throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    if (!(user as any).auth?.google_id) {
+      throw new GraphQLError('No Google account is connected.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (!(user as any).auth?.password) {
+      throw new GraphQLError(
+        'Set a password before disconnecting Google — it is currently the only way to sign in to this account.',
+        { extensions: { code: 'FORBIDDEN' } }
+      );
+    }
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $unset: { 'auth.google_id': '', 'auth.google_email': '', 'auth.google_linked_at': '' },
+        // The last login really did happen over Google, but leaving the marker
+        // pointing at a provider the account no longer has makes the admin list
+        // read as still-connected. Email is now the only truth.
+        $set: { 'auth.last_login_provider': 'EMAIL' },
+      }
+    );
+    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    return connectedAccountsOf(fresh);
   },
 
   async signupWithGoogle(input: GoogleSignupDTO) {

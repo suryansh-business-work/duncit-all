@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** "Backout in process": replacement search running — offer Keep My Spot.
  * Once a replacement is confirmed the backout is locked (no restore). */
@@ -10,12 +11,13 @@ export function BackoutInProcessBar({
   canCancel,
   onKeepSpot,
 }: Readonly<{ canCancel: boolean; onKeepSpot: () => void }>) {
+  const { t } = useTranslation();
   if (!canCancel) {
     return (
       <XStack flex={1} alignItems="center" gap={8} testID="pod-backout-locked">
         <MaterialIcons name="lock-clock" size={20} color={semantic.warning} />
         <Text flex={1} fontSize={13} fontWeight="600" color="$muted">
-          A replacement has been confirmed — this Backout can no longer be cancelled.
+          {t('mweb.podDetails.backoutLocked')}
         </Text>
       </XStack>
     );
@@ -26,17 +28,17 @@ export function BackoutInProcessBar({
         <MaterialIcons name="hourglass-top" size={22} color={semantic.warning} />
         <YStack flex={1}>
           <Text fontSize={11} color="$muted">
-            Searching for a replacement
+            {t('mweb.podDetails.searchingForReplacement')}
           </Text>
           <Text fontSize={15} fontWeight="700" color="$color" testID="pod-backout-in-process">
-            Backout in process
+            {t('mweb.podDetails.backoutInProcess')}
           </Text>
         </YStack>
       </XStack>
       <XStack
         testID="pod-keep-spot"
         role="button"
-        aria-label="Keep my spot"
+        aria-label={t('mweb.podDetails.keepMySpot')}
         onPress={onKeepSpot}
         alignItems="center"
         justifyContent="center"
@@ -55,9 +57,10 @@ export function BackoutInProcessBar({
 /** Hoisted so the themed label doesn't create a branch inside the bar. */
 function KeepSpotLabel() {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Text fontSize={14} fontWeight="700" color={onPrimary}>
-      Keep My Spot
+      {t('mweb.podDetails.keepMySpot')}
     </Text>
   );
 }

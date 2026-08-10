@@ -3,10 +3,10 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
+import { useTranslation } from '../../../../i18n/useTranslation';
 import { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 import ChargesAccordion from './ChargesAccordion';
 import PayoutCard from './PayoutCard';
-import { EARNINGS_ESTIMATE_NOTE, VENUE_SHORTFALL_MESSAGE } from './pricingCopy';
 import type { EarningsPreview } from './useEarningsPreview';
 
 export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES };
@@ -26,6 +26,7 @@ interface Props {
  */
 export default function PricePanel({ preview }: Readonly<Props>) {
   const { currency } = usePricing();
+  const { t } = useTranslation();
   const { podAmount, noOfSpots, projection, loading, stale, hasVenue, venueShortfall } = preview;
   const w = projection?.waterfall;
 
@@ -36,7 +37,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     if (podAmount <= 0 || noOfSpots <= 0) {
       return (
         <Typography variant="caption" color="text.secondary">
-          Set a ticket price and the number of spots to preview your earnings.
+          {t('mweb.createPod.previewPrompt')}
         </Typography>
       );
     }
@@ -44,7 +45,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     if (noOfSpots === 1) {
       return (
         <Typography variant="caption" color="text.secondary" data-testid="price-panel-host-only">
-          This pod only has your own spot, which is free. Add more spots to earn.
+          {t('mweb.createPod.hostOnlyPod')}
         </Typography>
       );
     }
@@ -61,7 +62,9 @@ export default function PricePanel({ preview }: Readonly<Props>) {
         <Stack spacing={0.25}>
           <Stack direction="row" justifyContent="space-between" spacing={2}>
             <Typography variant="body2" fontWeight={600}>
-              Total collection ({fmt(podAmount)} × {projection.payable_spots})
+              {t('mweb.createPod.totalCollection', {
+                vars: { price: fmt(podAmount), spots: projection.payable_spots },
+              })}
             </Typography>
             <Typography variant="body2" fontWeight={700} color="success.main">
               {fmt(w.amount)}
@@ -74,7 +77,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
         <ChargesAccordion
           statement={statement}
           money={fmt}
-          venueError={venueShortfall ? VENUE_SHORTFALL_MESSAGE : null}
+          venueError={venueShortfall ? t('mweb.createPod.venueShortfall') : null}
         />
         <PayoutCard
           amount={fmt(w.host_receives)}
@@ -93,11 +96,11 @@ export default function PricePanel({ preview }: Readonly<Props>) {
         <Stack direction="row" spacing={1} alignItems="center">
           <InsightsIcon color="primary" fontSize="small" />
           <Typography variant="subtitle2" fontWeight={700}>
-            Potential earnings
+            {t('mweb.createPod.potentialEarnings')}
           </Typography>
         </Stack>
         <Typography variant="caption" fontWeight={600} color="text.secondary">
-          Your take-home for the full pod
+          {t('mweb.createPod.takeHome')}
         </Typography>
         {noOfSpots > 0 && (
           <Alert
@@ -106,13 +109,12 @@ export default function PricePanel({ preview }: Readonly<Props>) {
             sx={{ borderRadius: '16px', py: 0.25 }}
             data-testid="price-panel-host-free-note"
           >
-            Your spot is free — that is why the total calculation is based on the remaining
-            available slots.
+            {t('mweb.createPod.hostFreeNote')}
           </Alert>
         )}
         {breakdown()}
         <Typography variant="caption" color="text.secondary" data-testid="price-panel-estimate-note">
-          {EARNINGS_ESTIMATE_NOTE}
+          {t('mweb.createPod.earningsEstimateNote')}
         </Typography>
       </Stack>
     </Card>

@@ -24,6 +24,7 @@ import { useDetailNav } from '@/hooks/useDetailNav';
 import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
+import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
@@ -40,6 +41,7 @@ import type { RootStackParamList } from '@/navigation/types';
 export function PodDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
   // Doc id from in-app nav, or resolved from a shared /club/:clubSlug/pod/:podSlug link.
   const { podId, resolving } = useResolvedPodId(route.params);
@@ -110,7 +112,7 @@ export function PodDetailsScreen() {
       );
       await refetch();
     } catch (err) {
-      setJoinError(toErrorMessage(err, 'Could not join this pod.'));
+      setJoinError(toErrorMessage(err, t('mweb.podDetails.couldNotJoin')));
     } finally {
       setJoiningFree(false);
     }
@@ -187,8 +189,12 @@ export function PodDetailsScreen() {
     /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
-      const { message, url } = podShareMessage(pod);
-      await Share.share({ message, url, title: pod.pod_title });
+      const { message } = podShareMessage(pod);
+      // Deliberately NO `url` — `message` already ends with the pod link, and
+      // passing both makes iOS's sheet carry the link as a second item, which
+      // is how the shared text arrived with the link written twice. mWeb omits
+      // its Web Share `url` field for the same reason (rule 27).
+      await Share.share({ message, title: pod.pod_title });
     } catch {
       /* user cancelled */
     }
@@ -282,7 +288,7 @@ export function PodDetailsScreen() {
         <XStack
           testID="pod-contact-support"
           role="button"
-          aria-label="Contact support about this pod"
+          aria-label={t('mweb.podDetails.contactSupport')}
           onPress={() =>
             navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })
           }
@@ -290,7 +296,7 @@ export function PodDetailsScreen() {
           paddingTop={12}
         >
           <Text fontSize={13} fontWeight="600" color="$primary">
-            Contact support about this pod
+            {t('mweb.podDetails.contactSupport')}
           </Text>
         </XStack>
       </ScrollView>
@@ -299,11 +305,11 @@ export function PodDetailsScreen() {
     podBody = (
       <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
         <Text color="$muted" testID="pod-details-error">
-          This pod is unavailable.
+          {t('mweb.podDetails.notFound')}
         </Text>
-        <XStack role="button" aria-label="Go back" onPress={goBack}>
+        <XStack role="button" aria-label={t('mweb.common.goBack')} onPress={goBack}>
           <Text color="$primary" fontWeight="700">
-            Go back
+            {t('mweb.common.goBack')}
           </Text>
         </XStack>
       </YStack>

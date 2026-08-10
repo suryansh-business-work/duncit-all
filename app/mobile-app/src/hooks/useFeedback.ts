@@ -19,6 +19,7 @@ export async function submitAppFeedback(
   category: string,
   message: string,
   mediaUrls: string[] = [],
+  sourceScreen = 'Report a Problem',
 ) {
   const input = buildAppFeedbackInput({
     category,
@@ -26,6 +27,11 @@ export async function submitAppFeedback(
     platform: Platform.OS,
     media_urls: mediaUrls,
     app_version: appVersion(),
+    // RN's own Platform rather than a new native dep: Version is the OS build
+    // and constants.Model is the handset on Android. Enough to reproduce on.
+    device_os: `${Platform.OS} ${String(Platform.Version ?? '')}`.trim(),
+    device_model: String((Platform.constants as { Model?: string } | undefined)?.Model ?? ''),
+    source_screen: sourceScreen,
   });
   return graphqlRequest<SubmitAppFeedbackResult, { input: AppFeedbackInput }>(
     SubmitAppFeedbackDocument,

@@ -16,6 +16,16 @@ const badInput = (message: string) =>
 
 const clean = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
+/** The reporter's phone as one dialable string, or '' when they have none —
+ * phone is optional on an account since signup stopped collecting it. */
+const phoneOf = (profile: any): string => {
+  const phone = profile?.auth?.phone;
+  const number = clean(phone?.number);
+  if (!number) return '';
+  const ext = clean(phone?.extension);
+  return ext ? `${ext} ${number}` : number;
+};
+
 const toPub = (d: IFeedbackReport) => ({
   id: String(d._id),
   report_no: d.report_no,
@@ -25,8 +35,15 @@ const toPub = (d: IFeedbackReport) => ({
   category: d.category,
   message: d.message,
   media_urls: d.media_urls ?? [],
+  reporter_phone: d.reporter_phone ?? '',
+  reporter_city: d.reporter_city ?? '',
+  reporter_locale: d.reporter_locale ?? '',
+  reporter_roles: d.reporter_roles ?? [],
   platform: d.platform ?? 'app',
   app_version: d.app_version ?? '',
+  device_os: d.device_os ?? '',
+  device_model: d.device_model ?? '',
+  source_screen: d.source_screen ?? '',
   status: d.status,
   slack_ts: d.slack_ts ?? null,
   slack_error: d.slack_error ?? null,
@@ -73,6 +90,9 @@ export const feedbackService = {
       platform?: string | null;
       app_version?: string | null;
       media_urls?: string[] | null;
+      device_os?: string | null;
+      device_model?: string | null;
+      source_screen?: string | null;
       blocks_json?: string | null;
     }
   ) {
@@ -87,7 +107,7 @@ export const feedbackService = {
 
     const media = (input.media_urls ?? []).map(clean).filter(Boolean).slice(0, config.max_media);
 
-    const profile = await UserModel.findById(user.id).select('profile.first_name profile.last_name auth.email').lean();
+    const profile = await UserModel.findById(user.id).select('profile.first_name profile.last_name profile.city profile.locale auth.email auth.phone metadata.role_keys').lean();
     const name = `${(profile as any)?.profile?.first_name ?? ''} ${(profile as any)?.profile?.last_name ?? ''}`.trim();
 
     const doc = await FeedbackReportModel.create({
@@ -98,8 +118,15 @@ export const feedbackService = {
       category,
       message,
       media_urls: media,
+      reporter_phone: phoneOf(profile),
+      reporter_city: clean((profile as any)?.profile?.city),
+      reporter_locale: clean((profile as any)?.profile?.locale),
+      reporter_roles: (profile as any)?.metadata?.role_keys ?? [],
       platform: clean(input.platform) || 'app',
       app_version: clean(input.app_version),
+      device_os: clean(input.device_os),
+      device_model: clean(input.device_model),
+      source_screen: clean(input.source_screen),
     });
 
     // Best effort from here. Anything that goes wrong is written to the row.

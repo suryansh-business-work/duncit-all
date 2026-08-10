@@ -107,7 +107,32 @@ export default function ReportedProblemDetailPage() {
                 )}
 
                 <Divider />
-                <InfoRow label="Reported by" value={`${r.user_name || 'Unknown'} · ${r.user_email}`} />
+                {/* The reporter AS THEY WERE when they reported it. Support
+                    reads these days later, by which time the account may have
+                    changed phone, city or roles — so these are the stored
+                    snapshot, not a live lookup. */}
+                <Typography variant="subtitle2">Reporter</Typography>
+                <InfoRow label="Name" value={r.user_name || 'Unknown'} />
+                <InfoRow label="Email" value={r.user_email || '—'} />
+                <InfoRow label="Phone" value={r.reporter_phone || '—'} />
+                <InfoRow label="City" value={r.reporter_city || '—'} />
+                <InfoRow label="Language" value={r.reporter_locale || '—'} />
+                <InfoRow
+                  label="Roles"
+                  value={r.reporter_roles.length > 0 ? r.reporter_roles.join(', ') : '—'}
+                />
+                {/* The id, not a link: Support has no user directory of its own
+                    (that lives in the admin portal), and a button that goes
+                    nowhere is worse than the id you can search with. */}
+                <InfoRow label="User ID" value={r.user_id} />
+
+                <Divider />
+                <Typography variant="subtitle2">Where it happened</Typography>
+                <InfoRow label="Surface" value={r.platform || '—'} />
+                <InfoRow label="App version" value={r.app_version || '—'} />
+                <InfoRow label="Device / OS" value={r.device_os || '—'} />
+                <InfoRow label="Model / screen" value={r.device_model || '—'} />
+                <InfoRow label="Screen" value={r.source_screen || '—'} />
                 <InfoRow label="Reported at" value={formatDateTime(r.created_at)} />
                 {/* Surfaced rather than hidden: an un-announced report is one
                     nobody was told about, not one that failed to save. */}

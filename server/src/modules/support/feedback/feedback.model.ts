@@ -14,9 +14,28 @@ export interface IFeedbackReport extends Document {
   /** Screenshots the reporter attached. A picture of the broken screen is the
    * whole point of "report a problem", so they travel with the row. */
   media_urls: string[];
+  /**
+   * Who reported it, AS THEY WERE at the moment they reported it.
+   *
+   * A snapshot, not a join. Support reads these reports days later, by which
+   * time the reporter may have changed their phone, moved city or lost a role —
+   * and "what did their account look like when this broke?" is the question the
+   * log has to answer. `user_id` is still stored, so the live profile is one
+   * click away when the current state is what matters instead.
+   */
+  reporter_phone: string;
+  reporter_city: string;
+  reporter_locale: string;
+  reporter_roles: string[];
   /** 'web' | 'ios' | 'android' — labelling only. */
   platform: string;
   app_version: string;
+  /** What they were running it on. A bug report without the device is a bug
+   * report that cannot be reproduced. */
+  device_os: string;
+  device_model: string;
+  /** The screen they were on when they opened the form. */
+  source_screen: string;
   status: FeedbackStatus;
   /**
    * What happened to the Slack announcement. Slack is a NOTIFICATION, not the
@@ -39,8 +58,15 @@ const feedbackReportSchema = new Schema<IFeedbackReport>(
     category: { type: String, required: true, trim: true, index: true },
     message: { type: String, required: true, trim: true },
     media_urls: { type: [String], default: [] },
+    reporter_phone: { type: String, default: '' },
+    reporter_city: { type: String, default: '' },
+    reporter_locale: { type: String, default: '' },
+    reporter_roles: { type: [String], default: [] },
     platform: { type: String, default: 'app' },
     app_version: { type: String, default: '' },
+    device_os: { type: String, default: '' },
+    device_model: { type: String, default: '' },
+    source_screen: { type: String, default: '' },
     status: {
       type: String,
       enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'CLOSED'],

@@ -8,12 +8,20 @@ export interface FeedbackReportRow {
   category: string;
   message: string;
   media_urls: string[];
+  reporter_phone: string;
+  reporter_city: string;
+  reporter_locale: string;
+  reporter_roles: string[];
   platform: string;
   app_version: string;
+  device_os: string;
+  device_model: string;
+  source_screen: string;
   status: string;
   slack_ts?: string | null;
   slack_error?: string | null;
   created_at: string;
+  user_id: string;
 }
 
 export interface ReportProblemCategory {
@@ -34,14 +42,22 @@ export interface ReportProblemConfig {
 
 const REPORT_FIELDS = `
   id
+  user_id
   report_no
   user_name
   user_email
   category
   message
   media_urls
+  reporter_phone
+  reporter_city
+  reporter_locale
+  reporter_roles
   platform
   app_version
+  device_os
+  device_model
+  source_screen
   status
   slack_ts
   slack_error

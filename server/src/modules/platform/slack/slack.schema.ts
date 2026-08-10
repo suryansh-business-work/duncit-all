@@ -60,6 +60,11 @@ export const slackTypeDefs = gql`
     "Screenshots the reporter attached — a picture of the broken screen is most of the report."
     media_urls: [String!]
     app_version: String
+    "Device context — a bug report without it cannot be reproduced."
+    device_os: String
+    device_model: String
+    "The screen the reporter was on when they opened the form."
+    source_screen: String
   }
 
   extend type Mutation {

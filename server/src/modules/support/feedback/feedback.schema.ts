@@ -24,8 +24,23 @@ export const feedbackTypeDefs = /* GraphQL */ `
     message: String!
     "Screenshots the reporter attached."
     media_urls: [String!]!
+    """
+    The reporter as they were WHEN they reported it — a snapshot, not a join.
+    Support reads these days later, by which time the account may have changed
+    phone, city or roles; user_id is still here for when the CURRENT state is
+    what matters instead.
+    """
+    reporter_phone: String!
+    reporter_city: String!
+    reporter_locale: String!
+    reporter_roles: [String!]!
     platform: String!
     app_version: String!
+    "What they were running it on — a report without the device cannot be reproduced."
+    device_os: String!
+    device_model: String!
+    "The screen they were on when they opened the form."
+    source_screen: String!
     status: FeedbackStatus!
     "Slack message timestamp when the announcement went out."
     slack_ts: String

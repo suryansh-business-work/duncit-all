@@ -87,5 +87,10 @@ export interface AppFeedbackInput {
   /** Screenshots the reporter attached. */
   media_urls?: string[];
   app_version?: string;
+  /** Device context — a bug report without it cannot be reproduced. */
+  device_os?: string;
+  device_model?: string;
+  /** The screen the reporter was on when they opened the form. */
+  source_screen?: string;
   blocks_json?: string;
 }

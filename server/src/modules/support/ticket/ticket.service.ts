@@ -2,6 +2,11 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { TicketModel, type ITicket, type TicketStatus, type TicketCategory, type TicketPriority } from './ticket.model';
 import { UserModel } from '@modules/access/user/user.model';
+import {
+  displayFrom,
+  userDisplayMap,
+  userDisplayOf,
+} from '@modules/access/user/user.display';
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
@@ -76,9 +81,11 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
 }
 
 async function toPub(doc: ITicket) {
-  const [user, assignee] = await Promise.all([
+  const [user, assignee, authors] = await Promise.all([
     doc.user_id ? buildActor(doc.user_id) : null,
     doc.assignee_id ? buildActor(doc.assignee_id) : null,
+    // One query for every author on the thread, however long it is.
+    userDisplayMap(doc.messages.map((m) => String(m.author_id))),
   ]);
   return {
     id: String(doc._id),
@@ -115,8 +122,12 @@ async function toPub(doc: ITicket) {
       id: String(m._id),
       author_id: String(m.author_id),
       author_role: m.author_role,
-      author_name: m.author_name || '',
-      author_photo: m.author_photo || null,
+      // Resolved from the account, not stored. A website ticket has no account
+      // behind it — `author_id` is a placeholder minted so the message can say
+      // who wrote it — so the guest's own name stands in, exactly as it does
+      // for the ticket's `user` above.
+      author_name: displayFrom(authors, m.author_id).name || doc.guest_name || '',
+      author_photo: displayFrom(authors, m.author_id).photo || null,
       body_html: m.body_html || '',
       body_text: m.body_text || '',
       attachments: m.attachments || [],
@@ -127,18 +138,18 @@ async function toPub(doc: ITicket) {
   };
 }
 
+/**
+ * What a new message stores about who wrote it — the id and the role, nothing
+ * else. `name` comes back alongside for the one thing that genuinely needs a
+ * literal: the "resolved by …" body text, which is a statement of what
+ * happened and does not change when someone renames themselves.
+ */
 async function actorMeta(userId: string, role: 'USER' | 'AGENT') {
-  const u = await UserModel.findById(userId).select(
-    'profile.first_name profile.last_name profile.profile_photo'
-  );
   const fallbackName = role === 'AGENT' ? 'Support' : 'User';
+  const display = await userDisplayOf(userId);
   return {
-    author_id: new Types.ObjectId(userId),
-    author_role: role,
-    author_name: u
-      ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || fallbackName
-      : fallbackName,
-    author_photo: u?.profile?.profile_photo || '',
+    author: { author_id: new Types.ObjectId(userId), author_role: role },
+    name: display.name || fallbackName,
   };
 }
 
@@ -174,7 +185,7 @@ export const ticketService = {
       last_message_at: now,
       messages: [
         {
-          ...meta,
+          ...meta.author,
           body_html: input.body_html || '',
           body_text: bodyText,
           attachments: input.attachments ?? [],
@@ -207,7 +218,7 @@ export const ticketService = {
 
     const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
     doc!.messages.push({
-      ...meta,
+      ...meta.author,
       body_html: input.body_html || '',
       body_text: bodyText,
       attachments: input.attachments ?? [],
@@ -298,7 +309,7 @@ export const ticketService = {
     const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
     const trimmed = (reason || '').trim();
     doc!.messages.push({
-      ...meta,
+      ...meta.author,
       body_text: trimmed ? `Re-opened this ticket. Reason: ${trimmed}` : 'Re-opened this ticket.',
       attachments: [],
     } as any);
@@ -329,11 +340,9 @@ export const ticketService = {
     doc!.resolved_at = new Date();
     doc!.last_message_at = new Date();
     doc!.messages.push({
-      author_id: meta.author_id,
+      author_id: meta.author.author_id,
       author_role: 'SYSTEM',
-      author_name: meta.author_name,
-      author_photo: meta.author_photo,
-      body_text: `Ticket marked resolved by ${meta.author_name}.`,
+      body_text: `Ticket marked resolved by ${meta.name}.`,
       attachments: [],
     } as any);
     await doc.save();
@@ -378,11 +387,12 @@ export const ticketService = {
     const no = ticketNo('ST', doc!._id as Types.ObjectId);
     const user = await buildActor(doc!.user_id);
     const userName = user?.name ?? 'User';
+    const authors = await userDisplayMap(doc!.messages.map((m) => String(m.author_id)));
     const lines = doc!.messages.map((m) => {
       let who: string;
       if (m.author_role === 'USER') who = userName || 'You';
       else if (m.author_role === 'SYSTEM') who = 'System';
-      else who = m.author_name || 'Support';
+      else who = displayFrom(authors, m.author_id).name || 'Support';
       const body =
         m.body_text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
       return { who, when: m.created_at?.toISOString?.() ?? '', body };

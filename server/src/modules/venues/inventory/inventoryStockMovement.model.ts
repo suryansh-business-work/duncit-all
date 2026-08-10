@@ -11,7 +11,6 @@ export type StockMovementType =
 export interface IInventoryStockMovement extends Document {
   product_id: Types.ObjectId;
   user_id: string | null;
-  user_name: string;
   type: StockMovementType;
   quantity: number;
   reason: string;
@@ -23,7 +22,6 @@ const schema = new Schema<IInventoryStockMovement>(
   {
     product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true, index: true },
     user_id: { type: String, default: null },
-    user_name: { type: String, default: '' },
     type: {
       type: String,
       enum: ['IN', 'OUT', 'RESERVE', 'RELEASE', 'DAMAGE', 'ADJUST'],

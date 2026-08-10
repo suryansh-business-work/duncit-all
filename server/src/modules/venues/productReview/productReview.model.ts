@@ -5,7 +5,6 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 export interface IProductReview extends Document {
   product_id: Types.ObjectId;
   user_id: Types.ObjectId;
-  user_name: string;
   rating: number;
   comment: string;
   images: string[];
@@ -21,7 +20,6 @@ const productReviewSchema = new Schema<IProductReview>(
   {
     product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    user_name: { type: String, default: '', trim: true, maxlength: 120 },
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, default: '', trim: true, maxlength: 2000 },
     images: { type: [String], default: [] },

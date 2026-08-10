@@ -48,7 +48,6 @@ export interface IGrievanceTicket extends Document {
   resolution: string;
   resolved_at: Date | null;
   handled_by: Types.ObjectId | null;
-  handled_by_name: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -68,7 +67,6 @@ const grievanceTicketSchema = new Schema<IGrievanceTicket>(
     resolution: { type: String, default: '', trim: true, maxlength: 5000 },
     resolved_at: { type: Date, default: null },
     handled_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    handled_by_name: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

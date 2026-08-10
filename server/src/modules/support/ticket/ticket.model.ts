@@ -26,8 +26,6 @@ export interface ITicketMessage {
   _id: Types.ObjectId;
   author_id: Types.ObjectId;
   author_role: TicketAuthorRole;
-  author_name: string;
-  author_photo: string;
   body_html: string;
   body_text: string;
   attachments: string[];
@@ -36,10 +34,11 @@ export interface ITicketMessage {
 
 const messageSchema = new Schema<ITicketMessage>(
   {
+    // The id, and only the id. The author's name and photo are resolved from
+    // the account at read time; a website ticket has no account, so its
+    // messages fall back to the ticket's `guest_name`.
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     author_role: { type: String, enum: ['USER', 'AGENT', 'SYSTEM'], required: true },
-    author_name: { type: String, default: '' },
-    author_photo: { type: String, default: '' },
     body_html: { type: String, default: '' },
     body_text: { type: String, default: '' },
     attachments: { type: [String], default: [] },

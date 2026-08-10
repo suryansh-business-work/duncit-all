@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { displayFrom, userDisplayMap } from '@modules/access/user/user.display';
 import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
@@ -196,7 +197,6 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     pickup_location_id: product.pickup_location_id ? String(product.pickup_location_id) : null,
     is_active: !!product.is_active,
     last_updated_by_id: product.last_updated_by_id ?? null,
-    last_updated_by_name: product.last_updated_by_name ?? '',
     created_at: product.created_at?.toISOString?.() ?? '',
     updated_at: product.updated_at?.toISOString?.() ?? '',
   };
@@ -239,7 +239,6 @@ async function logActivity(
   await InventoryActivityLogModel.create({
     product_id: productId,
     user_id: info.id,
-    user_name: info.name,
     action,
     changed_fields,
     notes,
@@ -267,7 +266,6 @@ async function recordStockChanges(
     await InventoryStockMovementModel.create({
       product_id: product._id,
       user_id: info.id,
-      user_name: info.name,
       type,
       quantity: after - before,
       reason: 'Direct edit',
@@ -596,7 +594,6 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   if (input.pickup_location_id !== undefined) doc.pickup_location_id = toOid(input.pickup_location_id);
   const info = userInfo(user);
   doc.last_updated_by_id = info.id;
-  doc.last_updated_by_name = info.name;
 }
 
 /* ---- Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1) ---- */
@@ -1077,7 +1074,6 @@ export const inventoryService = {
       free_delivery_above: toNullableAmount(input.free_delivery_above),
       pickup_location_id: toOid(input.pickup_location_id),
       last_updated_by_id: info.id,
-      last_updated_by_name: info.name,
     });
     if (Array.isArray(input.variants) && input.variants.length) {
       applyVariants(doc, input);
@@ -1132,7 +1128,6 @@ export const inventoryService = {
     const beforeAvailable = availableOf(doc);
     doc.inventory_count = inventoryCount;
     doc.last_updated_by_id = info.id;
-    doc.last_updated_by_name = info.name;
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', ['inventory_count'], 'Partner quantity updated');
     await recordStockChanges(doc, beforeStock, user);
@@ -1157,7 +1152,6 @@ export const inventoryService = {
     doc.low_stock_alert = lowStockAlert;
     doc.notify_low_stock = !!notifyLowStock;
     doc.last_updated_by_id = info.id;
-    doc.last_updated_by_name = info.name;
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', ['low_stock_alert', 'notify_low_stock'], 'Product settings updated');
     return inventoryProductToPub(doc);
@@ -1211,7 +1205,6 @@ export const inventoryService = {
     doc.pod_available = approved;
     doc.host_request_allowed = approved;
     doc.last_updated_by_id = info.id;
-    doc.last_updated_by_name = info.name;
     await doc.save();
     await logActivity(doc._id, user, approved ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
     // Tell the partner the outcome — they previously had to poll their table.
@@ -1252,7 +1245,6 @@ export const inventoryService = {
       sku,
       unit_cost: Number(input.unit_cost) || 0,
       last_updated_by_id: info.id,
-      last_updated_by_name: info.name,
     });
     applyInput(doc, { ...input, sku });
     // The Products-portal Add form only ever creates Duncit-owned catalogue
@@ -1265,7 +1257,6 @@ export const inventoryService = {
       await InventoryStockMovementModel.create({
         product_id: doc._id,
         user_id: info.id,
-        user_name: info.name,
         type: 'IN',
         quantity: doc.inventory_count,
         reason: 'Initial stock',
@@ -1299,7 +1290,6 @@ export const inventoryService = {
     if (doc.ownership === 'DUNCIT') await assertDuncitWarehouse(doc.pickup_location_id);
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
-    doc.last_updated_by_name = info.name;
     await doc.save();
 
     const changes = changedFields(before, doc.toObject()).filter((f) => !STOCK_FIELDS.has(f));
@@ -1444,7 +1434,6 @@ export const inventoryService = {
     obj.damaged_count = 0;
     obj.requested_count = 0;
     obj.last_updated_by_id = info.id;
-    obj.last_updated_by_name = info.name;
     const copy = await InventoryProductModel.create(obj);
     await logActivity(copy._id, user, 'DUPLICATE', ['*'], `Duplicated from ${src.sku}`);
     return inventoryProductToPub(copy);
@@ -1487,12 +1476,10 @@ export const inventoryService = {
         throw new GraphQLError('Unknown movement type', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     doc.last_updated_by_id = info.id;
-    doc.last_updated_by_name = info.name;
     await doc.save();
     await InventoryStockMovementModel.create({
       product_id: doc._id,
       user_id: info.id,
-      user_name: info.name,
       type: input.type,
       quantity: input.type === 'OUT' || input.type === 'RELEASE' ? -qty : qty,
       reason: input.reason ?? '',
@@ -1505,11 +1492,14 @@ export const inventoryService = {
     const docs = await InventoryActivityLogModel.find({ product_id: productId })
       .sort({ created_at: -1 })
       .limit(Math.min(Math.max(limit, 1), 500));
+    const display = await userDisplayMap(docs.map((d) => String(d.user_id ?? '')));
     return docs.map((d) => ({
       id: String(d._id),
       product_id: String(d.product_id),
       user_id: d.user_id ?? null,
-      user_name: d.user_name ?? '',
+      // Resolved from the account. What was stored here was the actor's EMAIL,
+      // copied off the JWT and never refreshed.
+      user_name: displayFrom(display, d.user_id).name,
       action: d.action,
       changed_fields: d.changed_fields ?? [],
       notes: d.notes ?? '',
@@ -1521,11 +1511,12 @@ export const inventoryService = {
     const docs = await InventoryStockMovementModel.find({ product_id: productId })
       .sort({ created_at: -1 })
       .limit(Math.min(Math.max(limit, 1), 500));
+    const display = await userDisplayMap(docs.map((d) => String(d.user_id ?? '')));
     return docs.map((d) => ({
       id: String(d._id),
       product_id: String(d.product_id),
       user_id: d.user_id ?? null,
-      user_name: d.user_name ?? '',
+      user_name: displayFrom(display, d.user_id).name,
       type: d.type,
       quantity: d.quantity,
       reason: d.reason ?? '',

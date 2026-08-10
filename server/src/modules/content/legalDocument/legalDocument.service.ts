@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { userDisplayOf } from '@modules/access/user/user.display';
 import { Types } from 'mongoose';
 import {
   LegalDocumentModel,
@@ -34,14 +35,6 @@ const SIGNATURE_METHOD_FLAG: Record<SignatureMethod, string> = {
   UPLOAD: 'legal_sign_upload',
 };
 
-async function actorName(userId: string): Promise<string> {
-  const u = await UserModel.findById(userId)
-    .select('profile.first_name profile.last_name')
-    .lean();
-  if (!u) return 'Legal';
-  return `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Legal';
-}
-
 function toPub(doc: ILegalDocument) {
   return {
     id: String(doc._id),
@@ -51,8 +44,9 @@ function toPub(doc: ILegalDocument) {
     document_type: doc.document_type,
     description: doc.description ?? '',
     content: doc.content ?? '',
-    created_by_name: doc.created_by_name ?? '',
-    updated_by_name: doc.updated_by_name ?? '',
+    // The ids the LegalDocument field resolvers turn into names.
+    created_by: doc.created_by ?? null,
+    updated_by: doc.updated_by ?? null,
     version_count: doc.versions.length,
     versions: [...doc.versions]
       .sort((a, b) => (b.created_at?.getTime?.() ?? 0) - (a.created_at?.getTime?.() ?? 0))
@@ -63,7 +57,6 @@ function toPub(doc: ILegalDocument) {
         description: v.description ?? '',
         content: v.content ?? '',
         updated_by: v.updated_by ? String(v.updated_by) : null,
-        updated_by_name: v.updated_by_name ?? '',
         created_at: v.created_at?.toISOString?.() ?? '',
       })),
     signing_status: doc.signed_at ? 'SIGNED' : 'UNSIGNED',
@@ -84,14 +77,13 @@ function toPub(doc: ILegalDocument) {
   };
 }
 
-function snapshot(doc: ILegalDocument, userId: string, name: string) {
+function snapshot(doc: ILegalDocument, userId: string) {
   doc.versions.push({
     name: doc.name,
     document_type: doc.document_type,
     description: doc.description,
     content: doc.content,
     updated_by: new Types.ObjectId(userId),
-    updated_by_name: name,
   } as any);
   // Keep the last 50 snapshots so the history never grows unbounded.
   if (doc.versions.length > 50) doc.versions.splice(0, doc.versions.length - 50);
@@ -105,7 +97,6 @@ const LEGAL_DOCUMENT_TABLE_CONFIG: TableEntityConfig = {
     name: 'name',
     is_active: 'is_active',
     document_type: 'document_type',
-    updated_by_name: 'updated_by_name',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
@@ -113,7 +104,6 @@ const LEGAL_DOCUMENT_TABLE_CONFIG: TableEntityConfig = {
     document_no: { type: 'string' },
     is_active: { type: 'boolean' },
     document_type: { type: 'string' },
-    updated_by_name: { type: 'string' },
     created_at: { type: 'date' },
     updated_at: { type: 'date' },
   },
@@ -187,16 +177,13 @@ export const legalDocumentService = {
     const documentType = (input.document_type || '').trim();
     if (!name) fail('BAD_USER_INPUT', 'Document name is required');
     if (!documentType) fail('BAD_USER_INPUT', 'Document type is required');
-    const who = await actorName(userId);
     const doc = await LegalDocumentModel.create({
       name,
       document_type: documentType,
       description: (input.description ?? '').trim(),
       content: input.content ?? '',
       created_by: new Types.ObjectId(userId),
-      created_by_name: who,
       updated_by: new Types.ObjectId(userId),
-      updated_by_name: who,
     });
     return toPub(doc);
   },
@@ -226,16 +213,14 @@ export const legalDocumentService = {
     if (input.name !== undefined && !input.name.trim()) {
       fail('BAD_USER_INPUT', 'Title is required');
     }
-    const who = await actorName(userId);
     // Snapshot the current state into history before applying the edit.
-    snapshot(doc, userId, who);
+    snapshot(doc, userId);
     if (input.name !== undefined) doc!.name = input.name.trim();
     if (input.document_type !== undefined) doc!.document_type = input.document_type.trim();
     if (input.description !== undefined) doc!.description = input.description.trim();
     if (input.content !== undefined) doc!.content = input.content;
     if (input.is_active !== undefined) doc!.is_active = !!input.is_active;
     doc!.updated_by = new Types.ObjectId(userId);
-    doc!.updated_by_name = who;
     await doc!.save();
     return toPub(doc);
   },
@@ -269,16 +254,13 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const src = await LegalDocumentModel.findById(id);
     if (!src) fail('NOT_FOUND', 'Document not found');
-    const who = await actorName(userId);
     const doc = await LegalDocumentModel.create({
       name: `Copy of ${src!.name}`,
       document_type: src!.document_type,
       description: src!.description,
       content: src!.content,
       created_by: new Types.ObjectId(userId),
-      created_by_name: who,
       updated_by: new Types.ObjectId(userId),
-      updated_by_name: who,
     });
     return toPub(doc);
   },
@@ -403,7 +385,7 @@ export const legalDocumentService = {
     await sendSignedContractEmail({
       to: recipient,
       contract_name: doc!.name,
-      sender_name: await actorName(userId),
+      sender_name: (await userDisplayOf(userId)).name,
       message: String(message ?? '').trim(),
       pdf,
     });

@@ -23,9 +23,7 @@ export interface IContract extends Document {
   effective_from: Date | null;
   effective_to: Date | null;
   created_by: Types.ObjectId | null;
-  created_by_name: string;
   updated_by: Types.ObjectId | null;
-  updated_by_name: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -41,9 +39,7 @@ const contractSchema = new Schema<IContract>(
     effective_from: { type: Date, default: null },
     effective_to: { type: Date, default: null },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    created_by_name: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    updated_by_name: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -1,5 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
+import { userDisplayOf } from '@modules/access/user/user.display';
 import { inventoryService } from './inventory.service';
 import { productReviewService } from '../productReview/productReview.service';
 
@@ -11,6 +12,21 @@ export const inventoryResolvers = {
     // InventoryProduct reads pay nothing.
     review_summary: (parent: { id?: string; _id?: unknown }) =>
       productReviewService.summary(String(parent.id ?? parent._id)),
+    /**
+     * Who last touched this product, resolved from `last_updated_by_id`.
+     *
+     * A field resolver rather than a change to `inventoryProductToPub`: that
+     * shaper has 22 call sites and is used inside `.map()` in nine of them, so
+     * making it async to fetch a label almost nobody selects would be a lot of
+     * churn and one missed `await` away from a promise rendered as a name.
+     * This runs only when the field is actually requested.
+     *
+     * The stored `last_updated_by_name` was the actor's EMAIL, copied off the
+     * JWT — it went stale on a profile change and showed an address where the
+     * column says "name".
+     */
+    last_updated_by_name: async (parent: { last_updated_by_id?: string | null }) =>
+      parent.last_updated_by_id ? (await userDisplayOf(parent.last_updated_by_id)).name : '',
   },
   Query: {
     inventoryProducts: async (

@@ -128,7 +128,6 @@ export interface IInventoryProduct extends Document {
   listing_submitted_by_id: string | null;
   listing_submitted_by_name: string;
   listing_reviewed_by_id: string | null;
-  listing_reviewed_by_name: string;
   is_duncit_delivery_partner: boolean;
   ownership: ProductOwnership;
   /** Buyer engagement counters (forward-only; incremented from the apps). */
@@ -287,7 +286,6 @@ const productSchema = new Schema<IInventoryProduct>(
     listing_submitted_by_id: { type: String, default: null },
     listing_submitted_by_name: { type: String, default: '' },
     listing_reviewed_by_id: { type: String, default: null },
-    listing_reviewed_by_name: { type: String, default: '' },
     is_duncit_delivery_partner: { type: Boolean, default: false },
     // Duncit's own catalogue product vs an external partner brand's listing.
     ownership: { type: String, enum: ['DUNCIT', 'BRAND'], default: 'DUNCIT', index: true },

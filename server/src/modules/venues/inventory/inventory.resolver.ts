@@ -27,6 +27,16 @@ export const inventoryResolvers = {
      */
     last_updated_by_name: async (parent: { last_updated_by_id?: string | null }) =>
       parent.last_updated_by_id ? (await userDisplayOf(parent.last_updated_by_id)).name : '',
+    /**
+     * Who reviewed the listing.
+     *
+     * Resolved, unlike its `listing_submitted_by_name` sibling — that one is a
+     * searchField on the listing-requests table and Mongo cannot search a value
+     * that is not on the row, so it stays stored and is refreshed by
+     * `syncUserMirrors` instead.
+     */
+    listing_reviewed_by_name: async (parent: { listing_reviewed_by_id?: string | null }) =>
+      parent.listing_reviewed_by_id ? (await userDisplayOf(parent.listing_reviewed_by_id)).name : '',
   },
   Query: {
     inventoryProducts: async (

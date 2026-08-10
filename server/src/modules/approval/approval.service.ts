@@ -25,7 +25,8 @@ const pub = (doc: any) => {
     subject_phone: o.subject_phone ?? null,
     meeting_id: o.meeting_id ? String(o.meeting_id) : null,
     requested_by_name: o.requested_by_name ?? null,
-    reviewed_by_name: o.reviewed_by_name ?? null,
+    // The id the ApprovalRequest field resolver turns into a name.
+    reviewed_by: o.reviewed_by ?? null,
     reviewed_at: iso(o.reviewed_at),
     review_notes: o.review_notes ?? null,
     created_at: iso(o.created_at),
@@ -222,7 +223,6 @@ export const approvalService = {
     }
     doc.status = 'APPROVED';
     doc.reviewed_by = reviewer.id ?? null;
-    doc.reviewed_by_name = reviewer.name ?? null;
     doc.reviewed_at = new Date();
     doc.review_notes = notes ?? null;
     await doc.save();
@@ -244,7 +244,6 @@ export const approvalService = {
     }
     doc.status = 'DENIED';
     doc.reviewed_by = reviewer.id ?? null;
-    doc.reviewed_by_name = reviewer.name ?? null;
     doc.reviewed_at = new Date();
     doc.review_notes = notes ?? null;
     await doc.save();

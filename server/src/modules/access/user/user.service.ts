@@ -15,6 +15,7 @@ import {
 } from './relations';
 import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { emitUserChanged } from '../../../realtime/user.events';
+import { syncUserMirrors } from './user.mirrors';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
   LoginDTO,
@@ -695,6 +696,11 @@ function publishSession<T extends Record<string, any> | null>(pub: T): T {
     if (pub[key] !== undefined) patch[key] = pub[key];
   }
   emitUserChanged(String(pub.user_id), patch);
+  // A handful of admin tables search and sort on the person's name, which Mongo
+  // cannot do against a value that lives only on the user document — so those
+  // collections keep a mirrored copy, refreshed here. Fire-and-forget: the
+  // profile save has already succeeded, and a slow fan-out must not hold it up.
+  syncUserMirrors(String(pub.user_id)).catch(() => undefined);
   return pub;
 }
 

@@ -51,7 +51,6 @@ const approvalRequestSchema = new Schema(
     requested_by: { type: String, default: null },
     requested_by_name: { type: String, default: null },
     reviewed_by: { type: String, default: null },
-    reviewed_by_name: { type: String, default: null },
     reviewed_at: { type: Date, default: null },
     review_notes: { type: String, default: null },
   },

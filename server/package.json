@@ -58,8 +58,7 @@
     "migrate:withdrawer-role": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts",
     "migrate:withdrawer-role:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --dry-run",
     "migrate:withdrawer-role:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local",
-    "migrate:withdrawer-role:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
-    "check:client-documents": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-client-documents.ts"
+    "migrate:withdrawer-role:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

@@ -111,6 +111,8 @@ jobs:
       # green above, both a runtime error in the browser. This validates every
       # resolvable client document AGAINST the schema the server boots with.
       # It found `publicUsersByIds(ids:)` on a live mWeb page, where the schema
-      # has always wanted `user_ids`.
+      # has always wanted `user_ids`. Static like its sibling: an earlier version
+      # imported the server module graph and failed here while passing locally,
+      # because nothing in CI had ever imported it.
       - name: GraphQL documents match the schema
-        run: npm --prefix server run check:client-documents
+        run: node scripts/verify-gql-schema.mjs

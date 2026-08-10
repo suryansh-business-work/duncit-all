@@ -23,37 +23,18 @@
  */
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import { connectForMigration } from './lib/migration-db';
 
 const DRY = process.argv.includes('--dry-run');
-const uriArg = process.argv.indexOf('--uri');
-const URI_OVERRIDE = uriArg !== -1 ? process.argv[uriArg + 1] : undefined;
-const FORCE_REMOTE = process.argv.includes('--i-know-this-is-production');
-
-const isLocal = (uri: string) =>
-  /^mongodb:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])[:/]/i.test(uri.trim());
 
 /** Same order as resolveWithdrawerRole — most specific earning capacity first,
  * HOST last because nearly every earning partner also holds it. */
 const PRECEDENCE = ['VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER', 'HOST'] as const;
 
 async function main(): Promise<void> {
-  const uri = URI_OVERRIDE ?? process.env.MONGO_URI;
-  if (!uri) {
-    console.error('No database. Set MONGO_URI in server/.env, or pass --uri <connection-string>.');
-    process.exit(1);
-  }
-  if (!DRY && !isLocal(uri) && !FORCE_REMOTE) {
-    console.error(
-      'Refusing to write to a non-local database.\n' +
-        'Rehearse locally first, then re-run with --i-know-this-is-production.'
-    );
-    process.exit(1);
-  }
-
-  await mongoose.connect(uri);
-  const db = mongoose.connection.db;
+  const connection = await connectForMigration({ dry: DRY });
+  const db = connection.db;
   if (!db) throw new Error('No database handle after connect');
-  console.log(`Connected to ${mongoose.connection.name} (${DRY ? 'DRY RUN' : 'WRITING'})\n`);
 
   const withdrawals = db.collection('walletwithdrawals');
   const missing = await withdrawals

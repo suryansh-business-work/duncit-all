@@ -8,7 +8,7 @@ import { TICKET_PRIORITY_COLORS, TICKET_SOURCE_COLORS, TICKET_STATUS_COLORS } fr
 
 const SOURCE_OPTIONS: ReadonlyArray<{ value: TicketSource; label: string }> = [
   { value: 'APP', label: 'Duncit App' },
-  { value: 'WEBSITE', label: 'Duncit Website' },
+  { value: 'WEBSITE', label: "Duncit's Main Website" },
 ];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: TicketStatus; label: string }> = [
@@ -40,7 +40,7 @@ const renderSubject = (t: Ticket) => (
  * stored enum — the two places are different jobs, not different codes. */
 const SOURCE_LABEL: Record<TicketSource, string> = {
   APP: 'Duncit App',
-  WEBSITE: 'Duncit Website',
+  WEBSITE: "Duncit's Main Website",
 };
 
 const renderSource = (t: Ticket) => (
@@ -76,7 +76,9 @@ const COLUMNS: DuncitColumn<Ticket>[] = [
     field: 'source',
     headerName: 'Source',
     sortable: false,
-    width: 150,
+    // Sized for the longest label ("Duncit's Main Website") inside a chip —
+    // at 150 it clipped, which is worse than the plainer wording it replaced.
+    width: 210,
     filter: { type: 'select', options: SOURCE_OPTIONS },
     cellRenderer: renderSource,
     valueGetter: (t) => SOURCE_LABEL[t.source] ?? t.source,

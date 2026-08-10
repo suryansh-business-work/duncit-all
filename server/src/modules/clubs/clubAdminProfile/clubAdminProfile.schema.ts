@@ -85,6 +85,30 @@ export const clubAdminProfileTypeDefs = /* GraphQL */ `
     plus any club they already run that falls outside it.
     """
     clubAdminMatchingClubs(id: ID!, search: String): [ClubAdminClubOption!]!
+    """
+    Club Admins whose onboarding taxonomy matches a club's — the picker on the
+    New Club form.
+
+    The mirror of clubAdminMatchingClubs. Without it the form offered every
+    CLUB_ADMIN role-holder on the platform, so a club could be handed to an
+    admin onboarded for an unrelated category. Matching happens at the level
+    the CLUB supplies; passing no category returns everyone, so the picker
+    still works before one is chosen. APPROVED + active only — a DRAFT profile
+    is somebody mid-onboarding who cannot yet be handed a club.
+    """
+    clubAdminCandidates(
+      super_category_id: ID
+      category_id: ID
+      sub_category_id: ID
+      search: String
+    ): [ClubAdminCandidate!]!
+  }
+
+  "One assignable Club Admin, in the shape the club form's picker renders."
+  type ClubAdminCandidate {
+    user_id: ID!
+    full_name: String!
+    email: String!
   }
 
   extend type Mutation {

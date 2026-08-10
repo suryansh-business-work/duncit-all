@@ -276,6 +276,74 @@ export const clubAdminProfileService = {
    * a checkbox you cannot see is not a decision you can make. They come back
    * flagged, so the screen can say why they are there.
    */
+  /**
+   * Club Admins whose onboarding taxonomy matches a club's — the MIRROR of
+   * `matchingClubs`, which already answers the same question from the other end.
+   *
+   * The New Club form used to offer every CLUB_ADMIN role-holder on the
+   * platform, so a club could be handed to an admin onboarded for an unrelated
+   * category. A Club Admin picks their Super > Category > Sub at onboarding and
+   * that is what they are approved against, so it is what the picker filters on.
+   *
+   * Matching is deliberately at the level the CLUB provides: a club with a Sub
+   * matches admins on that Sub; with only a Category, any admin whose Sub sits
+   * under it (or who chose that Category outright); with only a Super, on the
+   * Super. Passing nothing returns everyone, so the picker still works before a
+   * category is chosen rather than looking broken.
+   *
+   * Only APPROVED and active admins are offered: a DRAFT profile is somebody
+   * mid-onboarding who cannot yet be handed a club.
+   */
+  async candidatesForClub(filter: {
+    super_category_id?: string | null;
+    category_id?: string | null;
+    sub_category_id?: string | null;
+    search?: string | null;
+  }) {
+    const query: any = { status: 'APPROVED', is_active: true };
+
+    if (filter.sub_category_id && Types.ObjectId.isValid(filter.sub_category_id)) {
+      query.sub_category_id = new Types.ObjectId(filter.sub_category_id);
+    } else if (filter.category_id && Types.ObjectId.isValid(filter.category_id)) {
+      const subs = await CategoryModel.find({ parent_id: filter.category_id })
+        .select('_id')
+        .lean();
+      const subIds = subs.map((s: any) => s._id);
+      query.$or = [
+        { category_id: new Types.ObjectId(filter.category_id) },
+        ...(subIds.length > 0 ? [{ sub_category_id: { $in: subIds } }] : []),
+      ];
+    } else if (filter.super_category_id && Types.ObjectId.isValid(filter.super_category_id)) {
+      query.super_category_id = new Types.ObjectId(filter.super_category_id);
+    }
+
+    const term = filter.search?.trim();
+    if (term) {
+      const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
+      const nameOrEmail = [{ full_name: rx }, { email: rx }];
+      // A category $or is already in play when only a Category was given — AND
+      // the two rather than letting the search overwrite the taxonomy filter.
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: nameOrEmail }];
+        delete query.$or;
+      } else {
+        query.$or = nameOrEmail;
+      }
+    }
+
+    const docs = await ClubAdminProfileModel.find(query)
+      .select('user_id full_name email super_category_id category_id sub_category_id')
+      .sort({ full_name: 1 })
+      .limit(50)
+      .lean();
+
+    return (docs as any[]).map((d) => ({
+      user_id: String(d.user_id),
+      full_name: d.full_name ?? '',
+      email: d.email ?? '',
+    }));
+  },
+
   async matchingClubs(id: string, search?: string | null) {
     const doc = await ClubAdminProfileModel.findById(id);
     if (!doc) throw notFound();

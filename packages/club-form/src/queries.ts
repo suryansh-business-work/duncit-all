@@ -37,3 +37,31 @@ export const MATCHING_VENUES = gql`
     }
   }
 `;
+
+/**
+ * Club Admins whose onboarding taxonomy matches THIS club's category.
+ *
+ * Replaces a plain `users(filter:{ role: CLUB_ADMIN })` directory search, which
+ * offered every role-holder on the platform — so a club could be handed to an
+ * admin onboarded for an unrelated category. Passing no category returns
+ * everyone, so the picker still works before one is chosen.
+ */
+export const CLUB_ADMIN_CANDIDATES = gql`
+  query ClubAdminCandidatesForClub(
+    $super_category_id: ID
+    $category_id: ID
+    $sub_category_id: ID
+    $search: String
+  ) {
+    clubAdminCandidates(
+      super_category_id: $super_category_id
+      category_id: $category_id
+      sub_category_id: $sub_category_id
+      search: $search
+    ) {
+      user_id
+      full_name
+      email
+    }
+  }
+`;

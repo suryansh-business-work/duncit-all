@@ -4,7 +4,7 @@ import { Alert, Autocomplete, Avatar, CircularProgress, Stack, TextField, Typogr
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useClubFormData } from '../context';
-import { USERS_PICKER } from '../queries';
+import { CLUB_ADMIN_CANDIDATES } from '../queries';
 import type { ClubFormValues } from '../types';
 
 interface UserOption {
@@ -16,14 +16,6 @@ interface UserOption {
 
 const userLabel = (user: UserOption) => user.full_name || user.email || user.user_id;
 
-/** The role a user must hold to administer a club — granted by the onboarding
- * Club Admin approval. The directory is filtered to holders so a club can only
- * ever be handed to someone who can actually act on it.
- *
- * ACTIVE goes with it because a soft-deleted user keeps `metadata.role_keys`
- * (only their status flips), so a role-only filter would still offer them. */
-const PICKER_FILTER = { role: 'CLUB_ADMIN', status: 'ACTIVE' } as const;
-
 /** Server-side searchable picker to assign ONE platform user as the Club Admin.
  * A club has exactly one admin, so this is a required single-select: picking a
  * user replaces whoever was there. Seeds the labelled option from the club's
@@ -34,6 +26,15 @@ export default function AdminsSection() {
   const { errors } = useFormState({ control });
   const error = errors.admin_user_ids?.message;
   const adminIds = useWatch({ control, name: 'admin_user_ids' }) ?? [];
+  // The club's own taxonomy — the picker is narrowed to Club Admins onboarded
+  // under it, which is what stops a club being handed to an admin approved for
+  // an unrelated category.
+  //
+  // A club stores Super + SUB: its Sub is what `category_id` holds, and the
+  // middle Category level is a navigation step in the picker rather than a
+  // stored field. Sending it as `category_id` would match one level too wide.
+  const superCategoryId = useWatch({ control, name: 'super_category_id' });
+  const subCategoryId = useWatch({ control, name: 'category_id' });
   const [input, setInput] = useState('');
   const [term, setTerm] = useState('');
 
@@ -70,11 +71,21 @@ export default function AdminsSection() {
     return () => clearTimeout(id);
   }, [input]);
 
-  const { data, loading } = useQuery(USERS_PICKER, {
-    variables: { filter: { ...PICKER_FILTER, search: term || undefined } },
+  // Narrowed to this club's category. A Club Admin is approved against the
+  // Super > Category > Sub they chose at onboarding, so offering the whole
+  // CLUB_ADMIN directory let a club be handed to an admin from an unrelated
+  // one. The server matches at whatever level the club has filled in, and
+  // returns everyone while it has none — so the picker still works before a
+  // category is chosen rather than looking broken.
+  const { data, loading } = useQuery(CLUB_ADMIN_CANDIDATES, {
+    variables: {
+      super_category_id: superCategoryId || undefined,
+      sub_category_id: subCategoryId || undefined,
+      search: term || undefined,
+    },
     fetchPolicy: 'cache-and-network',
   });
-  const results = (data?.users ?? []) as UserOption[];
+  const results = (data?.clubAdminCandidates ?? []) as UserOption[];
 
   // Merge chosen + fetched so every id resolves to a labelled option.
   const options = useMemo(() => {

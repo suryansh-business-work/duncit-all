@@ -1365,5 +1365,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       checkoutApplied: '{coins} coins applied',
       checkoutNone: 'You have no Duncit Coins to redeem yet.',
     },
+    // Wallet — the role-wise Minimum Withdrawal Amount configured in Finance >
+    // Withdrawals > Withdrawal Settings. The server decides eligibility and
+    // sends the applicable floor on `myWallet`; these keys only word it, so
+    // mWeb and native say the same thing about the same number.
+    wallet: {
+      minimumHint: 'Minimum withdrawal {amount}.',
+      minimumBlocked: 'You need at least {amount} in your wallet to withdraw.',
+    },
   },
 };

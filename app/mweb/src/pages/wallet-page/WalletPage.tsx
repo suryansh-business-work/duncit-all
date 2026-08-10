@@ -13,6 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { formatMoney } from '@duncit/utils';
+import { useTranslation } from '../../i18n/useTranslation';
 import { MY_WALLET } from './queries';
 import { WithdrawForm } from './withdraw';
 
@@ -35,6 +37,7 @@ const fmtDate = (iso: string) => {
 export default function WalletPage() {
   const { data, loading, error, refetch } = useQuery(MY_WALLET, { fetchPolicy: 'cache-and-network' });
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (loading && !data) {
     return (
@@ -49,6 +52,12 @@ export default function WalletPage() {
   const balance = wallet?.balance ?? 0;
   const transactions = data?.myWalletTransactions ?? [];
   const withdrawals = data?.myWithdrawals ?? [];
+  // Eligibility is decided by the server (role-wise Minimum Withdrawal Amount)
+  // and never re-derived here — the client only words the number it is sent.
+  const eligible = wallet?.can_withdraw === true;
+  const minAmount = wallet?.min_withdrawal_amount ?? 0;
+  const minNoticeKey = eligible ? 'mweb.wallet.minimumHint' : 'mweb.wallet.minimumBlocked';
+  const minNotice = t(minNoticeKey, { vars: { amount: formatMoney(minAmount, { symbol: currency }) } });
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
@@ -73,8 +82,23 @@ export default function WalletPage() {
           <Typography variant="caption" color="text.secondary">
             {PAYOUT_LABEL[wallet?.payout_mode] ?? ''} · Next cycle {fmtDate(wallet?.next_payout_at)}
           </Typography>
+          {minAmount > 0 && (
+            <Typography
+              variant="caption"
+              display="block"
+              sx={{ mt: 0.5, fontWeight: 600 }}
+              color={eligible ? 'text.secondary' : 'warning.main'}
+            >
+              {minNotice}
+            </Typography>
+          )}
           <Box sx={{ mt: 1.5 }}>
-            <Button variant="contained" disabled={balance <= 0} onClick={() => setOpen(true)} sx={{ borderRadius: 999, fontWeight: 700 }}>
+            <Button
+              variant="contained"
+              disabled={!eligible || balance <= 0}
+              onClick={() => setOpen(true)}
+              sx={{ borderRadius: 999, fontWeight: 700 }}
+            >
               Withdraw
             </Button>
           </Box>
@@ -146,6 +170,7 @@ export default function WalletPage() {
       <WithdrawForm
         open={open}
         maxAmount={balance}
+        minAmount={minAmount}
         currency={currency}
         onClose={() => setOpen(false)}
         onDone={() => {

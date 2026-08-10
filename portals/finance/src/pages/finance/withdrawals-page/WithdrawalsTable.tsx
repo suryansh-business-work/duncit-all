@@ -1,13 +1,25 @@
-import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Stack, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Button, Stack } from '@mui/material';
+import {
+  DuncitTable,
+  EM_DASH,
+  formatDateCell,
+  type DuncitColumn,
+  type TableFetch,
+  type TableFilterValue,
+} from '@duncit/table';
+import { formatMoney } from '@duncit/utils';
+import { accountDetails } from './account-details';
 import type { WithdrawalRow } from './queries';
-
-const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
-  PENDING: 'warning',
-  PAID: 'success',
-  REJECTED: 'error',
-};
+import { roleLabel } from './roles';
+import {
+  renderAccount,
+  renderMethod,
+  renderRole,
+  renderStatus,
+  renderWithdrawer,
+  withdrawerSearchText,
+} from './withdrawal-cells';
 
 const STATUS_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
@@ -21,53 +33,14 @@ const METHOD_OPTIONS = [
   { value: 'NEFT', label: 'NEFT' },
 ];
 
-const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN');
-};
-
-const account = (w: WithdrawalRow) =>
-  w.payout_method === 'UPI' ? w.upi_id : `${w.account_number} · ${w.ifsc_code}`;
-
 const getWithdrawalRowId = (w: WithdrawalRow) => w.id;
-
-const renderHost = (w: WithdrawalRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="span">
-      {w.beneficiary_name}
-    </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
-      {w.beneficiary_email}
-    </Typography>
-  </Stack>
-);
-
-const renderAccount = (w: WithdrawalRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" component="span">
-      {w.payout_method}
-    </Typography>
-    <Typography variant="caption" color="text.secondary" component="span">
-      {account(w)}
-    </Typography>
-  </Stack>
-);
-
-const renderStatus = (w: WithdrawalRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} alignItems="flex-start">
-    <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
-    {w.reject_reason ? (
-      <Typography variant="caption" color="text.secondary" component="span">
-        {w.reject_reason}
-      </Typography>
-    ) : null}
-  </Stack>
-);
 
 interface Props {
   fetchRows: TableFetch<WithdrawalRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   reviewing: boolean;
+  externalFilters: ReadonlyArray<TableFilterValue>;
+  toolbarActions: ReactNode;
   onMarkPaid: (w: WithdrawalRow) => void;
   onReject: (w: WithdrawalRow) => void;
 }
@@ -76,16 +49,18 @@ export default function WithdrawalsTable({
   fetchRows,
   refetchRef,
   reviewing,
+  externalFilters,
+  toolbarActions,
   onMarkPaid,
   onReject,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<WithdrawalRow>[]>(() => {
-    const renderActions = (w: WithdrawalRow) => {
-      if (w.status !== 'PENDING') return '—';
+    const renderReview = (w: WithdrawalRow) => {
+      if (w.status !== 'PENDING') return EM_DASH;
       return (
         <Stack direction="row" spacing={1} component="span">
           <Button size="small" variant="contained" disabled={reviewing} onClick={() => onMarkPaid(w)}>
-            Mark paid
+            Mark Paid
           </Button>
           <Button
             size="small"
@@ -102,33 +77,49 @@ export default function WithdrawalsTable({
     return [
       {
         field: 'beneficiary_name',
-        headerName: 'Host',
+        headerName: 'Withdrawer Name',
         flex: 1,
-        minWidth: 180,
-        cellRenderer: renderHost,
-        valueGetter: (w) => w.beneficiary_name,
+        minWidth: 190,
+        cellRenderer: renderWithdrawer,
+        valueGetter: withdrawerSearchText,
       },
       {
         field: 'payout_method',
-        headerName: 'Account',
-        minWidth: 180,
+        headerName: 'Withdrawal Method',
+        width: 160,
         filter: { type: 'select', options: METHOD_OPTIONS },
-        cellRenderer: renderAccount,
-        valueGetter: (w) => `${w.payout_method} ${account(w)}`,
+        cellRenderer: renderMethod,
+        valueGetter: (w) => w.payout_method,
+      },
+      {
+        field: 'withdrawer_role',
+        headerName: 'Role',
+        width: 170,
+        cellRenderer: renderRole,
+        valueGetter: (w) => roleLabel(w.withdrawer_role),
       },
       {
         field: 'scheduled_for',
         headerName: 'Scheduled',
-        width: 120,
+        width: 130,
         filter: { type: 'date' },
-        valueGetter: (w) => fmtDate(w.scheduled_for),
+        valueGetter: (w) => formatDateCell(w.scheduled_for),
       },
       {
         field: 'amount',
         headerName: 'Amount',
-        width: 110,
+        width: 130,
         filter: { type: 'number' },
-        valueGetter: (w) => `₹${Number(w.amount).toFixed(2)}`,
+        valueGetter: (w) => formatMoney(w.amount, { decimals: 2 }),
+      },
+      {
+        field: 'account_number',
+        headerName: 'Account Details',
+        flex: 1,
+        minWidth: 200,
+        sortable: false,
+        cellRenderer: renderAccount,
+        valueGetter: accountDetails,
       },
       {
         field: 'status',
@@ -142,11 +133,11 @@ export default function WithdrawalsTable({
         field: 'requested_at',
         headerName: 'Requested',
         hide: true,
-        width: 120,
+        width: 130,
         filter: { type: 'date' },
-        valueGetter: (w) => fmtDate(w.requested_at),
+        valueGetter: (w) => formatDateCell(w.requested_at),
       },
-      { field: 'actions', headerName: 'Review', sortable: false, width: 200, cellRenderer: renderActions },
+      { field: 'actions', headerName: 'Review', sortable: false, width: 210, cellRenderer: renderReview },
     ];
   }, [reviewing, onMarkPaid, onReject]);
 
@@ -156,10 +147,19 @@ export default function WithdrawalsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getWithdrawalRowId}
-      emptyText="No withdrawals yet."
+      emptyText={emptyTextFor(externalFilters)}
       defaultSort={{ field: 'requested_at', dir: 'desc' }}
       searchPlaceholder="Search name, email, UPI or account"
       refetchRef={refetchRef}
+      externalFilters={externalFilters}
+      toolbarActions={toolbarActions}
     />
   );
+}
+
+/** Says WHY the table is empty, so a role filter never reads as "no data at all". */
+function emptyTextFor(filters: ReadonlyArray<TableFilterValue>): string {
+  const role = filters.find((f) => f.field === 'withdrawer_role')?.value;
+  if (!role) return 'No withdrawals yet.';
+  return `No withdrawals from a ${roleLabel(role)} yet.`;
 }

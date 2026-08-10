@@ -54,7 +54,11 @@
     "migrate:drop-user-copies:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --dry-run",
     "migrate:drop-user-copies:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --uri mongodb://127.0.0.1:27017/duncit-local",
     "migrate:drop-user-copies:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-drop-denormalised-user-fields.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
-    "seed:dead-user-copies": "ts-node -r tsconfig-paths/register --transpile-only scripts/seed-dead-user-copies.ts --uri mongodb://127.0.0.1:27017/duncit-local"
+    "seed:dead-user-copies": "ts-node -r tsconfig-paths/register --transpile-only scripts/seed-dead-user-copies.ts --uri mongodb://127.0.0.1:27017/duncit-local",
+    "migrate:withdrawer-role": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts",
+    "migrate:withdrawer-role:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --dry-run",
+    "migrate:withdrawer-role:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local",
+    "migrate:withdrawer-role:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

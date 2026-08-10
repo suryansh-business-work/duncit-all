@@ -3,6 +3,7 @@ import { neutral, semantic } from '@duncit/auth-tokens';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { WithdrawCta } from '@/components/wallet/WithdrawCta';
 import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { useWallet, type WalletTxn, type Withdrawal } from '@/hooks/useWallet';
 
@@ -76,6 +77,10 @@ export function WalletScreen() {
   const [open, setOpen] = useState(false);
   const symbol = wallet?.currency_symbol ?? '₹';
   const balance = wallet?.balance ?? 0;
+  // Eligibility is decided by the server (role-wise Minimum Withdrawal Amount)
+  // and never re-derived here — the app only words the number it is sent.
+  const eligible = wallet?.can_withdraw === true;
+  const minAmount = wallet?.min_withdrawal_amount ?? 0;
 
   return (
     <StackScreen header title="Wallet" testID="wallet-screen">
@@ -97,27 +102,13 @@ export function WalletScreen() {
                 {fmtDate(wallet.next_payout_at)}
               </Text>
             ) : null}
-            <XStack
-              testID="wallet-withdraw"
-              role="button"
-              aria-label="Withdraw"
-              aria-disabled={balance <= 0}
-              onPress={balance <= 0 ? undefined : () => setOpen(true)}
-              alignSelf="flex-start"
-              marginTop={8}
-              paddingHorizontal={18}
-              height={42}
-              alignItems="center"
-              justifyContent="center"
-              borderRadius={999}
-              backgroundColor="$primary"
-              opacity={balance <= 0 ? 0.5 : 1}
-              pressStyle={{ opacity: 0.85 }}
-            >
-              <Text fontSize={14} fontWeight="700" color="$onPrimary">
-                Withdraw
-              </Text>
-            </XStack>
+            <WithdrawCta
+              minAmount={minAmount}
+              symbol={symbol}
+              eligible={eligible}
+              disabled={!eligible || balance <= 0}
+              onPress={() => setOpen(true)}
+            />
           </YStack>
 
           <Text fontSize={16} fontWeight="700" color="$color">
@@ -149,6 +140,7 @@ export function WalletScreen() {
       <WithdrawDialog
         open={open}
         maxAmount={balance}
+        minAmount={minAmount}
         currency={symbol}
         onClose={() => setOpen(false)}
         onDone={() => {

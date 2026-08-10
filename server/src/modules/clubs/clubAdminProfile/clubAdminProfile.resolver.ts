@@ -38,6 +38,21 @@ export const clubAdminProfileResolvers = {
       requireRole(ctx, REVIEW_ROLES);
       return clubAdminProfileService.matchingClubs(args.id, args.search);
     },
+    // The club form is an admin surface, so it reads the same roles the rest of
+    // this module does rather than opening the Club Admin directory wider.
+    clubAdminCandidates: (
+      _p: unknown,
+      args: {
+        super_category_id?: string | null;
+        category_id?: string | null;
+        sub_category_id?: string | null;
+        search?: string | null;
+      },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, REVIEW_ROLES);
+      return clubAdminProfileService.candidatesForClub(args);
+    },
   },
 
   Mutation: {

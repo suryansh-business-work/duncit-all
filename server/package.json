@@ -58,7 +58,11 @@
     "migrate:withdrawer-role": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts",
     "migrate:withdrawer-role:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --dry-run",
     "migrate:withdrawer-role:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local",
-    "migrate:withdrawer-role:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run"
+    "migrate:withdrawer-role:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-withdrawer-role.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
+    "backfill:contact-tickets": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-contact-tickets.ts",
+    "backfill:contact-tickets:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-contact-tickets.ts --dry-run",
+    "backfill:contact-tickets:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-contact-tickets.ts --uri mongodb://127.0.0.1:27017/duncit-local",
+    "backfill:contact-tickets:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-contact-tickets.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

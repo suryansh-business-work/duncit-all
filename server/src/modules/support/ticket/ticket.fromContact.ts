@@ -26,7 +26,7 @@ export async function ticketFromContact(input: {
   subject: string;
   message: string;
   attachments: string[];
-}): Promise<void> {
+}): Promise<Types.ObjectId> {
   const account = await UserModel.findOne({ 'auth.email': input.email.toLowerCase() })
     .select('_id profile.first_name profile.last_name')
     .lean();
@@ -36,7 +36,7 @@ export async function ticketFromContact(input: {
     [account?.profile?.first_name, account?.profile?.last_name].filter(Boolean).join(' ') ||
     'Website visitor';
 
-  await TicketModel.create({
+  const ticket = await TicketModel.create({
     user_id: account?._id ?? null,
     source: 'WEBSITE',
     // The message no longer stores an author name — it is resolved from the
@@ -60,4 +60,8 @@ export async function ticketFromContact(input: {
       },
     ],
   });
+
+  // Returned so the submission can record WHICH ticket it became. A message
+  // that never reached the queue is then a null column rather than a log line.
+  return ticket._id as Types.ObjectId;
 }

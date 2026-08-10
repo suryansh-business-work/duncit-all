@@ -76,7 +76,7 @@ export const contactService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    await ContactSubmissionModel.create(payload);
+    const doc = await ContactSubmissionModel.create(payload);
 
     /*
       The same message, in the queue an agent actually watches.
@@ -87,11 +87,25 @@ export const contactService = {
       submission is already saved, and the acknowledgement email still goes.
     */
     try {
-      await ticketFromContact(payload);
+      // Recorded on the submission, so "did this reach Support?" is answerable
+      // from the row itself — the CRM list and the backfill both read it
+      // instead of guessing from email + subject.
+      const ticketId = await ticketFromContact(payload);
+      await ContactSubmissionModel.updateOne({ _id: doc._id }, { $set: { ticket_id: ticketId } });
     } catch (e) {
-      logs.server.warn('contact', 'submit', {
+      /*
+        ERROR, not warn.
+
+        Only error-level records roll into a Bug (telemetry.service:334), so a
+        warning here is persisted and then never chased. The failure it
+        describes is that a customer wrote to us and Support never saw it —
+        invisible from both ends, because the visitor gets a cheerful
+        confirmation and the queue simply has one fewer row. It stays
+        non-fatal for the visitor; it stops being silent for us.
+      */
+      logs.server.error('contact', 'submit', {
         error: e,
-        msg: 'contact ticket not raised',
+        msg: 'contact ticket not raised — this message never reached Support',
         email: payload.email,
       });
     }

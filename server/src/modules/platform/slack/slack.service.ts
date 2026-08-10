@@ -86,6 +86,66 @@ export const slackService = {
    * feedback channel (or the default), so this stays safe to expose to every
    * user without the Slack-manage role.
    */
+  /**
+   * Announce an already-SAVED problem report on Slack.
+   *
+   * Returns instead of throwing when no channel is configured: the report is
+   * already recorded by then, and refusing here is what used to throw the
+   * user's feedback away over a missing env var. The caller writes whatever
+   * comes back onto the row, so an un-announced report is visible in Support
+   * rather than silently absent.
+   */
+  async announceFeedback(report: {
+    report_no: string;
+    category: string;
+    message: string;
+    who: string;
+    platform: string;
+    media_urls?: string[];
+    blocks_json?: string | null;
+  }): Promise<{ ts?: string | null; skipped?: string | null }> {
+    const channel =
+      optionalStr(await getRuntimeEnvValue('SLACK_FEEDBACK_CHANNEL')) ??
+      optionalStr(await getRuntimeEnvValue('SLACK_DEFAULT_CHANNEL'));
+    if (!channel) {
+      return { skipped: 'No Slack channel is configured for feedback' };
+    }
+    const body = parseJsonArray(report.blocks_json, 'Feedback') ?? [
+      { type: 'section', text: { type: 'mrkdwn', text: report.message } },
+    ];
+    const media = (report.media_urls ?? []).filter(Boolean);
+    const result = await postMessage({
+      channel,
+      text: `${report.report_no} · ${report.category} from ${report.who}: ${report.message}`,
+      blocks: [
+        ...body,
+        ...(media.length > 0
+          ? [
+              {
+                type: 'context',
+                elements: [{ type: 'mrkdwn', text: media.map((u) => `<${u}|screenshot>`).join(' · ') }],
+              },
+            ]
+          : []),
+        {
+          type: 'context',
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: `${report.report_no} · ${report.category} · by ${report.who} · ${report.platform}`,
+            },
+          ],
+        },
+      ],
+    });
+    logs.server.info('slack', 'feedback', {
+      channel: result.channel,
+      ts: result.ts,
+      report_no: report.report_no,
+    });
+    return { ts: result.ts };
+  },
+
   async sendFeedback(user: { id: string; email?: string | null }, input: any) {
     const category = optionalStr(input.category);
     const message = optionalStr(input.message);

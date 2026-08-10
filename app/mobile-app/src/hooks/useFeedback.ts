@@ -1,4 +1,6 @@
 import { Platform } from 'react-native';
+
+import { appVersion } from '@/utils/app-version';
 import { buildAppFeedbackInput, type AppFeedbackInput } from '@duncit/slack';
 
 import { SubmitAppFeedbackDocument } from '@/graphql/feedback';
@@ -13,8 +15,18 @@ interface SubmitAppFeedbackResult {
  * message body is composed with @duncit/slack (shared with the mWeb twin); the
  * server stamps the signed-in identity and routes the channel.
  */
-export async function submitAppFeedback(category: string, message: string) {
-  const input = buildAppFeedbackInput({ category, message, platform: Platform.OS });
+export async function submitAppFeedback(
+  category: string,
+  message: string,
+  mediaUrls: string[] = [],
+) {
+  const input = buildAppFeedbackInput({
+    category,
+    message,
+    platform: Platform.OS,
+    media_urls: mediaUrls,
+    app_version: appVersion(),
+  });
   return graphqlRequest<SubmitAppFeedbackResult, { input: AppFeedbackInput }>(
     SubmitAppFeedbackDocument,
     { input },

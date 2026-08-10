@@ -84,3 +84,29 @@ export const SUBMIT_APP_FEEDBACK_SDL = `
     }
   }
 `;
+
+/**
+ * The Report a Problem form config, read by mWeb and the native app.
+ *
+ * The chips and the prompt used to be the hardcoded FEEDBACK_CATEGORIES below,
+ * so adding a category meant a release. Support edits them now, and both
+ * surfaces render from this — which is also why the operation lives here rather
+ * than in either app (rule 27).
+ */
+export const REPORT_PROBLEM_CONFIG_SDL = `
+  query ReportProblemConfig {
+    reportProblemConfig {
+      categories {
+        key
+        label
+        is_active
+        sort_order
+      }
+      message_label
+      message_hint
+      message_min_length
+      allow_media
+      max_media
+    }
+  }
+`;

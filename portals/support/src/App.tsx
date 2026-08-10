@@ -6,6 +6,9 @@ import SosListPage from './pages/sos/SosListPage';
 import SosDetailsPage from './pages/sos/SosDetailsPage';
 import CallbacksListPage from './pages/callbacks/CallbacksListPage';
 import CallbackDetailsPage from './pages/callbacks/CallbackDetailsPage';
+import ReportedProblemsPage from './pages/reported-problems/ReportedProblemsPage';
+import ReportedProblemDetailPage from './pages/reported-problems/ReportedProblemDetailPage';
+import ReportProblemSettingsPage from './pages/reported-problems/ReportProblemSettingsPage';
 import TicketsListPage from './pages/tickets/TicketsListPage';
 import TicketDetailPage from './pages/tickets/TicketDetailPage';
 import LiveChatPage from './pages/live-chat/LiveChatPage';
@@ -24,6 +27,10 @@ export default function App() {
       <Route path="/sos/:id" element={authed(<SosDetailsPage />)} />
       <Route path="/callbacks" element={authed(<CallbacksListPage />)} />
       <Route path="/callbacks/:id" element={authed(<CallbackDetailsPage />)} />
+      {/* /settings before /:id so the literal wins over the param route. */}
+      <Route path="/reported-problems" element={authed(<ReportedProblemsPage />)} />
+      <Route path="/reported-problems/settings" element={authed(<ReportProblemSettingsPage />)} />
+      <Route path="/reported-problems/:id" element={authed(<ReportedProblemDetailPage />)} />
       <Route path="/tickets" element={authed(<TicketsListPage />)} />
       <Route path="/tickets/:id" element={authed(<TicketDetailPage />)} />
       <Route path="/live-chat" element={authed(<LiveChatPage />)} />

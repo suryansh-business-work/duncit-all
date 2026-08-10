@@ -84,5 +84,8 @@ export interface AppFeedbackInput {
   category: string;
   message: string;
   platform?: string;
+  /** Screenshots the reporter attached. */
+  media_urls?: string[];
+  app_version?: string;
   blocks_json?: string;
 }

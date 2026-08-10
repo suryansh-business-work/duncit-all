@@ -24,9 +24,14 @@ export const buildAppFeedbackInput = (input: {
   category: string;
   message: string;
   platform?: string;
+  /** Screenshots the reporter attached — most of a bug report. */
+  media_urls?: string[];
+  app_version?: string;
 }): AppFeedbackInput => ({
   category: input.category,
   message: input.message,
   platform: input.platform,
+  media_urls: input.media_urls,
+  app_version: input.app_version,
   blocks_json: JSON.stringify(buildFeedbackBlocks(input)),
 });

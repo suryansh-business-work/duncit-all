@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { Button, Input, Text, XStack, YStack } from 'tamagui';
-import { FEEDBACK_CATEGORIES } from '@duncit/slack';
+import { useEffect, useState } from 'react';
+import { Button, Input, Spinner, Text, XStack, YStack } from 'tamagui';
+
+import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
+import { useReportProblemConfig } from '@/hooks/useReportProblemConfig';
 
 interface FeedbackValues {
   category: string;
   message: string;
+  media_urls: string[];
 }
 
 interface Props {
@@ -23,22 +26,45 @@ function FieldLabel({ children }: Readonly<{ children: string }>) {
 }
 
 /**
- * Report-a-problem / feedback form — category chips + message + submit. RN twin
- * of mWeb's FeedbackForm: the same shared FEEDBACK_CATEGORIES and the same
- * "at least 10 characters" rule before it posts to Slack.
+ * Report-a-problem / feedback form — category chips, the message, screenshots
+ * and submit.
+ *
+ * The chips and the prompt come from the SERVER now, not a hardcoded list:
+ * Support edits them in the portal, so adding a category no longer needs a
+ * release. Screenshots matter more here than anywhere else in the app — a
+ * picture of the broken screen is most of a bug report — so the picker is part
+ * of the form rather than an afterthought.
  */
 export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Props>) {
-  const [category, setCategory] = useState<string>(FEEDBACK_CATEGORIES[0]);
+  const { config, loading } = useReportProblemConfig();
+  const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
+  const [mediaText, setMediaText] = useState('');
   const [error, setError] = useState('');
 
+  // Default to the first chip the server offers, once it has answered. Not a
+  // constant: which chips exist is now configuration.
+  useEffect(() => {
+    const first = config.categories[0];
+    if (!category && first) setCategory(first.label);
+  }, [category, config.categories]);
+
+  const mediaUrls = mediaText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
   const submit = () => {
-    if (message.trim().length < 10) {
-      setError('Please describe it in at least 10 characters.');
+    if (!category) {
+      setError('Pick a category.');
+      return;
+    }
+    if (message.trim().length < config.message_min_length) {
+      setError(`Please describe it in at least ${config.message_min_length} characters.`);
       return;
     }
     setError('');
-    onSubmit({ category, message: message.trim() });
+    onSubmit({ category, message: message.trim(), media_urls: mediaUrls });
   };
 
   return (
@@ -53,35 +79,40 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
     >
       <YStack gap={6}>
         <FieldLabel>Category</FieldLabel>
-        <XStack gap={8} flexWrap="wrap">
-          {FEEDBACK_CATEGORIES.map((option) => {
-            const selected = option === category;
-            return (
-              <XStack
-                key={option}
-                testID={`feedback-cat-${option}`}
-                role="button"
-                aria-label={option}
-                onPress={() => setCategory(option)}
-                paddingHorizontal={14}
-                paddingVertical={8}
-                borderRadius={999}
-                borderWidth={1}
-                borderColor={selected ? '$primary' : '$borderColor'}
-                backgroundColor={selected ? '$primary' : '$surface'}
-                pressStyle={{ opacity: 0.85 }}
-              >
-                <Text fontWeight="600" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
-                  {option}
-                </Text>
-              </XStack>
-            );
-          })}
-        </XStack>
+        {loading && config.categories.length === 0 ? (
+          <Spinner testID="feedback-cats-loading" size="small" color="$primary" />
+        ) : (
+          <XStack gap={8} flexWrap="wrap">
+            {config.categories.map((option) => {
+              const selected = option.label === category;
+              return (
+                <XStack
+                  key={option.key || option.label}
+                  testID={`feedback-cat-${option.label}`}
+                  role="button"
+                  aria-label={option.label}
+                  aria-pressed={selected}
+                  onPress={() => setCategory(option.label)}
+                  paddingHorizontal={14}
+                  paddingVertical={8}
+                  borderRadius={999}
+                  borderWidth={1}
+                  borderColor={selected ? '$primary' : '$borderColor'}
+                  backgroundColor={selected ? '$primary' : '$surface'}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontWeight="600" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
+                    {option.label}
+                  </Text>
+                </XStack>
+              );
+            })}
+          </XStack>
+        )}
       </YStack>
 
       <YStack gap={4}>
-        <FieldLabel>What&apos;s going on?</FieldLabel>
+        <FieldLabel>{config.message_label}</FieldLabel>
         <Input
           testID="feedback-message"
           aria-label="Message"
@@ -94,9 +125,18 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
           backgroundColor="$background"
         />
         <Text fontSize={11} color="$muted">
-          At least 10 characters.
+          {config.message_hint}
         </Text>
       </YStack>
+
+      {config.allow_media ? (
+        <MediaUploadField
+          value={mediaText}
+          onChange={setMediaText}
+          label="Screenshots (optional)"
+          folder="/feedback"
+        />
+      ) : null}
 
       {error || errorMessage ? (
         <Text testID="feedback-error" color="$danger" fontSize={12}>

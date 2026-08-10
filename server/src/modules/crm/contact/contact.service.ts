@@ -89,9 +89,19 @@ export const contactService = {
     try {
       await ticketFromContact(payload);
     } catch (e) {
-      logs.server.warn('contact', 'submit', {
+      /*
+        ERROR, not warn.
+
+        Only error-level records roll into a Bug (telemetry.service:334), so a
+        warning here is persisted and then never chased. The failure it
+        describes is that a customer wrote to us and Support never saw it —
+        invisible from both ends, because the visitor gets a cheerful
+        confirmation and the queue simply has one fewer row. It stays
+        non-fatal for the visitor; it stops being silent for us.
+      */
+      logs.server.error('contact', 'submit', {
         error: e,
-        msg: 'contact ticket not raised',
+        msg: 'contact ticket not raised — this message never reached Support',
         email: payload.email,
       });
     }

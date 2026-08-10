@@ -54,8 +54,13 @@ export function usePexelsPhotos(seed: string, orientation: string, active: boole
         setPhotos((current) => (append ? [...current, ...next] : next));
         setPage(nextPage);
         setHasMore(!!data?.next_page);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t('mweb.createPod.pexelsUnreachable'));
+      } catch {
+        // Deliberately NOT the caught error's message: the transport's wording is
+        // "The request timed out. Please try again." — it reports what the
+        // network did, not what the user can do about it, and it reads as a
+        // system fault in the middle of picking a photo. One message that
+        // names the action and the way out.
+        setError(t('mweb.createPod.photoSearchFailed'));
       } finally {
         setSearching(false);
       }

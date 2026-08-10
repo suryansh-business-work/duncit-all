@@ -80,8 +80,11 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sendOtp is stable enough here
   }, [autoSend, verified, email]);
 
+  // Verified needs no row of its own. The tick beside the name in the profile
+  // header already says it, and a success Alert repeating it spent a full band
+  // of the page restating something the header had covered.
   if (verified) {
-    return <Alert severity="success">Your email is verified.</Alert>;
+    return null;
   }
 
   return (

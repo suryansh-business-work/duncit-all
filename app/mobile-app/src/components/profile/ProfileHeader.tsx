@@ -55,17 +55,26 @@ export function ProfileHeader({
       <XStack gap={14} alignItems="center">
         <ProfileAvatar photo={me.profile_photo} initial={initial} size={76} onChanged={onChanged} />
         <YStack flex={1} gap={3}>
-          <Text fontSize={20} fontWeight="700" color="$color" numberOfLines={1}>
-            {me.full_name ?? 'User'}
-          </Text>
+          {/* The tick sits beside the NAME and is the only thing that says the
+              email is verified — the sentence that used to say it as well is
+              gone. It was next to the address, where a long email pushed it to
+              the far edge and it read as decoration on the wrong line. */}
           <XStack alignItems="center" gap={5}>
-            <Text fontSize={13} color="$muted" numberOfLines={1} flex={1}>
-              {me.email ?? '—'}
+            <Text fontSize={20} fontWeight="700" color="$color" numberOfLines={1} flexShrink={1}>
+              {me.full_name ?? 'User'}
             </Text>
             {me.is_email_verified ? (
-              <MaterialIcons name="verified" size={15} color={primary} />
+              <MaterialIcons
+                name="verified"
+                size={17}
+                color={primary}
+                accessibilityLabel="Email verified"
+              />
             ) : null}
           </XStack>
+          <Text fontSize={13} color="$muted" numberOfLines={1}>
+            {me.email ?? '—'}
+          </Text>
         </YStack>
       </XStack>
 

@@ -91,6 +91,9 @@ const RELEASE_ROW_FIELDS = gql`
       commission_pct
       commission_amount
       duncit_revenue
+      attended_seats
+      booked_seats
+      attended_total
     }
   }
 `;

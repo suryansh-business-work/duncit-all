@@ -138,11 +138,11 @@ export const financeResolvers = {
     },
     podSettlementPreview: async (
       _p: unknown,
-      args: { pod_id: string; venue_bill_amount: number },
+      args: { pod_id: string; venue_bill_amount: number; host_user_id?: string | null },
       ctx: GraphQLContext
     ) => {
       await assertPodActor(ctx, args.pod_id);
-      return computePodSettlement(args.pod_id, args.venue_bill_amount);
+      return computePodSettlement(args.pod_id, args.venue_bill_amount, args.host_user_id ?? null);
     },
     myHostPayouts: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

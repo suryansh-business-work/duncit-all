@@ -291,8 +291,8 @@ export const COMPLETE_POD_SETTLEMENT = gql`
 `;
 
 export const POD_SETTLEMENT_PREVIEW = gql`
-  query AdminPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!) {
-    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount) {
+  query AdminPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!, $host_user_id: ID) {
+    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount, host_user_id: $host_user_id) {
       currency_symbol
       collected_total
       has_venue

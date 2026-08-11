@@ -10,10 +10,14 @@ interface BreakdownLine {
   bold?: boolean;
 }
 
+const PARTY_LABEL_BY_KIND: Record<string, string> = {
+  HOST_PAYMENT: 'Host amount (pool remainder)',
+  CLUB_ADMIN: 'Club admin cut (off the pool)',
+};
+
 const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
   const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
-  const isHost = kind === 'HOST_PAYMENT';
-  const partyLabel = isHost ? 'Host amount (pool remainder)' : 'Venue amount (booked slot price)';
+  const partyLabel = PARTY_LABEL_BY_KIND[kind] ?? 'Venue amount (booked slot price)';
   // Attendance is what the payout stands on: a pod settles on the seats a host
   // scanned in, so "collected" and "settled on" can legitimately differ. Both
   // are shown — a reviewer seeing only the smaller number would read a correct

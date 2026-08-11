@@ -90,7 +90,11 @@ export function buildEarningsStatement(
   options: EarningsStatementOptions
 ): EarningsStatement {
   const money = (value: number) => formatStatementMoney(value, options.symbol);
-  const commissionFormula = `${money(w.host_amount)} × ${w.host_commission_pct}% (your remainder)`;
+  // The engine (breakdown.math.ts) charges no commission when host_amount <= 0.
+  const commissionFormula =
+    w.host_amount > 0
+      ? `${money(w.host_amount)} × ${w.host_commission_pct}% (your remainder)`
+      : 'No commission — host remainder is not positive';
 
   const taxes: StatementSection = {
     key: 'taxes',

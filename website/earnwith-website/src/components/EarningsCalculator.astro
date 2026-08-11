@@ -135,7 +135,12 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
 
     let role = roles[0];
     let latest = null;
-    const money = (value) => `${currency}${Math.round(value).toLocaleString('en-IN')}`;
+    // Paise precision, never rounded per line: the server's waterfall
+    // reconciles exactly at two decimals, so showing those two decimals keeps
+    // the deduction column summing to the take-home and per-pod × pods equal
+    // to it — rounding each line to whole rupees independently drifted.
+    const money = (value) =>
+      `${currency}${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const QUERY = `query PublicPodEarnings($amount: Float!, $spots: Int!, $venue: Float) {
       publicPodEarningsEstimate(pod_amount: $amount, no_of_spots: $spots, venue_amount: $venue) {

@@ -1,46 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { downloadBase64File } from '@duncit/utils';
-import { INVOICE_PDF, PAYMENTS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
+import { INVOICE_PDF, PAYMENT_TOTALS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
 import { paymentTableFilter } from './helpers';
 import TotalsCards from './TotalsCards';
 import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
 
 const POLL_MS = 30000;
+const EMPTY_TOTALS = { count: 0, gross: 0, fee: 0, gst: 0 };
 
 export default function PaymentLogsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  // KPI totals keep the legacy list query (limit 200, 30s poll); its filter is
-  // synced from the table's search/status so the cards track what the table shows.
+  // KPI totals come from a filter-wide server aggregation (no row cap); the
+  // filter is synced from the table's search/status so the cards track what
+  // the table shows.
   const [totalsFilter, setTotalsFilter] = useState<Record<string, string> | undefined>(undefined);
   const totalsKeyRef = useRef('null');
-  const { data, refetch } = useQuery(PAYMENTS, {
-    variables: { filter: totalsFilter, limit: 200 },
+  const { data, refetch } = useQuery(PAYMENT_TOTALS, {
+    variables: { filter: totalsFilter },
     fetchPolicy: 'cache-and-network',
     pollInterval: POLL_MS,
   });
 
-  const items: any[] = data?.payments ?? [];
-  const totals = useMemo(() => {
-    return items.reduce(
-      (a, p) => {
-        if (p.status === 'SUCCESS') {
-          a.gross += p.total;
-          a.fee += p.platform_fee_amount;
-          a.gst += p.gst_amount;
-          a.count += 1;
-        }
-        return a;
-      },
-      { gross: 0, fee: 0, gst: 0, count: 0 }
-    );
-  }, [items]);
+  const totals = data?.paymentTotals ?? EMPTY_TOTALS;
 
   const fetchRows = useCallback(
     async (q: TableQueryState) => {

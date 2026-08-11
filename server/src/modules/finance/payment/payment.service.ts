@@ -778,6 +778,21 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
   }
 }
 
+type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };
+
+/** Mongo match for a PaymentFilterInput — shared by the list query and the KPI totals. */
+const buildListFilter = (filter?: PaymentListFilter) => {
+  const q: any = {};
+  if (filter?.status) q.status = filter.status;
+  if (filter?.user_id) q.user_id = new Types.ObjectId(filter.user_id);
+  if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
+  if (filter?.search) {
+    const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
+    q.$or = [{ payment_id: r }, { invoice_no: r }, { user_name: r }, { user_email: r }];
+  }
+  return q;
+};
+
 export const paymentService = {
   /**
    * The checkout preview. For a pod it prices the ticket × seats server-side
@@ -800,17 +815,36 @@ export const paymentService = {
     return computeQuote(round2(ticket * seats + extras));
   },
 
-  async list(filter?: { status?: string; user_id?: string; pod_id?: string; search?: string }, limit = 200) {
-    const q: any = {};
-    if (filter?.status) q.status = filter.status;
-    if (filter?.user_id) q.user_id = new Types.ObjectId(filter.user_id);
-    if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
-    if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-      q.$or = [{ payment_id: r }, { invoice_no: r }, { user_name: r }, { user_email: r }];
-    }
-    const docs = await PaymentModel.find(q).sort({ created_at: -1 }).limit(limit);
+  async list(filter?: PaymentListFilter, limit = 200) {
+    const docs = await PaymentModel.find(buildListFilter(filter)).sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
+  },
+
+  /**
+   * Filter-wide KPI totals for the finance Payment Logs cards. Applies the same
+   * PaymentFilterInput as `list` but aggregates over EVERY matching document
+   * (no row cap), counting SUCCESS money only — so a filter narrowed to another
+   * status matches nothing, exactly like SUCCESS-only cards over that list.
+   */
+  async totals(filter?: PaymentListFilter) {
+    const empty = { count: 0, gross: 0, fee: 0, gst: 0 };
+    const q = buildListFilter(filter);
+    if (q.status && q.status !== 'SUCCESS') return empty;
+    q.status = 'SUCCESS';
+    const [row] = await PaymentModel.aggregate([
+      { $match: q },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          gross: { $sum: '$total' },
+          fee: { $sum: '$platform_fee_amount' },
+          gst: { $sum: '$gst_amount' },
+        },
+      },
+    ]);
+    if (!row) return empty;
+    return { count: row.count, gross: round2(row.gross), fee: round2(row.fee), gst: round2(row.gst) };
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the paymentsTable query. */

@@ -1,5 +1,6 @@
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { generateProductInvoicePdf, type ProductInvoiceLine } from '@services/payout/product-invoice.pdf';
@@ -20,6 +21,23 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
   const requests = pod.product_requests ?? [];
   if (!requests.length) return;
 
+  // The invoice pays what was actually SOLD, at the prices buyers actually
+  // paid: the pod's product orders carry the exact line items (variant pricing
+  // included). The request's own quantity/total_cost is the STOCKED snapshot —
+  // billing it paid sellers for units that never sold and went straight back
+  // into their own sellable inventory.
+  const orders = await ProductOrderModel.find({ pod_id: pod._id }).select('line_items').lean();
+  const soldByProduct = new Map<string, { qty: number; gross: number }>();
+  for (const order of orders) {
+    for (const item of order.line_items ?? []) {
+      const key = String(item.product_id);
+      const prev = soldByProduct.get(key) ?? { qty: 0, gross: 0 };
+      prev.qty += Number(item.qty) || 0;
+      prev.gross += Number(item.gross) || 0;
+      soldByProduct.set(key, prev);
+    }
+  }
+
   const productIds = requests.map((r: any) => r.product_id);
   const products = await InventoryProductModel.find({ _id: { $in: productIds } })
     .select('commission_pct brand_id listing_submitted_by_id listing_submitted_by_name')
@@ -39,15 +57,21 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
     const p = byId.get(String(r.product_id));
     const sellerId = p?.listing_submitted_by_id;
     if (!sellerId) continue;
+    // Nothing sold → nothing to pay out; the unsold reservation was released
+    // back to the brand's sellable pool at completion.
+    const sold = soldByProduct.get(String(r.product_id));
+    if (!sold || sold.qty <= 0) continue;
     const brandPct = p.brand_id ? brandPctById.get(String(p.brand_id)) ?? 0 : 0;
     const commissionPct = clampPct(brandPct || p.commission_pct || fs.default_product_commission_pct);
-    const gross = round2(r.total_cost ?? Number(r.unit_cost || 0) * Number(r.quantity || 0));
+    const gross = round2(sold.gross);
     const commission = round2((gross * commissionPct) / 100);
     const bucket: SellerBucket = bySeller.get(sellerId) ?? { name: p.listing_submitted_by_name || 'Seller', lines: [] };
     bucket.lines.push({
       name: r.product_name,
-      qty: r.quantity,
-      unit_cost: r.unit_cost,
+      qty: sold.qty,
+      // The effective per-unit price buyers paid (variant prices can differ
+      // from the request's base unit cost).
+      unit_cost: round2(gross / sold.qty),
       gross,
       commission_pct: commissionPct,
       commission,

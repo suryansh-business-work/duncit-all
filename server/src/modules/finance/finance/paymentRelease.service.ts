@@ -66,6 +66,9 @@ function toPub(doc: IPaymentRelease) {
           commission_pct: doc.breakdown.commission_pct ?? 0,
           commission_amount: doc.breakdown.commission_amount ?? 0,
           duncit_revenue: doc.breakdown.duncit_revenue ?? 0,
+          attended_seats: doc.breakdown.attended_seats ?? 0,
+          booked_seats: doc.breakdown.booked_seats ?? 0,
+          attended_total: doc.breakdown.attended_total ?? 0,
         }
       : null,
     created_at: doc.created_at?.toISOString?.() ?? '',
@@ -548,9 +551,13 @@ export const paymentReleaseService = {
       throw new GraphQLError('Only a host of this pod can complete it', { extensions: { code: 'FORBIDDEN' } });
     }
 
+    // ANY live release on the pod blocks completion — not just the host leg. A
+    // manual VENUE_BILLING release (the legacy Finance flow) already paid the
+    // venue once; completing on top of it would mint a fresh release_id and pay
+    // the venue a second time, past the wallet's per-release idempotency.
     const already = await PaymentReleaseModel.findOne({
       pod_id: pod._id,
-      kind: 'HOST_PAYMENT',
+      kind: { $in: ['HOST_PAYMENT', 'VENUE_BILLING', 'CLUB_ADMIN'] },
       status: { $in: ['PENDING', 'APPROVED'] },
     });
     if (already) {
@@ -569,7 +576,13 @@ export const paymentReleaseService = {
       });
     }
 
-    const settlement = await computePodSettlement(String(pod._id), Number(input.venue_bill_amount) || 0);
+    // The chosen beneficiary's commission override prices the settlement — a
+    // co-host with a negotiated rate must not settle at the primary host's %.
+    const settlement = await computePodSettlement(
+      String(pod._id),
+      Number(input.venue_bill_amount) || 0,
+      input.host_user_id ?? null
+    );
 
     // A pod settles on the seats a host scanned in, so completing with nothing
     // scanned would pay everyone zero and freeze that as the answer — a

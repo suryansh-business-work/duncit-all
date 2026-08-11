@@ -1,24 +1,12 @@
 import { gql } from '@apollo/client';
 
-export const PAYMENTS = gql`
-  query AdminPayments($filter: PaymentFilterInput, $limit: Int) {
-    payments(filter: $filter, limit: $limit) {
-      id
-      payment_id
-      invoice_no
-      user_name
-      user_email
-      description
-      subtotal
-      platform_fee_amount
-      gst_amount
-      total
-      currency_symbol
-      status
-      gateway
-      gateway_ref
-      paid_at
-      created_at
+export const PAYMENT_TOTALS = gql`
+  query PaymentTotals($filter: PaymentFilterInput) {
+    paymentTotals(filter: $filter) {
+      count
+      gross
+      fee
+      gst
     }
   }
 `;

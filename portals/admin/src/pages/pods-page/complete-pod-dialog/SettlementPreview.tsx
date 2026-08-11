@@ -6,7 +6,7 @@ import { POD_SETTLEMENT_PREVIEW } from '../queries';
 import type { SettlementPreviewProps } from './complete-pod.types';
 
 /** Live waterfall preview of the settlement for the pod being completed. */
-export default function SettlementPreview({ podId, venueBillAmount }: Readonly<SettlementPreviewProps>) {
+export default function SettlementPreview({ podId, venueBillAmount, hostUserId }: Readonly<SettlementPreviewProps>) {
   const [amount, setAmount] = useState(venueBillAmount);
   useEffect(() => {
     const timer = setTimeout(() => setAmount(venueBillAmount), 350);
@@ -14,7 +14,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<S
   }, [venueBillAmount]);
 
   const { data, loading, error } = useQuery(POD_SETTLEMENT_PREVIEW, {
-    variables: { pod_id: podId, venue_bill_amount: amount },
+    variables: { pod_id: podId, venue_bill_amount: amount, host_user_id: hostUserId || null },
     fetchPolicy: 'cache-and-network',
   });
   const s = data?.podSettlementPreview;

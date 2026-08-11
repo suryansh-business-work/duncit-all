@@ -47,7 +47,9 @@ export interface SettlementWaterfall {
   /** Club-admin cut % + amount taken off the pool after GST + platform fee. */
   club_admin_pct: number;
   club_admin_amount: number;
-  /** The venue's booked slot price (Partners portal), clamped to the pool. */
+  /** The venue's booked slot price (Partners portal) — taken in FULL; neither
+   * settlement nor the previews clamp it to the pool any more, so a shortfall
+   * shows as a negative host amount instead of quietly shrinking this. */
   venue_amount: number;
   venue_commission_pct: number;
   venue_commission_amount: number;
@@ -94,11 +96,44 @@ export interface PodSettlement {
  * recomputed. */
 export const SETTLEMENT_ENGINE_VERSION = 2;
 
-/** Money a completed pod actually took in = sum of its SUCCESS payments. */
+/**
+ * The pod-settlement share of one payment: its total minus the one-off product
+ * add-on money (metadata.product_cost_total — product rupees settle to sellers
+ * via product invoices, never through the pod waterfall) and minus anything
+ * already refunded back to the buyer (a partial backout leaves the payment
+ * SUCCESS and records the returned money in metadata.refunded_amount).
+ */
+const ticketMoneyOf = (p: { total?: number; metadata?: any }) => {
+  const products = Number(p.metadata?.product_cost_total) || 0;
+  const refunded = Number(p.metadata?.refunded_amount) || 0;
+  return Math.max(0, (Number(p.total) || 0) - products - refunded);
+};
+
+/** The same netting as `ticketMoneyOf`, as a Mongo aggregation expression. */
+const TICKET_MONEY_EXPR = {
+  $max: [
+    0,
+    {
+      $subtract: [
+        { $ifNull: ['$total', 0] },
+        {
+          $add: [
+            { $ifNull: ['$metadata.product_cost_total', 0] },
+            { $ifNull: ['$metadata.refunded_amount', 0] },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/** TICKET money a pod actually took in = sum of its SUCCESS payments net of
+ * product add-ons and partial-backout refunds (see `ticketMoneyOf`). This is
+ * the pod's own money — never product rupees, never money already returned. */
 export async function collectedForPod(podId: string | Types.ObjectId): Promise<number> {
   const rows = await PaymentModel.aggregate([
     { $match: { pod_id: new Types.ObjectId(String(podId)), status: 'SUCCESS' } },
-    { $group: { _id: null, total: { $sum: '$total' } } },
+    { $group: { _id: null, total: { $sum: TICKET_MONEY_EXPR } } },
   ]);
   return round2(rows[0]?.total ?? 0);
 }
@@ -120,9 +155,10 @@ export interface PodAttendanceRoster {
   rows: SettlementAttendee[];
   attended_seats: number;
   booked_seats: number;
-  /** Money from bookings a host scanned in — the settlement basis. */
+  /** Ticket money from bookings a host scanned in — the settlement basis. */
   attended_total: number;
-  /** Money from every successful payment on the pod, attended or not. */
+  /** Ticket money from every successful payment on the pod, attended or not
+   * (net of product add-ons and partial-backout refunds). */
   collected_total: number;
 }
 
@@ -154,7 +190,7 @@ export async function podAttendanceRoster(podDocId: string): Promise<PodAttendan
     TicketModel.find({ membership_id: { $in: memberIds }, status: 'CHECKED_IN' })
       .select('membership_id checked_in_at')
       .lean(),
-    PaymentModel.find({ pod_id: podId, status: 'SUCCESS' }).select('_id total').lean(),
+    PaymentModel.find({ pod_id: podId, status: 'SUCCESS' }).select('_id total metadata').lean(),
     UserModel.find({ _id: { $in: members.map((m: any) => m.user_id) } })
       .select('_id profile.first_name profile.last_name')
       .lean(),
@@ -163,7 +199,10 @@ export async function podAttendanceRoster(podDocId: string): Promise<PodAttendan
   const checkedIn = new Map(
     tickets.map((t: any) => [String(t.membership_id), t.checked_in_at ?? null])
   );
-  const paidBy = new Map(payments.map((p: any) => [String(p._id), Number(p.total) || 0]));
+  // Each booking is worth its TICKET money: product add-ons settle to sellers
+  // on their own invoices and partially-refunded seats already went back to the
+  // buyer — neither may enter the pod's waterfall (see `ticketMoneyOf`).
+  const paidBy = new Map(payments.map((p: any) => [String(p._id), ticketMoneyOf(p)]));
   const nameOf = new Map(
     users.map((u: any) => [
       String(u._id),
@@ -207,7 +246,7 @@ export async function podAttendanceRoster(podDocId: string): Promise<PodAttendan
     attended_seats: attendedSeats,
     booked_seats: bookedSeats,
     attended_total: round2(attendedTotal),
-    collected_total: round2(payments.reduce((sum: number, p: any) => sum + (Number(p.total) || 0), 0)),
+    collected_total: round2(payments.reduce((sum: number, p: any) => sum + ticketMoneyOf(p), 0)),
   };
 }
 
@@ -283,10 +322,10 @@ export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
 }
 
 /** Waterfall for an arbitrary GST-inclusive rupee amount + venue slot price at
- * the given rates — powers the create-pod potential-earnings preview and live
- * pod breakdowns. `options.clampVenueToPool: false` (preview) keeps the venue's
- * full price so a shortfall shows as negative host earnings; settlement callers
- * omit it and keep the legacy clamp. */
+ * the given rates — powers the create-pod potential-earnings preview, live pod
+ * breakdowns and settlement itself. Every caller that quotes or settles real
+ * money passes `clampVenueToPool: false`: the venue keeps its full booked
+ * price and a shortfall shows as negative host earnings. */
 export function waterfallForAmount(
   amountRupees: number,
   venueAmountRupees: number,
@@ -310,13 +349,26 @@ export function waterfallForAmount(
  * remaining pool, and the host keeps the remainder — Duncit takes its
  * commission % from each side. The venue bill the host enters is evidence
  * (and the venue-amount fallback for legacy pods without a slot link).
+ *
+ * `hostUserId` is the host actually being PAID (a pod can have co-hosts and
+ * completion picks one) — their commission override must price the settlement,
+ * not whichever host happens to be listed first. Defaults to the primary host.
  */
-export async function computePodSettlement(podDocId: string, venueBillAmount: number): Promise<PodSettlement> {
+export async function computePodSettlement(
+  podDocId: string,
+  venueBillAmount: number,
+  hostUserId?: string | null
+): Promise<PodSettlement> {
   if (!Types.ObjectId.isValid(podDocId)) {
     throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   const pod = await PodModel.findById(podDocId);
   if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+  if (hostUserId && !(pod.pod_hosts_id ?? []).some((id: any) => String(id) === String(hostUserId))) {
+    throw new GraphQLError('Select a host assigned to this pod', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
 
   const fs = await getFinanceSettings();
   const roster = await podAttendanceRoster(String(pod._id));
@@ -333,7 +385,7 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
 
   const hasVenue = !!pod.venue_id;
   const rates = await resolveEffectiveRates({
-    hostUserId: pod.pod_hosts_id?.[0] ?? null,
+    hostUserId: hostUserId ?? pod.pod_hosts_id?.[0] ?? null,
     venueId: hasVenue ? pod.venue_id : null,
   });
   const venueAmount = await venueAmountForPod(pod, venueBill);

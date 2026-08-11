@@ -84,6 +84,14 @@ export const paymentTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  "Filter-wide KPI totals for the Payment Logs cards (SUCCESS payments only, no row cap)."
+  type PaymentTotals {
+    count: Int!
+    gross: Float!
+    fee: Float!
+    gst: Float!
+  }
+
   type CheckoutQuote {
     subtotal: Float!
     platform_fee_pct: Float!
@@ -278,6 +286,8 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   extend type Query {
     payments(filter: PaymentFilterInput, limit: Int): [Payment!]!
+    "Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only."
+    paymentTotals(filter: PaymentFilterInput): PaymentTotals!
     paymentsTable(query: TableQueryInput): PaymentTablePage!
     payment(payment_doc_id: ID!): Payment
     myPayments: [Payment!]!

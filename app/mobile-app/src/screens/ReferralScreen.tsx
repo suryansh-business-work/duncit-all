@@ -1,39 +1,79 @@
 import { useState } from 'react';
 import { Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
-import { referralLink, referralShareMessage } from '@duncit/utils';
+import { referralLink, renderReferralMessage } from '@duncit/utils';
 
 import { useReferral, type MyReferral } from '@/hooks/useReferral';
+import { useTranslation } from '@/hooks/useTranslation';
 import { POD_WEB_BASE } from '@/utils/pod-format';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 
 type ReferredEntry = MyReferral['referred'][number];
 
-/** My code with its share sheet, the admin-configured gift and who referred me. */
+/** How long the "copied" line stays up before it stops being news. */
+const NOTICE_MS = 3000;
+
+interface ActionProps {
+  testID: string;
+  label: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  tint: string;
+  filled?: boolean;
+  onPress: () => void;
+}
+
+/** One of the three ways a code leaves this screen. */
+function ShareAction({ testID, label, icon, tint, filled, onPress }: Readonly<ActionProps>) {
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      alignItems="center"
+      gap={6}
+      paddingHorizontal={14}
+      paddingVertical={8}
+      borderRadius={999}
+      borderWidth={filled ? 0 : 1}
+      borderColor="$borderColor"
+      backgroundColor={filled ? '$primary' : 'transparent'}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <MaterialIcons name={icon} size={15} color={tint} />
+      <Text fontSize={12.5} fontWeight="700" color={filled ? '$onPrimary' : '$color'}>
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
+interface CodeCardProps {
+  referral: MyReferral;
+  onPrimary: string;
+  primary: string;
+  ink: string;
+  onShare: () => void;
+  onCopyCode: () => void;
+  onCopyLink: () => void;
+}
+
+/** My code, the three ways to pass it on, and what it is worth. */
 function CodeCard({
   referral,
   onPrimary,
   primary,
-}: Readonly<{ referral: MyReferral | null; onPrimary: string; primary: string }>) {
-  /* istanbul ignore next -- the buttons only mount once the code loads */
-  const link = referral ? referralLink(referral.code, POD_WEB_BASE) : '';
-
-  const shareCode = async () => {
-    if (!referral) return;
-    try {
-      await Share.share({
-        // The link goes with the code: whoever receives it should not have to
-        // find the app AND type something in.
-        message: referralShareMessage(referral.code, link, referral.coins_per_referral ?? 0),
-      });
-    } catch {
-      /* user cancelled */
-    }
-  };
+  ink,
+  onShare,
+  onCopyCode,
+  onCopyLink,
+}: Readonly<CodeCardProps>) {
+  const { t } = useTranslation();
 
   return (
     <YStack
@@ -45,46 +85,51 @@ function CodeCard({
       backgroundColor="$surface"
     >
       <Text fontSize={11} fontWeight="700" color="$muted">
-        YOUR CODE
+        {t('mweb.referral.yourCode')}
       </Text>
-      <XStack alignItems="center" gap={12}>
-        <Text
-          testID="referral-code"
-          fontSize={22}
-          fontWeight="700"
-          color="$color"
-          letterSpacing={1}
-        >
-          {referral?.code ?? '—'}
-        </Text>
-        <XStack
+      <Text testID="referral-code" fontSize={22} fontWeight="700" color="$color" letterSpacing={1}>
+        {referral.code}
+      </Text>
+
+      {/*
+        Three ways out, because they travel differently: a code survives being
+        read out loud, a link does the typing for whoever receives it, and the
+        share sheet carries the message Finance wrote around both.
+      */}
+      <XStack gap={8} flexWrap="wrap" paddingTop={6}>
+        <ShareAction
           testID="referral-share"
-          role="button"
-          aria-label="Share referral link"
-          onPress={() => void shareCode()}
-          alignItems="center"
-          gap={6}
-          paddingHorizontal={14}
-          paddingVertical={8}
-          borderRadius={999}
-          backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <MaterialIcons name="share" size={15} color={onPrimary} />
-          <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
-            Share link
-          </Text>
-        </XStack>
+          label={t('mweb.referral.share')}
+          icon="share"
+          tint={onPrimary}
+          filled
+          onPress={onShare}
+        />
+        <ShareAction
+          testID="referral-copy-code"
+          label={t('mweb.referral.copyCode')}
+          icon="content-copy"
+          tint={ink}
+          onPress={onCopyCode}
+        />
+        <ShareAction
+          testID="referral-copy-link"
+          label={t('mweb.referral.copyLink')}
+          icon="link"
+          tint={ink}
+          onPress={onCopyLink}
+        />
       </XStack>
-      {(referral?.coins_per_referral ?? 0) > 0 ? (
+
+      {referral.coins_per_referral > 0 ? (
         <XStack alignItems="center" gap={8} paddingTop={6}>
           <MaterialIcons name="monetization-on" size={18} color={primary} />
-          <Text testID="referral-coins" flex={1} fontSize={13} fontWeight="700" color="">
-            {referral?.coins_per_referral} Duncit Coins for every friend who joins
+          <Text testID="referral-coins" flex={1} fontSize={13} fontWeight="700" color="$color">
+            {t('mweb.referral.bothEarn', { vars: { coins: referral.coins_per_referral } })}
           </Text>
         </XStack>
       ) : null}
-      {referral?.gift_description ? (
+      {referral.gift_description ? (
         <XStack alignItems="center" gap={8} paddingTop={6}>
           <MaterialIcons name="card-giftcard" size={18} color={primary} />
           <Text testID="referral-gift" flex={1} fontSize={13} fontWeight="700" color="$color">
@@ -92,77 +137,9 @@ function CodeCard({
           </Text>
         </XStack>
       ) : null}
-      {referral?.referred_by_name ? (
+      {referral.referred_by_name ? (
         <Text testID="referral-referred-by" fontSize={12} color="$muted">
-          You were referred by {referral.referred_by_name}
-        </Text>
-      ) : null}
-    </YStack>
-  );
-}
-
-/** Redeem a friend's code — only mounts while I have not been referred yet. */
-function ApplyCard({
-  applyBusy,
-  applyError,
-  applyCode,
-}: Readonly<{
-  applyBusy: boolean;
-  applyError: string | null;
-  applyCode: (code: string) => Promise<boolean>;
-}>) {
-  const [draft, setDraft] = useState('');
-  const inert = applyBusy || !draft.trim();
-
-  return (
-    <YStack
-      gap={10}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={15} fontWeight="700" color="$color">
-        Got a friend's code?
-      </Text>
-      <XStack gap={8}>
-        <Input
-          testID="referral-code-input"
-          aria-label="Referral code"
-          flex={1}
-          size="$4"
-          backgroundColor="$background"
-          color="$color"
-          placeholderTextColor="$muted"
-          borderColor="$borderColor"
-          autoCapitalize="characters"
-          placeholder="DUN-XXXXXX"
-          value={draft}
-          onChangeText={(text) => setDraft(text.toUpperCase())}
-        />
-        <XStack
-          testID="referral-apply"
-          role="button"
-          aria-label="Apply referral code"
-          aria-disabled={inert}
-          onPress={inert ? undefined : () => void applyCode(draft.trim())}
-          alignItems="center"
-          justifyContent="center"
-          paddingHorizontal={18}
-          borderRadius={12}
-          backgroundColor="$primary"
-          opacity={inert ? 0.6 : 1}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text fontSize={13.5} fontWeight="700" color="$onPrimary">
-            {applyBusy ? 'Applying…' : 'Apply'}
-          </Text>
-        </XStack>
-      </XStack>
-      {applyError ? (
-        <Text testID="referral-apply-error" fontSize={12.5} color="$danger">
-          {applyError}
+          {t('mweb.referral.referredBy', { vars: { name: referral.referred_by_name } })}
         </Text>
       ) : null}
     </YStack>
@@ -170,7 +147,10 @@ function ApplyCard({
 }
 
 /** One friend I brought in. */
-function ReferredRow({ entry }: Readonly<{ entry: ReferredEntry }>) {
+function ReferredRow({
+  entry,
+  fallbackName,
+}: Readonly<{ entry: ReferredEntry; fallbackName: string }>) {
   return (
     <XStack
       testID={`referral-row-${entry.user_id}`}
@@ -183,7 +163,7 @@ function ReferredRow({ entry }: Readonly<{ entry: ReferredEntry }>) {
       backgroundColor="$surface"
     >
       <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-        {entry.full_name || 'New member'}
+        {entry.full_name || fallbackName}
       </Text>
       <Text fontSize={11.5} fontWeight="700" color="$muted">
         {formatRelative(entry.referred_at)} ago
@@ -192,15 +172,48 @@ function ReferredRow({ entry }: Readonly<{ entry: ReferredEntry }>) {
   );
 }
 
-/** Refer & Earn — my code (share), the admin-configured gift, who I brought in,
- * and a box to redeem a friend's code. Identical to mWeb's ReferralPage (B4-11). */
+/**
+ * Refer & Earn — my code and the three ways to pass it on. mWeb's twin.
+ *
+ * There is no "enter a friend's code" box any more: a code is redeemed once, at
+ * signup, where it can still be checked while the form is on screen.
+ */
 export function ReferralScreen() {
-  const { onPrimary, primary } = useThemeColors();
-  const { referral, isLoading, applyBusy, applyError, applyCode } = useReferral();
+  const { t } = useTranslation();
+  const { onPrimary, primary, color } = useThemeColors();
+  const { referral, isLoading } = useReferral();
+  const [notice, setNotice] = useState<string | null>(null);
   const referredList = referral?.referred ?? [];
 
+  const link = referral ? referralLink(referral.code, POD_WEB_BASE) : '';
+
+  const flash = (message: string) => {
+    setNotice(message);
+    globalThis.setTimeout(() => setNotice(null), NOTICE_MS);
+  };
+
+  const copy = (value: string, message: string) => {
+    Clipboard.setStringAsync(value)
+      .then(() => flash(message))
+      .catch(() => undefined);
+  };
+
+  const share = () => {
+    if (!referral) return;
+    Share.share({
+      title: t('mweb.referral.title'),
+      // No `url` field: iOS repeats a link given both ways, and the message
+      // already carries one.
+      message: renderReferralMessage(referral.share_message, {
+        code: referral.code,
+        link,
+        coins: referral.coins_per_referral,
+      }),
+    }).catch(() => undefined);
+  };
+
   return (
-    <StackScreen title="Refer & Earn" testID="referral-screen">
+    <StackScreen title={t('mweb.referral.title')} testID="referral-screen">
       {isLoading && !referral ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner testID="referral-loading" color="$primary" />
@@ -208,21 +221,39 @@ export function ReferralScreen() {
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           <YStack gap={14} padding={16} paddingBottom={48}>
-            <CodeCard referral={referral} onPrimary={onPrimary} primary={primary} />
+            {referral ? (
+              <CodeCard
+                referral={referral}
+                onPrimary={onPrimary}
+                primary={primary}
+                ink={color}
+                onShare={share}
+                onCopyCode={() => copy(referral.code, t('mweb.referral.codeCopied'))}
+                onCopyLink={() => copy(link, t('mweb.referral.linkCopied'))}
+              />
+            ) : null}
 
-            {referral?.referred_by_name ? null : (
-              <ApplyCard applyBusy={applyBusy} applyError={applyError} applyCode={applyCode} />
-            )}
+            {notice ? (
+              <Text testID="referral-notice" fontSize={12.5} fontWeight="700" color="$primary">
+                {notice}
+              </Text>
+            ) : null}
 
             <Text fontSize={16} fontWeight="700" color="$color">
-              Friends you referred ({referredList.length})
+              {t('mweb.referral.friendsCount', { vars: { count: referredList.length } })}
             </Text>
             {referredList.length === 0 ? (
               <Text testID="referral-empty" fontSize={13} color="$muted">
-                No referrals yet — share your code to get started.
+                {t('mweb.referral.empty')}
               </Text>
             ) : (
-              referredList.map((entry) => <ReferredRow key={entry.user_id} entry={entry} />)
+              referredList.map((entry) => (
+                <ReferredRow
+                  key={entry.user_id}
+                  entry={entry}
+                  fallbackName={t('mweb.referral.newMember')}
+                />
+              ))
             )}
           </YStack>
         </ScrollView>

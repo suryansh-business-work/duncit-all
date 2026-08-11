@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Link, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -124,6 +125,17 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
             () => setShowConfirmPwd((v) => !v),
             showConfirmPwd ? hideLabel : showLabel,
           )}
+        />
+        <RhfTextField
+          control={control}
+          name="referralCode"
+          label={t('mweb.referral.codeOptional')}
+          hint={t('mweb.referral.codeHint')}
+          placeholder={t('mweb.referral.codePlaceholder')}
+          size="small"
+          InputLabelProps={{ shrink: true }}
+          InputProps={startIcon(<CardGiftcardOutlinedIcon fontSize="small" />)}
+          inputProps={{ style: { textTransform: 'uppercase' } }}
         />
       </Stack>
       <Stack spacing={2} sx={{ mt: 2 }}>

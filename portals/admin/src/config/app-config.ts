@@ -58,10 +58,7 @@ export const appConfig = {
     {
       label: 'Marketing',
       icon: 'marketing',
-      children: [
-        { label: 'Coupons', to: '/coupons', icon: 'percent' },
-        { label: 'Referrals', to: '/referrals', icon: 'campaign' },
-      ],
+      children: [{ label: 'Coupons', to: '/coupons', icon: 'percent' }],
     },
     {
       label: 'Catalog',
@@ -141,7 +138,6 @@ export const appConfig = {
     { label: 'Pod Settings', to: '/pod-settings', section: 'Pods', keywords: ['draft', 'retention', 'config'] },
     { label: 'Pod Monitoring (AI)', to: '/pod-monitoring', section: 'Pods', keywords: ['audit', 'ai', 'activity', 'risk', 'log'] },
     { label: 'Coupons', to: '/coupons', section: 'Marketing', keywords: ['discount', 'promo'] },
-    { label: 'Referrals', to: '/referrals', section: 'Marketing', keywords: ['invite', 'growth'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },
     { label: 'Locations', to: '/locations', section: 'Catalog' },
     { label: 'FAQs', to: '/faqs', section: 'Engagement' },

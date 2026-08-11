@@ -651,6 +651,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       statusReturnedToOrigin: 'Returned to origin',
       statusFulfilmentFailed: 'Fulfilment failed',
     },
+    // The marketing image shown over the app on open. Only the chrome is
+    // localized — the picture and the CTA label are campaign data, written by
+    // whoever set the popup up in the Marketing portal.
+    appPopup: {
+      close: 'Close',
+      tapToClose: 'Tap anywhere to close',
+    },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
     // the aspect labels are keyed from @duncit/utils' POD_FEEDBACK_ASPECT_KEY,
@@ -1391,6 +1398,44 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       checkoutRemove: 'Remove',
       checkoutApplied: '{coins} coins applied',
       checkoutNone: 'You have no Duncit Coins to redeem yet.',
+    },
+    // Refer & Earn — mWeb and native render the SAME screen (rule 27), so every
+    // key here is used by BOTH unless its comment says otherwise. The reward and
+    // the shared message itself come from Finance > Referrals; nothing here
+    // quotes a number, so a rate change never leaves this copy lying.
+    referral: {
+      title: 'Refer & Earn',
+      subtitle: 'Share your code, bring friends to Duncit',
+      yourCode: 'YOUR CODE',
+      copyCode: 'Copy code',
+      copyLink: 'Copy link',
+      codeCopied: 'Code copied',
+      linkCopied: 'Link copied',
+      // Native only — its share sheet hands the message to another app.
+      share: 'Share',
+      // Both sides earn, so the sentence says both. {coins} is the configured rate.
+      bothEarn: 'You and your friend each earn {coins} Duncit Coins',
+      referredBy: 'You were referred by {name}',
+      friendsTitle: 'Friends you referred',
+      friendsCount: 'Friends you referred ({count})',
+      empty: 'No referrals yet — share your code to get started.',
+      newMember: 'New member',
+      loadError: 'Could not load your referral details. Please try again.',
+      // The signup field, and the step Google signup lands on — the only two
+      // places a code can be entered now that Refer & Earn no longer takes one.
+      codeLabel: 'Referral code',
+      codeOptional: 'Referral code (optional)',
+      codePlaceholder: 'DUN-XXXXXX',
+      codeHint: 'Have a friend’s code? You both earn Duncit Coins.',
+      promptTitle: 'Got a referral code?',
+      promptBodyPlain: 'Enter it now and you both earn Duncit Coins. You can only do this once.',
+      apply: 'Apply code',
+      applying: 'Applying…',
+      skip: 'Skip for now',
+      applied: 'Referral code applied',
+      validation: {
+        codePattern: 'Enter a code like DUN-XXXXXX',
+      },
     },
     // Wallet — the role-wise Minimum Withdrawal Amount configured in Finance >
     // Withdrawals > Withdrawal Settings. The server decides eligibility and

@@ -20,6 +20,7 @@ import {
   InvoiceTemplatePage,
   LedgerPage,
   PayoutCyclesPage,
+  ReferralsPage,
   StartupDashboardPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
@@ -51,6 +52,7 @@ export default function App() {
       <Route path="/invoices/host" element={authed(<InvoiceTemplatePage kind="host" />)} />
       <Route path="/invoices/product" element={authed(<InvoiceTemplatePage kind="product" />)} />
       <Route path="/ledger" element={authed(<LedgerPage />)} />
+      <Route path="/referrals" element={authed(<ReferralsPage />)} />
       <Route path="/payouts" element={authed(<PayoutCyclesPage />)} />
       <Route path="/calculators/pod-profit" element={authed(<PodProfitCalculatorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />

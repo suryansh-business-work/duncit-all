@@ -21,7 +21,8 @@ export interface FeedbackReportRow {
   slack_ts?: string | null;
   slack_error?: string | null;
   created_at: string;
-  user_id: string;
+  /** Null when the report arrived by email from an address with no account. */
+  user_id: string | null;
 }
 
 export interface ReportProblemCategory {

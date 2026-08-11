@@ -7,6 +7,7 @@ export const MyReferralDocument = gql(`
       code
       gift_description
       coins_per_referral
+      share_message
       referred_by_name
       referred {
         user_id

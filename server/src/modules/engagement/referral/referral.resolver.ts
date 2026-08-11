@@ -2,7 +2,9 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { referralService } from './referral.service';
 
-const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+/* Referrals are run from the Finance console (the reward is money-shaped), so
+   FINANCE_MANAGER reads and writes them alongside the platform admins. */
+const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
 
 export const referralResolvers = {
   Query: {
@@ -25,13 +27,19 @@ export const referralResolvers = {
       const user = requireAuth(ctx);
       return referralService.applyCode(user.id, args.code);
     },
-    updateReferralGift: async (
+    updateReferralSettings: async (
       _p: unknown,
-      args: { gift_description: string; coins_per_referral?: number | null },
+      args: {
+        input: {
+          gift_description?: string | null;
+          coins_per_referral?: number | null;
+          share_message?: string | null;
+        };
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_WRITE);
-      return referralService.updateGift(args.gift_description, args.coins_per_referral);
+      return referralService.updateSettings(args.input);
     },
   },
 };

@@ -7,6 +7,7 @@ import { isPodPast } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { TourAnchor } from '@/tours/TourAnchor';
 import {
   canRejoin,
   podHistoryGate,
@@ -121,56 +122,62 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
   return (
     <YStack gap={12}>
-      <Card>
-        <XStack gap={12} alignItems="center">
-          <YStack
-            width={88}
-            height={88}
-            borderRadius={16}
-            overflow="hidden"
-            backgroundColor="$primary"
-            alignItems="center"
-            justifyContent="center"
-          >
-            {image ? (
-              <AppImage
-                source={{ uri: image }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-            ) : (
-              <MaterialIcons name="event" size={30} color={onPrimary} />
-            )}
-          </YStack>
-          <YStack flex={1} gap={6}>
-            <XStack gap={6} flexWrap="wrap">
-              <Chip label={statusLabel} tone={STATUS_CHIP[item.status].tone} />
-              {/* No refund state at all unless one is actually in play, and the
+      {/* The tour's first step. It lives here and not on the history LIST
+          because the ticket and back-out controls only exist on this screen —
+          and a tour that resolves on the list would open there, one step long,
+          and record itself as shown. */}
+      <TourAnchor tour="booking" anchor="booking-summary">
+        <Card>
+          <XStack gap={12} alignItems="center">
+            <YStack
+              width={88}
+              height={88}
+              borderRadius={16}
+              overflow="hidden"
+              backgroundColor="$primary"
+              alignItems="center"
+              justifyContent="center"
+            >
+              {image ? (
+                <AppImage
+                  source={{ uri: image }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <MaterialIcons name="event" size={30} color={onPrimary} />
+              )}
+            </YStack>
+            <YStack flex={1} gap={6}>
+              <XStack gap={6} flexWrap="wrap">
+                <Chip label={statusLabel} tone={STATUS_CHIP[item.status].tone} />
+                {/* No refund state at all unless one is actually in play, and the
                   word comes from the request rather than the booking — the
                   booking's own copy is never written for a partial. */}
-              {gate.showRefundState ? (
-                <Chip
-                  label={t('mweb.podHistory.refundChip', {
-                    vars: { status: refundLabel(gate.refundStatus, t) },
-                  })}
-                  tone="muted"
-                />
-              ) : null}
-            </XStack>
-            <Text fontSize={16} fontWeight="700" color="$color">
-              {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
-            </Text>
-            <Text fontSize={13} color="$muted">
-              {pod?.pod_date_time
-                ? formatDateTime(pod.pod_date_time)
-                : t('mweb.podHistory.dateNotAvailable')}
-            </Text>
-            <Text fontSize={12} color="$muted">
-              {podPriceCaption(pod?.pod_type, pod?.pod_amount, t)}
-            </Text>
-          </YStack>
-        </XStack>
-      </Card>
+                {gate.showRefundState ? (
+                  <Chip
+                    label={t('mweb.podHistory.refundChip', {
+                      vars: { status: refundLabel(gate.refundStatus, t) },
+                    })}
+                    tone="muted"
+                  />
+                ) : null}
+              </XStack>
+              <Text fontSize={16} fontWeight="700" color="$color">
+                {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
+              </Text>
+              <Text fontSize={13} color="$muted">
+                {pod?.pod_date_time
+                  ? formatDateTime(pod.pod_date_time)
+                  : t('mweb.podHistory.dateNotAvailable')}
+              </Text>
+              <Text fontSize={12} color="$muted">
+                {podPriceCaption(pod?.pod_type, pod?.pod_amount, t)}
+              </Text>
+            </YStack>
+          </XStack>
+        </Card>
+      </TourAnchor>
 
       <Card title={t('mweb.podHistory.actions')}>
         <PodHistoryActions {...props} />

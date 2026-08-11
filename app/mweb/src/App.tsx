@@ -11,6 +11,7 @@ import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NotifyHost } from './components/notify';
 import PodFeedbackPrompt from './components/pod-feedback';
+import AppPopupDialog from './components/app-popup';
 import AppRoutes from './app/AppRoutes';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
@@ -139,6 +140,7 @@ export default function App() {
       </Container>
       {showBottomNav && <BottomNav />}
       {isAuthed && <PodFeedbackPrompt />}
+      {isAuthed && <AppPopupDialog />}
       <OpenInAppBanner />
       <BrandFontLoader />
       <NotifyHost />

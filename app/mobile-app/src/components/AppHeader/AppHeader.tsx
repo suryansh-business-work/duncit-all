@@ -13,6 +13,7 @@ import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { STUDIO_HOME_ROUTE, STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
 
 import { HeaderGreeting } from './HeaderGreeting';
@@ -79,33 +80,43 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
          * with online dot. Studio modes keep their focused header (no search),
          * and the cart still hides itself when empty. */}
         {showBrowseActions ? (
-          <QuickAction label={t('mweb.home.actionSearch')}>
-            <XStack
-              testID="header-search"
-              role="button"
-              aria-label="Search pods"
-              onPress={() => navigation.navigate('Search')}
-              width={40}
-              height={40}
-              alignItems="center"
-              justifyContent="center"
-              borderRadius={20}
-              backgroundColor="$surface"
-              borderWidth={1}
-              borderColor="$borderColor"
-              pressStyle={{ opacity: 0.7 }}
-            >
-              <MaterialIcons name="search" size={22} color={ink} />
-            </XStack>
-          </QuickAction>
+          <TourAnchor tour="home" anchor="home-search">
+            <QuickAction label={t('mweb.home.actionSearch')}>
+              <XStack
+                testID="header-search"
+                role="button"
+                aria-label="Search pods"
+                onPress={() => navigation.navigate('Search')}
+                width={40}
+                height={40}
+                alignItems="center"
+                justifyContent="center"
+                borderRadius={20}
+                backgroundColor="$surface"
+                borderWidth={1}
+                borderColor="$borderColor"
+                pressStyle={{ opacity: 0.7 }}
+              >
+                <MaterialIcons name="search" size={22} color={ink} />
+              </XStack>
+            </QuickAction>
+          </TourAnchor>
         ) : null}
         {minimal ? null : <HeaderCartButton label={t('mweb.home.actionCart')} />}
         {minimal ? null : (
-          <QuickAction label={t('mweb.home.actionAlerts')}>
-            <NotificationsBell />
-          </QuickAction>
+          <TourAnchor tour="home" anchor="home-notifications">
+            <QuickAction label={t('mweb.home.actionAlerts')}>
+              <NotificationsBell />
+            </QuickAction>
+          </TourAnchor>
         )}
-        {minimal ? <LogoutButton /> : <AccountButton />}
+        {minimal ? (
+          <LogoutButton />
+        ) : (
+          <TourAnchor tour="home" anchor="home-profile">
+            <AccountButton />
+          </TourAnchor>
+        )}
       </XStack>
       <StudioSwitchDialog
         open={switchOpen}

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProfilePage, createAuthed } from '@duncit/shell';
+import { NotifyHost } from '@duncit/dialogs';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import SosListPage from './pages/sos/SosListPage';
@@ -12,6 +13,7 @@ import ReportProblemSettingsPage from './pages/reported-problems/ReportProblemSe
 import TicketsListPage from './pages/tickets/TicketsListPage';
 import TicketDetailPage from './pages/tickets/TicketDetailPage';
 import LiveChatPage from './pages/live-chat/LiveChatPage';
+import MailAutomationPage from './pages/mail-automation';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -19,7 +21,8 @@ const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> 
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
@@ -34,7 +37,13 @@ export default function App() {
       <Route path="/tickets" element={authed(<TicketsListPage />)} />
       <Route path="/tickets/:id" element={authed(<TicketDetailPage />)} />
       <Route path="/live-chat" element={authed(<LiveChatPage />)} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      {/* The reply and the queue. Connecting a mailbox is the Tech portal's. */}
+        <Route path="/mail-automation" element={authed(<MailAutomationPage />)} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      {/* Without this, every notify() in the portal is a silent no-op — it only
+          dispatches an event, and this is the sole listener. */}
+      <NotifyHost />
+    </>
   );
 }

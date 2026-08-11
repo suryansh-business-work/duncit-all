@@ -32,6 +32,7 @@ export const appConfig = {
         { label: 'Email', to: '/campaigns/email', icon: 'email' },
         { label: 'WhatsApp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
         { label: 'Notifications', to: '/notifications', icon: 'notifications' },
+        { label: 'App Popups', to: '/app-popups', icon: 'image' },
       ],
     },
     // Its own section, not a child of Campaigns: a short link is just as often

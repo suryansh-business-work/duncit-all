@@ -36,6 +36,9 @@ export const appConfig = {
         { label: 'Templates', to: '/emails/templates', icon: 'description' },
         { label: 'Fragments', to: '/emails/fragments', icon: 'widgets' },
         { label: 'Logs', to: '/emails/logs', icon: 'article' },
+        // Connecting the mailbox only — the reply and the queue are Support's,
+        // so the rest of this feature is in the Support portal.
+        { label: 'Mail Automation', to: '/mail-automation', icon: 'markEmailRead' },
       ],
     },
     {

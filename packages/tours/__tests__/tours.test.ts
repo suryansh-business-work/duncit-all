@@ -65,10 +65,56 @@ describe('TOURS registry', () => {
   // Navigating to a screen that needs params crashes on route.params being
   // undefined — PodDetails reads .podId off it. Every landing must open cold.
   it('lands every tour on a screen that opens with no params', () => {
-    const needsParams = new Set(['PodDetails', 'ChatRoom', 'Checkout', 'PodPending', 'Policy']);
+    const needsParams = new Set([
+      'PodDetails',
+      'ChatRoom',
+      'Checkout',
+      'PodPending',
+      'Policy',
+      'ClubDetails',
+      'PodHistoryDetails',
+    ]);
     for (const tour of TOURS) {
       expect(needsParams.has(tour.nativeRoute)).toBe(false);
     }
+  });
+
+  // A bottom tab is not a root-stack screen: reaching it means navigating to the
+  // tab host and naming the tab, so a tab landing has to say so explicitly.
+  it('routes a tab landing through the tab host', () => {
+    const club = findTour('club')!;
+    expect(club.nativeTab).toBe('Clubs');
+    expect(club.nativeRoute).toBe('Home');
+    // Everything else lands on a root-stack screen directly.
+    expect(TOURS.filter((t) => t.nativeTab).map((t) => t.id)).toEqual(['club']);
+  });
+
+  /*
+    Both surfaces resolve a tour against what has rendered and then freeze, so a
+    tour cannot walk from one screen to another. Create Pod shows one wizard page
+    at a time and Booking's ticket/back-out controls only exist on the detail
+    screen — steps split across those boundaries resolved to one step, opened on
+    it, and recorded the whole tour as shown.
+  */
+  it('keeps every tour’s steps on one screen', () => {
+    expect(findTour('create-pod')!.steps.map((s) => s.anchor)).toEqual([
+      'create-pod-steps',
+      'create-pod-basics',
+      'create-pod-publish',
+    ]);
+    expect(findTour('booking')!.steps.map((s) => s.anchor)).toEqual([
+      'booking-summary',
+      'booking-ticket',
+      'booking-backout',
+    ]);
+  });
+
+  // Pod history and "Earn with Duncit" are menu tiles and have never been on the
+  // account screen, so the tour that describes them lands on the menu.
+  it('lands the Profile tour on the menu, where its steps live', () => {
+    const profile = findTour('profile')!;
+    expect(profile.path).toBe('/menu');
+    expect(profile.nativeRoute).toBe('Menu');
   });
 
   it('gates Create Pod behind the host role and leaves the rest open', () => {

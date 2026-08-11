@@ -60,6 +60,7 @@ export const appConfig = {
       ],
     },
     { label: 'Duncit Expenses', to: '/ledger', icon: 'menuBook' },
+    { label: 'Referrals', to: '/referrals', icon: 'campaign' },
     { label: 'Payout Cycles', to: '/payouts', icon: 'calendar' },
     {
       label: 'Calculators',

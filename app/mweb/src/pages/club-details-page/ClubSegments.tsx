@@ -35,7 +35,16 @@ function renderSegment(active: SegmentKey, ctx: RenderCtx) {
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs ?? []} />;
   if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts ?? []} />;
   if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins ?? []} />;
-  return <ClubPodsScheduleSection pods={ctx.pods} priceFormat={ctx.priceFormat} onOpen={ctx.onOpenPod} />;
+  const schedule = (
+    <ClubPodsScheduleSection pods={ctx.pods} priceFormat={ctx.priceFormat} onOpen={ctx.onOpenPod} />
+  );
+  // The anchor goes HERE and not inside ClubPodsScheduleSection, which the Venue
+  // Details page renders too: an anchor in the shared component resolves on the
+  // venue page as well, and a club tour armed while the user browses venues
+  // would open there, one step long, over a heading about a venue.
+  // A club with nothing scheduled has nothing to spotlight, so it is left out.
+  if (ctx.pods.length === 0) return schedule;
+  return <Box data-tour="club-pods">{schedule}</Box>;
 }
 
 /** The tabbed Club Detail segments (Pods Schedule, Club Moments, content sections, hosts). */

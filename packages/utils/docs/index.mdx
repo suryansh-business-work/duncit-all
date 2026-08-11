@@ -48,6 +48,12 @@ exports:
   - 'grievanceFieldLabelKey'
   - 'SUBMIT_GRIEVANCE_SDL'
   - 'GRIEVANCE_OFFICER_SDL'
+  - 'REFERRAL_PARAM'
+  - 'referralLink'
+  - 'readReferralCode'
+  - 'renderReferralMessage'
+  - 'DEFAULT_REFERRAL_MESSAGE'
+  - 'REFERRAL_MESSAGE_TOKENS'
 ---
 
 ## Why this exists
@@ -514,6 +520,25 @@ If a number looks wrong, the fix belongs in the server waterfall, not here — r
 client-side is how the two surfaces started disagreeing in the first place. GST is charged once
 and extracted from the GST-inclusive collection, so the statement shows the real taxable base
 rather than inventing per-charge tax rows.
+
+## The referral link and its message
+
+`referralLink(code, baseUrl)` and `readReferralCode(search)` are two halves of one agreement:
+mWeb builds the link, the native app builds the same link, and mWeb's signup reads the code
+back out of it. The parameter name lives here once (`REFERRAL_PARAM`) so none of the three can
+drift.
+
+`renderReferralMessage(template, { code, link, coins })` fills in what Finance wrote at
+**Finance → Referrals**. The template is stored on the server with its placeholders intact —
+`{code}`, `{link}`, `{coins}`, listed as `REFERRAL_MESSAGE_TOKENS` — and rendered per member at
+share time, so one edit in Finance changes every share sheet at once. A blank template falls
+back to `DEFAULT_REFERRAL_MESSAGE`; the coin count is never hardcoded in either, because a
+message that promises fifty while the rate says ten is worse than no message.
+
+```ts
+renderReferralMessage('', { code: 'DUN-9F3A2C', link, coins: 50 })
+// 'Join me on Duncit! We both earn 50 Duncit Coins. Use my code DUN-9F3A2C or sign up here: …'
+```
 
 ## Metro, Docker and the `dist/` build
 

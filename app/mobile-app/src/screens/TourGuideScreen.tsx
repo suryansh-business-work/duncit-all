@@ -2,12 +2,13 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { isTourCompleted, toursForRoles, type TourId } from '@duncit/tours';
+import { isTourCompleted, toursForRoles, type TourDefinition } from '@duncit/tours';
 
 import { StackScreen } from '@/components/StackScreen';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
+import type { TabParamList } from '@/navigation/tabs';
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
@@ -23,9 +24,18 @@ export function TourGuideScreen() {
   // Create Pod walks through a screen a non-host cannot open.
   const tours = toursForRoles(useMe().data?.me?.roles ?? []);
 
-  const run = (id: TourId, route: string) => {
-    startTour(id);
-    navigation.navigate(route as keyof RootStackParamList as never);
+  // A tour whose landing is a bottom tab has to be navigated to THROUGH the tab
+  // navigator, which is the 'Home' route — `navigate('Clubs')` finds no such
+  // screen on the root stack and leaves the user where they were. That is how
+  // the Club tour used to drop native users on the home feed while mWeb opened
+  // /clubs.
+  const run = (tour: TourDefinition) => {
+    startTour(tour.id);
+    if (tour.nativeTab) {
+      navigation.navigate('Home', { screen: tour.nativeTab as keyof TabParamList & string });
+      return;
+    }
+    navigation.navigate(tour.nativeRoute as keyof RootStackParamList as never);
   };
 
   return (
@@ -43,7 +53,7 @@ export function TourGuideScreen() {
                 testID={`tour-row-${tour.id}`}
                 role="button"
                 aria-label={`${done ? 'Restart' : 'Start'} the ${tour.title} tour`}
-                onPress={() => run(tour.id, tour.nativeRoute)}
+                onPress={() => run(tour)}
                 alignItems="center"
                 gap={12}
                 padding={14}

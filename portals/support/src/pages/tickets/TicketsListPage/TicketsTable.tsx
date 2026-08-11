@@ -9,6 +9,7 @@ import { TICKET_PRIORITY_COLORS, TICKET_SOURCE_COLORS, TICKET_STATUS_COLORS } fr
 const SOURCE_OPTIONS: ReadonlyArray<{ value: TicketSource; label: string }> = [
   { value: 'APP', label: 'Duncit App' },
   { value: 'WEBSITE', label: "Duncit's Main Website" },
+  { value: 'EMAIL', label: 'Connected Mailbox' },
 ];
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: TicketStatus; label: string }> = [
@@ -41,6 +42,9 @@ const renderSubject = (t: Ticket) => (
 const SOURCE_LABEL: Record<TicketSource, string> = {
   APP: 'Duncit App',
   WEBSITE: "Duncit's Main Website",
+  // Mail Automation opened it. The agent's reply has to reach an email thread,
+  // not only an app the sender may not have — which is why it says so.
+  EMAIL: 'Connected Mailbox',
 };
 
 const renderSource = (t: Ticket) => (

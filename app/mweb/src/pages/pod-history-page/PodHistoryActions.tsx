@@ -81,6 +81,7 @@ export default function PodHistoryActions({
             </Button>
             {canBackout && (
               <Button
+                data-tour="booking-backout"
                 onClick={onBackout}
                 disabled={item.status !== 'JOINED' || backingOut}
                 color="error"
@@ -106,20 +107,22 @@ export default function PodHistoryActions({
                 {t('mweb.podHistory.refundChip', { vars: { status: refundLabel } })}
               </Button>
             )}
-            {item.status === 'JOINED' && (
-              <Button
-                onClick={onDownloadTicket}
-                disabled={ticketLoading}
-                variant="contained"
-                startIcon={<ConfirmationNumberIcon />}
-                sx={{
-                  background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)',
-                  fontWeight: 700,
-                }}
-              >
-                {ticketLoading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
-              </Button>
-            )}
+            {/* Shown-and-disabled rather than hidden, matching native: the same
+                booking used to offer this control on one surface and not the
+                other, which also made the tour one step shorter on mWeb. */}
+            <Button
+              data-tour="booking-ticket"
+              onClick={onDownloadTicket}
+              disabled={item.status !== 'JOINED' || ticketLoading}
+              variant="contained"
+              startIcon={<ConfirmationNumberIcon />}
+              sx={{
+                background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)',
+                fontWeight: 700,
+              }}
+            >
+              {ticketLoading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
+            </Button>
           </>
         )}
         <Button

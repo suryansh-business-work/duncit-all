@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import {
   CoinBalanceModel,
   CoinTransactionModel,
+  type CoinTxnSource,
   type ICoinBalance,
   type ICoinTransaction,
 } from './coin.model';
@@ -100,27 +101,30 @@ export const coinService = {
   },
 
   /**
-   * Pay a referrer for bringing somebody in.
+   * Pay one side of a referral.
    *
-   * A flat number of coins rather than a share of a spend: the referrer did not
-   * buy anything, and the person they brought may never buy anything either —
-   * what is being rewarded is the introduction.
+   * A flat number of coins rather than a share of a spend: nobody bought
+   * anything, and the person who was brought in may never buy anything either —
+   * what is being rewarded is the introduction. Both ends of it: the referrer
+   * earns for making it (REFERRAL_EARN) and the new member earns for arriving
+   * through it (REFERRAL_SIGNUP), which is why the source is a parameter.
    *
-   * Idempotent per REFERRAL, enforced by the unique index rather than a
-   * read-then-write check, because two requests racing to apply the same code
-   * would both pass that check and pay twice. The loser undoes its own
+   * Idempotent per REFERRAL AND SOURCE, enforced by the unique index rather
+   * than a read-then-write check, because two requests racing to apply the same
+   * code would both pass that check and pay twice. The loser undoes its own
    * increment, exactly as the payment path does.
    */
   async creditForReferral(opts: {
-    referrerId: string;
+    userId: string;
     referralId: string;
     coins: number;
     reason: string;
+    source: Extract<CoinTxnSource, 'REFERRAL_EARN' | 'REFERRAL_SIGNUP'>;
   }): Promise<void> {
     const value = Math.max(0, Math.floor(opts.coins));
-    if (!Types.ObjectId.isValid(opts.referrerId) || !opts.referralId || value <= 0) return;
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.referralId || value <= 0) return;
 
-    const userId = new Types.ObjectId(opts.referrerId);
+    const userId = new Types.ObjectId(opts.userId);
     try {
       const balance = await CoinBalanceModel.findOneAndUpdate(
         { user_id: userId },
@@ -132,7 +136,7 @@ export const coinService = {
         type: 'CREDIT',
         amount: value,
         balance_after: balance!.balance,
-        source: 'REFERRAL_EARN',
+        source: opts.source,
         reason: opts.reason,
         referral_id: opts.referralId,
       });
@@ -146,6 +150,17 @@ export const coinService = {
       }
       throw e;
     }
+  },
+
+  /**
+   * Drop index definitions the schema no longer declares and build the ones it
+   * does. The referral guard moved from `{referral_id}` to
+   * `{referral_id, source}`, and mongoose's autoIndex only ADDS — left alone,
+   * the old unique index survives and rejects the second of a referral's two
+   * credits.
+   */
+  async syncIndexes(): Promise<void> {
+    await CoinTransactionModel.syncIndexes();
   },
 
   /** Spendable coin count — what a checkout may price a redemption against. */

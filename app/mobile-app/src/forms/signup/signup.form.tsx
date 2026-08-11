@@ -73,6 +73,15 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         required
       />
 
+      <FormTextField
+        control={control}
+        name="referralCode"
+        label={t('mweb.referral.codeOptional')}
+        placeholder={t('mweb.referral.codePlaceholder')}
+        hint={t('mweb.referral.codeHint')}
+        autoCapitalize="characters"
+      />
+
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="signup-error">
           {errorMessage}

@@ -124,6 +124,29 @@ export const settingsTypeDefs = gql`
   }
 
   """
+  One flag from an exported JSON file. There is no id: an export is moved
+  BETWEEN environments, where ids mean nothing, so a flag is matched on the
+  thing that names it — its key.
+  """
+  input ImportFeatureFlagInput {
+    key: String!
+    name: String!
+    description: String
+    enabled: Boolean
+  }
+
+  """
+  What an import did. Flags are reported by key so an operator can see which
+  features the file switched, and skipped keys say what the file asked for
+  that could not be applied (a flag with no key or no name).
+  """
+  type FeatureFlagImportResult {
+    created: [String!]!
+    updated: [String!]!
+    skipped: [String!]!
+  }
+
+  """
   A festive window. While the app clock sits inside [starts_at, ends_at] the
   apps swap in this occasion's icons. The slug doubles as the folder name the
   native app loads its pre-bundled icons from.
@@ -299,6 +322,17 @@ export const settingsTypeDefs = gql`
     ): FeatureFlag!
     setFeatureFlag(flag_id: ID!, enabled: Boolean!): FeatureFlag!
     deleteFeatureFlag(flag_id: ID!): Boolean!
+
+    """
+    Restore flags from an exported JSON file, matching on key: a key this
+    server already has is switched to the file's state, a new one is created.
+
+    System flags are updated like any other — their key is seeded on boot, so
+    the file only carries whether the feature is on, never the seeding itself.
+    """
+    importFeatureFlags(
+      flags: [ImportFeatureFlagInput!]!
+    ): FeatureFlagImportResult!
     updateBranding(input: UpdateBrandingInput!): Branding!
     "Replace the global Pod Shop slider media (managed from the products portal)."
     updatePodShopSlider(input: [PodShopSliderMediaInput!]!): [PodShopSliderMedia!]!

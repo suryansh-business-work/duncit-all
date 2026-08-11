@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { notifyError, useConfirm } from '@duncit/dialogs';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -16,6 +16,7 @@ import {
 } from './queries';
 import FeatureFlagsTable from './FeatureFlagsTable';
 import FlagEditDialog from './FlagEditDialog';
+import FlagImportExport from './FlagImportExport';
 
 export default function FeatureFlagsPage() {
   const client = useApolloClient();
@@ -122,6 +123,28 @@ export default function FeatureFlagsPage() {
           Toggle features on or off across the platform without deploying code.
         </Typography>
       </Box>
+
+      {/* Above the table, not in its toolbar: these two act on every flag at
+          once, so sitting among the row actions would read as if they were
+          about the rows. */}
+      <Alert
+        severity="info"
+        variant="outlined"
+        action={
+          <FlagImportExport
+            onImported={() => {
+              // An import creates flags as well as switching them, so the
+              // whole cache goes rather than just this table's page.
+              client.resetStore().catch(() => undefined);
+              refetchRef.current?.();
+            }}
+          />
+        }
+        sx={{ alignItems: 'center', '& .MuiAlert-action': { pt: 0, alignItems: 'center' } }}
+      >
+        Carry these flags to another environment as a JSON file. An import matches on key and
+        switches matching features straight away.
+      </Alert>
 
       <FeatureFlagsTable
         fetchRows={fetchRows}

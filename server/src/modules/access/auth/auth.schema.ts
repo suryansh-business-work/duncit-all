@@ -16,6 +16,12 @@ export const authTypeDefs = gql`
     dob: String!
     city: String
     zone: String
+    """
+    A friend's referral code. Optional, and checked before the account is
+    created: a code that does not exist fails the signup rather than quietly
+    costing both sides their coins.
+    """
+    referral_code: String
   }
 
   input LoginInput {

@@ -147,11 +147,13 @@ export function HomeFeed() {
                 heading={brandingData?.branding.home_vibe_heading}
                 subheading={brandingData?.branding.home_vibe_subheading}
                 action={
-                  <HomeFilterButton
-                    count={filterCount}
-                    disabled={!hasContent}
-                    onPress={() => setFilterOpen(true)}
-                  />
+                  <TourAnchor tour="home" anchor="home-filters">
+                    <HomeFilterButton
+                      count={filterCount}
+                      disabled={!hasContent}
+                      onPress={() => setFilterOpen(true)}
+                    />
+                  </TourAnchor>
                 }
               />
             </TourAnchor>

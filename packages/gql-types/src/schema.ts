@@ -41,6 +41,21 @@ export type AdMediaType =
   | 'IMAGE'
   | 'VIDEO';
 
+/** How one placement is sold: the name on the rate card, and the line under it. */
+export type AdPlacementCopy = {
+  __typename?: 'AdPlacementCopy';
+  label: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  position: AdPosition;
+};
+
+export type AdPlacementCopyInput = {
+  /** Blank clears the override and restores the shipped name. */
+  label?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  position: AdPosition;
+};
+
 /** Where the ad renders in the apps. AUTO is eligible for every position. */
 export type AdPosition =
   | 'AUTO'
@@ -61,6 +76,15 @@ export type AdPricing = {
   currency_symbol: Scalars['String']['output'];
   explore_scroll_per_day: Scalars['Float']['output'];
   home_bottom_per_day: Scalars['Float']['output'];
+  max_days: Scalars['Int']['output'];
+  /**
+   * The booking window advertisers may pick from. Editable because the slider
+   * on the public page is drawn from these two numbers — a length the site
+   * offers must never be one the server refuses.
+   */
+  min_days: Scalars['Int']['output'];
+  /** What each placement is called and said about, resolved over the defaults. */
+  placements: Array<AdPlacementCopy>;
   pod_details_per_day: Scalars['Float']['output'];
   pod_list_per_day: Scalars['Float']['output'];
   sidebar_per_day: Scalars['Float']['output'];
@@ -89,6 +113,8 @@ export type AdRateCard = {
 export type AdRateCardEntry = {
   __typename?: 'AdRateCardEntry';
   label: Scalars['String']['output'];
+  /** The description under the name on the rate table. Marketing-editable. */
+  note: Scalars['String']['output'];
   position: AdPosition;
   price_per_day: Scalars['Float']['output'];
 };
@@ -180,12 +206,16 @@ export type AdminPodAttendee = {
   backed_out_at?: Maybe<Scalars['String']['output']>;
   /** Backout ID of the filled request when this member's seat was rebooked. */
   backout_no?: Maybe<Scalars['String']['output']>;
+  /** The other people on this booking, recorded at the door. */
+  companions: Array<PodCompanion>;
   email?: Maybe<Scalars['String']['output']>;
   full_name?: Maybe<Scalars['String']['output']>;
   is_host: Scalars['Boolean']['output'];
   joined_at?: Maybe<Scalars['String']['output']>;
   /** PodMember row id — null for people without a membership row (host seat). */
   member_id?: Maybe<Scalars['ID']['output']>;
+  /** This person's own story on the pod. Null for a host seat with no booking. */
+  participation?: Maybe<PodParticipation>;
   payment_id?: Maybe<Scalars['ID']['output']>;
   phone?: Maybe<Scalars['String']['output']>;
   profile_photo?: Maybe<Scalars['String']['output']>;
@@ -193,6 +223,8 @@ export type AdminPodAttendee = {
   replaced_by_name?: Maybe<Scalars['String']['output']>;
   /** Set when this member backed out and a replacement filled the seat. */
   replaced_by_user_id?: Maybe<Scalars['ID']['output']>;
+  /** Seats this booking holds — one ticket admits this many. 1 for a legacy booking. */
+  seats: Scalars['Int']['output'];
   source?: Maybe<JoinSource>;
   /** Null for people without a membership row (the host's own free seat). */
   status?: Maybe<MembershipStatus>;
@@ -399,13 +431,87 @@ export type AppAnalyticsEventType =
  * the authenticated identity and routes it to the feedback channel.
  */
 export type AppFeedbackInput = {
+  app_version?: InputMaybe<Scalars['String']['input']>;
   /** JSON array of Block Kit blocks (stringified) the client composed for the body. */
   blocks_json?: InputMaybe<Scalars['String']['input']>;
   /** Bug | Idea | Question | Other (free-form, shown as a label). */
   category: Scalars['String']['input'];
+  device_model?: InputMaybe<Scalars['String']['input']>;
+  /** Device context — a bug report without it cannot be reproduced. */
+  device_os?: InputMaybe<Scalars['String']['input']>;
+  /** Screenshots the reporter attached — a picture of the broken screen is most of the report. */
+  media_urls?: InputMaybe<Array<Scalars['String']['input']>>;
   message: Scalars['String']['input'];
   /** Where it was sent from — 'web' | 'ios' | 'android' (labelling only). */
   platform?: InputMaybe<Scalars['String']['input']>;
+  /** The screen the reporter was on when they opened the form. */
+  source_screen?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AppPopup = {
+  __typename?: 'AppPopup';
+  /** Set only for AUDIENCE_LIST — membership is recomputed on every app open. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
+  audience_type: AppPopupAudience;
+  /** Whether the ✕ is drawn. Tapping outside the image always closes it. */
+  close_button_enabled: Scalars['Boolean']['output'];
+  created_at: Scalars['String']['output'];
+  cta_label: Scalars['String']['output'];
+  cta_url: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  end_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  /** Internal label for the marketing table — never rendered in the app. */
+  name: Scalars['String']['output'];
+  platform: AppPopupPlatform;
+  start_at: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** Everyone, or the people currently matching a saved marketing audience list. */
+export type AppPopupAudience =
+  | 'ALL_USERS'
+  | 'AUDIENCE_LIST';
+
+/**
+ * What a client reports about itself when it asks for a popup. WEB is mWeb in a
+ * desktop browser; on a phone browser mWeb reports the underlying IOS/ANDROID,
+ * so platform targeting means the same thing on both surfaces.
+ */
+export type AppPopupClientPlatform =
+  | 'ANDROID'
+  | 'IOS'
+  | 'WEB';
+
+export type AppPopupInput = {
+  /** Required when audience_type is AUDIENCE_LIST. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
+  audience_type?: InputMaybe<AppPopupAudience>;
+  close_button_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  cta_url?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  end_at: Scalars['String']['input'];
+  image_url: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  platform?: InputMaybe<AppPopupPlatform>;
+  start_at: Scalars['String']['input'];
+};
+
+/** Which builds a popup is aimed at. BOTH reaches every client. */
+export type AppPopupPlatform =
+  | 'ANDROID'
+  | 'BOTH'
+  | 'IOS';
+
+/** Server-side table page for the shared table engine (appPopupsTable). */
+export type AppPopupTablePage = {
+  __typename?: 'AppPopupTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AppPopup>;
+  total: Scalars['Int']['output'];
 };
 
 export type AppReleaseCommitInput = {
@@ -454,7 +560,13 @@ export type AppVersionInfo = {
   __typename?: 'AppVersionInfo';
   android_store_url: Scalars['String']['output'];
   ios_store_url: Scalars['String']['output'];
+  /** Newest released version. Moves on every deploy — informational only. */
   latest_version: Scalars['String']['output'];
+  /**
+   * Oldest build still allowed in; what the force-update gate compares against.
+   * Blank means nothing is blocked, which is the state a fresh database is in.
+   */
+  min_supported_version: Scalars['String']['output'];
 };
 
 /** A single label → value row the admin inbox renders (survey answers, feedback…). */
@@ -674,9 +786,16 @@ export type BackoutRefundRequest = {
   /** Immutable, chronological Backout lifecycle timeline. */
   events: Array<BackoutEvent>;
   id: Scalars['ID']['output'];
+  /** True when the member gave back only part of their booking and is still attending. */
+  is_partial: Scalars['Boolean']['output'];
   joined_at: Scalars['String']['output'];
   /** Max Backout attempts per user per pod (Admin > Pods > Pod Settings). */
   max_backout_attempts: Scalars['Int']['output'];
+  /**
+   * The whole booking this request belongs to, so Finance reads the same story
+   * the member reads — this request is one branch of it, found by backout_no.
+   */
+  participation?: Maybe<PodParticipation>;
   payment_amount?: Maybe<Scalars['Float']['output']>;
   payment_currency?: Maybe<Scalars['String']['output']>;
   payment_id?: Maybe<Scalars['ID']['output']>;
@@ -698,6 +817,10 @@ export type BackoutRefundRequest = {
    */
   replacement_user_id?: Maybe<Scalars['ID']['output']>;
   replacement_user_name?: Maybe<Scalars['String']['output']>;
+  /** Seats this request released. Finance refunds these, not the whole booking. */
+  seats: Scalars['Int']['output'];
+  /** Seats the booking held before this request — fewer released means a partial backout. */
+  seats_before: Scalars['Int']['output'];
   status: MembershipStatus;
   user_email?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
@@ -997,6 +1120,12 @@ export type Branding = {
   __typename?: 'Branding';
   android_app_url: Scalars['String']['output'];
   app_latest_version: Scalars['String']['output'];
+  /**
+   * Oldest mobile build still allowed in. Set by hand once a release is live in
+   * the stores — unlike app_latest_version, which moves on every deploy. Blank
+   * means nothing is blocked.
+   */
+  app_min_supported_version: Scalars['String']['output'];
   app_name: Scalars['String']['output'];
   /** Icon placement + size for the home All tab (null means the default TOP 40x40 look). */
   home_all_vibe_icon_layout?: Maybe<CategoryIconLayout>;
@@ -1273,6 +1402,11 @@ export type ChatUser = {
 };
 
 export type CheckInEventTicketInput = {
+  /**
+   * The other people this ticket admits. Required the first time a multi-seat
+   * ticket is checked in — exactly one entry per seat beyond the buyer's own.
+   */
+  companions?: InputMaybe<Array<PodCompanionInput>>;
   ticket_doc_id?: InputMaybe<Scalars['ID']['input']>;
   token?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1403,6 +1537,14 @@ export type ClubAdminBackfillResult = {
   skipped: Scalars['Int']['output'];
 };
 
+/** One assignable Club Admin, in the shape the club form's picker renders. */
+export type ClubAdminCandidate = {
+  __typename?: 'ClubAdminCandidate';
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
 /** Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable). */
 export type ClubAdminClubInfoRow = {
   __typename?: 'ClubAdminClubInfoRow';
@@ -1443,6 +1585,11 @@ export type ClubAdminClubOption = {
   assigned: Scalars['Boolean']['output'];
   club_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /**
+   * False for a club they run from outside their own category. Listed anyway,
+   * because a club that is assigned but not shown cannot be given back.
+   */
+  matches_category: Scalars['Boolean']['output'];
 };
 
 /** Per-club breakdown row on the Club Admin dashboard. */
@@ -1601,6 +1748,80 @@ export type ClubMedia = {
 export type ClubMediaInput = {
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
+};
+
+/**
+ * One pod under a club the caller administers — the Club Studio "Your Pods" row.
+ *
+ * Field-for-field identical to VenuePod, with club_id/club_name where that type
+ * carries venue_id/venue_name, so Club Studio and Venue Studio render the same
+ * row through ONE component in mWeb and native (rules 27 + 34).
+ *
+ * It reuses VenuePodBucket rather than declaring a club-named twin of the same
+ * four values: the bucket describes the POD's lifecycle, not who is looking at
+ * it, and a second enum is how the two client unions drift apart.
+ */
+export type ClubPod = {
+  __typename?: 'ClubPod';
+  /** Seats taken — attendees plus the extra seats they bought. */
+  attendee_count: Scalars['Int']['output'];
+  bucket: VenuePodBucket;
+  /** Set when the pod was cancelled (soft-deleted). */
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  completed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  host_names: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  no_of_spots: Scalars['Int']['output'];
+  pod_amount: Scalars['Int']['output'];
+  /** Attendee user ids — resolve names via publicUsersByIds. */
+  pod_attendees: Array<Scalars['ID']['output']>;
+  pod_date_time: Scalars['String']['output'];
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: PodType;
+};
+
+/**
+ * Roll-up figures behind the Club Studio "Your Pods" header, computed over EVERY
+ * pod in scope (the list itself is capped) so the apps never re-derive money or
+ * state counts themselves.
+ *
+ * Cancelled pods count in the cancelled field only: their spots were never sold
+ * and their payments were refunded, so they stay out of capacity, fill and
+ * revenue.
+ */
+export type ClubPodSummary = {
+  __typename?: 'ClubPodSummary';
+  cancelled: Scalars['Int']['output'];
+  /** Finished (the COMPLETED bucket). */
+  completed: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** filled_spots / total_spots (0..1); 0 when there is no capacity. */
+  fill_rate: Scalars['Float']['output'];
+  /** Seats taken across non-cancelled pods (attendees + extra seats). */
+  filled_spots: Scalars['Int']['output'];
+  /** Start of the soonest upcoming pod, ISO. Null when nothing is scheduled. */
+  next_pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** Running right now (the ONGOING bucket). */
+  ongoing: Scalars['Int']['output'];
+  /**
+   * Clubs in scope — 1 when club_id narrows to a single club. Named to match
+   * VenuePodSummary so one client component reads both.
+   */
+  scope_count: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  /** People in those pods — extra seats excluded. */
+  total_attendees: Scalars['Int']['output'];
+  /** Collected from SUCCESS payments on the non-cancelled pods in scope. */
+  total_revenue: Scalars['Float']['output'];
+  /** Capacity across non-cancelled pods. */
+  total_spots: Scalars['Int']['output'];
+  upcoming: Scalars['Int']['output'];
 };
 
 export type ClubRating = {
@@ -1883,6 +2104,28 @@ export type CompletePodInput = {
   venue_bill_amount: Scalars['Float']['input'];
 };
 
+/**
+ * What a user can currently sign in with.
+ *
+ * has_password is what makes Google safe to disconnect: an account with no
+ * password has Google as its ONLY way in, so unlinking would lock the user out.
+ */
+export type ConnectedAccounts = {
+  __typename?: 'ConnectedAccounts';
+  email?: Maybe<Scalars['String']['output']>;
+  google?: Maybe<ConnectedGoogleAccount>;
+  has_password: Scalars['Boolean']['output'];
+};
+
+/** The Google account currently linked to a Duncit account. */
+export type ConnectedGoogleAccount = {
+  __typename?: 'ConnectedGoogleAccount';
+  /** The Gmail address the user is prompted with. Falls back to the account email for accounts created by Google signup, which predate the stored field. */
+  google_email: Scalars['String']['output'];
+  /** ISO timestamp of when the link was granted. Null for Google-signup accounts linked before this was recorded. */
+  linked_at?: Maybe<Scalars['String']['output']>;
+};
+
 export type ContactStatus =
   | 'ARCHIVED'
   | 'IN_PROGRESS'
@@ -1915,6 +2158,44 @@ export type ContactSubmitResult = {
   __typename?: 'ContactSubmitResult';
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
+};
+
+export type Contract = {
+  __typename?: 'Contract';
+  content: Scalars['String']['output'];
+  /**
+   * The permanent, globally unique handle (CTR-000001). Minted on creation,
+   * never edited, and never reused — the counter behind it only counts up, so
+   * a deleted contract's id is not handed to another one.
+   */
+  contract_no: Scalars['String']['output'];
+  counterparty: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  created_by_name: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  effective_from?: Maybe<Scalars['String']['output']>;
+  effective_to?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  status: ContractStatus;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  updated_by_name: Scalars['String']['output'];
+};
+
+/** Where a contract is in its life. */
+export type ContractStatus =
+  | 'ACTIVE'
+  | 'ARCHIVED'
+  | 'DRAFT'
+  | 'EXPIRED';
+
+/** Server-side table page for the shared table engine (contractsTable). */
+export type ContractTablePage = {
+  __typename?: 'ContractTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Contract>;
+  total: Scalars['Int']['output'];
 };
 
 export type Coupon = {
@@ -1974,6 +2255,26 @@ export type CouponTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Coupon>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * Someone who works here: anyone holding a role that admits them to a staff
+ * console. Membership follows the roles, so nobody maintains this list.
+ */
+export type Coworker = {
+  __typename?: 'Coworker';
+  bio: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Reachable off-chat. Empty when they have not given one. */
+  phone: Scalars['String']['output'];
+  photo: Scalars['String']['output'];
+  /** Only their staff roles — the ones that put them in this directory. */
+  roles: Array<Scalars['String']['output']>;
+  /** Their IANA zone, so you can see whether it is a reasonable hour to call. */
+  timezone: Scalars['String']['output'];
 };
 
 export type CreateAiPromptInput = {
@@ -2050,6 +2351,16 @@ export type CreateCommsProviderInput = {
   is_default?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   type: CommsProviderType;
+};
+
+export type CreateContractInput = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  counterparty?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  effective_from?: InputMaybe<Scalars['String']['input']>;
+  effective_to?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ContractStatus>;
+  title: Scalars['String']['input'];
 };
 
 export type CreateCouponInput = {
@@ -2280,6 +2591,7 @@ export type CreatePodInput = {
 export type CreatePolicyInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  policy_type?: InputMaybe<Scalars['String']['input']>;
   slug: Scalars['String']['input'];
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   title: Scalars['String']['input'];
@@ -2858,6 +3170,59 @@ export type DashboardTotals = {
   venues_total: Scalars['Int']['output'];
 };
 
+/**
+ * Progress for one collection inside a clone job. The bytes field is the BSON
+ * size of the documents actually written, so it grows while the copy runs.
+ */
+export type DataCloneCollection = {
+  __typename?: 'DataCloneCollection';
+  bytes: Scalars['Float']['output'];
+  copiedCount: Scalars['Int']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  sourceCount: Scalars['Int']['output'];
+  startedAt?: Maybe<Scalars['String']['output']>;
+  /** PENDING | COPYING | DONE | FAILED */
+  status: Scalars['String']['output'];
+};
+
+/** A production -> staging clone. Runs server-side; the browser only polls it. */
+export type DataCloneJob = {
+  __typename?: 'DataCloneJob';
+  bytesCopied: Scalars['Float']['output'];
+  collections: Array<DataCloneCollection>;
+  collectionsDone: Scalars['Int']['output'];
+  collectionsTotal: Scalars['Int']['output'];
+  currentCollection?: Maybe<Scalars['String']['output']>;
+  documentsCopied: Scalars['Int']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  /** Collections this clone deliberately never copies (credentials, tokens, logs). */
+  excluded: Array<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  sourceDatabase: Scalars['String']['output'];
+  startedAt?: Maybe<Scalars['String']['output']>;
+  startedBy?: Maybe<Scalars['String']['output']>;
+  /** RUNNING | SUCCEEDED | FAILED */
+  status: Scalars['String']['output'];
+  targetDatabase: Scalars['String']['output'];
+};
+
+/**
+ * What a clone would read and write, resolved from the server environment.
+ * The ready flag is false — with the reason in error — when the endpoints are
+ * not configured, or when the target would resolve to the source database.
+ */
+export type DataCloneTargets = {
+  __typename?: 'DataCloneTargets';
+  error?: Maybe<Scalars['String']['output']>;
+  excluded: Array<Scalars['String']['output']>;
+  ready: Scalars['Boolean']['output'];
+  sourceDatabase: Scalars['String']['output'];
+  targetDatabase: Scalars['String']['output'];
+};
+
 export type DeleteMyAccountInput = {
   otp: Scalars['String']['input'];
 };
@@ -3172,10 +3537,17 @@ export type EmailLog = {
   duration_ms: Scalars['Int']['output'];
   /** The header/footer fragment the template named, if any. */
   fragment_key?: Maybe<Scalars['String']['output']>;
+  /**
+   * The body exactly as it was handed to the provider.
+   *
+   * Only the single-row query fills this in — a page of campaign rows would
+   * otherwise carry a megabyte of HTML nobody opened. Empty on the table.
+   */
+  html?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   /** The provider's own id, for tracing a delivery complaint back to them. */
   message_id: Scalars['String']['output'];
-  /** smtp, resend, or none when it never left. */
+  /** smtp, or none when it never left. Older rows may name a retired provider. */
   provider: Scalars['String']['output'];
   /** Why, in one line, whenever the status is not SENT. */
   reason: Scalars['String']['output'];
@@ -3189,11 +3561,84 @@ export type EmailLog = {
   /** The template slug, or empty for a raw-HTML send. */
   template: Scalars['String']['output'];
   to: Scalars['String']['output'];
+  /** The variables it rendered with, as a JSON object. Single-row query only. */
+  vars?: Maybe<Scalars['String']['output']>;
+};
+
+/** One bar: a grouping key and how many rows fell into it. */
+export type EmailLogCountBucket = {
+  __typename?: 'EmailLogCountBucket';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+/**
+ * What the log says about deliverability over a window.
+ *
+ * Built to answer the question a provider's dashboard cannot: not "how many
+ * did we send", but "who did not get theirs, and why".
+ */
+export type EmailLogDashboard = {
+  __typename?: 'EmailLogDashboard';
+  /** Rows in the window — one per send attempt. */
+  attempts: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  /** Why the ones that did not go out did not go out, in fixed buckets. */
+  not_delivered_reasons: Array<EmailLogCountBucket>;
+  /** Which templates they belonged to. The empty key is a raw-HTML send. */
+  not_delivered_templates: Array<EmailLogCountBucket>;
+  /**
+   * Accepted by the mail server with part of the batch refused.
+   *
+   * The row reads SENT and somebody in it still did not get the email.
+   */
+  partially_refused: Scalars['Int']['output'];
+  range_days: Scalars['Int']['output'];
+  /**
+   * People addressed in the window, which is not the same as attempts.
+   *
+   * A campaign goes out as one row per batch with its audience in bcc, so one
+   * attempt can be fifty recipients; the sending mailbox the row is addressed
+   * to is not one of them.
+   */
+  recipients: Scalars['Int']['output'];
+  repeat_failures: Array<EmailLogFailingAddress>;
+  sent: Scalars['Int']['output'];
+  /**
+   * Sends that were accepted by nothing.
+   *
+   * With no provider entry configured the server falls back to a transport that
+   * accepts every message and discards it, so the row reads SENT with an empty
+   * rejection list. A sub-5ms handover is the only signature that leaves.
+   */
+  silently_discarded: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+};
+
+/**
+ * An address that failed more than once in the window.
+ *
+ * Nothing in this product receives bounce notifications, so an address that
+ * keeps failing is the closest thing to a hard-bounce list that exists.
+ */
+export type EmailLogFailingAddress = {
+  __typename?: 'EmailLogFailingAddress';
+  address: Scalars['String']['output'];
+  failures: Scalars['Int']['output'];
+  last_failed_at?: Maybe<Scalars['String']['output']>;
+  last_reason: Scalars['String']['output'];
 };
 
 /** Headline counts for the page's summary strip. */
 export type EmailLogStats = {
   __typename?: 'EmailLogStats';
+  /**
+   * Every row ever kept, not just the window above.
+   *
+   * Approximate by design — it comes from collection metadata, and its only job
+   * is to tell an operator the scale of what "delete everything" would remove.
+   */
+  all_time_total: Scalars['Int']['output'];
   days: Scalars['Int']['output'];
   failed: Scalars['Int']['output'];
   sent: Scalars['Int']['output'];
@@ -3254,6 +3699,18 @@ export type EmailTestResult = {
   ok: Scalars['Boolean']['output'];
 };
 
+/**
+ * What a one-time entity-id repair did.
+ *
+ * Every entity whose id is minted on insert (contracts, documents, policies …)
+ * needs the same one-off pass for rows written before that id existed, and each
+ * one answers the same single question: how many did it have to fix.
+ */
+export type EntityIdBackfillResult = {
+  __typename?: 'EntityIdBackfillResult';
+  repaired: Scalars['Int']['output'];
+};
+
 export type EnvCategory =
   | 'AISENSY'
   | 'EMAIL'
@@ -3267,6 +3724,7 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
+  | 'TURN'
   | 'TWILIO';
 
 export type EnvCategoryDef = {
@@ -3287,6 +3745,30 @@ export type EnvConfigPair = {
 export type EnvConfigPairInput = {
   key: Scalars['String']['input'];
   value: Scalars['String']['input'];
+};
+
+export type EnvConnectionTestInput = {
+  /**
+   * Where a provider whose only real credential check is a live send should
+   * send it (today: AiSensy). Country code + number, digits only. Left blank,
+   * the signed-in admin's own profile phone is used.
+   */
+  to?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The outcome of proving one entry's credentials against its vendor.
+ *
+ * The details list carries everything that is not the headline — granted
+ * scopes, live-vs-test mode, how long a token lasts. Neither field ever
+ * contains a credential; both are shown in the portal and kept in the
+ * entry's test history.
+ */
+export type EnvConnectionTestResult = {
+  __typename?: 'EnvConnectionTestResult';
+  details: Array<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
 };
 
 export type EnvEntry = {
@@ -3331,6 +3813,18 @@ export type EnvFieldDef = {
   number: Scalars['Boolean']['output'];
   phone: Scalars['Boolean']['output'];
   secret: Scalars['Boolean']['output'];
+};
+
+/**
+ * What an import did. Entries are reported by name so an operator can see
+ * which credentials were overwritten, and skipped names say what the file
+ * asked for that this server does not have (an unknown category, or no name).
+ */
+export type EnvImportResult = {
+  __typename?: 'EnvImportResult';
+  created: Array<Scalars['String']['output']>;
+  skipped: Array<Scalars['String']['output']>;
+  updated: Array<Scalars['String']['output']>;
 };
 
 export type EnvSecretFlag = {
@@ -3557,6 +4051,18 @@ export type FeatureFlag = {
   updated_at?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * What an import did. Flags are reported by key so an operator can see which
+ * features the file switched, and skipped keys say what the file asked for
+ * that could not be applied (a flag with no key or no name).
+ */
+export type FeatureFlagImportResult = {
+  __typename?: 'FeatureFlagImportResult';
+  created: Array<Scalars['String']['output']>;
+  skipped: Array<Scalars['String']['output']>;
+  updated: Array<Scalars['String']['output']>;
+};
+
 /** Server-side table page for the shared table engine (featureFlagsTable). */
 export type FeatureFlagTablePage = {
   __typename?: 'FeatureFlagTablePage';
@@ -3565,6 +4071,66 @@ export type FeatureFlagTablePage = {
   rows: Array<FeatureFlag>;
   total: Scalars['Int']['output'];
 };
+
+/**
+ * One problem reported from the app through "Report a Problem".
+ *
+ * The row is the STORE OF RECORD. Slack is only a notification, which is why
+ * slack_error exists: an announcement that never went out must be visible here
+ * rather than costing the reporter their report.
+ */
+export type FeedbackReport = {
+  __typename?: 'FeedbackReport';
+  app_version: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  device_model: Scalars['String']['output'];
+  /** What they were running it on — a report without the device cannot be reproduced. */
+  device_os: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Screenshots the reporter attached. */
+  media_urls: Array<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  /** Permanent, human-readable id (DUN-RPT-000001). */
+  report_no: Scalars['String']['output'];
+  reporter_city: Scalars['String']['output'];
+  reporter_locale: Scalars['String']['output'];
+  /**
+   * The reporter as they were WHEN they reported it — a snapshot, not a join.
+   * Support reads these days later, by which time the account may have changed
+   * phone, city or roles; user_id is still here for when the CURRENT state is
+   * what matters instead.
+   */
+  reporter_phone: Scalars['String']['output'];
+  reporter_roles: Array<Scalars['String']['output']>;
+  /** Why the Slack announcement did not go out. Null when it did. */
+  slack_error?: Maybe<Scalars['String']['output']>;
+  /** Slack message timestamp when the announcement went out. */
+  slack_ts?: Maybe<Scalars['String']['output']>;
+  /** The screen they were on when they opened the form. */
+  source_screen: Scalars['String']['output'];
+  status: FeedbackStatus;
+  updated_at: Scalars['String']['output'];
+  user_email: Scalars['String']['output'];
+  /** Null when the report arrived by email from an address with no account. */
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name: Scalars['String']['output'];
+};
+
+export type FeedbackReportTablePage = {
+  __typename?: 'FeedbackReportTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<FeedbackReport>;
+  total: Scalars['Int']['output'];
+};
+
+export type FeedbackStatus =
+  | 'CLOSED'
+  | 'IN_REVIEW'
+  | 'OPEN'
+  | 'RESOLVED';
 
 export type FinanceDashboardStats = {
   __typename?: 'FinanceDashboardStats';
@@ -3720,6 +4286,79 @@ export type GoogleSignupInput = {
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The Grievance Officer Duncit publishes.
+ *
+ * Readable by anyone — publishing these details is the whole purpose of the
+ * record, so the app, the website and the acknowledgement email all quote the
+ * same one instead of keeping copies.
+ */
+export type GrievanceOfficer = {
+  __typename?: 'GrievanceOfficer';
+  /** Optional. */
+  address: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** Which surface the grievance was raised from. */
+export type GrievanceSource =
+  | 'APP'
+  /** Arrived in a mailbox connected under Mail Automation. */
+  | 'EMAIL'
+  | 'PORTAL'
+  | 'WEBSITE';
+
+export type GrievanceStats = {
+  __typename?: 'GrievanceStats';
+  by_status: Array<GrievanceStatusCount>;
+  total: Scalars['Int']['output'];
+};
+
+export type GrievanceStatus =
+  | 'IN_REVIEW'
+  | 'RECEIVED'
+  | 'REJECTED'
+  | 'RESOLVED';
+
+export type GrievanceStatusCount = {
+  __typename?: 'GrievanceStatusCount';
+  count: Scalars['Int']['output'];
+  status: GrievanceStatus;
+};
+
+export type GrievanceTicket = {
+  __typename?: 'GrievanceTicket';
+  /** Optional — a grievance is answerable without a postal address. */
+  address: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  /** Permanent, globally unique handle (GRV-000001). Never edited, never reused. */
+  grievance_no: Scalars['String']['output'];
+  handled_by_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  /** What the legal team did about it. Staff-only. */
+  resolution: Scalars['String']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  source: GrievanceSource;
+  status: GrievanceStatus;
+  subject: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type GrievanceTicketTablePage = {
+  __typename?: 'GrievanceTicketTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GrievanceTicket>;
+  total: Scalars['Int']['output'];
 };
 
 export type HealthAdjustment = {
@@ -4135,8 +4774,18 @@ export type HostTicketScanResult = {
   /** True when the ticket had already been checked in before this scan. */
   already_checked_in: Scalars['Boolean']['output'];
   attendee?: Maybe<ScannedAttendee>;
+  /** The other people on this booking, once recorded. */
+  companions: Array<PodCompanion>;
+  /** How many more people still need a name and phone number (0 when none do). */
+  companions_required: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
+  /**
+   * True when this ticket admits more people than the buyer and their details
+   * have not been recorded yet. The ticket is NOT checked in — scan again with
+   * the companions argument filled to mark the group present.
+   */
+  requires_companions: Scalars['Boolean']['output'];
   ticket?: Maybe<EventTicket>;
 };
 
@@ -4148,13 +4797,49 @@ export type HostUpdatePodInput = {
   reel_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**
+ * Where to send a file, and the one-shot pass that lets you.
+ *
+ * Files go to ImageKit THROUGH the server, on the private key alone. A browser
+ * cannot sign an ImageKit upload, and the signed-from-the-browser scheme only
+ * works while the public and private keys are a matched pair — a mismatched pair
+ * rejects every upload and names no cause.
+ */
 export type ImagekitAuth = {
   __typename?: 'ImagekitAuth';
-  expire: Scalars['Int']['output'];
-  publicKey: Scalars['String']['output'];
-  signature: Scalars['String']['output'];
-  token: Scalars['String']['output'];
+  /** Single use, ten minutes. It also fixes which folder the file lands in. */
+  ticket: Scalars['String']['output'];
+  /** POST the raw file here, with the ticket and fileName on the query string. */
+  uploadUrl: Scalars['String']['output'];
+  /** The CDN base callers render from. */
   urlEndpoint: Scalars['String']['output'];
+};
+
+/**
+ * One entry from an exported JSON file. There is no id: an export is moved
+ * BETWEEN environments, where ids mean nothing, so an entry is matched on the
+ * pair that names it — its category and its name.
+ */
+export type ImportEnvEntryInput = {
+  assigned_portals?: InputMaybe<Array<Scalars['String']['input']>>;
+  category: EnvCategory;
+  config: Array<EnvConfigPairInput>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+};
+
+/**
+ * One flag from an exported JSON file. There is no id: an export is moved
+ * BETWEEN environments, where ids mean nothing, so a flag is matched on the
+ * thing that names it — its key.
+ */
+export type ImportFeatureFlagInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type Interview = {
@@ -4524,9 +5209,19 @@ export type LegalDocument = {
   created_at: Scalars['String']['output'];
   created_by_name: Scalars['String']['output'];
   description: Scalars['String']['output'];
+  /** Permanent, globally unique handle (DOC-000001). Never edited, never reused. */
+  document_no: Scalars['String']['output'];
   document_type: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Off hides the document from the app without deleting it. */
+  is_active: Scalars['Boolean']['output'];
+  /** A signed contract is closed to edits — the lock IS the signature. */
+  is_locked: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  signatories: Array<LegalDocumentSignatory>;
+  signed_at?: Maybe<Scalars['String']['output']>;
+  /** UNSIGNED until every required signatory has signed, then SIGNED. */
+  signing_status: SigningStatus;
   updated_at: Scalars['String']['output'];
   updated_by_name: Scalars['String']['output'];
   version_count: Scalars['Int']['output'];
@@ -4536,6 +5231,20 @@ export type LegalDocument = {
 export type LegalDocumentFilterInput = {
   document_type?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One person who must sign, and their signature once they have. */
+export type LegalDocumentSignatory = {
+  __typename?: 'LegalDocumentSignatory';
+  designation: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  initials: Scalars['String']['output'];
+  /** A data URL for a drawn or typed signature, or the uploaded image URL. */
+  signature_image: Scalars['String']['output'];
+  signature_method?: Maybe<SignatureMethod>;
+  signed_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type LegalDocumentStats = {
@@ -4652,6 +5361,87 @@ export type LoginInput = {
   password: Scalars['String']['input'];
   portal_key?: InputMaybe<Scalars['String']['input']>;
 };
+
+/**
+ * A Gmail mailbox that answers itself.
+ *
+ * Connected in the Tech portal (credentials), governed from the Support portal
+ * (what it says and what it opens). The first message on a conversation gets a
+ * ticket and one acknowledgement; every reply after that on the same thread is
+ * left alone for a human.
+ */
+export type MailAutomationAccount = {
+  __typename?: 'MailAutomationAccount';
+  /** Let OpenAI rewrite the template into a reply to the actual email, at send time. */
+  ai_enabled: Scalars['Boolean']['output'];
+  connected_at: Scalars['String']['output'];
+  display_name: Scalars['String']['output'];
+  /** The connected mailbox address. */
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Whether the automation is running for this mailbox. Pausing is not disconnecting. */
+  is_active: Scalars['Boolean']['output'];
+  /** False once the Google grant is gone — reconnect from the Tech portal. */
+  is_connected: Scalars['Boolean']['output'];
+  /** Why the last poll failed, or '' when it did not. */
+  last_error: Scalars['String']['output'];
+  last_polled_at?: Maybe<Scalars['String']['output']>;
+  /** Step 2 — what every first message gets back. Must contain {{ticket_no}}. */
+  reply_template: Scalars['String']['output'];
+  /** The response window as the reply words it — for example, 24-48 hours. */
+  sla_label: Scalars['String']['output'];
+  sla_max_hours: Scalars['Int']['output'];
+  sla_min_hours: Scalars['Int']['output'];
+  ticket_type: MailTicketType;
+};
+
+/** What a sender would actually receive, composed from the saved rule. */
+export type MailAutomationPreview = {
+  __typename?: 'MailAutomationPreview';
+  by_ai: Scalars['Boolean']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type MailAutomationRuleInput = {
+  ai_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+  /** Pause or resume the automation without giving up the Google grant. */
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  reply_template?: InputMaybe<Scalars['String']['input']>;
+  sla_max_hours?: InputMaybe<Scalars['Int']['input']>;
+  sla_min_hours?: InputMaybe<Scalars['Int']['input']>;
+  ticket_type?: InputMaybe<MailTicketType>;
+};
+
+/** One conversation the automation has already answered. */
+export type MailAutomationThread = {
+  __typename?: 'MailAutomationThread';
+  created_at: Scalars['String']['output'];
+  from_email: Scalars['String']['output'];
+  from_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** When the acknowledgement went out. Null means the ticket exists but the reply did not send. */
+  replied_at?: Maybe<Scalars['String']['output']>;
+  /** True when OpenAI wrote the body; false when the operator's template went as written. */
+  reply_by_ai: Scalars['Boolean']['output'];
+  reply_error: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  /** The reference quoted back to the sender, e.g. ST-A1B2C3 or GRV-000012. */
+  ticket_no: Scalars['String']['output'];
+  ticket_type: MailTicketType;
+};
+
+/**
+ * Which queue an inbound email opens a record in. Chosen per mailbox in the
+ * Support portal — step 3 of the wizard.
+ */
+export type MailTicketType =
+  /** A grievance — a legal filing with a redressal clock on it. */
+  | 'GRIEVANCE'
+  /** A Report a Problem entry, triaged like an in-app bug report. */
+  | 'REPORT_PROBLEM'
+  /** A support ticket, the ordinary conversation queue. */
+  | 'SUPPORT';
 
 export type ManualLogInput = {
   body_html: Scalars['String']['input'];
@@ -4864,6 +5654,33 @@ export type MarketingDashboardTopLink = {
   id: Scalars['ID']['output'];
   label: Scalars['String']['output'];
   revenue: Scalars['Float']['output'];
+};
+
+/**
+ * One file (or folder) in the ImageKit media library.
+ *
+ * Nothing about it is stored here — it is ImageKit's record, read through the
+ * private key, which is why the browser cannot ask for it directly.
+ */
+export type MediaItem = {
+  __typename?: 'MediaItem';
+  createdAt?: Maybe<Scalars['String']['output']>;
+  fileId: Scalars['ID']['output'];
+  filePath: Scalars['String']['output'];
+  /** image or non-image, as ImageKit classifies it. */
+  fileType?: Maybe<Scalars['String']['output']>;
+  height?: Maybe<Scalars['Int']['output']>;
+  mime?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  size: Scalars['Int']['output'];
+  tags: Array<Scalars['String']['output']>;
+  thumbnail?: Maybe<Scalars['String']['output']>;
+  /** file or folder. */
+  type: Scalars['String']['output'];
+  updatedAt?: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+  versionId?: Maybe<Scalars['String']['output']>;
+  width?: Maybe<Scalars['Int']['output']>;
 };
 
 export type MediaScanLog = {
@@ -5083,15 +5900,38 @@ export type Mutation = {
   approveVenueSlotRequest: VenueSlot;
   /** Products portal: approve a partner warehouse so it goes live (usable for shipping). */
   approveWarehouseRequest: ApprovalRequest;
+  /** Shorthand for setting the status to ARCHIVED. */
+  archiveContract: Contract;
   archiveInventoryProduct: InventoryProduct;
   /** Replace the set of clubs this admin runs. Other admins of those clubs are untouched. */
   assignClubAdminClubs: ClubAdminProfile;
   assignTicket: Ticket;
   assignUserRoles: User;
+  /**
+   * Hang a finished recording on the call it came from. Only a call you were
+   * on: a call id is guessable, and this writes into a conversation.
+   */
+  attachStaffCallRecording: Scalars['Boolean']['output'];
   awardBadgeManually: UserBadge;
   /** Give every existing Club Admin a record and an id. Idempotent. */
   backfillClubAdminProfiles: ClubAdminBackfillResult;
-  /** Confirm Backout — booking moves to 'Backout in process' and the seat is released. */
+  /** One-time repair: give an id to any contract that has none. */
+  backfillContractIds: EntityIdBackfillResult;
+  /** One-time repair: give an id to any grievance that has none. */
+  backfillGrievanceIds: EntityIdBackfillResult;
+  /** One-time repair: give an id to any document that has none. */
+  backfillLegalDocumentIds: EntityIdBackfillResult;
+  /** One-time repair: give an id to any policy that has none. */
+  backfillPolicyIds: EntityIdBackfillResult;
+  /**
+   * Confirm Backout — the released seats go back on sale immediately and the
+   * refund becomes eligible only once a replacement takes them.
+   *
+   * Omit the seats argument (or pass the whole booking) for the original
+   * all-or-nothing backout. Pass fewer to give back PART of a multi-seat
+   * booking: the member stays in the pod with the seats they kept, and only the
+   * released ones are refunded, at the same deduction.
+   */
   backoutPod: PodMember;
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
   bulkDeleteVenueSlots: BulkSlotResult;
@@ -5114,6 +5954,12 @@ export type Mutation = {
   checkInEventTicket: EventTicket;
   /** Agent picks up an unassigned chat — announced as a SYSTEM bubble. */
   claimSupportChat: SupportChatSession;
+  /**
+   * Empty this conversation for BOTH people and return how many messages went.
+   * Deleted, not blanked: a thread of tombstones is not a cleared thread. The
+   * call history stays — that two people spoke is still true.
+   */
+  clearStaffThread: Scalars['Int']['output'];
   cloneLegalDocument: LegalDocument;
   closeBouncerCallback: BouncerCallbackRequest;
   closeSupportChat: SupportChatSession;
@@ -5121,19 +5967,34 @@ export type Mutation = {
   clubAdminCreatePod: Pod;
   /** Soft-delete a pod in one of the signed-in user's clubs. */
   clubAdminDeletePod: Scalars['Boolean']['output'];
+  /**
+   * Club Admin marks a member present WITHOUT a scan.
+   *
+   * The host's path is QR-only on purpose: a scan is proof the person was at the
+   * door, and the host is paid on the result. This is the override for when that
+   * proof cannot be produced — a dead phone, a lost ticket — and it is limited
+   * to the club's admin, who is accountable for the club rather than for this
+   * pod's payout. Every forced mark records who forced it and notifies the
+   * member, so it is contestable rather than silent.
+   */
+  clubAdminForceAttendance: EventTicket;
   /** Edit a club the signed-in user administers (governance fields are ignored). */
   clubAdminUpdateClub: Club;
   /** Edit any field of a pod in one of the signed-in user's clubs. */
   clubAdminUpdatePod: Pod;
   completePodSettlement: PodSettlementResult;
+  /** Auth-required: link a Google account from Profile > Connected Accounts. */
+  connectGoogleAccount: ConnectedAccounts;
   createAiPrompt: AiPrompt;
   createApiKey: CreatedApiKey;
+  createAppPopup: AppPopup;
   createAudienceList: AudienceList;
   createBadge: Badge;
   createCategory: Category;
   createChallenge: Challenge;
   createClub: Club;
   createCommsProvider: CommsProvider;
+  createContract: Contract;
   createCoupon: Coupon;
   createCrmCallPrompt: CrmCallPrompt;
   createCrmDynamicField: CrmDynamicField;
@@ -5174,6 +6035,7 @@ export type Mutation = {
   createRole: Role;
   createShortLink: ShortLink;
   createSlotTemplate: SlotTemplate;
+  createSomethingForYouItem: SomethingForYouItem;
   createSurvey: Survey;
   createTicket: Ticket;
   createUser: User;
@@ -5200,6 +6062,16 @@ export type Mutation = {
   deleteAdjustment: HealthScore;
   /** Deleting a system prompt is refused — reset it instead. */
   deleteAiPrompt: Scalars['Boolean']['output'];
+  /**
+   * Empty the log entirely. Returns how many rows went.
+   *
+   * Deliberately unscoped rather than filter-scoped: the table's filters are
+   * debounced and its total came from an earlier fetch, so a scoped delete
+   * would state one number in the confirmation and remove a different one.
+   * Deleting a filtered set is what deleteEmailLogs is for.
+   */
+  deleteAllEmailLogs: Scalars['Int']['output'];
+  deleteAppPopup: Scalars['Boolean']['output'];
   deleteAudienceList: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
@@ -5213,6 +6085,7 @@ export type Mutation = {
    */
   deleteClubAdminProfile: Scalars['Boolean']['output'];
   deleteCommsProvider: Scalars['Boolean']['output'];
+  deleteContract: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
   deleteCrmCallPrompt: Scalars['Boolean']['output'];
   deleteCrmDynamicField: Scalars['Boolean']['output'];
@@ -5229,6 +6102,8 @@ export type Mutation = {
    * naming it are released rather than left pointing at nothing.
    */
   deleteEmailFragment: Scalars['Boolean']['output'];
+  /** Delete the ticked rows. Returns how many actually went. */
+  deleteEmailLogs: Scalars['Int']['output'];
   deleteEmailTemplate: Scalars['Boolean']['output'];
   deleteEnvEntry: Scalars['Boolean']['output'];
   deleteExpense: Scalars['Boolean']['output'];
@@ -5252,6 +6127,8 @@ export type Mutation = {
    * a campaign that is sending right now is refused.
    */
   deleteMarketingCampaign: Scalars['Boolean']['output'];
+  /** Delete files by id. Returns how many ImageKit actually removed. */
+  deleteMediaFiles: Scalars['Int']['output'];
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
@@ -5273,6 +6150,9 @@ export type Mutation = {
   deleteRole: Scalars['Boolean']['output'];
   deleteShortLink: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
+  deleteSomethingForYouItem: Scalars['Boolean']['output'];
+  /** Take back your own message. The row stays; the words go. */
+  deleteStaffMessage: StaffMessage;
   deleteSurvey: Scalars['Boolean']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
@@ -5291,6 +6171,17 @@ export type Mutation = {
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
   denyWarehouseRequest: ApprovalRequest;
+  /**
+   * Auth-required: unlink the Google account.
+   *
+   * Refused when the account has no password — Google would be the only way in,
+   * and unlinking it would lock the user out of their own account.
+   */
+  disconnectGoogleAccount: ConnectedAccounts;
+  /** Tech portal only: forget the mailbox. Tickets it already opened stay. */
+  disconnectMailAutomationAccount: Scalars['Boolean']['output'];
+  /** Record that the signed-in user closed this popup, so it never returns. */
+  dismissAppPopup: Scalars['Boolean']['output'];
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
   dummyCheckout: Payment;
@@ -5299,6 +6190,8 @@ export type Mutation = {
   duplicateInventoryProduct: InventoryProduct;
   /**  Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score.  */
   editAdjustment: HealthScore;
+  /** Change your own words. Only the text — never the attachment. */
+  editStaffMessage: StaffMessage;
   emailEcommLeadContact: LeadContactActionResult;
   emailHostLeadContact: LeadContactActionResult;
   /** Email the chat transcript to an address (defaults to a .docx attachment). */
@@ -5313,13 +6206,14 @@ export type Mutation = {
    * only opens a PENDING follow request and notifies its owner.
    */
   followUser: User;
+  /** Send an existing message on to somebody else — a copy, not a pointer. */
+  forwardStaffMessage: StaffMessage;
   generateInventorySku: Scalars['String']['output'];
   generateLeadSurveyLink: LeadSurveyEntry;
   generateMeetingLink: MeetingLinkResult;
   /**
-   * Returns short-lived auth params so the browser can upload directly to
-   * ImageKit using the official upload widget. The private key never leaves
-   * the server.
+   * Ask for somewhere to put a file. The folder is fixed on the pass, so one
+   * issued for avatars cannot be spent writing somewhere else.
    */
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
@@ -5334,6 +6228,23 @@ export type Mutation = {
    */
   hostScanPodTicket: HostTicketScanResult;
   hostUpdatePod: Pod;
+  /**
+   * Restore entries from an exported JSON file, matching on category + name:
+   * a name this server already has is updated in place, a new one is created.
+   *
+   * Blank secrets are left alone rather than written, which is what makes an
+   * export that was hand-edited safe to re-import — deleting a value from the
+   * file does not wipe the credential the server is running on.
+   */
+  importEnvEntries: EnvImportResult;
+  /**
+   * Restore flags from an exported JSON file, matching on key: a key this
+   * server already has is switched to the file's state, a new one is created.
+   *
+   * System flags are updated like any other — their key is seeded on boot, so
+   * the file only carries whether the feature is on, never the seeding itself.
+   */
+  importFeatureFlags: FeatureFlagImportResult;
   /**
    * Server-side import of a remote image (e.g. a Pexels stock photo) into our
    * own ImageKit account. Returns the final ImageKit URL.
@@ -5355,11 +6266,32 @@ export type Mutation = {
   inviteCoHost: Pod;
   /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
+  /**
+   * Grant Google sign-in to an existing email/password account, then sign in.
+   *
+   * This is the "allow" half of the consent step loginWithGoogle triggers with
+   * EMAIL_LOGIN_REQUIRED. Deliberately UNAUTHENTICATED: the caller has just
+   * proved control of the Google account, and verifyGoogleIdToken refuses a
+   * token whose email Google has not verified — so a verified address matching
+   * an account IS the proof. The password is never touched; the account keeps
+   * both ways in.
+   */
+  linkGoogleAccount: AuthPayload;
   login: AuthPayload;
   loginWithGoogle: AuthPayload;
+  /** Trade a correct code for the same session a password would have produced. */
+  loginWithPortalOtp: AuthPayload;
+  /**
+   * Tech portal only: the Google consent URL to open in a new tab. The callback
+   * at /gmail/oauth/callback finishes the connection and returns the operator
+   * to the Tech portal.
+   */
+  mailAutomationConnectUrl: Scalars['String']['output'];
   markAllNotificationsRead: Scalars['Boolean']['output'];
   markBouncerCallbackContacted: BouncerCallbackRequest;
   markNotificationRead: Scalars['Boolean']['output'];
+  /** Mark what they sent you as read. Returns how many that was. */
+  markStaffThreadRead: Scalars['Int']['output'];
   markSupportChatRead: SupportChatSession;
   /** Mark a ticket thread read (owner or agent) — updates the side's last-read so the other side's ticks turn 'Seen' (B12). */
   markTicketRead: Ticket;
@@ -5368,11 +6300,20 @@ export type Mutation = {
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
+  /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
+  pinStaffMessage: StaffMessage;
   /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
   processBackoutRefund: BackoutRefundRequest;
   publishPodDraft: Pod;
+  /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */
+  purgeMediaCache: Scalars['String']['output'];
   raiseBouncerSos: BouncerSosAlert;
   reactToPodMessage: PodMessage;
+  /**
+   * React, or take the reaction back. The same kind again removes it; a
+   * different kind replaces it, so one person is only ever counted once.
+   */
+  reactToStaffMessage: StaffMessage;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   recordActivePing: Scalars['Boolean']['output'];
@@ -5417,6 +6358,8 @@ export type Mutation = {
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
   removeUserRole: User;
+  /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
+  renameMediaFile: MediaItem;
   /** Re-open a resolved/closed chat (user within 3 days, or an agent). Reason logged to the thread. */
   reopenSupportChat: SupportChatSession;
   /** Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread. */
@@ -5438,6 +6381,15 @@ export type Mutation = {
   /** Auth-required: verify the current password and email a change-confirmation OTP. */
   requestPasswordChangeOtp: OtpRequestResult;
   requestPasswordResetOtp: OtpRequestResult;
+  /**
+   * Email a sign-in code for a console.
+   *
+   * Answers the same way whatever happens, on purpose: an account that does not
+   * exist, one that is not active and one with no role for this portal are all
+   * reported as sent. Told apart, this mutation would be a directory of who
+   * works here and what they can reach.
+   */
+  requestPortalLoginOtp: OtpRequestResult;
   requestWhatsAppOtp: WhatsAppOtpRequestResult;
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
@@ -5475,6 +6427,7 @@ export type Mutation = {
   saveExpoPushToken: Scalars['Boolean']['output'];
   /** Save a founder setting (constant / manual metric value). */
   saveFounderSetting: FounderSettingKv;
+  saveGrievanceOfficer: GrievanceOfficer;
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
   saveMyAddress: UserAddress;
@@ -5482,6 +6435,8 @@ export type Mutation = {
   saveMyBrandPickupLocation: BrandPickupLocation;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
+  /** Save part of your chat setup. Anything omitted is left as it was. */
+  saveStaffChatState: StaffChatState;
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
@@ -5496,6 +6451,8 @@ export type Mutation = {
   sendPodMessage: PodMessage;
   /** Post a message to a Slack channel (full message surface). */
   sendSlackMessage: SlackSendResult;
+  /** Send a message, a file, or both. Text may be empty when a file comes with it. */
+  sendStaffMessage: StaffMessage;
   sendSupportChatMessage: SupportChatMessage;
   sendTestEmail: EmailTestResult;
   /** Start or schedule a WhatsApp send. Returns immediately; the walk continues in the background. */
@@ -5516,6 +6473,8 @@ export type Mutation = {
   /** Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible). */
   setEcommBrandActive: EcommBrand;
   setFeatureFlag: FeatureFlag;
+  /** Support portal: move a report through triage. */
+  setFeedbackReportStatus: FeedbackReport;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
   /** Persist the signed-in users language. Validated against active locales. */
@@ -5532,13 +6491,23 @@ export type Mutation = {
   setShortLinkActive: ShortLink;
   setVenueActive: Venue;
   setVenueDeductions: Venue;
+  /** Email the signed contract, with the PDF attached. */
+  shareLegalDocument: Scalars['Boolean']['output'];
   sharePodIdea: PodIdea;
+  /** Sign as the acting user. Locks the contract once nobody is left to sign. */
+  signLegalDocument: LegalDocument;
   signupWithGoogle: AuthPayload;
   skipWhatsAppOtp: User;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
   /** Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer. */
   startCrmPortalCall: CrmAiCallResult;
+  /**
+   * Start a production -> staging clone and return the job immediately. The copy
+   * itself continues on the server, so closing the browser cannot interrupt it.
+   * SUPER_ADMIN only, and audited.
+   */
+  startDataClone: DataCloneJob;
   startRecordedUserCall: UserContactAction;
   startSupportChat: SupportChatSession;
   /**
@@ -5558,7 +6527,13 @@ export type Mutation = {
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
   submitAddressVerification: Verification;
-  /** Post in-app feedback to Slack. Any signed-in user; identity is server-stamped. */
+  /**
+   * File an in-app problem report. Any signed-in user; identity is server-stamped.
+   *
+   * The report is SAVED first and read in the Support portal; the Slack post is a
+   * notification whose failure is recorded on the row. It used to be Slack-only,
+   * so an unconfigured channel threw the report away.
+   */
   submitAppFeedback: SlackSendResult;
   submitBouncerFeedback: BouncerFeedback;
   submitContactForm: ContactSubmitResult;
@@ -5567,6 +6542,13 @@ export type Mutation = {
   /** Products portal: raise a brand/product change request for admin approval (Task B item 2). */
   submitEcommChangeRequest: ApprovalRequest;
   submitFaqQuestion: FaqSubmitResult;
+  /**
+   * Raise a grievance.
+   *
+   * Deliberately open: someone with a grievance about Duncit may have already
+   * deleted their account, so requiring one would close the only door they have.
+   */
+  submitGrievance: GrievanceTicket;
   submitHostFinal: Host;
   submitHostRequest: HostRequest;
   submitHostStep1: Host;
@@ -5597,6 +6579,19 @@ export type Mutation = {
   /** Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited. */
   techRestartContainer: TechRestartResult;
   testCommsProvider: CommsProviderTestResult;
+  /**
+   * Prove one entry's saved credentials against its vendor.
+   *
+   * Takes the ENTRY id rather than a category on purpose: a category can hold
+   * several entries and only one of them is the default, so a category-keyed
+   * test would report a credential the operator is not looking at. The category
+   * comes from the entry, which is what keeps this ONE mutation instead of a
+   * near-identical one per provider.
+   *
+   * Some of these perform a REAL action — AiSensy's key can make no call except
+   * sending, so testing it sends a WhatsApp message.
+   */
+  testEnvConnection: EnvConnectionTestResult;
   /** Interactive tests — these perform REAL actions (send email, place calls, upload, AI calls). */
   testEnvEmail: EnvTestRichResult;
   testEnvEntry: EnvTestResult;
@@ -5619,6 +6614,7 @@ export type Mutation = {
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
   updateAiPrompt: AiPrompt;
+  updateAppPopup: AppPopup;
   updateAppSettings: AppSettings;
   /** Owner edits the editable subset of an APPROVED venue (documents append-only). */
   updateApprovedVenue: Venue;
@@ -5631,6 +6627,7 @@ export type Mutation = {
   updateClubAdminProfile: ClubAdminProfile;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
+  updateContract: Contract;
   updateCoupon: Coupon;
   updateCrmCallPrompt: CrmCallPrompt;
   updateCrmDynamicField: CrmDynamicField;
@@ -5648,12 +6645,17 @@ export type Mutation = {
   updateFaqSubmissionStatus: FaqSubmission;
   updateFeatureFlag: FeatureFlag;
   updateFinanceSettings: FinanceSettings;
+  updateGrievanceStatus: GrievanceTicket;
   updateHostLead: HostLead;
   updateInterview: Interview;
   updateInventoryProduct: InventoryProduct;
   updateJobApplicationStatus: JobApplication;
   updateLegalDocument: LegalDocument;
   updateLocation: Location;
+  /** Support portal: steps 2 and 3 — the reply message, the queue and the window. */
+  updateMailAutomationRule: MailAutomationAccount;
+  /** Tags, and the focus rectangle a smart crop uses. */
+  updateMediaFile: MediaItem;
   updateMeeting: OnboardingMeeting;
   updateMeetingAvailability: MeetingAvailability;
   updateMyInterests: User;
@@ -5672,9 +6674,12 @@ export type Mutation = {
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
-  /** Admin: set the gift shown to users for referring friends. */
-  updateReferralGift: ReferralSettings;
+  /** Finance: what a referral pays and what a member's share sheet says. */
+  updateReferralSettings: ReferralSettings;
+  /** Support portal: edit the chips and prompt the app renders. */
+  updateReportProblemConfig: ReportProblemConfig;
   updateRole: Role;
+  updateSomethingForYouItem: SomethingForYouItem;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
@@ -5688,6 +6693,7 @@ export type Mutation = {
   updateVenueSlot: VenueSlot;
   updateWebsiteContent: WebsiteContentItem;
   updateWebsiteNavItem: WebsiteNavItem;
+  updateWithdrawalMinimums: WithdrawalMinimums;
   /**
    * Server-side ImageKit upload for admin/device files. This avoids browser
    * signature failures by keeping the private-key upload on the API server.
@@ -5978,6 +6984,11 @@ export type MutationApproveWarehouseRequestArgs = {
 };
 
 
+export type MutationArchiveContractArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationArchiveInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -6001,6 +7012,12 @@ export type MutationAssignUserRolesArgs = {
 };
 
 
+export type MutationAttachStaffCallRecordingArgs = {
+  call_id: Scalars['ID']['input'];
+  url: Scalars['String']['input'];
+};
+
+
 export type MutationAwardBadgeManuallyArgs = {
   badge_doc_id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -6010,6 +7027,7 @@ export type MutationAwardBadgeManuallyArgs = {
 
 export type MutationBackoutPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+  seats?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -6045,6 +7063,7 @@ export type MutationCallVenueLeadContactArgs = {
 
 
 export type MutationCancelBackoutPodArgs = {
+  backout_id?: InputMaybe<Scalars['ID']['input']>;
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -6086,6 +7105,11 @@ export type MutationClaimSupportChatArgs = {
 };
 
 
+export type MutationClearStaffThreadArgs = {
+  peer_id: Scalars['ID']['input'];
+};
+
+
 export type MutationCloneLegalDocumentArgs = {
   id: Scalars['ID']['input'];
 };
@@ -6113,6 +7137,12 @@ export type MutationClubAdminDeletePodArgs = {
 };
 
 
+export type MutationClubAdminForceAttendanceArgs = {
+  membership_id: Scalars['ID']['input'];
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationClubAdminUpdateClubArgs = {
   club_doc_id: Scalars['ID']['input'];
   input: UpdateClubInput;
@@ -6130,6 +7160,11 @@ export type MutationCompletePodSettlementArgs = {
 };
 
 
+export type MutationConnectGoogleAccountArgs = {
+  input: GoogleAuthInput;
+};
+
+
 export type MutationCreateAiPromptArgs = {
   input: CreateAiPromptInput;
 };
@@ -6137,6 +7172,11 @@ export type MutationCreateAiPromptArgs = {
 
 export type MutationCreateApiKeyArgs = {
   name: Scalars['String']['input'];
+};
+
+
+export type MutationCreateAppPopupArgs = {
+  input: AppPopupInput;
 };
 
 
@@ -6167,6 +7207,11 @@ export type MutationCreateClubArgs = {
 
 export type MutationCreateCommsProviderArgs = {
   input: CreateCommsProviderInput;
+};
+
+
+export type MutationCreateContractArgs = {
+  input: CreateContractInput;
 };
 
 
@@ -6351,6 +7396,11 @@ export type MutationCreateSlotTemplateArgs = {
 };
 
 
+export type MutationCreateSomethingForYouItemArgs = {
+  input: SomethingForYouInput;
+};
+
+
 export type MutationCreateSurveyArgs = {
   input: CreateSurveyInput;
 };
@@ -6450,6 +7500,11 @@ export type MutationDeleteAiPromptArgs = {
 };
 
 
+export type MutationDeleteAppPopupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteAudienceListArgs = {
   id: Scalars['ID']['input'];
 };
@@ -6488,6 +7543,11 @@ export type MutationDeleteClubAdminProfileArgs = {
 
 
 export type MutationDeleteCommsProviderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteContractArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -6546,6 +7606,11 @@ export type MutationDeleteEcommLeadArgs = {
 
 export type MutationDeleteEmailFragmentArgs = {
   key: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteEmailLogsArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -6633,6 +7698,11 @@ export type MutationDeleteLocationArgs = {
 
 export type MutationDeleteMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMediaFilesArgs = {
+  fileIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -6735,6 +7805,16 @@ export type MutationDeleteSlotTemplateArgs = {
 };
 
 
+export type MutationDeleteSomethingForYouItemArgs = {
+  item_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteStaffMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteSurveyArgs = {
   id: Scalars['ID']['input'];
 };
@@ -6816,6 +7896,16 @@ export type MutationDenyWarehouseRequestArgs = {
 };
 
 
+export type MutationDisconnectMailAutomationAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDismissAppPopupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDismissMeetingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -6838,6 +7928,12 @@ export type MutationDuplicateInventoryProductArgs = {
 
 export type MutationEditAdjustmentArgs = {
   input: EditAdjustmentInput;
+};
+
+
+export type MutationEditStaffMessageArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
 };
 
 
@@ -6900,6 +7996,12 @@ export type MutationFollowUserArgs = {
 };
 
 
+export type MutationForwardStaffMessageArgs = {
+  id: Scalars['ID']['input'];
+  to_user_id: Scalars['ID']['input'];
+};
+
+
 export type MutationGenerateLeadSurveyLinkArgs = {
   entity: LeadSurveyEntity;
   lead_id: Scalars['ID']['input'];
@@ -6912,6 +8014,11 @@ export type MutationGenerateMeetingLinkArgs = {
   platform: Scalars['String']['input'];
   start: Scalars['String']['input'];
   title: Scalars['String']['input'];
+};
+
+
+export type MutationGetImagekitAuthArgs = {
+  folder?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -6934,6 +8041,7 @@ export type MutationHostResubmitPodArgs = {
 
 
 export type MutationHostScanPodTicketArgs = {
+  companions?: InputMaybe<Array<PodCompanionInput>>;
   pod_doc_id: Scalars['ID']['input'];
   token: Scalars['String']['input'];
 };
@@ -6942,6 +8050,16 @@ export type MutationHostScanPodTicketArgs = {
 export type MutationHostUpdatePodArgs = {
   input: HostUpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationImportEnvEntriesArgs = {
+  entries: Array<ImportEnvEntryInput>;
+};
+
+
+export type MutationImportFeatureFlagsArgs = {
+  flags: Array<ImportFeatureFlagInput>;
 };
 
 
@@ -6983,6 +8101,11 @@ export type MutationJoinFreePodArgs = {
 };
 
 
+export type MutationLinkGoogleAccountArgs = {
+  input: GoogleAuthInput;
+};
+
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -6990,6 +8113,16 @@ export type MutationLoginArgs = {
 
 export type MutationLoginWithGoogleArgs = {
   input: GoogleAuthInput;
+};
+
+
+export type MutationLoginWithPortalOtpArgs = {
+  input: PortalLoginOtpInput;
+};
+
+
+export type MutationMailAutomationConnectUrlArgs = {
+  login_hint?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -7002,6 +8135,11 @@ export type MutationMarkBouncerCallbackContactedArgs = {
 
 export type MutationMarkNotificationReadArgs = {
   user_notification_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationMarkStaffThreadReadArgs = {
+  peer_id: Scalars['ID']['input'];
 };
 
 
@@ -7030,6 +8168,11 @@ export type MutationPermanentlyDeleteInventoryProductArgs = {
 };
 
 
+export type MutationPinStaffMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationProcessBackoutRefundArgs = {
   id: Scalars['ID']['input'];
 };
@@ -7041,6 +8184,11 @@ export type MutationPublishPodDraftArgs = {
 };
 
 
+export type MutationPurgeMediaCacheArgs = {
+  url: Scalars['String']['input'];
+};
+
+
 export type MutationRaiseBouncerSosArgs = {
   input: RaiseSosInput;
 };
@@ -7049,6 +8197,12 @@ export type MutationRaiseBouncerSosArgs = {
 export type MutationReactToPodMessageArgs = {
   emoji: Scalars['String']['input'];
   message_id: Scalars['ID']['input'];
+};
+
+
+export type MutationReactToStaffMessageArgs = {
+  emoji: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -7195,6 +8349,13 @@ export type MutationRemoveUserRoleArgs = {
 };
 
 
+export type MutationRenameMediaFileArgs = {
+  fileId: Scalars['ID']['input'];
+  newFileName: Scalars['String']['input'];
+  purgeCache?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type MutationReopenSupportChatArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   session_id: Scalars['ID']['input'];
@@ -7249,6 +8410,11 @@ export type MutationRequestPasswordChangeOtpArgs = {
 
 export type MutationRequestPasswordResetOtpArgs = {
   email: Scalars['String']['input'];
+};
+
+
+export type MutationRequestPortalLoginOtpArgs = {
+  input: PortalLoginOtpRequestInput;
 };
 
 
@@ -7395,6 +8561,11 @@ export type MutationSaveFounderSettingArgs = {
 };
 
 
+export type MutationSaveGrievanceOfficerArgs = {
+  input: SaveGrievanceOfficerInput;
+};
+
+
 export type MutationSaveLeadSurveyResponseArgs = {
   answers: Array<SurveyAnswerInput>;
   entity: LeadSurveyEntity;
@@ -7424,6 +8595,11 @@ export type MutationSavePodDraftArgs = {
 
 export type MutationSavePushSubscriptionArgs = {
   input: PushSubscriptionInput;
+};
+
+
+export type MutationSaveStaffChatStateArgs = {
+  input: StaffChatStateInput;
 };
 
 
@@ -7459,6 +8635,18 @@ export type MutationSendPodMessageArgs = {
 
 export type MutationSendSlackMessageArgs = {
   input: SendSlackMessageInput;
+};
+
+
+export type MutationSendStaffMessageArgs = {
+  attachment_name?: InputMaybe<Scalars['String']['input']>;
+  attachment_peaks?: InputMaybe<Array<Scalars['Float']['input']>>;
+  attachment_size?: InputMaybe<Scalars['Int']['input']>;
+  attachment_type?: InputMaybe<Scalars['String']['input']>;
+  attachment_url?: InputMaybe<Scalars['String']['input']>;
+  reply_to_id?: InputMaybe<Scalars['ID']['input']>;
+  text: Scalars['String']['input'];
+  to_user_id: Scalars['ID']['input'];
 };
 
 
@@ -7547,6 +8735,12 @@ export type MutationSetFeatureFlagArgs = {
 };
 
 
+export type MutationSetFeedbackReportStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FeedbackStatus;
+};
+
+
 export type MutationSetHostActiveArgs = {
   active: Scalars['Boolean']['input'];
   host_doc_id: Scalars['ID']['input'];
@@ -7613,8 +8807,21 @@ export type MutationSetVenueDeductionsArgs = {
 };
 
 
+export type MutationShareLegalDocumentArgs = {
+  id: Scalars['ID']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  to: Scalars['String']['input'];
+};
+
+
 export type MutationSharePodIdeaArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSignLegalDocumentArgs = {
+  id: Scalars['ID']['input'];
+  input: SignLegalDocumentInput;
 };
 
 
@@ -7654,6 +8861,7 @@ export type MutationStartSupportChatArgs = {
 
 export type MutationStartVideoCompressionArgs = {
   folder?: InputMaybe<Scalars['String']['input']>;
+  force_transcode?: InputMaybe<Scalars['Boolean']['input']>;
   remote_url: Scalars['String']['input'];
   surface?: InputMaybe<Scalars['String']['input']>;
   trim_duration_seconds?: InputMaybe<Scalars['Float']['input']>;
@@ -7708,6 +8916,11 @@ export type MutationSubmitEcommChangeRequestArgs = {
 
 export type MutationSubmitFaqQuestionArgs = {
   input: SubmitFaqQuestionInput;
+};
+
+
+export type MutationSubmitGrievanceArgs = {
+  input: SubmitGrievanceInput;
 };
 
 
@@ -7822,6 +9035,12 @@ export type MutationTestCommsProviderArgs = {
 };
 
 
+export type MutationTestEnvConnectionArgs = {
+  id: Scalars['ID']['input'];
+  input?: InputMaybe<EnvConnectionTestInput>;
+};
+
+
 export type MutationTestEnvEmailArgs = {
   id: Scalars['ID']['input'];
   to: Scalars['String']['input'];
@@ -7926,6 +9145,12 @@ export type MutationUpdateAiPromptArgs = {
 };
 
 
+export type MutationUpdateAppPopupArgs = {
+  id: Scalars['ID']['input'];
+  input: AppPopupInput;
+};
+
+
 export type MutationUpdateAppSettingsArgs = {
   input: UpdateAppSettingsInput;
 };
@@ -7987,6 +9212,12 @@ export type MutationUpdateCommsProviderArgs = {
 export type MutationUpdateContactStatusArgs = {
   contact_id: Scalars['ID']['input'];
   status: ContactStatus;
+};
+
+
+export type MutationUpdateContractArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateContractInput;
 };
 
 
@@ -8092,6 +9323,12 @@ export type MutationUpdateFinanceSettingsArgs = {
 };
 
 
+export type MutationUpdateGrievanceStatusArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGrievanceStatusInput;
+};
+
+
 export type MutationUpdateHostLeadArgs = {
   id: Scalars['ID']['input'];
   input: HostLeadInput;
@@ -8125,6 +9362,18 @@ export type MutationUpdateLegalDocumentArgs = {
 export type MutationUpdateLocationArgs = {
   input: UpdateLocationInput;
   location_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateMailAutomationRuleArgs = {
+  input: MailAutomationRuleInput;
+};
+
+
+export type MutationUpdateMediaFileArgs = {
+  customCoordinates?: InputMaybe<Scalars['String']['input']>;
+  fileId: Scalars['ID']['input'];
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -8212,14 +9461,25 @@ export type MutationUpdatePolicyArgs = {
 };
 
 
-export type MutationUpdateReferralGiftArgs = {
-  gift_description: Scalars['String']['input'];
+export type MutationUpdateReferralSettingsArgs = {
+  input: ReferralSettingsInput;
+};
+
+
+export type MutationUpdateReportProblemConfigArgs = {
+  input: UpdateReportProblemConfigInput;
 };
 
 
 export type MutationUpdateRoleArgs = {
   input: UpdateRoleInput;
   role_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateSomethingForYouItemArgs = {
+  input: SomethingForYouInput;
+  item_id: Scalars['ID']['input'];
 };
 
 
@@ -8285,6 +9545,11 @@ export type MutationUpdateWebsiteContentArgs = {
 export type MutationUpdateWebsiteNavItemArgs = {
   input: WebsiteNavItemInput;
   item_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateWithdrawalMinimumsArgs = {
+  input: UpdateWithdrawalMinimumsInput;
 };
 
 
@@ -8397,14 +9662,36 @@ export type MyAdminClubsFilter = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/**
+ * One guest's own rating of a pod, exactly as they left it — the answers that
+ * fill the form back in when they open the feedback link a second time.
+ */
+export type MyPodFeedback = {
+  __typename?: 'MyPodFeedback';
+  created_at: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  /** The OVERALL score. */
+  rating: Scalars['Int']['output'];
+  ratings: Array<BouncerAspectRating>;
+  updated_at: Scalars['String']['output'];
+};
+
 /** The signed-in user's referral state — code, gift on offer and redemptions. */
 export type MyReferral = {
   __typename?: 'MyReferral';
   code: Scalars['String']['output'];
+  /** Coins EACH side of a referral earns — the referrer and the new member. */
+  coins_per_referral: Scalars['Int']['output'];
   gift_description: Scalars['String']['output'];
   referred: Array<ReferralEntry>;
   /** Name of whoever referred this user; null when nobody has. */
   referred_by_name?: Maybe<Scalars['String']['output']>;
+  /**
+   * The Finance-written message a share sheet pre-fills, with its {code},
+   * {link} and {coins} placeholders still in it. Empty when Finance has not
+   * written one, which the apps answer with their shipped default.
+   */
+  share_message: Scalars['String']['output'];
 };
 
 export type NewsletterSource =
@@ -8754,6 +10041,18 @@ export type PaymentReleaseApprovalType =
 
 export type PaymentReleaseBreakdown = {
   __typename?: 'PaymentReleaseBreakdown';
+  /**
+   * The attendance this payout was computed from, frozen at completion.
+   *
+   * A pod settles on the seats a host scanned in, and a later scan changes the
+   * pod's attendance — so these cannot be re-derived when the release is
+   * reviewed, only read back. 0 on snapshots written before attendance drove
+   * the money.
+   */
+  attended_seats: Scalars['Int']['output'];
+  /** Money from the attended bookings — what the waterfall started from. */
+  attended_total: Scalars['Float']['output'];
+  booked_seats: Scalars['Int']['output'];
   collected_total: Scalars['Float']['output'];
   commission_amount: Scalars['Float']['output'];
   commission_pct: Scalars['Float']['output'];
@@ -8945,6 +10244,15 @@ export type PickupOwnerKind =
 
 export type Pod = {
   __typename?: 'Pod';
+  /**
+   * Seats a host has scanned in at the door, out of the seats booked.
+   *
+   * Attendance is not stored on the pod or the membership — it is the door scan
+   * on each EventTicket — so this is resolved live. It is what a completed pod
+   * settles on, which is why a pod's own detail view reports it beside the
+   * booking count rather than leaving the two to be reconciled elsewhere.
+   */
+  attendance: PodAttendanceSummary;
   available_perks: Array<Scalars['String']['output']>;
   club?: Maybe<Club>;
   club_id: Scalars['ID']['output'];
@@ -9009,6 +10317,30 @@ export type PodAspectRating = {
   aspect: BouncerFeedbackAspect;
   average: Scalars['Float']['output'];
   count: Scalars['Int']['output'];
+};
+
+/**
+ * How many of a pod's booked seats were actually scanned in at the door.
+ *
+ * Seats, not people: one booking can admit several, and a completed pod settles
+ * per seat. The recorded flag tells "nobody turned up" apart from "nobody
+ * scanned" — a virtual pod, or a host who never opened the scanner, is not a
+ * pod where everyone was absent.
+ */
+export type PodAttendanceSummary = {
+  __typename?: 'PodAttendanceSummary';
+  attended_seats: Scalars['Int']['output'];
+  booked_seats: Scalars['Int']['output'];
+  /** False when no ticket on this pod has ever been scanned. */
+  recorded: Scalars['Boolean']['output'];
+};
+
+/** How many seats one JOINED member holds — the +N other members label. */
+export type PodAttendeeSeats = {
+  __typename?: 'PodAttendeeSeats';
+  /** Seats this person's booking holds (always at least 1). */
+  seats: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
 };
 
 /** What kind of pod action was recorded. */
@@ -9148,6 +10480,23 @@ export type PodComment = {
   text: Scalars['String']['output'];
 };
 
+/** One extra person admitted on someone else's booking, recorded at the door. */
+export type PodCompanion = {
+  __typename?: 'PodCompanion';
+  /** When the host recorded them (ISO). */
+  added_at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone_extension?: Maybe<Scalars['String']['output']>;
+  phone_number: Scalars['String']['output'];
+};
+
+/** Details for one of the other people a multi-seat ticket admits. */
+export type PodCompanionInput = {
+  name: Scalars['String']['input'];
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number: Scalars['String']['input'];
+};
+
 export type PodDashboard = {
   __typename?: 'PodDashboard';
   created_trend: Array<PodDashboardDay>;
@@ -9241,6 +10590,17 @@ export type PodEarningsProjection = {
   /** Spots the host entered (physical capacity, including the host's own seat). */
   total_spots: Scalars['Int']['output'];
   waterfall: PodFinanceWaterfall;
+};
+
+/**
+ * The rating form for one pod: which parts it can be rated on, plus whatever
+ * the signed-in guest has already said about it. "mine" is null until they
+ * rate it, and submitting again edits that same answer.
+ */
+export type PodFeedbackForm = {
+  __typename?: 'PodFeedbackForm';
+  mine?: Maybe<MyPodFeedback>;
+  pod: BouncerPodInfo;
 };
 
 /** Everything guests said about one pod — averages, plus the ratings themselves. */
@@ -9377,9 +10737,21 @@ export type PodMember = {
   backed_out_at?: Maybe<Scalars['String']['output']>;
   /** Backout attempts used for this pod (each Confirm Backout counts one). */
   backout_count: Scalars['Int']['output'];
+  /**
+   * The other people this booking admits, captured at check-in. Empty until the
+   * host scans the ticket; one entry per seat beyond the buyer's own afterwards.
+   */
+  companions: Array<PodCompanion>;
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   joined_at: Scalars['String']['output'];
+  /**
+   * This booking's whole story — backouts, attendance and cancellation in one
+   * object, so a timeline costs one resolution rather than five. Null to anyone
+   * but the member themselves and Admin/Finance: it carries DUN-BKO ids and
+   * refund amounts, and PodMember is reachable from unauthenticated queries.
+   */
+  participation?: Maybe<PodParticipation>;
   payment_id?: Maybe<Scalars['ID']['output']>;
   pod?: Maybe<Pod>;
   pod_id: Scalars['ID']['output'];
@@ -9395,6 +10767,48 @@ export type PodMember = {
   user_id: Scalars['ID']['output'];
 };
 
+/**
+ * One backout this booking raised, as Finance sees it. The backout_no is the
+ * DUN-BKO id — the same key the User Backout Refunds page lists, so a line on
+ * Pod History and a row on that page are provably the same request.
+ */
+export type PodMemberBackout = {
+  __typename?: 'PodMemberBackout';
+  /** 1-based attempt for this user on this pod (a pod allows a few). */
+  attempt_no: Scalars['Int']['output'];
+  backout_no: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  deduction_pct: Scalars['Float']['output'];
+  events: Array<PodMemberBackoutEvent>;
+  refund_amount?: Maybe<Scalars['Float']['output']>;
+  /** Set once Finance has processed it — before that the refund is only pending. */
+  refund_processed_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * What Finance shows for THIS request. The booking's own refund_status is not
+   * it: the server never writes that one for a partial backout, so a member paid
+   * back for one of three seats was reading "not started".
+   */
+  refund_status: RefundStatus;
+  /** Seats this request released. Fewer than seats_before means a PARTIAL backout. */
+  seats: Scalars['Int']['output'];
+  seats_before: Scalars['Int']['output'];
+  status: BackoutStatus;
+};
+
+export type PodMemberBackoutEvent = {
+  __typename?: 'PodMemberBackoutEvent';
+  at: Scalars['String']['output'];
+  status: BackoutStatus;
+};
+
+/** Who ended the pod, when it was not the member who left. */
+export type PodMemberCancelActor =
+  | 'ADMIN'
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'SYSTEM'
+  | 'VENUE';
+
 export type PodMembershipState = {
   __typename?: 'PodMembershipState';
   /** Max Backout attempts per user per pod (Admin > Pods > Pod Settings). */
@@ -9407,6 +10821,11 @@ export type PodMembershipState = {
   backout_in_process: Scalars['Boolean']['output'];
   /** Estimated refund after deduction for the caller's paid booking (null for free). */
   backout_refund_amount?: Maybe<Scalars['Float']['output']>;
+  /**
+   * Refund after deduction for ONE seat, so a partial backout can be priced for
+   * any number the buyer picks without another round trip. Null for a free join.
+   */
+  backout_refund_per_seat?: Maybe<Scalars['Float']['output']>;
   can_backout: Scalars['Boolean']['output'];
   /** True when the in-process backout can still be cancelled (seat not rebooked). */
   can_cancel_backout: Scalars['Boolean']['output'];
@@ -9419,6 +10838,12 @@ export type PodMembershipState = {
   my_seats: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
   refund_threshold_pct: Scalars['Int']['output'];
+  /**
+   * Seats the caller has already released and is still waiting to have filled.
+   * A partial release leaves the member JOINED, so this is the only signal that
+   * a Keep My Spot is available to them.
+   */
+  released_seats_pending: Scalars['Int']['output'];
   /** Seats still bookable (0 when the pod has unlimited spots). */
   seats_available: Scalars['Int']['output'];
   spots_taken: Scalars['Int']['output'];
@@ -9464,6 +10889,38 @@ export type PodOccurrence =
   | 'ONE_TIME'
   | 'WEEKENDS_ONLY'
   | 'WEEKLY';
+
+/**
+ * One booking's whole story, in the shape the participation timeline reads.
+ *
+ * Finance and Admin resolve the same object the member's own Pod History does,
+ * so a support conversation is about one account of what happened rather than
+ * two. The pod's date is not on it: every screen that draws this already has
+ * the pod loaded, and it is the pod that says whether the story is still ahead.
+ */
+export type PodParticipation = {
+  __typename?: 'PodParticipation';
+  /**
+   * False when NOBODY on the pod was scanned — a virtual pod, or a host who
+   * never opened the scanner. Not attending and nobody checking are different
+   * things, and only one of them is this person's doing.
+   */
+  attendance_recorded: Scalars['Boolean']['output'];
+  /** True once a host has scanned this booking in at the door. */
+  attended: Scalars['Boolean']['output'];
+  attended_at?: Maybe<Scalars['String']['output']>;
+  /** Every backout this booking raised, oldest first. */
+  backouts: Array<PodMemberBackout>;
+  /**
+   * What the cancellation did to this booking's money. Not every cancel path
+   * refunds, and a free booking has nothing to give back.
+   */
+  cancel_refund_status: RefundStatus;
+  joined_at: Scalars['String']['output'];
+  pod_cancelled_at?: Maybe<Scalars['String']['output']>;
+  /** Set only when the pod itself was cancelled — then nothing else applies. */
+  pod_cancelled_by?: Maybe<PodMemberCancelActor>;
+};
 
 export type PodPlaceCharge = {
   __typename?: 'PodPlaceCharge';
@@ -9547,6 +11004,14 @@ export type PodProductRequestInput = {
 
 export type PodSettlement = {
   __typename?: 'PodSettlement';
+  /** Seats a host scanned in at the door. The settlement basis. */
+  attended_seats: Scalars['Int']['output'];
+  /** Money from the attended bookings: what the waterfall was computed from. */
+  attended_total: Scalars['Float']['output'];
+  /** Every JOINED booking, attended first — the completion roster. */
+  attendees: Array<PodSettlementAttendee>;
+  /** Seats booked on the pod, attended or not — the denominator beside it. */
+  booked_seats: Scalars['Int']['output'];
   collected_total: Scalars['Float']['output'];
   currency_symbol: Scalars['String']['output'];
   gst_pct: Scalars['Float']['output'];
@@ -9554,9 +11019,9 @@ export type PodSettlement = {
   host: PodSettlementParty;
   host_commission_pct: Scalars['Float']['output'];
   /**
-   * Guests who actually attended and paid — the host's own free seat excluded.
-   * A completed pod settles on what it COLLECTED, so this is the head count
-   * behind every figure above.
+   * SEATS the settlement was computed on — the ones a host scanned in. Kept
+   * under its original name for older consumers; attended_seats is the same
+   * number under the name that now describes it.
    */
   paying_attendees: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
@@ -9565,6 +11030,25 @@ export type PodSettlement = {
   venue_bill: Scalars['Float']['output'];
   venue_commission_pct: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
+};
+
+/**
+ * One booking on the completion roster.
+ *
+ * Attendance is not stored on the membership — it happens when a host scans a
+ * ticket at the door, so a booking counts as attended when its ticket reads
+ * CHECKED_IN. Seats, not people: one booking can admit several.
+ */
+export type PodSettlementAttendee = {
+  __typename?: 'PodSettlementAttendee';
+  /** What this booking paid. Zero on a free pod. */
+  amount: Scalars['Float']['output'];
+  attended: Scalars['Boolean']['output'];
+  attended_at?: Maybe<Scalars['String']['output']>;
+  membership_id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  seats: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
 };
 
 export type PodSettlementParty = {
@@ -9655,6 +11139,10 @@ export type Policy = {
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /** Permanent, globally unique handle (POL-000001). Never edited, never reused. */
+  policy_no: Scalars['String']['output'];
+  /** What kind of policy this is — the grouping the dashboard counts by. */
+  policy_type: Scalars['String']['output'];
   slug: Scalars['String']['output'];
   sort_order: Scalars['Int']['output'];
   title: Scalars['String']['output'];
@@ -9666,6 +11154,12 @@ export type PolicyFilterInput = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type PolicyStats = {
+  __typename?: 'PolicyStats';
+  by_type: Array<PolicyTypeCount>;
+  total: Scalars['Int']['output'];
+};
+
 /** Server-side table page for the shared table engine (policiesTable). */
 export type PolicyTablePage = {
   __typename?: 'PolicyTablePage';
@@ -9673,6 +11167,33 @@ export type PolicyTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Policy>;
   total: Scalars['Int']['output'];
+};
+
+export type PolicyTypeCount = {
+  __typename?: 'PolicyTypeCount';
+  count: Scalars['Int']['output'];
+  policy_type: Scalars['String']['output'];
+};
+
+/** Server-side table page over the by-type aggregate (policyStatsTable). */
+export type PolicyTypeCountTablePage = {
+  __typename?: 'PolicyTypeCountTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PolicyTypeCount>;
+  total: Scalars['Int']['output'];
+};
+
+export type PortalLoginOtpInput = {
+  email: Scalars['String']['input'];
+  otp: Scalars['String']['input'];
+  portal_key?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PortalLoginOtpRequestInput = {
+  email: Scalars['String']['input'];
+  /** The console being signed in to. The code only works for this one. */
+  portal_key?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PortalMode = {
@@ -10198,6 +11719,12 @@ export type Query = {
   __typename?: 'Query';
   /** Live ads for a placement (includes AUTO ads). Public — powers the app ad slots. */
   activeAds: Array<PublicAd>;
+  /**
+   * The one popup this signed-in user should see right now, or null. Enabled,
+   * inside its date window, matching the caller's platform and audience, and
+   * not already dismissed by this user.
+   */
+  activeAppPopup?: Maybe<AppPopup>;
   /** Location ids that currently have at least one live (active, not-yet-passed) pod. */
   activePodLocationIds: Array<Scalars['ID']['output']>;
   /** Kind-level default survey (all scope null) — back-compat. */
@@ -10227,6 +11754,7 @@ export type Query = {
   aisensyTemplates: Array<AisensyTemplate>;
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
+  appPopupsTable: AppPopupTablePage;
   appSettings: AppSettings;
   appVersionInfo: AppVersionInfo;
   /** Admin inbox of approval requests (defaults to all; filter by status/type). */
@@ -10288,18 +11816,61 @@ export type Query = {
   chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
   club?: Maybe<Club>;
+  /**
+   * Club Admins whose onboarding taxonomy matches a club's — the picker on the
+   * New Club form.
+   *
+   * The mirror of clubAdminMatchingClubs. Without it the form offered every
+   * CLUB_ADMIN role-holder on the platform, so a club could be handed to an
+   * admin onboarded for an unrelated category. Matching happens at the level
+   * the CLUB supplies; passing no category returns everyone, so the picker
+   * still works before one is chosen. APPROVED + active only — a DRAFT profile
+   * is somebody mid-onboarding who cannot yet be handed a club.
+   */
+  clubAdminCandidates: Array<ClubAdminCandidate>;
   /** Aggregated metrics for the signed-in Club Admin's clubs. */
   clubAdminDashboard: ClubAdminDashboard;
   /** Table page over the dashboard's computed per-club breakdown rows. */
   clubAdminDashboardTable: ClubAdminClubRowTablePage;
   /** Approved hosts matching the search, for the assign-host picker. Club-admin scoped. */
   clubAdminHostSearch: Array<ClubAdminHostOption>;
-  /** Clubs matching this Club Admin's Super > Category > Sub, for Assign Clubs. */
+  /**
+   * Clubs for the Assign Clubs picker: this Club Admin's Super > Category > Sub,
+   * plus any club they already run that falls outside it.
+   */
   clubAdminMatchingClubs: Array<ClubAdminClubOption>;
+  /**
+   * Attendees of one pod in the caller's clubs — the club-admin twin of
+   * adminPodAttendees.
+   *
+   * Its own query rather than a role added to the admin one: CLUB_ADMIN is a
+   * membership of a club, not a role on the user, so requireRole cannot express
+   * it. Gated on assertClubAdminForPod, which is what keeps a club admin inside
+   * their own club.
+   */
+  clubAdminPodAttendees: Array<AdminPodAttendee>;
   /** Full action trail of one pod in the caller's clubs, newest first. */
   clubAdminPodAuditLogs: Array<PodAuditLog>;
   /** Club admin: the same trail scoped to the clubs the caller administers. */
   clubAdminPodAuditLogsTable: PodAuditLogTablePage;
+  /** Rating + review summary for one pod in the caller's clubs. */
+  clubAdminPodFeedback: PodFeedbackSummary;
+  /**
+   * The host profile behind one of this pod's hosts.
+   *
+   * Scoped to the pod, not to an arbitrary user id: a club admin may read the
+   * host running their pod, not look up any host on the platform.
+   */
+  clubAdminPodHost?: Maybe<Host>;
+  /**
+   * Payments for ONE pod in the caller's clubs.
+   *
+   * Deliberately takes a pod id instead of the admin paymentsTable's free-form
+   * TableQueryInput: that input can express "every payment on the platform", and
+   * handing it to a club admin would let them read other clubs' money. The pod
+   * filter is applied server-side and cannot be overridden by the caller.
+   */
+  clubAdminPodPayments: PaymentTablePage;
   /**
    * Pods across the signed-in Club Admin's clubs, scoped server-side. Shows
    * EVERY stage — including pods awaiting the venue owner's approval and
@@ -10339,12 +11910,16 @@ export type Query = {
   communicationLogs: CommunicationLogPage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
+  contract?: Maybe<Contract>;
+  contractsTable: ContractTablePage;
   coupon?: Maybe<Coupon>;
   coupons: Array<Coupon>;
   couponsForPod: Array<Coupon>;
   /** Table sibling of couponsForPod — this pod's coupons plus every GLOBAL coupon. */
   couponsForPodTable: CouponTablePage;
   couponsTable: CouponTablePage;
+  /** Everyone you could message, minus yourself. Search matches name or email. */
+  coworkers: Array<Coworker>;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
   crmCallFromNumber?: Maybe<Scalars['String']['output']>;
   crmCallPrompt?: Maybe<CrmCallPrompt>;
@@ -10368,6 +11943,10 @@ export type Query = {
   crmWebsitePages: Array<CrmWebsitePage>;
   crmWebsitePagesTable: CrmWebsitePageTablePage;
   dashboardTotals: DashboardTotals;
+  /** One clone job by id, or the most recent one when id is omitted. Polled for progress. */
+  dataCloneJob?: Maybe<DataCloneJob>;
+  /** Source/target databases and the exclusion list, without starting anything. */
+  dataCloneTargets: DataCloneTargets;
   /**
    * Just the global default host commission % (Finance → Default Deductions).
    * Split out of financeSettings because the Onboarding console's Review Host
@@ -10388,6 +11967,10 @@ export type Query = {
   emailFragment?: Maybe<EmailFragment>;
   /** Every fragment — the nine first, then the custom ones. */
   emailFragments: Array<EmailFragment>;
+  /** One attempt with its rendered body and variables — what the drawer opens. */
+  emailLog?: Maybe<EmailLog>;
+  /** Deliverability over the last N days. Defaults to 7, capped at 90. */
+  emailLogDashboard: EmailLogDashboard;
   emailLogStats: EmailLogStats;
   /** Every email attempt, newest first. Filter by status, category, source, template. */
   emailLogsTable: EmailLogTablePage;
@@ -10427,6 +12010,11 @@ export type Query = {
   followingOf: Array<PublicProfile>;
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
+  /** Public: the officer the app and website publish. */
+  grievanceOfficer: GrievanceOfficer;
+  grievanceStats: GrievanceStats;
+  grievanceTicket?: Maybe<GrievanceTicket>;
+  grievanceTicketsTable: GrievanceTicketTablePage;
   host?: Maybe<Host>;
   /** The host profile behind a user, or null when they have never onboarded. */
   hostByUser?: Maybe<Host>;
@@ -10466,10 +12054,17 @@ export type Query = {
   /** Server-side table page (filter/sort/paginate) over one lead's survey entries. */
   leadSurveyEntriesTable: LeadSurveyEntryTablePage;
   legalDocument?: Maybe<LegalDocument>;
+  /**
+   * The contract as a PDF (base64) — the same document before and after
+   * signing, with a signature block appended once it has been signed.
+   */
+  legalDocumentPdfBase64: Scalars['String']['output'];
   legalDocumentStats: LegalDocumentStats;
   legalDocumentStatsTable: LegalDocumentTypeCountTablePage;
   legalDocuments: Array<LegalDocument>;
   legalDocumentsTable: LegalDocumentTablePage;
+  /** Which signing methods this platform allows, from the feature flags. */
+  legalSignatureMethods: Array<SignatureMethod>;
   /**
    * Only the ads showing right now — approved, started, not yet ended. LIVE is
    * a date window rather than a stored status, so it needs its own query.
@@ -10480,6 +12075,18 @@ export type Query = {
   location?: Maybe<Location>;
   locations: Array<Location>;
   locationsTable: LocationTablePage;
+  /** Every connected mailbox. Read by both the Tech and Support portals. */
+  mailAutomationAccounts: Array<MailAutomationAccount>;
+  /** Whether a Google OAuth client is configured to connect a mailbox with. */
+  mailAutomationConfigured: Scalars['Boolean']['output'];
+  /**
+   * Read the reply back before saving. Takes the same input as the save and
+   * applies it to an unsaved copy, so the preview answers "what does the
+   * message I just typed do" rather than "what did the last saved one do".
+   */
+  mailAutomationPreview: MailAutomationPreview;
+  /** Recent conversations this mailbox answered — the audit trail for the rule. */
+  mailAutomationThreads: Array<MailAutomationThread>;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -10499,6 +12106,14 @@ export type Query = {
   /** APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given. */
   matchingVenues: Array<Venue>;
   me?: Maybe<User>;
+  /** Everything ImageKit knows about one file — the details panel. */
+  mediaFile: MediaItem;
+  /**
+   * A page of the media library. Search matches the file name, fileType is
+   * image or non-image, and sort takes ImageKit's own values (DESC_CREATED
+   * by default).
+   */
+  mediaFiles: Array<MediaItem>;
   /** Admin: AI image-monitoring scan log (server-side table). */
   mediaScanLogsTable: MediaScanLogsTableResult;
   /** Global slot-availability config. */
@@ -10530,10 +12145,30 @@ export type Query = {
   /** The signed-in user's own callback request history, newest first. */
   myCallbackRequests: Array<BouncerCallbackRequest>;
   myChatRooms: Array<ChatRoom>;
+  /**
+   * Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
+   * section, newest first — the club-side twin of venuePods. Every stage shows,
+   * cancelled and awaiting-venue-approval included, matching clubAdminPodsTable.
+   *
+   * Scope is derived SERVER-SIDE from the caller's club memberships; club_id
+   * only NARROWS within them and throws FORBIDDEN for a club they do not
+   * administer (the same rule clubAdminPodsTable applies).
+   */
+  myClubPods: Array<ClubPod>;
+  /** Roll-up figures for exactly the myClubPods scope, over every pod in it. */
+  myClubPodsSummary: ClubPodSummary;
   /** Pods where I am a co-host. status defaults to ACCEPTED; pass PENDING for my invites. */
   myCoHostedPods: Array<Pod>;
   myCoinBalance: CoinBalance;
   myCoinTransactions: Array<CoinTransaction>;
+  /**
+   * Auth-required: what the signed-in account can sign in with.
+   *
+   * Reads the password hash's PRESENCE (it is select:false, so the generic
+   * user mapper cannot see it) which is why this is its own query rather than a
+   * field on User.
+   */
+  myConnectedAccounts: ConnectedAccounts;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
   myEcommBrands: Array<EcommBrand>;
   /** Server-side table sibling of myEcommBrands — always scoped to the caller's own brands. */
@@ -10626,8 +12261,15 @@ export type Query = {
   paymentsTable: PaymentTablePage;
   pexelsSearch: PexelsSearchResult;
   pexelsSearchVideos: PexelsVideoSearchResult;
+  /** Everything pinned on this line, newest pin first. */
+  pinnedStaffMessages: Array<StaffMessage>;
   /** include_deleted opens a cancelled pod too — honored for admin reviewers only. */
   pod?: Maybe<Pod>;
+  /**
+   * Seats each JOINED member of a pod holds. Powers the "+N other members" label
+   * on the attendee list — one face per person, the group size beside their name.
+   */
+  podAttendeeSeats: Array<PodAttendeeSeats>;
   /** Full trail of one pod, newest first (admin). */
   podAuditLogs: Array<PodAuditLog>;
   /** Admin: AI-monitored audit trail of every pod action. */
@@ -10638,6 +12280,11 @@ export type Query = {
   podComments: Array<PodComment>;
   /** The Admin panel's Pods dashboard, in one read. */
   podDashboard: PodDashboard;
+  /**
+   * Everything the feedback page for one pod needs — backs the shareable
+   * /pod/:podId/feedback link a host sends to their guests.
+   */
+  podFeedbackForm: PodFeedbackForm;
   /** Ratings for one pod, rolled up — backs the admin pod page. */
   podFeedbackSummary: PodFeedbackSummary;
   podFinanceBreakdown: PodFinanceBreakdown;
@@ -10663,6 +12310,8 @@ export type Query = {
   policyBySlug?: Maybe<Policy>;
   /** The policy rendered as a downloadable PDF (base64). */
   policyPdfBase64: Scalars['String']['output'];
+  policyStats: PolicyStats;
+  policyStatsTable: PolicyTypeCountTablePage;
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;
@@ -10708,6 +12357,8 @@ export type Query = {
   publicPodPlans: Array<PodPlan>;
   publicPolicies: Array<Policy>;
   publicRoles: Array<PublicRole>;
+  /** What Home should show: active cards, in the order an admin put them. */
+  publicSomethingForYou: Array<SomethingForYouItem>;
   /**
    * Flat key/value catalogue for one locale, merged over the default locale so a
    * partially translated locale still returns complete text. Clients merge this
@@ -10737,11 +12388,18 @@ export type Query = {
    */
   renderEmailTemplate: EmailTemplateRender;
   renderMarketingCampaign: MarketingCampaignRender;
+  /** The Report a Problem form config. Readable by any signed-in user — the app renders from it. */
+  reportProblemConfig: ReportProblemConfig;
+  reportedProblem?: Maybe<FeedbackReport>;
+  /** Support portal: every reported problem, newest first. */
+  reportedProblemsTable: FeedbackReportTablePage;
   role?: Maybe<Role>;
   roles: Array<Role>;
   rolesTable: RoleTablePage;
   /** Club-centric discovery search grouped by upcoming-pod availability. */
   searchDiscovery: SearchResults;
+  /** Find something that was said on this line. */
+  searchStaffMessages: Array<StaffMessage>;
   /** Type-ahead suggestions across clubs, categories, pods and activities. */
   searchSuggestions: Array<SearchSuggestion>;
   /**
@@ -10768,6 +12426,36 @@ export type Query = {
   slackChannels: Array<SlackChannel>;
   /** Whether a Slack bot token is configured (Tech portal). */
   slackConfigured: Scalars['Boolean']['output'];
+  /** Every card, including the switched-off ones. Admin only. */
+  somethingForYouItems: Array<SomethingForYouItem>;
+  /**
+   * Where a call should look for a path to the other browser.
+   *
+   * Served rather than baked into each console because a TURN relay comes with
+   * a username and a secret, and seventeen builds carrying a copy of a secret is
+   * seventeen places it can leak.
+   */
+  staffCallIceServers: Array<StaffIceServer>;
+  /** Every call on this line, newest first. */
+  staffCalls: Array<StaffCall>;
+  /** Your own chat setup, with defaults when you have never changed it. */
+  staffChatState: StaffChatState;
+  /** Resolve a link for the card that renders it. */
+  staffLinkPreview: StaffLinkPreview;
+  /**
+   * Every earlier wording of one message, oldest first. SUPER_ADMIN only: an
+   * edit history is a record of somebody's second thoughts, and handing it to
+   * both parties on every read is not the same as keeping it.
+   */
+  staffMessageEdits: Array<StaffMessageEdit>;
+  /** One conversation, oldest message last. */
+  staffMessages: Array<StaffMessage>;
+  /** Everyone connected right now, for the first paint of the coworker list. */
+  staffPresence: Array<StaffPresence>;
+  /** The conversations you already have, most recent first. */
+  staffThreads: Array<StaffThread>;
+  /** Everything anyone has sent you and you have not opened. */
+  staffUnreadCount: Scalars['Int']['output'];
   /** Active (non-expired) stories, newest first. Optionally scoped to one author. */
   stories: Array<Post>;
   /** Owner-only list of who viewed a story, newest first (Bug 4). */
@@ -10805,6 +12493,13 @@ export type Query = {
   /** Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent. */
   ticketTranscript: SupportChatTranscript;
   tickets: TicketPage;
+  /**
+   * Namespaces with their key counts and per-locale completeness — the first
+   * level of the admin Translations view, which drills into translationsTable
+   * filtered by the surface + page it hands back. Counted by a mongo
+   * aggregation rather than in Node, because the catalogue only grows.
+   */
+  translationGroups: TranslationGroupTablePage;
   /** Admin table of translation keys, filterable surface-wise and page-wise. */
   translationsTable: TranslationTablePage;
   /** Upload rules for the calling client's surface (any signed-in user). */
@@ -10835,6 +12530,11 @@ export type Query = {
   venueOwnerStats: VenueOwnerStats;
   /** Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue. */
   venuePods: Array<VenuePod>;
+  /**
+   * Header figures for Venue Studio, over EVERY approved booking at the caller's
+   * venues — the list is capped at 500 rows, these numbers are not.
+   */
+  venuePodsSummary: VenuePodSummary;
   venueRegistrationConfig: VenueRegistrationConfig;
   /** Owner: one request with its earnings, for the decision page linked from the request email. */
   venueSlotDecision: VenueSlotDecision;
@@ -10890,6 +12590,7 @@ export type Query = {
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
+  withdrawalMinimums: WithdrawalMinimums;
   withdrawalRequests: Array<WalletWithdrawal>;
   withdrawalRequestsTable: WalletWithdrawalTablePage;
 };
@@ -10897,6 +12598,11 @@ export type Query = {
 
 export type QueryActiveAdsArgs = {
   position: AdPosition;
+};
+
+
+export type QueryActiveAppPopupArgs = {
+  platform: AppPopupClientPlatform;
 };
 
 
@@ -10950,6 +12656,11 @@ export type QueryAiPromptArgs = {
 
 export type QueryAiPromptsArgs = {
   filter?: InputMaybe<AiPromptFilter>;
+};
+
+
+export type QueryAppPopupsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -11107,6 +12818,14 @@ export type QueryClubArgs = {
 };
 
 
+export type QueryClubAdminCandidatesArgs = {
+  category_id?: InputMaybe<Scalars['ID']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sub_category_id?: InputMaybe<Scalars['ID']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryClubAdminDashboardArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
@@ -11131,12 +12850,35 @@ export type QueryClubAdminMatchingClubsArgs = {
 };
 
 
+export type QueryClubAdminPodAttendeesArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryClubAdminPodAuditLogsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 
 
 export type QueryClubAdminPodAuditLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryClubAdminPodFeedbackArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminPodHostArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminPodPaymentsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -11243,6 +12985,16 @@ export type QueryContactSubmissionsTableArgs = {
 };
 
 
+export type QueryContractArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryContractsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryCouponArgs = {
   id: Scalars['ID']['input'];
 };
@@ -11266,6 +13018,12 @@ export type QueryCouponsForPodTableArgs = {
 
 export type QueryCouponsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCoworkersArgs = {
+  role?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -11366,6 +13124,11 @@ export type QueryDashboardTotalsArgs = {
 };
 
 
+export type QueryDataCloneJobArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
 };
@@ -11398,6 +13161,16 @@ export type QueryEcommLeadsTableArgs = {
 
 export type QueryEmailFragmentArgs = {
   key: Scalars['String']['input'];
+};
+
+
+export type QueryEmailLogArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryEmailLogDashboardArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -11530,6 +13303,16 @@ export type QueryFollowingOfArgs = {
 export type QueryFounderDashboardArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGrievanceTicketArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGrievanceTicketsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -11684,6 +13467,11 @@ export type QueryLegalDocumentArgs = {
 };
 
 
+export type QueryLegalDocumentPdfBase64Args = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryLegalDocumentStatsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -11716,6 +13504,17 @@ export type QueryLocationsArgs = {
 
 export type QueryLocationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMailAutomationPreviewArgs = {
+  input: MailAutomationRuleInput;
+};
+
+
+export type QueryMailAutomationThreadsArgs = {
+  account_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -11768,6 +13567,21 @@ export type QueryMatchingVenuesArgs = {
 };
 
 
+export type QueryMediaFileArgs = {
+  fileId: Scalars['ID']['input'];
+};
+
+
+export type QueryMediaFilesArgs = {
+  fileType?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  path?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryMediaScanLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -11811,6 +13625,16 @@ export type QueryMyBrandPickupLocationsArgs = {
 
 export type QueryMyCallbackRequestsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyClubPodsArgs = {
+  club_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryMyClubPodsSummaryArgs = {
+  club_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -12007,8 +13831,18 @@ export type QueryPexelsSearchVideosArgs = {
 };
 
 
+export type QueryPinnedStaffMessagesArgs = {
+  peer_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodArgs = {
   include_deleted?: InputMaybe<Scalars['Boolean']['input']>;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodAttendeeSeatsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -12041,6 +13875,11 @@ export type QueryPodCommentsArgs = {
 
 export type QueryPodDashboardArgs = {
   days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPodFeedbackFormArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -12142,6 +13981,11 @@ export type QueryPolicyBySlugArgs = {
 
 export type QueryPolicyPdfBase64Args = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryPolicyStatsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -12313,6 +14157,16 @@ export type QueryRenderMarketingCampaignArgs = {
 };
 
 
+export type QueryReportedProblemArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryReportedProblemsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryRoleArgs = {
   role_id: Scalars['ID']['input'];
 };
@@ -12325,6 +14179,12 @@ export type QueryRolesTableArgs = {
 
 export type QuerySearchDiscoveryArgs = {
   input?: InputMaybe<SearchDiscoveryInput>;
+};
+
+
+export type QuerySearchStaffMessagesArgs = {
+  filter?: InputMaybe<StaffSearchInput>;
+  peer_id: Scalars['ID']['input'];
 };
 
 
@@ -12368,6 +14228,29 @@ export type QueryShortLinkStatsArgs = {
 
 export type QueryShortLinksTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStaffCallsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  peer_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStaffLinkPreviewArgs = {
+  url: Scalars['String']['input'];
+};
+
+
+export type QueryStaffMessageEditsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStaffMessagesArgs = {
+  before?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  peer_id: Scalars['ID']['input'];
 };
 
 
@@ -12476,6 +14359,11 @@ export type QueryTicketsArgs = {
   sort_by?: InputMaybe<Scalars['String']['input']>;
   sort_dir?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<TicketStatus>;
+};
+
+
+export type QueryTranslationGroupsArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -12591,6 +14479,11 @@ export type QueryVenueOwnerStatsArgs = {
 
 
 export type QueryVenuePodsArgs = {
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryVenuePodsSummaryArgs = {
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -12812,7 +14705,18 @@ export type ReferralEntry = {
 
 export type ReferralSettings = {
   __typename?: 'ReferralSettings';
+  /** Coins EACH side of a referral earns — the referrer and the new member. */
+  coins_per_referral: Scalars['Int']['output'];
   gift_description: Scalars['String']['output'];
+  /** Share message template, with its {code}, {link} and {coins} placeholders. */
+  share_message: Scalars['String']['output'];
+};
+
+/** Finance > Referrals. Every field is optional; an omitted one is left alone. */
+export type ReferralSettingsInput = {
+  coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
+  gift_description?: InputMaybe<Scalars['String']['input']>;
+  share_message?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RefundStatus =
@@ -12830,7 +14734,46 @@ export type RegisterInput = {
   password: Scalars['String']['input'];
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * A friend's referral code. Optional, and checked before the account is
+   * created: a code that does not exist fails the signup rather than quietly
+   * costing both sides their coins.
+   */
+  referral_code?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One selectable chip on the app's Report a Problem form. */
+export type ReportProblemCategory = {
+  __typename?: 'ReportProblemCategory';
+  is_active: Scalars['Boolean']['output'];
+  /** Stable key stored on the report, so renaming a label never orphans rows. */
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+};
+
+export type ReportProblemCategoryInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * What the app renders on Report a Problem.
+ *
+ * The chips and the prompt used to be hardcoded in the app, so adding a category
+ * meant a release. Support edits them here instead.
+ */
+export type ReportProblemConfig = {
+  __typename?: 'ReportProblemConfig';
+  allow_media: Scalars['Boolean']['output'];
+  categories: Array<ReportProblemCategory>;
+  max_media: Scalars['Int']['output'];
+  message_hint: Scalars['String']['output'];
+  message_label: Scalars['String']['output'];
+  message_min_length: Scalars['Int']['output'];
 };
 
 export type RequestCallbackInput = {
@@ -12897,6 +14840,13 @@ export type RoleTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Role>;
   total: Scalars['Int']['output'];
+};
+
+export type SaveGrievanceOfficerInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
 };
 
 /** Sort order for the viewer's saved pods. RECENT = most recently saved first. */
@@ -13289,6 +15239,24 @@ export type ShortLinkTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type SignLegalDocumentInput = {
+  designation: Scalars['String']['input'];
+  full_name: Scalars['String']['input'];
+  initials: Scalars['String']['input'];
+  /** Data URL or hosted image. Must be under 5 MB. */
+  signature_image: Scalars['String']['input'];
+  signature_method: SignatureMethod;
+};
+
+export type SignatureMethod =
+  | 'DRAW'
+  | 'TYPE'
+  | 'UPLOAD';
+
+export type SigningStatus =
+  | 'SIGNED'
+  | 'UNSIGNED';
+
 export type SlackChannel = {
   __typename?: 'SlackChannel';
   id: Scalars['ID']['output'];
@@ -13352,6 +15320,241 @@ export type SlotTemplatePerDayPrice = {
 export type SlotTemplatePerDayPriceInput = {
   price: Scalars['Int']['input'];
   weekday: Scalars['Int']['input'];
+};
+
+/**
+ * What pressing a card does. Asked rather than inferred: an in-app path and
+ * a web address look alike to a validator and nothing alike to a person.
+ */
+export type SomethingForYouAction =
+  | 'NONE'
+  | 'ROUTE'
+  | 'URL';
+
+export type SomethingForYouInput = {
+  action_type?: InputMaybe<SomethingForYouAction>;
+  bottom_text?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  link_path?: InputMaybe<Scalars['String']['input']>;
+  link_url?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  title: Scalars['String']['input'];
+};
+
+/**
+ * One card in the "Something for you" rail at the bottom of Home. The same row
+ * renders in mWeb and in the native app, so a promotion changes in one place.
+ */
+export type SomethingForYouItem = {
+  __typename?: 'SomethingForYouItem';
+  action_type: SomethingForYouAction;
+  bottom_text: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** In-app path, e.g. /referral. Used when action_type is ROUTE. */
+  link_path: Scalars['String']['output'];
+  /** An address outside the product. Used when action_type is URL. */
+  link_url: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  /** At most 30 characters — the card is a fixed size on both surfaces. */
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/**
+ * A call that happened between two coworkers.
+ *
+ * The audio and video went browser to browser, so this row is the only record
+ * that it took place.
+ */
+export type StaffCall = {
+  __typename?: 'StaffCall';
+  duration_seconds: Scalars['Int']['output'];
+  ended_at?: Maybe<Scalars['String']['output']>;
+  from_user_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  /** AUDIO or VIDEO. */
+  kind: Scalars['String']['output'];
+  /** ANSWERED, MISSED, DECLINED or CANCELLED. */
+  outcome: Scalars['String']['output'];
+  /** The mp4 this call was recorded to, once FFmpeg has produced it. */
+  recording_url?: Maybe<Scalars['String']['output']>;
+  started_at?: Maybe<Scalars['String']['output']>;
+  to_user_id: Scalars['ID']['output'];
+};
+
+/**
+ * How one person has staff chat set up — what was open and how it looks.
+ *
+ * On the server rather than in localStorage because the same panel renders in
+ * all seventeen consoles: "per browser" meant it forgot everything the moment
+ * you moved to a different portal, and knew nothing at all on a second machine.
+ */
+export type StaffChatState = {
+  __typename?: 'StaffChatState';
+  bubble_color: Scalars['String']['output'];
+  cam_id: Scalars['String']['output'];
+  /** COMPACT or COMFORTABLE. */
+  density: Scalars['String']['output'];
+  enter_to_send: Scalars['Boolean']['output'];
+  font_size: Scalars['Int']['output'];
+  /** The microphone and camera chosen in Audio & video settings. */
+  mic_id: Scalars['String']['output'];
+  /** The conversation that was open, so a refresh returns to it. */
+  open_peer_id?: Maybe<Scalars['ID']['output']>;
+  panel_open: Scalars['Boolean']['output'];
+  /** The team filter, or '' for everyone. */
+  role_filter: Scalars['String']['output'];
+  /** IANA zone for every timestamp, or '' to follow the machine. */
+  time_zone: Scalars['String']['output'];
+};
+
+/** Every field optional: the panel saves the one thing that changed. */
+export type StaffChatStateInput = {
+  bubble_color?: InputMaybe<Scalars['String']['input']>;
+  cam_id?: InputMaybe<Scalars['String']['input']>;
+  density?: InputMaybe<Scalars['String']['input']>;
+  enter_to_send?: InputMaybe<Scalars['Boolean']['input']>;
+  font_size?: InputMaybe<Scalars['Int']['input']>;
+  mic_id?: InputMaybe<Scalars['String']['input']>;
+  open_peer_id?: InputMaybe<Scalars['ID']['input']>;
+  panel_open?: InputMaybe<Scalars['Boolean']['input']>;
+  role_filter?: InputMaybe<Scalars['String']['input']>;
+  time_zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * One entry of a browser's ICE configuration.
+ *
+ * STUN alone lets two browsers find each other when at least one of them can be
+ * reached directly; a TURN relay is what carries the call when neither can, and
+ * a company where people work from different networks needs one for calls to
+ * connect at all.
+ */
+export type StaffIceServer = {
+  __typename?: 'StaffIceServer';
+  credential: Scalars['String']['output'];
+  urls: Array<Scalars['String']['output']>;
+  /** TURN only. Empty for a public STUN server, which needs no credentials. */
+  username: Scalars['String']['output'];
+};
+
+/**
+ * What a link in a message turns into on screen. An outside link gets an Open
+ * Graph card; one of our own consoles gets the portal it points at and whether
+ * the person reading can actually open it.
+ */
+export type StaffLinkPreview = {
+  __typename?: 'StaffLinkPreview';
+  /** Why not, when they cannot. */
+  access_note?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  /** Whether the CALLER can open it. Always true for an outside link. */
+  has_access: Scalars['Boolean']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  /** True when it points at one of our own consoles. */
+  internal: Scalars['Boolean']['output'];
+  /** Which console, when internal. */
+  portal?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+};
+
+export type StaffMessage = {
+  __typename?: 'StaffMessage';
+  attachment_name: Scalars['String']['output'];
+  /** Loudness per slice, 0-1, for a voice note waveform. */
+  attachment_peaks: Array<Scalars['Float']['output']>;
+  /** Bytes, so a reader can judge before downloading. 0 when unknown. */
+  attachment_size: Scalars['Int']['output'];
+  attachment_type: Scalars['String']['output'];
+  /** An ImageKit URL when a file came with it. */
+  attachment_url: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * Set when the author took it back. The row stays and the words go, because a
+   * line that vanishes from the middle of a conversation reads as a bug.
+   */
+  deleted_at?: Maybe<Scalars['String']['output']>;
+  /** Set when it reached any of their open tabs — the second tick. */
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  /** Set when the author changed it, so the reader is told. */
+  edited_at?: Maybe<Scalars['String']['output']>;
+  /** Whose words these originally were, when it was forwarded on. */
+  forwarded_from?: Maybe<Scalars['ID']['output']>;
+  from_user_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  /** Who was named with @ in the text. */
+  mentions: Array<Scalars['ID']['output']>;
+  /** Set when somebody pinned it. Pins belong to the thread, not to a person. */
+  pinned_at?: Maybe<Scalars['String']['output']>;
+  pinned_by?: Maybe<Scalars['ID']['output']>;
+  /**
+   * Who reacted and with what. Empty on a deleted message — there is nothing
+   * left to have reacted to.
+   */
+  reactions: Array<StaffReaction>;
+  /** When the recipient read it; null until they do. */
+  read_at?: Maybe<Scalars['String']['output']>;
+  /** The message this one answers, when it is a reply. */
+  reply_to_id?: Maybe<Scalars['ID']['output']>;
+  text: Scalars['String']['output'];
+  to_user_id: Scalars['ID']['output'];
+};
+
+/** One earlier wording of a message, kept when its author changed it. */
+export type StaffMessageEdit = {
+  __typename?: 'StaffMessageEdit';
+  at?: Maybe<Scalars['String']['output']>;
+  text: Scalars['String']['output'];
+};
+
+/** Whether someone is at their desk. Held for as long as their socket is. */
+export type StaffPresence = {
+  __typename?: 'StaffPresence';
+  /** When they last had a socket open — what 'last seen' reads from. */
+  last_seen?: Maybe<Scalars['String']['output']>;
+  since?: Maybe<Scalars['String']['output']>;
+  /** ONLINE, AWAY, BUSY or OFFLINE. */
+  status: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** One person's reaction to one message. At most one per person per message. */
+export type StaffReaction = {
+  __typename?: 'StaffReaction';
+  at?: Maybe<Scalars['String']['output']>;
+  /** The emoji itself. Any is allowed; the bar offers six. */
+  emoji: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** Narrows a thread search. Every field is optional and they combine. */
+export type StaffSearchInput = {
+  /** ISO timestamps, inclusive. */
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  /** Only what this person wrote. */
+  from_user_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Only messages carrying a file. */
+  only_files?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Only messages containing a link. */
+  only_links?: InputMaybe<Scalars['Boolean']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A conversation you already have, for the list down the side. */
+export type StaffThread = {
+  __typename?: 'StaffThread';
+  last_at?: Maybe<Scalars['String']['output']>;
+  /** So the list can show 'You: …' without comparing ids in the browser. */
+  last_from_me: Scalars['Boolean']['output'];
+  last_text: Scalars['String']['output'];
+  peer: Coworker;
+  unread: Scalars['Int']['output'];
 };
 
 export type StartRecordedUserCallInput = {
@@ -13432,6 +15635,16 @@ export type SubmitFaqQuestionInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   question: Scalars['String']['input'];
   super_category_slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SubmitGrievanceInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  description: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
+  source?: InputMaybe<GrievanceSource>;
+  subject: Scalars['String']['input'];
 };
 
 export type SubmitHostRequestInput = {
@@ -13879,6 +16092,8 @@ export type Ticket = {
   created_at: Scalars['String']['output'];
   feedback_at?: Maybe<Scalars['String']['output']>;
   feedback_comment?: Maybe<Scalars['String']['output']>;
+  /** The address to reply to when there is no account behind the ticket. */
+  guest_email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   last_message_at: Scalars['String']['output'];
   message_count: Scalars['Int']['output'];
@@ -13893,6 +16108,7 @@ export type Ticket = {
   reopen_deadline?: Maybe<Scalars['String']['output']>;
   /** When the ticket was resolved/closed (drives the reopen window). */
   resolved_at?: Maybe<Scalars['String']['output']>;
+  source: TicketSource;
   status: TicketStatus;
   subject: Scalars['String']['output'];
   /** Human-readable support ticket number, e.g. ST-A1B2C3 (derived from the id). */
@@ -13960,6 +16176,16 @@ export type TicketPriority =
   | 'LOW'
   | 'MEDIUM';
 
+/**
+ * Where the request came from. WEBSITE is the contact form on duncit.com,
+ * which anyone can use without an account. EMAIL is a message that arrived in a
+ * mailbox connected under Mail Automation.
+ */
+export type TicketSource =
+  | 'APP'
+  | 'EMAIL'
+  | 'WEBSITE';
+
 export type TicketStatus =
   | 'CLOSED'
   | 'OPEN'
@@ -14021,6 +16247,39 @@ export type TranslationEntry = {
   value: Scalars['String']['output'];
 };
 
+/**
+ * One namespace — the surface + page pair every key under it shares, e.g.
+ * 'mweb' + 'shop'. The admin lists these first and drills into the entries, so a
+ * catalogue of hundreds of keys reads as a few dozen pages instead of one flat
+ * wall.
+ */
+export type TranslationGroup = {
+  __typename?: 'TranslationGroup';
+  /** surface + page joined, e.g. 'mweb.shop' — the table's stable row id. */
+  id: Scalars['ID']['output'];
+  key_count: Scalars['Int']['output'];
+  /** One entry per ACTIVE locale, so translated < key_count reads as a gap. */
+  locales: Array<TranslationGroupLocaleCount>;
+  page: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+};
+
+/** How many of a namespace's keys carry text in one locale. */
+export type TranslationGroupLocaleCount = {
+  __typename?: 'TranslationGroupLocaleCount';
+  locale: Scalars['String']['output'];
+  translated: Scalars['Int']['output'];
+};
+
+/** Server-side table page of namespaces for the shared table engine. */
+export type TranslationGroupTablePage = {
+  __typename?: 'TranslationGroupTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TranslationGroup>;
+  total: Scalars['Int']['output'];
+};
+
 /** Server-side table page for the shared table engine. */
 export type TranslationTablePage = {
   __typename?: 'TranslationTablePage';
@@ -14069,6 +16328,9 @@ export type UpdateAdPricingInput = {
   currency_symbol?: InputMaybe<Scalars['String']['input']>;
   explore_scroll_per_day?: InputMaybe<Scalars['Float']['input']>;
   home_bottom_per_day?: InputMaybe<Scalars['Float']['input']>;
+  max_days?: InputMaybe<Scalars['Int']['input']>;
+  min_days?: InputMaybe<Scalars['Int']['input']>;
+  placements?: InputMaybe<Array<AdPlacementCopyInput>>;
   pod_details_per_day?: InputMaybe<Scalars['Float']['input']>;
   pod_list_per_day?: InputMaybe<Scalars['Float']['input']>;
   sidebar_per_day?: InputMaybe<Scalars['Float']['input']>;
@@ -14135,6 +16397,7 @@ export type UpdateBadgeInput = {
 export type UpdateBrandingInput = {
   android_app_url?: InputMaybe<Scalars['String']['input']>;
   app_latest_version?: InputMaybe<Scalars['String']['input']>;
+  app_min_supported_version?: InputMaybe<Scalars['String']['input']>;
   app_name?: InputMaybe<Scalars['String']['input']>;
   home_all_vibe_icon_layout?: InputMaybe<CategoryIconLayoutInput>;
   home_all_vibe_icon_url?: InputMaybe<Scalars['String']['input']>;
@@ -14231,6 +16494,16 @@ export type UpdateCommsProviderInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   is_default?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateContractInput = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  counterparty?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  effective_from?: InputMaybe<Scalars['String']['input']>;
+  effective_to?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ContractStatus>;
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateCouponInput = {
@@ -14363,6 +16636,11 @@ export type UpdateFinanceSettingsInput = {
   venue_payout_mode?: InputMaybe<PayoutMode>;
 };
 
+export type UpdateGrievanceStatusInput = {
+  resolution?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<GrievanceStatus>;
+};
+
 export type UpdateInterviewInput = {
   admin_notes?: InputMaybe<Scalars['String']['input']>;
   meeting_link?: InputMaybe<Scalars['String']['input']>;
@@ -14421,6 +16699,8 @@ export type UpdateLegalDocumentInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   document_type?: InputMaybe<Scalars['String']['input']>;
+  /** Off hides the document from the app without deleting it. */
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -14510,9 +16790,19 @@ export type UpdatePodInput = {
 export type UpdatePolicyInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  policy_type?: InputMaybe<Scalars['String']['input']>;
   slug?: InputMaybe<Scalars['String']['input']>;
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateReportProblemConfigInput = {
+  allow_media?: InputMaybe<Scalars['Boolean']['input']>;
+  categories?: InputMaybe<Array<ReportProblemCategoryInput>>;
+  max_media?: InputMaybe<Scalars['Int']['input']>;
+  message_hint?: InputMaybe<Scalars['String']['input']>;
+  message_label?: InputMaybe<Scalars['String']['input']>;
+  message_min_length?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateRoleInput = {
@@ -14578,6 +16868,14 @@ export type UpdateVenueSlotInput = {
   notes?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Int']['input']>;
   start_at?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Every role is optional: the ones sent are updated, the rest keep their stored value. */
+export type UpdateWithdrawalMinimumsInput = {
+  club_admin?: InputMaybe<Scalars['Float']['input']>;
+  ecomm_manager?: InputMaybe<Scalars['Float']['input']>;
+  host?: InputMaybe<Scalars['Float']['input']>;
+  venue_owner?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type UploadCropPreset = {
@@ -14675,6 +16973,8 @@ export type User = {
   following_pod_ids: Array<Scalars['ID']['output']>;
   following_user_ids: Array<Scalars['ID']['output']>;
   full_name?: Maybe<Scalars['String']['output']>;
+  /** The Gmail address linked to this account, or null when Google is not connected. Shown beside the email in the admin user list so support can see both ways in. */
+  google_email?: Maybe<Scalars['String']['output']>;
   host_commission_pct: Scalars['Float']['output'];
   host_share_pct: Scalars['Float']['output'];
   interest_categories: Array<Category>;
@@ -14703,6 +17003,11 @@ export type User = {
   selected_location_id?: Maybe<Scalars['ID']['output']>;
   state?: Maybe<Scalars['String']['output']>;
   status?: Maybe<UserStatus>;
+  /**
+   * IANA zone the account is pinned to (e.g. Asia/Kolkata). Empty means the
+   * surface should fall back to the device zone.
+   */
+  timezone?: Maybe<Scalars['String']['output']>;
   updated_at?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
   whatsapp_extension?: Maybe<Scalars['String']['output']>;
@@ -15139,6 +17444,25 @@ export type VenuePodBucket =
   | 'COMPLETED'
   | 'ONGOING'
   | 'UPCOMING';
+
+/** Roll-up figures for exactly the venuePods scope, over every pod in it. */
+export type VenuePodSummary = {
+  __typename?: 'VenuePodSummary';
+  cancelled: Scalars['Int']['output'];
+  completed: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  fill_rate: Scalars['Float']['output'];
+  filled_spots: Scalars['Int']['output'];
+  next_pod_date_time?: Maybe<Scalars['String']['output']>;
+  ongoing: Scalars['Int']['output'];
+  /** Venues the figures cover. */
+  scope_count: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  total_attendees: Scalars['Int']['output'];
+  total_revenue: Scalars['Float']['output'];
+  total_spots: Scalars['Int']['output'];
+  upcoming: Scalars['Int']['output'];
+};
 
 /** Registration option catalogs — clients render these instead of hardcoding. */
 export type VenueRegistrationConfig = {
@@ -15688,9 +18012,15 @@ export type WaUserLeadPage = {
 export type Wallet = {
   __typename?: 'Wallet';
   balance: Scalars['Float']['output'];
+  /** balance >= min_withdrawal_amount, decided server-side — clients must not re-derive it. */
+  can_withdraw: Scalars['Boolean']['output'];
   currency_symbol: Scalars['String']['output'];
+  /** Role-wise minimum withdrawal amount that applies to this wallet. */
+  min_withdrawal_amount: Scalars['Float']['output'];
   next_payout_at: Scalars['String']['output'];
   payout_mode: PayoutMode;
+  /** Which of the four capacities this wallet withdraws in (precedence: VENUE_OWNER, CLUB_ADMIN, ECOMM_MANAGER, HOST). */
+  withdrawer_role: WithdrawerRole;
 };
 
 export type WalletTransaction = {
@@ -15725,6 +18055,7 @@ export type WalletWithdrawal = {
   upi_id: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
   withdrawal_id: Scalars['String']['output'];
+  withdrawer_role: WithdrawerRole;
 };
 
 /** Server-side table page for the shared table engine (withdrawalRequestsTable). */
@@ -15839,7 +18170,26 @@ export type WithdrawalMethod =
   | 'NEFT'
   | 'UPI';
 
+/** Role-wise minimum withdrawal amounts (Finance → Withdrawals → Withdrawal Settings). */
+export type WithdrawalMinimums = {
+  __typename?: 'WithdrawalMinimums';
+  club_admin: Scalars['Float']['output'];
+  ecomm_manager: Scalars['Float']['output'];
+  host: Scalars['Float']['output'];
+  venue_owner: Scalars['Float']['output'];
+};
+
 export type WithdrawalStatus =
   | 'PAID'
   | 'PENDING'
   | 'REJECTED';
+
+/**
+ * The capacity a payout was withdrawn in. Stamped on the withdrawal when it is
+ * requested and never resolved live, so it cannot change with the user's roles.
+ */
+export type WithdrawerRole =
+  | 'CLUB_ADMIN'
+  | 'ECOMM_MANAGER'
+  | 'HOST'
+  | 'VENUE_OWNER';

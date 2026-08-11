@@ -5,7 +5,13 @@ export type FeedbackStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'CLOSED';
 export interface IFeedbackReport extends Document {
   /** Permanent, human-readable id (DUN-RPT-000001) — never reused. */
   report_no: string;
-  user_id: Types.ObjectId;
+  /**
+   * Null only when the report arrived by email through Mail Automation and the
+   * sender's address matches no account. The in-app form always has an account
+   * behind it; a stranger writing to the mailbox does not, and refusing to file
+   * their report would be the wrong end to fix that at.
+   */
+  user_id: Types.ObjectId | null;
   user_name: string;
   user_email: string;
   /** One of the configured category chips, stored as the label it was sent as. */
@@ -52,7 +58,7 @@ export interface IFeedbackReport extends Document {
 const feedbackReportSchema = new Schema<IFeedbackReport>(
   {
     report_no: { type: String, required: true, unique: true, index: true },
-    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     user_name: { type: String, default: '' },
     user_email: { type: String, default: '', index: true },
     category: { type: String, required: true, trim: true, index: true },

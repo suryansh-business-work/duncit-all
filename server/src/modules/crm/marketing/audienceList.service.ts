@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { AudienceListModel } from './audienceList.model';
-import { audienceUserIds, countAudience } from './audience.service';
+import { audienceMatchesUser, audienceUserIds, countAudience } from './audience.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { PORTAL_ROLE_REQUIREMENTS } from '@modules/portals';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -124,6 +124,18 @@ export const audienceListService = {
     const doc = await AudienceListModel.findById(id);
     if (!doc) throw notFound();
     return audienceUserIds(toQueryInput(doc));
+  },
+
+  /**
+   * Whether one person is in a saved list right now. A deleted list matches
+   * nobody rather than everybody — an app popup aimed at a list that no longer
+   * exists must go quiet, not go global.
+   */
+  async matchesUser(id: string, userId: string) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    const doc = await AudienceListModel.findById(id);
+    if (!doc) return false;
+    return audienceMatchesUser(toQueryInput(doc), userId);
   },
 
   async table(input?: TableQueryInput | null) {

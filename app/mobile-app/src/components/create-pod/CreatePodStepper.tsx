@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -286,7 +287,12 @@ export function CreatePodStepper({
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
-      <StepHeader step={step} />
+      {/* The wizard renders ONE page at a time, so every tour step has to live
+          on the page the host lands on. The header carries the step counter and
+          is what lets the walkthrough explain the four-step journey. */}
+      <TourAnchor tour="create-pod" anchor="create-pod-steps">
+        <StepHeader step={step} />
+      </TourAnchor>
       {steps[step]}
       {error ? (
         <Text testID="create-pod-error" fontSize={12.5} color="$danger">
@@ -314,15 +320,20 @@ export function CreatePodStepper({
             </Text>
           </XStack>
         ) : null}
-        <YStack flex={2}>
-          <PrimaryButton
-            testID="create-pod-submit"
-            label={isLast ? submitLabel : t('mweb.createPod.next')}
-            loading={busy}
-            disabled={isLast && pricing.blocked}
-            onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}
-          />
-        </YStack>
+        {/* flex:2 is restated on the wrapper, not moved onto it: TourAnchor
+            renders nothing at all when no tour is on, so the child has to keep
+            sizing the row by itself. */}
+        <TourAnchor tour="create-pod" anchor="create-pod-publish" style={{ flex: 2 }}>
+          <YStack flex={2}>
+            <PrimaryButton
+              testID="create-pod-submit"
+              label={isLast ? submitLabel : t('mweb.createPod.next')}
+              loading={busy}
+              disabled={isLast && pricing.blocked}
+              onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}
+            />
+          </YStack>
+        </TourAnchor>
       </XStack>
       <ModerationBlockedDialog
         violations={blocked}

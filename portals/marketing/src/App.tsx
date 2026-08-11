@@ -12,6 +12,7 @@ import WhatsappCampaignsPage from './pages/whatsapp-campaigns-page';
 import ShortLinksPage from './pages/short-links-page/ShortLinksPage';
 import ShortLinkDetailPage from './pages/short-links-page/ShortLinkDetailPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
+import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/short-links" element={authed(<ShortLinksPage />)} />
         <Route path="/short-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
+        <Route path="/app-popups" element={authed(<AppPopupsPage />)} />
         <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
         <Route path="/live-ads" element={authed(<LiveAdsPage />)} />
         <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />

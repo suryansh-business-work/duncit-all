@@ -133,6 +133,32 @@ export const envEntryTypeDefs = gql`
     is_active: Boolean
   }
 
+  """
+  One entry from an exported JSON file. There is no id: an export is moved
+  BETWEEN environments, where ids mean nothing, so an entry is matched on the
+  pair that names it — its category and its name.
+  """
+  input ImportEnvEntryInput {
+    name: String!
+    category: EnvCategory!
+    description: String
+    is_default: Boolean
+    is_active: Boolean
+    assigned_portals: [String!]
+    config: [EnvConfigPairInput!]!
+  }
+
+  """
+  What an import did. Entries are reported by name so an operator can see
+  which credentials were overwritten, and skipped names say what the file
+  asked for that this server does not have (an unknown category, or no name).
+  """
+  type EnvImportResult {
+    created: [String!]!
+    updated: [String!]!
+    skipped: [String!]!
+  }
+
   "Server-side table page for the shared table engine (envEntriesTable)."
   type EnvEntryTablePage {
     rows: [EnvEntry!]!
@@ -194,6 +220,16 @@ export const envEntryTypeDefs = gql`
     testEnvEntry(id: ID!): EnvTestResult!
     "Replace the full set of entries assigned to a portal."
     setPortalEnvEntries(portalKey: String!, entryIds: [ID!]!): [EnvEntry!]!
+
+    """
+    Restore entries from an exported JSON file, matching on category + name:
+    a name this server already has is updated in place, a new one is created.
+
+    Blank secrets are left alone rather than written, which is what makes an
+    export that was hand-edited safe to re-import — deleting a value from the
+    file does not wipe the credential the server is running on.
+    """
+    importEnvEntries(entries: [ImportEnvEntryInput!]!): EnvImportResult!
 
     """
     Prove one entry's saved credentials against its vendor.

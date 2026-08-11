@@ -325,6 +325,49 @@ export const envEntryService = {
     return result;
   },
 
+  /**
+   * Restore entries from an exported file. Matching is on category + name
+   * because an export exists to be carried between environments, where the
+   * ids of the machine it came from mean nothing.
+   *
+   * An existing name is updated through the same path the edit form uses, so
+   * a blank secret in the file leaves the running credential alone instead of
+   * emptying it.
+   */
+  async importEntries(
+    entries: Array<{
+      name: string;
+      category: EnvCategory;
+      description?: string | null;
+      is_default?: boolean | null;
+      is_active?: boolean | null;
+      assigned_portals?: string[] | null;
+      config: EnvEntryConfig;
+    }>
+  ) {
+    const created: string[] = [];
+    const updated: string[] = [];
+    const skipped: string[] = [];
+
+    for (const entry of entries) {
+      const name = entry.name.trim();
+      if (!name || !ENV_CATEGORIES.includes(entry.category)) {
+        skipped.push(`${entry.name || '(unnamed)'} (${entry.category})`);
+        continue;
+      }
+      const existing = await EnvEntryModel.findOne({ category: entry.category, name });
+      if (existing) {
+        await this.update(String(existing._id), { ...entry, name });
+        updated.push(`${entry.category} · ${name}`);
+      } else {
+        await this.create({ ...entry, name });
+        created.push(`${entry.category} · ${name}`);
+      }
+    }
+
+    return { created, updated, skipped };
+  },
+
   /** Replace the full set of entries assigned to a portal (edited from the map page). */
   async setPortalAssignments(portalKey: string, entryIds: string[]) {
     const key = portalKey.trim();

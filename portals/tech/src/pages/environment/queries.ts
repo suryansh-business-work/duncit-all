@@ -56,6 +56,23 @@ export const SET_DEFAULT_ENV_ENTRY = gql`
   }
 `;
 
+/** Restore entries from an exported file — matched on category + name. */
+export const IMPORT_ENV_ENTRIES = gql`
+  mutation ImportEnvEntries($entries: [ImportEnvEntryInput!]!) {
+    importEnvEntries(entries: $entries) {
+      created
+      updated
+      skipped
+    }
+  }
+`;
+
+export interface EnvImportResult {
+  created: string[];
+  updated: string[];
+  skipped: string[];
+}
+
 export const TEST_ENV_ENTRY = gql`
   mutation TestEnvEntry($id: ID!) {
     testEnvEntry(id: $id) { ok message }

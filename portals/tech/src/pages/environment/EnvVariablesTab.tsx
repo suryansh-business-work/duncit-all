@@ -15,6 +15,7 @@ import {
   type EnvEntry,
 } from './queries';
 import EnvEntriesTable from './EnvEntriesTable';
+import EnvImportExport from './EnvImportExport';
 import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entry';
 import TestDrawer from './test-panels';
 import { notify, useConfirm } from '@duncit/dialogs';
@@ -109,9 +110,21 @@ export default function EnvVariablesTab() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
-            Add {def.label}
-          </Button>
+          <>
+            <EnvImportExport
+              category={active}
+              categoryLabel={def.label}
+              onImported={() => {
+                // The import can touch categories other than the tab in view,
+                // so the whole cache goes rather than just this table's page.
+                client.resetStore().catch(() => undefined);
+                refetchRef.current?.();
+              }}
+            />
+            <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
+              Add {def.label}
+            </Button>
+          </>
         }
         onEdit={setEditing}
         onDelete={handleDelete}

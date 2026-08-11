@@ -29,6 +29,7 @@ const BRAND_FIELDS = `
   documents { type url }
   tags
   status
+  is_active
   reviewer_notes
   submitted_at
   approved_at
@@ -70,6 +71,13 @@ export const WITHDRAW_BRAND = gql`
   }
 `;
 
+/** Temporarily hide/show an own brand (and all its products) in the shop. */
+export const SET_MY_BRAND_ACTIVE = gql`
+  mutation SetMyEcommBrandActive($brand_doc_id: ID!, $active: Boolean!) {
+    setMyEcommBrandActive(brand_doc_id: $brand_doc_id, active: $active) { id is_active }
+  }
+`;
+
 export interface BrandDocument {
   type: string;
   url: string;
@@ -104,6 +112,7 @@ export interface EcommBrand {
   documents: BrandDocument[];
   tags: string[];
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+  is_active: boolean;
   reviewer_notes: string;
   submitted_at: string | null;
   approved_at: string | null;

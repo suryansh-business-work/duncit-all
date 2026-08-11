@@ -477,6 +477,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     "Update a listing's low-stock threshold + notify toggle without re-triggering approval."
     updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!): InventoryProduct!
     deleteMyProductListing(product_doc_id: ID!): Boolean!
+    "Partner: temporarily deactivate/reactivate an OWN approved listing (reversible; hidden from the shop while paused, placed orders unaffected)."
+    setMyProductListingActive(product_doc_id: ID!, active: Boolean!): InventoryProduct!
     "Record a buyer view of a product (forward-only engagement tracking)."
     recordProductView(product_doc_id: ID!): Boolean!
     "Record a buyer click on a product (optionally a specific variant)."
@@ -492,6 +494,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     permanentlyDeleteInventoryProduct(product_doc_id: ID!): Boolean!
     archiveInventoryProduct(product_doc_id: ID!): InventoryProduct!
     restoreInventoryProduct(product_doc_id: ID!): InventoryProduct!
+    "Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle)."
+    setInventoryProductActive(product_doc_id: ID!, active: Boolean!): InventoryProduct!
     duplicateInventoryProduct(product_doc_id: ID!): InventoryProduct!
     recordInventoryStockMovement(
       product_doc_id: ID!

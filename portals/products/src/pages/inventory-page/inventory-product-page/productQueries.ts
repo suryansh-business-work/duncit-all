@@ -151,6 +151,17 @@ export const DUPLICATE_INVENTORY_PRODUCT = gql`
   }
 `;
 
+/** Reversible pause/resume — the product is hidden from the shop and pod
+ * product picker while inactive; status is untouched (archive owns ARCHIVED). */
+export const SET_INVENTORY_PRODUCT_ACTIVE = gql`
+  mutation SetInventoryProductActive($id: ID!, $active: Boolean!) {
+    setInventoryProductActive(product_doc_id: $id, active: $active) {
+      id
+      is_active
+    }
+  }
+`;
+
 export const INVENTORY_LINKED_PODS = gql`
   query InventoryLinkedPods($id: ID!) {
     inventoryProductLinkedPods(product_doc_id: $id) {

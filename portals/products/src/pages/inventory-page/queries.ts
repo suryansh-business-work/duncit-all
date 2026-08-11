@@ -14,6 +14,7 @@ export interface InventoryProductRow {
   available_count: number;
   low_stock_alert?: number | null;
   status: InventoryStatus;
+  is_active: boolean;
   created_at?: string | null;
 }
 
@@ -31,6 +32,7 @@ const INVENTORY_PRODUCT_ROW_FIELDS = gql`
     available_count
     low_stock_alert
     status
+    is_active
     created_at
   }
 `;

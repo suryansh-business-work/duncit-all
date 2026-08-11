@@ -120,6 +120,11 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.setActive(args.brand_doc_id, args.active);
     },
+    setMyEcommBrandActive: (
+      _p: unknown,
+      args: { brand_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => ecommBrandService.setActiveOwned(uid(ctx), args.brand_doc_id, args.active),
     deleteEcommBrand: async (
       _p: unknown,
       args: { brand_doc_id: string; email: string; password: string },

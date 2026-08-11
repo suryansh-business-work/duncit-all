@@ -201,10 +201,11 @@ export const CATALOG_BRAND_PRODUCTS_TABLE = gql`
   ${CATALOG_BRAND_PRODUCT_ROW_FIELDS}
 `;
 
-// Archive / restore / duplicate already exist for the Duncit catalogue and are
-// ownership-agnostic server-side — re-exported rather than re-declared (rule 34).
+// Archive / restore / duplicate / pause already exist for the Duncit catalogue
+// and are ownership-agnostic server-side — re-exported rather than re-declared (rule 34).
 export {
   ARCHIVE_INVENTORY_PRODUCT,
   DUPLICATE_INVENTORY_PRODUCT,
   RESTORE_INVENTORY_PRODUCT,
+  SET_INVENTORY_PRODUCT_ACTIVE,
 } from '../inventory-page/inventory-product-page/productQueries';

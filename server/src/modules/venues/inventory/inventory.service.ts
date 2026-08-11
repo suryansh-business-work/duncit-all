@@ -1168,6 +1168,36 @@ export const inventoryService = {
     return true;
   },
 
+  /** Partner self-service pause/resume of an owned listing. Pausing only flips
+   * is_active (status stays ACTIVE), so it is reversible and distinguishable
+   * from a deleted (ARCHIVED) listing; the shop, brand storefront and pod
+   * product picker all hide it while paused. Placed orders are untouched. */
+  async setMyProductListingActive(id: string, active: boolean, user: AuthUser | null) {
+    await requireEcommManager(user);
+    const doc = await ownedListing(id, user);
+    if (active && doc.status === 'ARCHIVED') {
+      throw new GraphQLError('This listing was deleted and cannot be reactivated', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    if (active && doc.listing_review_status !== 'APPROVED') {
+      throw new GraphQLError('Only an approved listing can be activated', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    doc.is_active = active;
+    doc.last_updated_by_id = userInfo(user).id;
+    await doc.save();
+    await logActivity(
+      doc._id,
+      user,
+      'UPDATE',
+      ['is_active'],
+      active ? 'Partner reactivated listing' : 'Partner temporarily deactivated listing'
+    );
+    return inventoryProductToPub(doc);
+  },
+
   async reviewProductListing(
     id: string,
     status: string,
@@ -1333,6 +1363,21 @@ export const inventoryService = {
    */
   async podsForProduct(productId: string) {
     if (!Types.ObjectId.isValid(productId)) return [];
+    // A paused product — or one whose brand is deactivated — is hidden from the
+    // shop, so it must not stay purchasable through a stale product-detail
+    // screen either: no pod options means no add-to-cart.
+    const product = await InventoryProductModel.findById(productId)
+      .select('free_delivery_above is_active brand_id')
+      .lean();
+    if (!product || (product as any).is_active === false) return [];
+    if ((product as any).brand_id) {
+      const brand = await EcommBrandModel.findById((product as any).brand_id)
+        .select('is_active')
+        .lean();
+      if (brand?.is_active === false) return [];
+    }
+    const freeDeliveryAbove = (product as any)?.free_delivery_above ?? null;
+
     const pods = await PodModel.find({
       'product_requests.product_id': productId,
       products_enabled: true,
@@ -1343,11 +1388,6 @@ export const inventoryService = {
       .sort({ pod_date_time: 1 })
       .limit(100);
     if (pods.length === 0) return [];
-
-    const product = await InventoryProductModel.findById(productId)
-      .select('free_delivery_above')
-      .lean();
-    const freeDeliveryAbove = (product as any)?.free_delivery_above ?? null;
 
     const clubIds = [
       ...new Set(pods.map((p: any) => p.club_id && String(p.club_id)).filter(Boolean)),
@@ -1411,6 +1451,30 @@ export const inventoryService = {
     doc.is_active = true;
     await doc.save();
     await logActivity(doc._id, user, 'RESTORE', ['status', 'is_active']);
+    return inventoryProductToPub(doc);
+  },
+
+  /** Staff pause/resume — the reversible is_active flip for any catalogue
+   * product without touching status (archive/restore own the ARCHIVED
+   * lifecycle). A paused product is hidden from the shop + pod picker. */
+  async setProductActive(id: string, active: boolean, user: AuthUser | null) {
+    const doc = await InventoryProductModel.findById(id);
+    if (!doc) throw new GraphQLError('Product not found', { extensions: { code: 'NOT_FOUND' } });
+    if (active && doc.status === 'ARCHIVED') {
+      throw new GraphQLError('Restore this archived product instead of activating it', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    doc.is_active = active;
+    doc.last_updated_by_id = userInfo(user).id;
+    await doc.save();
+    await logActivity(
+      doc._id,
+      user,
+      'UPDATE',
+      ['is_active'],
+      active ? 'Product activated' : 'Product temporarily deactivated'
+    );
     return inventoryProductToPub(doc);
   },
 

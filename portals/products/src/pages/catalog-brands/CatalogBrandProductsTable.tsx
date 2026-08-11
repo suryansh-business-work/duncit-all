@@ -18,6 +18,8 @@ interface Props {
   onEdit: (p: CatalogBrandProductRow) => void;
   /** Archive an active product, restore an archived one. */
   onLifecycle: (p: CatalogBrandProductRow) => void;
+  /** Temporarily deactivate an active product, reactivate a paused one. */
+  onToggleActive: (p: CatalogBrandProductRow) => void;
   onDuplicate: (p: CatalogBrandProductRow) => void;
 }
 
@@ -72,6 +74,7 @@ export default function CatalogBrandProductsTable({
   refetchRef,
   onEdit,
   onLifecycle,
+  onToggleActive,
   onDuplicate,
 }: Readonly<Props>) {
   const { formatDate } = useDateFormat();
@@ -82,6 +85,7 @@ export default function CatalogBrandProductsTable({
         product={p}
         onEdit={onEdit}
         onLifecycle={onLifecycle}
+        onToggleActive={onToggleActive}
         onDuplicate={onDuplicate}
       />
     );
@@ -156,11 +160,11 @@ export default function CatalogBrandProductsTable({
         field: 'actions',
         headerName: 'Actions',
         sortable: false,
-        width: 140,
+        width: 170,
         cellRenderer: renderActions,
       },
     ];
-  }, [onEdit, onLifecycle, onDuplicate, formatDate]);
+  }, [onEdit, onLifecycle, onToggleActive, onDuplicate, formatDate]);
 
   return (
     <DuncitTable<CatalogBrandProductRow>

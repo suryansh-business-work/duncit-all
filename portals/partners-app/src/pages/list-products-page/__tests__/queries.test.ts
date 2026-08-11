@@ -26,6 +26,8 @@ const PRODUCT_ROW_FIELDS = Object.keys({
   unit_cost: 0,
   delivery_target: 0,
   listing_review_status: 0,
+  status: 0,
+  is_active: 0,
   updated_at: 0,
 } satisfies Record<keyof ProductListingRow, number>);
 

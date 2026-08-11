@@ -91,6 +91,15 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Leaderboard',
+      icon: 'trophy',
+      children: [
+        { label: 'Boards', to: '/leaderboard', icon: 'insights' },
+        { label: 'Points Ledger', to: '/leaderboard/points', icon: 'receipt' },
+        { label: 'Settings & Rewards', to: '/leaderboard/settings', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Upload Settings',
       icon: 'upload',
       children: [
@@ -160,6 +169,24 @@ export const appConfig = {
       to: '/duncit-coin/transactions',
       section: 'Duncit Coin',
       keywords: ['coin', 'ledger', 'transactions', 'earn', 'redeem', 'pod', 'logs'],
+    },
+    {
+      label: 'Boards',
+      to: '/leaderboard',
+      section: 'Leaderboard',
+      keywords: ['leaderboard', 'points', 'rank', 'boards', 'rankings', 'top users'],
+    },
+    {
+      label: 'Points Ledger',
+      to: '/leaderboard/points',
+      section: 'Leaderboard',
+      keywords: ['leaderboard', 'points', 'ledger', 'awards', 'log'],
+    },
+    {
+      label: 'Settings & Rewards',
+      to: '/leaderboard/settings',
+      section: 'Leaderboard',
+      keywords: ['leaderboard', 'rewards', 'points', 'settings', 'prizes'],
     },
     {
       label: 'Portals Upload Setting',

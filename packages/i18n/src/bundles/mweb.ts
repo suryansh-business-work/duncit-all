@@ -1392,6 +1392,50 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       checkoutApplied: '{coins} coins applied',
       checkoutNone: 'You have no Duncit Coins to redeem yet.',
     },
+    // The Leaderboard — five boards (Users, Hosts, Club Admins, Venues,
+    // Brands), each ranking a different way of showing up for the platform.
+    // mWeb and the native app render the SAME journey (rule 27). Point values
+    // are never written into copy — they come from `leaderboardConfig`, so an
+    // admin edit changes what every surface promises without a release.
+    // Placeholders are deliberately NOT named `count` except where a real
+    // count is passed: the translator injects its own plural counter there.
+    leaderboard: {
+      title: 'Leaderboard',
+      sidebarLabel: 'View Rankings',
+      yourPoints: 'Your points',
+      yourRank: 'Rank #{rank}',
+      notRanked: 'Not ranked yet',
+      notRankedHint: 'Earn your first points to appear on this board.',
+      participantsOne: '1 participant in this window',
+      participantsMany: '{count} participants in this window',
+      pointsShort: 'pts',
+      periodMonth: 'This month',
+      periodYear: 'This year',
+      periodAll: 'All time',
+      tabUser: 'Users',
+      tabHost: 'Hosts',
+      tabClubAdmin: 'Club Admins',
+      tabVenue: 'Venues',
+      tabBrand: 'Brands',
+      emptyBoard: 'No points on this board yet — be the first!',
+      loadError: 'The leaderboard could not be loaded. Please try again.',
+      howToTitle: 'How to increase your points',
+      howToSubtitle: 'Every action below adds points the moment it succeeds.',
+      earnJoin: 'Join a pod successfully',
+      earnHost: 'Host a pod to completion',
+      earnClubAdmin: 'A pod of your club completes',
+      earnVenue: 'A pod completes at your venue',
+      earnBrand: 'Sell a product from your brand',
+      earnPoints: '+{points} pts',
+      rewardsTitle: 'Rewards',
+      rewardsSubtitle: 'Finish the window inside a rank range to win.',
+      rewardsMonthly: 'End of month',
+      rewardsYearly: 'End of year',
+      rewardRankOne: 'Rank #{from}',
+      rewardRankRange: 'Ranks #{from}–#{to}',
+      rewardsEmpty: 'Rewards for this board will be announced soon.',
+      anonymous: 'Duncit member',
+    },
     // Wallet — the role-wise Minimum Withdrawal Amount configured in Finance >
     // Withdrawals > Withdrawal Settings. The server decides eligibility and
     // sends the applicable floor on `myWallet`; these keys only word it, so

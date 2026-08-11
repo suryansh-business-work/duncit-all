@@ -227,6 +227,16 @@ async function assertNoBackoutInProcess(podId: Types.ObjectId, uid: Types.Object
 const fullName = (user: any) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
 
+/** Leaderboard points for a successful join — fire-and-forget like the badge
+ * hook. Idempotent per (user, pod) inside the service, so a rejoin after a
+ * backout never awards twice. Dynamic import keeps the engagement module out
+ * of this file's import graph. */
+function awardJoinPoints(userId: string, podDocId: string): void {
+  import('@modules/engagement/leaderboard/leaderboard.service')
+    .then(({ leaderboardService }) => leaderboardService.awardPodJoin(userId, podDocId))
+    .catch(() => {});
+}
+
 
 /** Best-effort in-app + push (Notification Center fan-out) to one user. */
 async function notifyUserInApp(userId: string, title: string, body: string) {
@@ -723,6 +733,7 @@ export const podMemberService = {
 
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+    awardJoinPoints(userId, String(pod._id));
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(doc._id));
@@ -957,6 +968,7 @@ export const podMemberService = {
     await fillBackoutsAfterJoin(pod, userId);
 
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+    awardJoinPoints(userId, String(pod._id));
     return toPub(doc);
   },
 
@@ -998,6 +1010,7 @@ export const podMemberService = {
     } catch (e) {
       logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Backout fill (paid join) failed' });
     }
+    awardJoinPoints(userId, podDocId);
     return doc;
   },
 
@@ -1073,6 +1086,7 @@ export const podMemberService = {
 
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+    awardJoinPoints(userId, String(pod._id));
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(membership._id));

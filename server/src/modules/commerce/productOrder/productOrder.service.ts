@@ -395,6 +395,13 @@ export const productOrderService = {
       created.push(doc);
       // Point of sale: stock moves only when this order doc is first created.
       await recordStockForOrder(doc);
+      // Leaderboard points for the brand owner(s) behind this order's lines.
+      // Best-effort + idempotent inside the service, like everything else on
+      // this path — a points hiccup must never fail a paid order.
+      const { leaderboardService } = await import(
+        '@modules/engagement/leaderboard/leaderboard.service'
+      );
+      await leaderboardService.awardProductSales(doc);
       if (group.method === 'SHIP') await this.tryCreateShipment(doc);
     }
     return created.map(toPub);

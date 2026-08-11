@@ -187,3 +187,15 @@ export {
   pickerBatchSize,
   type CoverCategoryNames,
 } from './cover-image';
+export {
+  LEADERBOARD_CATEGORIES,
+  LEADERBOARD_EARN_KEY,
+  LEADERBOARD_PERIODS,
+  LEADERBOARD_PERIOD_KEY,
+  LEADERBOARD_POINTS_FIELD,
+  LEADERBOARD_TAB_KEY,
+  leaderboardMedal,
+  type LeaderboardCategory,
+  type LeaderboardMedal,
+  type LeaderboardPeriodKey,
+} from './leaderboard';

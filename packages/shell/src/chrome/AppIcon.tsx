@@ -135,6 +135,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   terminal: TerminalIcon,
   timeline: TimelineIcon,
   tools: HandymanIcon,
+  trophy: EmojiEventsIcon,
   tune: TuneIcon,
   upload: CloudUploadIcon,
   wallet: AccountBalanceWalletIcon,

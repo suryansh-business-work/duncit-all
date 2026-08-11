@@ -4,6 +4,7 @@ import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-co
 import type { MenuRoute } from '@/navigation/types';
 import type { StudioMode } from '@/utils/studio-mode';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { useTranslation } from '@/hooks/useTranslation';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
@@ -11,7 +12,12 @@ import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
-import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSections';
+import {
+  buildManageItems,
+  buildPartnerMenus,
+  SHOP_ITEMS,
+  type ProfileTile,
+} from './profileSections';
 
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card, the Manage
@@ -24,6 +30,7 @@ export function SidebarUserContent({
   roles,
   mode,
   showPodPlans,
+  showLeaderboard = false,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
@@ -32,10 +39,24 @@ export function SidebarUserContent({
   /** Studio mode in effect — decides which partner menu (if any) is shown. */
   mode: StudioMode;
   showPodPlans: boolean;
+  /** Server `leaderboard` feature flag — the whole section hides without it. */
+  showLeaderboard?: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
+  const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
   const partnerMenus = buildPartnerMenus(roles, mode);
+  // Built here rather than in profileSections so the label is translated —
+  // the section ships flag-gated and localized from day one (rule 38).
+  const leaderboardItems: ProfileTile[] = [
+    {
+      key: 'leaderboard',
+      label: t('mweb.leaderboard.sidebarLabel'),
+      caption: '',
+      icon: 'emoji-events',
+      route: 'Leaderboard',
+    },
+  ];
   return (
     <YStack>
       <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
@@ -47,6 +68,13 @@ export function SidebarUserContent({
       <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />
+      {showLeaderboard ? (
+        <SidebarManageList
+          title={t('mweb.leaderboard.title')}
+          items={leaderboardItems}
+          onNavigate={onNavigate}
+        />
+      ) : null}
       <SidebarManageList
         title="Manage Account"
         items={buildManageItems(showPodPlans)}

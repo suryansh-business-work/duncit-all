@@ -1413,7 +1413,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       linkCopied: 'Link copied',
       // Native only — its share sheet hands the message to another app.
       share: 'Share',
-      shareLink: 'Share referral link',
       // Both sides earn, so the sentence says both. {coins} is the configured rate.
       bothEarn: 'You and your friend each earn {coins} Duncit Coins',
       referredBy: 'You were referred by {name}',
@@ -1429,7 +1428,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       codePlaceholder: 'DUN-XXXXXX',
       codeHint: 'Have a friend’s code? You both earn Duncit Coins.',
       promptTitle: 'Got a referral code?',
-      promptBody: 'Enter it now and you both earn {coins} Duncit Coins. You can only do this once.',
       promptBodyPlain: 'Enter it now and you both earn Duncit Coins. You can only do this once.',
       apply: 'Apply code',
       applying: 'Applying…',

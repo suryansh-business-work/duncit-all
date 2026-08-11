@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useSearchParams } from 'react-router-dom';
 import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { PageHeader } from '@duncit/ui';
@@ -10,6 +9,7 @@ import { useTranslation } from '@duncit/shell';
 import type { TableFetch } from '@duncit/table';
 import { urlConfigs } from '../../config/url-configs';
 import MailboxesTable from './MailboxesTable';
+import { useConnectOutcome } from './useConnectOutcome';
 import {
   DISCONNECT_MAIL_AUTOMATION_ACCOUNT,
   MAIL_AUTOMATION_ACCOUNTS,
@@ -34,7 +34,6 @@ const redirectUri = `${urlConfigs.graphqlUrl.replace('/graphql', '')}/gmail/oaut
 export default function MailAutomationPage() {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [params, setParams] = useSearchParams();
   const refetchRef = useRef<(() => void) | null>(null);
 
   const configured = useQuery<{ mailAutomationConfigured: boolean }>(MAIL_AUTOMATION_CONFIGURED, {
@@ -51,39 +50,10 @@ export default function MailAutomationPage() {
     refetchQueries: [MAIL_AUTOMATION_ACCOUNTS],
   });
 
-  /*
-    The OAuth callback can only hand its outcome back in the query string, so
-    this is where the round trip is reported.
-
-    A FAILED connect is held on the page, not just toasted. It writes no row and
-    leaves no trace anywhere the operator can look, so a toast that disappears
-    after a few seconds — or is missed entirely while the page is still
-    booting — means the only account of what went wrong is gone, and the screen
-    just says "no mailbox connected" with no reason. The server puts the real
-    Google/Gmail error in this parameter; it stays on screen until dismissed.
-  */
-  const connected = params.get('connected');
-  const failure = params.get('error');
-  const reconnected = params.get('reconnected') === '1';
-  const [connectError, setConnectError] = useState('');
-  const [reconnectWarning, setReconnectWarning] = useState('');
-  useEffect(() => {
-    if (!connected && !failure) return;
-    if (connected && reconnected) {
-      setReconnectWarning(connected);
-    } else if (connected) {
-      notify(t('tech.mailAutomation.connected', { vars: { email: connected } }), 'success');
-    } else if (failure === 'access_denied') {
-      notify(t('tech.mailAutomation.cancelled'), 'info');
-    } else {
-      setConnectError(failure ?? '');
-    }
-    if (connected) accounts.refetch().catch(() => undefined);
-    setParams({}, { replace: true });
-    // `accounts`/`setParams` are stable enough for this one-shot read; adding
-    // them re-runs the effect and re-notifies on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, failure, reconnected]);
+  const { connectError, setConnectError, reconnectWarning, setReconnectWarning } =
+    useConnectOutcome(() => {
+      accounts.refetch().catch(() => undefined);
+    });
 
   const rows = accounts.data?.mailAutomationAccounts;
 

@@ -23,7 +23,6 @@ import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage
 import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
 import PodsDashboardPage from './pages/pods-dashboard/PodsDashboardPage';
 import CouponsPage from './pages/CouponsPage';
-import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
 import BrandingPage from './pages/BrandingPage';
 import LocalesPage from './pages/localization-page/LocalesPage';
@@ -71,7 +70,6 @@ export default function App() {
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
                 <Route path="/pod-monitoring" element={<PodMonitoringPage />} />
                 <Route path="/coupons" element={<CouponsPage />} />
-                <Route path="/referrals" element={<ReferralsPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />

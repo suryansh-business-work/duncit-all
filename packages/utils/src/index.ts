@@ -38,7 +38,9 @@ export {
 export {
   readReferralCode,
   referralLink,
-  referralShareMessage,
+  renderReferralMessage,
+  DEFAULT_REFERRAL_MESSAGE,
+  REFERRAL_MESSAGE_TOKENS,
   REFERRAL_PARAM,
 } from './referral';
 export {

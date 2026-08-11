@@ -57,14 +57,18 @@ export const TOURS: readonly TourDefinition[] = [
   {
     id: 'club',
     title: 'Club Page',
-    caption: 'Following a club and finding its pods',
+    caption: 'Following a club and finding its pods — open any club to start',
     path: '/clubs',
     nativeRoute: 'Home',
+    nativeTab: 'Clubs',
     steps: [
       {
         anchor: 'club-header',
+        // The follower count is a clause this step used to promise and only mWeb
+        // could keep: on native it sits below the Follow pill, so covering it
+        // would have swallowed the next step's target.
         title: 'The club',
-        body: 'Who runs it, what it is about and how many people follow it.',
+        body: 'Who runs it and what it is about, in the club’s own words.',
       },
       {
         anchor: 'club-follow',
@@ -81,7 +85,7 @@ export const TOURS: readonly TourDefinition[] = [
   {
     id: 'pod-details',
     title: 'Pod Details',
-    caption: 'Reading a pod and booking a spot',
+    caption: 'Reading a pod and booking a spot — open any pod to start',
     path: '/',
     nativeRoute: 'Home',
     steps: [
@@ -109,21 +113,31 @@ export const TOURS: readonly TourDefinition[] = [
     path: '/create-pod',
     nativeRoute: 'CreatePod',
     requiredRole: 'HOST',
+    /*
+      Every step lives on the FIRST page of the wizard, and that is deliberate.
+      Create Pod renders one page at a time (`{steps[step]}`), so an anchor on
+      the venue page or the pricing page is never on screen at the same time as
+      one on the basics page. Both runners resolve a tour against what is
+      rendered and then freeze — so steps pointing at later pages did not merely
+      arrive late, they could never resolve, and the tour would open on its one
+      reachable step and mark itself as shown. The walkthrough therefore explains
+      the journey from the page the host actually lands on.
+    */
     steps: [
       {
+        anchor: 'create-pod-steps',
+        title: 'Four steps',
+        body: 'The basics, then where it happens, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+      },
+      {
         anchor: 'create-pod-basics',
-        title: 'The basics',
-        body: 'Name your pod, describe it and add a photo people will recognise.',
+        title: 'Name it well',
+        body: 'This is the line people read first. A description and a cover photo follow it, and both are checked before your pod goes live.',
       },
       {
-        anchor: 'create-pod-when-where',
-        title: 'When and where',
-        body: 'Pick a date and a venue slot. The slot you choose sets the pod’s time.',
-      },
-      {
-        anchor: 'create-pod-pricing',
-        title: 'Pricing',
-        body: 'Set a ticket price and see what you take home after fees before you publish.',
+        anchor: 'create-pod-publish',
+        title: 'Pricing, then publish',
+        body: 'This carries you through to the last step, where you set a ticket price and see what you take home after fees. Nothing is published until you press Create Pod.',
       },
     ],
   },
@@ -131,13 +145,17 @@ export const TOURS: readonly TourDefinition[] = [
     id: 'profile',
     title: 'Profile',
     caption: 'Your account, bookings and ways to earn',
-    path: '/account',
-    nativeRoute: 'Account',
+    // The menu, not the account screen. Pod history and Earn have never lived on
+    // /account — they are menu tiles — so two of these three steps had nothing
+    // to point at and the tour did nothing but navigate. The menu is a real
+    // route on both surfaces (it used to be a drawer), so it opens cold.
+    path: '/menu',
+    nativeRoute: 'Menu',
     steps: [
       {
         anchor: 'profile-details',
-        title: 'Your details',
-        body: 'Name, photo and contact details — keep these current so hosts can reach you.',
+        title: 'Your profile',
+        body: 'Your name and photo. Tap through for the profile other people see, and to keep your details current.',
       },
       {
         anchor: 'profile-history',
@@ -154,24 +172,31 @@ export const TOURS: readonly TourDefinition[] = [
   {
     id: 'booking',
     title: 'Booking Flow',
-    caption: 'From picking a spot to holding a ticket',
+    caption: 'From holding a spot to holding a ticket — open any booking to start',
     path: '/pod-history',
     nativeRoute: 'PodHistory',
+    /*
+      All three steps are on the booking DETAIL screen, which is the only place
+      the ticket and back-out controls exist. A step on the list screen would
+      resolve on its own, and a tour that resolves to one step opens on it and
+      records itself as shown — so the walkthrough waits, armed, until the user
+      opens a booking, and then runs whole.
+    */
     steps: [
       {
-        anchor: 'booking-list',
-        title: 'Your bookings',
-        body: 'Every spot you hold, newest first.',
+        anchor: 'booking-summary',
+        title: 'Your booking',
+        body: 'The pod you booked, when it runs and what the spot cost you.',
       },
       {
         anchor: 'booking-ticket',
         title: 'Your ticket',
-        body: 'Open a booking for its QR ticket — that is what gets scanned at the door.',
+        body: 'Download your ticket here. The QR code inside it is what gets scanned at the door.',
       },
       {
         anchor: 'booking-backout',
         title: 'Changed your mind?',
-        body: 'You can back out of a paid pod. Your refund is released once someone takes the spot.',
+        body: 'You can back out of a pod you have joined. If you paid for it, your refund is released once someone takes the spot.',
       },
     ],
   },

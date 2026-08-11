@@ -17,9 +17,11 @@ export const GRIEVANCE_STATUSES: GrievanceStatus[] = [
   'REJECTED',
 ];
 
-/** Which surface the grievance was raised from. */
-export type GrievanceSource = 'APP' | 'WEBSITE' | 'PORTAL';
-export const GRIEVANCE_SOURCES: GrievanceSource[] = ['APP', 'WEBSITE', 'PORTAL'];
+/** Which surface the grievance was raised from. EMAIL is a mailbox connected
+ * under Mail Automation — the complainant wrote in rather than filling a form,
+ * which is why `phone` below cannot be required. */
+export type GrievanceSource = 'APP' | 'WEBSITE' | 'PORTAL' | 'EMAIL';
+export const GRIEVANCE_SOURCES: GrievanceSource[] = ['APP', 'WEBSITE', 'PORTAL', 'EMAIL'];
 
 export interface IGrievanceTicket extends Document {
   /**
@@ -38,6 +40,10 @@ export interface IGrievanceTicket extends Document {
    *  the details they gave at the time are what the grievance was filed under. */
   name: string;
   email: string;
+  /** '' when it arrived by email. Every form still demands a phone, so the
+   *  relaxed model does not weaken them — but somebody who simply wrote to the
+   *  grievance mailbox never had a field to type one in, and a grievance is
+   *  answerable by email. */
   phone: string;
   /** Optional — a grievance is answerable by email; a postal address is not required. */
   address: string;
@@ -59,7 +65,7 @@ const grievanceTicketSchema = new Schema<IGrievanceTicket>(
     source: { type: String, enum: GRIEVANCE_SOURCES, default: 'APP', index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 200, index: true },
-    phone: { type: String, required: true, trim: true, maxlength: 30 },
+    phone: { type: String, default: '', trim: true, maxlength: 30 },
     address: { type: String, default: '', trim: true, maxlength: 500 },
     subject: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, required: true, trim: true, maxlength: 5000 },

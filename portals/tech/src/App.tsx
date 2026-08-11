@@ -19,6 +19,7 @@ import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
+import MailAutomationPage from './pages/mail-automation';
 import AisensyPage from './pages/aisensy';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -40,6 +41,8 @@ export default function App() {
         <Route path="/emails/templates" element={authed(<EmailTemplatesPage />)} />
         <Route path="/emails/fragments" element={authed(<EmailFragmentsPage />)} />
         <Route path="/emails/logs" element={authed(<EmailLogsPage />)} />
+        {/* Connecting a mailbox only. What it replies with lives in Support. */}
+        <Route path="/mail-automation" element={authed(<MailAutomationPage />)} />
         <Route path="/package-docs" element={authed(<PackagesDocsPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />

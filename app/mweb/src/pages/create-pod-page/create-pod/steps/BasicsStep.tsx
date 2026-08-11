@@ -1,5 +1,5 @@
 import { Controller } from 'react-hook-form';
-import { Stack, TextField } from '@mui/material';
+import { Box, Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
 import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
@@ -45,14 +45,18 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           the products on step 4, so it is picked before the title. Native twin
           (rule 27). */}
       <HostCategoryField form={form} hostCategories={hostCategories} />
-      <TextField
-        label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
-        fullWidth
-        placeholder={t('mweb.createPod.podTitlePlaceholder')}
-        {...register('pod_title')}
-        error={!!errors.pod_title}
-        helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
-      />
+      {/* The title field alone, matching native: this step is about the one line
+          people read first, and a taller highlight reads as "everything". */}
+      <Box data-tour="create-pod-basics">
+        <TextField
+          label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
+          fullWidth
+          placeholder={t('mweb.createPod.podTitlePlaceholder')}
+          {...register('pod_title')}
+          error={!!errors.pod_title}
+          helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
+        />
+      </Box>
       <TextField
         label={requiredLabel(t('mweb.createPod.podDescriptionLabel'), true)}
         fullWidth

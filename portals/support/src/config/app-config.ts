@@ -26,6 +26,7 @@ export const appConfig = {
     { label: 'Callback Requests', to: '/callbacks', icon: 'callback' },
     { label: 'Tickets', to: '/tickets', icon: 'ticket' },
     { label: 'Chat with Us', to: '/live-chat', icon: 'chat' },
+    { label: 'Mail Automation', to: '/mail-automation', icon: 'markEmailRead' },
     {
       // A group header, not a link: the two children are the list and the
       // config that decides what the app's form even offers.

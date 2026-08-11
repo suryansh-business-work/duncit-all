@@ -15,6 +15,7 @@ const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const SignupSurveyPage = lazy(() => import('../pages/SignupSurveyPage'));
 const SignupWhatsappPage = lazy(() => import('../pages/SignupWhatsappPage'));
+const SignupReferralPage = lazy(() => import('../pages/signup-referral-page'));
 const AccountPage = lazy(() => import('../pages/AccountPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const PostPage = lazy(() => import('../pages/PostPage'));
@@ -38,7 +39,7 @@ const VenuesPage = lazy(() => import('../pages/venues-page'));
 const FaqsPage = lazy(() => import('../pages/FaqsPage'));
 const PolicyPage = lazy(() => import('../pages/PolicyPage'));
 const PodIdeasPage = lazy(() => import('../pages/PodIdeasPage'));
-const ReferralPage = lazy(() => import('../pages/ReferralPage'));
+const ReferralPage = lazy(() => import('../pages/referral-page'));
 const DuncitCoinPage = lazy(() => import('../pages/duncit-coin-page'));
 const LeaderboardPage = lazy(() => import('../pages/leaderboard-page'));
 const PodPlansPage = lazy(() => import('../pages/PodPlansPage'));
@@ -197,6 +198,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />
+        <Route path="/signup-referral" element={withAuth(<SignupReferralPage />)} />
         <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
         <Route path="/product-checkout" element={withAuth(<ProductCheckoutPage />)} />

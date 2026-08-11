@@ -52,7 +52,7 @@ const COLUMNS: DuncitColumn<ReferralRow>[] = [
 export default function ReferralsTable({ fetchRows }: Readonly<Props>) {
   return (
     <DuncitTable<ReferralRow>
-      tableId="admin-referrals"
+      tableId="finance-referrals"
       columns={COLUMNS}
       fetchRows={fetchRows}
       getRowId={getReferralRowId}

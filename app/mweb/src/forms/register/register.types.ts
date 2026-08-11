@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
+import { REFERRAL_CODE } from '@duncit/regex';
 import { fallbackT, type Translate } from '../../i18n/fallback';
 
 export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
@@ -45,6 +46,20 @@ export function makeRegisterSchema(
       password: z.string().min(8, t('mweb.auth.validation.passwordMin')).max(128),
       confirmPassword: z.string().min(1, t('mweb.signup.validation.confirmRequired')),
       dob: dobString,
+      /*
+        Optional, and the ONLY place a code can be typed on this surface — the
+        box is gone from Refer & Earn, because a code is redeemed once and this
+        is the moment it happens. The shape is checked here so a typo is an
+        inline hint; whether the code actually exists is the server's call, made
+        before the account is created.
+      */
+      referralCode: z
+        .string()
+        .trim()
+        .refine(
+          (v) => v === '' || REFERRAL_CODE.test(v.toUpperCase()),
+          t('mweb.referral.validation.codePattern'),
+        ),
     })
     .refine((values) => values.password === values.confirmPassword, {
       message: t('mweb.auth.validation.passwordsMismatch'),
@@ -62,4 +77,5 @@ export const registerDefaults: RegisterFormValues = {
   password: '',
   confirmPassword: '',
   dob: '',
+  referralCode: '',
 };

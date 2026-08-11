@@ -9,7 +9,13 @@ jest.mock('@/services/secure-storage', () => ({
 const mockGet = getItem as jest.Mock;
 const mockSet = setItem as jest.Mock;
 
-const reset = () => useToursStore.setState({ completed: [], activeTourId: null });
+const reset = () =>
+  useToursStore.setState({
+    completed: [],
+    activeTourId: null,
+    activeSteps: [],
+    mountedAnchors: [],
+  });
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -35,6 +41,29 @@ describe('tours store', () => {
   it('starts a tour', () => {
     useToursStore.getState().startTour('club');
     expect(useToursStore.getState().activeTourId).toBe('club');
+  });
+
+  it('starting clears the previous tour’s locked step list', () => {
+    useToursStore.getState().armTour([{ anchor: 'home-pods', title: 'T', body: 'B' }]);
+    useToursStore.getState().startTour('club');
+    expect(useToursStore.getState().activeSteps).toEqual([]);
+  });
+
+  it('locks a copy of the resolved steps in, so the caller cannot mutate them', () => {
+    const resolved = [{ anchor: 'home-pods', title: 'T', body: 'B' }];
+    useToursStore.getState().armTour(resolved);
+    expect(useToursStore.getState().activeSteps).toEqual(resolved);
+    expect(useToursStore.getState().activeSteps).not.toBe(resolved);
+  });
+
+  it('tracks which anchors are on screen, without duplicating one', () => {
+    const { registerAnchor, unregisterAnchor } = useToursStore.getState();
+    registerAnchor('home-pods');
+    registerAnchor('home-pods');
+    registerAnchor('home-clubs');
+    expect(useToursStore.getState().mountedAnchors).toEqual(['home-pods', 'home-clubs']);
+    unregisterAnchor('home-pods');
+    expect(useToursStore.getState().mountedAnchors).toEqual(['home-clubs']);
   });
 
   it('finishing records the tour, clears it and persists under the user key', async () => {

@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
 import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
@@ -38,13 +39,18 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           the products on step 4, so it is picked before the title. mWeb twin
           (rule 27). */}
       <HostCategoryField form={form} hostCategories={hostCategories} />
-      <FormTextField
-        control={control}
-        name="pod_title"
-        label={t('mweb.createPod.podTitleLabel')}
-        required
-        hint={t('mweb.createPod.podTitleHint')}
-      />
+      {/* The title field alone, not the title/description/photo group: the
+          native overlay cannot scroll a target into view, so a highlight taller
+          than the viewport is one the host never sees. */}
+      <TourAnchor tour="create-pod" anchor="create-pod-basics">
+        <FormTextField
+          control={control}
+          name="pod_title"
+          label={t('mweb.createPod.podTitleLabel')}
+          required
+          hint={t('mweb.createPod.podTitleHint')}
+        />
+      </TourAnchor>
       <FormTextField
         control={control}
         name="pod_description"

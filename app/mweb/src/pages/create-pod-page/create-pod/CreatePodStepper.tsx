@@ -274,29 +274,36 @@ export default function CreatePodStepper({
 
   return (
     <Stack spacing={2.5}>
-      <StepHero
-        step={step}
-        total={STEP_TITLE_KEYS.length}
-        title={t(STEP_TITLE_KEYS[step])}
-        subtitle={t(STEP_SUBTITLE_KEYS[step])}
-      />
+      {/* The wizard renders ONE page at a time, so every tour step has to live on
+          the page the host lands on. The hero carries the step counter and is
+          what lets the walkthrough explain the four-step journey. */}
+      <Box data-tour="create-pod-steps">
+        <StepHero
+          step={step}
+          total={STEP_TITLE_KEYS.length}
+          title={t(STEP_TITLE_KEYS[step])}
+          subtitle={t(STEP_SUBTITLE_KEYS[step])}
+        />
+      </Box>
       {steps[step]}
       {error && <Alert severity="error">{error}</Alert>}
       {/* Spacer so the last field is never hidden behind the fixed footer bar. */}
       <Box aria-hidden sx={{ height: 88 }} />
-      <StepFooterBar
-        isFirst={step === 0}
-        isLast={isLast}
-        busy={busy}
-        submitDisabled={preview.blocked}
-        onBack={() => goTo(step - 1)}
-        onNext={() => {
-          next().catch(() => undefined);
-        }}
-        onSubmit={() => {
-          submit().catch(() => undefined);
-        }}
-      />
+      <Box data-tour="create-pod-publish">
+        <StepFooterBar
+          isFirst={step === 0}
+          isLast={isLast}
+          busy={busy}
+          submitDisabled={preview.blocked}
+          onBack={() => goTo(step - 1)}
+          onNext={() => {
+            next().catch(() => undefined);
+          }}
+          onSubmit={() => {
+            submit().catch(() => undefined);
+          }}
+        />
+      </Box>
       <ModerationBlockedDialog
         violations={blocked}
         onJump={jumpToStep}

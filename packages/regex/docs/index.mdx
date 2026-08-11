@@ -25,6 +25,7 @@ exports:
   - 'UPI_ID'
   - 'BANK_ACCOUNT_NUMBER'
   - 'GSTIN'
+  - 'REFERRAL_CODE'
   - 'isPhoneNumber'
   - 'isPhoneIntl'
   - 'isPincode'
@@ -35,6 +36,7 @@ exports:
   - 'isUpiId'
   - 'isBankAccountNumber'
   - 'isGstin'
+  - 'isReferralCode'
 ---
 
 ## Why this exists
@@ -83,6 +85,7 @@ const applicant = {
   upi_id: 'ananya.iyer@okhdfcbank',
   account_number: '50100234567890',
   gstin: '29ABCDE1234F1Z5',
+  referral_code: 'DUN-9F3A2C',  // a friend's code, typed at signup
 };
 ```
 
@@ -101,6 +104,7 @@ isIfsc(applicant.ifsc)                        // true
 isUpiId(applicant.upi_id)                     // true
 isBankAccountNumber(applicant.account_number) // true
 isGstin(applicant.gstin)                      // true
+isReferralCode(applicant.referral_code)       // true
 ```
 
 The rejections are the interesting half:
@@ -110,6 +114,8 @@ isPhoneNumber('98765')          // false — 5 digits, not 10
 isEmail('ananya@duncit')        // false — no dotted domain
 isIfsc('hdfc0001234')           // false — IFSC is UPPERCASE only; uppercase before validating
 isGstin('29ABCDE1234F1Z')       // false — 14 chars, one short
+isReferralCode('dun-9f3a2c')    // false — codes are UPPERCASE; uppercase before validating
+isReferralCode('DUN9F3A2C')     // false — the hyphen is part of the code
 isPincode('012345')             // false — an Indian PIN never starts with 0
 isPhoneIntl('+14155552671')     // false — PHONE_INTL is digits only…
 PHONE_INTL_PLUS.test('+14155552671') // true  — …use this one for a pasted full number

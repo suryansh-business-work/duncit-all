@@ -39,18 +39,27 @@ const referralSchema = new Schema<IReferral>(
 export const ReferralModel: Model<IReferral> =
   (models.Referral as Model<IReferral>) ?? model<IReferral>('Referral', referralSchema);
 
-/** Admin-managed referral settings (singleton) — what gift referrers earn. */
+/** Finance-managed referral settings (singleton) — what a referral pays and
+ * what gets said when a member shares their code. */
 export interface IReferralSettings {
   singleton_key: string;
   gift_description: string;
-  /** Coins the referrer earns per person they bring in. */
+  /** Coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: number;
+  /** The message a share sheet pre-fills. See DEFAULT_REFERRAL_MESSAGE for the
+   * placeholders it may use. */
+  share_message: string;
 }
 
 const referralSettingsSchema = new Schema<IReferralSettings>({
   singleton_key: { type: String, default: 'referral', unique: true },
   gift_description: { type: String, default: '' },
   coins_per_referral: { type: Number, default: 50, min: 0 },
+  // Stored empty rather than seeded with the default text: an empty column is
+  // "Finance has not written one", which the apps answer with the shipped
+  // default. Copying the default in would freeze today's wording into the
+  // database, where a later change to it could never reach.
+  share_message: { type: String, default: '', maxlength: 500 },
 });
 
 export const ReferralSettingsModel: Model<IReferralSettings> =

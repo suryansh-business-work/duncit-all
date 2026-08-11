@@ -44,6 +44,7 @@ import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
 import { PodIdeasScreen } from '@/screens/PodIdeasScreen';
 import { ReferralScreen } from '@/screens/ReferralScreen';
+import { ReferralPromptScreen } from '@/screens/ReferralPromptScreen';
 import { DuncitCoinScreen } from '@/screens/DuncitCoinScreen';
 import { PodPlansScreen } from '@/screens/PodPlansScreen';
 import { PoliciesScreen } from '@/screens/PoliciesScreen';
@@ -92,6 +93,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   const token = useAuthStore((s) => s.token);
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
+  const referralPromptPending = useAuthStore((s) => s.referralPromptPending);
   // Short-link journey: a session binds the click to the account, and the
   // survey flag flipping true IS the survey being finished. Both are no-ops
   // for the vast majority who never followed a link, and the server keeps a
@@ -123,7 +125,7 @@ export function RootNavigator() {
     }
   }, [token, surveyCompleted]);
 
-  const signedInScreens = surveyCompleted ? (
+  const appScreens = (
     <>
       <Stack.Screen name="Home" component={MainTabs} />
       <Stack.Screen name="Menu" component={MenuScreen} />
@@ -193,9 +195,22 @@ export function RootNavigator() {
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
-  ) : (
-    <Stack.Screen name="Survey" component={SurveyScreen} />
   );
+
+  /*
+    Three post-token states, not two. The referral step comes FIRST because it
+    is the last thing the signup itself owes the user — asked after the survey
+    it would read as an unrelated interruption, and asked not at all it can
+    never be asked again (Refer & Earn no longer takes a code).
+  */
+  let signedInScreens;
+  if (referralPromptPending) {
+    signedInScreens = <Stack.Screen name="ReferralPrompt" component={ReferralPromptScreen} />;
+  } else if (surveyCompleted) {
+    signedInScreens = appScreens;
+  } else {
+    signedInScreens = <Stack.Screen name="Survey" component={SurveyScreen} />;
+  }
 
   return (
     <Stack.Navigator

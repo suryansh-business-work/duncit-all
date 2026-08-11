@@ -9,8 +9,14 @@ export const referralTypeDefs = /* GraphQL */ `
   type MyReferral {
     code: String!
     gift_description: String!
-    "Coins the referrer earns for each person they bring in."
+    "Coins EACH side of a referral earns — the referrer and the new member."
     coins_per_referral: Int!
+    """
+    The Finance-written message a share sheet pre-fills, with its {code},
+    {link} and {coins} placeholders still in it. Empty when Finance has not
+    written one, which the apps answer with their shipped default.
+    """
+    share_message: String!
     referred: [ReferralEntry!]!
     "Name of whoever referred this user; null when nobody has."
     referred_by_name: String
@@ -36,8 +42,17 @@ export const referralTypeDefs = /* GraphQL */ `
 
   type ReferralSettings {
     gift_description: String!
-    "Coins the referrer earns for each person they bring in."
+    "Coins EACH side of a referral earns — the referrer and the new member."
     coins_per_referral: Int!
+    "Share message template, with its {code}, {link} and {coins} placeholders."
+    share_message: String!
+  }
+
+  "Finance > Referrals. Every field is optional; an omitted one is left alone."
+  input ReferralSettingsInput {
+    gift_description: String
+    coins_per_referral: Int
+    share_message: String
   }
 
   extend type Query {
@@ -52,7 +67,7 @@ export const referralTypeDefs = /* GraphQL */ `
   extend type Mutation {
     "Redeem someone's referral code (once per account, not your own)."
     applyReferralCode(code: String!): MyReferral!
-    "Admin: set the gift shown to users for referring friends."
-    updateReferralGift(gift_description: String!, coins_per_referral: Int): ReferralSettings!
+    "Finance: what a referral pays and what a member's share sheet says."
+    updateReferralSettings(input: ReferralSettingsInput!): ReferralSettings!
   }
 `;

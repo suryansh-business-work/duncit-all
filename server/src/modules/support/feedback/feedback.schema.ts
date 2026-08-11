@@ -17,7 +17,8 @@ export const feedbackTypeDefs = /* GraphQL */ `
     id: ID!
     "Permanent, human-readable id (DUN-RPT-000001)."
     report_no: String!
-    user_id: ID!
+    "Null when the report arrived by email from an address with no account."
+    user_id: ID
     user_name: String!
     user_email: String!
     category: String!

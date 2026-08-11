@@ -51,6 +51,15 @@ export function DobDateField<T extends FieldValues>({
   const closeSheet = () => setOpen(false);
 
   const value = typeof field.value === 'string' ? field.value : '';
+  /* Signup validates on blur, which left a TYPED birthday silent until focus
+     moved on, while one picked from the sheet flagged straight away — closing
+     the sheet blurs the input. A complete date is checked the moment it is
+     typed; partial input still waits, so the format hint does not fire on
+     every keystroke. */
+  const onTyped = (text: string) => {
+    field.onChange(text);
+    if (DOB_PATTERN.test(text)) field.onBlur();
+  };
   // The calendar stops at the minimum joining age, so an under-18 day cannot be
   // picked; the schema still re-checks a typed value.
   const maxDate = latestEligibleDob(minAge);
@@ -71,7 +80,7 @@ export function DobDateField<T extends FieldValues>({
           placeholderTextColor="$muted"
           borderColor={error ? '$danger' : '$borderColor'}
           value={value}
-          onChangeText={field.onChange}
+          onChangeText={onTyped}
           onBlur={field.onBlur}
           placeholder={t('mweb.signup.dobPlaceholder')}
           autoCapitalize="none"
@@ -133,6 +142,7 @@ export function DobDateField<T extends FieldValues>({
                     maxDate={maxDate}
                     onDone={(picked) => {
                       field.onChange(format(picked, 'yyyy-MM-dd'));
+                      field.onBlur();
                       setOpen(false);
                     }}
                   />

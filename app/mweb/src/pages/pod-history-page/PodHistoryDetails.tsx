@@ -137,7 +137,11 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
 
   return (
     <Stack spacing={1.5} sx={{ width: '100%' }}>
-      <Card>
+      {/* The tour's first step. It lives here and not on the history LIST
+          because the ticket and back-out controls only exist on this page — and
+          a tour that resolves on the list would open there, one step long, and
+          record itself as shown. */}
+      <Card data-tour="booking-summary">
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
             <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '16px', bgcolor: 'action.hover' }}>

@@ -6,7 +6,7 @@ module.exports = {
   // testMatch would otherwise pick those specs up and run them in jsdom.
   testPathIgnorePatterns: ['/node_modules/', '/e2e/', '/__tests__/e2e/', '/android/', '/ios/'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-reanimated|react-native-worklets|tamagui|@tamagui/.*|moti|react-native-spotlight-tour|@floating-ui/react-native))',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-reanimated|react-native-worklets|tamagui|@tamagui/.*|moti|rn-tourguide|@floating-ui/react-native))',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

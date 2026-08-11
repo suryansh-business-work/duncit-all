@@ -448,6 +448,72 @@ export type AppFeedbackInput = {
   source_screen?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AppPopup = {
+  __typename?: 'AppPopup';
+  /** Set only for AUDIENCE_LIST — membership is recomputed on every app open. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
+  audience_type: AppPopupAudience;
+  /** Whether the ✕ is drawn. Tapping outside the image always closes it. */
+  close_button_enabled: Scalars['Boolean']['output'];
+  created_at: Scalars['String']['output'];
+  cta_label: Scalars['String']['output'];
+  cta_url: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  end_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  /** Internal label for the marketing table — never rendered in the app. */
+  name: Scalars['String']['output'];
+  platform: AppPopupPlatform;
+  start_at: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** Everyone, or the people currently matching a saved marketing audience list. */
+export type AppPopupAudience =
+  | 'ALL_USERS'
+  | 'AUDIENCE_LIST';
+
+/**
+ * What a client reports about itself when it asks for a popup. WEB is mWeb in a
+ * desktop browser; on a phone browser mWeb reports the underlying IOS/ANDROID,
+ * so platform targeting means the same thing on both surfaces.
+ */
+export type AppPopupClientPlatform =
+  | 'ANDROID'
+  | 'IOS'
+  | 'WEB';
+
+export type AppPopupInput = {
+  /** Required when audience_type is AUDIENCE_LIST. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
+  audience_type?: InputMaybe<AppPopupAudience>;
+  close_button_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  cta_url?: InputMaybe<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  end_at: Scalars['String']['input'];
+  image_url: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  platform?: InputMaybe<AppPopupPlatform>;
+  start_at: Scalars['String']['input'];
+};
+
+/** Which builds a popup is aimed at. BOTH reaches every client. */
+export type AppPopupPlatform =
+  | 'ANDROID'
+  | 'BOTH'
+  | 'IOS';
+
+/** Server-side table page for the shared table engine (appPopupsTable). */
+export type AppPopupTablePage = {
+  __typename?: 'AppPopupTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AppPopup>;
+  total: Scalars['Int']['output'];
+};
+
 export type AppReleaseCommitInput = {
   body?: InputMaybe<Scalars['String']['input']>;
   hash: Scalars['String']['input'];
@@ -4047,7 +4113,8 @@ export type FeedbackReport = {
   status: FeedbackStatus;
   updated_at: Scalars['String']['output'];
   user_email: Scalars['String']['output'];
-  user_id: Scalars['ID']['output'];
+  /** Null when the report arrived by email from an address with no account. */
+  user_id?: Maybe<Scalars['ID']['output']>;
   user_name: Scalars['String']['output'];
 };
 
@@ -4241,6 +4308,8 @@ export type GrievanceOfficer = {
 /** Which surface the grievance was raised from. */
 export type GrievanceSource =
   | 'APP'
+  /** Arrived in a mailbox connected under Mail Automation. */
+  | 'EMAIL'
   | 'PORTAL'
   | 'WEBSITE';
 
@@ -5435,6 +5504,87 @@ export type LoginInput = {
   portal_key?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**
+ * A Gmail mailbox that answers itself.
+ *
+ * Connected in the Tech portal (credentials), governed from the Support portal
+ * (what it says and what it opens). The first message on a conversation gets a
+ * ticket and one acknowledgement; every reply after that on the same thread is
+ * left alone for a human.
+ */
+export type MailAutomationAccount = {
+  __typename?: 'MailAutomationAccount';
+  /** Let OpenAI rewrite the template into a reply to the actual email, at send time. */
+  ai_enabled: Scalars['Boolean']['output'];
+  connected_at: Scalars['String']['output'];
+  display_name: Scalars['String']['output'];
+  /** The connected mailbox address. */
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Whether the automation is running for this mailbox. Pausing is not disconnecting. */
+  is_active: Scalars['Boolean']['output'];
+  /** False once the Google grant is gone — reconnect from the Tech portal. */
+  is_connected: Scalars['Boolean']['output'];
+  /** Why the last poll failed, or '' when it did not. */
+  last_error: Scalars['String']['output'];
+  last_polled_at?: Maybe<Scalars['String']['output']>;
+  /** Step 2 — what every first message gets back. Must contain {{ticket_no}}. */
+  reply_template: Scalars['String']['output'];
+  /** The response window as the reply words it — for example, 24-48 hours. */
+  sla_label: Scalars['String']['output'];
+  sla_max_hours: Scalars['Int']['output'];
+  sla_min_hours: Scalars['Int']['output'];
+  ticket_type: MailTicketType;
+};
+
+/** What a sender would actually receive, composed from the saved rule. */
+export type MailAutomationPreview = {
+  __typename?: 'MailAutomationPreview';
+  by_ai: Scalars['Boolean']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type MailAutomationRuleInput = {
+  ai_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+  /** Pause or resume the automation without giving up the Google grant. */
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  reply_template?: InputMaybe<Scalars['String']['input']>;
+  sla_max_hours?: InputMaybe<Scalars['Int']['input']>;
+  sla_min_hours?: InputMaybe<Scalars['Int']['input']>;
+  ticket_type?: InputMaybe<MailTicketType>;
+};
+
+/** One conversation the automation has already answered. */
+export type MailAutomationThread = {
+  __typename?: 'MailAutomationThread';
+  created_at: Scalars['String']['output'];
+  from_email: Scalars['String']['output'];
+  from_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** When the acknowledgement went out. Null means the ticket exists but the reply did not send. */
+  replied_at?: Maybe<Scalars['String']['output']>;
+  /** True when OpenAI wrote the body; false when the operator's template went as written. */
+  reply_by_ai: Scalars['Boolean']['output'];
+  reply_error: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  /** The reference quoted back to the sender, e.g. ST-A1B2C3 or GRV-000012. */
+  ticket_no: Scalars['String']['output'];
+  ticket_type: MailTicketType;
+};
+
+/**
+ * Which queue an inbound email opens a record in. Chosen per mailbox in the
+ * Support portal — step 3 of the wizard.
+ */
+export type MailTicketType =
+  /** A grievance — a legal filing with a redressal clock on it. */
+  | 'GRIEVANCE'
+  /** A Report a Problem entry, triaged like an in-app bug report. */
+  | 'REPORT_PROBLEM'
+  /** A support ticket, the ordinary conversation queue. */
+  | 'SUPPORT';
+
 export type ManualLogInput = {
   body_html: Scalars['String']['input'];
   body_text?: InputMaybe<Scalars['String']['input']>;
@@ -5979,6 +6129,7 @@ export type Mutation = {
   connectGoogleAccount: ConnectedAccounts;
   createAiPrompt: AiPrompt;
   createApiKey: CreatedApiKey;
+  createAppPopup: AppPopup;
   createAudienceList: AudienceList;
   createBadge: Badge;
   createCategory: Category;
@@ -6062,6 +6213,7 @@ export type Mutation = {
    * Deleting a filtered set is what deleteEmailLogs is for.
    */
   deleteAllEmailLogs: Scalars['Int']['output'];
+  deleteAppPopup: Scalars['Boolean']['output'];
   deleteAudienceList: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
@@ -6168,6 +6320,10 @@ export type Mutation = {
    * and unlinking it would lock the user out of their own account.
    */
   disconnectGoogleAccount: ConnectedAccounts;
+  /** Tech portal only: forget the mailbox. Tickets it already opened stay. */
+  disconnectMailAutomationAccount: Scalars['Boolean']['output'];
+  /** Record that the signed-in user closed this popup, so it never returns. */
+  dismissAppPopup: Scalars['Boolean']['output'];
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
   dummyCheckout: Payment;
@@ -6267,6 +6423,12 @@ export type Mutation = {
   loginWithGoogle: AuthPayload;
   /** Trade a correct code for the same session a password would have produced. */
   loginWithPortalOtp: AuthPayload;
+  /**
+   * Tech portal only: the Google consent URL to open in a new tab. The callback
+   * at /gmail/oauth/callback finishes the connection and returns the operator
+   * to the Tech portal.
+   */
+  mailAutomationConnectUrl: Scalars['String']['output'];
   markAllNotificationsRead: Scalars['Boolean']['output'];
   markBouncerCallbackContacted: BouncerCallbackRequest;
   markNotificationRead: Scalars['Boolean']['output'];
@@ -6594,6 +6756,7 @@ export type Mutation = {
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
   updateAiPrompt: AiPrompt;
+  updateAppPopup: AppPopup;
   updateAppSettings: AppSettings;
   /** Owner edits the editable subset of an APPROVED venue (documents append-only). */
   updateApprovedVenue: Venue;
@@ -6632,6 +6795,8 @@ export type Mutation = {
   updateLeaderboardSettings: LeaderboardSettings;
   updateLegalDocument: LegalDocument;
   updateLocation: Location;
+  /** Support portal: steps 2 and 3 — the reply message, the queue and the window. */
+  updateMailAutomationRule: MailAutomationAccount;
   /** Tags, and the focus rectangle a smart crop uses. */
   updateMediaFile: MediaItem;
   updateMeeting: OnboardingMeeting;
@@ -6652,8 +6817,8 @@ export type Mutation = {
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
-  /** Admin: set the gift shown to users for referring friends. */
-  updateReferralGift: ReferralSettings;
+  /** Finance: what a referral pays and what a member's share sheet says. */
+  updateReferralSettings: ReferralSettings;
   /** Support portal: edit the chips and prompt the app renders. */
   updateReportProblemConfig: ReportProblemConfig;
   updateRole: Role;
@@ -7153,6 +7318,11 @@ export type MutationCreateApiKeyArgs = {
 };
 
 
+export type MutationCreateAppPopupArgs = {
+  input: AppPopupInput;
+};
+
+
 export type MutationCreateAudienceListArgs = {
   input: AudienceListInput;
 };
@@ -7469,6 +7639,11 @@ export type MutationDeleteAdjustmentArgs = {
 
 
 export type MutationDeleteAiPromptArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAppPopupArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -7864,6 +8039,16 @@ export type MutationDenyWarehouseRequestArgs = {
 };
 
 
+export type MutationDisconnectMailAutomationAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDismissAppPopupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDismissMeetingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -8076,6 +8261,11 @@ export type MutationLoginWithGoogleArgs = {
 
 export type MutationLoginWithPortalOtpArgs = {
   input: PortalLoginOtpInput;
+};
+
+
+export type MutationMailAutomationConnectUrlArgs = {
+  login_hint?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -9098,6 +9288,12 @@ export type MutationUpdateAiPromptArgs = {
 };
 
 
+export type MutationUpdateAppPopupArgs = {
+  id: Scalars['ID']['input'];
+  input: AppPopupInput;
+};
+
+
 export type MutationUpdateAppSettingsArgs = {
   input: UpdateAppSettingsInput;
 };
@@ -9317,6 +9513,11 @@ export type MutationUpdateLocationArgs = {
 };
 
 
+export type MutationUpdateMailAutomationRuleArgs = {
+  input: MailAutomationRuleInput;
+};
+
+
 export type MutationUpdateMediaFileArgs = {
   customCoordinates?: InputMaybe<Scalars['String']['input']>;
   fileId: Scalars['ID']['input'];
@@ -9408,9 +9609,8 @@ export type MutationUpdatePolicyArgs = {
 };
 
 
-export type MutationUpdateReferralGiftArgs = {
-  coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
-  gift_description: Scalars['String']['input'];
+export type MutationUpdateReferralSettingsArgs = {
+  input: ReferralSettingsInput;
 };
 
 
@@ -9628,12 +9828,18 @@ export type MyPodFeedback = {
 export type MyReferral = {
   __typename?: 'MyReferral';
   code: Scalars['String']['output'];
-  /** Coins the referrer earns for each person they bring in. */
+  /** Coins EACH side of a referral earns — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   gift_description: Scalars['String']['output'];
   referred: Array<ReferralEntry>;
   /** Name of whoever referred this user; null when nobody has. */
   referred_by_name?: Maybe<Scalars['String']['output']>;
+  /**
+   * The Finance-written message a share sheet pre-fills, with its {code},
+   * {link} and {coins} placeholders still in it. Empty when Finance has not
+   * written one, which the apps answer with their shipped default.
+   */
+  share_message: Scalars['String']['output'];
 };
 
 export type NewsletterSource =
@@ -11661,6 +11867,12 @@ export type Query = {
   __typename?: 'Query';
   /** Live ads for a placement (includes AUTO ads). Public — powers the app ad slots. */
   activeAds: Array<PublicAd>;
+  /**
+   * The one popup this signed-in user should see right now, or null. Enabled,
+   * inside its date window, matching the caller's platform and audience, and
+   * not already dismissed by this user.
+   */
+  activeAppPopup?: Maybe<AppPopup>;
   /** Location ids that currently have at least one live (active, not-yet-passed) pod. */
   activePodLocationIds: Array<Scalars['ID']['output']>;
   /** Kind-level default survey (all scope null) — back-compat. */
@@ -11690,6 +11902,7 @@ export type Query = {
   aisensyTemplates: Array<AisensyTemplate>;
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
+  appPopupsTable: AppPopupTablePage;
   appSettings: AppSettings;
   appVersionInfo: AppVersionInfo;
   /** Admin inbox of approval requests (defaults to all; filter by status/type). */
@@ -12020,6 +12233,18 @@ export type Query = {
   location?: Maybe<Location>;
   locations: Array<Location>;
   locationsTable: LocationTablePage;
+  /** Every connected mailbox. Read by both the Tech and Support portals. */
+  mailAutomationAccounts: Array<MailAutomationAccount>;
+  /** Whether a Google OAuth client is configured to connect a mailbox with. */
+  mailAutomationConfigured: Scalars['Boolean']['output'];
+  /**
+   * Read the reply back before saving. Takes the same input as the save and
+   * applies it to an unsaved copy, so the preview answers "what does the
+   * message I just typed do" rather than "what did the last saved one do".
+   */
+  mailAutomationPreview: MailAutomationPreview;
+  /** Recent conversations this mailbox answered — the audit trail for the rule. */
+  mailAutomationThreads: Array<MailAutomationThread>;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -12534,6 +12759,11 @@ export type QueryActiveAdsArgs = {
 };
 
 
+export type QueryActiveAppPopupArgs = {
+  platform: AppPopupClientPlatform;
+};
+
+
 export type QueryActiveSurveyArgs = {
   kind: SurveyKind;
 };
@@ -12584,6 +12814,11 @@ export type QueryAiPromptArgs = {
 
 export type QueryAiPromptsArgs = {
   filter?: InputMaybe<AiPromptFilter>;
+};
+
+
+export type QueryAppPopupsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -13438,6 +13673,17 @@ export type QueryLocationsArgs = {
 
 export type QueryLocationsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMailAutomationPreviewArgs = {
+  input: MailAutomationRuleInput;
+};
+
+
+export type QueryMailAutomationThreadsArgs = {
+  account_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -14628,9 +14874,18 @@ export type ReferralEntry = {
 
 export type ReferralSettings = {
   __typename?: 'ReferralSettings';
-  /** Coins the referrer earns for each person they bring in. */
+  /** Coins EACH side of a referral earns — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   gift_description: Scalars['String']['output'];
+  /** Share message template, with its {code}, {link} and {coins} placeholders. */
+  share_message: Scalars['String']['output'];
+};
+
+/** Finance > Referrals. Every field is optional; an omitted one is left alone. */
+export type ReferralSettingsInput = {
+  coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
+  gift_description?: InputMaybe<Scalars['String']['input']>;
+  share_message?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RefundStatus =
@@ -14648,6 +14903,12 @@ export type RegisterInput = {
   password: Scalars['String']['input'];
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * A friend's referral code. Optional, and checked before the account is
+   * created: a code that does not exist fails the signup rather than quietly
+   * costing both sides their coins.
+   */
+  referral_code?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -16086,10 +16347,12 @@ export type TicketPriority =
 
 /**
  * Where the request came from. WEBSITE is the contact form on duncit.com,
- * which anyone can use without an account.
+ * which anyone can use without an account. EMAIL is a message that arrived in a
+ * mailbox connected under Mail Automation.
  */
 export type TicketSource =
   | 'APP'
+  | 'EMAIL'
   | 'WEBSITE';
 
 export type TicketStatus =

@@ -21,6 +21,8 @@ exports:
   - 'getProductRequestTotal'
   - 'blankPodFormValues'
   - 'filterProductsForClub'
+  - 'useVenueSlots'
+  - 'VENUE_AVAILABLE_SLOTS'
   - 'POD_TYPES'
   - 'OCCURRENCES'
   - 'POD_MODES'
@@ -302,6 +304,11 @@ Takes every `PodForm` prop except `onCancel`, plus:
 | `getProductRequestTotal` | `(requests: PodProductRequest[], products: any[]) => number` | Sum of `unit_cost × quantity`. |
 | `usePodEditorState` | `(args: UsePodEditorStateArgs) => …` | `{ open, initialValues, editingPod, busy, opError, openCreate, openEdit, submit, close }` |
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
+| `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
+
+`VENUE_AVAILABLE_SLOTS` is that query document, exported for a consumer that has to read the same
+slots outside the form tree — the admin AI-fill books the venue's next free slot before it resets
+the form, so the picker then renders it as the selected one.
 
 `useMediaPickerBridge()` returns `accept: 'image/*,video/*'` and `title: 'Add pod image'` while
 picking an image, and `accept: 'video/*'` / `title: 'Pick reel video'` while picking the reel — pass

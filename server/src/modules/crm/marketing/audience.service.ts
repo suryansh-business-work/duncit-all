@@ -293,6 +293,24 @@ export async function countAudience(input?: TableQueryInput | null): Promise<num
   return UserModel.countDocuments(await audienceFilter(input));
 }
 
+/**
+ * Whether ONE person matches a saved list's criteria right now.
+ *
+ * The app-open popup asks this on every launch. Expanding the segment and
+ * testing membership in memory would read every matching user to answer a
+ * question about one of them, so the user's own id is pushed into the same
+ * filter and Mongo answers it from the index.
+ */
+export async function audienceMatchesUser(
+  input: TableQueryInput | null | undefined,
+  userId: string
+): Promise<boolean> {
+  if (!Types.ObjectId.isValid(userId)) return false;
+  const filter = await audienceFilter(input);
+  const match = await UserModel.exists({ $and: [filter, { _id: new Types.ObjectId(userId) }] });
+  return !!match;
+}
+
 /** Who matches right now — the recipients a campaign or notification sends to.
  * Recomputed per send, so a list built last month reaches this month's people. */
 export async function audienceUserIds(input?: TableQueryInput | null): Promise<Types.ObjectId[]> {

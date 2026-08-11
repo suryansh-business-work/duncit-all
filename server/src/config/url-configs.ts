@@ -7,6 +7,7 @@ const developmentUrls = {
   mwebUrl: 'http://localhost:2003',
   partnersUrl: 'http://localhost:2005',
   websiteUrl: 'http://localhost:2000',
+  techUrl: 'http://localhost:2009',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
 };
@@ -18,6 +19,7 @@ const productionUrls = {
   mwebUrl: 'https://mweb.duncit.com',
   partnersUrl: 'https://partners-app.duncit.com',
   websiteUrl: 'https://duncit.com',
+  techUrl: 'https://tech.duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
 };
@@ -45,6 +47,10 @@ export async function getUrlConfigs() {
     appUrl: mwebUrl,
     partnersUrl: await configValue('PARTNERS_APP_URL', defaults.partnersUrl),
     websiteUrl: await configValue('PUBLIC_SITE_URL', defaults.websiteUrl),
+    // Where the Gmail OAuth callback returns the operator to. A fixed,
+    // server-side value on purpose: taking the return address from the request
+    // would make this an open redirect wearing an OAuth callback's clothes.
+    techUrl: await configValue('TECH_URL', defaults.techUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {
       host: await getRuntimeEnvValue('SMTP_HOST'),

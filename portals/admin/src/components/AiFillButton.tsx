@@ -29,8 +29,12 @@ const promptPlaceholder = (entity: AiDummyEntity) => {
 
 interface Props {
   entity: AiDummyEntity;
-  /** Called with the parsed JSON object returned by OpenAI. */
-  onFill: (data: Record<string, any>) => void;
+  /**
+   * Called with the parsed JSON object returned by OpenAI. Awaited, so a fill
+   * that has to look something up (the pod fill books a venue slot) keeps the
+   * button spinning and reports its failure in this popover.
+   */
+  onFill: (data: Record<string, any>) => void | Promise<void>;
   /** Hide the small label, render icon-only. */
   iconOnly?: boolean;
   /** Override button label. */
@@ -41,7 +45,9 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [run, { loading }] = useMutation(AI_FILL);
+  const [filling, setFilling] = useState(false);
+  const [run, { loading: generating }] = useMutation(AI_FILL);
+  const loading = generating || filling;
 
   const open = Boolean(anchorEl);
 
@@ -59,11 +65,14 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
       } catch {
         throw new Error('AI returned invalid JSON');
       }
-      onFill(parsed);
+      setFilling(true);
+      await onFill(parsed);
       setAnchorEl(null);
       setPrompt('');
     } catch (e: any) {
       setError(e?.message || 'Failed to generate');
+    } finally {
+      setFilling(false);
     }
   };
 

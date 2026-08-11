@@ -6,6 +6,7 @@ export { default as usePodEditorState } from './editor/usePodEditorState';
 export type { UsePodEditorStateArgs, PodEditorSaveMeta } from './editor/usePodEditorState';
 export { default as useMediaPickerBridge } from './editor/useMediaPickerBridge';
 export type { PodMediaPickKind } from './editor/useMediaPickerBridge';
+export { useVenueSlots, VENUE_AVAILABLE_SLOTS, type VenueSlot } from './slots/useVenueSlots';
 export { makePodSchema } from './schema';
 export type { PodSchema } from './schema';
 export { makeNativeParityPodConfig } from './configs';

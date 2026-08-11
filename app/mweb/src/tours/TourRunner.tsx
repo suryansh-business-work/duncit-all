@@ -8,9 +8,17 @@ import { useTours } from './TourContext';
 /** Anchors are declared as `data-tour="<anchor>"` on the element they describe. */
 const selectorFor = (anchor: string) => `[data-tour="${anchor}"]`;
 
-/** How long to keep looking for a tour's anchors, and how often. */
+/**
+ * How often to look for a tour's anchors.
+ *
+ * There is no give-up: several tours describe a screen that needs an id in its
+ * URL — a club, a pod, a booking — so they land on the list that leads there and
+ * WAIT. A ten-second limit meant they expired long before the user had chosen
+ * anything, and the tour they started then did nothing at all, for good. The
+ * poll is three selector lookups and it stops the moment the tour ends or the
+ * runner unmounts.
+ */
 const POLL_MS = 250;
-const POLL_LIMIT = 40; // 10s — long enough for a slow feed, short enough to give up
 
 /**
  * How many quiet ticks mean "this is the whole screen".
@@ -74,11 +82,9 @@ export function TourRunner() {
       second-to-last step. This is also what lets a tour armed on a list fire on
       the detail screen the user opens next.
     */
-    let tries = 0;
     let best = 0;
     let quiet = 0;
     const timer = globalThis.setInterval(() => {
-      tries += 1;
       const resolved = resolveSteps(tour.steps);
 
       if (resolved.length > best) {
@@ -90,13 +96,10 @@ export function TourRunner() {
 
       const everything = resolved.length === tour.steps.length;
       const settled = best > 0 && quiet >= SETTLE_TICKS;
-      const outOfTime = tries >= POLL_LIMIT;
 
-      if (everything || settled || outOfTime) {
+      if (everything || settled) {
         globalThis.clearInterval(timer);
-        // Out of time with nothing found is a screen that never rendered its
-        // anchors; there is no tour to show, so leave it closed.
-        if (resolved.length > 0) setSteps(resolved);
+        setSteps(resolved);
       }
     }, POLL_MS);
     return () => globalThis.clearInterval(timer);

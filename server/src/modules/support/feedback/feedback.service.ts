@@ -29,7 +29,7 @@ const phoneOf = (profile: any): string => {
 const toPub = (d: IFeedbackReport) => ({
   id: String(d._id),
   report_no: d.report_no,
-  user_id: String(d.user_id),
+  user_id: d.user_id ? String(d.user_id) : null,
   user_name: d.user_name ?? '',
   user_email: d.user_email ?? '',
   category: d.category,

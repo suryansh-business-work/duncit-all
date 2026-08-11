@@ -19,6 +19,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DnsIcon from '@mui/icons-material/Dns';
 import EmailIcon from '@mui/icons-material/Email';
+import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FlagIcon from '@mui/icons-material/Flag';
 import ForumIcon from '@mui/icons-material/Forum';
@@ -87,6 +88,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   docker: ViewInArIcon,
   document: DescriptionIcon,
   email: EmailIcon,
+  markEmailRead: MarkEmailReadIcon,
   expenses: RequestQuoteIcon,
   feedback: StarRateIcon,
   flag: FlagIcon,

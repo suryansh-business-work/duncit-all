@@ -6,6 +6,8 @@ import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
+import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
+import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
 import http from 'node:http';
@@ -180,6 +182,12 @@ async function bootstrap() {
   });
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
   await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
+  // Drops the superseded single-field referral guard on the coin ledger so one
+  // referral can pay both the referrer and the member they brought in.
+  await safeSeed('coinIndexes', async () => {
+    const { coinService } = await import('@modules/finance/coin/coin.service');
+    await coinService.syncIndexes();
+  });
   await safeSeed('crmServicesOfferedSlugs', async () => {
     const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
     await serviceOfferedService.backfillSlugs();
@@ -210,6 +218,10 @@ async function bootstrap() {
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();
+
+  // Mail automation: read each connected Gmail mailbox forward from its cursor,
+  // open a ticket for every new conversation and acknowledge it once.
+  startMailAutomationScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);
@@ -288,6 +300,10 @@ async function bootstrap() {
 
   // ShipRocket shipment-status webhook (parses its own JSON, self-verifies x-api-key).
   app.use('/shiprocket', buildShiprocketWebhookRouter());
+
+  // Google's OAuth redirect after an operator connects a Gmail mailbox in the
+  // Tech portal. A browser navigation, so it lives here and not in GraphQL.
+  app.use('/gmail', buildGmailOAuthRouter());
 
   // Public developer REST API — approved venues + slot booking, x-api-key auth
   // (parses its own JSON, carries its own CORS for the Developers portal).

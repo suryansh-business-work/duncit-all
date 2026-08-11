@@ -93,15 +93,19 @@ export default function PodForm({
   // its own — it just narrows which clubs are offered, and does it above every
   // section so the category is chosen first (same order as the host apps).
   const [categoryFilter, setCategoryFilter] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
+  const selectedClubId = methods.watch('club_id');
   const clubsInCategory = useMemo(() => {
     const key = { superId: categoryFilter.super_id, subId: categoryFilter.sub_id };
     if (!key.superId || !key.subId) return clubs;
     return clubs.filter(
       (club: any) =>
-        String(club?.super_category_id ?? '') === key.superId &&
-        String(club?.category_id ?? '') === key.subId,
+        // The club already chosen always stays listed: a filter that hides it
+        // leaves the Club select rendering blank over a value the form holds.
+        String(club?.id) === selectedClubId ||
+        (String(club?.super_category_id ?? '') === key.superId &&
+          String(club?.category_id ?? '') === key.subId),
     );
-  }, [clubs, categoryFilter.super_id, categoryFilter.sub_id]);
+  }, [clubs, categoryFilter.super_id, categoryFilter.sub_id, selectedClubId]);
 
   const data: PodFormData = useMemo(
     () => ({

@@ -38,6 +38,9 @@ const SOURCE_LABEL: Record<GrievanceTicket['source'], string> = {
   APP: 'App',
   WEBSITE: 'Website',
   PORTAL: 'Portal',
+  // Mail Automation filed it from a connected mailbox. It carries no phone —
+  // the complainant wrote in rather than filling the form.
+  EMAIL: 'Email',
 };
 
 /**
@@ -96,6 +99,7 @@ export default function GrievanceTicketsTable({
             { value: 'APP', label: 'App' },
             { value: 'WEBSITE', label: 'Website' },
             { value: 'PORTAL', label: 'Portal' },
+            { value: 'EMAIL', label: 'Email' },
           ],
         },
         valueGetter: (g) => SOURCE_LABEL[g.source],

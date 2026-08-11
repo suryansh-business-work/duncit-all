@@ -33,6 +33,8 @@ export const BANK_ACCOUNT_NUMBER: RegExp;
  * pattern; mWeb checkout's 14-character variant rejects every valid GSTIN.
  */
 export const GSTIN: RegExp;
+/** A Duncit referral code — `DUN-` and six uppercase hex characters. */
+export const REFERRAL_CODE: RegExp;
 
 export function isPhoneNumber(value: string): boolean;
 export function isPincode(value: string): boolean;
@@ -45,3 +47,5 @@ export function isUpiId(value: string): boolean;
 export function isBankAccountNumber(value: string): boolean;
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export function isGstin(value: string): boolean;
+/** Referral-code shape check. Case-sensitive: upper-case before calling it. */
+export function isReferralCode(value: string): boolean;

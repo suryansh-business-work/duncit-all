@@ -11,8 +11,14 @@ export interface ReferralRow {
   created_at: string;
 }
 
+export interface ReferralSettings {
+  gift_description: string;
+  coins_per_referral: number;
+  share_message: string;
+}
+
 export const REFERRALS_TABLE = gql`
-  query AdminReferralsTable($query: TableQueryInput) {
+  query FinanceReferralsTable($query: TableQueryInput) {
     referralsTable(query: $query) {
       total
       rows {
@@ -29,17 +35,21 @@ export const REFERRALS_TABLE = gql`
 `;
 
 export const REFERRAL_SETTINGS = gql`
-  query AdminReferralSettings {
+  query FinanceReferralSettings {
     referralSettings {
       gift_description
+      coins_per_referral
+      share_message
     }
   }
 `;
 
-export const UPDATE_GIFT = gql`
-  mutation UpdateReferralGift($gift_description: String!) {
-    updateReferralGift(gift_description: $gift_description) {
+export const UPDATE_REFERRAL_SETTINGS = gql`
+  mutation UpdateReferralSettings($input: ReferralSettingsInput!) {
+    updateReferralSettings(input: $input) {
       gift_description
+      coins_per_referral
+      share_message
     }
   }
 `;

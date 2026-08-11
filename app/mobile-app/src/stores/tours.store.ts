@@ -8,19 +8,25 @@ import {
   shouldAutoStartHomeTour,
   tourStorageKey,
   type TourId,
+  type TourStep,
 } from '@duncit/tours';
 
 interface TourState {
   completed: TourId[];
   activeTourId: TourId | null;
   /**
-   * Anchors currently mounted on screen.
+   * The running tour's step list, frozen when it starts.
    *
-   * spotlight-tour spotlights by POSITION in the steps array, so a step whose
-   * element is not on screen has nothing to highlight and draws an empty
-   * overlay — the "blank tour". Tracking what is mounted lets the provider
-   * build steps only for anchors that exist, the same way mWeb drops steps
-   * whose selector finds nothing.
+   * rn-tourguide identifies a highlight by its ZONE NUMBER, so the provider and
+   * every anchor have to agree on the numbering. Deriving it live from
+   * `mountedAnchors` meant a section arriving mid-walkthrough renumbered every
+   * step behind it and the spotlight jumped to the wrong element. Freezing the
+   * list once is what keeps a step pointing at the thing its copy describes.
+   */
+  activeSteps: TourStep[];
+  /**
+   * Anchors currently mounted on screen. Feeds the resolve pass above; a step
+   * whose element is absent has nothing to spotlight and is dropped.
    */
   mountedAnchors: string[];
   registerAnchor: (anchor: string) => void;
@@ -28,6 +34,8 @@ interface TourState {
   /** Load this user's completions. Called once the signed-in user is known. */
   hydrate: (userId: string) => Promise<void>;
   startTour: (id: TourId) => void;
+  /** Lock the resolved step list in; the overlay starts on the first of these. */
+  armTour: (steps: readonly TourStep[]) => void;
   /** Finished or skipped — either way it counts as shown. */
   finishTour: (userId: string, id: TourId) => Promise<void>;
   maybeAutoStartHomeTour: (isFirstSignup: boolean) => void;
@@ -42,6 +50,7 @@ interface TourState {
 export const useToursStore = create<TourState>((set, get) => ({
   completed: [],
   activeTourId: null,
+  activeSteps: [],
   mountedAnchors: [],
 
   registerAnchor: (anchor) =>
@@ -62,11 +71,13 @@ export const useToursStore = create<TourState>((set, get) => ({
     }
   },
 
-  startTour: (id) => set({ activeTourId: id }),
+  startTour: (id) => set({ activeTourId: id, activeSteps: [] }),
+
+  armTour: (steps) => set({ activeSteps: [...steps] }),
 
   finishTour: async (userId, id) => {
     const next = markTourCompleted(get().completed, id);
-    set({ completed: next, activeTourId: null });
+    set({ completed: next, activeTourId: null, activeSteps: [] });
     try {
       await setItem(tourStorageKey(userId), serializeCompletedTours(next));
     } catch {
@@ -76,7 +87,7 @@ export const useToursStore = create<TourState>((set, get) => ({
 
   maybeAutoStartHomeTour: (isFirstSignup) => {
     if (shouldAutoStartHomeTour(get().completed, isFirstSignup)) {
-      set({ activeTourId: HOME_TOUR_ID });
+      set({ activeTourId: HOME_TOUR_ID, activeSteps: [] });
     }
   },
 }));

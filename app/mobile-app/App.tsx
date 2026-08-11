@@ -19,6 +19,7 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
+import { AppPopup } from '@/components/AppPopup';
 import { linking } from '@/navigation/linking';
 import {
   initShortLinkAttribution,
@@ -137,6 +138,9 @@ export default function App() {
                   </NativeTourProvider>
                 </NavigationContainer>
                 <SplashOverlay />
+                {/* Below the update gate on purpose: a blocked build must see
+                    the store prompt, not a campaign image over it. */}
+                <AppPopup />
                 <ForceUpdateGate />
               </YStack>
             </ErrorBoundary>

@@ -1,3 +1,4 @@
+import { useAppPopupStore } from '@/stores/app-popup.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCoinBalanceStore, useCoinLedgerStore } from '@/stores/coin.store';
 import { useMeStore } from '@/stores/me.store';
@@ -17,5 +18,8 @@ export function useLogout() {
     // and flash in the next user's sidebar while their own balance loads.
     useCoinBalanceStore.getState().reset();
     useCoinLedgerStore.getState().reset();
+    // Which popups somebody has already closed is per-account, so the cached
+    // answer must not decide what the NEXT user who signs in on this phone sees.
+    useAppPopupStore.getState().reset();
   };
 }

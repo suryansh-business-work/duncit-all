@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { canRejoin, podHistoryGate, refundLabel, type PodMembership } from '@/utils/pod-history';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
@@ -104,14 +105,16 @@ function LivePodActions({
         onPress={onPodDetails}
       />
       {canBackout ? (
-        <ActionButton
-          testID="ph-backout"
-          icon="restart-alt"
-          label={backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
-          variant="danger"
-          disabled={item.status !== 'JOINED' || backingOut}
-          onPress={onBackout}
-        />
+        <TourAnchor tour="booking" anchor="booking-backout">
+          <ActionButton
+            testID="ph-backout"
+            icon="restart-alt"
+            label={backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
+            variant="danger"
+            disabled={item.status !== 'JOINED' || backingOut}
+            onPress={onBackout}
+          />
+        </TourAnchor>
       ) : null}
       {showRejoin ? (
         <ActionButton
@@ -131,14 +134,16 @@ function LivePodActions({
           onPress={onRefundStatus}
         />
       ) : null}
-      <ActionButton
-        testID="ph-ticket"
-        icon="confirmation-number"
-        label={ticketBusy ? t('mweb.podHistory.downloading') : t('mweb.podHistory.ticket')}
-        variant="contained"
-        disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
-        onPress={onTicket}
-      />
+      <TourAnchor tour="booking" anchor="booking-ticket">
+        <ActionButton
+          testID="ph-ticket"
+          icon="confirmation-number"
+          label={ticketBusy ? t('mweb.podHistory.downloading') : t('mweb.podHistory.ticket')}
+          variant="contained"
+          disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
+          onPress={onTicket}
+        />
+      </TourAnchor>
     </>
   );
 }

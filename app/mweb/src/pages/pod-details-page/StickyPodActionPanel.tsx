@@ -35,7 +35,11 @@ export default function StickyPodActionPanel(props: Readonly<Props>) {
         pointerEvents: 'none',
       }}
     >
+      {/* The whole bar, not just the Book button: which control sits here depends
+          on whether the viewer is the host, already in, backing out or still
+          deciding, and the tour describes the bar's job either way. */}
       <Box
+        data-tour="pod-book"
         sx={{
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',

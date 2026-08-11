@@ -6,6 +6,7 @@ import { semantic } from '@duncit/auth-tokens';
 
 import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
 import { SeatPicker } from '@/components/details/SeatPicker';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
@@ -72,27 +73,32 @@ export function PodBookingBar({
       borderColor="$borderColor"
     >
       <SafeAreaView edges={['bottom']}>
-        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
-          {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
-          {showClosedNotice ? <ClosedNotice /> : null}
-          {!isHost && inProcess ? (
-            <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
-          ) : null}
-          {!isHost && !showClosedNotice && !inProcess && isMember ? (
-            <MemberBar canBackout={canBackout} isExpired={isExpired} onBackout={onBackout} />
-          ) : null}
-          {showBookBar ? (
-            <BookBar
-              isFree={isFree}
-              isFull={isFull}
-              podAmount={pod.pod_amount}
-              seats={seats}
-              maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
-              onSeatsChange={onSeatsChange}
-              onCheckout={onCheckout}
-            />
-          ) : null}
-        </XStack>
+        {/* The whole bar, not just the Book button: which control sits here
+            depends on whether the viewer is the host, already in, backing out or
+            still deciding, and the tour describes the bar's job either way. */}
+        <TourAnchor tour="pod-details" anchor="pod-book">
+          <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
+            {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
+            {showClosedNotice ? <ClosedNotice /> : null}
+            {!isHost && inProcess ? (
+              <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
+            ) : null}
+            {!isHost && !showClosedNotice && !inProcess && isMember ? (
+              <MemberBar canBackout={canBackout} isExpired={isExpired} onBackout={onBackout} />
+            ) : null}
+            {showBookBar ? (
+              <BookBar
+                isFree={isFree}
+                isFull={isFull}
+                podAmount={pod.pod_amount}
+                seats={seats}
+                maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
+                onSeatsChange={onSeatsChange}
+                onCheckout={onCheckout}
+              />
+            ) : null}
+          </XStack>
+        </TourAnchor>
       </SafeAreaView>
     </YStack>
   );

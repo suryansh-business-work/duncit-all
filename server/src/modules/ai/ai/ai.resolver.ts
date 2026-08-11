@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { buildFillReference, resolveClubReferences } from './ai-fill-context';
 import { importRemoteImage, pexelsSearch } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
@@ -27,18 +28,19 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
   "faqs": [                       // 3-5 question/answer pairs shown on the club page
     { "question": string, "answer": string }
   ],
-  "super_category": string,       // NAME of the super category, e.g. "Sports & Fitness"
-  "sub_category": string,         // NAME of the sub category, e.g. "Badminton"
-  "city": string,                 // NAME of the city, e.g. "Bengaluru"
-  "locality": string,             // NAME of the locality/zone within that city
+  "super_category": string,       // NAME of a super category from the reference data
+  "sub_category": string,         // NAME of a sub category listed under that super
+  "city": string,                 // NAME of a city from the reference data
+  "locality": string,             // NAME of a locality listed under that city
   "club_admin_email": string      // email of the Club Admin to assign, if the prompt names one
 }`,
     example: '',
     notes:
-      'Use real-looking https://images.unsplash.com/... URLs (or https://picsum.photos/seed/...) for image lines. Bullets are a single line each (<= 90 chars, no leading dash or bullet glyph). FAQ questions end with "?" and answers are 1-2 sentences. Return every key — the form has a section for each and a missing key leaves it empty. The last five keys are NAMES, not ids: the server looks each one up against the real taxonomy, location list and Club Admin directory, and drops any it cannot match — so answer them from the prompt where it says, and with a sensible guess otherwise, rather than leaving them blank.',
+      'Use real-looking https://images.unsplash.com/... URLs (or https://picsum.photos/seed/...) for image lines. Bullets are a single line each (<= 90 chars, no leading dash or bullet glyph). FAQ questions end with "?" and answers are 1-2 sentences. Return every key — the form has a section for each and a missing key leaves it empty. super_category, sub_category, city and locality are NAMES, not ids, and the request carries the platform\'s real lists to pick them from: copy the values verbatim from there, because the server looks each one up and drops anything it cannot match.',
   },
   POD: {
     fields: `{
+  "club_name": string,            // NAME of the club hosting it, from the reference data
   "pod_title": string,            // event title (5-8 words)
   "pod_description": string,      // 2-3 sentence vivid description
   "pod_hashtag_text": string,     // space-separated hashtags, 3-6, each starts with #
@@ -64,7 +66,7 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
 }`,
     example: '',
     notes:
-      'pod_type and pod_occurrence must be one of the listed values EXACTLY — any other string is dropped by the form. A pod_type containing FREE means pod_amount 0 and place_charges []; FREE is only valid when pod_mode is VIRTUAL, so a PHYSICAL pod must use a PAID type with a sensible price. Default pod_mode to PHYSICAL unless the prompt clearly describes an online/remote pod; when it is VIRTUAL fill meeting_platform/meeting_url/meeting_notes and leave place_charges empty, and when it is PHYSICAL return "" for all three meeting fields. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
+      'club_name must be copied verbatim from the club list in the request — the pod is attached to that club, and a name that is not on the list attaches it to none. pod_type and pod_occurrence must be one of the listed values EXACTLY — any other string is dropped by the form. A pod_type containing FREE means pod_amount 0 and place_charges []; FREE is only valid when pod_mode is VIRTUAL, so a PHYSICAL pod must use a PAID type with a sensible price. Default pod_mode to PHYSICAL unless the prompt clearly describes an online/remote pod; when it is VIRTUAL fill meeting_platform/meeting_url/meeting_notes and leave place_charges empty, and when it is PHYSICAL return "" for all three meeting fields. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
   },
   INVENTORY_PRODUCT: {
     fields: `{
@@ -112,6 +114,24 @@ function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
   });
 }
 
+/** The instruction plus the platform's own lists, so every name the model
+ * answers with is one the lookup afterwards can actually find. A reference
+ * lookup that fails must not cost the admin the fill, which is mostly copy. */
+async function buildUserMessage(entity: Entity, prompt?: string | null): Promise<string> {
+  const topic = prompt?.trim();
+  const ask = topic
+    ? `Generate dummy ${entity.toLowerCase()} data for: ${topic}`
+    : `Generate dummy ${entity.toLowerCase()} data.`;
+  const reference = await buildFillReference(entity).catch((err) => {
+    logs.server.warn('ai.resolver', 'buildFillReference', {
+      error: err,
+      msg: 'reference data unavailable; the fill will not resolve names to ids',
+    });
+    return '';
+  });
+  return reference ? `${ask}\n\n${reference}` : ask;
+}
+
 export async function generateDummy(entity: Entity, prompt?: string | null): Promise<string> {
   const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
@@ -127,13 +147,7 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
     response_format: { type: 'json_object' as const },
     messages: [
       { role: 'system', content: await buildSystemPrompt(entity, prompt) },
-      {
-        role: 'user',
-        content:
-          prompt?.trim()
-            ? `Generate dummy ${entity.toLowerCase()} data for: ${prompt.trim()}`
-            : `Generate dummy ${entity.toLowerCase()} data.`,
-      },
+      { role: 'user', content: await buildUserMessage(entity, prompt) },
     ],
   };
 
@@ -225,79 +239,6 @@ async function pickPexelsImageKitUrl(query: string, folder: string, offset = 0):
     return imported.url || null;
   } catch {
     return null;
-  }
-}
-
-/** Case-insensitive exact-name match, anchored, with regex metacharacters
- * escaped — a club called "C++ Devs" must not compile as a pattern. */
-const nameRx = (name: string) =>
-  new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)}$`, 'i');
-
-/**
- * Turn the NAMES the model answered with into the real ids the club form binds.
- *
- * The model cannot invent an ObjectId, which is why category, location and the
- * admin were left out of the fill entirely and a prompt naming them still
- * produced an empty Category / Location / Club Admin. It CAN name them, though
- * — so it does, and the lookup happens here against the real collections.
- *
- * Anything that does not match is simply dropped: a half-right guess silently
- * assigning the wrong category (or the wrong person to administer a club) is
- * worse than leaving the field for the admin to pick.
- */
-async function resolveClubReferences(parsed: any): Promise<void> {
-  const [{ CategoryModel }, { LocationModel }, { ClubAdminProfileModel }] = await Promise.all([
-    import('@modules/pods/category/category.model'),
-    import('@modules/platform/location/location.model'),
-    import('@modules/clubs/clubAdminProfile/clubAdminProfile.model'),
-  ]);
-
-  // A club stores Super + SUB (its Sub lives in category_id) — the middle
-  // Category level is not persisted, so it is not asked for or resolved.
-  const superName = typeof parsed.super_category === 'string' ? parsed.super_category : '';
-  const subName = typeof parsed.sub_category === 'string' ? parsed.sub_category : '';
-  if (superName.trim()) {
-    const doc = await CategoryModel.findOne({ name: nameRx(superName), level: 'SUPER' })
-      .select('_id')
-      .lean();
-    if (doc) parsed.super_category_id = String((doc as any)._id);
-  }
-  if (subName.trim()) {
-    const query: any = { name: nameRx(subName), level: 'SUB' };
-    const doc = await CategoryModel.findOne(query).select('_id').lean();
-    if (doc) parsed.category_id = String((doc as any)._id);
-  }
-
-  const cityName = typeof parsed.city === 'string' ? parsed.city : '';
-  if (cityName.trim()) {
-    const loc = await LocationModel.findOne({ location_name: nameRx(cityName) })
-      .select('_id location_zones')
-      .lean();
-    if (loc) {
-      parsed.location_id = String((loc as any)._id);
-      // The locality must be one this location actually lists: it drives the
-      // venue auto-match, so an invented one matches nothing.
-      const zones: any[] = (loc as any).location_zones ?? [];
-      const wanted = typeof parsed.locality === 'string' ? parsed.locality.trim() : '';
-      const zone = zones.find(
-        (z: any) => String(z?.zone_name ?? z ?? '').toLowerCase() === wanted.toLowerCase()
-      );
-      parsed.locality = zone ? String(zone?.zone_name ?? zone) : '';
-    }
-  }
-
-  const email = typeof parsed.club_admin_email === 'string' ? parsed.club_admin_email : '';
-  if (email.trim()) {
-    // Only an APPROVED, active Club Admin can be handed a club — the same rule
-    // the form's own picker applies.
-    const admin = await ClubAdminProfileModel.findOne({
-      email: nameRx(email),
-      status: 'APPROVED',
-      is_active: true,
-    })
-      .select('user_id')
-      .lean();
-    if (admin) parsed.admin_user_ids = [String((admin as any).user_id)];
   }
 }
 
@@ -633,7 +574,15 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
 
 export const aiResolvers = {
   Mutation: {
-    aiFillDummyData: async (_: unknown, args: { entity: Entity; prompt?: string | null }) => {
+    aiFillDummyData: async (
+      _: unknown,
+      args: { entity: Entity; prompt?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      // Only the admin portal fills forms this way, and the fill now reads the
+      // Club Admin directory to assign one — so it is gated like the rest of
+      // the admin AI surface rather than open to any caller.
+      requireRole(ctx, ADMIN_ROLES);
       const raw = await generateDummy(args.entity, args.prompt);
       return enrichImagesWithPexels(args.entity, raw, args.prompt);
     },

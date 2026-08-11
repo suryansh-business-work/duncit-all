@@ -66,7 +66,7 @@ export const SAVE_GRIEVANCE_OFFICER = gql`
   }
 `;
 
-export type GrievanceSource = 'APP' | 'WEBSITE' | 'PORTAL';
+export type GrievanceSource = 'APP' | 'WEBSITE' | 'PORTAL' | 'EMAIL';
 
 export interface GrievanceTicket {
   id: string;

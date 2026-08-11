@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { TourAnchor } from '@/tours/TourAnchor';
 import type { ClubDetail, ClubPod } from '@/hooks/useDetails';
 import type { ClubMoment } from '@/utils/club-detail';
 import { ClubAdminsSection } from './ClubAdminsSection';
@@ -41,7 +42,18 @@ function segmentContent(active: SegmentKey, ctx: Props) {
   if (active === 'HOSTS')
     return <ClubHostsRail hosts={ctx.club.hosts} onOpenHost={ctx.onOpenHost} />;
   if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins} />;
-  return <ClubPodsSchedule pods={ctx.pods} onOpenPod={ctx.onOpenPod} />;
+  const schedule = <ClubPodsSchedule pods={ctx.pods} onOpenPod={ctx.onOpenPod} />;
+  // The anchor goes HERE and not inside ClubPodsSchedule, which Venue Details
+  // renders too: an anchor in the shared component registers on the venue screen
+  // as well, and a club tour armed while the user browses venues would open
+  // there — one step, over a heading that reads "Pods at this venue".
+  // A club with nothing scheduled has nothing to spotlight, so it is left out.
+  if (ctx.pods.length === 0) return schedule;
+  return (
+    <TourAnchor tour="club" anchor="club-pods">
+      {schedule}
+    </TourAnchor>
+  );
 }
 
 /** The tabbed Club Detail segments — Pods Schedule, Club Moments, the admin

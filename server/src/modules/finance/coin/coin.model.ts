@@ -1,7 +1,12 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type CoinTxnType = 'CREDIT' | 'DEBIT';
-export type CoinTxnSource = 'PAYMENT_EARN' | 'PAYMENT_REDEEM' | 'REFERRAL_EARN';
+/** REFERRAL_EARN pays the referrer, REFERRAL_SIGNUP pays the person they brought. */
+export type CoinTxnSource =
+  | 'PAYMENT_EARN'
+  | 'PAYMENT_REDEEM'
+  | 'REFERRAL_EARN'
+  | 'REFERRAL_SIGNUP';
 
 /**
  * Duncit Coins are a loyalty balance, NOT withdrawable money — which is exactly
@@ -54,7 +59,11 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     type: { type: String, enum: ['CREDIT', 'DEBIT'], required: true },
     amount: { type: Number, required: true, min: 0 },
     balance_after: { type: Number, required: true, min: 0 },
-    source: { type: String, enum: ['PAYMENT_EARN', 'PAYMENT_REDEEM', 'REFERRAL_EARN'], required: true },
+    source: {
+      type: String,
+      enum: ['PAYMENT_EARN', 'PAYMENT_REDEEM', 'REFERRAL_EARN', 'REFERRAL_SIGNUP'],
+      required: true,
+    },
     reason: { type: String, default: '', trim: true, maxlength: 300 },
     payment_id: { type: String, default: null },
     referral_id: { type: String, default: null },
@@ -82,11 +91,20 @@ coinTxnSchema.index(
   { unique: true, partialFilterExpression: { payment_id: { $type: 'string' } } }
 );
 
-// The same guard for the other way coins are earned. A referral pays its
-// referrer exactly once, and two requests racing to apply the same code both
-// reach the insert — so the database decides, not a read-then-write check.
+// The same guard for the other way coins are earned. Two requests racing to
+// apply the same code both reach the insert — so the database decides, not a
+// read-then-write check.
+//
+// Keyed on source as well as referral, exactly like the payment index above,
+// because ONE referral now pays TWO people: the referrer (REFERRAL_EARN) and
+// the person who signed up with their code (REFERRAL_SIGNUP). Keyed on the
+// referral alone — as it was while only the referrer earned — the second
+// credit collided with the first and the new member silently got nothing.
+//
+// Replacing a unique index needs the old one DROPPED, which mongoose only does
+// through syncIndexes(); it runs at boot (`coinIndexes` in index.ts).
 coinTxnSchema.index(
-  { referral_id: 1 },
+  { referral_id: 1, source: 1 },
   { unique: true, partialFilterExpression: { referral_id: { $type: 'string' } } }
 );
 

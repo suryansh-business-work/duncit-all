@@ -11,6 +11,8 @@ import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
+import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
+import HostPodsPage from './pages/host-pods-page/HostPodsPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
@@ -49,11 +51,14 @@ export default function App() {
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
+      <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
+      <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />
+      <Route path="/host/pods" element={authed(<HostPodsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
       <Route path="/ecomm-brand/:brandId/settings" element={authed(<BrandSettingsPage />)} />
-      <Route path="/pods" element={<Navigate to="/become-host" replace />} />
+      <Route path="/pods" element={<Navigate to="/host/pods" replace />} />
       <Route path="/ecomm-brand/:brandId/products" element={authed(<ListProductsPage />)} />
       <Route path="/ecomm-brand/:brandId/products/new" element={authed(<ProductListingEditorPage />)} />
       <Route path="/ecomm-brand/:brandId/products/:productId/view" element={authed(<ProductDetailPage />)} />

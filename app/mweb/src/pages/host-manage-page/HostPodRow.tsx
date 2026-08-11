@@ -1,8 +1,13 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import HostPodActionsMenu from './HostPodActionsMenu';
-import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from './venueApproval';
+import {
+  HostPodActionsMenu,
+  VENUE_REJECTED_NOTE,
+  isVenueRejected,
+  venueApprovalChip,
+  type HostPodMenuHandlers,
+} from '@duncit/host-pod-actions';
 
 function formatDate(value?: string | null) {
   if (!value) return '—';
@@ -13,29 +18,17 @@ function formatDate(value?: string | null) {
 
 interface Props {
   pod: any;
-  onScan: () => void;
-  onComplete: () => void;
-  onEdit: () => void;
-  onOpenFeedback: () => void;
-  onShareFeedback: () => void;
-  onCopyFeedback: () => void;
-  onCancel: () => void;
+  /** This row's wiring into the shared action dialogs. */
+  actions: HostPodMenuHandlers;
 }
 
 /** One hosted pod row — link to the pod + the host's actions behind a single
  * overflow menu. A venue-rejected pod shows its status + the resubmission note. */
-export default function HostPodRow({
-  pod,
-  onScan,
-  onComplete,
-  onEdit,
-  onOpenFeedback,
-  onShareFeedback,
-  onCopyFeedback,
-  onCancel,
-}: Readonly<Props>) {
+export default function HostPodRow({ pod, actions }: Readonly<Props>) {
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
   const rejected = isVenueRejected(pod.venue_approval_status);
+  const free = pod.pod_type === 'FREE';
+  const podPath = pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : '#';
   return (
     <Stack
       spacing={0.75}
@@ -52,7 +45,7 @@ export default function HostPodRow({
       <Stack direction="row" alignItems="center" spacing={0.5}>
         <Box
           component={RouterLink}
-          to={pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : '#'}
+          to={podPath}
           sx={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
         >
           <Typography variant="subtitle2" fontWeight={700} noWrap>
@@ -63,26 +56,15 @@ export default function HostPodRow({
             {pod.zone_name ? ` · ${pod.zone_name}` : ''}
           </Typography>
         </Box>
-        {approvalChip && (
-          <Chip size="small" label={approvalChip.label} color={approvalChip.color} />
-        )}
+        {approvalChip && <Chip size="small" label={approvalChip.label} color={approvalChip.color} />}
         <Chip
           size="small"
           // TODO(i18n)
-          label={pod.pod_type === 'FREE' ? 'Free' : 'Paid'}
-          color={pod.pod_type === 'FREE' ? 'success' : 'primary'}
+          label={free ? 'Free' : 'Paid'}
+          color={free ? 'success' : 'primary'}
           variant="outlined"
         />
-        <HostPodActionsMenu
-          podTitle={pod.pod_title}
-          onScan={onScan}
-          onComplete={onComplete}
-          onEdit={onEdit}
-          onOpenFeedback={onOpenFeedback}
-          onShareFeedback={onShareFeedback}
-          onCopyFeedback={onCopyFeedback}
-          onCancel={onCancel}
-        />
+        <HostPodActionsMenu {...actions} />
       </Stack>
       {rejected && (
         <Alert severity="warning" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ py: 0.25 }}>

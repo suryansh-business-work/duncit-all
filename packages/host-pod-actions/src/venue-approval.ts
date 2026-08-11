@@ -1,18 +1,18 @@
-/** Host-facing copy + chip meta for a pod's venue-approval state. Mirrors
- * @duncit/host-pod-actions' venue-approval.ts (rule 27 parity). */
+/** Host-facing copy + chip meta for a pod's venue-approval state. Mirrors the
+ * mobile app's utils/venue-approval.ts (rule 27 parity). */
 
 export const VENUE_REJECTED_NOTE =
   'Venue rejected your slot request. Please select a different venue or choose a different time slot and submit your request again.';
 
 export interface VenueApprovalChip {
   label: string;
-  tone: 'error' | 'warning';
+  color: 'error' | 'warning';
 }
 
-/** Chip for the pod card — only the in-flight approval states are surfaced. */
+/** Chip for the pod row — only the in-flight approval states are surfaced. */
 export function venueApprovalChip(status?: string | null): VenueApprovalChip | null {
-  if (status === 'DECLINED') return { label: 'Venue Rejected', tone: 'error' };
-  if (status === 'PENDING') return { label: 'Venue Approval Pending', tone: 'warning' };
+  if (status === 'DECLINED') return { label: 'Venue Rejected', color: 'error' };
+  if (status === 'PENDING') return { label: 'Venue Approval Pending', color: 'warning' };
   return null;
 }
 

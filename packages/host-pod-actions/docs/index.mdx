@@ -1,0 +1,100 @@
+---
+name: '@duncit/host-pod-actions'
+summary: 'Every action a host takes on their own pod — scan tickets, complete, edit, resubmit, cancel, share the rating link — as one set of MUI dialogs shared by mWeb and the Partners console.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+exports:
+  - 'HostPodActionsProvider'
+  - 'HostPodActionsMenu'
+  - 'useHostPodActions'
+  - 'PodCompleteDialog'
+  - 'PodCancelDialog'
+  - 'PodEditDialog'
+  - 'PodResubmitDialog'
+  - 'TicketScanDialog'
+  - 'buildHostPodActionLabels'
+---
+
+## Why this exists
+
+A host runs the same five errands on a pod wherever they are signed in: check people in at the
+door, complete it and settle their share, fix a typo, resubmit it when the venue says no, or call
+it off. mWeb grew those five dialogs first; the native app grew its Tamagui twin (rule 27); then
+the Partners console needed them too.
+
+That third surface is the reason this package exists. Copying `host-manage-page/*` into
+`portals/partners-app` would have meant two Zod schemas for the same edit, two settlement previews
+reading the same waterfall, and two versions of the rule that a `DECLINED` pod opens the
+resubmission flow rather than the limited edit. One of them drifts, and a host gets a different
+answer depending on which tab they had open.
+
+The native app keeps its own Tamagui views — rule 40's mWeb ↔ native pair shares logic, never UI.
+The two **MUI** surfaces share the whole dialog.
+
+## Mount the provider once
+
+Three things genuinely differ per surface, so they are supplied rather than guessed: the media
+picker (mWeb's is Pexels-backed, the portals use ImageKit), where a profile or a rating link goes,
+and which namespace the copy is read from.
+
+```tsx
+import {
+  HostPodActionsProvider,
+  shellHostPodLabels,
+} from '@duncit/host-pod-actions';
+import { MediaListField } from '@duncit/media-picker';
+import { buildSlotLabels } from '@duncit/slots';
+
+<HostPodActionsProvider
+  labels={shellHostPodLabels(t)}            // mwebHostPodLabels(t) in mWeb
+  slotLabels={buildSlotLabels(t, 'shell.slots')}
+  renderMediaField={({ value, onChange, error, label, folder }) => (
+    <MediaListField label={label} value={value} onChange={onChange} folder={folder} helperText={error} />
+  )}
+  onViewProfile={openExternally}
+  feedbackBaseUrl={urlConfigs.mwebUrl}
+  onOpenFeedback={(podId) => openExternally(podFeedbackPath(podId))}
+  notifySuccess={notifySuccess}
+  notifyError={notifyError}
+>
+  {children}
+</HostPodActionsProvider>
+```
+
+A dialog rendered outside the provider throws rather than falling back to defaults: silently losing
+the media picker and showing raw translation keys reads as a broken feature, not a missing mount.
+
+## Wire a list to it
+
+`useHostPodActions` owns the five "which pod is being …" states, so a list only renders rows.
+
+```tsx
+const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
+
+<PodsTable renderActions={(pod) => <HostPodActionsMenu {...menuHandlers(pod)} />} />
+{dialogs}
+```
+
+`menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
+`PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the limited
+title/description/media `PodEditDialog`.
+
+## Copy lives in two namespaces
+
+`mweb.podFeedback.*` / `mweb.hostScan.*` for mWeb and native, `shell.podFeedback.*` /
+`shell.hostScan.*` for the portals — word-for-word identical values. They cannot collapse into one
+namespace because the server stores one Localization row per key path, and they are written out as
+literal `t('…')` calls because `scripts/verify-translation-keys.mjs` greps for the literal key. Same
+shape, and same reasons, as `@duncit/slots`' `buildSlotLabels`.
+
+## What it deliberately does not own
+
+The **Admin** console's Complete Pod dialog. That is a different job — staff pick which co-host is
+the payout beneficiary and attach notes — and its settlement preview already renders through
+`@duncit/ui`'s `FinanceWaterfallList`. This package renders the same list with host-voiced lines
+(`buildHostShareLines`): "You receive", not "Host receives".

@@ -34,6 +34,10 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/forms', 'library — rendered end-to-end by every portal form'],
   ['@duncit/geo', 'pure geo helpers, no DOM'],
   ['@duncit/gql-types', 'generated types only, no runtime'],
+  [
+    '@duncit/host-pod-actions',
+    'library — the host pod dialogs are rendered end-to-end by mWeb Your Pods and partners-app Host > Your Pods',
+  ],
   ['@duncit/i18n', 'string bundles; verified by scripts/verify-translation-keys.mjs'],
   ['@duncit/location', 'library — rendered end-to-end by mWeb + admin'],
   ['@duncit/logs', 'transport library, no DOM'],

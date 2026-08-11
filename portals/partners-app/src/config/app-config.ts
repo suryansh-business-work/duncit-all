@@ -37,7 +37,8 @@ export const appConfig: AppConfig = {
         { label: 'Pods', to: '/venues/pods', icon: 'orders' },
       ],
     },
-    { label: 'Host', to: '/become-host', icon: 'work' },
+    // Host's children are role-dependent — buildNav() assembles them.
+    { label: 'Host', icon: 'work', children: [] },
     {
       label: 'E-Commerce Brand',
       icon: 'marketplace',
@@ -67,6 +68,29 @@ const CLUB_ADMIN_NAV: AppNavItem = {
 const WALLET_NAV: AppNavItem = { label: 'Wallet', to: '/wallet', icon: 'wallet' };
 const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER']);
 
+/**
+ * The Host section, like every other partner area, is a group rather than a
+ * single link.
+ *
+ * "Become a Host" is the one entry that comes and goes: somebody who already
+ * holds the role has nothing to apply for, and leaving the application in the
+ * sidebar invites them to re-submit a profile that is already approved.
+ */
+function hostNav(isHost: boolean): AppNavItem {
+  const apply: AppNavItem[] = isHost
+    ? []
+    : [{ label: 'Become a Host', to: '/become-host', icon: 'work' }];
+  return {
+    label: 'Host',
+    icon: 'work',
+    children: [
+      { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
+      ...apply,
+      { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
+    ],
+  };
+}
+
 /** Sidebar nav for the signed-in user — appends Club Admin tools when entitled
  * and a Wallet entry for roles that can earn payouts. Both slot in before Help
  * (FAQs), keeping the partner tools grouped together. */
@@ -87,8 +111,8 @@ export function landingPath(roles?: readonly string[] | null): string {
 export function buildNav(roles?: readonly string[] | null): AppNavItem[] {
   const isClubAdmin = roles?.includes('CLUB_ADMIN') ?? false;
   const isEarner = roles?.some((role) => EARNING_ROLES.has(role)) ?? false;
-  if (!isClubAdmin && !isEarner) return appConfig.nav;
-  const nav = [...appConfig.nav];
+  const isHost = roles?.includes('HOST') ?? false;
+  const nav = appConfig.nav.map((item) => (item.label === 'Host' ? hostNav(isHost) : item));
   const helpIndex = () => {
     const index = nav.findIndex((item) => item.to === '/faqs');
     return index === -1 ? nav.length : index;

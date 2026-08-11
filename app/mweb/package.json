@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.52.0",
+  "version": "1.52.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "@duncit/datetime": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/geo": "workspace:*",
+    "@duncit/host-pod-actions": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",

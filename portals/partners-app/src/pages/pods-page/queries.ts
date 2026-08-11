@@ -56,36 +56,52 @@ export const PARTNER_POD_LOOKUPS = gql`
 /** Row shape for the partner pods table (myHostPodsTable rows). */
 export interface PartnerPodRow {
   id: string;
+  pod_id?: string | null;
   pod_title: string;
   pod_description?: string | null;
   pod_images_and_videos?: { url: string; type: string }[] | null;
   club_id?: string | null;
+  club_slug?: string | null;
   venue_id?: string | null;
   pod_mode?: string | null;
+  pod_type?: string | null;
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
   /** Hosts sit inside pod_attendees but never pay — see payingAttendees. */
   pod_hosts_id?: string[] | null;
+  /** Seats scanned in at the door — what a completed pod settles on. */
+  attendance?: { attended_seats: number; booked_seats: number; recorded: boolean } | null;
+  /** Drives the "Venue rejected" status and the resubmit-instead-of-edit branch. */
+  venue_approval_status?: string | null;
+  zone_name?: string | null;
   is_active: boolean;
+  is_deleted?: boolean | null;
   completed_at?: string | null;
 }
 
 /** Same selection as the legacy myHostPods rows so table rows can feed the
- * edit dialog without a second fetch. */
+ * edit, resubmit and complete dialogs without a second fetch. */
 const PARTNER_POD_ROW_FIELDS = gql`
   fragment PartnerPodRowFields on Pod {
     id
+    pod_id
     pod_title
     pod_description
     pod_images_and_videos { url type }
     club_id
+    club_slug
     venue_id
     pod_mode
+    pod_type
     pod_date_time
     pod_amount
     pod_attendees
+    attendance { attended_seats booked_seats recorded }
+    venue_approval_status
+    zone_name
     is_active
+    is_deleted
     completed_at
   }
 `;

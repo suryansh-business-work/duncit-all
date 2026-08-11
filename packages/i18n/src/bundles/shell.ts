@@ -40,6 +40,42 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       current: 'current',
     },
     /**
+     * The host's per-pod actions, rendered by @duncit/host-pod-actions.
+     *
+     * Word-for-word identical to `mweb.podFeedback` / `mweb.hostScan` — the
+     * same dialogs run in the Partners console and in mWeb, and the two must
+     * read the same (rule 27). They are written out rather than shared through
+     * a const because the key-verification gate parses this file statically and
+     * cannot follow a spread; the server stores one row per key path, so the
+     * two namespaces cannot collapse into one.
+     */
+    podFeedback: {
+      feedbackLink: 'Feedback link',
+      shareLink: 'Share feedback link',
+      copyLink: 'Copy feedback link',
+      shareMessage: 'How was “{title}”? Tell us in a minute:',
+      linkCopied: 'Feedback link copied',
+      copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
+    },
+    hostScan: {
+      personOnTicket: 'person on this ticket',
+      peopleOnTicket: 'people on this ticket',
+      companionsTitle: 'Who else is coming in?',
+      companionsBody: 'This ticket admits {seats}. Add the other {count} to mark attendance.',
+      companionName: 'Name',
+      companionPhone: 'Phone',
+      companionsSubmit: 'Mark attendance',
+      companionsIncomplete: 'Fill in every name and phone number.',
+      companionsHeading: 'Person {index}',
+      fieldRequired: 'Required',
+      nameInvalid: 'Enter the name',
+      phoneInvalid: 'Enter a phone number — digits only, 6 to 15',
+      attendanceMarked: 'Attendance marked',
+      attendanceMarkedOne: '{name} is checked in.',
+      attendanceMarkedGroup: '{name} and {count} more are checked in.',
+      alreadyMarked: 'Already checked in',
+    },
+    /**
      * Staff chat — the panel every console renders in its header.
      *
      * Under `shell` rather than a surface of its own because it IS shell

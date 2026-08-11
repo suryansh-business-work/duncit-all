@@ -2,15 +2,21 @@
  * Where a production -> staging clone reads from and writes to, and the single
  * list of collections it must never copy.
  *
- * Connection strings come ONLY from the environment — nothing here is ever
- * hardcoded. Staging shares the Atlas cluster and isolates its data in its own
- * database (`duncit-staging`, CLAUDE.md rule 32), so the target URI falls back
- * to the source URI while the target DATABASE must always be set explicitly:
- * inheriting it would turn "clone into staging" into "clone production onto
- * itself", which is the one outcome this feature must make impossible.
+ * Both endpoints come from the two connections an operator saves and PROVES in
+ * Data Clone -> Settings (see ./dataCloneConnection.model) — nothing here is
+ * ever hardcoded, and an unverified connection is treated exactly like a
+ * missing one. Staging shares the Atlas cluster and isolates its data in its
+ * own database (`duncit-staging`, CLAUDE.md rule 32), so the guard that matters
+ * is not the URI but the pair: a target resolving to the source cluster AND
+ * database would turn "clone into staging" into "clone production onto itself",
+ * which is the one outcome this feature must make impossible.
  */
 import { GraphQLError } from 'graphql';
-import mongoose from 'mongoose';
+import {
+  DataCloneConnectionModel,
+  type DataCloneConnectionDoc,
+  type DataCloneRole,
+} from './dataCloneConnection.model';
 
 export interface CloneEndpoints {
   sourceUri: string;
@@ -71,6 +77,10 @@ export const EXCLUDED_COLLECTIONS: readonly string[] = [
   //     SOURCE database and is written to on every batch, so copying it would
   //     hand staging a half-written record of a clone staging never ran. ---
   'dataclonejobs',
+  // The saved production + staging connection strings. Copying them would both
+  // hand staging production's credentials and overwrite the settings of the
+  // server running the clone, mid-clone.
+  'datacloneconnections',
 ];
 
 const CONFIG_ERROR_CODE = 'BAD_USER_INPUT';
@@ -91,53 +101,78 @@ export function clusterKey(uri: string): string {
   return hosts.split(/[/?]/)[0].toLowerCase();
 }
 
-function readEnv(key: string): string {
-  return (process.env[key] ?? '').trim();
+/** The saved connection for one end, or null when it was never saved. */
+export function findConnection(role: DataCloneRole): Promise<DataCloneConnectionDoc | null> {
+  return DataCloneConnectionModel.findOne({ role }).lean<DataCloneConnectionDoc>().exec();
 }
 
 /**
- * The database this server is actually connected to.
+ * The write end, pinned by the environment.
  *
- * The last resort for the SOURCE name, because production's server.env
- * deliberately omits MONGO_DB_NAME (only staging sets it) and Mongo then uses
- * the URI's default database. Reading the live connection is the only way to
- * name that database without guessing it — and it is by definition the data an
- * operator means by "production". The target is never resolved this way.
+ * Both deployed stacks set DATA_CLONE_TARGET_DB=duncit-staging, and the deploy
+ * relies on that pin — not on which portal a clone is started from — to keep
+ * production read-only. Endpoints being operator-chosen must not quietly hand
+ * that back: on a stack that pins a target, the staging connection may only
+ * name that database. A server that pins nothing (local development) lets the
+ * operator name any target, which is the whole point of the settings dialog.
+ *
+ * Returns the reason it is refused, or null when the target is allowed.
  */
-function connectedDbName(): string {
-  return mongoose.connection.db?.databaseName ?? '';
+export function targetPinViolation(database: string): string | null {
+  const pinned = (process.env.DATA_CLONE_TARGET_DB ?? '').trim();
+  if (!pinned || pinned === database) return null;
+  return `This server only allows a clone to write to ${pinned} (pinned by DATA_CLONE_TARGET_DB), not ${database}.`;
 }
 
 /**
- * Resolve both endpoints, or throw with the exact env var that is missing.
+ * Whether one end is usable, in the order an operator fixes it: paste the
+ * string, name the database, then press Connect. A saved-but-unproved
+ * connection is refused, because the only thing that proves a connection
+ * string works is having used it.
+ */
+function assertUsable(doc: DataCloneConnectionDoc | null, label: string): DataCloneConnectionDoc {
+  if (!doc?.uri || !doc.database) {
+    throw configError(`Add the ${label} connection in Data Clone -> Settings.`);
+  }
+  if (!doc.connected) {
+    throw configError(
+      `The ${label} connection has not been verified — open Data Clone -> Settings and press Connect.`,
+    );
+  }
+  return doc;
+}
+
+/**
+ * Resolve both endpoints, or throw with the exact thing an operator must fix.
  * Also the hard guard: a target that resolves to the source database is
  * refused outright, because that clone would overwrite production with itself.
  */
-export function resolveCloneEndpoints(): CloneEndpoints {
-  const sourceUri = readEnv('DATA_CLONE_SOURCE_URI') || readEnv('MONGO_URI');
-  const sourceDb =
-    readEnv('DATA_CLONE_SOURCE_DB') || readEnv('MONGO_DB_NAME') || connectedDbName();
-  const targetUri = readEnv('DATA_CLONE_TARGET_URI') || sourceUri;
-  const targetDb = readEnv('DATA_CLONE_TARGET_DB');
+export async function resolveCloneEndpoints(): Promise<CloneEndpoints> {
+  const [productionDoc, stagingDoc] = await Promise.all([
+    findConnection('PRODUCTION'),
+    findConnection('STAGING'),
+  ]);
+  const production = assertUsable(productionDoc, 'production');
+  const staging = assertUsable(stagingDoc, 'staging');
 
-  if (!sourceUri) {
-    throw configError('Set DATA_CLONE_SOURCE_URI (or MONGO_URI) to the production connection string.');
-  }
-  if (!sourceDb) {
+  const pinViolation = targetPinViolation(staging.database);
+  if (pinViolation) throw configError(pinViolation);
+
+  if (
+    clusterKey(production.uri) === clusterKey(staging.uri) &&
+    production.database === staging.database
+  ) {
     throw configError(
-      'Set DATA_CLONE_SOURCE_DB (or MONGO_DB_NAME) — the server is not connected to a named database yet.',
+      `Refusing to clone: staging resolves to the same cluster and database as production (${production.database}). ` +
+        'The staging connection must name a different database.',
     );
   }
-  if (!targetDb) {
-    throw configError('Set DATA_CLONE_TARGET_DB to the staging database name — it is never inherited.');
-  }
-  if (clusterKey(sourceUri) === clusterKey(targetUri) && sourceDb === targetDb) {
-    throw configError(
-      `Refusing to clone: the target resolves to the source database (${sourceDb}). ` +
-        'DATA_CLONE_TARGET_DB must name a different database from the production one.',
-    );
-  }
-  return { sourceUri, sourceDb, targetUri, targetDb };
+  return {
+    sourceUri: production.uri,
+    sourceDb: production.database,
+    targetUri: staging.uri,
+    targetDb: staging.database,
+  };
 }
 
 export interface CloneTargets {
@@ -152,10 +187,10 @@ export interface CloneTargets {
  * The same resolution as a read — so the UI can show what a clone WOULD do,
  * and why it cannot run, without starting one.
  */
-export function describeCloneEndpoints(): CloneTargets {
+export async function describeCloneEndpoints(): Promise<CloneTargets> {
   const excluded = [...EXCLUDED_COLLECTIONS];
   try {
-    const endpoints = resolveCloneEndpoints();
+    const endpoints = await resolveCloneEndpoints();
     return {
       sourceDatabase: endpoints.sourceDb,
       targetDatabase: endpoints.targetDb,

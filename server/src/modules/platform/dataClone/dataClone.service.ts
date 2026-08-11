@@ -6,8 +6,9 @@
  * every step is written to Mongo so any client — or the same client after a
  * server restart — reads the same progress.
  *
- * Both connection strings come from the environment and the target can never
- * resolve to the source database; see ./dataClone.config.
+ * Both connection strings come from the two connections an operator saved and
+ * proved in Settings, and the target can never resolve to the source database;
+ * see ./dataClone.config.
  */
 import { GraphQLError } from 'graphql';
 import { mongo } from 'mongoose';
@@ -254,6 +255,16 @@ async function runClone(jobId: string, endpoints: CloneEndpoints): Promise<void>
     const sourceDb = sourceClient.db(endpoints.sourceDb);
     const targetDb = targetClient.db(endpoints.targetDb);
     const names = await cloneableCollections(sourceDb);
+    // A source that names a database which does not exist reads as an empty one
+    // — Mongo creates databases lazily, so nothing errors. Left alone, the walk
+    // below copies nothing and reports SUCCEEDED, telling an operator staging
+    // was refreshed when it was not touched. A source with no collections is a
+    // wrong source, and it fails loudly.
+    if (names.length === 0) {
+      throw new Error(
+        `Nothing to copy: ${endpoints.sourceDb} has no collections. Check the production database name in Data Clone -> Settings.`,
+      );
+    }
     await DataCloneJobModel.updateOne(
       { _id: jobId },
       { $set: { collections: names.map((name) => ({ name })), heartbeat_at: new Date() } },
@@ -315,7 +326,7 @@ export const dataCloneService = {
    * the same target collections.
    */
   async start(user: AuthUser): Promise<PublicCloneJob> {
-    const endpoints = resolveCloneEndpoints();
+    const endpoints = await resolveCloneEndpoints();
     const latest = await findJob();
     if (latest && (await repairIfStale(latest)).status === 'RUNNING') {
       throw badInput('A clone is already running — wait for it to finish.');

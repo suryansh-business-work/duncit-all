@@ -1516,7 +1516,10 @@ jobs:
           # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
           # is allowed to overwrite, and it is pinned on BOTH stacks — that pin,
           # not which portal you start from, is what keeps a clone from ever
-          # writing to production. Source falls back to MONGO_URI +
+          # writing to production. The endpoints themselves are now saved and
+          # proved from Data Clone > Settings, so these vars only SEED a
+          # never-configured stack — except this one, which stays a hard limit on
+          # the write target whatever an operator saves. Source falls back to MONGO_URI +
           # MONGO_DB_NAME, so the production stack clones production ->
           # duncit-staging with nothing further set. The staging stack sets
           # MONGO_DB_NAME=duncit-staging, which would resolve source == target
@@ -1561,7 +1564,10 @@ jobs:
           # production's connection to read, staging's to write. They are set
           # together on purpose: TARGET_URI falls back to the SOURCE URI, so
           # setting the source alone would silently move the WRITE onto
-          # production's connection.
+          # production's connection. These are the SEED an operator sees
+          # pre-filled the first time they open Data Clone > Settings; from then
+          # on the saved connections are what run, and each has to be proved
+          # before a clone can start.
           # SOURCE_DB is `test` because production deliberately omits
           # MONGO_DB_NAME and its URI carries no path, so Mongo uses its default
           # (see server/src/config/db.ts). Left unset, the source would be

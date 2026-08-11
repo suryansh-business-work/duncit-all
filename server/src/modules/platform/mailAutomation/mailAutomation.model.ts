@@ -15,7 +15,15 @@ import { Schema, model, Types, type Document } from 'mongoose';
 export type MailTicketType = 'SUPPORT' | 'GRIEVANCE' | 'REPORT_PROBLEM';
 export const MAIL_TICKET_TYPES: MailTicketType[] = ['SUPPORT', 'GRIEVANCE', 'REPORT_PROBLEM'];
 
-/** The response window quoted in the auto-reply. 24-48 is the default pair. */
+/**
+ * How long the TEAM has to act on the ticket. 24-48 is the default pair.
+ *
+ * Not the time to a reply — the acknowledgement leaves within a couple of
+ * minutes of the email arriving. This window is the promise about the work:
+ * how long before a human has actually looked at it and come back. Wording it
+ * as "we will reply in 24-48 hours" would be a promise already broken by the
+ * message it is written in.
+ */
 export const DEFAULT_SLA_MIN_HOURS = 24;
 export const DEFAULT_SLA_MAX_HOURS = 48;
 
@@ -23,8 +31,9 @@ export const DEFAULT_SLA_MAX_HOURS = 48;
 export const DEFAULT_REPLY_TEMPLATE = [
   'Hi {{sender_name}},',
   '',
-  'Thanks for writing in. We have logged your message as {{ticket_no}} and our team is on it.',
-  'You can expect a reply within {{sla}}.',
+  'Thanks for writing in. We have logged your message as {{ticket_no}}.',
+  '',
+  'Our team will look into it and get back to you within {{sla}}.',
   '',
   'Please keep replying on this same email thread so everything stays on one ticket.',
 ].join('\n');

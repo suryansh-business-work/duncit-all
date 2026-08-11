@@ -1,40 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, CircularProgress, Stack } from '@mui/material';
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+} from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
+import type { TableFetch } from '@duncit/table';
 import {
   MAIL_AUTOMATION_ACCOUNTS,
   type MailAutomationAccount,
 } from '../../graphql/mail-automation';
+import MailboxRulesTable from './MailboxRulesTable';
 import { MailAutomationRuleForm } from './mail-automation-rule';
 import RecentThreads from './RecentThreads';
 
 /**
- * Support > Mail Automation: steps 2 and 3, plus the mailbox picker that
- * step 1 is reduced to here.
+ * Support > Mail Automation.
  *
- * The mailboxes themselves are connected in the Tech portal — this page can
- * choose between them and pause one, but never adds or removes one. Everything
- * that decides what a sender actually receives lives here.
+ * The mailboxes are a table; the rule behind each one is the three-step wizard
+ * in the dialog. Connecting and disconnecting is the Tech portal's — this page
+ * can pause a mailbox and decide what it says, but never adds or removes one.
  */
 export default function MailAutomationPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery<{ mailAutomationAccounts: MailAutomationAccount[] }>(
-    MAIL_AUTOMATION_ACCOUNTS,
-    { fetchPolicy: 'cache-and-network' }
+  const refetchRef = useRef<(() => void) | null>(null);
+  const { data, loading, error, refetch } = useQuery<{
+    mailAutomationAccounts: MailAutomationAccount[];
+  }>(MAIL_AUTOMATION_ACCOUNTS, { fetchPolicy: 'cache-and-network' });
+
+  const [editingId, setEditingId] = useState('');
+  /*
+    The row that opened the dialog, held so the dialog cannot vanish.
+
+    `editing` below prefers the LIVE row — a save refetches, and the wizard
+    should re-render with what was actually stored. But a refetch that
+    momentarily empties the list would otherwise close the dialog underneath an
+    operator halfway through writing a reply message. Nothing but an explicit
+    Save or Close may take this dialog away.
+  */
+  const [opened, setOpened] = useState<MailAutomationAccount | null>(null);
+  const rows = data?.mailAutomationAccounts;
+
+  const fetchRows = useCallback<TableFetch<MailAutomationAccount>>(
+    async (query) => {
+      const all = rows ?? [];
+      const term = query.search.trim().toLowerCase();
+      const matched = term ? all.filter((row) => row.email.toLowerCase().includes(term)) : all;
+      return { rows: matched, total: matched.length };
+    },
+    [rows]
   );
-  const [selectedId, setSelectedId] = useState('');
 
-  const accounts = data?.mailAutomationAccounts ?? [];
-
-  // Land on the first mailbox, and recover if the selected one is disconnected
-  // from the Tech portal while this page is open.
+  // The table caches its page until told otherwise, so a refetched list has to
+  // push itself in rather than wait to be asked.
   useEffect(() => {
-    if (accounts.length === 0) return;
-    if (accounts.some((a) => a.id === selectedId)) return;
-    setSelectedId(accounts[0].id);
-  }, [accounts, selectedId]);
+    refetchRef.current?.();
+  }, [rows]);
+
+  const onConfigure = useCallback((account: MailAutomationAccount) => {
+    setOpened(account);
+    setEditingId(account.id);
+  }, []);
+
+  const closeDialog = () => {
+    setEditingId('');
+    setOpened(null);
+  };
+
+  const editing = rows?.find((row) => row.id === editingId) ?? opened;
 
   return (
     <Stack spacing={2.5}>
@@ -51,20 +91,46 @@ export default function MailAutomationPage() {
         </Stack>
       ) : null}
 
-      {!loading && !error && accounts.length === 0 ? (
-        <Alert severity="info">{t('support.mailAutomation.empty')}</Alert>
-      ) : null}
+      <MailboxRulesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onConfigure={onConfigure}
+      />
 
-      {selectedId && accounts.length > 0 && (
-        <>
-          <MailAutomationRuleForm
-            accounts={accounts}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-          <RecentThreads accountId={selectedId} />
-        </>
-      )}
+      {editingId && <RecentThreads accountId={editingId} />}
+
+      {/* Closes on Save or on Close, and on nothing else. The wizard holds an
+          unsaved reply message, so a stray backdrop click or an Escape must not
+          throw away what somebody has just written. */}
+      <Dialog
+        open={Boolean(editing)}
+        onClose={(_event, reason) => {
+          if (reason !== 'backdropClick') closeDialog();
+        }}
+        fullWidth
+        maxWidth="md"
+        disableEscapeKeyDown
+      >
+        {editing && (
+          <>
+            <DialogTitle>
+              {t('support.mailAutomation.editTitle', { vars: { email: editing.email } })}
+            </DialogTitle>
+            <DialogContent dividers>
+              <MailAutomationRuleForm
+                account={editing}
+                onSaved={() => {
+                  refetch().catch(() => undefined);
+                  closeDialog();
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDialog}>{t('support.mailAutomation.close')}</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Stack>
   );
 }

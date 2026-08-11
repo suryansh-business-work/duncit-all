@@ -1,84 +1,135 @@
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
-import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import {
   MAIL_AUTOMATION_THREADS,
   type MailAutomationThread,
 } from '../../graphql/mail-automation';
 
-interface RowProps {
-  thread: MailAutomationThread;
-}
+const getRowId = (row: MailAutomationThread) => row.id;
+const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '');
 
-/** Hoisted so it is not redefined on every render (S6478). */
-function ThreadRow({ thread }: Readonly<RowProps>) {
-  const { t } = useTranslation();
-  const when = new Date(thread.created_at).toLocaleString();
-
-  // Three states, not two. A thread with no reply and no error was claimed but
-  // never finished — the poller was interrupted between claiming it and
-  // answering it. Rendering that as "reply failed: " with a blank reason reads
-  // like a bug in this page rather than what actually happened.
-  let status: string;
-  if (thread.replied_at) {
-    status = t('support.mailAutomation.recentReplied', {
-      vars: { when: new Date(thread.replied_at).toLocaleString() },
-    });
-  } else if (thread.reply_error) {
-    status = t('support.mailAutomation.recentFailed', { vars: { reason: thread.reply_error } });
-  } else {
-    status = t('support.mailAutomation.recentPending');
-  }
-
-  return (
-    <Stack spacing={0.25} sx={{ py: 1 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-        <Chip size="small" label={thread.ticket_no} />
-        <Typography fontWeight={700} noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {thread.subject}
-        </Typography>
-        {thread.reply_by_ai && <SmartToyIcon fontSize="small" color="action" />}
-      </Stack>
-      <Typography variant="caption" color="text.secondary">
-        {thread.from_name || thread.from_email} · {when}
-      </Typography>
-      <Typography variant="caption" color={thread.replied_at ? 'text.secondary' : 'error.main'}>
-        {status}
-      </Typography>
-    </Stack>
-  );
-}
-
-/** What the mailbox has actually done. The rule above is a promise; this is
- * the record of it being kept — including the cases where the ticket opened
- * but the acknowledgement did not send. */
+/**
+ * What the mailbox has actually done.
+ *
+ * The rule above is a promise; this is the record of it being kept — including
+ * the cases where the ticket opened but the acknowledgement never left, which
+ * is a different failure from never having been picked up at all.
+ */
 export default function RecentThreads({ accountId }: Readonly<{ accountId: string }>) {
   const { t } = useTranslation();
   const { data } = useQuery<{ mailAutomationThreads: MailAutomationThread[] }>(
     MAIL_AUTOMATION_THREADS,
-    { variables: { account_id: accountId, limit: 20 }, fetchPolicy: 'cache-and-network' }
+    { variables: { account_id: accountId, limit: 100 }, fetchPolicy: 'cache-and-network' }
   );
-  const rows = data?.mailAutomationThreads ?? [];
+  const rows = data?.mailAutomationThreads;
+
+  const fetchRows = useCallback<TableFetch<MailAutomationThread>>(
+    async (query) => {
+      const all = rows ?? [];
+      const term = query.search.trim().toLowerCase();
+      const matched = term
+        ? all.filter((r) =>
+            [r.from_email, r.from_name, r.subject, r.ticket_no].some((v) =>
+              v.toLowerCase().includes(term)
+            )
+          )
+        : all;
+      return { rows: matched, total: matched.length };
+    },
+    [rows]
+  );
+
+  const columns = useMemo<DuncitColumn<MailAutomationThread>[]>(() => {
+    // Three states, not two. A thread with no reply and no error was claimed
+    // but never finished — rendering that as "reply failed: " with a blank
+    // reason reads like a bug in this page rather than what actually happened.
+    const renderStatus = (row: MailAutomationThread) => {
+      if (row.replied_at) {
+        return (
+          <Typography variant="body2" color="text.secondary">
+            {t('support.mailAutomation.recentReplied', { vars: { when: when(row.replied_at) } })}
+          </Typography>
+        );
+      }
+      const text = row.reply_error
+        ? t('support.mailAutomation.recentFailed', { vars: { reason: row.reply_error } })
+        : t('support.mailAutomation.recentPending');
+      return (
+        <Typography variant="body2" color="error.main" title={row.reply_error || undefined}>
+          {text}
+        </Typography>
+      );
+    };
+
+    const renderSubject = (row: MailAutomationThread) => (
+      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+        <Typography variant="body2" fontWeight={600} noWrap title={row.subject}>
+          {row.subject}
+        </Typography>
+        {row.reply_by_ai && <SmartToyIcon fontSize="small" color="action" />}
+      </Stack>
+    );
+
+    const renderTicket = (row: MailAutomationThread) => (
+      <Chip size="small" label={row.ticket_no || '—'} />
+    );
+
+    return [
+      {
+        field: 'ticket_no',
+        headerName: t('support.mailAutomation.colTicket'),
+        width: 150,
+        cellRenderer: renderTicket,
+      },
+      {
+        field: 'from_email',
+        headerName: t('support.mailAutomation.colFrom'),
+        flex: 1,
+        minWidth: 200,
+        valueGetter: (row) => row.from_name || row.from_email,
+      },
+      {
+        field: 'subject',
+        headerName: t('support.mailAutomation.colSubject'),
+        flex: 1.4,
+        minWidth: 220,
+        cellRenderer: renderSubject,
+      },
+      {
+        field: 'replied_at',
+        headerName: t('support.mailAutomation.colStatus'),
+        flex: 1.2,
+        minWidth: 220,
+        sortable: false,
+        cellRenderer: renderStatus,
+      },
+      {
+        field: 'created_at',
+        headerName: t('support.mailAutomation.colReceived'),
+        width: 190,
+        valueGetter: (row) => when(row.created_at),
+      },
+    ];
+  }, [t]);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Typography variant="subtitle1" fontWeight={800}>
-          {t('support.mailAutomation.recentTitle')}
-        </Typography>
-        {rows.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {t('support.mailAutomation.recentEmpty')}
-          </Typography>
-        ) : (
-          <Stack divider={<Divider flexItem />} sx={{ mt: 1 }}>
-            {rows.map((thread) => (
-              <ThreadRow key={thread.id} thread={thread} />
-            ))}
-          </Stack>
-        )}
-      </CardContent>
-    </Card>
+    <Stack spacing={1}>
+      <Typography variant="subtitle1" fontWeight={800}>
+        {t('support.mailAutomation.recentTitle')}
+      </Typography>
+      <DuncitTable<MailAutomationThread>
+        tableId="support-mail-automation-threads"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getRowId}
+        emptyText={t('support.mailAutomation.recentEmpty')}
+        defaultSort={{ field: 'created_at', dir: 'desc' }}
+        searchPlaceholder={t('support.mailAutomation.colSubject')}
+      />
+    </Stack>
   );
 }

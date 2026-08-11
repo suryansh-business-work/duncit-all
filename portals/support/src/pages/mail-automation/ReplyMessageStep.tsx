@@ -18,10 +18,7 @@ import {
   type MailAutomationRuleValues,
 } from './mail-automation-rule/mail-automation-rule.types';
 
-export interface ReplyPreview {
-  text: string;
-  by_ai: boolean;
-}
+import type { ReplyPreview } from './mail-automation-rule/useMailAutomationRule';
 
 interface Props {
   control: Control<MailAutomationRuleValues>;
@@ -97,6 +94,7 @@ export default function ReplyMessageStep({
 
       <Stack direction="row">
         <Button
+          type="button"
           variant="outlined"
           startIcon={<VisibilityIcon />}
           disabled={previewing}

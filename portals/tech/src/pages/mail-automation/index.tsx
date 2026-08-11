@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useSearchParams } from 'react-router-dom';
-import { Alert, Button, CircularProgress, Stack } from '@mui/material';
+import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { PageHeader } from '@duncit/ui';
 import { notify, useConfirm } from '@duncit/dialogs';

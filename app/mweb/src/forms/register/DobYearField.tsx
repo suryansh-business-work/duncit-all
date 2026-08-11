@@ -48,8 +48,15 @@ export default function DobYearField({
             minDate={minDate}
             maxDate={maxDate}
             onChange={(d) => {
-              if (!d || Number.isNaN(d.getTime())) field.onChange('');
-              else field.onChange(toIsoDay(d));
+              const isReal = d && !Number.isNaN(d.getTime());
+              field.onChange(isReal ? toIsoDay(d) : '');
+              /* Typing a birthday never blurs the field, so under the form's
+                 `onTouched` mode the age rule stayed silent until focus moved
+                 on — while picking one flagged straight away, because opening
+                 the calendar blurs the input first. The field publishes only
+                 complete dates, so marking it touched here checks a typed date
+                 the same moment a picked one is checked. */
+              field.onBlur();
             }}
             slotProps={{
               textField: {

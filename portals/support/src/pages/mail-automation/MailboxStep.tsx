@@ -1,19 +1,9 @@
-import {
-  Alert,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, FormControlLabel, Paper, Stack, Switch, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import type { MailAutomationAccount } from '../../graphql/mail-automation';
 
 interface Props {
-  accounts: MailAutomationAccount[];
-  selectedId: string;
-  onSelect: (id: string) => void;
+  account: MailAutomationAccount;
   active: boolean;
   onActiveChange: (value: boolean) => void;
 }
@@ -21,39 +11,30 @@ interface Props {
 /**
  * Step 1: which mailbox this rule is for.
  *
- * A picker, not a connect button. Connecting is Tech's — the hint says so
- * rather than leaving an operator hunting for a button that is not here.
- * The pause switch IS here, because pausing is a decision about the promise
- * being made, not about the credential.
+ * Read-only, because the row that opened this wizard already chose it — and
+ * connecting or disconnecting a mailbox is the Tech portal's, which the hint
+ * says rather than leaving an operator hunting for a button that is not here.
+ * The pause switch IS here: pausing is a decision about the promise being
+ * made, not about the credential.
  */
-export default function MailboxStep({
-  accounts,
-  selectedId,
-  onSelect,
-  active,
-  onActiveChange,
-}: Readonly<Props>) {
+export default function MailboxStep({ account, active, onActiveChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const selected = accounts.find((a) => a.id === selectedId);
 
   return (
     <Stack spacing={2}>
-      <TextField
-        select
-        fullWidth
-        label={t('support.mailAutomation.stepMailbox')}
-        value={selectedId}
-        onChange={(event) => onSelect(event.target.value)}
-        helperText={t('support.mailAutomation.mailboxHint')}
-      >
-        {accounts.map((account) => (
-          <MenuItem key={account.id} value={account.id}>
-            {account.email}
-          </MenuItem>
-        ))}
-      </TextField>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+        <Typography variant="overline" color="text.secondary">
+          {t('support.mailAutomation.colMailbox')}
+        </Typography>
+        <Typography variant="h6" fontWeight={800}>
+          {account.email}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t('support.mailAutomation.mailboxHint')}
+        </Typography>
+      </Paper>
 
-      {selected && !selected.is_connected && (
+      {!account.is_connected && (
         <Alert severity="error">{t('support.mailAutomation.mailboxNotConnected')}</Alert>
       )}
 

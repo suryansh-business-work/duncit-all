@@ -91,26 +91,26 @@ export default function MailboxesTable({
     );
 
     return [
-      { field: 'email', headerName: 'Mailbox', flex: 1.4, minWidth: 220, cellRenderer: renderMailbox },
-      { field: 'is_active', headerName: 'State', width: 150, sortable: false, cellRenderer: renderState },
+      { field: 'email', headerName: t('support.mailAutomation.colMailbox'), flex: 1.4, minWidth: 220, cellRenderer: renderMailbox },
+      { field: 'is_active', headerName: t('support.mailAutomation.colState'), width: 150, sortable: false, cellRenderer: renderState },
       {
         field: 'ticket_type',
-        headerName: 'Opens',
+        headerName: t('support.mailAutomation.colOpens'),
         width: 170,
         valueGetter: (row) => t(QUEUE_LABEL[row.ticket_type]),
       },
-      { field: 'sla_label', headerName: 'Replies in', width: 130 },
-      { field: 'ai_enabled', headerName: 'Reply written by', width: 180, cellRenderer: renderWriter },
+      { field: 'sla_label', headerName: t('support.mailAutomation.colRepliesIn'), width: 130 },
+      { field: 'ai_enabled', headerName: t('support.mailAutomation.colWriter'), width: 180, cellRenderer: renderWriter },
       {
         field: 'last_polled_at',
-        headerName: 'Last checked',
+        headerName: t('support.mailAutomation.colLastChecked'),
         flex: 1,
         minWidth: 190,
         cellRenderer: renderLastChecked,
       },
       {
         field: 'connected_at',
-        headerName: 'Connected',
+        headerName: t('support.mailAutomation.colConnected'),
         width: 190,
         valueGetter: (row) => formatDateTime(row.connected_at),
       },
@@ -126,7 +126,7 @@ export default function MailboxesTable({
       getRowId={getRowId}
       emptyText={t('tech.mailAutomation.empty')}
       defaultSort={{ field: 'connected_at', dir: 'desc' }}
-      searchPlaceholder="Search mailbox"
+      searchPlaceholder={t('support.mailAutomation.searchMailbox')}
       refetchRef={refetchRef}
     />
   );

@@ -225,6 +225,33 @@ services:
     ports:
       - "127.0.0.1:2127:80"
 
+  # Staging Redis — same shape as production's, isolated on the staging
+  # network with its own data dir, so a staging cache flush never touches
+  # production's cache (and vice versa).
+  redis:
+    image: redis:7-alpine
+    container_name: duncit-staging-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - /opt/duncit-staging/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # staging.redis.duncit.com — staging Redis Commander UI (same nginx basic
+  # auth file as production's: /etc/nginx/.htpasswd-redis).
+  redis-ui:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: duncit-staging-redis-ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: duncit-staging:redis:6379
+    ports:
+      - "127.0.0.1:2128:8081"
+
 networks:
   # Implicit project network for the duncit-staging stack (isolated from prod).
   default:

@@ -19,6 +19,12 @@ CONTAINER_PREFIX="${CONTAINER_PREFIX:-duncit-}"
 PORT_OFFSET="${PORT_OFFSET:-0}"
 cd "$STACK_DIR"
 
+# Infra services (redis + its UI) are external images, never build targets, so
+# they are not in SERVICES — ensure they're up on every deploy. `|| true`: an
+# older compose file without them must not fail the deploy.
+echo ">>> Ensuring infra services (redis, redis-ui) are up..."
+docker compose up -d --no-deps redis redis-ui || true
+
 ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers)
 declare -A PORT_OF=(
   [server]=2001 [admin]=2002 [mweb]=2003 [website]=2000

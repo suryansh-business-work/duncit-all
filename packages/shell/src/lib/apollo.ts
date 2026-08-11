@@ -9,7 +9,7 @@ import {
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
-import { getOrCreateDuid } from '@duncit/user-core';
+import { NO_REDIS_HEADER, getOrCreateDuid, resolveNoRedisFlag } from '@duncit/user-core';
 
 const NETWORK_FAILURE_PATTERN = /failed to fetch|network request failed|load failed/i;
 const FRIENDLY_NETWORK_MESSAGE = 'Unable to connect to server. Please check your internet connection and try again.';
@@ -55,6 +55,9 @@ export function createApolloClient(options: Readonly<CreateApolloClientOptions>)
         ...headers,
         ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(duid ? { 'x-duid': duid } : {}),
+        // `?noRedis=true` in the portal URL: skip the server's Redis response
+        // cache for every request from this tab (sticky until ?noRedis=false).
+        ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),
       },
     };
   });

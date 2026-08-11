@@ -1504,10 +1504,15 @@ jobs:
           MWEB_BASE_URL=${{ env.MWEB_URL }}
           PUBLIC_SITE_URL=${{ env.MAIN_SITE_URL }}
           SERVER_URL=${{ env.SERVER_URL }}
+          REDIS_URL=redis://redis:6379
           RUN_POD_TYPE_MIGRATION=1
           RUN_CLUB_ADMIN_BACKFILL=1
           DATA_CLONE_TARGET_DB=duncit-staging
           EOF
+          # REDIS_URL: the GraphQL response cache — the `redis` compose service
+          # on the stack's own network, so the same value works on both stacks
+          # (each resolves its own container). Infra-level like MONGO_URI, so it
+          # lives here and not in the Tech portal's EnvEntry store.
           # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
           # is allowed to overwrite, and it is pinned on BOTH stacks — that pin,
           # not which portal you start from, is what keeps a clone from ever
@@ -1624,7 +1629,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com redis.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -1662,7 +1667,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.redis.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else

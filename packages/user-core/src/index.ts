@@ -16,6 +16,11 @@ export {
   makeDeviceId,
 } from './device';
 export {
+  NO_REDIS_HEADER,
+  NO_REDIS_STORAGE_KEY,
+  resolveNoRedisFlag,
+} from './no-redis';
+export {
   USER_CHANGED_EVENT,
   parseUserChangedFrame,
   subscribeUserChanged,

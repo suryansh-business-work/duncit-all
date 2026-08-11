@@ -7,8 +7,9 @@ import type { TableQueryInput } from '@utils/table-query';
 
 // The boards ship in the consumer apps, so reading the admin side mirrors the
 // admin portal's own audience; writing the economics is platform-admin only.
-const LEADERBOARD_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
-const LEADERBOARD_ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
+// CHALLENGE_MANAGER: the leaderboard console lives in the Challenges portal.
+const LEADERBOARD_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'CHALLENGE_MANAGER'];
+const LEADERBOARD_ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'CHALLENGE_MANAGER'];
 
 export const leaderboardResolvers = {
   Query: {

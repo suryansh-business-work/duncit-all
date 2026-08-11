@@ -80,15 +80,6 @@ export const appConfig = {
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
     {
-      label: 'Leaderboard',
-      icon: 'trophy',
-      children: [
-        { label: 'Boards', to: '/leaderboard', icon: 'insights' },
-        { label: 'Points Ledger', to: '/leaderboard/points', icon: 'receipt' },
-        { label: 'Settings & Rewards', to: '/leaderboard/settings', icon: 'tune' },
-      ],
-    },
-    {
       label: 'Upload Settings',
       icon: 'upload',
       children: [
@@ -146,24 +137,6 @@ export const appConfig = {
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', to: '/something-for-you', section: 'Engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
-    {
-      label: 'Boards',
-      to: '/leaderboard',
-      section: 'Leaderboard',
-      keywords: ['leaderboard', 'points', 'rank', 'boards', 'rankings', 'top users'],
-    },
-    {
-      label: 'Points Ledger',
-      to: '/leaderboard/points',
-      section: 'Leaderboard',
-      keywords: ['leaderboard', 'points', 'ledger', 'awards', 'log'],
-    },
-    {
-      label: 'Settings & Rewards',
-      to: '/leaderboard/settings',
-      section: 'Leaderboard',
-      keywords: ['leaderboard', 'rewards', 'points', 'settings', 'prizes'],
-    },
     {
       label: 'Portals Upload Setting',
       to: '/upload-settings/portals',

@@ -34,9 +34,6 @@ import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
-import LeaderboardBoardsPage from './pages/leaderboard/LeaderboardBoardsPage';
-import LeaderboardPointsPage from './pages/leaderboard/LeaderboardPointsPage';
-import LeaderboardSettingsPage from './pages/leaderboard/LeaderboardSettingsPage';
 import { getToken } from './lib/session';
 
 export default function App() {
@@ -85,9 +82,6 @@ export default function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/localization/locales" element={<LocalesPage />} />
                 <Route path="/localization/translations" element={<TranslationsPage />} />
-                <Route path="/leaderboard" element={<LeaderboardBoardsPage />} />
-                <Route path="/leaderboard/points" element={<LeaderboardPointsPage />} />
-                <Route path="/leaderboard/settings" element={<LeaderboardSettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AppShell>

@@ -16,7 +16,7 @@ import {
   detectVariables,
   renderTemplateBody,
 } from '@modules/content/emailTemplate/emailTemplate.service';
-import { sendHtmlEmail } from '@services/email/email.service';
+import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getMailConfigs, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -197,7 +197,12 @@ async function renderCampaign(input: {
   card_ref_id?: string | null;
 }) {
   const card = await findPreviewCard(input.card_type, input.card_ref_id);
-  const vars = await campaignVars(card);
+  // The fragment's own variables first — the logo, the support address, the
+  // year, the unsubscribe link and the translated footer copy. `sendEmail`
+  // supplies these on every templated send; a campaign does not go through it,
+  // so without them the marketing footer renders its own `{{ }}` placeholders
+  // as text. `emailPreviewVars` is that exact set, already assembled.
+  const vars = { ...(await emailPreviewVars()), ...(await campaignVars(card)) };
   // Wrapped in the MARKETING fragment — the one that carries the unsubscribe
   // line. Campaigns rendered bare, which is the one category where a missing
   // footer is a compliance problem rather than a cosmetic one.

@@ -21,6 +21,8 @@ export type RootStackParamList = {
   Profile: { verifyEmail?: boolean } | undefined;
   Account: undefined;
   AccountHealth: undefined;
+  /** Profile → Mail Preference, the twin of mWeb's /account/mail-preference. */
+  MailPreference: undefined;
   Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;

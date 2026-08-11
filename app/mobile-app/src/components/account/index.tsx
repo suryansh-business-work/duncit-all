@@ -11,5 +11,6 @@ export { ChangePasswordDialog } from './ChangePasswordDialog';
 export { DeleteAccountDialog } from './DeleteAccountDialog';
 export { SecuritySheet } from './SecuritySheet';
 export { LanguageSection } from './LanguageSection';
+export { MailPreferenceCard } from './MailPreferenceCard';
 export { ConnectedAccountsSection } from './ConnectedAccountsSection';
 export { ConnectedAccountRow } from './ConnectedAccountRow';

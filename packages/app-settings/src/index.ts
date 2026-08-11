@@ -49,6 +49,7 @@ export {
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   mergeCatalogues,
   missingKeys,

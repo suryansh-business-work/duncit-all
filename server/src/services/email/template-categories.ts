@@ -68,8 +68,11 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   // Part of a support conversation.
   support: ['contact-received', 'faq-received'],
 
-  // A record of something they did.
-  transactional: ['event-ticket', 'welcome'],
+  // A record of something they did. `unsubscribe-confirmed` is here and not in
+  // `marketing` on purpose: it confirms an action the person just took, so it
+  // has to arrive even to somebody who has switched marketing off — which is
+  // exactly who receives it.
+  transactional: ['event-ticket', 'unsubscribe-confirmed', 'welcome'],
 
   // No template sends as these yet; the fragments exist for when one does.
   service: [],
@@ -126,6 +129,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'password-change-otp': "You're receiving this because you use Duncit.",
   'password-reset-otp': "You're receiving this because you use Duncit.",
   'signed-contract': "You're receiving this because a Duncit contract was shared with this address.",
+  'unsubscribe-confirmed': "You're receiving this because your Duncit email preferences were changed.",
   'portal-login-otp': "You're receiving this because somebody asked to sign in to a Duncit console with this address.",
   'payment-receipt': "You're receiving this because you made a Duncit booking.",
   'payment-release-approved': "You're receiving this because you use Duncit.",

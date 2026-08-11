@@ -1,5 +1,6 @@
 import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
+import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { MWEB_BUNDLE } from './bundles/mweb';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
@@ -29,6 +30,7 @@ import { WEBSITE_BUNDLE } from './bundles/website';
  */
 export {
   GRIEVANCE_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
@@ -39,6 +41,7 @@ export {
 /** Every client bundle, by the surface that ships it. */
 export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   grievance: GRIEVANCE_BUNDLE,
+  mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   mweb: MWEB_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,

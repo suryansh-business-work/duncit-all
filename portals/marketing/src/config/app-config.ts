@@ -33,6 +33,10 @@ export const appConfig = {
         { label: 'WhatsApp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
         { label: 'Notifications', to: '/notifications', icon: 'notifications' },
         { label: 'App Popups', to: '/app-popups', icon: 'image' },
+        // Under Campaigns, not under a reporting section: an opt-out is what a
+        // campaign costs, and the number is only useful next to the send that
+        // caused it.
+        { label: 'Mail Preferences', to: '/campaigns/mail-preferences', icon: 'markEmailRead' },
       ],
     },
     // Its own section, not a child of Campaigns: a short link is just as often

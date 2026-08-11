@@ -2,6 +2,7 @@ import {
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
   type NestedCatalogue,
@@ -27,6 +28,7 @@ import {
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...GRIEVANCE_BUNDLE,
+  ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
 };
 

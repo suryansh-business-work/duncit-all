@@ -10,6 +10,7 @@ export {
 export {
   allFallbackEntries,
   GRIEVANCE_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,

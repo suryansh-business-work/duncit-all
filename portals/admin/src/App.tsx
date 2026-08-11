@@ -36,6 +36,9 @@ import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
 import CoinDashboardPage from './pages/duncit-coin/CoinDashboardPage';
 import CoinTransactionsPage from './pages/duncit-coin/CoinTransactionsPage';
+import LeaderboardBoardsPage from './pages/leaderboard/LeaderboardBoardsPage';
+import LeaderboardPointsPage from './pages/leaderboard/LeaderboardPointsPage';
+import LeaderboardSettingsPage from './pages/leaderboard/LeaderboardSettingsPage';
 import { getToken } from './lib/session';
 
 export default function App() {
@@ -86,6 +89,9 @@ export default function App() {
                 <Route path="/localization/translations" element={<TranslationsPage />} />
                 <Route path="/duncit-coin/dashboard" element={<CoinDashboardPage />} />
                 <Route path="/duncit-coin/transactions" element={<CoinTransactionsPage />} />
+                <Route path="/leaderboard" element={<LeaderboardBoardsPage />} />
+                <Route path="/leaderboard/points" element={<LeaderboardPointsPage />} />
+                <Route path="/leaderboard/settings" element={<LeaderboardSettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AppShell>

@@ -19,6 +19,7 @@ import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
 import { AddressBookScreen } from '@/screens/AddressBookScreen';
 import { CartScreen } from '@/screens/CartScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
+import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { ShopScreen } from '@/screens/ShopScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
@@ -191,6 +192,7 @@ export function RootNavigator() {
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="OrdersHistory" component={OrdersHistoryScreen} />
       <Stack.Screen name="AddressBook" component={AddressBookScreen} />
+      <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
   );

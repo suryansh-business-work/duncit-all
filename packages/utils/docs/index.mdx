@@ -554,6 +554,31 @@ The Vite portals need only `COPY packages/utils/package.json`, because pnpm reso
 workspace link and Vite reads the source through it. Getting this backwards passes locally and
 fails only in the deploy build.
 
+## Leaderboard vocabulary — one list, two apps
+
+`LEADERBOARD_CATEGORIES` is the five boards in display order (`USER`, `HOST`, `CLUB_ADMIN`,
+`VENUE`, `BRAND`), and the companion maps carry each board's i18n keys and its pricing field so
+mWeb and native render identical tabs, "how to earn" lines and period toggles from one
+vocabulary (rule 27):
+
+```ts
+import {
+  LEADERBOARD_CATEGORIES,
+  LEADERBOARD_TAB_KEY,
+  LEADERBOARD_EARN_KEY,
+  LEADERBOARD_PERIOD_KEY,
+  LEADERBOARD_POINTS_FIELD,
+  leaderboardMedal,
+} from '@duncit/utils';
+
+LEADERBOARD_TAB_KEY.CLUB_ADMIN; // 'mweb.leaderboard.tabClubAdmin'
+LEADERBOARD_POINTS_FIELD.BRAND; // 'points_per_product_sale' — the leaderboardConfig field
+leaderboardMedal(1); // 'gold'  ·  leaderboardMedal(4) → null (past the podium)
+```
+
+The i18n keys are literals on purpose — the translation-key gate parses source statically and
+cannot follow a key assembled from the category name.
+
 ## Adding a helper
 
 `src/index.ts` is a pure re-export barrel and is coverage-excluded; everything else is under a

@@ -15,6 +15,7 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ExploreIcon from '@mui/icons-material/Explore';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StoreIcon from '@mui/icons-material/Store';
@@ -41,6 +42,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   cart: <ShoppingCartIcon />,
   wallet: <AccountBalanceWalletIcon />,
   coin: <MonetizationOnIcon />,
+  leaderboard: <EmojiEventsIcon />,
   // The partner menus reuse the Earn cards' icon vocabulary, so a role reads
   // the same on the card that unlocked it and in its own drawer section.
   host: <DashboardIcon />,

@@ -52,6 +52,7 @@ export default function MenuPanel({
   const colorMode = useColorMode();
   const { mode, setMode } = useStudioMode();
   const showPodPlans = useFeatureFlag('pod_plans_section');
+  const showLeaderboard = useFeatureFlag('leaderboard');
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
@@ -86,7 +87,14 @@ export default function MenuPanel({
       <Box sx={{ flex: 1 }}>
         {/* One unified card layout for every role — the studio-specific menu
             list was retired so all modes share this design. */}
-        <UserModeContent me={me} roles={roles} mode={effectiveMode} showPodPlans={showPodPlans} onNavigate={go} />
+        <UserModeContent
+          me={me}
+          roles={roles}
+          mode={effectiveMode}
+          showPodPlans={showPodPlans}
+          showLeaderboard={showLeaderboard}
+          onNavigate={go}
+        />
 
         {canSwitch && (
           <Box sx={{ px: 2, pb: 1.25 }}>

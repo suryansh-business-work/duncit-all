@@ -1505,13 +1505,14 @@ jobs:
           DATA_CLONE_TARGET_DB=duncit-staging
           EOF
           # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
-          # is allowed to overwrite. Source falls back to MONGO_URI +
+          # is allowed to overwrite, and it is pinned on BOTH stacks — that pin,
+          # not which portal you start from, is what keeps a clone from ever
+          # writing to production. Source falls back to MONGO_URI +
           # MONGO_DB_NAME, so the production stack clones production ->
-          # duncit-staging. Written for both stacks on purpose: on the staging
-          # stack the source IS duncit-staging, so source and target resolve to
-          # the same database and the server refuses to start a clone — the
-          # guard, not a second config file, is what keeps staging from
-          # overwriting itself.
+          # duncit-staging with nothing further set. The staging stack sets
+          # MONGO_DB_NAME=duncit-staging, which would resolve source == target
+          # and leave Data Clone permanently disabled there, so it names its
+          # source explicitly (DATA_CLONE_SOURCE_DB below).
           # MWEB_BASE_URL: every link the server EMAILS is built from this
           # (url-configs.getUrlConfigs -> appUrl), and the booking CTA is
           # `${appUrl}/booking/:bookingId`. It was never written here, so both
@@ -1546,10 +1547,20 @@ jobs:
           # fully separate, so values saved in the staging Tech portal apply to
           # staging only. APP_ENV lets the server self-identify (health,
           # telemetry, staging-aware status probes).
+          # DATA_CLONE_SOURCE_DB names production's database explicitly, because
+          # MONGO_DB_NAME above would otherwise be the source too and the
+          # source == target guard would disable Data Clone in the STAGING Tech
+          # portal — the one an operator actually opens to refresh staging.
+          # `test` is production's database: production deliberately omits
+          # MONGO_DB_NAME and the URI carries no path, so Mongo uses its default
+          # (see server/src/config/db.ts). With this set, the staging stack does
+          # the copy itself — it reads `test` and can only ever write
+          # DATA_CLONE_TARGET_DB, so production stays read-only either way.
           if [ "${{ env.DEPLOY_ENV }}" = "staging" ]; then
             cat >> /tmp/server.env <<EOF
           APP_ENV=staging
           MONGO_DB_NAME=duncit-staging
+          DATA_CLONE_SOURCE_DB=test
           DEFAULT_SUPER_ADMIN_PASSWORD=${STAGING_SUPER_ADMIN_PASSWORD}
           EOF
           fi

@@ -81,6 +81,11 @@ export default function DataClonePage() {
 
       {(loading || targetsQuery.loading) && <LinearProgress />}
 
+      {/* Without this the query's own failure — most often "not authorised",
+          since every clone operation is SUPER_ADMIN-only — renders nothing at
+          all and the Start button is simply disabled with no reason given. */}
+      {targetsQuery.error && <Alert severity="error">{targetsQuery.error.message}</Alert>}
+
       {targets && !targets.ready && (
         <Alert severity="error">
           {t('tech.dataClone.notConfigured')} {targets.error}

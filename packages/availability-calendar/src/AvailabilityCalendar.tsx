@@ -9,6 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
+import { slotCoveredDays } from './slot-window';
 import type { CalendarView, VenueSlotRow } from './types';
 
 interface Props {
@@ -34,13 +35,17 @@ interface Bucket {
 function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
   const map = new Map<string, Bucket>();
   for (const slot of slots) {
-    const key = format(new Date(slot.start_at), 'yyyy-MM-dd');
-    const bucket = map.get(key) ?? { available: 0, pending: 0, booked: 0, blocked: 0 };
-    if (slot.status === 'AVAILABLE') bucket.available += 1;
-    else if (slot.status === 'PENDING') bucket.pending += 1;
-    else if (slot.status === 'BOOKED') bucket.booked += 1;
-    else bucket.blocked += 1;
-    map.set(key, bucket);
+    // A multi-day (activity) slot counts on EVERY day it covers, so the block
+    // is visible across the whole range, not just its start date.
+    for (const day of slotCoveredDays(slot)) {
+      const key = format(day, 'yyyy-MM-dd');
+      const bucket = map.get(key) ?? { available: 0, pending: 0, booked: 0, blocked: 0 };
+      if (slot.status === 'AVAILABLE') bucket.available += 1;
+      else if (slot.status === 'PENDING') bucket.pending += 1;
+      else if (slot.status === 'BOOKED') bucket.booked += 1;
+      else bucket.blocked += 1;
+      map.set(key, bucket);
+    }
   }
   return map;
 }

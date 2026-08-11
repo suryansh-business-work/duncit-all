@@ -2731,6 +2731,8 @@ export type CreateVenueSlotInput = {
   /** The venue space this slot is for ('' = whole venue). Slots in different spaces may share a time. */
   space_label?: InputMaybe<Scalars['String']['input']>;
   start_at: Scalars['String']['input'];
+  /** Mark this slot as a whole-day (or whole-date-range) booking (defaults to false). */
+  whole_day?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type CreatedApiKey = {
@@ -5630,6 +5632,100 @@ export type MailAutomationThread = {
   ticket_type: MailTicketType;
 };
 
+/** Everything one address receives, and what it has opted out of. */
+export type MailPreference = {
+  __typename?: 'MailPreference';
+  categories: Array<MailPreferenceCategory>;
+  email: Scalars['String']['output'];
+  /** When the person last changed anything. Null if they never have. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** What the opt-out log says about reach. */
+export type MailPreferenceAnalytics = {
+  __typename?: 'MailPreferenceAnalytics';
+  by_category: Array<MailPreferenceCategoryStat>;
+  /** Which surface the changes were made from. */
+  by_source: Array<MailPreferenceBucket>;
+  opt_ins: Scalars['Int']['output'];
+  opt_outs: Scalars['Int']['output'];
+  /** Addresses refusing at least one category. */
+  people_opted_out: Scalars['Int']['output'];
+  /**
+   * Addresses refusing every category they are allowed to refuse.
+   *
+   * Counted apart from the number above because it is a different kind of loss:
+   * one category off still leaves somebody reachable, all of them off does not.
+   */
+  people_opted_out_all: Scalars['Int']['output'];
+  range_days: Scalars['Int']['output'];
+};
+
+export type MailPreferenceBucket = {
+  __typename?: 'MailPreferenceBucket';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+/**
+ * One kind of email, and whether this person still wants it.
+ *
+ * There is no label or description here on purpose: the copy is localized and
+ * lives in the client bundles (rule 38), so the server ships the KEY and the
+ * screen decides what it says in the reader's language.
+ */
+export type MailPreferenceCategory = {
+  __typename?: 'MailPreferenceCategory';
+  /** The email category — marketing, notification, authentication, and so on. */
+  category: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  /**
+   * Sent whatever this says.
+   *
+   * Codes, receipts and notices we are obliged to send. The screen renders these
+   * locked rather than hiding them: "you will always get your OTP" is the answer
+   * to a question people actually have.
+   */
+  required: Scalars['Boolean']['output'];
+};
+
+/** One category's standing, now and over the window. */
+export type MailPreferenceCategoryStat = {
+  __typename?: 'MailPreferenceCategoryStat';
+  category: Scalars['String']['output'];
+  /** People who came back inside the window. */
+  opt_ins: Scalars['Int']['output'];
+  /** Opt-outs inside the window. */
+  opt_outs: Scalars['Int']['output'];
+  /** Addresses currently refusing this category. */
+  opted_out_now: Scalars['Int']['output'];
+};
+
+/** One change to one category — the row the Marketing analytics table lists. */
+export type MailPreferenceLog = {
+  __typename?: 'MailPreferenceLog';
+  category: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  /** true = they opted back in, false = they opted out. */
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Where the change was made: MWEB, NATIVE, WEBSITE, PORTAL or SERVER. */
+  source: Scalars['String']['output'];
+  source_detail: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+  /** The account behind the address, when there is one. Empty for a contact. */
+  user_name: Scalars['String']['output'];
+};
+
+export type MailPreferenceLogTablePage = {
+  __typename?: 'MailPreferenceLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MailPreferenceLog>;
+  total: Scalars['Int']['output'];
+};
+
 /**
  * Which queue an inbound email opens a record in. Chosen per mailbox in the
  * Support portal — step 3 of the wizard.
@@ -6666,6 +6762,8 @@ export type Mutation = {
   sendWaCampaign: WaCampaign;
   /** Send one test message to one number, through the same path a campaign uses. */
   sendWaTestMessage: WaTestSendResult;
+  /** Switch off everything the signed-in person is allowed to switch off. */
+  setAllMyMailPreferences: MailPreference;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
@@ -6684,8 +6782,12 @@ export type Mutation = {
   setFeedbackReportStatus: FeedbackReport;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
+  /** The same two actions from an unsubscribe link, with no sign-in. */
+  setMailPreferenceByToken: MailPreference;
   /** Persist the signed-in users language. Validated against active locales. */
   setMyLocale: User;
+  /** Switch one category on or off for the signed-in person. */
+  setMyMailPreference: MailPreference;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
   setPodIdeaStatus: PodIdea;
@@ -6817,6 +6919,7 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  unsubscribeAllByToken: MailPreference;
   unsubscribeNewsletter: Scalars['Boolean']['output'];
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
@@ -8892,6 +8995,11 @@ export type MutationSendWaTestMessageArgs = {
 };
 
 
+export type MutationSetAllMyMailPreferencesArgs = {
+  enabled: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetBrandCommissionArgs = {
   brand_doc_id: Scalars['ID']['input'];
   product_commission_pct: Scalars['Float']['input'];
@@ -8971,8 +9079,22 @@ export type MutationSetHostDeductionsArgs = {
 };
 
 
+export type MutationSetMailPreferenceByTokenArgs = {
+  category: Scalars['String']['input'];
+  e: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+  t: Scalars['String']['input'];
+};
+
+
 export type MutationSetMyLocaleArgs = {
   locale: Scalars['String']['input'];
+};
+
+
+export type MutationSetMyMailPreferenceArgs = {
+  category: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
 };
 
 
@@ -9344,6 +9466,12 @@ export type MutationUnfollowPodArgs = {
 
 export type MutationUnfollowUserArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUnsubscribeAllByTokenArgs = {
+  e: Scalars['String']['input'];
+  t: Scalars['String']['input'];
 };
 
 
@@ -12338,6 +12466,18 @@ export type Query = {
   mailAutomationPreview: MailAutomationPreview;
   /** Recent conversations this mailbox answered — the audit trail for the rule. */
   mailAutomationThreads: Array<MailAutomationThread>;
+  /** Opt-outs and opt-ins over a window. Defaults to 30 days, capped at 365. */
+  mailPreferenceAnalytics: MailPreferenceAnalytics;
+  /** Every preference change ever made, newest first. */
+  mailPreferenceLogsTable: MailPreferenceLogTablePage;
+  /**
+   * The preferences an unsubscribe link points at.
+   *
+   * Deliberately unauthenticated: the person clicking it is reading an email, not
+   * signed in, and an opt-out behind a login screen is one most people abandon.
+   * The signature in the link is what proves whose preferences these are.
+   */
+  mailPreferencesByToken?: Maybe<MailPreference>;
   /** One campaign in full, including its rendered HTML — powers the View dialog. */
   marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
@@ -12440,6 +12580,8 @@ export type Query = {
   myHostRequests: Array<HostRequest>;
   myHostTakenCategoryIds: Array<Scalars['ID']['output']>;
   myInterviews: Array<Interview>;
+  /** The signed-in person's own mail preferences. */
+  myMailPreferences: MailPreference;
   /** Current user's meeting request for a kind. */
   myMeeting?: Maybe<OnboardingMeeting>;
   /** All of the current user's onboarding meetings (one per kind). */
@@ -13784,6 +13926,22 @@ export type QueryMailAutomationPreviewArgs = {
 export type QueryMailAutomationThreadsArgs = {
   account_id: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMailPreferenceAnalyticsArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMailPreferenceLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMailPreferencesByTokenArgs = {
+  e: Scalars['String']['input'];
+  t: Scalars['String']['input'];
 };
 
 
@@ -17819,6 +17977,8 @@ export type VenueSlot = {
   status: VenueSlotStatus;
   venue_id: Scalars['ID']['output'];
   venue_name?: Maybe<Scalars['String']['output']>;
+  /** True for a whole-day / whole-date-range booking — render 'Whole day' instead of clock times. */
+  whole_day: Scalars['Boolean']['output'];
 };
 
 /**
@@ -17853,6 +18013,8 @@ export type VenueSlotDecision = {
   venue_name: Scalars['String']['output'];
   /** What the venue takes home if the pod sells out; the slot price is a ceiling. */
   venue_receives: Scalars['Float']['output'];
+  /** True for a whole-day / whole-date-range booking. */
+  whole_day: Scalars['Boolean']['output'];
 };
 
 /** The owner's answer to a booking request. NONE = still waiting. */
@@ -17877,6 +18039,8 @@ export type VenueSlotRequest = {
   start_at: Scalars['String']['output'];
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
+  /** True for a whole-day / whole-date-range booking. */
+  whole_day: Scalars['Boolean']['output'];
 };
 
 export type VenueSlotStatus =

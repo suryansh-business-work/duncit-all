@@ -3,10 +3,11 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { addMonths, endOfMonth, format, isSameDay, startOfMonth, subMonths } from 'date-fns';
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
 import {
   AvailabilityCalendar,
   DayDrawer,
+  slotCoversDay,
   type NewSlotInput,
   type VenueSlotRow,
 } from '@duncit/availability-calendar';
@@ -50,8 +51,10 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
     if (!selectedDate) return [];
+    // slotCoversDay, not isSameDay(start): a multi-day (activity) booking must
+    // appear in the drawer of every day it spans.
     return (data?.adminVenueSlots ?? [])
-      .filter((slot) => isSameDay(new Date(slot.start_at), selectedDate))
+      .filter((slot) => slotCoversDay(slot, selectedDate))
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
   }, [data, selectedDate]);
 

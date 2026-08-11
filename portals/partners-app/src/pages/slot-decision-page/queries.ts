@@ -10,6 +10,7 @@ export const VENUE_SLOT_DECISION = gql`
       venue_name
       start_at
       end_at
+      whole_day
       price
       space_label
       requested_at
@@ -35,6 +36,8 @@ export interface SlotDecisionRow {
   venue_name: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day: boolean;
   price: number;
   space_label: string;
   requested_at: string;

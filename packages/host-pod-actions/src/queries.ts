@@ -119,6 +119,7 @@ export const RESUBMIT_VENUE_SLOTS = gql`
       id
       start_at
       end_at
+      whole_day
       price
       space_label
     }

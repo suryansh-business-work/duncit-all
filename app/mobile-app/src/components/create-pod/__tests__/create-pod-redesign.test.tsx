@@ -207,6 +207,7 @@ describe('SlotPicker day labels', () => {
       id: 'today1',
       start_at: noon.toISOString(),
       end_at: noon.toISOString(),
+      whole_day: false,
       price: 0,
       space_label: '',
       capacity: 20,

@@ -19,6 +19,7 @@ export const VenueSlotRequestsDocument = gql(`
       venue_name
       start_at
       end_at
+      whole_day
       price
       requested_at
       pod_id

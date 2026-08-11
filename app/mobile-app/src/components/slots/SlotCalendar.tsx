@@ -6,8 +6,7 @@ import {
   resolveSlotDay,
   slotDayBounds,
   slotDayKeys,
-  slotPriceLabel,
-  slotTimeLabel,
+  slotTileLines,
 } from '@duncit/slots';
 import { monthKeyOf } from '@duncit/slots';
 import type { CalendarSlot, SlotFormatter, SlotLabels } from '@duncit/slots';
@@ -110,9 +109,7 @@ export default function SlotCalendar({
           <XStack flexWrap="wrap" gap={8}>
             {daySlots.map((slot) => {
               const selected = slot.id === selectedSlotId;
-              const price = showPrice ? slotPriceLabel(slot.price, labels.free) : '';
-              const time = slotTimeLabel(slot.start_at, fmt);
-              const secondary = price || slot.caption || '';
+              const { headline: time, secondary } = slotTileLines(slot, fmt, labels, showPrice);
               return (
                 <YStack
                   key={slot.id}

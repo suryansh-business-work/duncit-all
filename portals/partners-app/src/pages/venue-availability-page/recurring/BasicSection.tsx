@@ -1,4 +1,4 @@
-import { Stack } from '@mui/material';
+import { Box, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { addDays } from 'date-fns';
 import DayOfWeekPicker from './DayOfWeekPicker';
@@ -42,12 +42,28 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
         weeklyOff={settings.weekly_off_days}
       />
 
-      <TimeSlotsSection
-        timeSlots={form.timeSlots}
-        onChange={(timeSlots) => patch({ timeSlots })}
-        openHours={settings.operating_hours}
-        bufferMinutes={settings.rules.buffer_minutes}
+      <FormControlLabel
+        control={<Switch checked={form.wholeDay} onChange={(e) => patch({ wholeDay: e.target.checked })} />}
+        label={
+          <Box>
+            <Typography variant="body2" fontWeight={800}>
+              Whole day
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Each selected day becomes one whole-day booking — no time windows needed.
+            </Typography>
+          </Box>
+        }
       />
+
+      {!form.wholeDay && (
+        <TimeSlotsSection
+          timeSlots={form.timeSlots}
+          onChange={(timeSlots) => patch({ timeSlots })}
+          openHours={settings.operating_hours}
+          bufferMinutes={settings.rules.buffer_minutes}
+        />
+      )}
 
       <SpacePricingSection spaces={form.spaces} onChange={(spaces) => patch({ spaces })} />
     </Stack>

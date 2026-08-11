@@ -7,6 +7,8 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { slotSpanLabel } from '@duncit/slots';
 import { InfoRow } from '@duncit/ui';
 import type { SlotRequestRow } from './queries';
 
@@ -17,13 +19,16 @@ interface Props {
   onDecline: (slotId: string, reason: string) => Promise<void>;
 }
 
-const slotWindow = (row: SlotRequestRow) =>
-  `${format(new Date(row.start_at), 'EEE, d MMM yyyy · h:mm a')} – ${format(new Date(row.end_at), 'h:mm a')}`;
-
 export default function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonly<Props>) {
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState('');
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  // Whole-day and multi-day (activity) bookings label correctly through the
+  // shared helper — a bare start-day + times would misread both.
+  const slotWindow = (row: SlotRequestRow) =>
+    slotSpanLabel(row.start_at, row.end_at, row.whole_day, fmt, t('shell.slots.wholeDay'));
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>

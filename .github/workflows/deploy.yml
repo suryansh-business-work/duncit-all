@@ -1467,6 +1467,10 @@ jobs:
         env:
           DOCKERHUB_USERNAME:    ${{ secrets.DOCKERHUB_USERNAME }}
           MONGO_URI:             ${{ github.ref_name == 'staging' && secrets.STAGING_MONGO_URI || secrets.MONGO_URI }}
+          # Production's connection string, unbranched. The staging stack needs
+          # it as the Data Clone SOURCE — it reads production and writes only
+          # its own database. The production stack already has it as MONGO_URI.
+          PROD_MONGO_URI:        ${{ secrets.MONGO_URI }}
           JWT_SECRET:            ${{ github.ref_name == 'staging' && secrets.STAGING_JWT_SECRET || secrets.JWT_SECRET }}
           OPENWA_API_MASTER_KEY: ${{ github.ref_name == 'staging' && secrets.STAGING_OPENWA_API_MASTER_KEY || secrets.OPENWA_API_MASTER_KEY }}
           STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
@@ -1505,13 +1509,14 @@ jobs:
           DATA_CLONE_TARGET_DB=duncit-staging
           EOF
           # DATA_CLONE_TARGET_DB: the ONLY database the Tech portal's Data Clone
-          # is allowed to overwrite. Source falls back to MONGO_URI +
+          # is allowed to overwrite, and it is pinned on BOTH stacks — that pin,
+          # not which portal you start from, is what keeps a clone from ever
+          # writing to production. Source falls back to MONGO_URI +
           # MONGO_DB_NAME, so the production stack clones production ->
-          # duncit-staging. Written for both stacks on purpose: on the staging
-          # stack the source IS duncit-staging, so source and target resolve to
-          # the same database and the server refuses to start a clone — the
-          # guard, not a second config file, is what keeps staging from
-          # overwriting itself.
+          # duncit-staging with nothing further set. The staging stack sets
+          # MONGO_DB_NAME=duncit-staging, which would resolve source == target
+          # and leave Data Clone permanently disabled there, so it names its
+          # source explicitly (DATA_CLONE_SOURCE_DB below).
           # MWEB_BASE_URL: every link the server EMAILS is built from this
           # (url-configs.getUrlConfigs -> appUrl), and the booking CTA is
           # `${appUrl}/booking/:bookingId`. It was never written here, so both
@@ -1546,10 +1551,29 @@ jobs:
           # fully separate, so values saved in the staging Tech portal apply to
           # staging only. APP_ENV lets the server self-identify (health,
           # telemetry, staging-aware status probes).
+          # DATA_CLONE_*: the staging stack runs the clone itself, so it names
+          # BOTH endpoints explicitly and each one uses its OWN credentials —
+          # production's connection to read, staging's to write. They are set
+          # together on purpose: TARGET_URI falls back to the SOURCE URI, so
+          # setting the source alone would silently move the WRITE onto
+          # production's connection.
+          # SOURCE_DB is `test` because production deliberately omits
+          # MONGO_DB_NAME and its URI carries no path, so Mongo uses its default
+          # (see server/src/config/db.ts). Left unset, the source would be
+          # MONGO_DB_NAME above — source == target — and the guard would leave
+          # Data Clone permanently disabled in the STAGING Tech portal, the one
+          # an operator actually opens to refresh staging. Naming the source
+          # rather than inheriting it also keeps a wrong answer loud: a source
+          # that resolved to an empty database would otherwise report a
+          # SUCCEEDED clone of zero collections. Production stays read-only
+          # regardless — a clone can only ever write DATA_CLONE_TARGET_DB.
           if [ "${{ env.DEPLOY_ENV }}" = "staging" ]; then
             cat >> /tmp/server.env <<EOF
           APP_ENV=staging
           MONGO_DB_NAME=duncit-staging
+          DATA_CLONE_SOURCE_URI=${PROD_MONGO_URI}
+          DATA_CLONE_SOURCE_DB=test
+          DATA_CLONE_TARGET_URI=${MONGO_URI}
           DEFAULT_SUPER_ADMIN_PASSWORD=${STAGING_SUPER_ADMIN_PASSWORD}
           EOF
           fi

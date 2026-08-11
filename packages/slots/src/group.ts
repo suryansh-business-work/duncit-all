@@ -114,6 +114,60 @@ export function slotRangeLabel(
   return end ? `${start} – ${end}` : start;
 }
 
+/** The calendar day a slot ENDS on. The end instant is exclusive, so a slot
+ * ending exactly at midnight claims no extra day. */
+function slotEndDayKey(endIso: string, fmt: SlotFormatter): string {
+  const endMs = new Date(endIso).getTime();
+  if (Number.isNaN(endMs)) return '';
+  return fmt.dayKey(new Date(endMs - 1));
+}
+
+/**
+ * The full when-is-this-slot sentence for request/decision rows, whole-day and
+ * multi-day aware: "10 Aug 2026, 10:00 AM – 6:00 PM", "10 Aug 2026, 10:00 AM –
+ * 12 Aug 2026, 6:00 PM", or "Whole day · 10 Aug 2026[ – 12 Aug 2026]".
+ */
+export function slotSpanLabel(
+  startIso: string,
+  endIso: string,
+  wholeDay: boolean | undefined,
+  fmt: SlotFormatter,
+  wholeDayLabel: string,
+): string {
+  const startDate = fmt.formatDate(startIso);
+  const endDate = fmt.formatDate(endIso);
+  const multiDay = slotEndDayKey(endIso, fmt) !== fmt.dayKey(startIso);
+  if (wholeDay) {
+    return multiDay ? `${wholeDayLabel} · ${startDate} – ${endDate}` : `${wholeDayLabel} · ${startDate}`;
+  }
+  const start = `${startDate}, ${fmt.formatTime(startIso)}`;
+  if (multiDay) return `${start} – ${endDate}, ${fmt.formatTime(endIso)}`;
+  return `${start} – ${fmt.formatTime(endIso)}`;
+}
+
+/**
+ * The two lines a slot tile renders, identical on every surface (MUI + Tamagui):
+ * headline = the start time, or the wholeDay label for a whole-day booking;
+ * secondary = the date range when the slot spans days, then price/caption.
+ */
+export function slotTileLines<T extends CalendarSlot>(
+  slot: T,
+  fmt: SlotFormatter,
+  labels: Readonly<{ free: string; wholeDay: string }>,
+  showPrice: boolean,
+): { headline: string; secondary: string } {
+  const headline = slot.whole_day ? labels.wholeDay : slotTimeLabel(slot.start_at, fmt);
+  const parts: string[] = [];
+  const endDay = slot.end_at ? slotEndDayKey(slot.end_at, fmt) : '';
+  if (endDay && endDay !== fmt.dayKey(slot.start_at)) {
+    parts.push(`${fmt.formatDate(slot.start_at)} – ${fmt.formatDate(slot.end_at)}`);
+  }
+  const price = showPrice ? slotPriceLabel(slot.price, labels.free) : '';
+  const extra = price || slot.caption || '';
+  if (extra) parts.push(extra);
+  return { headline, secondary: parts.join(' · ') };
+}
+
 /**
  * Price for a tile. `freeLabel` is injected rather than hardcoded so the copy
  * stays translatable at the call site.

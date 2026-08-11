@@ -41,6 +41,7 @@ export function SlotPicker({
         id: slot.id,
         start_at: slot.start_at,
         end_at: slot.end_at,
+        whole_day: slot.whole_day,
         price: slot.price,
       })),
     [slots],

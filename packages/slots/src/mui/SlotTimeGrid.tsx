@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { slotPriceLabel, slotTimeLabel } from '../group';
+import { slotTileLines } from '../group';
 import type { CalendarSlot, SlotFormatter } from '../types';
 
 export interface SlotTimeGridProps {
@@ -8,6 +8,8 @@ export interface SlotTimeGridProps {
   onPick: (slot: CalendarSlot) => void;
   fmt: SlotFormatter;
   freeLabel: string;
+  /** Headline on whole-day / whole-date-range slot tiles. */
+  wholeDayLabel: string;
   showPrice: boolean;
 }
 
@@ -21,6 +23,7 @@ export default function SlotTimeGrid({
   onPick,
   fmt,
   freeLabel,
+  wholeDayLabel,
   showPrice,
 }: Readonly<SlotTimeGridProps>) {
   return (
@@ -29,9 +32,12 @@ export default function SlotTimeGrid({
     >
       {slots.map((slot) => {
         const selected = slot.id === selectedSlotId;
-        const price = showPrice ? slotPriceLabel(slot.price, freeLabel) : '';
-        const time = slotTimeLabel(slot.start_at, fmt);
-        const secondary = price || slot.caption || '';
+        const { headline: time, secondary } = slotTileLines(
+          slot,
+          fmt,
+          { free: freeLabel, wholeDay: wholeDayLabel },
+          showPrice,
+        );
         return (
           <Box
             key={slot.id}

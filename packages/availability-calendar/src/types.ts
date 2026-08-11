@@ -9,6 +9,9 @@ export interface VenueSlotRow {
   venue_id: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking — rendered as "Whole day"
+   * instead of clock times. start_at/end_at still hold the real span. */
+  whole_day?: boolean;
   price: number;
   status: VenueSlotStatus;
   booked_by_pod_id: string | null;
@@ -34,6 +37,8 @@ export interface VenueSpace {
 export interface NewSlotInput {
   start_at: string;
   end_at: string;
+  /** True when the owner published this as a whole-day booking. */
+  whole_day?: boolean;
   price: number;
   notes: string;
   /** Omitted / '' when the venue has no named spaces (whole-venue slot). */

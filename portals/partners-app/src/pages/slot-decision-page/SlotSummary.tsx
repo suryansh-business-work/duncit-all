@@ -2,15 +2,17 @@ import { Box, Link, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/EventOutlined';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import PersonIcon from '@mui/icons-material/PersonOutline';
-import { format } from 'date-fns';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { slotSpanLabel } from '@duncit/slots';
 import type { SlotDecisionRow } from './queries';
 
 /** The booked window, venue/space and who is hosting — the "what am I deciding
  * on" block shared by the pending, approved and declined states. */
 export default function SlotSummary({ request }: Readonly<{ request: SlotDecisionRow }>) {
-  const start = new Date(request.start_at);
-  const end = new Date(request.end_at);
-  const window = `${format(start, 'EEE, d MMM yyyy · h:mm a')} – ${format(end, 'h:mm a')}`;
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  // Whole-day / multi-day aware — a bare start-day + times would misread both.
+  const window = slotSpanLabel(request.start_at, request.end_at, request.whole_day, fmt, t('shell.slots.wholeDay'));
   const place = [request.venue_name, request.space_label].filter(Boolean).join(' · ');
 
   return (

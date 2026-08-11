@@ -8,6 +8,7 @@ export const VENUE_SLOTS = gql`
       venue_id
       start_at
       end_at
+      whole_day
       price
       space_label
       capacity
@@ -82,6 +83,8 @@ export interface VenueSlotRow {
   venue_id: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day?: boolean;
   price: number;
   // Optional so a plain calendar VenueSlotRow (no space fields) stays assignable.
   space_label?: string;

@@ -34,6 +34,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       pickVenueFirst: 'Select a venue first to see its available slots.',
       currentlyBooked: 'Currently booked for this pod',
       wholeVenue: 'Whole venue',
+      wholeDay: 'Whole day',
       meetingHint: 'Greyed-out slots are already booked.',
       meetingRescheduleHint:
         'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',

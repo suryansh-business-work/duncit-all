@@ -13,7 +13,7 @@ export interface VenueSlotFieldProps {
    * The pod's already-booked slot when editing. A booked slot is no longer
    * "available", so it is merged back in and never auto-cleared.
    */
-  currentSlot?: { id: string; start_at: string; end_at: string } | null;
+  currentSlot?: { id: string; start_at: string; end_at: string; whole_day?: boolean } | null;
   onSelect: (slot: { id: string; start_at: string; end_at: string } | null) => void;
 }
 
@@ -35,6 +35,7 @@ export default function VenueSlotField({
     const booked: VenueSlot | null = currentSlot
       ? {
           ...currentSlot,
+          whole_day: currentSlot.whole_day ?? false,
           notes: slotLabels.currentlyBooked,
           price: 0,
           space_label: '',
@@ -45,6 +46,7 @@ export default function VenueSlotField({
       id: slot.id,
       start_at: slot.start_at,
       end_at: slot.end_at,
+      whole_day: slot.whole_day,
       price: slot.price,
       // The space is what tells two 10:00 tiles apart; the booked-slot note
       // takes the line instead, since that slot has no space of its own.

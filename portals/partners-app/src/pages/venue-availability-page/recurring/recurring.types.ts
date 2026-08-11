@@ -31,6 +31,8 @@ export interface RecurringConfig {
   startDate: Date | null;
   endDate: Date | null;
   weekdays: number[]; // selected 0..6
+  /** Each eligible day becomes ONE whole-day slot; timeSlots are ignored. */
+  wholeDay: boolean;
   timeSlots: TimeRange[]; // one slot generated per range, per space, per day
   spaces: SpacePrice[]; // one slot generated per space
   bufferMinutes: number; // enforced gap between adjacent time ranges
@@ -41,6 +43,7 @@ export interface RecurringConfig {
 export interface GeneratedSlot {
   start_at: string; // ISO
   end_at: string; // ISO
+  whole_day: boolean;
   price: number;
   space_label: string;
   capacity: number;

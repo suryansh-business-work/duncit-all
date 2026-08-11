@@ -19,6 +19,8 @@ export {
   slotDayLabel,
   slotPriceLabel,
   slotRangeLabel,
+  slotSpanLabel,
+  slotTileLines,
   slotTimeLabel,
   withCurrentSlot,
 } from './group';

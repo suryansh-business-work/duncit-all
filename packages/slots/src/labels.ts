@@ -33,6 +33,7 @@ export function mwebSlotLabels(t: SlotTranslate): SlotLabels {
     pickVenueFirst: t('mweb.slots.pickVenueFirst'),
     currentlyBooked: t('mweb.slots.currentlyBooked'),
     wholeVenue: t('mweb.slots.wholeVenue'),
+    wholeDay: t('mweb.slots.wholeDay'),
   };
 }
 
@@ -53,6 +54,7 @@ export function shellSlotLabels(t: SlotTranslate): SlotLabels {
     pickVenueFirst: t('shell.slots.pickVenueFirst'),
     currentlyBooked: t('shell.slots.currentlyBooked'),
     wholeVenue: t('shell.slots.wholeVenue'),
+    wholeDay: t('shell.slots.wholeDay'),
   };
 }
 

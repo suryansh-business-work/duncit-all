@@ -5203,6 +5203,148 @@ export type LeadSurveySource =
   | 'LINK'
   | 'MANUAL';
 
+/** One points ledger row joined to its user and pod, for Admin > Leaderboard. */
+export type LeaderboardAdminPoint = {
+  __typename?: 'LeaderboardAdminPoint';
+  category: LeaderboardCategory;
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  pod_title: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  /** Business key of the earning event — pod id, or order:product:variant. */
+  source_id: Scalars['String']['output'];
+  source_type: Scalars['String']['output'];
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (leaderboardPointsTable). */
+export type LeaderboardAdminPointTablePage = {
+  __typename?: 'LeaderboardAdminPointTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<LeaderboardAdminPoint>;
+  total: Scalars['Int']['output'];
+};
+
+/** One board ranked over one window, with the caller's own position. */
+export type LeaderboardBoard = {
+  __typename?: 'LeaderboardBoard';
+  category: LeaderboardCategory;
+  /** The caller's points in this window — 0 when they have none yet. */
+  my_points: Scalars['Float']['output'];
+  /** The caller's 1-based rank. Null until they hold points in this window. */
+  my_rank?: Maybe<Scalars['Int']['output']>;
+  /** Distinct users holding at least one point in this window. */
+  participants: Scalars['Int']['output'];
+  period: LeaderboardPeriod;
+  /** Top rows, best first. Rank counts everyone, not just this page. */
+  rows: Array<LeaderboardEntry>;
+};
+
+/** The five boards. Each ranks a different way of showing up for the platform. */
+export type LeaderboardCategory =
+  | 'BRAND'
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'USER'
+  | 'VENUE';
+
+/** One headline card per board for Admin > Leaderboard > Boards. */
+export type LeaderboardCategoryStats = {
+  __typename?: 'LeaderboardCategoryStats';
+  /** Ledger rows written on this board. */
+  awards_count: Scalars['Int']['output'];
+  category: LeaderboardCategory;
+  /** Distinct users holding at least one point on this board. */
+  participants: Scalars['Int']['output'];
+  /** Every point ever granted on this board. */
+  total_points: Scalars['Float']['output'];
+};
+
+/**
+ * Points-per-action plus the reward list. The apps render "How to increase
+ * your points" and the rewards showcase from this, so changing a number in
+ * Admin > Leaderboard changes what every surface promises — no client release.
+ */
+export type LeaderboardConfig = {
+  __typename?: 'LeaderboardConfig';
+  /** Points a club admin earns when a pod of their club completes. */
+  points_per_club_pod: Scalars['Float']['output'];
+  /** Points a host earns when their pod completes. */
+  points_per_host: Scalars['Float']['output'];
+  /** Points a member earns for each successful pod join. */
+  points_per_join: Scalars['Float']['output'];
+  /** Points a brand owner earns per product sold. */
+  points_per_product_sale: Scalars['Float']['output'];
+  /** Points a venue owner earns when a pod completes at their venue. */
+  points_per_venue_pod: Scalars['Float']['output'];
+  /** Active rewards only, in display order. */
+  rewards: Array<LeaderboardReward>;
+};
+
+/** One ranked row of a board. */
+export type LeaderboardEntry = {
+  __typename?: 'LeaderboardEntry';
+  avatar_url: Scalars['String']['output'];
+  /** True when this row is the caller. */
+  is_me: Scalars['Boolean']['output'];
+  /** Display name from the profile. May be empty for a deleted account. */
+  name: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  rank: Scalars['Int']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** Ranking window. MONTH and YEAR are the current calendar window, in UTC. */
+export type LeaderboardPeriod =
+  | 'ALL'
+  | 'MONTH'
+  | 'YEAR';
+
+/** A prize the admin promises for finishing a window inside a rank range. */
+export type LeaderboardReward = {
+  __typename?: 'LeaderboardReward';
+  category: LeaderboardCategory;
+  description: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  period: LeaderboardRewardPeriod;
+  rank_from: Scalars['Int']['output'];
+  rank_to: Scalars['Int']['output'];
+  sort_order: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type LeaderboardRewardInput = {
+  category: LeaderboardCategory;
+  description?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  period: LeaderboardRewardPeriod;
+  rank_from: Scalars['Int']['input'];
+  rank_to: Scalars['Int']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  title: Scalars['String']['input'];
+};
+
+/** When a reward's window closes and it is handed out. */
+export type LeaderboardRewardPeriod =
+  | 'MONTHLY'
+  | 'YEARLY';
+
+/** The admin view of the settings singleton — every reward, active or not. */
+export type LeaderboardSettings = {
+  __typename?: 'LeaderboardSettings';
+  points_per_club_pod: Scalars['Float']['output'];
+  points_per_host: Scalars['Float']['output'];
+  points_per_join: Scalars['Float']['output'];
+  points_per_product_sale: Scalars['Float']['output'];
+  points_per_venue_pod: Scalars['Float']['output'];
+  rewards: Array<LeaderboardReward>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 export type LegalDocument = {
   __typename?: 'LegalDocument';
   content: Scalars['String']['output'];
@@ -6650,6 +6792,7 @@ export type Mutation = {
   updateInterview: Interview;
   updateInventoryProduct: InventoryProduct;
   updateJobApplicationStatus: JobApplication;
+  updateLeaderboardSettings: LeaderboardSettings;
   updateLegalDocument: LegalDocument;
   updateLocation: Location;
   /** Support portal: steps 2 and 3 — the reply message, the queue and the window. */
@@ -9353,6 +9496,11 @@ export type MutationUpdateJobApplicationStatusArgs = {
 };
 
 
+export type MutationUpdateLeaderboardSettingsArgs = {
+  input: UpdateLeaderboardSettingsInput;
+};
+
+
 export type MutationUpdateLegalDocumentArgs = {
   id: Scalars['ID']['input'];
   input: UpdateLegalDocumentInput;
@@ -12053,6 +12201,16 @@ export type Query = {
   leadSurveyByToken: PublicLeadSurvey;
   /** Server-side table page (filter/sort/paginate) over one lead's survey entries. */
   leadSurveyEntriesTable: LeadSurveyEntryTablePage;
+  /** One ranked board with the caller's own points and rank. Period defaults to MONTH. */
+  leaderboard: LeaderboardBoard;
+  /** Admin > Leaderboard > Boards headline cards. */
+  leaderboardAdminStats: Array<LeaderboardCategoryStats>;
+  /** Points-per-action and active rewards. Public, like the ad rate card. */
+  leaderboardConfig: LeaderboardConfig;
+  /** Admin > Leaderboard > Points Ledger. */
+  leaderboardPointsTable: LeaderboardAdminPointTablePage;
+  /** Admin > Leaderboard > Settings & Rewards. */
+  leaderboardSettings: LeaderboardSettings;
   legalDocument?: Maybe<LegalDocument>;
   /**
    * The contract as a PDF (base64) — the same document before and after
@@ -13458,6 +13616,17 @@ export type QueryLeadSurveyByTokenArgs = {
 export type QueryLeadSurveyEntriesTableArgs = {
   entity: LeadSurveyEntity;
   lead_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryLeaderboardArgs = {
+  category: LeaderboardCategory;
+  period?: InputMaybe<LeaderboardPeriod>;
+};
+
+
+export type QueryLeaderboardPointsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -16693,6 +16862,16 @@ export type UpdateInventoryProductInput = {
   visibility?: InputMaybe<InventoryVisibility>;
   weight_kg?: InputMaybe<Scalars['Float']['input']>;
   weight_volume?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Scalars are patched individually; a present rewards array replaces the whole list. */
+export type UpdateLeaderboardSettingsInput = {
+  points_per_club_pod?: InputMaybe<Scalars['Float']['input']>;
+  points_per_host?: InputMaybe<Scalars['Float']['input']>;
+  points_per_join?: InputMaybe<Scalars['Float']['input']>;
+  points_per_product_sale?: InputMaybe<Scalars['Float']['input']>;
+  points_per_venue_pod?: InputMaybe<Scalars['Float']['input']>;
+  rewards?: InputMaybe<Array<LeaderboardRewardInput>>;
 };
 
 export type UpdateLegalDocumentInput = {

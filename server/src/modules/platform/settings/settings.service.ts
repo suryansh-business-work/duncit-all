@@ -308,6 +308,13 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    key: "leaderboard",
+    name: "Leaderboard",
+    description:
+      "Show the Leaderboard section (boards, points and rewards) in the mobile app and mobile web sidebar.",
+    enabled: false,
+  },
+  {
     // Seeded ON so enabling this feature changes nothing for users already on
     // the current build — turning it OFF is the deliberate act.
     key: "force_app_update",

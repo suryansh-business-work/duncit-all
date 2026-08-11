@@ -24,6 +24,7 @@ export type ProfileIconKey =
   | 'cart'
   | 'wallet'
   | 'coin'
+  | 'leaderboard'
   | 'host'
   | 'venue'
   | 'ecomm'

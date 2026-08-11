@@ -671,6 +671,14 @@ export const paymentReleaseService = {
       await autoApprove(doc, actor.id);
     }
 
+    // Leaderboard points for host, venue owner and club admin ride the same
+    // trigger. Best-effort and idempotent inside the service — a points hiccup
+    // must never fail a completion whose wallets are already credited.
+    const { leaderboardService } = await import(
+      '@modules/engagement/leaderboard/leaderboard.service'
+    );
+    await leaderboardService.awardForCompletedPod(pod, String(hostBeneficiary.host_user_id));
+
     return { settlement, releases: releases.map(toPub) };
   },
 

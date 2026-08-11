@@ -1642,12 +1642,31 @@ jobs:
               echo ">>> Skipping $d in certbot (DNS not resolving yet)"
             fi
           done
-          # Always (re)deploy the core cert + 443 listeners.
-          $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE || true
-          # Best-effort expansion for the newer domains; a failure here must NOT
-          # drop the core HTTPS already installed above.
-          if [ -n "$CERTBOT_EXTRA" ]; then
-            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE $CERTBOT_EXTRA || true
+          # ONE run with every domain that belongs on the cert.
+          #
+          # This used to be two runs: CORE alone, then CORE+EXTRA. That made
+          # every deploy issue TWO certificates and, worse, flip the lineage's
+          # identifier set back and forth — CORE one minute, CORE+EXTRA the
+          # next — so certbot could never answer "not yet due for renewal" and
+          # each deploy burned an issuance from BOTH sets. Let's Encrypt allows
+          # 5 certificates per EXACT set of identifiers per 168h, so a few
+          # deploys in one day exhausted them and certbot started failing with
+          # `rateLimited`. The newest domain (redis.duncit.com) then never made
+          # it onto the cert, its 443 block was never written, and the hostname
+          # fell through to another site's default server — a browser landing
+          # on redis.duncit.com got a foreign certificate and a hard TLS error.
+          #
+          # With one stable set, a deploy that changes no domains asks for the
+          # set already on disk, certbot issues nothing at all, and the limit is
+          # only ever touched when the domain list genuinely changes.
+          if ! $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE $CERTBOT_EXTRA; then
+            # Only on failure — a brand-new domain that cannot validate yet, or
+            # a rate limit — fall back to CORE so the established subdomains
+            # keep their HTTPS. This is the second identifier set whose churn
+            # caused the outage above, so it must stay a fallback and never
+            # become an unconditional run again.
+            echo "::warning::certbot failed for the full domain set; retrying CORE only"
+            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE || true
           fi
           $SUDO nginx -t
           $SUDO systemctl reload nginx

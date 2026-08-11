@@ -21,6 +21,7 @@ const PostPage = lazy(() => import('../pages/PostPage'));
 const FollowPage = lazy(() => import('../pages/FollowPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
 const PodDetailsPage = lazy(() => import('../pages/PodDetailsPage'));
+const PodFeedbackPage = lazy(() => import('../pages/pod-feedback-page'));
 const ClubDetailsPage = lazy(() => import('../pages/ClubDetailsPage'));
 const HostsVenuesPage = lazy(() => import('../pages/HostsVenuesPage'));
 const SurveyGatePage = lazy(() => import('../pages/survey-gate'));
@@ -138,6 +139,10 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
         <Route path="/venues" element={withAuth(<VenuesPage locationId={locationId} />)} />
         <Route path="/club/:clubSlug/pod/:podSlug" element={withAuth(<PodDetailsPage />)} />
+        {/* The rating link a host shares with their guests. Auth-gated like
+            every other page, so an unread link parks in `?redirect` and opens
+            straight after sign-in. */}
+        <Route path="/pod/:podId/feedback" element={withAuth(<PodFeedbackPage />)} />
         <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
         <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />
         <Route path="/register-venue" element={<PartnerRedirect path="/register-venue" />} />

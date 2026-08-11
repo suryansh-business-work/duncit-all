@@ -113,6 +113,19 @@ export const envEntryResolvers = {
       return envEntryService.setPortalAssignments(args.portalKey, args.entryIds);
     },
 
+    importEnvEntries: async (_p: unknown, args: { entries: any[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      // Each entry's own category decides which keys survive: pairsToConfig
+      // drops anything the category does not define, so a file carrying a key
+      // this server has never heard of cannot smuggle it into the document.
+      return envEntryService.importEntries(
+        args.entries.map(({ config, ...rest }) => ({
+          ...rest,
+          config: pairsToConfig(rest.category, config),
+        }))
+      );
+    },
+
     testEnvConnection: async (
       _p: unknown,
       args: { id: string; input?: { to?: string | null } | null },

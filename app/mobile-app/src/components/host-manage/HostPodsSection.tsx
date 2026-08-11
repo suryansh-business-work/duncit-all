@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { RootStackParamList } from '@/navigation/types';
+import { useFeedbackLinkActions } from '@/hooks/useFeedbackLinkActions';
 import { useHostPods, type HostPod } from '@/hooks/useHostPods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
@@ -14,9 +15,8 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from '@/utils/host-pods-filters';
-import { podTypeLabel } from '@/utils/pod-format';
-import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
-import { HostPodRow } from './HostPodRow';
+import { isVenueRejected } from '@/utils/venue-approval';
+import { HostPodsList } from './HostPodsList';
 import { HostPodsFilterSheet } from './HostPodsFilterSheet';
 import { PodActionsSheet } from './PodActionsSheet';
 import { TicketScanDialog, type ScanTarget } from './ticket-scan';
@@ -27,12 +27,6 @@ import { PodResubmitDialog } from './PodResubmitDialog';
 import type { HostPodSummary } from './pod-edit.form';
 import type { HostPodForComplete } from './pod-complete.form';
 import type { HostPodForResubmit } from './pod-resubmit.form';
-
-function formatWhen(value?: string | null) {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
-}
 
 interface HostPodsSectionProps {
   /** Fired after a pod completes — the screen refetches the Host Share list,
@@ -45,6 +39,7 @@ interface HostPodsSectionProps {
 export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProps>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
+  const feedbackLink = useFeedbackLinkActions();
   const { color: ink, onPrimary } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
   // The whole row, not the narrower edit shape — the sheet routes to complete,
@@ -61,6 +56,14 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
   const visible = filterHostPods(pods, filters);
   const filterActive = activeHostFilterCount(filters) > 0;
   const filterLabel = filterActive ? `Filter (${activeHostFilterCount(filters)})` : 'Filter';
+
+  /** Run one of the rating-link actions on the pod the sheet is open for. */
+  const withActionsPod = (action: (pod: HostPod) => Promise<unknown> | void) => () => {
+    // A dismissed share sheet rejects on iOS — that is the host closing it,
+    // not a failure worth showing them.
+    if (actionsPod) Promise.resolve(action(actionsPod)).catch(() => undefined);
+    setActionsPod(null);
+  };
 
   return (
     <YStack gap={12} testID="host-pods-section">
@@ -89,34 +92,18 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           </Text>
         </XStack>
       </XStack>
-      {isLoading ? <Spinner testID="host-pods-loading" color="$primary" /> : null}
-      {!isLoading && pods.length === 0 ? (
-        <Text testID="host-pods-empty" fontSize={13} color="$muted">
-          You don't host any pods yet. New pods you host will show up here.
+      {feedbackLink.notice ? (
+        <Text testID="host-pods-notice" fontSize={12.5} color="$success">
+          {feedbackLink.notice}
         </Text>
       ) : null}
-      {!isLoading && pods.length > 0 && visible.length === 0 ? (
-        <Text testID="host-pods-filtered-empty" fontSize={13} color="$muted">
-          No pods match these filters. Try adjusting or resetting them.
-        </Text>
-      ) : null}
-      {visible.map((pod) => {
-        const rejected = isVenueRejected(pod.venue_approval_status);
-        return (
-          <HostPodRow
-            key={pod.id}
-            id={pod.id}
-            title={pod.pod_title}
-            when={formatWhen(pod.pod_date_time)}
-            zoneName={pod.zone_name}
-            typeLabel={podTypeLabel(pod.pod_type)}
-            approval={venueApprovalChip(pod.venue_approval_status)}
-            rejectedNote={rejected ? VENUE_REJECTED_NOTE : null}
-            onOpen={() => openPod(pod.club_slug, pod.pod_id)}
-            onActions={() => setActionsPod(pod)}
-          />
-        );
-      })}
+      <HostPodsList
+        pods={pods}
+        visible={visible}
+        isLoading={isLoading}
+        onOpen={(pod) => openPod(pod.club_slug, pod.pod_id)}
+        onActions={setActionsPod}
+      />
       <HostPodsFilterSheet
         open={filterOpen}
         initial={filters}
@@ -155,6 +142,9 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           }
           setActionsPod(null);
         }}
+        onOpenFeedback={withActionsPod(feedbackLink.open)}
+        onShareFeedback={withActionsPod(feedbackLink.share)}
+        onCopyFeedback={withActionsPod(feedbackLink.copy)}
         onCancel={() => {
           if (actionsPod) setDeletePod({ id: actionsPod.id, title: actionsPod.pod_title });
           setActionsPod(null);

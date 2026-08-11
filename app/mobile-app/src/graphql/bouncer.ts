@@ -89,6 +89,31 @@ export const MobilePendingPodFeedbackDocument = gql(`
   }
 `);
 
+/**
+ * The rating form for one pod plus this guest's own answers, if they have
+ * already sent some — backs the shared feedback link. mWeb's POD_FEEDBACK_FORM.
+ */
+export const MobilePodFeedbackFormDocument = gql(`
+  query MobilePodFeedbackForm($pod_id: ID!) {
+    podFeedbackForm(pod_id: $pod_id) {
+      pod {
+        id
+        title
+        feedback_aspects
+      }
+      mine {
+        rating
+        ratings {
+          aspect
+          rating
+        }
+        message
+        updated_at
+      }
+    }
+  }
+`);
+
 /** Rate an attended pod — mWeb's SUBMIT_FEEDBACK. */
 export const MobileSubmitFeedbackDocument = gql(`
   mutation MobileSubmitBouncerFeedback($input: SubmitBouncerFeedbackInput!) {

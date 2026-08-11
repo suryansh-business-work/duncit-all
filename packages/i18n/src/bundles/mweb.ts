@@ -672,6 +672,22 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       submitting: 'Sending…',
       rateAspect: 'Rate {aspect} {stars} out of 5',
       failed: 'That could not be sent. Please try again.',
+      // The standalone page behind the link a host shares with their guests.
+      pageTitle: 'Rate this pod',
+      loadFailed: 'That pod could not be opened. Check the link and try again.',
+      saved: 'Thanks — your rating has been saved.',
+      alreadyRated: 'You already rated this pod. Change anything you like and send it again.',
+      update: 'Update rating',
+      updating: 'Saving…',
+      done: 'Done',
+      // The feedback link in the host's pod menu: the row opens the form, and
+      // the two icons beside it hand the link to someone else.
+      feedbackLink: 'Feedback link',
+      shareLink: 'Share feedback link',
+      copyLink: 'Copy feedback link',
+      shareMessage: 'How was “{title}”? Tell us in a minute:',
+      linkCopied: 'Feedback link copied',
+      copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
     },
     // What to say when a payment does not complete. Three outcomes, three
     // answers — a buyer whose money may have left their account must not be

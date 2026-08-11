@@ -1,47 +1,11 @@
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { ActionRow } from '@/components/host-manage/ActionRow';
+import { FeedbackLinkRow } from '@/components/host-manage/FeedbackLinkRow';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
-
-type IconName = keyof typeof MaterialIcons.glyphMap;
-
-interface ActionRowProps {
-  testID: string;
-  icon: IconName;
-  label: string;
-  tint: string;
-  danger?: boolean;
-  onPress: () => void;
-}
-
-/** One tappable action line inside the sheet. */
-function ActionRow({ testID, icon, label, tint, danger, onPress }: Readonly<ActionRowProps>) {
-  return (
-    <XStack
-      testID={testID}
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      alignItems="center"
-      gap={12}
-      height={52}
-      paddingHorizontal={14}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
-    >
-      <MaterialIcons name={icon} size={20} color={tint} />
-      <Text fontSize={14.5} fontWeight="600" color={danger ? '$danger' : '$color'}>
-        {label}
-      </Text>
-    </XStack>
-  );
-}
 
 interface Props {
   open: boolean;
@@ -50,6 +14,9 @@ interface Props {
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  onOpenFeedback: () => void;
+  onShareFeedback: () => void;
+  onCopyFeedback: () => void;
   onCancel: () => void;
 }
 
@@ -62,6 +29,9 @@ export function PodActionsSheet({
   onScan,
   onComplete,
   onEdit,
+  onOpenFeedback,
+  onShareFeedback,
+  onCopyFeedback,
   onCancel,
 }: Readonly<Props>) {
   const { color: ink, danger, primary, success } = useThemeColors();
@@ -115,6 +85,13 @@ export function PodActionsSheet({
                   label="Edit pod"
                   tint={ink}
                   onPress={onEdit}
+                />
+                {/* The rating link: tapping the row opens the form, and the two
+                    icons beside it hand the link to the people who came. */}
+                <FeedbackLinkRow
+                  onOpen={onOpenFeedback}
+                  onShare={onShareFeedback}
+                  onCopy={onCopyFeedback}
                 />
                 <ActionRow
                   testID="pod-action-cancel"

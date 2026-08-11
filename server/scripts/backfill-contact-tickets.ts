@@ -87,13 +87,30 @@ async function main(): Promise<void> {
     .find({ source: 'WEBSITE' })
     .project({ guest_email: 1, subject: 1 })
     .toArray();
-  const seen = new Set(
-    tickets.map((t: any) => `${String(t.guest_email ?? '').toLowerCase()}|${t.subject ?? ''}`)
-  );
+
+  /*
+    COUNTED, not a Set.
+
+    Membership cannot tell one ticket from three. The same person writing in
+    twice about the same thing — which is exactly what someone does when the
+    first message got no reply — produced two submissions and one ticket, and a
+    Set called both of them covered. That is the one case this script exists to
+    catch, and it was the case it silently passed. Each ticket now accounts for
+    exactly one submission.
+  */
+  const available = new Map<string, number>();
+  for (const t of tickets as any[]) {
+    const key = `${String(t.guest_email ?? '').toLowerCase()}|${t.subject ?? ''}`;
+    available.set(key, (available.get(key) ?? 0) + 1);
+  }
 
   const missing = submissions.filter((s: any) => {
     const subject = String(s.subject ?? '').trim() || DEFAULT_SUBJECT;
-    return !seen.has(`${String(s.email ?? '').toLowerCase()}|${subject}`);
+    const key = `${String(s.email ?? '').toLowerCase()}|${subject}`;
+    const left = available.get(key) ?? 0;
+    if (left === 0) return true;
+    available.set(key, left - 1);
+    return false;
   });
 
   console.log(`contact submissions : ${submissions.length}`);

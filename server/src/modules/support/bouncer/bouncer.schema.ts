@@ -141,6 +141,29 @@ export const bouncerTypeDefs = /* GraphQL */ `
     recent: [BouncerFeedback!]!
   }
 
+  """
+  One guest's own rating of a pod, exactly as they left it — the answers that
+  fill the form back in when they open the feedback link a second time.
+  """
+  type MyPodFeedback {
+    "The OVERALL score."
+    rating: Int!
+    ratings: [BouncerAspectRating!]!
+    message: String!
+    created_at: String!
+    updated_at: String!
+  }
+
+  """
+  The rating form for one pod: which parts it can be rated on, plus whatever
+  the signed-in guest has already said about it. "mine" is null until they
+  rate it, and submitting again edits that same answer.
+  """
+  type PodFeedbackForm {
+    pod: BouncerPodInfo!
+    mine: MyPodFeedback
+  }
+
   input RaiseSosInput {
     pod_id: ID!
     message: String
@@ -217,6 +240,11 @@ export const bouncerTypeDefs = /* GraphQL */ `
     myCallbackRequests(limit: Int): [BouncerCallbackRequest!]!
     "An attended (past) pod the user has not yet rated — drives the post-pod feedback pop-up."
     myPendingPodFeedback: BouncerPodInfo
+    """
+    Everything the feedback page for one pod needs — backs the shareable
+    /pod/:podId/feedback link a host sends to their guests.
+    """
+    podFeedbackForm(pod_id: ID!): PodFeedbackForm!
   }
 
   extend type Mutation {

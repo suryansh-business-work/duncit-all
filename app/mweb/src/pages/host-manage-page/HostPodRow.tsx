@@ -16,6 +16,9 @@ interface Props {
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  onOpenFeedback: () => void;
+  onShareFeedback: () => void;
+  onCopyFeedback: () => void;
   onCancel: () => void;
 }
 
@@ -26,6 +29,9 @@ export default function HostPodRow({
   onScan,
   onComplete,
   onEdit,
+  onOpenFeedback,
+  onShareFeedback,
+  onCopyFeedback,
   onCancel,
 }: Readonly<Props>) {
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -72,6 +78,9 @@ export default function HostPodRow({
           onScan={onScan}
           onComplete={onComplete}
           onEdit={onEdit}
+          onOpenFeedback={onOpenFeedback}
+          onShareFeedback={onShareFeedback}
+          onCopyFeedback={onCopyFeedback}
           onCancel={onCancel}
         />
       </Stack>

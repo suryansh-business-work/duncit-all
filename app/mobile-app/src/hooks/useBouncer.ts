@@ -7,6 +7,7 @@ import {
   MobileActiveSosDocument,
   MobileMyCallbacksDocument,
   MobilePendingPodFeedbackDocument,
+  MobilePodFeedbackFormDocument,
   MobileRaiseSosDocument,
   MobileRequestCallbackDocument,
   MobileSubmitFeedbackDocument,
@@ -21,6 +22,7 @@ export type CallbackHistoryItem = ResultOf<
 export type PendingPodFeedback = ResultOf<
   typeof MobilePendingPodFeedbackDocument
 >['myPendingPodFeedback'];
+export type PodFeedbackForm = ResultOf<typeof MobilePodFeedbackFormDocument>['podFeedbackForm'];
 
 /** Best-effort current location for an SOS — null if permission denied/unavailable. */
 async function captureLocation(): Promise<{
@@ -87,6 +89,16 @@ export function useBouncer() {
     [],
   );
 
+  // The rating form behind the link a host shares: the parts this pod can be
+  // rated on, plus whatever this guest already said about it.
+  const getPodFeedbackForm = useCallback(
+    (podId: string): Promise<PodFeedbackForm> =>
+      graphqlRequest(MobilePodFeedbackFormDocument, { pod_id: podId }, { auth: true }).then(
+        (d) => d.podFeedbackForm,
+      ),
+    [],
+  );
+
   // The input is built by @duncit/utils so mWeb and native send the same shape;
   // the category is left out on purpose — the server reads it from the weakest
   // score rather than asking the guest to triage their own feedback.
@@ -101,6 +113,7 @@ export function useBouncer() {
     requestCallback,
     listMyCallbacks,
     getPendingPodFeedback,
+    getPodFeedbackForm,
     submitPodFeedback,
   };
 }

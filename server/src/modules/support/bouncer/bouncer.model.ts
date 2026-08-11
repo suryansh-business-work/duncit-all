@@ -170,4 +170,9 @@ const feedbackSchema = new Schema<IBouncerFeedback>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
+// A guest has ONE opinion of a pod, not a new one every time they open the
+// form: this pair is how a rating is looked up, so re-rating edits what they
+// already said instead of stacking another row on top of it.
+feedbackSchema.index({ user_id: 1, pod_id: 1 });
+
 export const BouncerFeedbackModel = model<IBouncerFeedback>('BouncerFeedback', feedbackSchema);

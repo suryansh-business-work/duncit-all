@@ -7,13 +7,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import {
-  POD_FEEDBACK_ASPECT_KEY,
   buildPodFeedbackInput,
   canSubmitPodFeedback,
   orderedAspects,
@@ -21,7 +18,7 @@ import {
 } from '@duncit/utils';
 import { MY_PENDING_POD_FEEDBACK, SUBMIT_FEEDBACK } from '../../pages/support-hub/queries';
 import { useTranslation } from '../../i18n/useTranslation';
-import AspectRatingRow from './AspectRatingRow';
+import PodFeedbackFields from './PodFeedbackFields';
 
 interface PendingPod {
   id: string;
@@ -81,32 +78,12 @@ export default function PodFeedbackPrompt() {
             {t('mweb.podFeedback.subtitle')}
           </Typography>
 
-          <Stack divider={<Divider flexItem />}>
-            {aspects.map((aspect) => {
-              const label = t(POD_FEEDBACK_ASPECT_KEY[aspect]);
-              return (
-                <AspectRatingRow
-                  key={aspect}
-                  label={label}
-                  value={scores[aspect] ?? 0}
-                  onChange={(value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
-                  starLabel={(stars) =>
-                    t('mweb.podFeedback.rateAspect', { vars: { aspect: label, stars } })
-                  }
-                />
-              );
-            })}
-          </Stack>
-
-          <TextField
-            size="small"
-            label={t('mweb.podFeedback.comments')}
-            placeholder={t('mweb.podFeedback.commentsPlaceholder')}
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            multiline
-            minRows={2}
-            inputProps={{ maxLength: 1000 }}
+          <PodFeedbackFields
+            aspects={aspects}
+            scores={scores}
+            onScore={(aspect, value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
+            message={message}
+            onMessage={setMessage}
           />
           {failed && <Alert severity="error">{t('mweb.podFeedback.failed')}</Alert>}
         </Stack>

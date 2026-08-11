@@ -1,3 +1,4 @@
+import dns from 'node:dns/promises';
 import mongoose from 'mongoose';
 
 /**
@@ -52,17 +53,101 @@ export async function connectForMigration({ dry }: MigrationTarget): Promise<mon
   try {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });
   } catch (error) {
-    console.error(explainConnectionFailure(uri, error));
-    process.exit(1);
+    // A blocked SRV lookup is not an unreachable cluster — it is a resolver
+    // that will not answer this record type. Try again over public DNS before
+    // telling anyone their database is unreachable.
+    const resolved = await srvFallbackUri(uri, error);
+    if (!resolved) {
+      console.error(explainConnectionFailure(uri, error));
+      process.exit(1);
+    }
+    console.log('SRV lookup was refused locally — resolved the cluster over public DNS.');
+    try {
+      await mongoose.connect(resolved, { serverSelectionTimeoutMS: 8000 });
+    } catch (retryError) {
+      console.error(explainConnectionFailure(uri, retryError));
+      process.exit(1);
+    }
   }
 
   console.log(`Connected to ${mongoose.connection.name} (${dry ? 'DRY RUN' : 'WRITING'})\n`);
   return mongoose.connection;
 }
 
+/**
+ * Public resolvers to fall back to, in order: Cloudflare, then Google.
+ *
+ * Hardcoded deliberately (Sonar S1313): the whole point is to bypass whatever
+ * the machine's own resolver is, so taking these from the environment that is
+ * already failing would defeat it. They are queried for one SRV and one TXT
+ * record on a public hostname — no credentials leave the process.
+ */
+const PUBLIC_DNS = ['1.1.1.1', '8.8.8.8'];
+
+const messageOf = (error: unknown): string =>
+  error instanceof Error ? error.message : JSON.stringify(error);
+
+/** Does this failure look like "the resolver would not answer", rather than
+ * "the database said no"? */
+const isSrvLookupFailure = (error: unknown): boolean =>
+  /querySrv|queryTxt|ENOTFOUND|EAI_AGAIN|ECONNREFUSED/i.test(messageOf(error));
+
+/**
+ * Turn a `mongodb+srv://` URI into the plain `mongodb://` one it stands for,
+ * resolving the SRV and TXT records over public DNS.
+ *
+ * `mongodb+srv` is only sugar: the driver looks up `_mongodb._tcp.<host>` for
+ * the seed list and a TXT record on `<host>` for default options, then connects
+ * normally. When the local resolver refuses those queries — corporate DNS and
+ * sandboxes commonly do — the cluster is perfectly reachable and the driver
+ * still cannot start. This does the same two lookups against a resolver that
+ * answers, and hands back an equivalent URI.
+ *
+ * Returns null when the failure was not a lookup problem, or when the records
+ * cannot be read even over public DNS — in which case the caller reports the
+ * original error rather than a misleading one about DNS.
+ */
+async function srvFallbackUri(uri: string, error: unknown): Promise<string | null> {
+  if (!uri.startsWith('mongodb+srv://') || !isSrvLookupFailure(error)) return null;
+
+  let parsed: URL;
+  try {
+    // The URL parser accepts the scheme; credentials and path come out intact.
+    parsed = new URL(uri);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname;
+
+  for (const server of PUBLIC_DNS) {
+    try {
+      const resolver = new dns.Resolver();
+      resolver.setServers([server]);
+      const [records, txt] = await Promise.all([
+        resolver.resolveSrv(`_mongodb._tcp.${host}`),
+        resolver.resolveTxt(host).catch(() => [] as string[][]),
+      ]);
+      if (records.length === 0) continue;
+
+      const seeds = records.map((r) => `${r.name}:${r.port}`).join(',');
+      // The TXT record carries cluster defaults (authSource, replicaSet). Its
+      // options come FIRST so anything explicit on the original URI wins.
+      const fromTxt = txt.flat().join('&');
+      const own = parsed.search.replace(/^\?/, '');
+      const options = ['tls=true', fromTxt, own].filter(Boolean).join('&');
+      const secret = parsed.password ? `:${parsed.password}` : '';
+      const auth = parsed.username ? `${parsed.username}${secret}@` : '';
+      return `mongodb://${auth}${seeds}${parsed.pathname}?${options}`;
+    } catch {
+      // Try the next resolver.
+    }
+  }
+  return null;
+}
+
 /** Turn a driver error into something that says what to do about it. */
 function explainConnectionFailure(uri: string, error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = messageOf(error);
   const local = isLocalUri(uri);
   if (local && /ECONNREFUSED/i.test(message)) {
     return (

@@ -44,8 +44,6 @@ export const ReferralModel: Model<IReferral> =
 export interface IReferralSettings {
   singleton_key: string;
   gift_description: string;
-  /** Coins paid to EACH side of a referral — the referrer and the new member. */
-  coins_per_referral: number;
   /** The message a share sheet pre-fills. See DEFAULT_REFERRAL_MESSAGE for the
    * placeholders it may use. */
   share_message: string;
@@ -54,7 +52,9 @@ export interface IReferralSettings {
 const referralSettingsSchema = new Schema<IReferralSettings>({
   singleton_key: { type: String, default: 'referral', unique: true },
   gift_description: { type: String, default: '' },
-  coins_per_referral: { type: Number, default: 50, min: 0 },
+  // `coins_per_referral` used to live here. It moved to CoinSettings, where the
+  // rest of the coin payout rules are; coinSettingsService.seed() carries the
+  // configured value across on first boot after the move.
   // Stored empty rather than seeded with the default text: an empty column is
   // "Finance has not written one", which the apps answer with the shipped
   // default. Copying the default in would freeze today's wording into the

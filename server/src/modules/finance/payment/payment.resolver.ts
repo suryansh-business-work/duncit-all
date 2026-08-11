@@ -38,6 +38,10 @@ export const paymentResolvers = {
       requireRole(ctx, ADMIN_READ);
       return paymentService.list(args.filter, args.limit ?? 200);
     },
+    paymentTotals: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return paymentService.totals(args.filter);
+    },
     paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return paymentService.table(args.query);

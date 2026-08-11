@@ -79,6 +79,7 @@ export default function CompletePodDialog({
 
   const submit = handleSubmit((values) => onSubmit(values));
   const venueBillAmount = Number(watch('venue_bill_amount')) || 0;
+  const selectedHostId = watch('host_user_id') || '';
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -113,7 +114,9 @@ export default function CompletePodDialog({
                   />
                 )}
               />
-              {pod && <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} />}
+              {pod && (
+                <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} hostUserId={selectedHostId} />
+              )}
               <RhfTextField control={control} name="notes" label="Notes" multiline minRows={2} />
               <Button type="submit" variant="contained" disabled={busy}>
                 {busy ? 'Completing…' : 'Complete pod'}

@@ -8,6 +8,7 @@ export const MY_COIN_BALANCE = gql`
       balance
       lifetime_earned
       earn_pct
+      shop_earn_pct
     }
   }
 `;
@@ -18,6 +19,7 @@ export const MY_COIN_TRANSACTIONS = gql`
       balance
       lifetime_earned
       earn_pct
+      shop_earn_pct
     }
     myCoinTransactions {
       id
@@ -48,5 +50,7 @@ export interface CoinTransaction {
 export interface CoinBalance {
   balance: number;
   lifetime_earned: number;
+  /** Pod-join rate. Named `earn_pct` on the server since it predates the split. */
   earn_pct: number;
+  shop_earn_pct: number;
 }

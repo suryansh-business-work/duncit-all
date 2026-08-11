@@ -127,7 +127,11 @@ const stat = (total: number, thisMonth: number, lastMonth: number): FinanceStat 
 function waterfallFromSnapshot(hostRelease: IPaymentRelease, venueRelease: IPaymentRelease | null): SettlementWaterfall {
   const b = hostRelease.breakdown!;
   const vb = venueRelease?.breakdown ?? null;
-  const amount = b.collected_total;
+  // The waterfall was computed from the ATTENDANCE basis, so that is the top
+  // line it reconciles against — collected_total is the whole pod's money and
+  // rendering it above attendance-based lines broke the invariant (and skewed
+  // host_earn_pct). Older snapshots without attended_total fall back.
+  const amount = b.attended_total || b.collected_total;
   return {
     version: b.version,
     amount,
@@ -217,8 +221,11 @@ export const breakdownService = {
       });
       // Live view: the venue side is its booked slot price (Partners portal);
       // no bill has been entered yet, so legacy pods without a slot show 0.
+      // Unclamped like settlement itself — the venue is owed its booked price,
+      // so the live view must quote the same venue money completion will pay
+      // (a shortfall shows as a negative host amount here too).
       const venueAmount = await venueAmountForPod(pod, 0);
-      waterfall = waterfallForAmount(collected, venueAmount, rates);
+      waterfall = waterfallForAmount(collected, venueAmount, rates, { clampVenueToPool: false });
     }
 
     return {
@@ -272,7 +279,7 @@ export const breakdownService = {
       payable_spots: billable,
       // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
       // — a shortfall renders as negative host earnings so the clients can show
-      // the real gap. Settlement keeps the legacy clamp (see breakdown.math).
+      // the real gap. Settlement runs the same unclamped branch.
       waterfall: waterfallForAmount(amount, venuePrice, rates, { clampVenueToPool: false }),
     };
   },
@@ -356,8 +363,8 @@ export const breakdownService = {
    * hostResubmitPod: a PAID pod must (a) fully cover the venue's fixed slot
    * price with its total pod value (ticket price × payable spots) and (b)
    * leave the host a strictly positive projected payout. Free pods (amount 0)
-   * are exempt. Settlement NEVER calls this — legacy shortfall pods keep
-   * settling under the clamped engine unchanged.
+   * are exempt. Settlement NEVER calls this — already-created shortfall pods
+   * still settle (unclamped: the venue is paid in full, the host floored at 0).
    */
   async assertViablePodEconomics(input: {
     hostUserId: string | null;

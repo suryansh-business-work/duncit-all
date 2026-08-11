@@ -14,7 +14,7 @@ interface Props {
   results: PodProfitResults;
 }
 
-type Emphasis = 'primary' | 'success' | 'warning' | 'default';
+type Emphasis = 'primary' | 'success' | 'warning' | 'error' | 'default';
 
 interface RowProps {
   label: string;
@@ -27,6 +27,7 @@ const COLORS: Record<Emphasis, string> = {
   primary: 'primary.main',
   success: 'success.main',
   warning: 'warning.main',
+  error: 'error.main',
   default: 'text.primary',
 };
 
@@ -56,6 +57,12 @@ function SectionLabel({ text }: Readonly<{ text: string }>) {
 
 export default function ResultsCard({ results }: Readonly<Props>) {
   const hostShare = Math.min(Math.max(results.host_earn_percent, 0), 100);
+  const hostShortfall = results.host_receives < 0;
+  const hostEmphasis: Emphasis = hostShortfall ? 'error' : 'success';
+  const hostDetailBase = `Host amount ${formatRupees(results.host_amount)} − commission`;
+  const hostDetail = hostShortfall
+    ? `${hostDetailBase} — the venue's booked price exceeds the pool; the shortfall lands on the host`
+    : hostDetailBase;
   return (
     <Card sx={{ position: { lg: 'sticky' }, top: { lg: 84 } }}>
       <CardContent>
@@ -120,8 +127,8 @@ export default function ResultsCard({ results }: Readonly<Props>) {
         <Row
           label="Host receives"
           value={formatRupees(results.host_receives)}
-          emphasis="success"
-          detail={`Host amount ${formatRupees(results.host_amount)} − commission`}
+          emphasis={hostEmphasis}
+          detail={hostDetail}
         />
 
         <Divider sx={{ my: 1 }} />

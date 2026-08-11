@@ -235,6 +235,33 @@ export const ticketService = {
     }
     await doc.save();
 
+    // An EMAIL ticket's sender is holding a mail thread, maybe with no app at
+    // all — so an agent's words must also reach their inbox, sent from the
+    // SAME connected mailbox the message arrived in, threaded onto the same
+    // conversation (see platform/mailAutomation/mailAutomation.outbound). The
+    // reply above is already saved: a failed send becomes a SYSTEM note on the
+    // ticket rather than a thrown error, so the agent sees the truth and a
+    // retry cannot double-post what they wrote.
+    if (isAgent && doc!.source === 'EMAIL') {
+      const { sendAgentTicketReply } = await import(
+        '@modules/platform/mailAutomation/mailAutomation.outbound'
+      );
+      const outcome = await sendAgentTicketReply(String(doc!._id), bodyText);
+      if (!outcome.sent) {
+        doc!.messages.push({
+          author_id: new Types.ObjectId(actorId),
+          author_role: 'SYSTEM',
+          body_html: '',
+          body_text:
+            `This reply was saved to the ticket but could NOT be emailed to ` +
+            `${doc!.guest_email || 'the sender'}: ${outcome.reason}`,
+          attachments: [],
+        } as any);
+        doc!.last_message_at = new Date();
+        await doc!.save();
+      }
+    }
+
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);

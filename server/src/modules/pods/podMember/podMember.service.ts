@@ -529,7 +529,11 @@ async function previewRefund(
   if (!payment) return none;
   const paidSeats = normalizeSeats((payment.metadata as any)?.seats ?? membership.seats ?? 1);
   const held = normalizeSeats(membership.seats ?? 1);
-  const perSeatPaid = payment.total / paidSeats;
+  // Seats are valued on the TICKET money only: the payment's total can carry
+  // one-off product add-ons which are not per-seat and are not returned (the
+  // product order still ships) — `requestBackout` divides the same way.
+  const productMoney = Number((payment.metadata as any)?.product_cost_total) || 0;
+  const perSeatPaid = Math.max(0, payment.total - productMoney) / paidSeats;
   return {
     perSeat: refundAfterDeduction(perSeatPaid, pct),
     total: refundAfterDeduction(round2(perSeatPaid * held), pct),
@@ -812,8 +816,13 @@ export const podMemberService = {
     // instead of a quarter. Releasing one at a time would pay out more than was
     // ever collected. `previewRefund` uses the same divisor, so the number the
     // buyer was shown is the number Finance is told to pay.
+    // And on the TICKET money only: product add-ons ride on the same payment
+    // but are not per-seat and are not returned on a backout — the buyer keeps
+    // the products and the product order still fulfils.
     const paidSeats = normalizeSeats((payment?.metadata as any)?.seats ?? held);
-    const paymentAmount = payment ? round2((payment.total * release) / paidSeats) : null;
+    const productMoney = Number((payment?.metadata as any)?.product_cost_total) || 0;
+    const ticketPaid = payment ? Math.max(0, payment.total - productMoney) : 0;
+    const paymentAmount = payment ? round2((ticketPaid * release) / paidSeats) : null;
     const attemptNo = attemptsUsed + 1;
     const now = new Date();
     const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);

@@ -9,8 +9,10 @@
  *   2b. The club-admin cut comes off the pool (net − fee): ca = pool × ca%
  *       (0–10%); it counts as Duncit revenue, disbursed to the club admin later.
  *   3. The venue's money is its FIXED booked slot price (set by the venue in
- *      the Partners portal), taken from the remaining pool (clamped to the
- *      pool so the host side can never go negative).
+ *      the Partners portal), taken from the remaining pool. Settlement and the
+ *      previews take it in FULL (clampVenueToPool: false) so a shortfall shows
+ *      as a negative host amount; the legacy clamp survives only as the
+ *      engine's default for old call sites.
  *   4. Whatever remains after the venue's price is the HOST's amount — there
  *      is no host/venue share percentage.
  *   5. Duncit's commission comes out of each side:       hc = host_amount × hc%,
@@ -47,11 +49,12 @@ export interface BreakdownRates {
 /** Behaviour switches for `computePodFinanceBreakdown`. */
 export interface BreakdownOptions {
   /**
-   * Default `true` (SETTLEMENT behaviour): the venue amount is clamped to the
-   * pool so the host side never goes negative — legacy shortfall pods keep
-   * settling exactly as before. Pass `false` for the create-pod PREVIEW: the
-   * venue keeps its full fixed price and host_amount / host_receives go
-   * negative honestly so clients can render the real shortfall.
+   * Default `true` (legacy engine default): the venue amount is clamped to the
+   * pool so the host side never goes negative. Every current server caller
+   * that quotes or settles real money — settlement, the create-pod previews,
+   * the live pod breakdown — passes `false`: the venue keeps its full fixed
+   * price and host_amount / host_receives go negative honestly so the real
+   * shortfall is visible instead of quietly shrinking the venue's money.
    */
   clampVenueToPool?: boolean;
 }
@@ -163,9 +166,10 @@ export function payingSeats(
  *
  * @param amountPaise      what customers paid in total (GST-inclusive)
  * @param venueAmountPaise the venue's booked slot price (0 when no venue)
- * @param options          clampVenueToPool defaults to true (settlement); the
- *                         create-pod preview passes false so a venue-price
- *                         shortfall surfaces as negative host earnings.
+ * @param options          clampVenueToPool defaults to true (legacy); every
+ *                         current caller — settlement, previews, live
+ *                         breakdown — passes false so a venue-price shortfall
+ *                         surfaces as negative host earnings.
  */
 /**
  * The venue's side of the split: its fixed slot price minus Duncit's venue

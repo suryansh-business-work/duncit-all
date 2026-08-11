@@ -1,5 +1,6 @@
 import { Controller, type Control } from 'react-hook-form';
-import { Card, CardContent, InputAdornment, Stack, TextField, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Card, CardContent, Link, Stack, TextField, Typography } from '@mui/material';
 import { REFERRAL_MESSAGE_TOKENS } from '@duncit/utils';
 import type { ReferralSettingsForm } from './referral-settings.schema';
 
@@ -7,18 +8,25 @@ interface Props {
   control: Control<ReferralSettingsForm>;
   /** Rendered with today's saved rate, so Finance sees what members will read. */
   preview: string;
+  /** The live rate, shown but not edited here — see the note below. */
+  coinsPerReferral: number;
 }
 
 const TOKEN_HINT = `Placeholders: ${REFERRAL_MESSAGE_TOKENS.join(', ')}`;
 
 /**
- * What a referral pays and what it says, on one form and saved together.
+ * What a referral says, and — read-only — what it pays.
  *
- * They describe the same promise, and one changed without the other is a
- * promise that lies — a message offering fifty coins beside a rate somebody
- * quietly set to ten.
+ * The rate is one of the coin payout rules and is set with the others on Duncit
+ * Coin > Settings. It is still shown here because the message beside it quotes
+ * it: a page that lets you write "earn 50 coins" without showing you the rate is
+ * a page that lets the promise drift.
  */
-export default function ReferralSettingsCard({ control, preview }: Readonly<Props>) {
+export default function ReferralSettingsCard({
+  control,
+  preview,
+  coinsPerReferral,
+}: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>
@@ -31,28 +39,21 @@ export default function ReferralSettingsCard({ control, preview }: Readonly<Prop
         </Typography>
 
         <Stack spacing={2.5} sx={{ mt: 2 }}>
-          <Controller
-            name="coins_per_referral"
-            control={control}
-            render={({ field, fieldState }) => (
-              <TextField
-                {...field}
-                label="Coins per referral"
-                required
-                size="small"
-                inputMode="numeric"
-                sx={{ maxWidth: 280 }}
-                error={!!fieldState.error}
-                helperText={
-                  fieldState.error?.message ??
-                  'Paid to each side the moment the code is redeemed.'
-                }
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">coins</InputAdornment>,
-                }}
-              />
-            )}
-          />
+          <Stack spacing={0.25} sx={{ p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+              COINS PER REFERRAL
+            </Typography>
+            <Typography variant="h6" fontWeight={700}>
+              {coinsPerReferral}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Paid to each side the moment the code is redeemed. Change it in{' '}
+              <Link component={RouterLink} to="/duncit-coin/settings">
+                Duncit Coin &rsaquo; Coin Settings
+              </Link>
+              , where every coin payout rule lives.
+            </Typography>
+          </Stack>
 
           <Controller
             name="share_message"

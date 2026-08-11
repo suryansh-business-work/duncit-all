@@ -1,12 +1,19 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type CoinTxnType = 'CREDIT' | 'DEBIT';
-/** REFERRAL_EARN pays the referrer, REFERRAL_SIGNUP pays the person they brought. */
+/**
+ * REFERRAL_EARN pays the referrer, REFERRAL_SIGNUP pays the person they brought.
+ * ADMIN_GRANT / ADMIN_DEDUCT are the manual, user-specific adjustments made from
+ * Finance > Duncit Coin > Settings — the only rows a human types the amount for,
+ * which is why they are the only ones that record who did it.
+ */
 export type CoinTxnSource =
   | 'PAYMENT_EARN'
   | 'PAYMENT_REDEEM'
   | 'REFERRAL_EARN'
-  | 'REFERRAL_SIGNUP';
+  | 'REFERRAL_SIGNUP'
+  | 'ADMIN_GRANT'
+  | 'ADMIN_DEDUCT';
 
 /**
  * Duncit Coins are a loyalty balance, NOT withdrawable money — which is exactly
@@ -36,6 +43,10 @@ export interface ICoinTransaction extends Document {
   /** The referral that earned this row. The same job as payment_id, for the
    * other way coins are earned — one referral pays its referrer once. */
   referral_id: string | null;
+  /** The admin who typed this adjustment, on ADMIN_GRANT / ADMIN_DEDUCT rows
+   * only. A manual grant has no payment and no referral to explain it, so
+   * without this the ledger cannot answer who created the coins. */
+  admin_id: Types.ObjectId | null;
   /** Rate in effect when the coins were granted, so changing the setting later
    * never rewrites what a past row says the user was promised. */
   earn_pct: number;
@@ -61,12 +72,20 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     balance_after: { type: Number, required: true, min: 0 },
     source: {
       type: String,
-      enum: ['PAYMENT_EARN', 'PAYMENT_REDEEM', 'REFERRAL_EARN', 'REFERRAL_SIGNUP'],
+      enum: [
+        'PAYMENT_EARN',
+        'PAYMENT_REDEEM',
+        'REFERRAL_EARN',
+        'REFERRAL_SIGNUP',
+        'ADMIN_GRANT',
+        'ADMIN_DEDUCT',
+      ],
       required: true,
     },
     reason: { type: String, default: '', trim: true, maxlength: 300 },
     payment_id: { type: String, default: null },
     referral_id: { type: String, default: null },
+    admin_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     earn_pct: { type: Number, default: 0 },
     spend_amount: { type: Number, default: 0 },
   },
@@ -108,5 +127,38 @@ coinTxnSchema.index(
   { unique: true, partialFilterExpression: { referral_id: { $type: 'string' } } }
 );
 
+/**
+ * Every rule that decides how many coins a person is given, in one document.
+ *
+ * The rates used to be scattered — the earn rate sat on AppSettings (Admin > Pod
+ * Settings) and the referral amount on ReferralSettings — which meant no single
+ * screen could answer "what does Duncit pay out, and when". They live together
+ * here because they are one policy, edited by one team, on one page.
+ */
+export interface ICoinSettings extends Document {
+  singleton_key: string;
+  /** Percent of a pod-ticket payment granted back to the buyer as coins. */
+  pod_join_earn_pct: number;
+  /** The same, for shop/product orders. Split from the pod rate because a
+   * physical product carries a cost of goods a pod seat does not. */
+  shop_earn_pct: number;
+  /** Flat coins paid to BOTH sides of a referral — the referrer and the member
+   * they brought. One rate, deliberately: two would let the promise drift. */
+  coins_per_referral: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const coinSettingsSchema = new Schema<ICoinSettings>(
+  {
+    singleton_key: { type: String, default: 'coin', unique: true },
+    pod_join_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
+    shop_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
+    coins_per_referral: { type: Number, default: 50, min: 0 },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
 export const CoinBalanceModel = model<ICoinBalance>('CoinBalance', coinBalanceSchema);
 export const CoinTransactionModel = model<ICoinTransaction>('CoinTransaction', coinTxnSchema);
+export const CoinSettingsModel = model<ICoinSettings>('CoinSettings', coinSettingsSchema);

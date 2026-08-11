@@ -50,16 +50,17 @@ export default function ReferralsPage() {
   }, [settings, reset]);
 
   /*
-    The preview reads the LIVE form, not the saved row, so the sentence updates
-    as the message and the rate are typed — the whole point of a template being
-    editable is seeing what it turns into before committing to it.
+    The preview reads the LIVE message as it is typed — the whole point of an
+    editable template is seeing what it turns into before committing to it. The
+    coin count comes from the SAVED rate instead, because this page no longer
+    owns it: it renders whatever Duncit Coin > Settings currently pays.
   */
   const draftMessage = useWatch({ control, name: 'share_message' });
-  const draftCoins = useWatch({ control, name: 'coins_per_referral' });
+  const coinsPerReferral = settings?.coins_per_referral ?? 0;
   const preview = renderReferralMessage(draftMessage ?? '', {
     code: SAMPLE_CODE,
     link: referralLink(SAMPLE_CODE, urlConfigs.mwebUrl),
-    coins: Number.parseInt(draftCoins || '0', 10) || 0,
+    coins: coinsPerReferral,
   });
 
   const fetchTable = useApolloTableFetch<ReferralRow>(client, REFERRALS_TABLE, 'referralsTable');
@@ -79,7 +80,6 @@ export default function ReferralsPage() {
         variables: {
           input: {
             gift_description: values.gift_description,
-            coins_per_referral: Number.parseInt(values.coins_per_referral, 10),
             share_message: values.share_message,
           },
         },
@@ -122,7 +122,11 @@ export default function ReferralsPage() {
 
         {error && <Alert severity="error">{error}</Alert>}
 
-        <ReferralSettingsCard control={control} preview={preview} />
+        <ReferralSettingsCard
+          control={control}
+          preview={preview}
+          coinsPerReferral={coinsPerReferral}
+        />
 
         <Box>
           <Button

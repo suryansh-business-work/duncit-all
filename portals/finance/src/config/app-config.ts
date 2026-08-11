@@ -60,6 +60,15 @@ export const appConfig = {
       ],
     },
     { label: 'Duncit Expenses', to: '/ledger', icon: 'menuBook' },
+    {
+      label: 'Duncit Coin',
+      icon: 'wallet',
+      children: [
+        { label: 'Dashboard', to: '/duncit-coin/dashboard', icon: 'insights' },
+        { label: 'Transactions', to: '/duncit-coin/transactions', icon: 'receipt' },
+        { label: 'Coin Settings', to: '/duncit-coin/settings', icon: 'tune' },
+      ],
+    },
     { label: 'Referrals', to: '/referrals', icon: 'campaign' },
     { label: 'Payout Cycles', to: '/payouts', icon: 'calendar' },
     {

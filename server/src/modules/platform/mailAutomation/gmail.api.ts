@@ -438,6 +438,11 @@ export interface ReplyParams {
   threadId: string;
   inReplyTo: string;
   references: string;
+  /** False when a HUMAN wrote the body (an agent's ticket reply): the
+   * Auto-Submitted header marks robot mail, and claiming it on a human's
+   * words would be untrue. Omitted/true keeps the acknowledgement path
+   * exactly as it was. */
+  autoReply?: boolean;
 }
 
 /** The reply as RFC 2822, threaded. In-Reply-To and References are what make
@@ -460,9 +465,10 @@ export function buildReplyMime(params: ReplyParams): string {
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset="UTF-8"',
     'Content-Transfer-Encoding: base64',
-    // Tells the next auto-responder in the chain not to answer this one.
-    'Auto-Submitted: auto-replied',
   ];
+  // Tells the next auto-responder in the chain not to answer this one. A
+  // human agent's reply is not auto-submitted, so it goes out without it.
+  if (params.autoReply !== false) headers.push('Auto-Submitted: auto-replied');
   if (params.inReplyTo) headers.push(`In-Reply-To: ${params.inReplyTo}`);
   if (references) headers.push(`References: ${references}`);
   const body = Buffer.from(params.bodyText, 'utf8').toString('base64');

@@ -492,7 +492,9 @@ export const financeTypeDefs = /* GraphQL */ `
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
     paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
     # Live preview of the host/venue split for a pod given a venue bill.
-    podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!): PodSettlement!
+    # host_user_id picks which co-host's commission override prices it
+    # (default: the primary host) — must match the completion input.
+    podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!, host_user_id: ID): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).
     myHostPayouts: [PaymentReleaseRequest!]!
     # A venue owner's payouts across every venue they own (Venue Earnings).

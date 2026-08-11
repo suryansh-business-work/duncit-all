@@ -42,7 +42,12 @@ export const referralTypeDefs = /* GraphQL */ `
 
   type ReferralSettings {
     gift_description: String!
-    "Coins EACH side of a referral earns — the referrer and the new member."
+    """
+    Coins EACH side of a referral earns — the referrer and the new member.
+    Read-only here: it is a coin payout rule, set in Finance > Duncit Coin >
+    Settings alongside the earn rates, and reported here so the copy that quotes
+    it can never drift from what is actually paid.
+    """
     coins_per_referral: Int!
     "Share message template, with its {code}, {link} and {coins} placeholders."
     share_message: String!
@@ -51,7 +56,6 @@ export const referralTypeDefs = /* GraphQL */ `
   "Finance > Referrals. Every field is optional; an omitted one is left alone."
   input ReferralSettingsInput {
     gift_description: String
-    coins_per_referral: Int
     share_message: String
   }
 

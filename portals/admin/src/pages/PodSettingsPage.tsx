@@ -10,7 +10,6 @@ const POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
-      coin_earn_pct
       updated_at
     }
   }
@@ -22,7 +21,6 @@ const UPDATE_POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
-      coin_earn_pct
       updated_at
     }
   }
@@ -31,8 +29,9 @@ const UPDATE_POD_SETTINGS = gql`
 /** Admin > Pods > Pod Settings — platform defaults for the Create-a-Pod flow:
  * the draft-pod retention window (daily cleanup job + Host Studio note), the
  * per-user-per-pod Backout attempt limit enforced by the backout flow, the
- * Account Health penalty a venue pays when its owner cancels a booked pod, and
- * the Duncit Coin earn rate applied to every successful payment. */
+ * and the Account Health penalty a venue pays when its owner cancels a booked
+ * pod. (The Duncit Coin earn rate used to sit here too; it moved to Finance >
+ * Duncit Coin > Settings, with the rest of the coin payout rules.) */
 export default function PodSettingsPage() {
   const { data, loading, refetch } = useQuery(POD_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [save] = useMutation(UPDATE_POD_SETTINGS, {
@@ -88,18 +87,6 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.venue_cancel_health_penalty ?? null}
         onSave={(next) => saveField({ venue_cancel_health_penalty: next })}
-      />
-      <NumberSettingCard
-        title="Duncit Coin Earn Rate"
-        description="Percent of every successful payment granted back to the buyer as Duncit Coins. 1 coin = 1 rupee, and coins can be redeemed at checkout. Set 0 to turn the reward off."
-        label="Duncit Coin Earn Rate (%)"
-        helperText="Minimum 0%, maximum 100%. Default 10."
-        invalidText="Enter a whole number between 0 and 100."
-        min={0}
-        max={100}
-        loading={loading}
-        value={settings?.coin_earn_pct ?? null}
-        onSave={(next) => saveField({ coin_earn_pct: next })}
       />
       <Snackbar
         open={!!toast}

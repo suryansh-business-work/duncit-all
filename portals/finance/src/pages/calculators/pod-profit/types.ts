@@ -35,11 +35,11 @@ export interface PodProfitResults {
   pool_amount: number;
   /** Club-admin cut off the pool — folded into duncit_revenue_total. */
   club_admin_amount: number;
-  /** The venue's fixed slot price, clamped to the pool. */
+  /** The venue's fixed slot price, taken whole (never clamped to the pool). */
   venue_amount: number;
   venue_commission_amount: number;
   venue_receives: number;
-  /** The host's remainder: pool − venue amount. */
+  /** The host's remainder: pool − venue amount (negative on a shortfall). */
   host_amount: number;
   host_commission_amount: number;
   host_receives: number;

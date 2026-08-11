@@ -22,8 +22,25 @@ export interface CoinAdminStats {
   transaction_count: number;
   holders_count: number;
   earn_pct: number;
+  shop_earn_pct: number;
   currency_symbol: string;
   monthly: CoinMonthBucket[];
+}
+
+/** Every rule deciding how many coins someone is given. */
+export interface CoinSettings {
+  pod_join_earn_pct: number;
+  shop_earn_pct: number;
+  coins_per_referral: number;
+  updated_at: string;
+}
+
+/** One account the manual-adjustment picker can offer. */
+export interface CoinUserOption {
+  id: string;
+  full_name: string;
+  email: string;
+  balance: number;
 }
 
 export interface CoinAdminPod {
@@ -38,6 +55,8 @@ export interface CoinTxnRow {
   user_id: string;
   user_name: string;
   user_email: string;
+  /** Who typed the adjustment. Empty on every automatic row. */
+  admin_name: string;
   type: string;
   amount: number;
   balance_after: number;
@@ -72,6 +91,7 @@ export const COIN_ADMIN_STATS = gql`
       transaction_count
       holders_count
       earn_pct
+      shop_earn_pct
       currency_symbol
       monthly {
         month
@@ -91,6 +111,7 @@ export const COIN_TRANSACTIONS_TABLE = gql`
         user_id
         user_name
         user_email
+        admin_name
         type
         amount
         balance_after
@@ -150,10 +171,68 @@ export const COIN_POD_BY_ID = gql`
   }
 `;
 
+export const COIN_SETTINGS = gql`
+  query FinanceCoinSettings {
+    coinSettings {
+      pod_join_earn_pct
+      shop_earn_pct
+      coins_per_referral
+      updated_at
+    }
+  }
+`;
+
+export const UPDATE_COIN_SETTINGS = gql`
+  mutation FinanceUpdateCoinSettings($input: CoinSettingsInput!) {
+    updateCoinSettings(input: $input) {
+      pod_join_earn_pct
+      shop_earn_pct
+      coins_per_referral
+      updated_at
+    }
+  }
+`;
+
+export const COIN_USER_SEARCH = gql`
+  query FinanceCoinUserSearch($term: String!) {
+    coinUserSearch(term: $term) {
+      id
+      full_name
+      email
+      balance
+    }
+  }
+`;
+
+export const ADJUST_USER_COINS = gql`
+  mutation FinanceAdjustUserCoins(
+    $user_id: ID!
+    $direction: CoinAdjustDirection!
+    $coins: Int!
+    $reason: String!
+  ) {
+    adjustUserCoins(
+      user_id: $user_id
+      direction: $direction
+      coins: $coins
+      reason: $reason
+    ) {
+      user_id
+      balance
+      lifetime_earned
+      applied
+    }
+  }
+`;
+
 /** How many pods the picker shows before the admin narrows it by typing, and
  * how many a search may return — searching is how you reach past the first ten. */
 export const POD_PICKER_PAGE_SIZE = 10;
 export const POD_PICKER_SEARCH_SIZE = 25;
+
+/** Characters typed before the user picker asks the server, matching the
+ * minimum the resolver itself enforces. */
+export const USER_SEARCH_MIN_CHARS = 2;
 
 export type CoinTileKey =
   | 'total_circulated'
@@ -161,7 +240,8 @@ export type CoinTileKey =
   | 'total_outstanding'
   | 'holders_count'
   | 'transaction_count'
-  | 'earn_pct';
+  | 'earn_pct'
+  | 'shop_earn_pct';
 
 export interface CoinTile {
   key: CoinTileKey;
@@ -202,11 +282,19 @@ export const COIN_TILES: readonly CoinTile[] = [
   { key: 'transaction_count', label: 'Ledger Entries', icon: ReceiptLongIcon, color: '#0891b2' },
   {
     key: 'earn_pct',
-    label: 'Earn Rate',
+    label: 'Pod Join Earn',
     icon: PercentIcon,
     color: '#dc2626',
     percent: true,
-    to: '/pod-settings',
+    to: '/duncit-coin/settings',
+  },
+  {
+    key: 'shop_earn_pct',
+    label: 'Shop Earn',
+    icon: PercentIcon,
+    color: '#db2777',
+    percent: true,
+    to: '/duncit-coin/settings',
   },
 ];
 

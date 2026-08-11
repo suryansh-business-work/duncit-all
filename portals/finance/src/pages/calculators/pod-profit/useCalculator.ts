@@ -16,8 +16,10 @@ const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
  * attendees on create and never pay — so a 30-spot pod only ever bills 29
  * guests. GST is extracted from the collection (`P × g/(100+g)`); the platform
  * fee applies to the net; the venue
- * takes its fixed booked slot price out of the remaining pool ONCE per pod
- * (clamped so the host can never go negative); the host keeps the remainder.
+ * takes its fixed booked slot price out of the remaining pool ONCE per pod,
+ * UNCLAMPED (`clampVenueToPool: false`, matching how the engine quotes and
+ * settles) — on a shortfall the host's remainder goes honestly negative, and
+ * no host commission is charged on a non-positive host side.
  * Duncit's commission comes out of each side, and duncit_revenue = platform
  * fee + both commissions.
  *
@@ -46,10 +48,15 @@ export function useCalculator(inputs: PodProfitInputs): PodProfitResults {
     // breakdown.math.ts. Clamped to the pool so nothing downstream goes negative.
     const clubAdmin = Math.min(pool, Math.round((pool * clubAdminPct) / 100));
     const splitPool = pool - clubAdmin;
-    const venueAmount = Math.min(toPaise(inputs.venue_amount), splitPool);
+    // The venue is owed its full booked price — no clamp, mirroring the
+    // engine's clampVenueToPool: false; a shortfall lands on the host as a
+    // negative remainder.
+    const venueAmount = toPaise(inputs.venue_amount);
     const hostAmount = splitPool - venueAmount;
     const venueCommission = Math.round((venueAmount * venuePct) / 100);
-    const hostCommission = Math.round((hostAmount * hostPct) / 100);
+    // No commission is charged on a non-positive host side — the shortfall
+    // passes through whole (mirrors breakdown.math.ts).
+    const hostCommission = hostAmount > 0 ? Math.round((hostAmount * hostPct) / 100) : 0;
     const venueReceives = venueAmount - venueCommission;
     const hostReceives = hostAmount - hostCommission;
     const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;

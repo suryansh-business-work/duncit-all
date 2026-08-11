@@ -80,14 +80,6 @@ export const appConfig = {
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
     {
-      label: 'Duncit Coin',
-      icon: 'wallet',
-      children: [
-        { label: 'Dashboard', to: '/duncit-coin/dashboard', icon: 'insights' },
-        { label: 'Transactions', to: '/duncit-coin/transactions', icon: 'receipt' },
-      ],
-    },
-    {
       label: 'Leaderboard',
       icon: 'trophy',
       children: [
@@ -154,18 +146,6 @@ export const appConfig = {
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', to: '/something-for-you', section: 'Engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
-    {
-      label: 'Coin Dashboard',
-      to: '/duncit-coin/dashboard',
-      section: 'Duncit Coin',
-      keywords: ['coin', 'duncit coin', 'loyalty', 'reward', 'circulated', 'redeemed', 'outstanding'],
-    },
-    {
-      label: 'Coin Transactions',
-      to: '/duncit-coin/transactions',
-      section: 'Duncit Coin',
-      keywords: ['coin', 'ledger', 'transactions', 'earn', 'redeem', 'pod', 'logs'],
-    },
     {
       label: 'Boards',
       to: '/leaderboard',

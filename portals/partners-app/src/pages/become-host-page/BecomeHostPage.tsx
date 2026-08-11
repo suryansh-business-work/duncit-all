@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import HostStepContent from './HostStepContent';
 import HostWithdrawApplication from './HostWithdrawApplication';
-import PartnerPodsSection from '../pods-page/PartnerPodsSection';
 import { FINAL, MY_HOST, STEP1, STEP2, STEP3, WITHDRAW_HOST } from './queries';
 import { HOST_STEPS, blankHostStep1, blankHostStep2, blankHostStep3 } from './types';
 import { validateHostStep } from './validation';
@@ -110,7 +110,20 @@ export default function BecomeHostPage() {
           </Card>
         </>
       )}
-      <PartnerPodsSection />
+      {/* An approved host has nothing to apply for — the hosting area itself
+          lives under Host > Dashboard / Your Pods. */}
+      {isHost && (
+        <Alert
+          severity="success"
+          action={
+            <Button component={RouterLink} to="/host/pods" size="small">
+              Your Pods
+            </Button>
+          }
+        >
+          Your host profile is approved. Create and manage your pods from the Host section.
+        </Alert>
+      )}
       <MediaPickerDialog open={picker !== null} onClose={() => setPicker(null)} onPicked={(url) => {
         if (picker === 'photo') setS2({ ...s2, passport_photo_url: url });
         if (picker === 'police') setS3({ ...s3, police_verification_url: url });

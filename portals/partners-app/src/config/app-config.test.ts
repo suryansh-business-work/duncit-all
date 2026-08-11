@@ -4,9 +4,18 @@ import { appConfig, buildNav } from './app-config';
 describe('buildNav', () => {
   it('returns the base nav (no Wallet / Club Admin) for a user with no earning roles', () => {
     const nav = buildNav([]);
-    expect(nav).toBe(appConfig.nav);
+    expect(nav.map((i) => i.label)).toEqual(appConfig.nav.map((i) => i.label));
     expect(nav.some((i) => i.to === '/wallet')).toBe(false);
     expect(nav.some((i) => i.label === 'Club Admin')).toBe(false);
+  });
+
+  it('offers Become a Host only to a user who is not already one', () => {
+    const childLabels = (roles: string[]) =>
+      buildNav(roles)
+        .find((i) => i.label === 'Host')
+        ?.children?.map((c) => c.label) ?? [];
+    expect(childLabels([])).toEqual(['Dashboard', 'Become a Host', 'Your Pods']);
+    expect(childLabels(['HOST'])).toEqual(['Dashboard', 'Your Pods']);
   });
 
   it('handles null / undefined roles as no earning roles', () => {

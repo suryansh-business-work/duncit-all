@@ -69,6 +69,7 @@ const FeedbackPage = lazy(() =>
 const GrievancePage = lazy(() =>
   import('../pages/support-hub').then((m) => ({ default: m.GrievancePage })),
 );
+const MailPreferencePage = lazy(() => import('../pages/mail-preference-page'));
 const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
@@ -195,6 +196,11 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/support/chat" element={<Navigate to="/support/live" replace />} />
         <Route path="/bouncers" element={<Navigate to="/support" replace />} />
         <Route path="/account/health" element={withAuth(<AccountHealthPage />)} />
+        <Route path="/account/mail-preference" element={withAuth(<MailPreferencePage />)} />
+        {/* The one-click door out of an email. NOT auth-gated: the person
+            clicking it is reading their inbox, and the signature in the link is
+            what proves whose preferences these are. */}
+        <Route path="/unsubscribe" element={<MailPreferencePage fromLink />} />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />

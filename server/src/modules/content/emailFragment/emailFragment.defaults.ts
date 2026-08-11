@@ -1,4 +1,5 @@
 import { EMAIL_CATEGORIES, type EmailCategory } from '@services/email/email.provider';
+import { isOptionalMailCategory } from '@modules/content/mailPreference/mailPreference.categories';
 
 /**
  * The nine fragments as they are first seeded.
@@ -55,7 +56,7 @@ const DESCRIPTIONS: Record<EmailCategory, string> = {
   transactional: 'Receipts and confirmations for something the recipient did.',
   authentication: 'Codes and credentials. Carries the "never share this" warning.',
   marketing:
-    'Campaigns and announcements. Add your unsubscribe link here — a campaign records any link containing the word "unsubscribe" as an opt-out.',
+    'Campaigns and announcements. Carries the unsubscribe line — a campaign records any link containing the word "unsubscribe" as an opt-out.',
   service: 'A person writing to a person. Invites a reply.',
   notification: 'Something changed on the recipient’s account or booking.',
   support: 'Part of a support conversation — tickets, chats, transcripts.',
@@ -82,13 +83,30 @@ const header = () => `    <mj-section padding="24px 0 8px 0">
  * `support_email`, `website_url`, `app_name` and `year` are supplied by
  * `sendEmail` on every send, so a fragment never has to be told them.
  */
-const footer = () => `    <mj-section padding="8px 0 28px 0">
+/**
+ * The way out, for the categories that have one.
+ *
+ * Only the opt-out-able categories carry it. A footer offering to unsubscribe
+ * somebody from their own sign-in code is not a courtesy, it is a trap — the
+ * link would take them to a screen where that row is locked, which reads as the
+ * product ignoring them.
+ *
+ * `unsubscribe_url` is supplied on every send: one-click and signed when the
+ * recipient is known, the same screen behind a sign-in for a bcc'd campaign
+ * batch, which has no single recipient to sign for.
+ */
+const unsubscribeLine = () => `
+        <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">
+          {{t:email.fragment.unsubscribe}} <a href="{{unsubscribe_url}}" style="color:#2563eb;text-decoration:none">{{t:email.fragment.unsubscribeLink}}</a>
+        </mj-text>`;
+
+const footer = (optOutable: boolean) => `    <mj-section padding="8px 0 28px 0">
       <mj-column>
         <mj-divider border-width="1px" border-color="#e5e7eb" padding="0 0 16px 0" />
         <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">{{footer_note}}</mj-text>
         <mj-text align="center" font-size="12px" color="#6b7280" padding="0 0 6px 0">
           {{t:email.fragment.help}} <a href="mailto:{{support_email}}" style="color:#2563eb;text-decoration:none">{{support_email}}</a>
-        </mj-text>
+        </mj-text>${optOutable ? unsubscribeLine() : ''}
         <mj-text align="center" font-size="11px" color="#9ca3af" padding="0">
           &copy; {{year}} <a href="{{website_url}}" style="color:#9ca3af;text-decoration:none">{{app_name}}</a>. {{t:email.fragment.rights}}
         </mj-text>
@@ -100,7 +118,7 @@ export const FRAGMENT_DEFAULTS: FragmentDefault[] = EMAIL_CATEGORIES.map((catego
   name: LABELS[category],
   description: DESCRIPTIONS[category],
   header_mjml: header(),
-  footer_mjml: footer(),
+  footer_mjml: footer(isOptionalMailCategory(category)),
 }));
 
 export const FRAGMENT_LABELS = LABELS;

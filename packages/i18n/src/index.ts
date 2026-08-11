@@ -10,6 +10,7 @@ export {
 export {
   allFallbackEntries,
   GRIEVANCE_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
@@ -17,6 +18,11 @@ export {
   SURFACE_BUNDLES,
   WEBSITE_BUNDLE,
 } from './bundles';
+export {
+  mailCategoryCopy,
+  type MailCategoryCopy,
+  type MailCategoryTranslate,
+} from './mail-preference';
 export {
   createTranslator,
   interpolate,

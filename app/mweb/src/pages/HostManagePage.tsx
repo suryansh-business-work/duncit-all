@@ -5,6 +5,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import InsightsIcon from '@mui/icons-material/Insights';
 import HostDraftsCard from './HostDraftsCard';
+import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodsCard from './host-manage-page/HostPodsCard';
 import HostShareCard from './host-manage-page/HostShareCard';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
@@ -90,14 +91,16 @@ export default function HostManagePage() {
 
       <HostDraftsCard />
 
-      <HostPodsCard
-        pods={pods}
-        loading={bootLoading}
-        errorMessage={error?.message}
-        onChanged={() => {
-          refetch().catch(() => undefined);
-        }}
-      />
+      <HostPodActionsBridge>
+        <HostPodsCard
+          pods={pods}
+          loading={bootLoading}
+          errorMessage={error?.message}
+          onChanged={() => {
+            refetch().catch(() => undefined);
+          }}
+        />
+      </HostPodActionsBridge>
 
       <HostShareCard />
     </Stack>

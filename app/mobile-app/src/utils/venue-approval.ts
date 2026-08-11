@@ -1,5 +1,5 @@
 /** Host-facing copy + chip meta for a pod's venue-approval state. Mirrors
- * mWeb's host-manage-page/venueApproval.ts (rule 27 parity). */
+ * @duncit/host-pod-actions' venue-approval.ts (rule 27 parity). */
 
 export const VENUE_REJECTED_NOTE =
   'Venue rejected your slot request. Please select a different venue or choose a different time slot and submit your request again.';

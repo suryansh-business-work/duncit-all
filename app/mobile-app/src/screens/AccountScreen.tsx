@@ -11,6 +11,7 @@ import {
   ConnectedAccountsSection,
   EditAccountDialog,
   LanguageSection,
+  MailPreferenceCard,
   PrivacyToggleCard,
   SecuritySection,
 } from '@/components/account';
@@ -93,6 +94,7 @@ export function AccountScreen() {
 
         <YStack height={1} backgroundColor="$borderColor" />
         <LanguageSection />
+        <MailPreferenceCard onPress={() => navigation.navigate('MailPreference')} />
         <ConnectedAccountsSection />
         <SecuritySection />
       </ScrollView>

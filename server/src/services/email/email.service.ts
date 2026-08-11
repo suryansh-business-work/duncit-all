@@ -9,6 +9,8 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
 import type { EmailLogSource } from '@modules/content/emailLog/emailLog.model';
+import { mailPreferenceService } from '@modules/content/mailPreference/mailPreference.service';
+import { mailPreferenceUrl } from '@modules/content/mailPreference/mailPreference.token';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
 import {
@@ -86,17 +88,28 @@ function swapLegacyLogo(html: string, brandLogoUrl: string): string {
 
 /**
  * The values every header/footer fragment needs — the brand's name, where to
- * write for help, where the site lives, and the year on the copyright line.
- * Supplied on every send so a fragment is self-sufficient and no call site has
- * to know it exists.
+ * write for help, where the site lives, the year on the copyright line, and the
+ * way out. Supplied on every send so a fragment is self-sufficient and no call
+ * site has to know it exists.
+ *
+ * `unsubscribe_url` is one-click when the recipient is known and a plain link to
+ * the same screen when it is not. It is supplied for EVERY category, not only
+ * the opt-out-able ones, because which categories carry the line is the
+ * fragment's decision to make in the Tech portal — and a fragment that renders
+ * a literal `{{unsubscribe_url}}` because this file second-guessed it is worse
+ * than one extra variable.
  */
-async function chromeVars(): Promise<Record<string, string>> {
-  const [{ supportEmail, websiteUrl }, brand] = await Promise.all([getUrlConfigs(), getBrand()]);
+async function chromeVars(to?: string): Promise<Record<string, string>> {
+  const [{ supportEmail, websiteUrl, appUrl }, brand] = await Promise.all([
+    getUrlConfigs(),
+    getBrand(),
+  ]);
   return {
     support_email: supportEmail,
     website_url: websiteUrl,
     app_name: brand.appName,
     year: String(new Date().getFullYear()),
+    unsubscribe_url: mailPreferenceUrl(appUrl, to),
   };
 }
 
@@ -278,6 +291,14 @@ export async function sendEmail(opts: {
   // reaches a renderer or a provider — and is still on the record.
   if (!opts.to?.trim()) return notSent('No recipient address', 'FAILED');
 
+  // THE opt-out gate for every templated email in the product. It sits here and
+  // not at the forty call sites for the same reason the email log does: a rule
+  // enforced in one place cannot be forgotten in the forty-first. Required
+  // categories — codes, receipts, legal notices — never reach the database.
+  if (!(await mailPreferenceService.allows(opts.to, category))) {
+    return notSent(`Recipient opted out of ${category} email`, 'SKIPPED');
+  }
+
   try {
     // Inside the try, not above it. `bySlug` reads Mongo and CREATES the row on
     // a slug's first use, so it throws on an outage and on two sends racing the
@@ -300,7 +321,7 @@ export async function sendEmail(opts: {
       brand_logo_url: brandLogoUrl,
       // Supplied on every send so a header/footer fragment never has to be told
       // them, and no call site has to remember to pass them.
-      ...(await chromeVars()),
+      ...(await chromeVars(opts.to)),
       ...translations,
       ...opts.vars,
     };
@@ -348,6 +369,30 @@ export async function sendEmail(opts: {
 }
 
 /**
+ * The recipients of a bulk send who still want this category.
+ *
+ * WHICH list is the audience follows the rule the email log already states: a
+ * non-empty `bcc` means the bcc list is the audience and `to` is the mailbox the
+ * message is addressed FROM — that is how a campaign goes out, fifty bcc'd
+ * people at a time. Filtering `to` there would drop our own sending address on
+ * the day somebody at the company unsubscribed, and take the whole batch with
+ * it. With no bcc, `to` is the audience and is filtered.
+ */
+async function allowedAudience(input: {
+  to: string[];
+  bcc?: string[];
+  category: EmailCategory;
+}): Promise<{ to: string[]; bcc: string[]; suppressed: string[] }> {
+  const bcc = input.bcc ?? [];
+  if (bcc.length > 0) {
+    const result = await mailPreferenceService.allowedRecipients(bcc, input.category);
+    return { to: input.to, bcc: result.allowed, suppressed: result.suppressed };
+  }
+  const result = await mailPreferenceService.allowedRecipients(input.to, input.category);
+  return { to: result.allowed, bcc, suppressed: result.suppressed };
+}
+
+/**
  * Send ready-made HTML. THE method for anything without a template — campaigns,
  * support transcripts, release notices, CRM lead mail.
  *
@@ -390,7 +435,7 @@ export async function sendHtmlEmail(opts: {
   const category = opts.category ?? 'marketing';
   const recipients = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter((r) => r?.trim());
 
-  const failed = (reason: string): SendResult => {
+  const notSent = (reason: string, status: 'SKIPPED' | 'FAILED'): SendResult => {
     logs.server.warn('email', 'not-sent', { to: recipients.join(', '), reason });
     void emailLogService.record({
       template: opts.template,
@@ -399,7 +444,7 @@ export async function sendHtmlEmail(opts: {
       bcc: opts.bcc,
       subject: opts.subject,
       category,
-      status: 'FAILED',
+      status,
       reason,
       source: opts.source,
       source_detail: opts.source_detail,
@@ -408,8 +453,15 @@ export async function sendHtmlEmail(opts: {
     return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
   };
 
-  if (recipients.length === 0 && !opts.bcc?.length) return failed('No recipient address');
-  if (!opts.html?.trim()) return failed('No message body');
+  if (recipients.length === 0 && !opts.bcc?.length) return notSent('No recipient address', 'FAILED');
+  if (!opts.html?.trim()) return notSent('No message body', 'FAILED');
+
+  // The same opt-out gate sendEmail applies, for the path that addresses many
+  // people at once. Required categories return the lists untouched.
+  const audience = await allowedAudience({ to: recipients, bcc: opts.bcc, category });
+  if (audience.to.length === 0 && audience.bcc.length === 0) {
+    return notSent(`Every recipient opted out of ${category} email`, 'SKIPPED');
+  }
 
   try {
     const brandLogoUrl = await getBrandLogoUrl();
@@ -417,8 +469,8 @@ export async function sendHtmlEmail(opts: {
     const info = await deliver(
       {
         category,
-        to: opts.to,
-        bcc: opts.bcc,
+        to: audience.to,
+        bcc: audience.bcc.length > 0 ? audience.bcc : undefined,
         replyTo: opts.replyTo,
         subject: opts.subject,
         html,
@@ -428,15 +480,21 @@ export async function sendHtmlEmail(opts: {
     );
 
     const outcome = deliveryOutcome(info);
+    // The row records WHO WAS WRITTEN TO, not who was asked for — a campaign of
+    // five hundred that reached four hundred and sixty has to read as that, or
+    // the log answers "did this person get it?" with somebody else's send.
+    const suppressedNote = audience.suppressed.length
+      ? `${audience.suppressed.length} recipient(s) opted out of ${category} email`
+      : '';
     void emailLogService.record({
       template: opts.template,
       fragment_key: opts.fragment_key,
-      to: recipients,
-      bcc: opts.bcc,
+      to: audience.to,
+      bcc: audience.bcc,
       subject: opts.subject,
       category,
       status: outcome.status,
-      reason: outcome.reason,
+      reason: [outcome.reason, suppressedNote].filter(Boolean).join(' · '),
       provider: info.provider,
       message_id: info.messageId,
       source: opts.source,
@@ -449,13 +507,37 @@ export async function sendHtmlEmail(opts: {
       category,
       provider: info.provider,
       messageId: info.messageId,
+      suppressed: audience.suppressed.length,
     });
     // A send everyone refused is not a send. Callers read `skipped` to decide
     // whether to tell a user their email is on the way.
     return { ...info, skipped: outcome.status === 'FAILED' };
   } catch (error: any) {
-    return failed(error?.message || 'Send failed');
+    return notSent(error?.message || 'Send failed', 'FAILED');
   }
+}
+
+/**
+ * Confirm an opt-out to the person who made it.
+ *
+ * `transactional`, so it arrives even though what they just did was ask us to
+ * stop writing — it is the record of an action they took, and the only thing
+ * that tells somebody whose address was entered by mistake that it happened.
+ *
+ * It does NOT list which categories were switched off. The category names are
+ * localized client copy, and the preferences screen — one tap away through
+ * `{{unsubscribe_url}}` — shows the whole sheet in the reader's language and
+ * always correctly. A second, hand-joined copy of those names inside an email
+ * body is how the two go out of step.
+ */
+export function sendUnsubscribeConfirmationEmail(opts: { to: string }) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit email preferences were updated',
+    template: 'unsubscribe-confirmed',
+    category: 'transactional',
+    vars: { email: opts.to },
+  });
 }
 
 export function sendWelcomeEmail(to: string, name: string) {

@@ -26,6 +26,7 @@ import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
+import MailPreferenceCard from './account-page/MailPreferenceCard';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -178,6 +179,7 @@ export default function AccountPage() {
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
       <LanguageSection />
+      <MailPreferenceCard />
       <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog

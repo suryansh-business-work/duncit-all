@@ -51,6 +51,19 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.grievance.detailsLabel": "What you told us",
   "email.grievance.officerLabel": "Grievance Officer",
   "email.grievance.footer": "Reply to this email if you have anything to add.",
+  "email.unsubscribe.title": "Your email preferences were updated",
+  "email.unsubscribe.heading": "We've updated what we send you",
+  "email.unsubscribe.intro":
+    "We've stopped sending some kinds of email to this address:",
+  "email.unsubscribe.stillSending":
+    "You will still get security codes, receipts and notices we are required to send — those cannot be switched off.",
+  "email.unsubscribe.manage": "Manage your email preferences",
+  "email.unsubscribe.mistake":
+    "Didn't do this? Open the link above and switch anything back on. Emails already on their way may still arrive.",
+
+  // The opt-out line the footer of every opt-out-able category carries.
+  "email.fragment.unsubscribe": "Don't want these emails?",
+  "email.fragment.unsubscribeLink": "Manage your email preferences",
 
   // The header/footer fragments (Tech portal > Emails > Fragments). One note
   // per category, because "why did I get this?" has a different answer for a

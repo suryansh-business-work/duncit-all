@@ -63,6 +63,7 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/ad-request-form/package.json ./packages/ad-request-form/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
+COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

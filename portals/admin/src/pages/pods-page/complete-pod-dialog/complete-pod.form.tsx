@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import MediaListField from '../../../components/MediaListField';
+import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
 import type { CompletePodDialogProps, CompletePodValues } from './complete-pod.types';
 

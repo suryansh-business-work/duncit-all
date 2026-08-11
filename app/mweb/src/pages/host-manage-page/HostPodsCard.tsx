@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { useHostPodActions } from '@duncit/host-pod-actions';
 import HostPodRow from './HostPodRow';
-import { useFeedbackLinkActions } from './useFeedbackLinkActions';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
 import {
   DEFAULT_HOST_PODS_FILTERS,
@@ -23,12 +23,6 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from './hostPodsFilters';
-import { PodEditForm, type HostPodSummary } from './pod-edit';
-import { PodDeleteForm } from './pod-delete';
-import { PodCompleteForm, type HostPodForComplete } from './pod-complete';
-import { PodResubmitForm, type HostPodForResubmit } from './pod-resubmit';
-import { TicketScanDialog, type ScanTarget } from './ticket-scan';
-import { isVenueRejected } from './venueApproval';
 
 interface HostPodsCardProps {
   pods: any[];
@@ -38,19 +32,14 @@ interface HostPodsCardProps {
 }
 
 /** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
- * host's self-service Complete/Edit/Delete actions (2). */
+ * host's self-service Complete/Edit/Cancel actions (2). */
 export default function HostPodsCard({
   pods,
   loading,
   errorMessage,
   onChanged,
 }: Readonly<HostPodsCardProps>) {
-  const feedbackLink = useFeedbackLinkActions();
-  const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
-  const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
-  const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
-  const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
-  const [scanPod, setScanPod] = useState<ScanTarget | null>(null);
+  const { menuHandlers, dialogs } = useHostPodActions(onChanged);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -68,27 +57,19 @@ export default function HostPodsCard({
     body = <Alert severity="error">{errorMessage}</Alert>;
   } else if (pods.length === 0) {
     body = (
-      <Alert severity="info">You don't host any pods yet. New pods you host will show up here.</Alert>
+      <Alert severity="info">
+        You don't host any pods yet. New pods you host will show up here.
+      </Alert>
     );
   } else if (visible.length === 0) {
-    body = <Alert severity="info">No pods match these filters. Try adjusting or resetting them.</Alert>;
+    body = (
+      <Alert severity="info">No pods match these filters. Try adjusting or resetting them.</Alert>
+    );
   } else {
     body = (
       <Stack spacing={1}>
         {visible.map((p: any) => (
-          <HostPodRow
-            key={p.id}
-            pod={p}
-            onScan={() => setScanPod({ id: p.id, pod_title: p.pod_title })}
-            onComplete={() => setCompletePod({ id: p.id, pod_title: p.pod_title, venue_id: p.venue_id })}
-            // A venue-rejected pod opens the FULL edit + resubmission flow; every
-            // other pod keeps the limited title/description/media edit.
-            onEdit={() => (isVenueRejected(p.venue_approval_status) ? setResubmitPod(p) : setEditPod(p))}
-            onOpenFeedback={() => feedbackLink.open(p)}
-            onShareFeedback={() => feedbackLink.share(p)}
-            onCopyFeedback={() => feedbackLink.copy(p)}
-            onCancel={() => setDeletePod({ id: p.id, title: p.pod_title })}
-          />
+          <HostPodRow key={p.id} pod={p} actions={menuHandlers(p)} />
         ))}
       </Stack>
     );
@@ -123,40 +104,7 @@ export default function HostPodsCard({
         }}
         onClose={() => setFilterOpen(false)}
       />
-      <PodEditForm
-        pod={editPod}
-        onClose={() => setEditPod(null)}
-        onSaved={() => {
-          setEditPod(null);
-          onChanged();
-        }}
-      />
-      <PodResubmitForm
-        pod={resubmitPod}
-        onClose={() => setResubmitPod(null)}
-        onSaved={() => {
-          setResubmitPod(null);
-          onChanged();
-        }}
-      />
-      <PodDeleteForm
-        podId={deletePod?.id ?? null}
-        podTitle={deletePod?.title ?? ''}
-        onClose={() => setDeletePod(null)}
-        onDeleted={() => {
-          setDeletePod(null);
-          onChanged();
-        }}
-      />
-      <PodCompleteForm
-        pod={completePod}
-        onClose={() => setCompletePod(null)}
-        onCompleted={() => {
-          setCompletePod(null);
-          onChanged();
-        }}
-      />
-      <TicketScanDialog pod={scanPod} onClose={() => setScanPod(null)} />
+      {dialogs}
     </Card>
   );
 }

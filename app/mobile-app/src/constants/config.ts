@@ -7,6 +7,8 @@ import Constants from 'expo-constants';
 import { logs } from '@duncit/logs';
 
 const LOCAL_API_PORT = 2001;
+/** mWeb's dev-server port (app/mweb vite.config.ts). */
+const LOCAL_WEB_PORT = 2003;
 
 /** True for `localhost` / `127.0.0.1` origins, which a phone or emulator can't
  * reach (there `localhost` is the device itself, not the dev machine). */
@@ -38,6 +40,23 @@ function resolveApiUrl(): string {
 
 const apiUrl = resolveApiUrl();
 
+/**
+ * The mWeb origin that belongs to THIS build — where a link the app hands out
+ * (a pod, a rating form) should point.
+ *
+ * Derived from the API origin rather than hardcoded, because the two always
+ * travel together: a local build must share a local link, a staging build a
+ * staging one. A dev origin is the one carrying the API's port, so it keeps its
+ * host and takes mWeb's port; a deployed origin only differs by its first
+ * label (server.duncit.com ↔ mweb.duncit.com, staging included).
+ */
+function resolveWebUrl(): string {
+  if (apiUrl.includes(`:${LOCAL_API_PORT}`)) {
+    return apiUrl.replace(`:${LOCAL_API_PORT}`, `:${LOCAL_WEB_PORT}`);
+  }
+  return apiUrl.replace('server.', 'mweb.');
+}
+
 if (__DEV__) {
   // Visible in the logs so a network error is easy to diagnose.
   logs.mobileApp.info('config', 'resolveApiUrl', {
@@ -49,6 +68,8 @@ if (__DEV__) {
 export const config = {
   // graphql.client appends `/graphql`, so this is the bare origin only.
   apiUrl,
+  // Where a link shared out of the app points — see resolveWebUrl.
+  webUrl: resolveWebUrl(),
   endpoints: {
     location: '/api/location',
   },

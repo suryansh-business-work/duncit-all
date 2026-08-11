@@ -15,6 +15,7 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import HostPodRow from './HostPodRow';
+import { useFeedbackLinkActions } from './useFeedbackLinkActions';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
 import {
   DEFAULT_HOST_PODS_FILTERS,
@@ -44,6 +45,7 @@ export default function HostPodsCard({
   errorMessage,
   onChanged,
 }: Readonly<HostPodsCardProps>) {
+  const feedbackLink = useFeedbackLinkActions();
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
   const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
@@ -82,6 +84,9 @@ export default function HostPodsCard({
             // A venue-rejected pod opens the FULL edit + resubmission flow; every
             // other pod keeps the limited title/description/media edit.
             onEdit={() => (isVenueRejected(p.venue_approval_status) ? setResubmitPod(p) : setEditPod(p))}
+            onOpenFeedback={() => feedbackLink.open(p)}
+            onShareFeedback={() => feedbackLink.share(p)}
+            onCopyFeedback={() => feedbackLink.copy(p)}
             onCancel={() => setDeletePod({ id: p.id, title: p.pod_title })}
           />
         ))}

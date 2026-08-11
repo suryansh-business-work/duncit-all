@@ -449,39 +449,84 @@ export const bouncerService = {
     // Only the parts this pod actually has are kept — a rating for a venue a
     // virtual pod never had would be a number nobody could act on.
     const ratings = normalizeRatings(input.ratings, await aspectsForPod(pod as any));
+    const where = { user_id: new Types.ObjectId(userId), pod_id: pod._id };
+    const already = await BouncerFeedbackModel.exists(where);
 
-    const doc = await BouncerFeedbackModel.create({
-      user_id: new Types.ObjectId(userId),
-      pod_id: pod._id,
-      host_id: hostId,
-      rating: input.rating,
-      ratings,
-      // Asking "what is this about?" separately is asking the guest to do the
-      // triage: the weakest score already says it.
-      category: input.category ?? deriveCategory(ratings),
-      message: (input.message ?? '').trim(),
-    });
+    // A guest has one opinion of a pod, not a new one per visit to the form —
+    // so re-rating rewrites what they said. That is what lets the shared
+    // feedback link open filled in and still be changeable.
+    const doc = await BouncerFeedbackModel.findOneAndUpdate(
+      where,
+      {
+        $set: {
+          host_id: hostId,
+          rating: input.rating,
+          ratings,
+          // Asking "what is this about?" separately is asking the guest to do
+          // the triage: the weakest score already says it.
+          category: input.category ?? deriveCategory(ratings),
+          message: (input.message ?? '').trim(),
+        },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
     const pub = await toFeedbackPub(doc);
     emit('bouncer:feedback_new', pub, hostId ? String(hostId) : null);
 
-    notifyHost({
-      hostId: hostId ? String(hostId) : null,
-      title: `New ${input.rating}★ feedback on "${pub.pod.title}"`,
-      // The stored category, not the sent one — it is usually derived.
-      body: pub.message
-        ? `${pub.category}: ${pub.message.slice(0, 120)}`
-        : `Category: ${pub.category}`,
-      link: `/bouncers?feedback=${pub.id}`,
-    }).catch((e) =>
-      logs.server.error('bouncer', 'submitFeedback', {
-        error: e,
-        msg: 'Feedback notify failed',
-        feedbackId: pub.id,
-      })
-    );
+    // Only the first rating pings the host. Someone tidying up their stars
+    // half an hour later is not news, and would read as a second review.
+    if (!already) {
+      notifyHost({
+        hostId: hostId ? String(hostId) : null,
+        title: `New ${input.rating}★ feedback on "${pub.pod.title}"`,
+        // The stored category, not the sent one — it is usually derived.
+        body: pub.message
+          ? `${pub.category}: ${pub.message.slice(0, 120)}`
+          : `Category: ${pub.category}`,
+        link: `/bouncers?feedback=${pub.id}`,
+      }).catch((e) =>
+        logs.server.error('bouncer', 'submitFeedback', {
+          error: e,
+          msg: 'Feedback notify failed',
+          feedbackId: pub.id,
+        })
+      );
+    }
 
     return pub;
+  },
+
+  /**
+   * Everything the standalone feedback page needs for one pod: the parts it
+   * can be rated on, and whatever this guest already said about it.
+   *
+   * The second half is the point — a host shares one link, and a guest who
+   * follows it twice sees their own stars rather than an empty form that would
+   * quietly replace them.
+   */
+  async getPodFeedbackForm(userId: string, podId: string) {
+    if (!Types.ObjectId.isValid(podId)) fail('BAD_USER_INPUT', 'Invalid pod_id');
+    const pod = await buildPodInfo(new Types.ObjectId(podId));
+    if (!pod) fail('NOT_FOUND', 'Pod not found');
+
+    const mine = await BouncerFeedbackModel.findOne({
+      user_id: new Types.ObjectId(userId),
+      pod_id: new Types.ObjectId(podId),
+    }).lean();
+
+    return {
+      pod: pod!,
+      mine: mine
+        ? {
+            rating: mine.rating,
+            ratings: mine.ratings.map((r) => ({ aspect: r.aspect, rating: r.rating })),
+            message: mine.message,
+            created_at: mine.created_at.toISOString(),
+            updated_at: mine.updated_at.toISOString(),
+          }
+        : null,
+    };
   },
 
   async listFeedback(limit = 100) {

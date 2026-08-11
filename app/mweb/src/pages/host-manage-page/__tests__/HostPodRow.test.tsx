@@ -19,6 +19,9 @@ const renderRow = (pod: Record<string, unknown>, handlers: Record<string, () => 
   const onScan = handlers.onScan ?? vi.fn();
   const onComplete = handlers.onComplete ?? vi.fn();
   const onEdit = handlers.onEdit ?? vi.fn();
+  const onOpenFeedback = handlers.onOpenFeedback ?? vi.fn();
+  const onShareFeedback = handlers.onShareFeedback ?? vi.fn();
+  const onCopyFeedback = handlers.onCopyFeedback ?? vi.fn();
   const onCancel = handlers.onCancel ?? vi.fn();
   render(
     <MemoryRouter>
@@ -27,11 +30,14 @@ const renderRow = (pod: Record<string, unknown>, handlers: Record<string, () => 
         onScan={onScan}
         onComplete={onComplete}
         onEdit={onEdit}
+        onOpenFeedback={onOpenFeedback}
+        onShareFeedback={onShareFeedback}
+        onCopyFeedback={onCopyFeedback}
         onCancel={onCancel}
       />
     </MemoryRouter>,
   );
-  return { onScan, onComplete, onEdit, onCancel };
+  return { onScan, onComplete, onEdit, onOpenFeedback, onShareFeedback, onCopyFeedback, onCancel };
 };
 
 /** The actions moved behind an overflow menu, so each one needs it opened. */

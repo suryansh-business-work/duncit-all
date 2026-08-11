@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { buildPodShareMessage } from '@duncit/utils';
 
+import { config } from '@/constants/config';
 import { PodOccurrence } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import type { HomePod } from '@/hooks/useHomeFeed';
@@ -155,7 +156,9 @@ export function podScheduleLabel(
   return label;
 }
 
-export const POD_WEB_BASE = 'https://mweb.duncit.com';
+/** The mWeb origin this build shares links to — local in dev, production in a
+ * release build. Hardcoding it meant a link tested locally opened production. */
+export const POD_WEB_BASE = config.webUrl;
 
 export interface PodSharable {
   pod_id: string;

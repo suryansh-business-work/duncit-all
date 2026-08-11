@@ -5,12 +5,16 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
+import FeedbackLinkItem from './FeedbackLinkItem';
 
 interface Props {
   podTitle: string;
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
+  onOpenFeedback: () => void;
+  onShareFeedback: () => void;
+  onCopyFeedback: () => void;
   onCancel: () => void;
 }
 
@@ -21,6 +25,9 @@ export default function HostPodActionsMenu({
   onScan,
   onComplete,
   onEdit,
+  onOpenFeedback,
+  onShareFeedback,
+  onCopyFeedback,
   onCancel,
 }: Readonly<Props>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -66,6 +73,13 @@ export default function HostPodActionsMenu({
           </ListItemIcon>
           <ListItemText primary="Edit pod" />
         </MenuItem>
+        {/* The rating link: tapping the row opens the form, and the two icons
+            beside it hand the link to the people who came. */}
+        <FeedbackLinkItem
+          onOpen={pick(onOpenFeedback)}
+          onShare={pick(onShareFeedback)}
+          onCopy={pick(onCopyFeedback)}
+        />
         <MenuItem onClick={pick(onCancel)} sx={{ color: 'error.main' }}>
           <ListItemIcon>
             <CancelIcon fontSize="small" color="error" />

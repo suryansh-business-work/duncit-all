@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.50.49",
+  "version": "1.50.50",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -75,6 +75,7 @@
     "expo-auth-session": "~7.0.11",
     "expo-build-properties": "~1.0.10",
     "expo-camera": "~17.0.10",
+    "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.9",
     "expo-document-picker": "~14.0.8",

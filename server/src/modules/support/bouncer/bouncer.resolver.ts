@@ -92,6 +92,10 @@ export const bouncerResolvers = {
       const user = requireAuth(ctx);
       return bouncerService.getPendingPodFeedback(user.id);
     },
+    podFeedbackForm: (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return bouncerService.getPodFeedbackForm(user.id, args.pod_id);
+    },
   },
   Mutation: {
     raiseBouncerSos: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import {
-  POD_FEEDBACK_ASPECT_KEY,
   buildPodFeedbackInput,
   canSubmitPodFeedback,
   orderedAspects,
   type PodFeedbackScores,
 } from '@duncit/utils';
 
-import { Field } from '@/components/Field';
-import { AspectRatingRow } from '@/components/support/AspectRatingRow';
+import { PodFeedbackFields } from '@/components/support/PodFeedbackFields';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -102,38 +100,14 @@ export function PodFeedbackPrompt() {
         {/* Seven rows plus a keyboard on a small phone: the sheet scrolls
             rather than pushing its buttons off the screen. */}
         <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack gap={2}>
-            {aspects.map((aspect) => {
-              const label = t(POD_FEEDBACK_ASPECT_KEY[aspect]);
-              return (
-                <AspectRatingRow
-                  key={aspect}
-                  aspect={aspect}
-                  label={label}
-                  value={scores[aspect] ?? 0}
-                  onChange={(value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
-                  starLabel={(stars) =>
-                    t('mweb.podFeedback.rateAspect', { vars: { aspect: label, stars } })
-                  }
-                />
-              );
-            })}
-          </YStack>
-        </ScrollView>
-
-        <Field label={t('mweb.podFeedback.comments')}>
-          <TextArea
-            testID="pod-feedback-comment"
-            aria-label={t('mweb.podFeedback.comments')}
-            value={message}
-            onChangeText={setMessage}
-            placeholder={t('mweb.podFeedback.commentsPlaceholder')}
-            placeholderTextColor="$muted"
-            maxLength={1000}
-            backgroundColor="$surface"
-            borderColor="$borderColor"
+          <PodFeedbackFields
+            aspects={aspects}
+            scores={scores}
+            onScore={(aspect, value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
+            message={message}
+            onMessage={setMessage}
           />
-        </Field>
+        </ScrollView>
         {failed && (
           <Text testID="pod-feedback-error" fontSize={12} color="$red10">
             {t('mweb.podFeedback.failed')}

@@ -3,6 +3,10 @@ import { Text, XStack } from 'tamagui';
 
 const STARS = [1, 2, 3, 4, 5];
 
+/** The gold a rating star is drawn in — also what marks the rating action in
+ * the host's pod menu, so the two read as the same feature. */
+export const STAR_COLOR = '#f5a623';
+
 interface Props {
   aspect: string;
   label: string;
@@ -39,7 +43,7 @@ export function AspectRatingRow({ aspect, label, value, onChange, starLabel }: R
             <MaterialIcons
               name={star <= value ? 'star' : 'star-border'}
               size={24}
-              color="#f5a623"
+              color={STAR_COLOR}
             />
           </XStack>
         ))}

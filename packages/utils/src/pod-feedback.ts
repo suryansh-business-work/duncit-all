@@ -83,6 +83,38 @@ export function orderedAspects(fromServer: readonly string[] | null | undefined)
 export const canSubmitPodFeedback = (scores: PodFeedbackScores): boolean =>
   (scores.OVERALL ?? 0) > 0;
 
+/**
+ * Where a pod's rating form lives on the web — the link a host shares with the
+ * people who came. One shape, so the mWeb route, the native deep link and the
+ * message the host sends can never point at three different places.
+ */
+export const podFeedbackPath = (podId: string): string => `/pod/${podId}/feedback`;
+
+/** The same path as a full URL, for a message that leaves the app. */
+export const podFeedbackLink = (podId: string, baseUrl: string): string =>
+  `${baseUrl}${podFeedbackPath(podId)}`;
+
+/** A rating the guest has already left, as the server returns it. */
+export interface MyPodFeedback {
+  rating: number;
+  ratings: ReadonlyArray<{ aspect: string; rating: number }>;
+  message: string;
+}
+
+/**
+ * A previous rating, back in the shape the form renders from — so following
+ * the link a second time shows the guest their own stars instead of a blank
+ * form that would silently overwrite them.
+ */
+export function scoresFromMyFeedback(mine: MyPodFeedback | null | undefined): PodFeedbackScores {
+  if (!mine) return {};
+  const scores: PodFeedbackScores = { OVERALL: mine.rating };
+  for (const entry of mine.ratings) {
+    if (KNOWN.has(entry.aspect)) scores[entry.aspect as PodFeedbackAspect] = entry.rating;
+  }
+  return scores;
+}
+
 export interface PodFeedbackInput {
   pod_id: string;
   rating: number;

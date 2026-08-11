@@ -67,6 +67,8 @@ export type RootStackParamList = {
   // shared mWeb deep links — so the web URL matches mWeb exactly; resolved to a
   // doc id via podBySlugs. podId/title stay for back-compat with older links.
   PodDetails: { podId?: string; clubSlug?: string; podSlug?: string; title?: string };
+  /** Rating form behind the link a host shares — mWeb's /pod/:podId/feedback. */
+  PodFeedback: { podId: string };
   // Always the club slug (/club/:clubSlug) — in-app taps and shared deep links —
   // resolved to a doc id via clubBySlug. clubId/title stay for back-compat.
   ClubDetails: { clubId?: string; clubSlug?: string; title?: string };
@@ -107,6 +109,7 @@ export type MenuRoute = Exclude<
   | 'Survey'
   | 'ChatRoom'
   | 'PodDetails'
+  | 'PodFeedback'
   | 'ClubDetails'
   | 'PodHistoryDetails'
   | 'Booking'

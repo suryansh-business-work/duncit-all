@@ -37,6 +37,7 @@ import { ForgotPasswordScreen } from '@/screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '@/screens/ResetPasswordScreen';
 import { NotFoundScreen } from '@/screens/NotFoundScreen';
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
+import { PodFeedbackScreen } from '@/screens/PodFeedbackScreen';
 import { PreviousPodsScreen } from '@/screens/PreviousPodsScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
@@ -173,6 +174,7 @@ export function RootNavigator() {
       <Stack.Screen name="Policy" component={PolicyScreen} />
       <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
       <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
+      <Stack.Screen name="PodFeedback" component={PodFeedbackScreen} />
       <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
       <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
       <Stack.Screen name="Venues" component={VenuesScreen} />

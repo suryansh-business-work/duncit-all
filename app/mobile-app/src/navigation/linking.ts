@@ -102,6 +102,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // link shared from mWeb opens the same screen in the app. The screens
       // resolve the slug → doc id via podBySlugs / clubBySlug.
       PodDetails: 'club/:clubSlug/pod/:podSlug',
+      // The rating link a host shares. Same grammar as mWeb, so the link opens
+      // the app when it is installed and the browser when it is not.
+      PodFeedback: 'pod/:podId/feedback',
       ClubDetails: 'club/:clubSlug',
       HostsVenues: 'hosts-venues',
       Venues: 'venues',

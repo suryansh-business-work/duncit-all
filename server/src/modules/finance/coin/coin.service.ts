@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import {
   CoinBalanceModel,
@@ -6,11 +7,17 @@ import {
   type ICoinBalance,
   type ICoinTransaction,
 } from './coin.model';
-import { settingsService } from '@modules/platform/settings/settings.service';
+import { coinSettingsService } from './coin.settings.service';
+import { UserModel } from '@modules/access/user/user.model';
+import type { PaymentTargetType } from '@modules/finance/payment/payment.model';
 import { logs } from '@observability/log';
 
 /** Mongo's duplicate-key error — the unique payment_id index rejecting a repeat. */
 const DUPLICATE_KEY = 11000;
+
+const badInput = (message: string): never => {
+  throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
+};
 
 /**
  * Coins earned on a spend. 1 coin = 1 rupee, so a fractional coin would be a
@@ -24,10 +31,14 @@ export function coinsForSpend(spendAmount: number, earnPct: number): number {
   return Math.floor((spend * pct) / 100);
 }
 
-const balancePub = (doc: ICoinBalance | null, earnPct: number) => ({
+const balancePub = (
+  doc: ICoinBalance | null,
+  rates: { pod: number; shop: number }
+) => ({
   balance: doc?.balance ?? 0,
   lifetime_earned: doc?.lifetime_earned ?? 0,
-  earn_pct: earnPct,
+  earn_pct: rates.pod,
+  shop_earn_pct: rates.shop,
 });
 
 const txnPub = (t: ICoinTransaction) => ({
@@ -48,16 +59,20 @@ export const coinService = {
    * Grant a buyer their coins for one successful payment. Idempotent per
    * payment: a retried checkout hits the unique index and the duplicate is
    * dropped rather than paying the reward twice.
+   *
+   * `targetType` picks the rate — a pod ticket and a shop order earn at their
+   * own configured percentages.
    */
   async creditForPayment(opts: {
     userId: string;
     paymentId: string;
     spendAmount: number;
     reason: string;
+    targetType?: PaymentTargetType | null;
   }): Promise<void> {
     if (!Types.ObjectId.isValid(opts.userId) || !opts.paymentId) return;
 
-    const earnPct = await settingsService.getCoinEarnPct();
+    const earnPct = await coinSettingsService.earnPctFor(opts.targetType);
     const value = coinsForSpend(opts.spendAmount, earnPct);
     // A 0% rate, or a spend too small to round up to one coin, earns nothing —
     // and must not leave an empty ledger row behind to explain.
@@ -221,11 +236,78 @@ export const coinService = {
     }
   },
 
+  /**
+   * A coin adjustment an admin typed, for one named person — the goodwill
+   * credit, the correction, the compensation no automatic rule covers.
+   *
+   * Deliberately NOT idempotent: unlike a payment or a referral there is no
+   * external event to key on, and two identical grants are two real decisions.
+   * The guard that matters is on the other side — a deduct can never take a
+   * balance below zero, and asking for more than the account holds is refused
+   * with the real number rather than quietly deducting a different amount than
+   * the one that was typed.
+   */
+  async adminAdjust(opts: {
+    userId: string;
+    adminId: string;
+    direction: 'GRANT' | 'DEDUCT';
+    coins: number;
+    reason: string;
+  }) {
+    const value = Math.floor(Number(opts.coins) || 0);
+    if (value <= 0) badInput('Enter how many coins to apply');
+    const reason = (opts.reason ?? '').trim();
+    if (!reason) badInput('A reason is required — it is what the ledger row explains');
+    if (!Types.ObjectId.isValid(opts.userId)) badInput('Choose a user');
+
+    const userId = new Types.ObjectId(opts.userId);
+    if (!(await UserModel.exists({ _id: userId }))) badInput('That account no longer exists');
+
+    const grant = opts.direction === 'GRANT';
+    // The deduct is a single guarded update for the same reason the redemption
+    // is: read-then-write lets two admins both pass the check and overdraw.
+    const balance = grant
+      ? await CoinBalanceModel.findOneAndUpdate(
+          { user_id: userId },
+          { $inc: { balance: value, lifetime_earned: value } },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        )
+      : await CoinBalanceModel.findOneAndUpdate(
+          { user_id: userId, balance: { $gte: value } },
+          { $inc: { balance: -value } },
+          { new: true }
+        );
+
+    if (!balance) {
+      const held = await this.balanceOf(opts.userId);
+      badInput(`That account holds ${held} coins — it cannot give up ${value}`);
+    }
+
+    await CoinTransactionModel.create({
+      user_id: userId,
+      type: grant ? 'CREDIT' : 'DEBIT',
+      amount: value,
+      balance_after: balance!.balance,
+      source: grant ? 'ADMIN_GRANT' : 'ADMIN_DEDUCT',
+      reason,
+      admin_id: new Types.ObjectId(opts.adminId),
+    });
+
+    return {
+      balance: balance!.balance,
+      lifetime_earned: balance!.lifetime_earned,
+      // Echoing what landed lets the console confirm the exact movement rather
+      // than re-deriving it from a number that may already have moved again.
+      applied: grant ? value : -value,
+    };
+  },
+
   async getMyBalance(userId: string) {
-    const earnPct = await settingsService.getCoinEarnPct();
-    if (!Types.ObjectId.isValid(userId)) return balancePub(null, earnPct);
+    const settings = await coinSettingsService.get();
+    const rates = { pod: settings.pod_join_earn_pct, shop: settings.shop_earn_pct };
+    if (!Types.ObjectId.isValid(userId)) return balancePub(null, rates);
     const doc = await CoinBalanceModel.findOne({ user_id: new Types.ObjectId(userId) });
-    return balancePub(doc, earnPct);
+    return balancePub(doc, rates);
   },
 
   async listMyTransactions(userId: string) {

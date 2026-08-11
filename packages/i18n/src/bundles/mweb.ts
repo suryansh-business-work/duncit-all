@@ -1382,11 +1382,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // with its own plural counter, so `{coins}` is what actually renders.
     coin: {
       title: 'Duncit Coin',
-      sidebarCaption: 'Earn {pct}% back on every payment',
+      sidebarCaption: 'Earn {pct}% back when you join a pod',
       balanceLabel: 'Coin balance',
       lifetimeLabel: 'Lifetime earned',
       rateNote:
-        'You earn {pct}% back as Duncit Coins on every successful payment. 1 coin = {symbol}1.',
+        'You earn {pct}% back as Duncit Coins when you join a pod, and {shopPct}% on shop orders. 1 coin = {symbol}1.',
       historyTitle: 'Transaction history',
       historyEmpty: 'No coin activity yet. Rewards from your payments will show up here.',
       earned: 'Earned',

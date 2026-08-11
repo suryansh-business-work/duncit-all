@@ -2,23 +2,12 @@ import { z } from 'zod';
 import { REFERRAL_MESSAGE_TOKENS } from '@duncit/utils';
 import type { ReferralSettings } from './queries';
 
-/** Sanity ceiling: a payout above this is a typo, not a promotion. */
-export const MAX_COINS_PER_REFERRAL = 100000;
-
-/**
- * Coins are held as a string so an emptied field stays empty rather than
- * collapsing to 0 — the difference between "not filled in yet" and "referrals
- * pay nothing", which are very different instructions to give the platform.
- */
-const coins = z
-  .string()
-  .trim()
-  .min(1, 'Enter how many coins a referral pays.')
-  .regex(/^\d+$/, 'Whole coins only — digits, no decimals or symbols.')
-  .refine(
-    (value) => Number.parseInt(value, 10) <= MAX_COINS_PER_REFERRAL,
-    `Keep the reward at or under ${MAX_COINS_PER_REFERRAL.toLocaleString('en-IN')} coins.`,
-  );
+/*
+  `coins_per_referral` is deliberately absent from this form. It is one of the
+  coin payout rules, and all of them are set together on Duncit Coin > Settings
+  so no screen can quote a reward the platform stopped paying. This page still
+  READS it — the preview below has to show members the real number.
+*/
 
 /*
   The link is the point of sharing, so the message has to carry it.
@@ -38,7 +27,6 @@ const shareMessage = z
   );
 
 export const referralSettingsSchema = z.object({
-  coins_per_referral: coins,
   gift_description: z.string().trim().max(300, 'Keep the gift line under 300 characters.'),
   share_message: shareMessage,
 });
@@ -46,7 +34,6 @@ export const referralSettingsSchema = z.object({
 export type ReferralSettingsForm = z.infer<typeof referralSettingsSchema>;
 
 export const BLANK_SETTINGS: ReferralSettingsForm = {
-  coins_per_referral: '',
   gift_description: '',
   share_message: '',
 };
@@ -54,7 +41,6 @@ export const BLANK_SETTINGS: ReferralSettingsForm = {
 /** Server payload -> form strings. */
 export function toFormValues(settings: ReferralSettings): ReferralSettingsForm {
   return {
-    coins_per_referral: String(settings.coins_per_referral ?? 0),
     gift_description: settings.gift_description ?? '',
     share_message: settings.share_message ?? '',
   };

@@ -188,6 +188,13 @@ async function bootstrap() {
     const { coinService } = await import('@modules/finance/coin/coin.service');
     await coinService.syncIndexes();
   });
+  // Carries the earn rate off AppSettings and the referral amount off
+  // ReferralSettings into the one document that now owns both. Skipping this
+  // step resets a configured platform back to the shipped defaults.
+  await safeSeed('coinSettings', async () => {
+    const { coinSettingsService } = await import('@modules/finance/coin/coin.settings.service');
+    await coinSettingsService.seed();
+  });
   await safeSeed('crmServicesOfferedSlugs', async () => {
     const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
     await serviceOfferedService.backfillSlugs();

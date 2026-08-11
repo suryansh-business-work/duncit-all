@@ -24,8 +24,6 @@ const DEFAULT_DRAFT_RETENTION_DAYS = 3;
 const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
 /** Default Account Health penalty when a venue owner cancels a pod. */
 const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
-/** Default share of a payment granted back to the buyer as Duncit Coins. */
-const DEFAULT_COIN_EARN_PCT = 10;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -48,13 +46,6 @@ const cleanVenueCancelHealthPenalty = (value: unknown) => {
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_VENUE_CANCEL_HEALTH_PENALTY;
 };
 
-// 0 is legal here too — it switches the coin reward off — so this cleaner also
-// avoids the `|| DEFAULT` idiom that would turn a deliberate 0 back into 10.
-const cleanCoinEarnPct = (value: unknown) => {
-  const n = Math.floor(Number(value));
-  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_COIN_EARN_PCT;
-};
-
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
@@ -69,7 +60,6 @@ const toAppPub = (d: any) => ({
   max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
   venue_cancel_health_penalty:
     d?.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
-  coin_earn_pct: d?.coin_earn_pct ?? DEFAULT_COIN_EARN_PCT,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -337,7 +327,6 @@ type AppSettingsUpdateInput = {
   draft_retention_days?: number;
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
-  coin_earn_pct?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -375,8 +364,6 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     update.venue_cancel_health_penalty = cleanVenueCancelHealthPenalty(
       input.venue_cancel_health_penalty,
     );
-  if (input.coin_earn_pct !== undefined)
-    update.coin_earn_pct = cleanCoinEarnPct(input.coin_earn_pct);
   return update;
 };
 
@@ -427,12 +414,10 @@ export const settingsService = {
     return cleanVenueCancelHealthPenalty(doc?.venue_cancel_health_penalty);
   },
 
-  /** Clamped Duncit Coin earn rate (0–100, default 10) — the percent of every
-   * successful payment granted back to the buyer as coins. */
-  async getCoinEarnPct(): Promise<number> {
-    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
-    return cleanCoinEarnPct(doc?.coin_earn_pct);
-  },
+  // The Duncit Coin earn rate used to be read here. It is a coin payout rule
+  // now, alongside the others, in coinSettingsService (Finance > Duncit Coin >
+  // Settings) — and split in two, since a pod join and a shop order earn at
+  // their own rates.
 
   /**
    * Public, non-secret client config the web/native apps need before login

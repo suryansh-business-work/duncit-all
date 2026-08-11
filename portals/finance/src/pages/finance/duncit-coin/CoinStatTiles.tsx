@@ -29,8 +29,11 @@ export default function CoinStatTiles({ stats, loading }: Readonly<Props>) {
         const hint = stats && tile.showValueHint
           ? coinValue(stats[tile.key], stats.currency_symbol)
           : undefined;
+        // Four across rather than six: the earn rate became two tiles when pod
+        // joins and shop orders got their own rates, and seven tiles at
+        // six-per-row leave a single orphan on the second line.
         return (
-          <Grid item xs={6} sm={4} md={2} key={tile.key}>
+          <Grid item xs={6} sm={4} md={3} key={tile.key}>
             <StatCard
               layout="split"
               label={tile.label}

@@ -56,7 +56,11 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
       </XStack>
       <Text fontSize={11.5} color="$muted" marginTop={12}>
         {t('mweb.coin.rateNote', {
-          vars: { pct: balance?.earn_pct ?? 0, symbol: currencySymbol },
+          vars: {
+            pct: balance?.earn_pct ?? 0,
+            shopPct: balance?.shop_earn_pct ?? 0,
+            symbol: currencySymbol,
+          },
         })}
       </Text>
     </YStack>

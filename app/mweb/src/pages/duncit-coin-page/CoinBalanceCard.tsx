@@ -51,7 +51,11 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
       </Stack>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
         {t('mweb.coin.rateNote', {
-          vars: { pct: balance?.earn_pct ?? 0, symbol: currencySymbol },
+          vars: {
+            pct: balance?.earn_pct ?? 0,
+            shopPct: balance?.shop_earn_pct ?? 0,
+            symbol: currencySymbol,
+          },
         })}
       </Typography>
     </Paper>

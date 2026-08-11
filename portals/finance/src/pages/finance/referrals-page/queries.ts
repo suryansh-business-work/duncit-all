@@ -13,6 +13,7 @@ export interface ReferralRow {
 
 export interface ReferralSettings {
   gift_description: string;
+  /** Read-only here — it is a coin payout rule, set on Duncit Coin > Settings. */
   coins_per_referral: number;
   share_message: string;
 }

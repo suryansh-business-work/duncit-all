@@ -9,6 +9,7 @@ import {
   type IReferralSettings,
 } from './referral.model';
 import { coinService } from '@modules/finance/coin/coin.service';
+import { coinSettingsService } from '@modules/finance/coin/coin.settings.service';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -19,10 +20,18 @@ const badInput = (message: string): never => {
 /** Readable 8-char code, e.g. DUN-9F3A2C. */
 const generateCode = () => `DUN-${randomBytes(3).toString('hex').toUpperCase()}`;
 
-/** The settings shape both the read and the write answer with. */
-const settingsPub = (doc: IReferralSettings) => ({
+/**
+ * The settings shape both the read and the write answer with.
+ *
+ * `coins_per_referral` is still reported here — the referral screens and the
+ * share message are what quote it — but it is no longer OWNED here: it is one
+ * of the coin payout rules, and all of those are edited together in Finance >
+ * Duncit Coin > Settings. Reporting a number this page cannot change is the
+ * point; it means the copy and the rate can never disagree.
+ */
+const settingsPub = (doc: IReferralSettings, coinsPerReferral: number) => ({
   gift_description: doc.gift_description ?? '',
-  coins_per_referral: doc.coins_per_referral ?? 0,
+  coins_per_referral: coinsPerReferral,
   share_message: doc.share_message ?? '',
 });
 
@@ -85,8 +94,9 @@ export const referralService = {
         codeDoc = await ReferralCodeModel.create({ user_id: userId, code: generateCode() });
       }
     }
-    const [settings, referred, referredBy] = await Promise.all([
+    const [settings, coinsPerReferral, referred, referredBy] = await Promise.all([
       getSettings(),
+      coinSettingsService.coinsPerReferral(),
       ReferralModel.find({ referrer_user_id: userId }).sort({ created_at: -1 }).lean(),
       ReferralModel.findOne({ referred_user_id: userId }).lean(),
     ]);
@@ -97,7 +107,7 @@ export const referralService = {
     return {
       code: codeDoc.code,
       gift_description: settings.gift_description ?? '',
-      coins_per_referral: settings.coins_per_referral ?? 0,
+      coins_per_referral: coinsPerReferral,
       share_message: settings.share_message ?? '',
       referred: referred.map((r: any) => ({
         user_id: String(r.referred_user_id),
@@ -152,8 +162,7 @@ export const referralService = {
     });
 
     try {
-      const settings = await getSettings();
-      const coins = settings.coins_per_referral ?? 0;
+      const coins = await coinSettingsService.coinsPerReferral();
       const referralId = String(referral._id);
       await coinService.creditForReferral({
         userId: referrerId,
@@ -211,28 +220,29 @@ export const referralService = {
   },
 
   async settings() {
-    return settingsPub(await getSettings());
+    const [doc, coins] = await Promise.all([
+      getSettings(),
+      coinSettingsService.coinsPerReferral(),
+    ]);
+    return settingsPub(doc, coins);
   },
 
   /**
-   * Finance: the gift copy, the rate and the share message, saved together.
+   * Finance: the gift copy and the share message.
    *
-   * They describe the same promise, and one changed without the other is a
-   * promise that lies — "earn 50 coins" beside a rate somebody quietly set to
-   * ten, or a share message offering a reward the platform stopped paying.
+   * The rate they describe is NOT written here. It is a coin payout rule, and
+   * every one of those is set in one place so no screen can quote a reward the
+   * platform stopped paying — the share message reaches members with `{coins}`
+   * still a placeholder precisely so it renders whatever the live rate is.
    */
   async updateSettings(input: {
     gift_description?: string | null;
-    coins_per_referral?: number | null;
     share_message?: string | null;
   }) {
     const doc = await getSettings();
     if (input.gift_description != null) doc.gift_description = input.gift_description;
-    if (input.coins_per_referral != null) {
-      doc.coins_per_referral = Math.max(0, Math.floor(input.coins_per_referral));
-    }
     if (input.share_message != null) doc.share_message = input.share_message.trim();
     await doc.save();
-    return settingsPub(doc);
+    return settingsPub(doc, await coinSettingsService.coinsPerReferral());
   },
 };

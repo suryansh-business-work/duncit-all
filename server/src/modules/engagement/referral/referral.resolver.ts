@@ -32,7 +32,6 @@ export const referralResolvers = {
       args: {
         input: {
           gift_description?: string | null;
-          coins_per_referral?: number | null;
           share_message?: string | null;
         };
       },

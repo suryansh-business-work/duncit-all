@@ -9,5 +9,6 @@ export { default as InvoiceManagementPage } from './InvoiceManagementPage';
 export { default as InvoiceTemplatePage } from './invoice-template-page';
 export { default as LedgerPage } from './LedgerPage';
 export { default as ReferralsPage } from './referrals-page';
+export { CoinDashboardPage, CoinTransactionsPage, CoinSettingsPage } from './duncit-coin';
 export { default as PayoutCyclesPage } from './PayoutCyclesPage';
 export { default as StartupDashboardPage } from './startup-dashboard';

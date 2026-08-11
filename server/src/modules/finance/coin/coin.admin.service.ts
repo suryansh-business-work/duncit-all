@@ -4,7 +4,8 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { settingsService } from '@modules/platform/settings/settings.service';
+import { UserModel } from '@modules/access/user/user.model';
+import { coinSettingsService } from './coin.settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 /**
@@ -64,6 +65,36 @@ interface PodInfo {
   id: string;
   title: string;
   slug: string;
+}
+
+interface UserInfo {
+  name: string;
+  email: string;
+}
+
+/**
+ * Names for ledger rows that have no payment to take them from — referral
+ * credits and manual adjustments — plus the admins who typed the manual ones.
+ * Without this a growing share of the ledger renders a blank where a person
+ * should be, which is exactly the column an audit reads first.
+ */
+async function loadUserMap(userIds: string[]): Promise<Map<string, UserInfo>> {
+  const unique = [...new Set(userIds.filter(Boolean))].filter((id) =>
+    Types.ObjectId.isValid(id)
+  );
+  if (unique.length === 0) return new Map();
+  const rows = await UserModel.find({ _id: { $in: unique } })
+    .select('email profile.first_name profile.last_name')
+    .lean();
+  return new Map(
+    rows.map((u: any) => [
+      String(u._id),
+      {
+        name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+        email: u.email ?? '',
+      },
+    ])
+  );
 }
 
 /** UTC 'YYYY-MM' keys for the last `span` months, oldest first. */
@@ -155,17 +186,23 @@ async function loadPodMap(podIds: string[]): Promise<Map<string, PodInfo>> {
 const toAdminRow = (
   t: ICoinTransaction,
   payments: Map<string, PaymentInfo>,
-  pods: Map<string, PodInfo>
+  pods: Map<string, PodInfo>,
+  users: Map<string, UserInfo>
 ) => {
   const payment = t.payment_id ? payments.get(t.payment_id) : undefined;
   const rowPods = (payment?.pod_ids ?? [])
     .map((id) => pods.get(id))
     .filter((pod): pod is PodInfo => !!pod);
+  // The payment's frozen snapshot wins when there is one: it is what the buyer
+  // was actually invoiced as, even if they have renamed the account since.
+  const account = users.get(String(t.user_id));
+  const admin = t.admin_id ? users.get(String(t.admin_id)) : undefined;
   return {
     id: t._id.toString(),
     user_id: String(t.user_id),
-    user_name: payment?.user_name ?? '',
-    user_email: payment?.user_email ?? '',
+    user_name: payment?.user_name || account?.name || '',
+    user_email: payment?.user_email || account?.email || '',
+    admin_name: admin?.name ?? '',
     type: t.type,
     amount: t.amount,
     balance_after: t.balance_after,
@@ -192,7 +229,7 @@ export const coinAdminService = {
     const keys = monthKeys(span);
     const from = new Date(`${keys[0]}-01T00:00:00.000Z`);
 
-    const [totals, buckets, balances, earnPct, finance] = await Promise.all([
+    const [totals, buckets, balances, coinSettings, finance] = await Promise.all([
       CoinTransactionModel.aggregate([
         {
           $group: {
@@ -222,7 +259,7 @@ export const coinAdminService = {
           },
         },
       ]),
-      settingsService.getCoinEarnPct(),
+      coinSettingsService.get(),
       getFinanceSettings(),
     ]);
 
@@ -239,7 +276,8 @@ export const coinAdminService = {
       wallet_balance_total: balances[0]?.balance ?? 0,
       transaction_count: totals[0]?.count ?? 0,
       holders_count: balances[0]?.holders ?? 0,
-      earn_pct: earnPct,
+      earn_pct: coinSettings.pod_join_earn_pct,
+      shop_earn_pct: coinSettings.shop_earn_pct,
       currency_symbol: finance.currency_symbol,
       // Every month in the window is emitted, so a quiet month reads as a zero
       // bar rather than vanishing and compressing the timeline.
@@ -249,6 +287,38 @@ export const coinAdminService = {
         redeemed: byMonth.get(month)?.redeemed ?? 0,
       })),
     };
+  },
+
+  /**
+   * Accounts the manual-adjustment picker can offer, with the balance each one
+   * currently holds — the number an admin needs before deciding what to type.
+   *
+   * A short term is answered with nothing rather than the first ten accounts on
+   * the platform: this picker exists to find ONE known person, and a list that
+   * appears before you have said who you mean invites picking the wrong one.
+   */
+  async userSearch(term: string) {
+    const needle = (term ?? '').trim();
+    if (needle.length < 2) return [];
+    const rx = new RegExp(needle.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
+    const users = await UserModel.find({
+      $or: [{ email: rx }, { 'profile.first_name': rx }, { 'profile.last_name': rx }],
+    })
+      .select('email profile.first_name profile.last_name')
+      .limit(10)
+      .lean();
+    const balances = await CoinBalanceModel.find({
+      user_id: { $in: users.map((u: any) => u._id) },
+    })
+      .select('user_id balance')
+      .lean();
+    const byUser = new Map(balances.map((b: any) => [String(b.user_id), b.balance ?? 0]));
+    return users.map((u: any) => ({
+      id: String(u._id),
+      full_name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+      email: u.email ?? '',
+      balance: byUser.get(String(u._id)) ?? 0,
+    }));
   },
 
   /**
@@ -268,7 +338,17 @@ export const coinAdminService = {
     const paymentIds = docs.map((d) => d.payment_id).filter((id): id is string => !!id);
     const payments = await loadPaymentMap(paymentIds);
     const podIds = [...payments.values()].flatMap((p) => p.pod_ids);
-    const pods = await loadPodMap([...new Set(podIds)]);
-    return { rows: docs.map((d) => toAdminRow(d, payments, pods)), total, page, page_size };
+    // Both sides of a manual row in one lookup: the account it moved coins for,
+    // and the admin who typed it.
+    const [pods, users] = await Promise.all([
+      loadPodMap([...new Set(podIds)]),
+      loadUserMap(docs.flatMap((d) => [String(d.user_id), d.admin_id ? String(d.admin_id) : ''])),
+    ]);
+    return {
+      rows: docs.map((d) => toAdminRow(d, payments, pods, users)),
+      total,
+      page,
+      page_size,
+    };
   },
 };

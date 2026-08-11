@@ -531,8 +531,6 @@ export type AppReleaseEmailResult = {
 
 export type AppSettings = {
   __typename?: 'AppSettings';
-  /** Percent of every successful payment granted back to the buyer as Duncit Coins, where 1 coin = 1 rupee (0 turns the reward off). */
-  coin_earn_pct: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1857,6 +1855,20 @@ export type CoHostStatus =
   | 'DECLINED'
   | 'PENDING';
 
+export type CoinAdjustDirection =
+  | 'DEDUCT'
+  | 'GRANT';
+
+/** What one manual adjustment left behind, so the console can confirm it landed. */
+export type CoinAdjustResult = {
+  __typename?: 'CoinAdjustResult';
+  /** Signed movement: positive for a grant, negative for a deduction. */
+  applied: Scalars['Float']['output'];
+  balance: Scalars['Float']['output'];
+  lifetime_earned: Scalars['Float']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
 /** A pod a coin row is attributable to, named for the admin ledger. */
 export type CoinAdminPod = {
   __typename?: 'CoinAdminPod';
@@ -1871,12 +1883,14 @@ export type CoinAdminStats = {
   __typename?: 'CoinAdminStats';
   /** Currency the coin value is quoted in — 1 coin = 1 unit of it. */
   currency_symbol: Scalars['String']['output'];
-  /** Percent of a payment currently granted back as coins (Admin > Pod Settings). */
+  /** Percent of a pod join currently granted back as coins. */
   earn_pct: Scalars['Float']['output'];
   /** Accounts holding a non-zero balance. */
   holders_count: Scalars['Int']['output'];
   /** Oldest first, one entry per calendar month, empty months filled with zeroes. */
   monthly: Array<CoinMonthBucket>;
+  /** Percent of a shop order currently granted back as coins. */
+  shop_earn_pct: Scalars['Float']['output'];
   /** Every coin ever granted — the sum of all CREDIT rows. */
   total_circulated: Scalars['Float']['output'];
   /** Circulated minus redeemed: the coins still sitting with users. */
@@ -1896,6 +1910,8 @@ export type CoinAdminStats = {
 /** One coin ledger row joined to its payment and the pods that payment bought. */
 export type CoinAdminTransaction = {
   __typename?: 'CoinAdminTransaction';
+  /** Who typed this adjustment. Empty on every automatic row. */
+  admin_name: Scalars['String']['output'];
   amount: Scalars['Float']['output'];
   balance_after: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
@@ -1920,7 +1936,11 @@ export type CoinAdminTransaction = {
   type: Scalars['String']['output'];
   user_email: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
-  /** Buyer name frozen on the payment. Empty when the row has no payment. */
+  /**
+   * Who the coins moved for. Taken from the buyer name frozen on the payment,
+   * and looked up on the account for the rows that have no payment — a referral
+   * credit or a manual adjustment names its person too.
+   */
   user_name: Scalars['String']['output'];
 };
 
@@ -1937,10 +1957,12 @@ export type CoinAdminTransactionTablePage = {
 export type CoinBalance = {
   __typename?: 'CoinBalance';
   balance: Scalars['Float']['output'];
-  /** Percent of a payment currently granted back as coins (Admin > Pod Settings). */
+  /** Percent of a pod join currently granted back as coins. */
   earn_pct: Scalars['Float']['output'];
   /** Every coin ever earned, so the total survives future spending. */
   lifetime_earned: Scalars['Float']['output'];
+  /** Percent of a shop order currently granted back as coins. */
+  shop_earn_pct: Scalars['Float']['output'];
 };
 
 /** One calendar month of coin flow. The client formats the label from the key. */
@@ -1950,6 +1972,28 @@ export type CoinMonthBucket = {
   /** Calendar month as a 'YYYY-MM' key, in UTC. */
   month: Scalars['String']['output'];
   redeemed: Scalars['Float']['output'];
+};
+
+/**
+ * Every rule that decides how many coins someone is given, in one place
+ * (Finance > Duncit Coin > Settings).
+ */
+export type CoinSettings = {
+  __typename?: 'CoinSettings';
+  /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
+  coins_per_referral: Scalars['Int']['output'];
+  /** Percent of a pod-ticket payment granted back to the buyer (0 turns it off). */
+  pod_join_earn_pct: Scalars['Int']['output'];
+  /** Percent of a shop/product order granted back to the buyer (0 turns it off). */
+  shop_earn_pct: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** Every field is optional; an omitted one is left alone. */
+export type CoinSettingsInput = {
+  coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
+  pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
+  shop_earn_pct?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /** One row of the coin ledger — insert-only, newest first. */
@@ -1968,6 +2012,19 @@ export type CoinTransaction = {
   /** Order total the grant was computed from. */
   spend_amount: Scalars['Float']['output'];
   type: Scalars['String']['output'];
+};
+
+/**
+ * One account the manual-adjustment picker can offer. Deliberately narrow: the
+ * full User type would ship a profile per keystroke, and the balance is the one
+ * extra fact an admin needs before typing an amount.
+ */
+export type CoinUserOption = {
+  __typename?: 'CoinUserOption';
+  balance: Scalars['Float']['output'];
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
 };
 
 export type CommsLogEntity =
@@ -5986,6 +6043,14 @@ export type Mutation = {
   addUserRole: User;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
+  /**
+   * Finance: hand one named account coins, or take them back.
+   *
+   * 'reason' is required — a manual row has no payment or referral to explain
+   * itself, so the words are the whole audit trail. A deduction larger than the
+   * balance is refused rather than partially applied.
+   */
+  adjustUserCoins: CoinAdjustResult;
   /** Admin assistant chat backed by OpenAI with limited internal lookup context. */
   adminAiChat: Scalars['String']['output'];
   adminCreateHost: Host;
@@ -6767,6 +6832,8 @@ export type Mutation = {
   updateChallenge: Challenge;
   updateClub: Club;
   updateClubAdminProfile: ClubAdminProfile;
+  /** Finance: set what a pod join, a shop order and a referral each pay. */
+  updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
   updateContract: Contract;
@@ -6958,6 +7025,14 @@ export type MutationAddUserRoleArgs = {
 
 export type MutationAdjustHealthArgs = {
   input: AdjustHealthInput;
+};
+
+
+export type MutationAdjustUserCoinsArgs = {
+  coins: Scalars['Int']['input'];
+  direction: CoinAdjustDirection;
+  reason: Scalars['String']['input'];
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -9346,6 +9421,11 @@ export type MutationUpdateClubAdminProfileArgs = {
 };
 
 
+export type MutationUpdateCoinSettingsArgs = {
+  input: CoinSettingsInput;
+};
+
+
 export type MutationUpdateCommsProviderArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCommsProviderInput;
@@ -10304,6 +10384,15 @@ export type PaymentTargetType =
   | 'OTHER'
   | 'POD'
   | 'PRODUCT';
+
+/** Filter-wide KPI totals for the Payment Logs cards (SUCCESS payments only, no row cap). */
+export type PaymentTotals = {
+  __typename?: 'PaymentTotals';
+  count: Scalars['Int']['output'];
+  fee: Scalars['Float']['output'];
+  gross: Scalars['Float']['output'];
+  gst: Scalars['Float']['output'];
+};
 
 export type PayoutMode =
   | 'IMMEDIATE'
@@ -12042,10 +12131,14 @@ export type Query = {
   clubsTable: ClubTablePage;
   /** Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited. */
   coHostCandidates: Array<CoHostCandidate>;
-  /** Admin > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
+  /** Finance > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
   coinAdminStats: CoinAdminStats;
-  /** Admin > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
+  /** Every coin payout rule, for Finance > Duncit Coin > Settings. */
+  coinSettings: CoinSettings;
+  /** Finance > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
   coinTransactionsTable: CoinAdminTransactionTablePage;
+  /** Name/email search for the manual-adjustment picker. Under two characters returns nothing. */
+  coinUserSearch: Array<CoinUserOption>;
   commsProvider?: Maybe<CommsProvider>;
   /**
    * Lightweight selector for portals that need to pick a provider when
@@ -12415,6 +12508,8 @@ export type Query = {
   paymentInvoicePdfBase64: Scalars['String']['output'];
   paymentReleaseRequests: Array<PaymentReleaseRequest>;
   paymentReleaseRequestsTable: PaymentReleaseRequestTablePage;
+  /** Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only. */
+  paymentTotals: PaymentTotals;
   payments: Array<Payment>;
   paymentsTable: PaymentTablePage;
   pexelsSearch: PexelsSearchResult;
@@ -13102,6 +13197,11 @@ export type QueryCoinAdminStatsArgs = {
 export type QueryCoinTransactionsTableArgs = {
   pod_doc_id?: InputMaybe<Scalars['ID']['input']>;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCoinUserSearchArgs = {
+  term: Scalars['String']['input'];
 };
 
 
@@ -13973,6 +14073,11 @@ export type QueryPaymentReleaseRequestsTableArgs = {
 };
 
 
+export type QueryPaymentTotalsArgs = {
+  filter?: InputMaybe<PaymentFilterInput>;
+};
+
+
 export type QueryPaymentsArgs = {
   filter?: InputMaybe<PaymentFilterInput>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -14102,6 +14207,7 @@ export type QueryPodPlansTableArgs = {
 
 
 export type QueryPodSettlementPreviewArgs = {
+  host_user_id?: InputMaybe<Scalars['ID']['input']>;
   pod_id: Scalars['ID']['input'];
   venue_bill_amount: Scalars['Float']['input'];
 };
@@ -14874,7 +14980,12 @@ export type ReferralEntry = {
 
 export type ReferralSettings = {
   __typename?: 'ReferralSettings';
-  /** Coins EACH side of a referral earns — the referrer and the new member. */
+  /**
+   * Coins EACH side of a referral earns — the referrer and the new member.
+   * Read-only here: it is a coin payout rule, set in Finance > Duncit Coin >
+   * Settings alongside the earn rates, and reported here so the copy that quotes
+   * it can never drift from what is actually paid.
+   */
   coins_per_referral: Scalars['Int']['output'];
   gift_description: Scalars['String']['output'];
   /** Share message template, with its {code}, {link} and {coins} placeholders. */
@@ -14883,7 +14994,6 @@ export type ReferralSettings = {
 
 /** Finance > Referrals. Every field is optional; an omitted one is left alone. */
 export type ReferralSettingsInput = {
-  coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
   gift_description?: InputMaybe<Scalars['String']['input']>;
   share_message?: InputMaybe<Scalars['String']['input']>;
 };
@@ -16517,8 +16627,6 @@ export type UpdateAiPromptInput = {
 };
 
 export type UpdateAppSettingsInput = {
-  /** Percent of every successful payment granted back as Duncit Coins (0-100, 0 turns the reward off). */
-  coin_earn_pct?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;

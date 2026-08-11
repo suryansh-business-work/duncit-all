@@ -735,6 +735,8 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       paymentId: doc.payment_id,
       spendAmount: doc.total,
       reason: doc.description || 'Purchase',
+      // Pod tickets and shop orders earn at separately configured rates.
+      targetType: doc.target_type,
     });
   } catch (e) {
     logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Coin settlement failed' });

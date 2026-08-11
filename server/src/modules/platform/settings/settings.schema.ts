@@ -32,8 +32,6 @@ export const settingsTypeDefs = gql`
     max_backout_attempts: Int!
     "Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty)."
     venue_cancel_health_penalty: Int!
-    "Percent of every successful payment granted back to the buyer as Duncit Coins, where 1 coin = 1 rupee (0 turns the reward off)."
-    coin_earn_pct: Int!
     updated_at: String
   }
 
@@ -82,8 +80,6 @@ export const settingsTypeDefs = gql`
     max_backout_attempts: Int
     "Account Health points deducted from a venue when its owner cancels a pod booked there (0-100, 0 disables the penalty)."
     venue_cancel_health_penalty: Int
-    "Percent of every successful payment granted back as Duncit Coins (0-100, 0 turns the reward off)."
-    coin_earn_pct: Int
   }
 
   type FeatureFlag {

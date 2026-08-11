@@ -57,11 +57,13 @@ export const ticketTypeDefs = /* GraphQL */ `
 
   """
   Where the request came from. WEBSITE is the contact form on duncit.com,
-  which anyone can use without an account.
+  which anyone can use without an account. EMAIL is a message that arrived in a
+  mailbox connected under Mail Automation.
   """
   enum TicketSource {
     APP
     WEBSITE
+    EMAIL
   }
 
   type Ticket {

@@ -31,6 +31,7 @@ export function SignupScreen() {
         dob: values.dob,
         email: values.email,
         password: values.password,
+        referralCode: values.referralCode,
       });
       authenticate(result.token, result.surveyCompleted);
     } catch (e) {
@@ -40,11 +41,17 @@ export function SignupScreen() {
     }
   };
 
+  /*
+    Google hands back a finished account with no form attached, so its referral
+    question has to be asked afterwards — hence the third argument, which routes
+    the gate to the skippable referral step before the survey. The email path
+    above never needs it: its form already carried the code.
+  */
   const handleGoogle = async (idToken: string) => {
     setError(null);
     try {
       const result = await signupWithGoogle(idToken);
-      authenticate(result.token, result.surveyCompleted);
+      authenticate(result.token, result.surveyCompleted, true);
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
     }

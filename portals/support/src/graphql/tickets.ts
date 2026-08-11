@@ -196,7 +196,7 @@ export interface TicketMessage {
 }
 
 /** Where the request came from — the app, or the contact form on duncit.com. */
-export type TicketSource = 'APP' | 'WEBSITE';
+export type TicketSource = 'APP' | 'WEBSITE' | 'EMAIL';
 
 export interface Ticket {
   id: string;

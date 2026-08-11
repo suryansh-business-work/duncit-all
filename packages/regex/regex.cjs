@@ -60,6 +60,15 @@ const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/**
+ * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,
+ * exactly what the server generates (referral.service `generateCode`).
+ *
+ * Shared because the signup box on mWeb and the one in the native app must
+ * agree on it, and because a typed code is now the ONLY way one is redeemed.
+ */
+const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -75,6 +84,7 @@ module.exports = {
   UPI_ID,
   BANK_ACCOUNT_NUMBER,
   GSTIN,
+  REFERRAL_CODE,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
   isEmail: (v) => EMAIL.test(v),
@@ -85,4 +95,5 @@ module.exports = {
   isUpiId: (v) => UPI_ID.test(v),
   isBankAccountNumber: (v) => BANK_ACCOUNT_NUMBER.test(v),
   isGstin: (v) => GSTIN.test(v),
+  isReferralCode: (v) => REFERRAL_CODE.test(v),
 };

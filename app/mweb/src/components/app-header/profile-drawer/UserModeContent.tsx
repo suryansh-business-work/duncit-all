@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
@@ -27,7 +28,9 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, onNavig
   const partnerMenus = buildPartnerMenus(roles, mode);
   return (
     <>
-      <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
+      <Box data-tour="profile-details">
+        <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
+      </Box>
       {percent < 100 && <IncompleteBanner percent={percent} onComplete={() => onNavigate('/account')} />}
       <QuickActionGrid onNavigate={onNavigate} />
       <VenuesCard onNavigate={onNavigate} />

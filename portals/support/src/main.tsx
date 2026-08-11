@@ -1,5 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
+import { ConfirmProvider } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
@@ -20,5 +21,8 @@ mountPortal({
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.support,
   loadUser,
+  // Same arrangement as the other portals: useConfirm() needs this above the
+  // tree or it throws the moment a page asks for a confirmation.
+  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

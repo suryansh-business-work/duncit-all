@@ -6,11 +6,22 @@
 const isDevelopment = import.meta.env.DEV;
 
 const fallback = isDevelopment
-  ? { graphqlUrl: 'http://localhost:2001/graphql', appUrl: 'http://localhost:2008' }
-  : { graphqlUrl: 'https://server.duncit.com/graphql', appUrl: 'https://finance.duncit.com' };
+  ? {
+      graphqlUrl: 'http://localhost:2001/graphql',
+      appUrl: 'http://localhost:2008',
+      mwebUrl: 'http://localhost:2003',
+    }
+  : {
+      graphqlUrl: 'https://server.duncit.com/graphql',
+      appUrl: 'https://finance.duncit.com',
+      mwebUrl: 'https://mweb.duncit.com',
+    };
 
 export const urlConfigs = {
   isDevelopment,
   graphqlUrl: import.meta.env.VITE_GRAPHQL_URL || fallback.graphqlUrl,
   appUrl: import.meta.env.VITE_APP_URL || fallback.appUrl,
+  // Where a referral link lands — mWeb hosts signup, so the share-message
+  // preview on Finance > Referrals shows the URL members will actually send.
+  mwebUrl: import.meta.env.VITE_MWEB_URL || fallback.mwebUrl,
 };

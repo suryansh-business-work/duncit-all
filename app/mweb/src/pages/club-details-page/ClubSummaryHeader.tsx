@@ -59,7 +59,11 @@ export default function ClubSummaryHeader({
         boxShadow: '0 24px 54px rgba(9,7,18,0.34)',
       }}
     >
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      {/* Identity only — name, category and the club's own description. The
+          stats row below is deliberately outside it: native has no equivalent
+          block in that position, and covering it here would put the follower
+          count inside one surface's step and not the other's. */}
+      <Stack direction="row" spacing={1.5} alignItems="center" data-tour="club-header">
         <Avatar
           src={featureUrl}
           variant="rounded"
@@ -96,6 +100,7 @@ export default function ClubSummaryHeader({
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
         <Button
           fullWidth
+          data-tour="club-follow"
           variant={following ? 'outlined' : 'contained'}
           startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />}
           onClick={onToggleFollow}

@@ -16,6 +16,8 @@ export interface SignupValues {
   dob: string;
   email: string;
   password: string;
+  /** A friend's code, checked by the server BEFORE the account is created. */
+  referralCode?: string;
 }
 
 export interface LoginValues {
@@ -44,6 +46,7 @@ export function dobToIso(dob: string): string {
 
 export async function register(values: SignupValues): Promise<AuthOutcome> {
   const { first_name, last_name } = splitName(values.name);
+  const referralCode = (values.referralCode ?? '').trim().toUpperCase();
   const data = await graphqlRequest(RegisterDocument, {
     input: {
       first_name,
@@ -51,6 +54,9 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       email: values.email.trim().toLowerCase(),
       password: values.password,
       dob: dobToIso(values.dob),
+      // Omitted rather than sent empty: the server treats a present-but-blank
+      // code the same way, and an absent field says what happened more plainly.
+      ...(referralCode ? { referral_code: referralCode } : {}),
     },
   });
   await setAuthToken(data.register.token);

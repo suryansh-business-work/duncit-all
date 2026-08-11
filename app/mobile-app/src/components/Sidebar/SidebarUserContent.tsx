@@ -4,6 +4,7 @@ import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-co
 import type { MenuRoute } from '@/navigation/types';
 import type { StudioMode } from '@/utils/studio-mode';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
@@ -38,7 +39,9 @@ export function SidebarUserContent({
   const partnerMenus = buildPartnerMenus(roles, mode);
   return (
     <YStack>
-      <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
+      <TourAnchor tour="profile" anchor="profile-details">
+        <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
+      </TourAnchor>
       {percent < 100 ? (
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}

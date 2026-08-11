@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
+import { TourAnchor } from '@/tours/TourAnchor';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -98,20 +99,27 @@ export function PodInfo({
         </Text>
       ) : null}
       <CategoryBreadcrumb crumbs={categoryCrumbs} />
-      <XStack gap={8} flexWrap="wrap">
-        <Chip label={podPriceLabel(pod, t)} primary />
-        <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode, t)} />
-        {time ? (
-          <Chip
-            icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
-            label={time.label}
-            tone={TONE[time.tone]}
-          />
-        ) : null}
-      </XStack>
+      {/* The chip row carries all three facts the tour step names, in its order:
+          price, Physical/Virtual, and when it runs. */}
+      <TourAnchor tour="pod-details" anchor="pod-summary">
+        <XStack gap={8} flexWrap="wrap">
+          <Chip label={podPriceLabel(pod, t)} primary />
+          <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode, t)} />
+          {time ? (
+            <Chip
+              icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
+              label={time.label}
+              tone={TONE[time.tone]}
+            />
+          ) : null}
+        </XStack>
+      </TourAnchor>
       <XStack gap={10}>
         <StatBox label={t('mweb.podDetails.peopleIn')} value={attendees} />
-        <StatBox label={t('mweb.podDetails.spotsLeft')} value={remaining} />
+        {/* Half of a two-box row, so the wrapper has to carry the flex on. */}
+        <TourAnchor tour="pod-details" anchor="pod-spots" style={{ flex: 1 }}>
+          <StatBox label={t('mweb.podDetails.spotsLeft')} value={remaining} />
+        </TourAnchor>
       </XStack>
       <XStack gap={8} flexWrap="wrap">
         {hasSpots ? (

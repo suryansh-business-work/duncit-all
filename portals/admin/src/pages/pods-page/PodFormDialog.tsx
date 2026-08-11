@@ -1,8 +1,14 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import { useApolloClient } from '@apollo/client';
 import type { UseFormReturn } from 'react-hook-form';
-import { PodEditorDialog, type PodFormConfig, type PodFormValues } from '@duncit/pod-form';
+import {
+  PodEditorDialog,
+  VENUE_AVAILABLE_SLOTS,
+  type PodFormConfig,
+  type PodFormValues,
+} from '@duncit/pod-form';
 import AiFillButton from '../../components/AiFillButton';
-import { applyAiFillToForm } from './podFormAi';
+import { buildAiFilledPod, type AvailableSlot } from './podFormAi';
 import { MEETING_PLATFORMS, generateMeetingLink } from './meeting-platforms';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
@@ -49,7 +55,38 @@ export default function PodFormDialog({
   const methodsRef = useRef<UseFormReturn<PodFormValues> | null>(null);
   const fmt = useDateFormat();
   const { t } = useTranslation();
+  const client = useApolloClient();
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
+
+  // The same query the slot calendar runs, so the slot an AI fill books is one
+  // the picker then shows as selected.
+  const fetchSlots = useCallback(
+    async (venueId: string): Promise<AvailableSlot[]> => {
+      const { data } = await client.query({
+        query: VENUE_AVAILABLE_SLOTS,
+        variables: { venue_id: venueId, from: new Date().toISOString() },
+        fetchPolicy: 'network-only',
+      });
+      return data?.venueAvailableSlots ?? [];
+    },
+    [client],
+  );
+
+  const handleAiFill = async (d: any) => {
+    const methods = methodsRef.current;
+    if (!methods) return;
+    const lookups = {
+      clubs,
+      venues,
+      hosts,
+      clubVenueIds: getClubVenueIds,
+      slotDrivenDates: config.showVenueSlot,
+    };
+    const next = await buildAiFilledPod(d, methods.getValues(), lookups, fetchSlots);
+    // Defaults stay the pod's own: the slot picker reads them to keep offering
+    // the slot an edited pod already booked.
+    methods.reset(next, { keepDefaultValues: true });
+  };
 
   return (
     <PodEditorDialog
@@ -78,16 +115,7 @@ export default function PodFormDialog({
         methodsRef.current = methods;
       }}
       hideDraftOnEdit
-      titleExtras={
-        <AiFillButton
-          entity="POD"
-          onFill={(d: any) => {
-            const methods = methodsRef.current;
-            if (!methods) return;
-            applyAiFillToForm(d, methods.getValues(), (next) => methods.reset(next));
-          }}
-        />
-      }
+      titleExtras={<AiFillButton entity="POD" onFill={handleAiFill} />}
     />
   );
 }

@@ -389,5 +389,94 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       leaveStay: 'Stay on this page',
       leaveAnyway: 'Leave anyway',
     },
+    mailAutomation: {
+      title: 'Mail Automation',
+      subtitle:
+        'Connect a Gmail mailbox so it answers itself. Tech owns the connection; Support writes what it says and which queue it opens.',
+      notConfigured:
+        'Google OAuth is not configured. Add a Client ID and Client Secret in Environment Variables → Google OAuth, then come back.',
+      // Three separate steps in the Google Cloud console, and they are easy to
+      // mistake for one. Adding the Gmail scopes to the consent screen does NOT
+      // enable the Gmail API — consent then succeeds and the connection fails
+      // afterwards with a 403, which is a confusing way to learn this.
+      scopeHint:
+        'On the Google Cloud project: enable the Gmail API, give this OAuth client the Gmail read and send scopes, and register {redirect} as an authorised redirect URI.',
+      connect: 'Connect Gmail',
+      connecting: 'Opening Google…',
+      connected: '{email} is connected.',
+      connectFailed: 'Could not connect the mailbox: {reason}',
+      cancelled: 'Connection cancelled — nothing was changed.',
+      empty: 'No mailbox is connected yet. Connect one to start automating replies.',
+      disconnect: 'Disconnect',
+      disconnectTitle: 'Disconnect {email}?',
+      disconnectMessage:
+        'The mailbox stops being read and stops replying. Tickets it already opened stay exactly as they are, and its rule is forgotten — reconnecting starts from the default message.',
+      disconnected: '{email} disconnected',
+      alreadyConnected:
+        '{email} was already connected. Its Google access has been refreshed and the reply rule Support wrote for it was left exactly as it was — nothing was reset.',
+      grantLost: 'The Google grant is gone. Reconnect this mailbox.',
+      paused: 'Paused by Support',
+      running: 'Running',
+      neverPolled: 'Not checked yet',
+      aiOn: 'AI writes the reply',
+      aiOff: 'Sends the message as written',
+      ruleHint: 'The reply message and the queue are set in the Support portal.',
+    },
+  },
+  support: {
+    mailAutomation: {
+      title: 'Mail Automation',
+      subtitle:
+        'What a connected mailbox replies with, and which queue an email opens. Tech connects the mailbox; everything below is yours.',
+      empty:
+        'No mailbox is connected yet. Ask Tech to connect one under Tech → Mail Automation.',
+      stepMailbox: 'Mailbox',
+      stepMessage: 'Reply message',
+      stepTicket: 'Ticket & response time',
+      mailboxHint:
+        'Pick the mailbox this rule belongs to. Connecting and disconnecting happens in the Tech portal.',
+      mailboxNotConnected: 'This mailbox has lost its Google grant — Tech needs to reconnect it.',
+      automationActive: 'Automation running',
+      automationPaused: 'Automation paused — mail is read but nothing is answered',
+      messageLabel: 'What every first message gets back',
+      messageHint:
+        'Use {tokens} anywhere in the text. {ticketToken} is required — it is the reference the sender quotes back to you.',
+      messageRequired: 'Write the reply message',
+      messageNeedsTicket: 'Include {ticketToken} so the sender gets their reference',
+      aiLabel: 'Let AI write the actual reply',
+      aiHint:
+        'OpenAI rewrites your message so it answers the email in front of it. Every fact and promise you wrote is kept, and the reference number is checked before it sends. With this off, your message goes exactly as written.',
+      preview: 'Preview the reply',
+      previewTitle: 'What the sender receives',
+      previewByAi: 'Written by AI from your message',
+      previewByTemplate: 'Your message, as written',
+      previewFailed: 'Could not build a preview: {reason}',
+      ticketLabel: 'What an email opens',
+      ticketSupport: 'Support ticket',
+      ticketSupportHint: 'The ordinary conversation queue, answered by an agent.',
+      ticketGrievance: 'Grievance ticket',
+      ticketGrievanceHint: 'A legal filing with a redressal clock. Goes to the legal queue.',
+      ticketReport: 'Report a problem',
+      ticketReportHint: 'Triaged like an in-app bug report, with the sender as the reporter.',
+      slaLabel: 'Response time promised in the reply',
+      slaMin: 'Minimum hours',
+      slaMax: 'Maximum hours',
+      slaHint: 'The reply words this as “{label}”. Default is 24 to 48 hours.',
+      slaOrder: 'Minimum cannot be more than maximum',
+      slaRange: 'Between 1 and 720 hours',
+      threadRule:
+        'Only the FIRST message of a conversation opens a ticket and gets a reply. Anything that comes back on the same thread is left for a human.',
+      recentTitle: 'Recently answered',
+      recentEmpty: 'Nothing answered yet.',
+      recentReplied: 'Replied {when}',
+      recentFailed: 'Ticket opened, reply failed: {reason}',
+      recentPending: 'Picked up but not answered — it retries on the next check.',
+      save: 'Save',
+      saving: 'Saving…',
+      saved: 'Rule saved',
+      saveFailed: 'Could not save: {reason}',
+      back: 'Back',
+      next: 'Next',
+    },
   },
 };

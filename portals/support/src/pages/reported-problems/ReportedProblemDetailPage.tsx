@@ -123,8 +123,10 @@ export default function ReportedProblemDetailPage() {
                 />
                 {/* The id, not a link: Support has no user directory of its own
                     (that lives in the admin portal), and a button that goes
-                    nowhere is worse than the id you can search with. */}
-                <InfoRow label="User ID" value={r.user_id} />
+                    nowhere is worse than the id you can search with. Empty for
+                    a report that arrived by email from an address with no
+                    account — there is genuinely nobody to look up. */}
+                <InfoRow label="User ID" value={r.user_id || 'No account'} />
 
                 <Divider />
                 <Typography variant="subtitle2">Where it happened</Typography>

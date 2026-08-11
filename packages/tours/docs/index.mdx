@@ -24,8 +24,9 @@ exports:
 
 What each guided tour says and which tours a user has already seen. No overlay,
 no storage, no framework — mWeb renders React Joyride and native renders
-`react-native-spotlight-tour`, two libraries with different geometry and
-animation, but the *content and sequence* are written once here.
+`rn-tourguide` (a react-native-svg scrim with the highlight cut out of it), two
+libraries with different geometry and animation, but the *content and sequence*
+are written once here.
 
 That split is deliberate. Rule 27 asks mWeb and native to match, and with two
 different tour libraries pixel parity is not achievable; identical steps in an
@@ -40,20 +41,40 @@ changes — that is the "extensible for future screens" requirement:
 {
   id: 'club',
   title: 'Club Page',
-  caption: 'Following a club and finding its pods',
+  caption: 'Following a club and finding its pods — open any club to start',
   path: '/clubs',            // mWeb route
-  nativeRoute: 'Clubs',      // native stack screen
+  nativeRoute: 'Home',       // native stack screen — must open with no params
+  nativeTab: 'Clubs',        // …and, when the landing is a bottom tab, which one
   steps: [
     { anchor: 'club-follow', title: 'Follow', body: 'Following puts this club’s new pods in front of you…' },
   ],
 }
 ```
 
+**A tour's steps must all live on ONE screen.** Both runners resolve a tour
+against what has rendered and then freeze, so a step whose element only appears
+on the next screen never resolves: the tour opens on the reachable steps alone
+and records itself as shown. That rules out splitting a walkthrough across a
+list and a detail screen, or across the pages of a wizard.
+
+**A landing that needs an id is not a landing.** Club, pod and booking tours all
+describe a screen whose URL carries an id, so they land on the list that leads
+there and stay armed — nothing opens until the user picks something, which is
+why those captions end in "open any club/pod/booking to start". Neither surface
+times out waiting.
+
 `anchor` is the contract between copy and screen. mWeb tags the element
-`data-tour="club-follow"`; native registers the same string with the tour-guide
-provider. Anchors are unique across every tour, which the suite asserts — a
-duplicate would make a step highlight the wrong element on whichever screen
-rendered first.
+`data-tour="club-follow"`; native wraps it in `<TourAnchor tour="club"
+anchor="club-follow">`. Anchors are unique across every tour, which the suite
+asserts — a duplicate would make a step highlight the wrong element on whichever
+screen rendered first.
+
+Neither surface hard-codes a step number. mWeb resolves selectors and native
+resolves anchor names, both against what actually rendered, and a step whose
+element is absent is dropped — a screen legitimately varies (no clubs yet → no
+clubs section). Native then *freezes* that resolved list before opening the
+overlay, because `rn-tourguide` addresses a highlight by its zone number: a
+section arriving mid-walkthrough would otherwise renumber every step behind it.
 
 ## Completion state
 

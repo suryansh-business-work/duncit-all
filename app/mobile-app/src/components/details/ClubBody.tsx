@@ -15,6 +15,7 @@ import { ClubFollowersSheet } from '@/components/details/club/ClubFollowersSheet
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { pickPodMoments } from '@/utils/club-detail';
 
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
@@ -76,21 +77,27 @@ export function ClubBody({
 
   return (
     <YStack padding={16} gap={18}>
-      <Text fontSize={24} fontWeight="700" color="$color">
-        {club.club_name}
-      </Text>
-      <CategoryBreadcrumb crumbs={categoryCrumbs} />
-      {club.club_description ? (
-        <Text fontSize={14} color="$muted" lineHeight={20}>
-          {club.club_description}
+      {/* Folding three siblings into one child hands the parent's gap to the
+          wrapper, so it is restated here or the block sits flush mid-tour. */}
+      <TourAnchor tour="club" anchor="club-header" style={{ gap: 18 }}>
+        <Text fontSize={24} fontWeight="700" color="$color">
+          {club.club_name}
         </Text>
-      ) : null}
-      <FollowPillButton
-        testID="club-follow"
-        following={following}
-        busy={followBusy}
-        onToggle={onToggleFollow}
-      />
+        <CategoryBreadcrumb crumbs={categoryCrumbs} />
+        {club.club_description ? (
+          <Text fontSize={14} color="$muted" lineHeight={20}>
+            {club.club_description}
+          </Text>
+        ) : null}
+      </TourAnchor>
+      <TourAnchor tour="club" anchor="club-follow" style={{ alignSelf: 'flex-start' }}>
+        <FollowPillButton
+          testID="club-follow"
+          following={following}
+          busy={followBusy}
+          onToggle={onToggleFollow}
+        />
+      </TourAnchor>
       {/* Ephemeral 24h club stories + the "Add" tile — mirrors mWeb, which
           places this directly under the club summary header. */}
       <ClubStoriesRail clubId={club.id} clubName={club.club_name} />

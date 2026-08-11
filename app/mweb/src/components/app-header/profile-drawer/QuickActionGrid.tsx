@@ -3,10 +3,19 @@ import { alpha } from '@mui/material/styles';
 import { profileIcon } from './profileIcons';
 import { PROFILE_GRID, type ProfileTile } from './profileSections';
 
+/** Which grid tiles the Profile tour walks through. Keyed off the tile, so a
+ * reordered grid cannot point a step at the wrong destination. Native twin:
+ * app/mobile-app/src/components/Sidebar/SidebarQuickGrid.tsx. */
+const TOUR_ANCHORS: Readonly<Record<string, string>> = {
+  'pod-history': 'profile-history',
+  earn: 'profile-earn',
+};
+
 function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNavigate: (to: string) => void }>) {
   return (
     <Paper
       variant="outlined"
+      data-tour={TOUR_ANCHORS[tile.key]}
       onClick={() => onNavigate(tile.to)}
       role="button"
       tabIndex={0}

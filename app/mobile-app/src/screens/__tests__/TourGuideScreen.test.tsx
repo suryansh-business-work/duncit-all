@@ -71,6 +71,16 @@ describe('TourGuideScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Home');
   });
 
+  // A bottom tab is not a root-stack screen: naming it directly finds nothing
+  // and leaves the user where they were, which is how the Club tour used to land
+  // on the home feed while mWeb opened /clubs.
+  it('opens a tab landing through the tab navigator', () => {
+    renderWithProviders(<TourGuideScreen />);
+    fireEvent.press(screen.getByTestId('tour-row-club'));
+    expect(useToursStore.getState().activeTourId).toBe('club');
+    expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'Clubs' });
+  });
+
   it('marks a finished tour as completed so it can be restarted', () => {
     useToursStore.setState({ completed: ['home'] });
     renderWithProviders(<TourGuideScreen />);

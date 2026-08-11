@@ -11,6 +11,8 @@ export const grievanceTypeDefs = /* GraphQL */ `
     APP
     WEBSITE
     PORTAL
+    "Arrived in a mailbox connected under Mail Automation."
+    EMAIL
   }
 
   type GrievanceTicket {

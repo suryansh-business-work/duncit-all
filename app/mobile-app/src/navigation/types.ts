@@ -10,6 +10,8 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: { email: string };
   Survey: undefined;
+  /** Google signup only: the skippable "got a referral code?" step. */
+  ReferralPrompt: undefined;
   /** Account menu as its own page (URL /menu) — Back/refresh work. */
   Menu: undefined;
   Home: NavigatorScreenParams<TabParamList> | undefined;
@@ -107,6 +109,7 @@ export type MenuRoute = Exclude<
   | 'ForgotPassword'
   | 'ResetPassword'
   | 'Survey'
+  | 'ReferralPrompt'
   | 'ChatRoom'
   | 'PodDetails'
   | 'PodFeedback'

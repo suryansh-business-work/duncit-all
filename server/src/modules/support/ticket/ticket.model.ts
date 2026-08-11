@@ -18,9 +18,14 @@ export type TicketAuthorRole = 'USER' | 'AGENT' | 'SYSTEM';
  * an agent looking at a queue needs to know which of two very different
  * conversations they are in: one where they can open the account behind it,
  * and one where an email address is everything they have.
+ *
+ * EMAIL is a connected Gmail mailbox answering itself — see
+ * `platform/mailAutomation`. It matters for the same reason WEBSITE does, plus
+ * one more: the sender is holding an email thread, so a reply typed here has
+ * to reach them there rather than only in an app they may not have.
  */
-export type TicketSource = 'APP' | 'WEBSITE';
-export const TICKET_SOURCES: TicketSource[] = ['APP', 'WEBSITE'];
+export type TicketSource = 'APP' | 'WEBSITE' | 'EMAIL';
+export const TICKET_SOURCES: TicketSource[] = ['APP', 'WEBSITE', 'EMAIL'];
 
 export interface ITicketMessage {
   _id: Types.ObjectId;

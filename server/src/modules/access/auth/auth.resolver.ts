@@ -13,6 +13,7 @@ import {
 } from './auth.validator';
 import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
+import { referralService } from '@modules/engagement/referral/referral.service';
 import type { GraphQLContext } from '@context';
 
 /** The signed-in user's id, or the standard UNAUTHENTICATED refusal. */
@@ -33,13 +34,28 @@ export const authResolvers = {
     },
   },
   Mutation: {
-    register: async (_p: unknown, args: { input: unknown }) => {
+    register: async (_p: unknown, args: { input: { referral_code?: string | null } }) => {
       const data = await validate(registerSchema, args.input);
       // The age gate is admin-configured, so it lives here rather than in the
       // static yup schema — and it must be server-side: the client rule only
       // shapes the form, it cannot stop a hand-rolled mutation.
       await assertEligibleDob(data.dob);
-      return userService.register(data);
+
+      /*
+        The referral code is checked BEFORE the account is created and linked
+        after, which is the only ordering that works in both directions: a typo
+        has to fail while the form is still on screen (the box is gone from
+        Refer & Earn, so a code lost here is lost for good), and the reward
+        cannot be recorded against a user id that does not exist yet.
+
+        It never rides `data` — registerSchema strips unknown keys, so the code
+        stays out of the user document it has no business being in.
+      */
+      const code = (args.input?.referral_code ?? '').trim().toUpperCase();
+      const referrerId = code ? await referralService.validateCode(code) : null;
+      const payload = await userService.register(data);
+      if (referrerId) await referralService.link(referrerId, payload.user.user_id, code);
+      return payload;
     },
     login: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(loginSchema, args.input);

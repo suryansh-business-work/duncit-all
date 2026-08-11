@@ -36,13 +36,45 @@ export function readReferralCode(search: string): string | null {
 }
 
 /**
- * What gets shared.
+ * The placeholders a share message may use, and what each is replaced with.
  *
- * The reward is named because "join me on Duncit" asks for a favour and
- * "join me and we both get coins" makes an offer — and the number comes from
- * the server, so it can never promise what the platform does not pay.
+ * Named rather than positional because the message is written by Finance, in a
+ * text box, months after this code was read — `{code}` survives being moved
+ * around a sentence and `%s` does not.
  */
-export function referralShareMessage(code: string, link: string, coins: number): string {
-  const reward = coins > 0 ? ` We both earn ${coins} Duncit Coins.` : '';
-  return `Join me on Duncit!${reward} Use my code ${code} or sign up here: ${link}`;
+export const REFERRAL_MESSAGE_TOKENS = ['{code}', '{link}', '{coins}'] as const;
+
+/**
+ * What gets shared when Finance has not written its own message.
+ *
+ * The reward is named because "join me on Duncit" asks for a favour and "join
+ * me and we both get coins" makes an offer — and the number is a placeholder,
+ * so it can never promise what the platform does not pay.
+ */
+export const DEFAULT_REFERRAL_MESSAGE =
+  'Join me on Duncit! We both earn {coins} Duncit Coins. Use my code {code} or sign up here: {link}';
+
+/**
+ * The share message with its placeholders filled in.
+ *
+ * A blank template falls back to the shipped default, so an unconfigured
+ * platform still shares something that makes sense. A template that pays
+ * nothing (`coins` at zero) is left with a literal `0` rather than being
+ * rewritten — Finance wrote the sentence and gets to keep it; the rate is the
+ * thing to fix.
+ */
+export function renderReferralMessage(
+  template: string,
+  vars: Readonly<{ code: string; link: string; coins: number }>
+): string {
+  const text = template.trim() || DEFAULT_REFERRAL_MESSAGE;
+  // split/join rather than replaceAll: this package compiles below ES2021, and
+  // a global regex would need each token escaped for no gain.
+  return text
+    .split('{code}')
+    .join(vars.code)
+    .split('{link}')
+    .join(vars.link)
+    .split('{coins}')
+    .join(String(vars.coins));
 }

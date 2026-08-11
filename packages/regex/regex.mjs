@@ -59,6 +59,17 @@ export const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/**
+ * A Duncit referral code — the `DUN-` prefix and six uppercase hex characters,
+ * exactly what the server generates (referral.service `generateCode`).
+ *
+ * Shared because the signup box on mWeb and the one in the native app must
+ * agree on it, and because a typed code is now the ONLY way one is redeemed:
+ * catching the shape here turns a mistyped code into an inline hint instead of
+ * a failed signup.
+ */
+export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
+
 export const isPhoneNumber = (v) => PHONE_NUMBER.test(v);
 export const isPincode = (v) => PINCODE.test(v);
 export const isEmail = (v) => EMAIL.test(v);
@@ -70,3 +81,5 @@ export const isUpiId = (v) => UPI_ID.test(v);
 export const isBankAccountNumber = (v) => BANK_ACCOUNT_NUMBER.test(v);
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export const isGstin = (v) => GSTIN.test(v);
+/** Referral-code shape check. Case-sensitive: upper-case before calling it. */
+export const isReferralCode = (v) => REFERRAL_CODE.test(v);

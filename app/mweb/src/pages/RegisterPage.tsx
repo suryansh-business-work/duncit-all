@@ -12,7 +12,7 @@ import LegalLinks from '../components/LegalLinks';
 import { useTranslation } from '../i18n/useTranslation';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import { RegisterForm, type RegisterFormValues } from '../forms/register';
+import { RegisterForm, registerDefaults, type RegisterFormValues } from '../forms/register';
 import { parseApiError } from '../utils/parseApiError';
 
 const REGISTER = gql`
@@ -51,14 +51,6 @@ function splitName(name: string): { first_name: string; last_name?: string } {
 }
 
 
-const APPLY_REFERRAL = gql`
-  mutation ApplyReferralOnSignup($code: String!) {
-    applyReferralCode(code: $code) {
-      code
-    }
-  }
-`;
-
 export default function RegisterPage() {
   const { t } = useTranslation();
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
@@ -66,27 +58,18 @@ export default function RegisterPage() {
   const [gError, setGError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [applyReferral] = useMutation(APPLY_REFERRAL);
 
   /*
     A shared referral link carries its code in the URL, and this page is where
-    it lands. Redeeming it is deliberately AFTER the token is stored — the
-    mutation is authenticated, and there is no account to credit until the
-    signup has returned one.
-
-    Best-effort and silent: somebody who has just made an account is not the
-    person to hand "your friend's code could not be applied" to. The referrer's
-    coins are the thing at stake, and the code can still be entered by hand.
+    it lands — so it arrives as the form's initial value rather than as a
+    separate mutation fired after the account exists. The code now travels WITH
+    the signup, and the server checks it before creating anything: a code that
+    has gone stale fails the form the sender's friend is still looking at,
+    instead of silently costing them both their coins.
   */
-  const claimReferral = async () => {
-    const code = readReferralCode(globalThis.location.search);
-    if (!code) return;
-    try {
-      await applyReferral({ variables: { code } });
-    } catch {
-      /* already referred, or the code has gone — neither blocks the signup */
-    }
-  };
+  const linkedCode = readReferralCode(globalThis.location.search) ?? '';
+  const initialValues = { ...registerDefaults, referralCode: linkedCode };
+
   const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
 
@@ -94,6 +77,7 @@ export default function RegisterPage() {
     setRegisterError(null);
     try {
       const { first_name, last_name } = splitName(values.name);
+      const code = values.referralCode.trim().toUpperCase();
       const res = await registerMutation({
         variables: {
           input: {
@@ -102,13 +86,13 @@ export default function RegisterPage() {
             email: values.email,
             password: values.password,
             dob: new Date(values.dob).toISOString(),
+            ...(code ? { referral_code: code } : {}),
           },
         },
       });
       const token = res.data?.register?.token;
       if (token) {
         localStorage.setItem('token', token);
-        await claimReferral();
         navigate(nextRoute);
       }
     } catch (e) {
@@ -116,7 +100,12 @@ export default function RegisterPage() {
     }
   };
 
-  // Token-only Google signup: no extra form — straight to the survey.
+  /*
+    Google hands back a finished account with no form attached, so its referral
+    question has to be asked afterwards — on its own step, before the survey.
+    A link-borne code rides along so somebody who followed a friend's link and
+    then chose Google still arrives with the box filled in.
+  */
   const handleGoogle = async (idToken: string) => {
     setGError(null);
     try {
@@ -124,8 +113,7 @@ export default function RegisterPage() {
       const token = res.data?.signupWithGoogle?.token;
       if (token) {
         localStorage.setItem('token', token);
-        await claimReferral();
-        navigate('/signup-survey');
+        navigate('/signup-referral', { state: { code: linkedCode } });
       }
     } catch (e) {
       setGError(parseApiError(e));
@@ -160,6 +148,7 @@ export default function RegisterPage() {
 
           <RegisterForm
             loading={loading}
+            initialValues={initialValues}
             errorMessage={registerError ?? (error ? parseApiError(error) : null)}
             onSubmit={handleRegister}
           />

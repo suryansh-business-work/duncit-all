@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Stack, Switch, Typography } from '@mui/material';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import {
@@ -7,6 +7,7 @@ import {
   EMPTY_CATEGORY,
   useAdminCategories,
   type AdminCategoryValue,
+  type CategoryDoc,
 } from '@duncit/category';
 import {
   AdminLocationSelect,
@@ -23,10 +24,33 @@ const CATEGORY_HINT =
   'Venues auto-match to this club by location + category — pick the same Super & Sub the venues sit under.';
 const LOCATION_HINT = 'Approved venues here in the same category auto-link to this club.';
 
+/**
+ * The category picker's value, DERIVED from the ids the form holds.
+ *
+ * It used to be plain local state seeded once per club, which meant anything
+ * writing the ids straight into the form — an AI fill, most visibly — left both
+ * cascades rendering empty while the form already held the value.
+ *
+ * `draft` carries the one level the club does not persist: the middle Category,
+ * which the picker needs while a super is chosen but a sub is not. It is only
+ * honoured under the super it was picked for.
+ */
+function categoryValueOf(
+  categories: CategoryDoc[],
+  superId: string,
+  subId: string,
+  draft: AdminCategoryValue,
+): AdminCategoryValue {
+  if (!superId) return draft;
+  const built = buildCategoryValue(categories, superId, subId);
+  if (built.category_id || draft.super_id !== superId) return built;
+  return { ...built, category_id: draft.category_id, category_name: draft.category_name };
+}
+
 /** Basic club fields + the shared Category and Location cascade pickers. The
  * club persists super_category_id + category_id (sub) + location_id + locality;
- * the pickers keep their full cascade value in local state so the middle levels
- * survive editing. */
+ * the pickers derive their full cascade value from those ids, keeping only the
+ * levels the club does not store in local state. */
 export default function BasicSection() {
   const { config } = useClubFormData();
   const { control, setValue, getValues } = useFormContext<ClubFormValues>();
@@ -36,20 +60,25 @@ export default function BasicSection() {
   const isActive = useWatch({ control, name: 'is_active' });
   const { categories } = useAdminCategories();
   const { locations } = useAdminLocations();
+  const superCategoryId = useWatch({ control, name: 'super_category_id' });
+  const subCategoryId = useWatch({ control, name: 'category_id' });
+  const locationId = useWatch({ control, name: 'location_id' });
+  const locality = useWatch({ control, name: 'locality' });
 
-  const [catValue, setCatValue] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
-  const [locValue, setLocValue] = useState<AdminLocationValue>(EMPTY_LOCATION);
+  // What only the pickers know: the levels above the id the club stores.
+  const [catDraft, setCatDraft] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
+  const [locDraft, setLocDraft] = useState<AdminLocationValue>(EMPTY_LOCATION);
 
-  // Re-hydrate the pickers from the persisted ids when a different club loads or
-  // the admin lists arrive.
-  useEffect(() => {
-    setCatValue(buildCategoryValue(categories, getValues('super_category_id'), getValues('category_id')));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubDocId, categories.length]);
-  useEffect(() => {
-    setLocValue(buildLocationValue(locations, getValues('location_id'), getValues('locality')));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubDocId, locations.length]);
+  const catValue = useMemo(
+    () => categoryValueOf(categories, superCategoryId, subCategoryId, catDraft),
+    [categories, superCategoryId, subCategoryId, catDraft],
+  );
+  // Country and state come with the Location doc, so a stored city rebuilds the
+  // whole cascade; the draft only covers stepping down to one.
+  const locValue = useMemo(
+    () => (locationId ? buildLocationValue(locations, locationId, locality) : locDraft),
+    [locations, locationId, locality, locDraft],
+  );
 
   const slugHint = clubDocId
     ? `URL slug: ${getValues('club_id') || '—'}`
@@ -71,7 +100,7 @@ export default function BasicSection() {
       <AdminCategorySelect
         value={catValue}
         onChange={(next) => {
-          setCatValue(next);
+          setCatDraft(next);
           setValue('super_category_id', next.super_id);
           setValue('category_id', next.sub_id);
         }}
@@ -85,7 +114,7 @@ export default function BasicSection() {
       <AdminLocationSelect
         value={locValue}
         onChange={(next) => {
-          setLocValue(next);
+          setLocDraft(next);
           setValue('location_id', next.location_id);
           setValue('locality', next.locality);
         }}

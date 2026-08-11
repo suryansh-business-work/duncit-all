@@ -94,7 +94,14 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           </Button>
         )}
       </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+      {/* The chip row carries all three facts the tour step names, in its order:
+          price, Physical/Virtual, and when it runs. */}
+      <Stack
+        direction="row"
+        spacing={1}
+        data-tour="pod-summary"
+        sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}
+      >
         <Chip
           label={isFree ? t('mweb.podDetails.free') : priceFormat(pod.pod_amount)}
           sx={{ fontWeight: 700, fontSize: '1rem', px: 0.5, height: 32, bgcolor: isDark ? '#fff' : alpha(theme.palette.primary.main, 0.12), color: isDark ? '#111827' : 'primary.dark' }}
@@ -111,7 +118,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.peopleIn')}</Typography>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{spotsTaken}</Typography>
         </Box>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
+        <Box data-tour="pod-spots" sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.spotsLeft')}</Typography>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
         </Box>

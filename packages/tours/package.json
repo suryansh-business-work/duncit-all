@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Shared guided-tour registry — tour definitions, step copy and completion state. Zero runtime deps so mWeb (Joyride) and native (tour-guide) share one source of truth.",
+  "description": "Shared guided-tour registry — tour definitions, step copy and completion state. Zero runtime deps so mWeb (Joyride) and native (rn-tourguide) share one source of truth.",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "react-native": "./src/index.ts",

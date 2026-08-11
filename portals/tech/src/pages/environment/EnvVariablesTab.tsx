@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Button, LinearProgress, Stack, Tab, Tabs } from '@mui/material';
+import { Alert, Button, LinearProgress, Stack, Tab, Tabs } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -101,6 +101,31 @@ export default function EnvVariablesTab() {
 
   return (
     <Stack spacing={2}>
+      {/* Above the tabs, not in the table toolbar: these two act on whole
+          categories, so sitting among the row actions read as if they were
+          about the rows. The warning travels with them because the file they
+          produce is the most dangerous thing this page can hand out. */}
+      <Alert
+        severity="warning"
+        variant="outlined"
+        action={
+          <EnvImportExport
+            category={active}
+            categoryLabel={def.label}
+            onImported={() => {
+              // The import can touch categories other than the tab in view, so
+              // the whole cache goes rather than just this table's page.
+              client.resetStore().catch(() => undefined);
+              refetchRef.current?.();
+            }}
+          />
+        }
+        sx={{ alignItems: 'center', '& .MuiAlert-action': { pt: 0, alignItems: 'center' } }}
+      >
+        Sensitive — an exported file holds the real keys and secrets in plain text. Treat it like a
+        password: do not share it, and delete it once you are done.
+      </Alert>
+
       <Tabs value={active} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto">
         {categories.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
       </Tabs>
@@ -110,21 +135,9 @@ export default function EnvVariablesTab() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <>
-            <EnvImportExport
-              category={active}
-              categoryLabel={def.label}
-              onImported={() => {
-                // The import can touch categories other than the tab in view,
-                // so the whole cache goes rather than just this table's page.
-                client.resetStore().catch(() => undefined);
-                refetchRef.current?.();
-              }}
-            />
-            <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
-              Add {def.label}
-            </Button>
-          </>
+          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
+            Add {def.label}
+          </Button>
         }
         onEdit={setEditing}
         onDelete={handleDelete}

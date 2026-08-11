@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import {
   Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -15,6 +18,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { addDays, isAfter, isBefore, set as setTimeOnDate, startOfDay } from 'date-fns';
+import { wholeDayWindow } from './slot-window';
 import type { NewSlotInput } from './types';
 
 // Mirror the server cap: availability can be published at most this far ahead.
@@ -35,13 +39,24 @@ function combineDateAndTime(date: Date, time: Date): Date {
   });
 }
 
-// One slot per day across [start, end] with the same daily window; past windows
-// are skipped so a range that starts today still works.
+/** One day's window: the daily times, or the whole day when the toggle is on
+ * (today's whole day starts a few minutes from now, not at a past midnight). */
+function dayWindow(day: Date, wholeDay: boolean, startTime: Date | null, endTime: Date | null, now: Date) {
+  if (wholeDay) return wholeDayWindow(day, day, now);
+  return {
+    start: combineDateAndTime(day, startTime as Date),
+    end: combineDateAndTime(day, endTime as Date),
+  };
+}
+
+// One slot per day across [start, end] with the same daily window (or the whole
+// day); past windows are skipped so a range that starts today still works.
 function buildRecurringSlots(
   startDate: Date,
   endDate: Date,
-  startTime: Date,
-  endTime: Date,
+  wholeDay: boolean,
+  startTime: Date | null,
+  endTime: Date | null,
   price: number,
 ): NewSlotInput[] {
   const slots: NewSlotInput[] = [];
@@ -52,10 +67,15 @@ function buildRecurringSlots(
   const last = startOfDay(endDate);
   let cursor = startOfDay(startDate);
   while (!isAfter(cursor, last)) {
-    const start = combineDateAndTime(cursor, startTime);
-    const end = combineDateAndTime(cursor, endTime);
-    if (isAfter(start, now) && !isAfter(start, maxStart)) {
-      slots.push({ start_at: start.toISOString(), end_at: end.toISOString(), price, notes: '' });
+    const { start, end } = dayWindow(cursor, wholeDay, startTime, endTime, now);
+    if (isAfter(end, start) && isAfter(start, now) && !isAfter(start, maxStart)) {
+      slots.push({
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+        whole_day: wholeDay,
+        price,
+        notes: '',
+      });
     }
     cursor = addDays(cursor, 1);
   }
@@ -65,6 +85,7 @@ function buildRecurringSlots(
 /** Bulk-add a daily availability window across a date range at one price. The
  *  host wires onAdd (which calls the bulk-create API). Prop-driven + reusable. */
 export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Readonly<Props>) {
+  const [wholeDay, setWholeDay] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
@@ -76,6 +97,7 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
   const maxDate = addDays(new Date(), MAX_FUTURE_DAYS);
 
   const reset = () => {
+    setWholeDay(false);
     setStartDate(null);
     setEndDate(null);
     setStartTime(null);
@@ -90,8 +112,10 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
   };
 
   const validate = (): string | null => {
-    if (!startDate || !endDate || !startTime || !endTime) return 'Pick the dates and the daily times.';
+    if (!startDate || !endDate) return 'Pick the start and end date.';
     if (isBefore(endDate, startDate)) return 'End date must be on or after the start date.';
+    if (wholeDay) return null;
+    if (!startTime || !endTime) return 'Pick the daily start and end time.';
     if (!isAfter(combineDateAndTime(startDate, endTime), combineDateAndTime(startDate, startTime))) {
       return 'Daily end time must be after the start time.';
     }
@@ -107,8 +131,9 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
     const slots = buildRecurringSlots(
       startDate as Date,
       endDate as Date,
-      startTime as Date,
-      endTime as Date,
+      wholeDay,
+      startTime,
+      endTime,
       Math.max(0, Math.round(Number(price) || 0)),
     );
     if (slots.length === 0) {
@@ -141,6 +166,19 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
           <Typography variant="body2" color="text.secondary">
             Add the same daily time window across a date range (up to {MAX_FUTURE_DAYS} days ahead).
           </Typography>
+          <FormControlLabel
+            control={<Switch checked={wholeDay} onChange={(e) => setWholeDay(e.target.checked)} />}
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={800}>
+                  Whole day
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Each day becomes one whole-day slot — no time selection needed.
+                </Typography>
+              </Box>
+            }
+          />
           <DatePicker
             label="Start date"
             value={startDate}
@@ -157,10 +195,12 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
             maxDate={maxDate}
             slotProps={{ textField: { fullWidth: true, size: 'small' } }}
           />
-          <Stack direction="row" spacing={1}>
-            <TimePicker label="Daily start" value={startTime} onChange={setStartTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
-            <TimePicker label="Daily end" value={endTime} onChange={setEndTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
-          </Stack>
+          {!wholeDay && (
+            <Stack direction="row" spacing={1}>
+              <TimePicker label="Daily start" value={startTime} onChange={setStartTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
+              <TimePicker label="Daily end" value={endTime} onChange={setEndTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
+            </Stack>
+          )}
           <TextField
             size="small"
             type="number"

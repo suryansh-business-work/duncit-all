@@ -7,6 +7,7 @@ export const VENUE_AVAILABLE_SLOTS = gql`
       id
       start_at
       end_at
+      whole_day
       notes
       price
       space_label
@@ -21,6 +22,8 @@ export interface VenueSlot {
   id: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day: boolean;
   notes: string;
   price: number;
   /** '' means the whole venue rather than a named space. */

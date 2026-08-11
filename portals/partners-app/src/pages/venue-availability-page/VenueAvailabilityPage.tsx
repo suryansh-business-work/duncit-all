@@ -26,7 +26,6 @@ import {
   endOfMonth,
   endOfWeek,
   format,
-  isSameDay,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -34,6 +33,7 @@ import {
 import {
   AvailabilityCalendar,
   DayDrawer,
+  slotCoversDay,
   type CalendarView,
   type NewSlotInput,
 } from '@duncit/availability-calendar';
@@ -114,8 +114,10 @@ export default function VenueAvailabilityPage() {
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
     if (!selectedDate) return [];
+    // slotCoversDay, not isSameDay(start): a multi-day (activity) booking must
+    // appear in the drawer of every day it spans.
     return (data?.venueSlots ?? [])
-      .filter((s) => isSameDay(new Date(s.start_at), selectedDate))
+      .filter((s) => slotCoversDay(s, selectedDate))
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
   }, [data, selectedDate]);
 

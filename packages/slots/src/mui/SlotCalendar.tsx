@@ -146,6 +146,7 @@ export default function SlotCalendar({
             onPick={onPick}
             fmt={fmt}
             freeLabel={labels.free}
+            wholeDayLabel={labels.wholeDay}
             showPrice={showPrice}
           />
         ) : (

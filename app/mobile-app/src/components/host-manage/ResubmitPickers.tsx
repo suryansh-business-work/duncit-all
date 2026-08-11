@@ -136,6 +136,7 @@ export function SlotPickerField({
         id: slot.id,
         start_at: slot.start_at,
         end_at: slot.end_at,
+        whole_day: slot.whole_day,
         price: slot.price,
         // A venue can publish two spaces at the same hour; without the space the
         // two tiles would be indistinguishable.

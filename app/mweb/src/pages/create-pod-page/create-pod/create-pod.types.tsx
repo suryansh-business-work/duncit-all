@@ -159,6 +159,8 @@ export interface CreatePodSlot {
   id: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day: boolean;
   price: number;
   /** The venue space/capacity-item this slot is for ('' = whole venue). */
   space_label: string;

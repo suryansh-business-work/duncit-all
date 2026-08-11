@@ -41,6 +41,7 @@ const toPub = (s: IVenueSlot, venueName: string, podTitle: string | null) => ({
   venue_name: venueName,
   start_at: s.start_at.toISOString(),
   end_at: s.end_at.toISOString(),
+  whole_day: s.whole_day ?? false,
   price: s.price ?? 0,
   space_label: s.space_label ?? '',
   capacity: s.capacity ?? 0,
@@ -98,14 +99,31 @@ const venueSlotRules = (venue: Pick<IVenue, 'settings'> | null): SlotRules => ({
   holidays: new Set(venue?.settings?.holidays ?? []),
 });
 
+// A slot may span multiple days (a whole-date-range / multi-day activity
+// booking), but never more than the advance window itself.
+const MAX_SLOT_SPAN_DAYS = 60;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function validateSlotWindow(start: Date, end: Date, rules: SlotRules) {
   if (end.getTime() <= start.getTime()) fail('BAD_USER_INPUT', 'end_at must be after start_at');
   if (start.getTime() < Date.now() - 60_000) fail('BAD_USER_INPUT', 'Cannot create slots in the past');
-  if (start.getTime() > Date.now() + rules.maxAdvanceDays * 24 * 60 * 60 * 1000) {
+  if (start.getTime() > Date.now() + rules.maxAdvanceDays * DAY_MS) {
     fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${rules.maxAdvanceDays} days in advance`);
   }
-  if (rules.holidays.has(venueLocalYmd(start))) {
-    fail('BAD_REQUEST', `${venueLocalYmd(start)} is marked as a venue leave/holiday`);
+  if (end.getTime() - start.getTime() > MAX_SLOT_SPAN_DAYS * DAY_MS) {
+    fail('BAD_USER_INPUT', `A slot cannot span more than ${MAX_SLOT_SPAN_DAYS} days`);
+  }
+  // No part of the slot may fall on a leave/holiday — a multi-day booking that
+  // crosses a holiday is as unbookable as one starting on it. The end instant
+  // itself is exclusive so a slot ending exactly at midnight claims no extra day.
+  const lastYmd = venueLocalYmd(new Date(end.getTime() - 1));
+  for (let cursor = start.getTime(); ; cursor += DAY_MS) {
+    const ymd = venueLocalYmd(new Date(cursor));
+    if (ymd > lastYmd) break;
+    if (rules.holidays.has(ymd)) {
+      fail('BAD_REQUEST', `${ymd} is marked as a venue leave/holiday`);
+    }
+    if (ymd === lastYmd) break;
   }
 }
 
@@ -162,6 +180,7 @@ async function createSlotsCore(
   slots: Array<{
     start_at: string;
     end_at: string;
+    whole_day?: boolean;
     notes?: string;
     price?: number;
     space_label?: string;
@@ -178,6 +197,7 @@ async function createSlotsCore(
     return {
       start,
       end,
+      whole_day: Boolean(s.whole_day),
       notes: (s.notes ?? '').trim(),
       price: normalizePrice(s.price),
       space_label: (s.space_label ?? '').trim(),
@@ -218,6 +238,7 @@ async function createSlotsCore(
       owner_user_id: new Types.ObjectId(ownerUserId),
       start_at: p.start,
       end_at: p.end,
+      whole_day: p.whole_day,
       price: p.price,
       space_label: p.space_label,
       capacity: p.capacity,
@@ -379,6 +400,7 @@ function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
     venue_name: venueName,
     start_at: s.start_at.toISOString(),
     end_at: s.end_at.toISOString(),
+    whole_day: s.whole_day ?? false,
     price: s.price ?? 0,
     requested_at: s.updated_at?.toISOString() ?? '',
     pod_id: String(pod._id),
@@ -438,7 +460,7 @@ export const venueSlotService = {
     userId: string,
     input: {
       venue_id: string;
-      slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number; space_label?: string; capacity?: number }>;
+      slots: Array<{ start_at: string; end_at: string; whole_day?: boolean; notes?: string; price?: number; space_label?: string; capacity?: number }>;
     }
   ) {
     const venue = await ensureOwnedVenue(userId, input.venue_id);
@@ -448,7 +470,7 @@ export const venueSlotService = {
   // Admin create — slots are owned by the venue's actual owner, not the editor.
   async adminCreate(input: {
     venue_id: string;
-    slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number; space_label?: string; capacity?: number }>;
+    slots: Array<{ start_at: string; end_at: string; whole_day?: boolean; notes?: string; price?: number; space_label?: string; capacity?: number }>;
   }) {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);

@@ -13,6 +13,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     venue_name: String!
     start_at: String!
     end_at: String!
+    "True for a whole-day / whole-date-range booking."
+    whole_day: Boolean!
     price: Int!
     requested_at: String!
     pod_id: ID!
@@ -41,6 +43,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     venue_name: String!
     start_at: String!
     end_at: String!
+    "True for a whole-day / whole-date-range booking."
+    whole_day: Boolean!
     "The slot's gross price, before Duncit's venue commission."
     price: Int!
     "The venue space this slot is for ('' = whole venue)."
@@ -69,6 +73,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     venue_name: String
     start_at: String!
     end_at: String!
+    "True for a whole-day / whole-date-range booking — render 'Whole day' instead of clock times."
+    whole_day: Boolean!
     price: Int!
     "The venue space/capacity-item this slot is for ('' = whole venue)."
     space_label: String!
@@ -84,6 +90,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
   input CreateVenueSlotInput {
     start_at: String!
     end_at: String!
+    "Mark this slot as a whole-day (or whole-date-range) booking (defaults to false)."
+    whole_day: Boolean
     price: Int
     notes: String
     "The venue space this slot is for ('' = whole venue). Slots in different spaces may share a time."

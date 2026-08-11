@@ -1370,6 +1370,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pickVenueFirst: 'Select a venue first to see its available slots.',
       currentlyBooked: 'Currently booked for this pod',
       wholeVenue: 'Whole venue',
+      wholeDay: 'Whole day',
       // Onboarding meetings render the same calendar, but a booked slot stays
       // visible-and-disabled instead of disappearing, so they get their own hint.
       meetingHint: 'Greyed-out slots are already booked.',

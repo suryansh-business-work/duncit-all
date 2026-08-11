@@ -54,7 +54,7 @@ export interface VenuePod {
   club_slug: string;
 }
 
-const SLOT_FIELDS = `id venue_id start_at end_at price status booked_by_pod_id booked_pod_title notes created_at`;
+const SLOT_FIELDS = `id venue_id start_at end_at whole_day price status booked_by_pod_id booked_pod_title notes created_at`;
 
 export const ADMIN_VENUE_SLOTS = gql`
   query AdminVenueSlots($venue_id: ID!, $from: String, $to: String) {

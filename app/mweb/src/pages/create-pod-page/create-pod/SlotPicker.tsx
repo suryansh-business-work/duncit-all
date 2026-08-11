@@ -35,7 +35,14 @@ export default function SlotPicker({
   // The step above already narrows to one space, so no caption is needed here —
   // every tile on a day belongs to the same space.
   const calendarSlots = useMemo(
-    () => slots.map((slot) => ({ id: slot.id, start_at: slot.start_at, end_at: slot.end_at, price: slot.price })),
+    () =>
+      slots.map((slot) => ({
+        id: slot.id,
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        whole_day: slot.whole_day,
+        price: slot.price,
+      })),
     [slots],
   );
 

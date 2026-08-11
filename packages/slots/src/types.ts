@@ -11,6 +11,9 @@ export interface CalendarSlot {
   start_at: string;
   /** Absent for meeting slots, which are a start time with an implied length. */
   end_at?: string | null;
+  /** A whole-day (or whole-date-range) booking — the tile shows the wholeDay
+   * label instead of a clock time. */
+  whole_day?: boolean;
   /** Omitted where the surface has no pricing (meetings are free to book). */
   price?: number | null;
   /** Second line on the tile — the venue space, or a note like "Currently booked". */
@@ -76,4 +79,6 @@ export interface SlotLabels {
   currentlyBooked: string;
   /** Caption for a slot with no named space. */
   wholeVenue: string;
+  /** Headline on a whole-day / whole-date-range slot tile. */
+  wholeDay: string;
 }

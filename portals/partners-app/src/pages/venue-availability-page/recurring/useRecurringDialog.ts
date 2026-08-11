@@ -43,6 +43,8 @@ export interface RecurringForm {
   startDate: Date | null;
   endDate: Date | null;
   weekdays: number[];
+  /** ON = each eligible day becomes one whole-day slot (no time windows). */
+  wholeDay: boolean;
   timeSlots: TimeSlotRow[];
   spaces: SpaceRow[];
   skipWeeklyOff: boolean;
@@ -70,6 +72,7 @@ export const initialRecurringForm = (spaces: SpaceRow[]): RecurringForm => ({
   startDate: null,
   endDate: null,
   weekdays: [0, 1, 2, 3, 4, 5, 6],
+  wholeDay: false,
   timeSlots: [newTimeSlot()],
   spaces: spaces.map((s) => ({ ...s })),
   skipWeeklyOff: true,
@@ -137,6 +140,7 @@ export function useRecurringDialog(
       startDate: form.startDate,
       endDate: form.endDate,
       weekdays: form.weekdays,
+      wholeDay: form.wholeDay,
       timeSlots: form.timeSlots.map((t) => ({ start: timeToHHMM(t.start), end: timeToHHMM(t.end) })),
       // Only enabled spaces with a filled price generate slots.
       spaces: form.spaces
@@ -170,6 +174,7 @@ export function useRecurringDialog(
       const generated = result.slots.map((s) => ({
         start_at: s.start_at,
         end_at: s.end_at,
+        whole_day: s.whole_day,
         price: s.price,
         space_label: s.space_label,
         capacity: s.capacity,

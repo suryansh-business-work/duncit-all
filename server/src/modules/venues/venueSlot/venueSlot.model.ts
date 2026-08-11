@@ -9,6 +9,10 @@ export interface IVenueSlot extends Document {
   owner_user_id: Types.ObjectId;
   start_at: Date;
   end_at: Date;
+  /** True when the owner published this as a whole-day (or whole-date-range)
+   * booking rather than a timed window — surfaces label it "Whole day" instead
+   * of showing clock times. start_at/end_at still hold the real span. */
+  whole_day: boolean;
   price: number;
   /** The venue space/capacity-item this slot is for ('' = whole venue). Slots in
    * different spaces may share the same time window. */
@@ -44,6 +48,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     start_at: { type: Date, required: true, index: true },
     end_at: { type: Date, required: true },
+    whole_day: { type: Boolean, default: false },
     price: { type: Number, default: 0, min: 0, max: 1_000_000 },
     space_label: { type: String, default: '', trim: true, maxlength: 120 },
     capacity: { type: Number, default: 0, min: 0, max: 100_000 },

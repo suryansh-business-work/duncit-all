@@ -15,18 +15,32 @@ import {
  * is approved, so a request sitting unread is a pod that cannot sell a seat.
  */
 
-const fmtWindow = (row: SlotRequestRow) => {
-  const start = new Date(row.start_at);
-  const end = new Date(row.end_at);
-  if (Number.isNaN(start.getTime())) return '—';
-  const day = start.toLocaleDateString(undefined, {
+const fmtDay = (d: Date) =>
+  d.toLocaleDateString(undefined, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+
+/** Same reading as mWeb's slotWindow: both dates when the booking spans days,
+ * and "Whole day" instead of times for whole-day bookings. The end instant is
+ * exclusive, so a slot ending exactly at midnight claims no extra day. */
+const fmtWindow = (row: SlotRequestRow) => {
+  const start = new Date(row.start_at);
+  const end = new Date(row.end_at);
+  if (Number.isNaN(start.getTime())) return '—';
   const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  return `${day} · ${time(start)} – ${time(end)}`;
+  const multiDay = start.toDateString() !== new Date(end.getTime() - 1).toDateString();
+  if (row.whole_day) {
+    return multiDay
+      ? `Whole day · ${fmtDay(start)} – ${fmtDay(end)}`
+      : `Whole day · ${fmtDay(start)}`;
+  }
+  if (multiDay) {
+    return `${fmtDay(start)} · ${time(start)} – ${fmtDay(end)} · ${time(end)}`;
+  }
+  return `${fmtDay(start)} · ${time(start)} – ${time(end)}`;
 };
 
 const fmtRequested = (iso: string) => {

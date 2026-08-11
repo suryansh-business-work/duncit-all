@@ -61,6 +61,8 @@ export interface ResubmitSlotOption {
   id: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day: boolean;
   price: number;
   space_label: string;
 }

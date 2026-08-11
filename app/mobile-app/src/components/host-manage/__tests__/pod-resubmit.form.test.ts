@@ -76,6 +76,7 @@ describe('option labels', () => {
     id: 's1',
     start_at: '2030-03-05T12:30:00.000Z',
     end_at: '2030-03-05T14:30:00.000Z',
+    whole_day: false,
     price: 400,
     space_label: 'Hall A',
   };

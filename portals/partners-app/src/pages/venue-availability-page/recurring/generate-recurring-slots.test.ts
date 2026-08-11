@@ -17,6 +17,7 @@ const config = (over: Partial<RecurringConfig> = {}): RecurringConfig => ({
   startDate: new Date(2026, 6, 6), // Mon
   endDate: new Date(2026, 6, 12), // Sun
   weekdays: [0, 1, 2, 3, 4, 5, 6],
+  wholeDay: false,
   timeSlots: [{ start: '13:00', end: '14:00' }],
   spaces: [{ label: 'Hall', capacity: 100, price: 399 }],
   bufferMinutes: 0,

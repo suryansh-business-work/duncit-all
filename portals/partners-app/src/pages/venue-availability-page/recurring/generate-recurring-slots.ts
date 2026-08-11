@@ -1,4 +1,5 @@
-import { addDays, format, set as setTimeOnDate, startOfDay } from 'date-fns';
+import { addDays, format, isAfter, set as setTimeOnDate, startOfDay } from 'date-fns';
+import { wholeDayWindow } from '@duncit/availability-calendar';
 import type {
   GenerateResult,
   PreviewSummary,
@@ -79,7 +80,9 @@ function collectErrors(config: RecurringConfig, settings: VenueSettingsLike): st
     errors.push('End date must be on or after the start date.');
   }
   if (config.weekdays.length === 0) errors.push('Select at least one day to repeat on.');
-  errors.push(...timeSlotErrors(config, settings));
+  // Whole-day mode books the entire date, so the daily time windows (and the
+  // operating-hours checks that govern them) don't apply.
+  if (!config.wholeDay) errors.push(...timeSlotErrors(config, settings));
   if (config.spaces.length === 0) errors.push('Add at least one space with a price.');
   if (config.spaces.some((s) => s.price < 0)) errors.push('Price cannot be negative.');
   return errors;
@@ -125,8 +128,40 @@ export function generateRecurringSlots(
   return { slots, summary, errors: [] };
 }
 
-/** Emits every (time range × space) slot for one eligible day, updating the
- * summary. Past / beyond-cap ranges are skipped and counted per time range. */
+/** One generated slot per space for the window, updating the summary. */
+function pushSpaceSlots(
+  window: { start: Date; end: Date },
+  wholeDay: boolean,
+  weekday: number,
+  config: RecurringConfig,
+  slots: GenerateResult['slots'],
+  summary: PreviewSummary,
+) {
+  for (const space of config.spaces) {
+    const price = Math.max(0, Math.round(space.price));
+    slots.push({
+      start_at: window.start.toISOString(),
+      end_at: window.end.toISOString(),
+      whole_day: wholeDay,
+      price,
+      space_label: space.label,
+      capacity: Math.max(0, Math.round(space.capacity)),
+      notes: '',
+      weekday,
+    });
+    summary.total += 1;
+    summary.estimatedRevenue += price;
+    const bucket = summary.bySpace[space.label] ?? { count: 0, price, capacity: space.capacity };
+    bucket.count += 1;
+    bucket.price = price;
+    bucket.capacity = space.capacity;
+    summary.bySpace[space.label] = bucket;
+  }
+}
+
+/** Emits every (time range × space) slot for one eligible day — or one
+ * whole-day slot per space — updating the summary. Past / beyond-cap windows
+ * are skipped and counted per time range. */
 function addDaySlots(
   day: Date,
   weekday: number,
@@ -135,6 +170,19 @@ function addDaySlots(
   slots: GenerateResult['slots'],
   summary: PreviewSummary,
 ) {
+  if (config.wholeDay) {
+    // Today's whole day starts a few minutes from now (never a past midnight);
+    // a day already fully over yields an inverted window and is skipped.
+    const window = wholeDayWindow(day, day, bounds.now);
+    if (!isAfter(window.end, window.start)) {
+      summary.skippedPast += 1;
+    } else if (window.start > bounds.maxStart) {
+      summary.skippedBeyondCap += 1;
+    } else {
+      pushSpaceSlots(window, true, weekday, config, slots, summary);
+    }
+    return;
+  }
   for (const range of config.timeSlots) {
     const start = combine(day, range.start);
     const end = combine(day, range.end);
@@ -143,25 +191,7 @@ function addDaySlots(
     } else if (start > bounds.maxStart) {
       summary.skippedBeyondCap += 1;
     } else {
-      for (const space of config.spaces) {
-        const price = Math.max(0, Math.round(space.price));
-        slots.push({
-          start_at: start.toISOString(),
-          end_at: end.toISOString(),
-          price,
-          space_label: space.label,
-          capacity: Math.max(0, Math.round(space.capacity)),
-          notes: '',
-          weekday,
-        });
-        summary.total += 1;
-        summary.estimatedRevenue += price;
-        const bucket = summary.bySpace[space.label] ?? { count: 0, price, capacity: space.capacity };
-        bucket.count += 1;
-        bucket.price = price;
-        bucket.capacity = space.capacity;
-        summary.bySpace[space.label] = bucket;
-      }
+      pushSpaceSlots({ start, end }, false, weekday, config, slots, summary);
     }
   }
 }

@@ -172,6 +172,7 @@ export const VenueAvailableSlotsDocument = gql(`
       id
       start_at
       end_at
+      whole_day
       price
       space_label
       capacity

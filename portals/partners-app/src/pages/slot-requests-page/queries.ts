@@ -8,6 +8,7 @@ export const VENUE_SLOT_REQUESTS = gql`
       venue_name
       start_at
       end_at
+      whole_day
       price
       requested_at
       pod_id
@@ -44,6 +45,8 @@ export interface SlotRequestRow {
   venue_name: string;
   start_at: string;
   end_at: string;
+  /** A whole-day (or whole-date-range) booking. */
+  whole_day: boolean;
   price: number;
   requested_at: string;
   pod_id: string;

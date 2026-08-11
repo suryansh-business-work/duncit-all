@@ -51,6 +51,7 @@ export const PARTNER_POD_LOOKUPS = gql`
       listing_review_status
     }
   }
+  ${POD_PICKER_PRODUCT_FIELDS}
 `;
 
 /** Row shape for the partner pods table (myHostPodsTable rows). */

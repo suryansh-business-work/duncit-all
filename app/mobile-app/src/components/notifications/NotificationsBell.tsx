@@ -37,6 +37,11 @@ export function NotificationsBell() {
       navigation.navigate('PostDetail', { postId: target.postId });
       return;
     }
+    if (target.kind === 'pod') {
+      setOpen(false);
+      navigation.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
+      return;
+    }
     if (target.kind === 'screen') {
       setOpen(false);
       navigation.navigate(target.route);

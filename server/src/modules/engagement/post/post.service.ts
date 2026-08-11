@@ -3,6 +3,10 @@ import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
 import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import {
+  notifySocialActivity,
+  type SocialAction,
+} from '@modules/engagement/notification/social-notify';
 import { logs } from '@observability/log';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -100,34 +104,17 @@ function normalizeMediaType(value?: string | null): 'IMAGE' | 'VIDEO' {
 
 /**
  * Best-effort "someone interacted with your post" notification to the post
- * owner. The post owner is skipped when they are the actor (no self-notifies),
- * and a single USER-scoped notification is created — notificationService.create
- * handles the inbox row + web-push + Expo fan-out. The link_url deep-links the
- * tap to the post (mWeb `/post/:id`, mobile PostDetail). A failure here must
- * never break the like/comment mutation, so the caller fires-and-forgets.
+ * owner. Self-notifies, the wording and the `/post/:id` deep link all live in
+ * the shared helper now — pods and pod ideas raise the same notification. A
+ * failure here must never break the like/comment mutation, so the caller
+ * fires-and-forgets.
  */
-async function notifyPostActivity(
+const notifyPostActivity = (
   ownerId: string,
   actorId: string,
   postId: string,
-  action: 'liked' | 'commented on'
-) {
-  if (ownerId === actorId) return;
-  const { userService } = await import('@modules/access/user/user.service');
-  const { notificationService } = await import(
-    '@modules/engagement/notification/notification.service'
-  );
-  const actor = await userService.getById(actorId).catch(() => null);
-  const name = actor?.full_name?.trim() || 'Someone';
-  await notificationService.create({
-    title: action === 'liked' ? 'New like on your post' : 'New comment on your post',
-    body: `${name} ${action} your post`,
-    image_url: actor?.profile_photo ?? null,
-    link_url: `/post/${postId}`,
-    scope: 'USER',
-    target_user_ids: [ownerId],
-  });
-}
+  action: SocialAction
+) => notifySocialActivity({ ownerId, actorId, subject: 'post', action, link: `/post/${postId}` });
 
 export const postService = {
   async list(authorId: string | null | undefined, viewerId?: string | null) {

@@ -26,6 +26,10 @@ function openCta(url: string) {
     navigationRef.navigate('PostDetail', { postId: target.postId });
     return;
   }
+  if (target.kind === 'pod') {
+    navigationRef.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
+    return;
+  }
   if (target.kind === 'screen') {
     navigationRef.navigate(target.route);
   }

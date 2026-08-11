@@ -2,7 +2,12 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodIdeaModel, type IPodIdea } from './podIdea.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { notifySocialActivity } from '@modules/engagement/notification/social-notify';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
+
+/** Neither surface has a per-idea route yet — the list is the closest landing. */
+const POD_IDEA_LINK = '/pod-ideas';
 
 const toPub = (p: IPodIdea, viewerId?: string | null) => ({
   id: String(p._id),
@@ -222,9 +227,26 @@ export const podIdeaService = {
     const doc = await PodIdeaModel.findById(id);
     if (!doc) throw new GraphQLError('Idea not found', { extensions: { code: 'NOT_FOUND' } });
     const idx = doc.likes.findIndex((x) => String(x) === viewerId);
+    const nowLiked = idx < 0;
     if (idx >= 0) doc.likes.splice(idx, 1);
     else doc.likes.push(new Types.ObjectId(viewerId));
     await doc.save();
+    // Only the transition to liked is news — an unlike is not.
+    if (nowLiked) {
+      notifySocialActivity({
+        ownerId: String(doc.author_id),
+        actorId: viewerId,
+        subject: 'pod idea',
+        action: 'liked',
+        link: POD_IDEA_LINK,
+      }).catch((err) =>
+        logs.server.error('podIdea', 'toggleLike', {
+          error: err,
+          msg: 'notifySocialActivity (like) failed',
+          ideaId: id,
+        })
+      );
+    }
     return toPub(doc, viewerId);
   },
 
@@ -256,6 +278,19 @@ export const podIdeaService = {
       created_at: new Date(),
     } as any);
     await doc.save();
+    notifySocialActivity({
+      ownerId: String(doc.author_id),
+      actorId: viewerId,
+      subject: 'pod idea',
+      action: 'commented on',
+      link: POD_IDEA_LINK,
+    }).catch((err) =>
+      logs.server.error('podIdea', 'addComment', {
+        error: err,
+        msg: 'notifySocialActivity (comment) failed',
+        ideaId: id,
+      })
+    );
     return toPub(doc, viewerId);
   },
 

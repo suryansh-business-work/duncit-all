@@ -37,6 +37,7 @@ import {
 import { LEGACY_POD_TYPE_MAP } from './pod-type.migration';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
+import { notifySocialActivity } from '@modules/engagement/notification/social-notify';
 import { logs } from '@observability/log';
 
 const slugify = (s: string) =>
@@ -54,6 +55,20 @@ async function loadClubSlugMap(podDocs: any[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const clubs = await ClubModel.find({ _id: { $in: ids } }, { club_id: 1 });
   return new Map(clubs.map((c: any) => [String(c._id), c.club_id]));
+}
+
+/** The host who owns a pod — the repo-wide convention is the first entry. */
+const podOwnerId = (d: any): string => String((d?.pod_hosts_id ?? [])[0] ?? '');
+
+/**
+ * Where a pod notification should land. Both surfaces route a pod by
+ * club-slug + pod-slug, so a pod whose club could not be resolved gets no link
+ * rather than a broken `/club//pod/x`.
+ */
+function podNotificationLink(d: any, clubSlugById: Map<string, string>): string | null {
+  const clubSlug = d?.club_id ? clubSlugById.get(String(d.club_id)) : null;
+  if (!clubSlug || !d?.pod_id) return null;
+  return `/club/${clubSlug}/pod/${d.pod_id}`;
 }
 
 const toPub = (d: any, clubSlugById?: Map<string, string>) => {
@@ -1914,10 +1929,27 @@ export const podService = {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
     const idx = (doc!.liked_user_ids || []).findIndex((x: any) => String(x) === viewerId);
+    const nowLiked = idx < 0;
     if (idx >= 0) doc!.liked_user_ids.splice(idx, 1);
     else doc!.liked_user_ids.push(new Types.ObjectId(viewerId) as any);
     await doc!.save();
     const slugMap = await loadClubSlugMap([doc!]);
+    // Ping the host only when transitioning to liked — an unlike is not news.
+    if (nowLiked) {
+      notifySocialActivity({
+        ownerId: podOwnerId(doc),
+        actorId: viewerId,
+        subject: 'pod',
+        action: 'liked',
+        link: podNotificationLink(doc, slugMap),
+      }).catch((err) =>
+        logs.server.error('pod', 'toggleLike', {
+          error: err,
+          msg: 'notifySocialActivity (like) failed',
+          podId: id,
+        })
+      );
+    }
     return toPub(doc, slugMap);
   },
 
@@ -1942,6 +1974,20 @@ export const podService = {
       created_at,
     } as any);
     await doc!.save();
+    const slugMap = await loadClubSlugMap([doc!]);
+    notifySocialActivity({
+      ownerId: podOwnerId(doc),
+      actorId: viewerId,
+      subject: 'pod',
+      action: 'commented on',
+      link: podNotificationLink(doc, slugMap),
+    }).catch((err) =>
+      logs.server.error('pod', 'addComment', {
+        error: err,
+        msg: 'notifySocialActivity (comment) failed',
+        podId: id,
+      })
+    );
     const c = doc!.comments[doc!.comments.length - 1] as any;
     const u: any = await UserModel.findById(viewerId).select(
       'profile.first_name profile.last_name profile.profile_photo'
@@ -1968,9 +2014,28 @@ export const podService = {
     if (!c) throw new GraphQLError('Comment not found', { extensions: { code: 'NOT_FOUND' } });
     c.likes = c.likes ?? [];
     const idx = c.likes.findIndex((x: any) => String(x) === viewerId);
+    const nowLiked = idx < 0;
     if (idx >= 0) c.likes.splice(idx, 1);
     else c.likes.push(new Types.ObjectId(viewerId));
     await doc!.save();
+    // The comment's author is the one being liked here, not the pod's host.
+    if (nowLiked) {
+      const slugMap = await loadClubSlugMap([doc!]);
+      notifySocialActivity({
+        ownerId: String(c.author_id),
+        actorId: viewerId,
+        subject: 'pod comment',
+        action: 'liked',
+        link: podNotificationLink(doc, slugMap),
+      }).catch((err) =>
+        logs.server.error('pod', 'toggleCommentLike', {
+          error: err,
+          msg: 'notifySocialActivity (comment like) failed',
+          podId: id,
+          commentId,
+        })
+      );
+    }
     const u: any = await UserModel.findById(c.author_id).select(
       'profile.first_name profile.last_name profile.profile_photo'
     );

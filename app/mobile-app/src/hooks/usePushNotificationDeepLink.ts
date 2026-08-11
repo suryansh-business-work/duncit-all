@@ -21,6 +21,10 @@ export function navigateForPushLink(navigation: Nav, link: unknown) {
     navigation.navigate('PostDetail', { postId: target.postId });
     return;
   }
+  if (target.kind === 'pod') {
+    navigation.navigate('PodDetails', { clubSlug: target.clubSlug, podSlug: target.podSlug });
+    return;
+  }
   if (target.kind === 'screen') {
     navigation.navigate(target.route);
   }

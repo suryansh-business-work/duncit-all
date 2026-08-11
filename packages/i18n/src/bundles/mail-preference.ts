@@ -24,9 +24,11 @@ export const MAIL_PREFERENCE_BUNDLE: NestedCatalogue = {
     requiredHeading: 'Always sent',
     requiredHint:
       'Codes, receipts and notices we are required to send. These cannot be switched off — without them you could not sign in or prove what you paid.',
+    // The lock badge on a category nobody can switch off. There is deliberately
+    // no `on`/`off` copy beside it: both switches announce their own state, and
+    // a shipped key nothing renders is one an admin pays to translate for
+    // nothing (rule 38).
     alwaysOn: 'Always on',
-    on: 'On',
-    off: 'Off',
     unsubscribeAll: 'Unsubscribe from everything optional',
     resubscribeAll: 'Turn everything back on',
     unsubscribeAllTitle: 'Stop all optional email?',

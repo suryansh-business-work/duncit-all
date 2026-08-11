@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 
 import {
   MobileMailPreferencesDocument,
@@ -26,8 +27,9 @@ export function useMailPreferences() {
   const [preference, setPreference] = useState<MailPreference | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const [busyCategory, setBusyCategory] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,16 +43,24 @@ export function useMailPreferences() {
     };
   }, []);
 
+  /**
+   * One save. The failure is a flag rather than the thrown message, matching
+   * mWeb: a transport string is neither localized nor actionable (rule 38), and
+   * the detail belongs in the log instead.
+   */
   const run = useCallback(
-    async (key: string, work: () => Promise<MailPreference>) => {
+    async (key: string, enabled: boolean, work: () => Promise<MailPreference>) => {
       if (busyCategory !== null) return;
       setBusyCategory(key);
-      setError(null);
+      setSaveFailed(false);
       try {
         setPreference(await work());
         setSaved(true);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : null);
+        // The server confirms by email on the way OUT only.
+        setConfirmationSent(!enabled);
+      } catch (error) {
+        setSaveFailed(true);
+        logs.mobileApp.error('useMailPreferences', 'save', { error, category: key, enabled });
       } finally {
         setBusyCategory(null);
       }
@@ -60,7 +70,7 @@ export function useMailPreferences() {
 
   const setCategory = useCallback(
     (category: string, enabled: boolean) =>
-      run(category, () =>
+      run(category, enabled, () =>
         graphqlRequest(MobileSetMailPreferenceDocument, { category, enabled }, { auth: true }).then(
           (data) => data.setMyMailPreference,
         ),
@@ -70,7 +80,7 @@ export function useMailPreferences() {
 
   const setAll = useCallback(
     (enabled: boolean) =>
-      run(ALL_CATEGORIES, () =>
+      run(ALL_CATEGORIES, enabled, () =>
         graphqlRequest(MobileSetAllMailPreferencesDocument, { enabled }, { auth: true }).then(
           (data) => data.setAllMyMailPreferences,
         ),
@@ -82,8 +92,10 @@ export function useMailPreferences() {
     preference,
     isLoading,
     loadFailed,
-    error,
+    saveFailed,
     saved,
+    /** The last save was an opt-out, so a confirmation email is on its way. */
+    confirmationSent,
     dismissSaved: useCallback(() => setSaved(false), []),
     busyCategory,
     setCategory,

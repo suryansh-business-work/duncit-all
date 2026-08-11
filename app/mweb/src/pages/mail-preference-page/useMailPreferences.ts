@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
+import { logs } from '@duncit/logs';
 import {
   MAIL_PREFERENCES_BY_TOKEN,
   MY_MAIL_PREFERENCES,
@@ -26,8 +27,9 @@ export interface MailPreferenceToken {
  */
 export function useMailPreferences(token: MailPreferenceToken | null) {
   const byToken = token !== null;
-  const [error, setError] = useState<string | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const [busyCategory, setBusyCategory] = useState<string | null>(null);
 
   const mine = useQuery<{ myMailPreferences: MailPreference }>(MY_MAIL_PREFERENCES, {
@@ -47,15 +49,27 @@ export function useMailPreferences(token: MailPreferenceToken | null) {
     ? (linked.data?.mailPreferencesByToken ?? null)
     : (mine.data?.myMailPreferences ?? null);
 
+  /**
+   * One save, whichever mutation it is.
+   *
+   * The failure is reported as a flag rather than the thrown message: a raw
+   * Apollo string ("Response not successful: 500") is neither localized nor
+   * anything the reader can act on (rule 38). It still reaches the log, where
+   * somebody can actually use it.
+   */
   const run = useCallback(
-    async (category: string, work: () => Promise<unknown>) => {
+    async (category: string, enabled: boolean, work: () => Promise<unknown>) => {
       setBusyCategory(category);
-      setError(null);
+      setSaveFailed(false);
       try {
         await work();
         setSaved(true);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : null);
+        // The server confirms by email on the way OUT only — confirming an
+        // opt-in would be another email somebody just asked for fewer of.
+        setConfirmationSent(!enabled);
+      } catch (error) {
+        setSaveFailed(true);
+        logs.mWeb.error('useMailPreferences', 'save', { error, category, enabled });
       } finally {
         setBusyCategory(null);
       }
@@ -67,7 +81,7 @@ export function useMailPreferences(token: MailPreferenceToken | null) {
    * lands on the same shape the query wrote and nothing needs refetching. */
   const setCategory = useCallback(
     (category: string, enabled: boolean) =>
-      run(category, () => setOne({ variables: { ...token, category, enabled } })),
+      run(category, enabled, () => setOne({ variables: { ...token, category, enabled } })),
     [run, setOne, token],
   );
 
@@ -80,7 +94,7 @@ export function useMailPreferences(token: MailPreferenceToken | null) {
    */
   const setAll = useCallback(
     (enabled: boolean) =>
-      run('__all__', () => setEvery({ variables: byToken ? token : { enabled } })),
+      run('__all__', enabled, () => setEvery({ variables: byToken ? token : { enabled } })),
     [byToken, run, setEvery, token],
   );
 
@@ -90,8 +104,10 @@ export function useMailPreferences(token: MailPreferenceToken | null) {
     /** The link was tampered with, or the signing key was rotated. */
     linkInvalid: byToken && !active.loading && !preference,
     loadError: active.error ?? null,
-    error,
+    saveFailed,
     saved,
+    /** The last save was an opt-out, so a confirmation email is on its way. */
+    confirmationSent,
     dismissSaved: () => setSaved(false),
     busyCategory,
     canResubscribeAll: !byToken,

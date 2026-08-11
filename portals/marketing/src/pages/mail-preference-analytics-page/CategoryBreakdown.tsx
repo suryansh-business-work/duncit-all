@@ -1,5 +1,5 @@
 import { Box, Card, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
-import { useTranslation } from '@duncit/app-settings';
+import { mailCategoryCopy, useTranslation } from '@duncit/app-settings';
 import type { MailPreferenceCategoryStat } from './queries';
 
 /**
@@ -19,16 +19,23 @@ export default function CategoryBreakdown({
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-          {t('mailPreference.analytics.byCategory')}
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ mb: 1.5 }}>
+          <Typography variant="subtitle2" fontWeight={700}>
+            {t('mailPreference.analytics.byCategory')}
+          </Typography>
+          {/* Names the column of numbers on the right — without it the reader has
+              to guess whether it counts people or changes. */}
+          <Typography variant="caption" color="text.secondary">
+            {t('mailPreference.analytics.optedOutNow')}
+          </Typography>
+        </Stack>
 
         <Stack spacing={1.5}>
           {rows.map((row) => (
             <Box key={row.category}>
               <Stack direction="row" justifyContent="space-between" spacing={1}>
                 <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                  {t(`mailPreference.categories.${row.category}.label`)}
+                  {mailCategoryCopy(t, row.category).label}
                 </Typography>
                 <Typography variant="body2" fontWeight={700}>
                   {row.opted_out_now.toLocaleString()}

@@ -1,6 +1,7 @@
 import { ActivityIndicator, Switch } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { mailCategoryCopy } from '@duncit/i18n';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,7 +21,7 @@ interface Props {
 export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
-  const base = `mailPreference.categories.${item.category}`;
+  const copy = mailCategoryCopy(t, item.category);
 
   return (
     <XStack
@@ -32,7 +33,7 @@ export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
       <YStack flex={1}>
         <XStack alignItems="center" gap={6}>
           <Text fontSize={14.5} fontWeight="700" color="$color">
-            {t(`${base}.label`)}
+            {copy.label}
           </Text>
           {item.required ? (
             <XStack alignItems="center" gap={3}>
@@ -44,7 +45,7 @@ export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
           ) : null}
         </XStack>
         <Text fontSize={12.5} color="$muted" paddingTop={2}>
-          {t(`${base}.description`)}
+          {copy.description}
         </Text>
       </YStack>
 
@@ -53,7 +54,7 @@ export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
       ) : (
         <Switch
           testID={`mail-preference-switch-${item.category}`}
-          aria-label={t(`${base}.label`)}
+          aria-label={copy.label}
           value={item.enabled}
           disabled={item.required}
           onValueChange={(next) => onChange(item.category, next)}

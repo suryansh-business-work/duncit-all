@@ -1,6 +1,6 @@
 import { Box, Chip, Typography } from '@mui/material';
 import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
-import type { Translator } from '@duncit/app-settings';
+import { mailCategoryCopy, type Translator } from '@duncit/app-settings';
 import type { MailPreferenceLogRow } from './queries';
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
@@ -36,7 +36,7 @@ export function getMailPreferenceLogColumns(
   t: Translator['t'],
   categories: string[],
 ): DuncitColumn<MailPreferenceLogRow>[] {
-  const label = (category: string) => t(`mailPreference.categories.${category}.label`);
+  const label = (category: string) => mailCategoryCopy(t, category).label;
   const renderAction = (row: MailPreferenceLogRow) => (
     <Chip
       size="small"

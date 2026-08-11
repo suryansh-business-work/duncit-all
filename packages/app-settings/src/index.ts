@@ -50,6 +50,7 @@ export {
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
+  mailCategoryCopy,
   MEDIA_BUNDLE,
   mergeCatalogues,
   missingKeys,
@@ -62,6 +63,7 @@ export {
   WEBSITE_BUNDLE,
   type FlatCatalogue,
   type Locale,
+  type MailCategoryCopy,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';

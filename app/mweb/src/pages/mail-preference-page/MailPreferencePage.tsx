@@ -75,6 +75,12 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
     setConfirmOpen(true);
   };
 
+  // An opt-out is confirmed by email, so the snackbar says so. Hoisted out of
+  // the JSX to keep the branch at nesting zero (S3776).
+  const savedMessage = state.confirmationSent
+    ? `${t('mailPreference.saved')} ${t('mailPreference.confirmationSent')}`
+    : t('mailPreference.saved');
+
   const bulkButton =
     allOff && !state.canResubscribeAll ? null : (
       <Box sx={{ pt: 1.5 }}>
@@ -101,7 +107,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         </Typography>
       </Stack>
 
-      {state.error && <Alert severity="error">{state.error}</Alert>}
+      {state.saveFailed && <Alert severity="error">{t('mailPreference.saveFailed')}</Alert>}
 
       <MailPreferenceSection
         heading={t('mailPreference.optionalHeading')}
@@ -137,7 +143,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         open={state.saved}
         autoHideDuration={2500}
         onClose={state.dismissSaved}
-        message={t('mailPreference.saved')}
+        message={savedMessage}
       />
     </Stack>
   );

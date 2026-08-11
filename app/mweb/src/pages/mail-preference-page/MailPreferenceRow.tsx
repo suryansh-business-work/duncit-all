@@ -1,6 +1,6 @@
 import { Chip, CircularProgress, Stack, Switch, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useTranslation } from '@duncit/app-settings';
+import { mailCategoryCopy, useTranslation } from '@duncit/app-settings';
 import type { MailPreferenceCategory } from './queries';
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
  */
 export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const base = `mailPreference.categories.${item.category}`;
+  const copy = mailCategoryCopy(t, item.category);
 
   return (
     <Stack
@@ -31,7 +31,7 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
       <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" alignItems="center" spacing={0.75}>
           <Typography variant="subtitle2" fontWeight={700}>
-            {t(`${base}.label`)}
+            {copy.label}
           </Typography>
           {item.required && (
             <Chip
@@ -43,7 +43,7 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
           )}
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          {t(`${base}.description`)}
+          {copy.description}
         </Typography>
       </Stack>
 
@@ -54,7 +54,7 @@ export default function MailPreferenceRow({ item, busy, onChange }: Readonly<Pro
           checked={item.enabled}
           disabled={item.required}
           onChange={(event) => onChange(item.category, event.target.checked)}
-          inputProps={{ 'aria-label': t(`${base}.label`) }}
+          inputProps={{ 'aria-label': copy.label }}
         />
       )}
     </Stack>

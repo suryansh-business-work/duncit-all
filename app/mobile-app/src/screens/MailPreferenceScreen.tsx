@@ -31,6 +31,11 @@ export function MailPreferenceScreen() {
   const bulkLabel = allOff
     ? t('mailPreference.resubscribeAll')
     : t('mailPreference.unsubscribeAll');
+  // An opt-out is confirmed by email, so the saved line says so (S3776: the
+  // branch sits at nesting zero rather than inside the JSX).
+  const savedMessage = state.confirmationSent
+    ? `${t('mailPreference.saved')} ${t('mailPreference.confirmationSent')}`
+    : t('mailPreference.saved');
   const onBulkPress = () => {
     if (allOff) {
       state.setAll(true);
@@ -61,14 +66,14 @@ export function MailPreferenceScreen() {
         {t('mailPreference.subtitle', { vars: { email: preference.email } })}
       </Text>
 
-      {state.error ? (
+      {state.saveFailed ? (
         <Text testID="mail-preference-save-error" fontSize={12.5} color="$danger">
-          {state.error}
+          {t('mailPreference.saveFailed')}
         </Text>
       ) : null}
-      {state.saved && !state.error ? (
+      {state.saved && !state.saveFailed ? (
         <Text testID="mail-preference-saved" fontSize={12.5} color="$success">
-          {t('mailPreference.saved')}
+          {savedMessage}
         </Text>
       ) : null}
 

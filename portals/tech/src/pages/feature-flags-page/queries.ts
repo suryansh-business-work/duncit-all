@@ -69,6 +69,23 @@ export const DELETE_FLAG = gql`
   }
 `;
 
+/** Restore flags from an exported file — matched on key, so ids never travel. */
+export const IMPORT_FLAGS = gql`
+  mutation ImportFeatureFlags($flags: [ImportFeatureFlagInput!]!) {
+    importFeatureFlags(flags: $flags) {
+      created
+      updated
+      skipped
+    }
+  }
+`;
+
+export interface FlagImportResult {
+  created: string[];
+  updated: string[];
+  skipped: string[];
+}
+
 export interface FlagEdit {
   id?: string;
   key: string;

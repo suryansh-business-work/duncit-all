@@ -536,6 +536,52 @@ export const settingsService = {
     return toFlagPub(updated);
   },
 
+  /**
+   * Restore flags from an exported file. Matching is on key because an export
+   * exists to be carried between environments, where the ids of the machine it
+   * came from mean nothing.
+   *
+   * A key this server already has is updated in place — including a system
+   * flag, whose key is seeded on boot and whose enabled state is exactly what
+   * an operator is moving.
+   */
+  async importFlags(
+    flags: Array<{
+      key: string;
+      name: string;
+      description?: string | null;
+      enabled?: boolean | null;
+    }>,
+  ) {
+    const created: string[] = [];
+    const updated: string[] = [];
+    const skipped: string[] = [];
+
+    for (const flag of flags) {
+      const key = flag.key.toLowerCase().trim();
+      const name = flag.name.trim();
+      if (!key || !name) {
+        skipped.push(flag.key || "(no key)");
+        continue;
+      }
+      const existing = await FeatureFlagModel.findOne({ key });
+      const input = {
+        name,
+        description: flag.description ?? "",
+        enabled: !!flag.enabled,
+      };
+      if (existing) {
+        await this.updateFlag(existing.id, input);
+        updated.push(key);
+      } else {
+        await this.createFlag({ ...input, key });
+        created.push(key);
+      }
+    }
+
+    return { created, updated, skipped };
+  },
+
   async deleteFlag(id: string) {
     const f = await FeatureFlagModel.findById(id);
     if (!f) notFound("FeatureFlag");

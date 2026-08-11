@@ -87,6 +87,14 @@ export const settingsResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.deleteFlag(args.flag_id);
     },
+    importFeatureFlags: async (
+      _p: unknown,
+      args: { flags: any[] },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return settingsService.importFlags(args.flags);
+    },
     updateBranding: async (
       _p: unknown,
       args: { input: any },

@@ -1,8 +1,10 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
@@ -17,6 +19,8 @@ interface Props {
   toolbarActions?: ReactNode;
   onEdit: (p: InventoryProductRow) => void;
   onArchive: (p: InventoryProductRow) => void;
+  /** Temporarily deactivate an active product, reactivate a paused one. */
+  onToggleActive: (p: InventoryProductRow) => void;
   onDelete: (p: InventoryProductRow) => void;
 }
 
@@ -49,6 +53,17 @@ const renderStatus = (p: InventoryProductRow) => (
   <StatusChip status={p.status} colorMap={STATUS_CHIP_COLOR} />
 );
 
+const activeValue = (p: InventoryProductRow) => (p.is_active ? 'Active' : 'Inactive');
+
+const renderActive = (p: InventoryProductRow) => (
+  <Chip
+    size="small"
+    variant="outlined"
+    label={activeValue(p)}
+    color={p.is_active ? 'success' : 'default'}
+  />
+);
+
 const priceValue = (p: InventoryProductRow) =>
   formatMoney(p.selling_price || p.unit_cost, { decimals: 2 });
 
@@ -58,17 +73,28 @@ export default function InventoryTable({
   toolbarActions,
   onEdit,
   onArchive,
+  onToggleActive,
   onDelete,
 }: Readonly<Props>) {
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<InventoryProductRow>[]>(() => {
-    const renderActions = (p: InventoryProductRow) => (
+    const renderActions = (p: InventoryProductRow) => {
+      const paused = p.is_active === false;
+      const pauseLabel = paused ? 'Reactivate' : 'Temporarily deactivate';
+      return (
       <Stack direction="row" justifyContent="flex-end" component="span">
         <Tooltip title="Edit">
           <IconButton size="small" onClick={() => onEdit(p)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+        {p.status !== 'ARCHIVED' && (
+          <Tooltip title={pauseLabel}>
+            <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(p)}>
+              {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title="Archive">
           <IconButton size="small" onClick={() => onArchive(p)}>
             <ArchiveIcon fontSize="small" />
@@ -80,7 +106,8 @@ export default function InventoryTable({
           </IconButton>
         </Tooltip>
       </Stack>
-    );
+      );
+    };
     return [
       { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
       {
@@ -116,6 +143,15 @@ export default function InventoryTable({
         cellRenderer: renderStatus,
         valueGetter: (p) => p.status,
       },
+      {
+        field: 'is_active',
+        headerName: 'Active',
+        sortable: false,
+        filter: { type: 'boolean' },
+        width: 110,
+        cellRenderer: renderActive,
+        valueGetter: activeValue,
+      },
       { field: 'brand_name', headerName: 'Brand', filter: { type: 'text' }, hide: true, minWidth: 140 },
       {
         field: 'created_at',
@@ -125,9 +161,9 @@ export default function InventoryTable({
         width: 130,
         valueGetter: (p) => (p.created_at ? formatDate(p.created_at) : '—'),
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 140, cellRenderer: renderActions },
+      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
     ];
-  }, [onEdit, onArchive, onDelete, formatDate]);
+  }, [onEdit, onArchive, onToggleActive, onDelete, formatDate]);
 
   return (
     <DuncitTable<InventoryProductRow>

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SettingsIcon from '@mui/icons-material/Settings';
 import StorageIcon from '@mui/icons-material/Storage';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import CloneExcludedCard from './CloneExcludedCard';
 import CloneProgressCard from './CloneProgressCard';
 import LeaveCloneDialog from './LeaveCloneDialog';
+import { DataCloneSettingsDialog } from './settings';
 import { useCloneJob } from './useCloneJob';
 import { useCloneNavigationGuard } from './useCloneNavigationGuard';
 import {
@@ -29,6 +31,7 @@ export default function DataClonePage() {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const [startError, setStartError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const targetsQuery = useQuery<{ dataCloneTargets: CloneTargets }>(DATA_CLONE_TARGETS, {
     fetchPolicy: 'cache-and-network',
@@ -59,6 +62,15 @@ export default function DataClonePage() {
     }
   };
 
+  // Closing Settings is the only moment the endpoints can have changed, so it
+  // is where the page re-asks whether a clone may now run.
+  const closeSettings = () => {
+    setSettingsOpen(false);
+    targetsQuery
+      .refetch()
+      .catch((e) => setStartError(e instanceof Error ? e.message : t('tech.dataClone.statusFailed')));
+  };
+
   const excluded = job?.excluded ?? targets?.excluded ?? [];
   const busy = !targets?.ready || running || startState.loading;
 
@@ -74,6 +86,14 @@ export default function DataClonePage() {
             {t('tech.dataClone.subtitle')}
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          startIcon={<SettingsIcon />}
+          onClick={() => setSettingsOpen(true)}
+          disabled={running}
+        >
+          {t('tech.dataClone.settings')}
+        </Button>
         <Button variant="contained" color="error" onClick={handleStart} disabled={busy}>
           {startState.loading ? t('tech.dataClone.starting') : t('tech.dataClone.start')}
         </Button>
@@ -115,6 +135,7 @@ export default function DataClonePage() {
       {excluded.length > 0 && <CloneExcludedCard excluded={excluded} />}
 
       <LeaveCloneDialog open={!!guard.pendingPath} onStay={guard.stay} onLeave={guard.leave} />
+      {settingsOpen && <DataCloneSettingsDialog open onClose={closeSettings} />}
     </Stack>
   );
 }

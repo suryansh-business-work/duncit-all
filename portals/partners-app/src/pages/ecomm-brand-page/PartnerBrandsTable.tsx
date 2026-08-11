@@ -4,6 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { format } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EcommBrandRow } from './queries';
@@ -27,6 +29,7 @@ interface Props {
   onOpen: (brand: EcommBrandRow) => void;
   onManageProducts: (brand: EcommBrandRow) => void;
   onSettings: (brand: EcommBrandRow) => void;
+  onToggleActive: (brand: EcommBrandRow) => void;
 }
 
 const getBrandRowId = (brand: EcommBrandRow) => brand.id;
@@ -51,7 +54,12 @@ const categoriesValue = (brand: EcommBrandRow) =>
   (brand.product_categories ?? []).join(', ') || '—';
 
 const renderStatus = (brand: EcommBrandRow) => (
-  <Chip size="small" color={STATUS_COLOR[brand.status]} label={brand.status} />
+  <Stack direction="row" spacing={0.5} component="span">
+    <Chip size="small" color={STATUS_COLOR[brand.status]} label={brand.status} />
+    {brand.status === 'APPROVED' && brand.is_active === false && (
+      <Chip size="small" color="warning" variant="outlined" label="PAUSED" />
+    )}
+  </Stack>
 );
 
 const updatedValue = (brand: EcommBrandRow) =>
@@ -64,16 +72,25 @@ export default function PartnerBrandsTable({
   onOpen,
   onManageProducts,
   onSettings,
+  onToggleActive,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     const renderActions = (brand: EcommBrandRow) => {
       const locked = brand.status === 'SUBMITTED' || brand.status === 'APPROVED';
+      const paused = brand.is_active === false;
       return (
         <Stack direction="row" justifyContent="flex-end" component="span">
           {brand.status === 'APPROVED' && (
             <Tooltip title="Product management">
               <IconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
                 <Inventory2Icon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {brand.status === 'APPROVED' && (
+            <Tooltip title={paused ? 'Reactivate' : 'Temporarily deactivate'}>
+              <IconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(brand)}>
+                {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
           )}
@@ -109,15 +126,15 @@ export default function PartnerBrandsTable({
       {
         field: 'status',
         headerName: 'Status',
-        width: 130,
+        width: 190,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (brand) => brand.status,
       },
       { field: 'updated_at', headerName: 'Updated', hide: true, width: 130, valueGetter: updatedValue },
-      { field: 'actions', headerName: 'Action', sortable: false, width: 120, cellRenderer: renderActions },
+      { field: 'actions', headerName: 'Action', sortable: false, width: 160, cellRenderer: renderActions },
     ];
-  }, [onOpen, onManageProducts, onSettings]);
+  }, [onOpen, onManageProducts, onSettings, onToggleActive]);
 
   return (
     <DuncitTable<EcommBrandRow>

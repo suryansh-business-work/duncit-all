@@ -223,6 +223,35 @@ services:
     ports:
       - "127.0.0.1:2027:80"
 
+  # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
+  # redis://redis:6379). Deliberately NO host port: only containers on this
+  # network reach it; humans go through the redis-ui below. Infra service, not
+  # a build target — redeploy.sh always `up -d`s it before restarting services.
+  redis:
+    image: redis:7-alpine
+    container_name: duncit-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - /opt/duncit/redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # redis.duncit.com — Redis Commander UI. Loopback-only; nginx fronts it WITH
+  # basic auth (/etc/nginx/.htpasswd-redis, created once on the VPS — see
+  # README "Redis"), so the cache contents are never publicly readable.
+  redis-ui:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: duncit-redis-ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: duncit:redis:6379
+    ports:
+      - "127.0.0.1:2028:8081"
+
 networks:
   # Implicit project network for the duncit stack.
   default:

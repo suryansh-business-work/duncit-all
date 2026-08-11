@@ -47,8 +47,8 @@ server {
     add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
     add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
     add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
-    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent" always;
-    add_header Access-Control-Expose-Headers    "Content-Length, Content-Type, Authorization, X-DUID" always;
+    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-No-Redis, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent" always;
+    add_header Access-Control-Expose-Headers    "Content-Length, Content-Type, Authorization, X-DUID, X-Redis-Cache" always;
     add_header Access-Control-Max-Age           "600"                  always;
     add_header Vary                             "Origin"               always;
 
@@ -57,7 +57,7 @@ server {
             add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
             add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
             add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
-            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-No-Redis, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent" always;
             add_header Access-Control-Max-Age           "600"                  always;
             add_header Vary                             "Origin"               always;
             add_header Content-Length 0;
@@ -621,5 +621,32 @@ server {
         proxy_connect_timeout 30s;
         proxy_send_timeout    300s;
         proxy_read_timeout    300s;
+    }
+}
+
+# --- Redis UI: redis.duncit.com (Redis Commander on :2028) --------------------
+# Window into the server's GraphQL response cache (duncit-redis / duncit-redis-ui
+# in the duncit compose stack). ALWAYS behind basic auth: the cache holds real
+# API responses, so this must never be publicly readable. The htpasswd file is
+# created once on the VPS (see README "Redis") and survives deploys.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name redis.duncit.com;
+    client_max_body_size 5m;
+
+    location / {
+        auth_basic           "Duncit Redis";
+        auth_basic_user_file /etc/nginx/.htpasswd-redis;
+
+        proxy_pass         http://127.0.0.1:2028;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
     }
 }

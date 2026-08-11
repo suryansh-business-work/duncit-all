@@ -5,11 +5,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 
 export interface ProductRowAction {
   key: string;
   label: string;
-  icon: 'edit' | 'settings' | 'ad' | 'delete';
+  icon: 'edit' | 'settings' | 'ad' | 'delete' | 'pause' | 'resume';
   onClick: () => void;
   danger?: boolean;
   disabled?: boolean;
@@ -20,6 +22,8 @@ const ICONS = {
   settings: <SettingsIcon fontSize="small" />,
   ad: <CampaignIcon fontSize="small" />,
   delete: <DeleteOutlineIcon fontSize="small" color="error" />,
+  pause: <PauseCircleOutlineIcon fontSize="small" color="warning" />,
+  resume: <PlayCircleOutlineIcon fontSize="small" color="success" />,
 };
 
 /** Per-row 3-dots menu. Lives in a MUI Menu portal, so item clicks never bubble

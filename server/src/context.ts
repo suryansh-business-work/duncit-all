@@ -14,6 +14,12 @@ export interface GraphQLContext {
   res: Response;
   user: AuthUser | null;
   device_id: string | null;
+  /**
+   * `x-no-redis: true` — the client asked to skip the Redis response cache
+   * (portals/mWeb send it when the URL carried `?noRedis=true`). Read by the
+   * redisResponseCache plugin; resolvers never need to look at it.
+   */
+  noRedis: boolean;
 }
 
 export async function buildContext({
@@ -46,5 +52,7 @@ export async function buildContext({
     typeof rawDuid === 'string' && rawDuid.trim()
       ? rawDuid.trim().slice(0, 100)
       : duidFromArray;
-  return { req, res, user, device_id };
+  const rawNoRedis = req.headers['x-no-redis'];
+  const noRedis = (Array.isArray(rawNoRedis) ? rawNoRedis[0] : rawNoRedis) === 'true';
+  return { req, res, user, device_id, noRedis };
 }

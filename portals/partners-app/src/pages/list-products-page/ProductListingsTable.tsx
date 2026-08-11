@@ -7,6 +7,7 @@ import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/tab
 import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
 import ProductRowActions from './ProductRowActions';
+import ListingPauseDialog from './ListingPauseDialog';
 import RunAdDialog, { type AdKind } from './RunAdDialog';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
 
@@ -41,6 +42,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
   const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
+  const [pauseTarget, setPauseTarget] = useState<ProductListingRow | null>(null);
   const [adTarget, setAdTarget] = useState<{ product: ProductListingRow; kind: AdKind } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -84,17 +86,22 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     const renderQuantity = (product: ProductListingRow) => (
       <QuantityCell product={product} disabled={quantityDisabled} onSave={saveQuantity} />
     );
-    const renderActions = (product: ProductListingRow) => (
-      <ProductRowActions
-        actions={[
-          { key: 'edit', label: 'Edit', icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
-          { key: 'settings', label: 'Settings', icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
-          { key: 'product-ad', label: 'Run Product Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
-          { key: 'brand-ad', label: 'Run Brand Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
-          { key: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
-        ]}
-      />
-    );
+    const renderActions = (product: ProductListingRow) => {
+      const paused = product.is_active === false;
+      const canPause = canManageProducts && product.listing_review_status === 'APPROVED' && product.status !== 'ARCHIVED';
+      return (
+        <ProductRowActions
+          actions={[
+            { key: 'edit', label: 'Edit', icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
+            { key: 'settings', label: 'Settings', icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
+            { key: 'toggle-active', label: paused ? 'Reactivate' : 'Temporarily deactivate', icon: paused ? 'resume' : 'pause', disabled: !canPause, onClick: () => setPauseTarget(product) },
+            { key: 'product-ad', label: 'Run Product Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
+            { key: 'brand-ad', label: 'Run Brand Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
+            { key: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
+          ]}
+        />
+      );
+    };
     return [
       {
         field: 'product_name',
@@ -176,6 +183,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
           <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>Delete</Button>
         </DialogActions>
       </Dialog>
+      <ListingPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />
       <RunAdDialog
         product={adTarget?.product ?? null}
         adKind={adTarget?.kind ?? 'PRODUCT_AD'}

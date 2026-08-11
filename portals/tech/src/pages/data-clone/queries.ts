@@ -60,6 +60,57 @@ export const START_DATA_CLONE = gql`
   }
 `;
 
+const SETTINGS_FIELDS = gql`
+  fragment DataCloneSettingsFields on DataCloneSettings {
+    production {
+      ...DataCloneConnectionFields
+    }
+    staging {
+      ...DataCloneConnectionFields
+    }
+  }
+  fragment DataCloneConnectionFields on DataCloneConnection {
+    role
+    uriMasked
+    hasUri
+    database
+    connected
+    collectionCount
+    lastTestedAt
+    lastTestError
+  }
+`;
+
+/** Both saved connections. Seeded from the server environment on first read. */
+export const DATA_CLONE_SETTINGS = gql`
+  ${SETTINGS_FIELDS}
+  query DataCloneSettings {
+    dataCloneSettings {
+      ...DataCloneSettingsFields
+    }
+  }
+`;
+
+/** Saves one end and proves it in the same call; returns both ends. */
+export const SAVE_DATA_CLONE_CONNECTION = gql`
+  ${SETTINGS_FIELDS}
+  mutation SaveDataCloneConnection($role: DataCloneRole!, $input: DataCloneConnectionInput!) {
+    saveDataCloneConnection(role: $role, input: $input) {
+      ...DataCloneSettingsFields
+    }
+  }
+`;
+
+/** Re-proves what is already saved, without changing it. */
+export const TEST_DATA_CLONE_CONNECTION = gql`
+  ${SETTINGS_FIELDS}
+  mutation TestDataCloneConnection($role: DataCloneRole!) {
+    testDataCloneConnection(role: $role) {
+      ...DataCloneSettingsFields
+    }
+  }
+`;
+
 export type CloneCollectionStatus = 'PENDING' | 'COPYING' | 'DONE' | 'FAILED';
 export type CloneJobStatus = 'RUNNING' | 'SUCCEEDED' | 'FAILED';
 
@@ -96,4 +147,23 @@ export interface CloneTargets {
   excluded: string[];
   ready: boolean;
   error: string | null;
+}
+
+export type DataCloneRole = 'PRODUCTION' | 'STAGING';
+
+/** The connection string itself never reaches the client — only `uriMasked`. */
+export interface CloneConnection {
+  role: DataCloneRole;
+  uriMasked: string;
+  hasUri: boolean;
+  database: string;
+  connected: boolean;
+  collectionCount: number;
+  lastTestedAt: string | null;
+  lastTestError: string | null;
+}
+
+export interface CloneSettings {
+  production: CloneConnection;
+  staging: CloneConnection;
 }

@@ -14,6 +14,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import mongoose from 'mongoose';
+import { redisStatus } from '../config/redis';
 
 const READY_STATE: Record<number, string> = {
   0: 'disconnected',
@@ -52,7 +53,7 @@ export interface HealthReport {
     systemTotalBytes: number;
     systemFreeBytes: number;
   };
-  checks: { database: string };
+  checks: { database: string; redis: string };
 }
 
 export function buildHealth(): HealthReport {
@@ -75,6 +76,8 @@ export function buildHealth(): HealthReport {
       systemTotalBytes: os.totalmem(),
       systemFreeBytes: os.freemem(),
     },
-    checks: { database },
+    // Redis is a cache, not a dependency — 'disconnected' never flips
+    // `status` to degraded the way the database does.
+    checks: { database, redis: redisStatus() },
   };
 }

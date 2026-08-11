@@ -88,6 +88,7 @@
     "geoip-lite": "^2.0.3",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "mjml": "^4.15.3",
     "mongoose": "^8.4.0",

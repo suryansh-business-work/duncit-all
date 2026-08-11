@@ -18,6 +18,8 @@ import type { ApolloServerPlugin } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { connectDB } from './config/db';
+import { initRedis } from './config/redis';
+import { redisResponseCachePlugin } from './config/redisResponseCache';
 import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
 import {
@@ -62,6 +64,10 @@ async function safeSeed(name: string, fn: () => Promise<void>) {
 
 async function bootstrap() {
   await connectDB();
+  // Redis response cache (gated on REDIS_URL — a no-op without it, so local
+  // dev and tests run cache-less). `?noRedis=true` on any portal/mWeb URL
+  // bypasses it per request via the x-no-redis header.
+  initRedis();
   await safeSeed('rbac', () => rbacService.seedDefaults());
   // Fresh databases (e.g. a new staging replica) get the root super admin
   // created on first boot; existing databases no-op.
@@ -258,7 +264,11 @@ async function bootstrap() {
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), graphqlErrorLogger],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      graphqlErrorLogger,
+      redisResponseCachePlugin,
+    ],
   });
 
   await apollo.start();

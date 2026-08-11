@@ -2,7 +2,7 @@ import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { getOrCreateDuid } from '@duncit/user-core';
+import { NO_REDIS_HEADER, getOrCreateDuid, resolveNoRedisFlag } from '@duncit/user-core';
 import { urlConfigs } from './config/url-configs';
 import { apolloErrorLink } from './utils/apolloErrorLink';
 
@@ -18,6 +18,9 @@ const authLink = setContext((_op, { headers }) => {
       ...headers,
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(duid ? { 'x-duid': duid } : {}),
+      // `?noRedis=true` in the URL: skip the server's Redis response cache
+      // for every request from this tab (sticky until ?noRedis=false).
+      ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),
     },
   };
 });

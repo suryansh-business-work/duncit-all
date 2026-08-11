@@ -41,9 +41,10 @@ export const dataCloneTypeDefs = gql`
   }
 
   """
-  What a clone would read and write, resolved from the server environment.
-  The ready flag is false — with the reason in error — when the endpoints are
-  not configured, or when the target would resolve to the source database.
+  What a clone would read and write, resolved from the two saved connections.
+  The ready flag is false — with the reason in error — when either end is
+  missing or has never been proved, or when the target would resolve to the
+  source database.
   """
   type DataCloneTargets {
     sourceDatabase: String!
@@ -53,11 +54,55 @@ export const dataCloneTypeDefs = gql`
     error: String
   }
 
+  "Which end of a clone a saved connection is. There is exactly one of each."
+  enum DataCloneRole {
+    PRODUCTION
+    STAGING
+  }
+
+  """
+  One saved database connection.
+
+  The connection string itself is never returned — uriMasked keeps the cluster
+  and the user and drops the password, which is enough to recognise which
+  account is saved and not enough to use it. connected is only true because the
+  server actually reached that database, and collectionCount is what it counted
+  there.
+  """
+  type DataCloneConnection {
+    role: DataCloneRole!
+    uriMasked: String!
+    hasUri: Boolean!
+    database: String!
+    connected: Boolean!
+    collectionCount: Int!
+    lastTestedAt: String
+    "Why the last connect attempt failed, in the driver's own words."
+    lastTestError: String
+  }
+
+  "Both ends of a clone. A clone can only start when both are connected."
+  type DataCloneSettings {
+    production: DataCloneConnection!
+    staging: DataCloneConnection!
+  }
+
+  """
+  A blank uri keeps the stored one, so the database name can be corrected
+  without re-pasting credentials that are only ever shown masked.
+  """
+  input DataCloneConnectionInput {
+    uri: String
+    database: String!
+  }
+
   extend type Query {
     "Source/target databases and the exclusion list, without starting anything."
     dataCloneTargets: DataCloneTargets!
     "One clone job by id, or the most recent one when id is omitted. Polled for progress."
     dataCloneJob(id: ID): DataCloneJob
+    "The saved production + staging connections, seeded from the environment on first read."
+    dataCloneSettings: DataCloneSettings!
   }
 
   extend type Mutation {
@@ -67,5 +112,14 @@ export const dataCloneTypeDefs = gql`
     SUPER_ADMIN only, and audited.
     """
     startDataClone: DataCloneJob!
+
+    """
+    Save one end and immediately prove it by connecting with exactly what was
+    saved. Returns both ends, so the caller never has to merge two shapes.
+    """
+    saveDataCloneConnection(role: DataCloneRole!, input: DataCloneConnectionInput!): DataCloneSettings!
+
+    "Re-prove an already-saved connection — a rotated password changes the answer."
+    testDataCloneConnection(role: DataCloneRole!): DataCloneSettings!
   }
 `;

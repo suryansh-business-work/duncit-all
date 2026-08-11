@@ -25,13 +25,20 @@ export const renderProduct = (product: ProductListingRow) => (
   </Stack>
 );
 
-export const renderListingStatus = (product: ProductListingRow) => (
-  <StatusChip
-    status={product.listing_review_status}
-    colorMap={LISTING_STATUS_COLORS}
-    fallbackColor="warning"
-  />
-);
+export const renderListingStatus = (product: ProductListingRow) => {
+  // An approved-but-paused listing is hidden from the shop — surface that
+  // instead of a green APPROVED chip the partner would read as "live".
+  if (product.listing_review_status === 'APPROVED' && product.is_active === false) {
+    return <StatusChip status="PAUSED" colorMap={LISTING_STATUS_COLORS} fallbackColor="warning" />;
+  }
+  return (
+    <StatusChip
+      status={product.listing_review_status}
+      colorMap={LISTING_STATUS_COLORS}
+      fallbackColor="warning"
+    />
+  );
+};
 
 interface QuantityCellProps {
   product: ProductListingRow;

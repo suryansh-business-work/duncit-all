@@ -202,6 +202,14 @@ export const inventoryResolvers = {
       requireAuth(ctx);
       return inventoryService.deleteMyProductListing(args.product_doc_id, ctx.user);
     },
+    setMyProductListingActive: async (
+      _p: unknown,
+      args: { product_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.setMyProductListingActive(args.product_doc_id, args.active, ctx.user);
+    },
     recordProductView: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return inventoryService.recordProductView(args.product_doc_id);
@@ -263,6 +271,14 @@ export const inventoryResolvers = {
     ) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.restore(args.product_doc_id, ctx.user);
+    },
+    setInventoryProductActive: async (
+      _p: unknown,
+      args: { product_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.setProductActive(args.product_doc_id, args.active, ctx.user);
     },
     duplicateInventoryProduct: async (
       _p: unknown,

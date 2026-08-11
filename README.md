@@ -128,6 +128,41 @@ feature branch → staging → PR → main
 - The pre-commit hook bumps the app version on every commit
   (`app/mobile-app/app.json` is the source of truth).
 
+## ⚡ Redis (GraphQL response cache)
+
+Each stack (prod + staging) runs its own `redis` container (`redis:7-alpine`,
+no host port — compose-network only) and the server caches **whole GraphQL
+responses** for a whitelist of public, user-independent queries (branding,
+settings, translations, website content, FAQs, …). See
+`server/src/config/redisResponseCache.ts` for the whitelist and
+`server/src/config/redis.ts` for the connection.
+
+- **Wiring**: `REDIS_URL=redis://redis:6379` is written into `server.env` by
+  the deploy workflow. Unset (local dev, tests) = caching off, everything still
+  works — Redis is a cache, never a dependency (`/health` reports it under
+  `checks.redis` without ever flipping the status to degraded).
+- **TTL-only invalidation**: `REDIS_CACHE_TTL_SECONDS` (default 60). Admin
+  edits to cached data appear within a minute.
+- **`?noRedis=true`**: append it to any portal/mWeb URL to bypass the cache for
+  that tab (sticky via sessionStorage; `?noRedis=false` clears it). The client
+  then sends `x-no-redis: true` and the server answers straight from Mongo.
+  The `x-redis-cache` response header reports `hit | miss | bypass`.
+- **UI**: <https://redis.duncit.com> (prod) and
+  <https://staging.redis.duncit.com> (staging) run Redis Commander, fronted by
+  nginx **basic auth**. The credential file lives at
+  `/etc/nginx/.htpasswd-redis` on the VPS and is created ONCE by hand (it
+  survives deploys but not a server rebuild):
+
+  ```bash
+  printf 'duncit:%s\n' "$(openssl passwd -apr1 '<password>')" | sudo tee /etc/nginx/.htpasswd-redis
+  ```
+
+  Both vhosts reference that file — if it is missing, `nginx -t` fails and the
+  deploy's nginx step breaks, so recreate it before anything else on a new
+  host.
+- **Infra services**: `redis` and `redis-ui` are external images, not build
+  targets — `deploy/redeploy.sh` `up -d`s them on every deploy.
+
 ## 📐 Coding standards
 
 They live in [.claude/CLAUDE.md](.claude/CLAUDE.md) and are enforced by SonarQube +

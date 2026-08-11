@@ -14,12 +14,16 @@ import {
   CATALOG_BRAND_PRODUCTS_TABLE,
   DUPLICATE_INVENTORY_PRODUCT,
   RESTORE_INVENTORY_PRODUCT,
+  SET_INVENTORY_PRODUCT_ACTIVE,
   type CatalogBrandProductRow,
 } from './queries';
 
 const ARCHIVE_MESSAGE =
   'Archiving hides this product from active lists and the pod product picker. You can restore it here anytime.';
 const RESTORE_MESSAGE = 'The product becomes active again and reappears in this brand’s catalogue.';
+const PAUSE_MESSAGE =
+  'The product is hidden from the shop and pod product picker until it is reactivated. Orders already placed are not affected.';
+const RESUME_MESSAGE = 'The product becomes visible and purchasable in the shop again.';
 
 /**
  * Catalog > Brands > one brand's products. Scoped with ownership=BRAND +
@@ -32,6 +36,7 @@ export default function CatalogBrandProductsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [lifecycleTarget, setLifecycleTarget] = useState<CatalogBrandProductRow | null>(null);
+  const [pauseTarget, setPauseTarget] = useState<CatalogBrandProductRow | null>(null);
 
   const brandQuery = useQuery(CATALOG_BRAND, {
     variables: { id: brandId },
@@ -40,6 +45,7 @@ export default function CatalogBrandProductsPage() {
   const [archiveProduct, archiveState] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
   const [restoreProduct, restoreState] = useMutation(RESTORE_INVENTORY_PRODUCT);
   const [duplicateProduct] = useMutation(DUPLICATE_INVENTORY_PRODUCT);
+  const [setProductActive, pauseState] = useMutation(SET_INVENTORY_PRODUCT_ACTIVE);
 
   const productsBase = `/catalog/brands/${brandId}/products`;
 
@@ -75,6 +81,20 @@ export default function CatalogBrandProductsPage() {
     setLifecycleTarget(null);
   };
 
+  const runPauseToggle = async () => {
+    /* v8 ignore next -- the dialog only opens once a row has been picked */
+    if (!pauseTarget) return;
+    const activating = pauseTarget.is_active === false;
+    try {
+      await setProductActive({ variables: { id: pauseTarget.id, active: activating } });
+      notifySuccess(activating ? 'Product reactivated' : 'Product temporarily deactivated');
+      refetchRef.current?.();
+    } catch (error) {
+      notifyError(parseApiError(error, 'Could not update the product'));
+    }
+    setPauseTarget(null);
+  };
+
   const runDuplicate = async (product: CatalogBrandProductRow) => {
     try {
       const res = await duplicateProduct({ variables: { id: product.id } });
@@ -89,6 +109,8 @@ export default function CatalogBrandProductsPage() {
   const brand = brandQuery.data?.ecommBrand ?? null;
   const restoring = lifecycleTarget?.status === 'ARCHIVED';
   const lifecycleLabel = restoring ? 'Restore' : 'Archive';
+  const activating = pauseTarget?.is_active === false;
+  const pauseLabel = activating ? 'Reactivate' : 'Deactivate';
 
   return (
     <Stack spacing={3}>
@@ -123,6 +145,7 @@ export default function CatalogBrandProductsPage() {
         refetchRef={refetchRef}
         onEdit={(p) => navigate(`${productsBase}/${p.id}/edit`)}
         onLifecycle={setLifecycleTarget}
+        onToggleActive={setPauseTarget}
         onDuplicate={runDuplicate}
       />
 
@@ -136,6 +159,18 @@ export default function CatalogBrandProductsPage() {
         busyLabel="Working…"
         onClose={() => setLifecycleTarget(null)}
         onConfirm={runLifecycle}
+      />
+
+      <ConfirmDialog
+        open={!!pauseTarget}
+        title={`${pauseLabel} product?`}
+        message={activating ? RESUME_MESSAGE : PAUSE_MESSAGE}
+        confirmLabel={pauseLabel}
+        confirmColor={activating ? 'success' : 'warning'}
+        loading={pauseState.loading}
+        busyLabel="Working…"
+        onClose={() => setPauseTarget(null)}
+        onConfirm={runPauseToggle}
       />
     </Stack>
   );

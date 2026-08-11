@@ -56,6 +56,8 @@ const PRODUCT_FIELDS = `
   listing_review_status
   listing_review_notes
   is_duncit_delivery_partner
+  status
+  is_active
   updated_at
 `;
 
@@ -82,6 +84,13 @@ export const UPDATE_QUANTITY = gql`
 export const DELETE_LISTING = gql`
   mutation DeleteMyProductListing($product_doc_id: ID!) {
     deleteMyProductListing(product_doc_id: $product_doc_id)
+  }
+`;
+
+/** Temporarily hide/show an own approved listing in the shop (reversible). */
+export const SET_LISTING_ACTIVE = gql`
+  mutation SetMyProductListingActive($product_doc_id: ID!, $active: Boolean!) {
+    setMyProductListingActive(product_doc_id: $product_doc_id, active: $active) { id is_active }
   }
 `;
 
@@ -137,5 +146,7 @@ export interface ProductListingRow {
   unit_cost?: number | null;
   delivery_target?: string | null;
   listing_review_status: string;
+  status?: string | null;
+  is_active?: boolean | null;
   updated_at?: string | null;
 }

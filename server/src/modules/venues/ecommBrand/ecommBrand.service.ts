@@ -360,6 +360,14 @@ export const ecommBrandService = {
     return toPub(brand);
   },
 
+  /** Partner self-service pause: same reversible is_active flip as setActive,
+   * but scoped to a brand the caller owns (partners portal "Temporarily
+   * deactivate" toggle). Orders already placed are untouched. */
+  async setActiveOwned(userId: string, brandId: string, active: boolean) {
+    await loadOwned(userId, brandId);
+    return this.setActive(brandId, active);
+  },
+
   /** Developer hard-delete: permanently removes a brand everywhere, its pickup
    * locations, and revokes the owner's ECOMM_MANAGER role when it was their last
    * brand. BLOCKS when the brand still has products (remove them first). */

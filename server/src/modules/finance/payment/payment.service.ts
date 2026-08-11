@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { PaymentModel, type IPayment } from './payment.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/finance.model';
 import { invoiceDataForPayment } from './payment.invoice';
@@ -250,6 +251,30 @@ function assertPodRemainingStock(perProductQty: Map<string, number>, allowed: Ma
   }
 }
 
+/** Pay-time gate for the temporary-deactivate flags: a paused product — or one
+ * whose brand is deactivated — is hidden from the shop, so a checkout still
+ * carrying it (stale cart / open pod page) must fail here instead of selling a
+ * hidden product. Already-placed orders are never re-checked. */
+async function assertProductsActive(products: any[]) {
+  const pausedProduct = products.find((p: any) => p.is_active === false);
+  if (pausedProduct) {
+    throw new GraphQLError(`${pausedProduct.product_name || 'A selected product'} is currently unavailable`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const brandIds = [...new Set(products.map((p: any) => (p.brand_id ? String(p.brand_id) : '')).filter(Boolean))];
+  if (brandIds.length === 0) return;
+  const pausedBrands = await EcommBrandModel.find({ _id: { $in: brandIds }, is_active: false })
+    .select('_id')
+    .lean();
+  if (pausedBrands.length === 0) return;
+  const paused = new Set(pausedBrands.map((b: any) => String(b._id)));
+  const hit = products.find((p: any) => p.brand_id && paused.has(String(p.brand_id)));
+  throw new GraphQLError(`${hit?.product_name || 'A selected product'} is currently unavailable`, {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
+}
+
 async function resolveProductLines(pod: any, selectedProducts: any[] = []): Promise<ProductResolution> {
   const allowed = new Map<string, any>(
     (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
@@ -261,8 +286,9 @@ async function resolveProductLines(pod: any, selectedProducts: any[] = []): Prom
     (id) => Types.ObjectId.isValid(id)
   );
   const products = await InventoryProductModel.find({ _id: { $in: productIds } })
-    .select('product_name variants delivery_target')
+    .select('product_name variants delivery_target is_active brand_id')
     .lean();
+  await assertProductsActive(products);
   const productMap = new Map<string, any>(products.map((p: any) => [String(p._id), p]));
 
   const lines: ResolvedProductLine[] = [];

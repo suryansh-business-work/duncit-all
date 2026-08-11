@@ -7,6 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useApolloTableFetch } from '@duncit/table';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import EcommBrandForm from './EcommBrandForm';
+import BrandPauseDialog from './BrandPauseDialog';
 import PartnerBrandsTable from './PartnerBrandsTable';
 import { MY_BRANDS, MY_BRANDS_TABLE, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrand, type EcommBrandRow } from './queries';
 import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
@@ -22,6 +23,7 @@ export default function EcommBrandPage() {
   const [submitBrand, submitState] = useMutation(SUBMIT_BRAND);
   const [withdrawBrand, withdrawState] = useMutation(WITHDRAW_BRAND);
   const [editing, setEditing] = useState<Editing>(null);
+  const [pauseTarget, setPauseTarget] = useState<EcommBrandRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -118,6 +120,7 @@ export default function EcommBrandPage() {
             onOpen={(brand) => { setError(null); setEditing(brand); }}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
             onSettings={(brand) => navigate(`/ecomm-brand/${brand.id}/settings`)}
+            onToggleActive={setPauseTarget}
           />
         </CardContent>
       </Card>
@@ -148,6 +151,7 @@ export default function EcommBrandPage() {
         </DialogContent>
       </Dialog>
 
+      <BrandPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />
       <MediaPickerDialog
         open={pickerOpen}
         onClose={() => settlePicker(null)}

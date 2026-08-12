@@ -1,6 +1,6 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
-import type { DateFormatter } from '@duncit/app-settings';
+import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import type { PaymentStep } from './queries';
 
 const STEP_STATUS_COLORS: StatusColorMap = {
@@ -22,20 +22,25 @@ interface Props {
  * step that has one rather than only for failures.
  */
 export default function StepsTimeline({ steps, finalizeAttempts, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Two keys rather than a suffixed plural: languages that do not split on one
+  // pick whichever their catalogue defines.
+  const attemptsKey =
+    finalizeAttempts === 1 ? 'finance.payment.finalizeAttemptsOne' : 'finance.payment.finalizeAttemptsMany';
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={700}>
-          Pipeline steps
+          {t('finance.payment.stepsTitle')}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-          {finalizeAttempts} finalize attempt{finalizeAttempts === 1 ? '' : 's'}
+          {t(attemptsKey, { vars: { n: finalizeAttempts } })}
         </Typography>
 
         {steps.length === 0 && (
           <Typography variant="body2" color="text.secondary">
-            This payment was finalized before step tracking shipped — see the table above for what
-            exists.
+            {t('finance.payment.stepsEmpty')}
           </Typography>
         )}
 
@@ -57,7 +62,7 @@ export default function StepsTimeline({ steps, finalizeAttempts, formatDateTime 
                   <StatusChip status={step.status} colorMap={STEP_STATUS_COLORS} />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  {step.at ? formatDateTime(step.at) : 'not run'}
+                  {step.at ? formatDateTime(step.at) : t('finance.payment.stepNotRun')}
                 </Typography>
               </Stack>
               {step.detail && (

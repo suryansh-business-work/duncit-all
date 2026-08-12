@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
 import { downloadBase64File } from '@duncit/utils';
 import { INVOICE_PDF, PAYMENT_TOTALS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
 import { paymentTableFilter } from './helpers';
@@ -15,6 +16,7 @@ const POLL_MS = 30000;
 const EMPTY_TOTALS = { count: 0, gross: 0, fee: 0, gst: 0 };
 
 export default function PaymentLogsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -84,17 +86,17 @@ export default function PaymentLogsPage() {
           fetchPolicy: 'network-only',
         });
         const b64 = pdfData?.paymentInvoicePdfBase64;
-        if (!b64) throw new Error('Invoice not available');
+        if (!b64) throw new Error(t('finance.payment.invoiceUnavailable'));
         downloadBase64File(b64, `invoice-${invoiceNo.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`, 'application/pdf');
       } catch (e: any) {
         // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
-        const message = e?.message ?? /* istanbul ignore next */ 'Could not download invoice';
+        const message = e?.message ?? /* istanbul ignore next */ t('finance.payment.invoiceDownloadFailed');
         setActionError(message);
       } finally {
         setDownloadingId(null);
       }
     },
-    [client],
+    [client, t],
   );
 
   const handleConfirmRefund = async () => {
@@ -109,7 +111,7 @@ export default function PaymentLogsPage() {
       refetch();
     } catch (e: any) {
       // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
-      const message = e?.message ?? /* istanbul ignore next */ 'Refund failed';
+      const message = e?.message ?? /* istanbul ignore next */ t('finance.payment.refundFailed');
       setActionError(message);
     }
   };
@@ -119,7 +121,7 @@ export default function PaymentLogsPage() {
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
         <ReceiptLongIcon color="primary" />
         <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
-          Payment Logs
+          {t('finance.payment.logsTitle')}
         </Typography>
       </Stack>
 

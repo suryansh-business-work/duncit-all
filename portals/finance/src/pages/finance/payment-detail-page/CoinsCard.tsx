@@ -1,6 +1,6 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
-import type { DateFormatter } from '@duncit/app-settings';
+import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import type { PaymentCoinLine } from './queries';
 
 const COIN_TYPE_COLORS: StatusColorMap = {
@@ -30,21 +30,23 @@ interface Props {
  * movements — Finance needs to see the absence, not an absent card.
  */
 export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-          Duncit Coins
+          {t('finance.payment.coinsTitle')}
         </Typography>
         <Stack spacing={1}>
-          <InfoRow variant="split" label="Coins spent" value={String(coinsRedeemed)} />
-          <InfoRow variant="split" label="Coins earned" value={String(coinsEarned)} />
+          <InfoRow variant="split" label={t('finance.payment.coinsSpent')} value={String(coinsRedeemed)} />
+          <InfoRow variant="split" label={t('finance.payment.coinsEarned')} value={String(coinsEarned)} />
         </Stack>
         <Divider sx={{ my: 1.5 }} />
 
         {coins.length === 0 && (
           <Typography variant="body2" color="text.secondary">
-            No coins used on this payment.
+            {t('finance.payment.coinsEmpty')}
           </Typography>
         )}
 
@@ -58,11 +60,11 @@ export default function CoinsCard({ coins, coinsRedeemed, coinsEarned, formatDat
                   {line.amount}
                 </Typography>
               </Stack>
-              <InfoRow variant="split" label="Balance after" value={String(line.balance_after)} />
-              <InfoRow variant="split" label="Source" value={line.source} />
-              <InfoRow variant="split" label="Reason" value={line.reason} />
+              <InfoRow variant="split" label={t('finance.payment.balanceAfter')} value={String(line.balance_after)} />
+              <InfoRow variant="split" label={t('finance.payment.coinSource')} value={line.source} />
+              <InfoRow variant="split" label={t('finance.payment.coinReason')} value={line.reason} />
               {line.earn_pct > 0 && (
-                <InfoRow variant="split" label="Earn rate" value={`${line.earn_pct}%`} />
+                <InfoRow variant="split" label={t('finance.payment.earnRate')} value={`${line.earn_pct}%`} />
               )}
               <Typography variant="caption" color="text.secondary">
                 {formatDateTime(line.at)}

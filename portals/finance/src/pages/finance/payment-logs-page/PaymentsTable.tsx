@@ -3,15 +3,18 @@ import { CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/m
 import DownloadIcon from '@mui/icons-material/Download';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { useTranslation, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from './helpers';
 import type { PaymentRow } from './queries';
 
-const STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'SUCCESS', label: 'Success' },
-  { value: 'FAILED', label: 'Failed' },
-  { value: 'REFUNDED', label: 'Refunded' },
+/** The filter's options carry translated labels but untranslated values — the
+ * value is the PaymentStatus the server filters on, not copy. */
+const statusOptions = (t: Translator['t']) => [
+  { value: 'PENDING', label: t('finance.payment.statusPending') },
+  { value: 'SUCCESS', label: t('finance.payment.statusSuccess') },
+  { value: 'FAILED', label: t('finance.payment.statusFailed') },
+  { value: 'REFUNDED', label: t('finance.payment.statusRefunded') },
 ];
 
 const getPaymentRowId = (p: PaymentRow) => p.id;
@@ -64,10 +67,11 @@ export default function PaymentsTable({
   onRefund,
   onOpen,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PaymentRow>[]>(() => {
     const renderActions = (p: PaymentRow) => (
       <Stack direction="row" spacing={0.5} component="span">
-        <Tooltip title={p.invoice_no ? 'Download invoice' : 'No invoice generated'}>
+        <Tooltip title={p.invoice_no ? t('finance.payment.downloadInvoice') : t('finance.payment.noInvoiceGenerated')}>
           <span>
             <IconButton
               size="small"
@@ -82,7 +86,7 @@ export default function PaymentsTable({
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={p.status === 'SUCCESS' ? 'Refund' : 'Only successful payments can be refunded'}>
+        <Tooltip title={p.status === 'SUCCESS' ? t('finance.payment.refund') : t('finance.payment.refundOnlySuccess')}>
           <span>
             <IconButton
               size="small"
@@ -100,44 +104,44 @@ export default function PaymentsTable({
       </Stack>
     );
     return [
-      { field: 'created_at', headerName: 'When', width: 160, filter: { type: 'date' }, valueGetter: whenValue },
+      { field: 'created_at', headerName: t('finance.payment.colWhen'), width: 160, filter: { type: 'date' }, valueGetter: whenValue },
       {
         field: 'user_name',
-        headerName: 'Customer',
+        headerName: t('finance.payment.colCustomer'),
         flex: 1,
         minWidth: 170,
         cellRenderer: renderCustomer,
         valueGetter: (p) => p.user_name,
       },
-      { field: 'description', headerName: 'Description', minWidth: 160 },
-      { field: 'subtotal', headerName: 'Subtotal', width: 100, valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
-      { field: 'platform_fee_amount', headerName: 'Fee', width: 90, valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
-      { field: 'gst_amount', headerName: 'GST', width: 90, valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
+      { field: 'description', headerName: t('finance.payment.colDescription'), minWidth: 160 },
+      { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
+      { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
+      { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
       {
         field: 'total',
-        headerName: 'Total',
+        headerName: t('finance.payment.colTotal'),
         width: 100,
         filter: { type: 'number' },
         valueGetter: (p) => fmt(p.total, p.currency_symbol),
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('finance.payment.colStatus'),
         width: 120,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        filter: { type: 'select', options: statusOptions(t) },
         cellRenderer: renderStatus,
         valueGetter: (p) => p.status,
       },
       {
         field: 'payment_id',
-        headerName: 'IDs',
+        headerName: t('finance.payment.colIds'),
         minWidth: 190,
         cellRenderer: renderIds,
         valueGetter: (p) => [p.payment_id, p.invoice_no].filter(Boolean).join(' '),
       },
       {
         field: 'paid_at',
-        headerName: 'Paid at',
+        headerName: t('finance.payment.colPaidAt'),
         hide: true,
         width: 160,
         filter: { type: 'date' },
@@ -145,14 +149,14 @@ export default function PaymentsTable({
       },
       {
         field: 'gateway',
-        headerName: 'Gateway',
+        headerName: t('finance.payment.colGateway'),
         hide: true,
         width: 120,
         filter: { type: 'text' },
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('finance.payment.colActions'), sortable: false, width: 110, cellRenderer: renderActions },
     ];
-  }, [downloadingId, onDownload, onRefund]);
+  }, [downloadingId, onDownload, onRefund, t]);
 
   return (
     <DuncitTable<PaymentRow>
@@ -161,9 +165,9 @@ export default function PaymentsTable({
       fetchRows={fetchRows}
       getRowId={getPaymentRowId}
       onRowClick={onOpen}
-      emptyText="No payments yet."
+      emptyText={t('finance.payment.logsEmpty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
-      searchPlaceholder="Search txn id, invoice, name or email"
+      searchPlaceholder={t('finance.payment.logsSearch')}
       refetchRef={refetchRef}
     />
   );

@@ -1,5 +1,6 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
+import { useTranslation, type Translator } from '@duncit/app-settings';
 import { money, type PaymentDetail } from './queries';
 
 interface BreakupLine {
@@ -23,45 +24,54 @@ interface BreakupLine {
  * Coupon and coins render as negatives so the arithmetic reads top to bottom;
  * both are skipped when zero rather than shown as a "− ₹0.00" no-op.
  */
-function buildLines(detail: PaymentDetail): BreakupLine[] {
+function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
   const p = detail.payment;
   const sym = p.currency_symbol;
   const lines: BreakupLine[] = [
-    { key: 'original', label: 'Original total', value: money(sym, detail.original_total) },
+    { key: 'original', label: t('finance.payment.originalTotal'), value: money(sym, detail.original_total) },
   ];
   if (p.coupon_discount > 0) {
-    const label = p.coupon_code ? `Coupon discount (${p.coupon_code})` : 'Coupon discount';
+    // Named when the code survived on the payment, bare when it did not — the
+    // two are separate keys so a translator is never handed a dangling "()".
+    const label = p.coupon_code
+      ? t('finance.payment.couponDiscountWith', { vars: { code: p.coupon_code } })
+      : t('finance.payment.couponDiscount');
     lines.push({ key: 'coupon', label, value: `− ${money(sym, p.coupon_discount)}` });
   }
   if (detail.coins_redeemed > 0) {
     lines.push({
       key: 'coins',
-      label: `Coins redeemed (${detail.coins_redeemed})`,
+      label: t('finance.payment.coinsRedeemedLine', { vars: { n: detail.coins_redeemed } }),
       value: `− ${money(sym, detail.coins_redeemed)}`,
     });
   }
   lines.push(
-    { key: 'subtotal', label: 'Subtotal (net of GST)', value: money(sym, p.subtotal) },
-    { key: 'gst', label: `GST (${p.gst_pct.toFixed(2)}%)`, value: money(sym, p.gst_amount) },
+    { key: 'subtotal', label: t('finance.payment.subtotalNetGst'), value: money(sym, p.subtotal) },
+    {
+      key: 'gst',
+      label: t('finance.payment.gstPct', { vars: { pct: p.gst_pct.toFixed(2) } }),
+      value: money(sym, p.gst_amount),
+    },
   );
   return lines;
 }
 
 /** Every line of the bill, labelled — the first thing Finance reconciles. */
 export default function AmountBreakupCard({ detail }: Readonly<{ detail: PaymentDetail }>) {
+  const { t } = useTranslation();
   const p = detail.payment;
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
-          Amount Breakup
+          {t('finance.payment.amountBreakup')}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
           {p.description}
         </Typography>
         <Stack spacing={1}>
-          {buildLines(detail).map((line) => (
+          {buildLines(detail, t).map((line) => (
             <InfoRow key={line.key} variant="split" label={line.label} value={line.value} />
           ))}
         </Stack>
@@ -69,7 +79,7 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
         <InfoRow
           variant="split"
           bold
-          label="Total charged"
+          label={t('finance.payment.totalCharged')}
           value={money(p.currency_symbol, p.total)}
         />
 
@@ -83,16 +93,15 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
         */}
         <Divider sx={{ my: 1.5 }} />
         <Typography variant="overline" color="text.secondary" display="block">
-          Of which Duncit&apos;s share
+          {t('finance.payment.duncitShare')}
         </Typography>
         <InfoRow
           variant="split"
-          label={`Platform fee (${p.platform_fee_pct.toFixed(2)}% of subtotal)`}
+          label={t('finance.payment.platformFeeOfSubtotal', { vars: { pct: p.platform_fee_pct.toFixed(2) } })}
           value={money(p.currency_symbol, p.platform_fee_amount)}
         />
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-          Already included in the total charged above — Duncit&apos;s revenue is carved out of the
-          subtotal, not added to it.
+          {t('finance.payment.platformFeeNote')}
         </Typography>
       </CardContent>
     </Card>

@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import { Box, Stack } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
-import { useDateFormat, type DateFormatter } from '@duncit/app-settings';
+import { useDateFormat, useTranslation, type DateFormatter } from '@duncit/app-settings';
 import PaymentDetailHeader from './PaymentDetailHeader';
 import AmountBreakupCard from './AmountBreakupCard';
 import ArtifactsTable from './ArtifactsTable';
@@ -75,6 +75,7 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
 export default function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { formatDateTime } = useDateFormat();
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ paymentDetail: PaymentDetail }>(PAYMENT_DETAIL, {
     variables: { id },
     skip: !id,
@@ -88,7 +89,7 @@ export default function PaymentDetailPage() {
       loading={loading && !detail}
       error={error}
       notFound={!detail}
-      notFoundText="Payment not found."
+      notFoundText={t('finance.payment.notFound')}
       notFoundSeverity="warning"
       spinnerSx={{ p: 6 }}
     >

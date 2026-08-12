@@ -9,6 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 import { fmt } from './helpers';
 
 interface Props {
@@ -30,9 +31,11 @@ export default function RefundDialog({
   onClose,
   onConfirm,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={!!refundFor} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Refund payment</DialogTitle>
+      <DialogTitle>{t('finance.payment.refundDialogTitle')}</DialogTitle>
       <DialogContent dividers>
         {refundFor && (
           <Stack spacing={1.5}>
@@ -44,7 +47,7 @@ export default function RefundDialog({
               Payment ID: {refundFor.payment_id}
             </Typography>
             <TextField
-              label="Reason (optional)"
+              label={t('finance.payment.refundReason')}
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
               multiline
@@ -56,14 +59,14 @@ export default function RefundDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('finance.payment.cancel')}</Button>
         <Button
           color="warning"
           variant="contained"
           disabled={refundLoading}
           onClick={onConfirm}
         >
-          {refundLoading ? 'Refunding…' : 'Confirm refund'}
+          {refundLoading ? t('finance.payment.refunding') : t('finance.payment.confirmRefund')}
         </Button>
       </DialogActions>
     </Dialog>

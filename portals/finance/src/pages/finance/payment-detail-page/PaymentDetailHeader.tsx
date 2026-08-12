@@ -2,13 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertTitle, Box, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { StatusChip } from '@duncit/ui';
-import type { DateFormatter } from '@duncit/app-settings';
+import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { STATUS_COLORS } from '../payment-logs-page/helpers';
 import type { PaymentDetail } from './queries';
 
 interface FinalizeWarning {
-  title: string;
-  body: string;
+  titleKey: string;
+  bodyKey: string;
 }
 
 /**
@@ -18,12 +18,12 @@ interface FinalizeWarning {
  */
 const FINALIZE_WARNINGS: Record<string, FinalizeWarning> = {
   FAILED: {
-    title: 'Checkout finalization failed',
-    body: 'Part of what this payment was supposed to create was never written. Check the pipeline steps below, then re-run or refund.',
+    titleKey: 'finance.payment.finalizeFailedTitle',
+    bodyKey: 'finance.payment.finalizeFailedBody',
   },
   CORE_DONE: {
-    title: 'Still finishing',
-    body: 'The booking itself was written, but the follow-up work (invoice PDF, receipt email, shipment) has not all completed yet.',
+    titleKey: 'finance.payment.stillFinishingTitle',
+    bodyKey: 'finance.payment.stillFinishingBody',
   },
 };
 
@@ -35,14 +35,15 @@ interface Props {
 /** Identity line + the loud states: refund-required and a stalled/failed finalize. */
 export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly<Props>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const p = detail.payment;
   const warning = FINALIZE_WARNINGS[detail.finalize_state];
-  const paidAt = p.paid_at ? formatDateTime(p.paid_at) : 'not paid';
+  const paidAt = p.paid_at ? formatDateTime(p.paid_at) : t('finance.payment.notPaid');
 
   return (
     <Box sx={{ mb: 3 }}>
       <Stack direction="row" spacing={1.5} alignItems="center">
-        <IconButton aria-label="Back to Payment Logs" onClick={() => navigate('/payment-logs')}>
+        <IconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1 }}>
@@ -53,23 +54,22 @@ export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly
             <StatusChip status={p.status} colorMap={STATUS_COLORS} />
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            {p.invoice_no ?? 'No invoice number'} · {p.gateway} · {paidAt}
+            {p.invoice_no ?? t('finance.payment.noInvoiceNumber')} · {p.gateway} · {paidAt}
           </Typography>
         </Box>
       </Stack>
 
       {detail.needs_refund && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          <AlertTitle>Refund required</AlertTitle>
-          Money was captured but the booking could not be written. Nothing was created for this
-          customer — refund this payment.
+          <AlertTitle>{t('finance.payment.refundRequired')}</AlertTitle>
+          {t('finance.payment.refundRequiredBody')}
         </Alert>
       )}
 
       {warning && (
         <Alert severity="warning" sx={{ mt: 2 }}>
-          <AlertTitle>{warning.title}</AlertTitle>
-          {warning.body}
+          <AlertTitle>{t(warning.titleKey)}</AlertTitle>
+          {t(warning.bodyKey)}
           {detail.finalize_error && (
             <Typography variant="caption" component="div" sx={{ mt: 1, fontFamily: 'monospace' }}>
               {detail.finalize_error}

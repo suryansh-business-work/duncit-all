@@ -5,12 +5,13 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import type { SvgIconComponent } from '@mui/icons-material';
 import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
+import { useTranslation, type Translator } from '@duncit/app-settings';
 import { staticTableFetch, type PaymentArtifact } from './queries';
 
 type ArtifactState = 'CREATED' | 'NOT_APPLICABLE' | 'MISSING';
 
 interface ArtifactStateStyle {
-  label: string;
+  labelKey: string;
   color: string;
   Icon: SvgIconComponent;
 }
@@ -18,9 +19,9 @@ interface ArtifactStateStyle {
 // Colour is never the only signal: each state pairs its icon with the label
 // that names it, so the table reads the same without colour perception.
 const ARTIFACT_STATES: Record<ArtifactState, ArtifactStateStyle> = {
-  CREATED: { label: 'Created', color: 'success.main', Icon: CheckCircleIcon },
-  NOT_APPLICABLE: { label: 'Not applicable', color: 'text.disabled', Icon: RemoveCircleOutlineIcon },
-  MISSING: { label: 'Missing', color: 'error.main', Icon: ErrorOutlineIcon },
+  CREATED: { labelKey: 'finance.payment.artifactCreated', color: 'success.main', Icon: CheckCircleIcon },
+  NOT_APPLICABLE: { labelKey: 'finance.payment.artifactNotApplicable', color: 'text.disabled', Icon: RemoveCircleOutlineIcon },
+  MISSING: { labelKey: 'finance.payment.artifactMissing', color: 'error.main', Icon: ErrorOutlineIcon },
 };
 
 /** `created` is the server reading the document back, so it outranks the
@@ -36,19 +37,22 @@ const getArtifactRowId = (artifact: PaymentArtifact) => artifact.key;
 const artifactSearchText = (artifact: PaymentArtifact) =>
   [artifact.label, artifact.key, ...artifact.refs].join(' ');
 
-const renderStatus = (artifact: PaymentArtifact) => {
-  const { label, color, Icon } = ARTIFACT_STATES[artifactState(artifact)];
+/** The state cell. Takes `t` rather than calling a hook, so it stays a plain
+ * module-scope renderer (a component defined inside a component would remount
+ * every row on each render). */
+const renderStatus = (artifact: PaymentArtifact, t: Translator['t']) => {
+  const { labelKey, color, Icon } = ARTIFACT_STATES[artifactState(artifact)];
   return (
     <Stack direction="row" spacing={0.75} alignItems="center" component="span">
       <Icon fontSize="small" sx={{ color }} />
       <Typography variant="body2" component="span">
-        {label}
+        {t(labelKey)}
       </Typography>
     </Stack>
   );
 };
 
-const renderRefs = (artifact: PaymentArtifact) => {
+const renderRefs = (artifact: PaymentArtifact, t: Translator['t']) => {
   if (artifact.refs.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary" component="span">
@@ -63,30 +67,32 @@ const renderRefs = (artifact: PaymentArtifact) => {
       </Typography>
       {artifact.count > 1 && (
         <Typography variant="caption" color="text.secondary" component="span">
-          {artifact.count} records
+          {t('finance.payment.recordCount', { vars: { n: artifact.count } })}
         </Typography>
       )}
     </Stack>
   );
 };
 
-const ARTIFACT_COLUMNS: DuncitColumn<PaymentArtifact>[] = [
-  { field: 'label', headerName: 'Item', sortable: false, flex: 1, minWidth: 200 },
+/** Columns depend on the active catalogue, so they are built per translator
+ * rather than frozen at module load — the header text has to change with it. */
+const artifactColumns = (t: Translator['t']): DuncitColumn<PaymentArtifact>[] => [
+  { field: 'label', headerName: t('finance.payment.artifactItem'), sortable: false, flex: 1, minWidth: 200 },
   {
     field: 'created',
-    headerName: 'Status',
+    headerName: t('finance.payment.artifactStatus'),
     sortable: false,
     width: 170,
-    cellRenderer: renderStatus,
-    valueGetter: (artifact) => ARTIFACT_STATES[artifactState(artifact)].label,
+    cellRenderer: (artifact) => renderStatus(artifact, t),
+    valueGetter: (artifact) => t(ARTIFACT_STATES[artifactState(artifact)].labelKey),
   },
   {
     field: 'refs',
-    headerName: 'Reference',
+    headerName: t('finance.payment.artifactReference'),
     sortable: false,
     flex: 1.4,
     minWidth: 220,
-    cellRenderer: renderRefs,
+    cellRenderer: (artifact) => renderRefs(artifact, t),
     valueGetter: (artifact) => artifact.refs.join(', '),
   },
 ];
@@ -96,24 +102,26 @@ const ARTIFACT_COLUMNS: DuncitColumn<PaymentArtifact>[] = [
  * document back from the database rather than trusting the pipeline's own log.
  */
 export default function ArtifactsTable({ artifacts }: Readonly<{ artifacts: PaymentArtifact[] }>) {
+  const { t } = useTranslation();
   const fetchRows = useMemo(() => staticTableFetch(artifacts, artifactSearchText), [artifacts]);
+  const columns = useMemo(() => artifactColumns(t), [t]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={700}>
-          What checkout created
+          {t('finance.payment.artifactsTitle')}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-          Each row is verified against the database, not the pipeline log.
+          {t('finance.payment.artifactsCaption')}
         </Typography>
         <DuncitTable<PaymentArtifact>
           tableId="finance-payment-artifacts"
-          columns={ARTIFACT_COLUMNS}
+          columns={columns}
           fetchRows={fetchRows}
           getRowId={getArtifactRowId}
-          emptyText="Nothing was recorded for this payment."
-          searchPlaceholder="Search item or reference"
+          emptyText={t('finance.payment.artifactsEmpty')}
+          searchPlaceholder={t('finance.payment.artifactsSearch')}
         />
       </CardContent>
     </Card>

@@ -13,6 +13,12 @@ export interface ScannedAttendee {
   joined_at: string | null;
 }
 
+/** A companion already on file — what the green-tick roster renders. */
+export interface PodCompanionRecord {
+  name: string;
+  phone_number: string;
+}
+
 export interface HostTicketScanResult {
   ok: boolean;
   message: string;
@@ -21,6 +27,8 @@ export interface HostTicketScanResult {
   requires_companions: boolean;
   /** How many still need a name and phone number. */
   companions_required: number;
+  /** The other people on this booking, once recorded. */
+  companions: PodCompanionRecord[];
   ticket: {
     id: string;
     ticket_code: string;

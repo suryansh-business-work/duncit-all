@@ -127,6 +127,10 @@ export const HostScanPodTicketDocument = gql(`
       already_checked_in
       requires_companions
       companions_required
+      companions {
+        name
+        phone_number
+      }
       ticket {
         id
         ticket_code

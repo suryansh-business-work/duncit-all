@@ -1390,6 +1390,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       attendanceMarkedOne: '{name} is checked in.',
       attendanceMarkedGroup: '{name} and {count} more are checked in.',
       alreadyMarked: 'Already checked in',
+      // The buyer's chip while the rest of the group is still being collected —
+      // the old copy said "Marked present" before anyone actually was.
+      notMarkedYet: 'Not checked in yet',
+      // Heading for the green-tick roster of everyone this ticket let in.
+      checkedInList: 'Checked in on this ticket',
+      confirmDone: 'Done',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

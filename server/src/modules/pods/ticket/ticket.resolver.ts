@@ -42,9 +42,16 @@ export const eventTicketResolvers = {
     },
     // No role gate: the pod's own host/co-host is the authority here, and
     // ticketService.hostScan asserts exactly that before touching the ticket.
-    hostScanPodTicket: (_p: unknown, args: { pod_doc_id: string; token: string }, ctx: GraphQLContext) => {
+    hostScanPodTicket: (
+      _p: unknown,
+      args: { pod_doc_id: string; token: string; companions?: unknown },
+      ctx: GraphQLContext
+    ) => {
       const u = requireAuth(ctx);
-      return ticketService.hostScan(args.pod_doc_id, args.token, u.id);
+      // `companions` MUST reach the service: the second scan of a multi-seat
+      // ticket exists only to deliver them, and dropping the argument here
+      // turned that scan into a no-op that asked for the group forever.
+      return ticketService.hostScan(args.pod_doc_id, args.token, u.id, args.companions);
     },
     // Authorisation is the service's own assertClubAdminForPod — CLUB_ADMIN is
     // a membership of a club, not a role on the user, so requireRole cannot

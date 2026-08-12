@@ -45,6 +45,9 @@ const formatWhen = (value: string | null) => {
 interface Props {
   attendee: ScannedAttendee;
   alreadyCheckedIn: boolean;
+  /** True while the group's details are still being collected — nobody is
+   * marked yet, and the status line must not claim otherwise. */
+  pending?: boolean;
   ticketCode?: string;
   /** People this one ticket admits — a group booking scans once. */
   seats?: number;
@@ -55,6 +58,7 @@ interface Props {
 export function ScannedAttendeeCard({
   attendee,
   alreadyCheckedIn,
+  pending = false,
   ticketCode,
   seats = 1,
   onOpenProfile,
@@ -62,7 +66,17 @@ export function ScannedAttendeeCard({
   const { muted, onPrimary, primary, success } = useThemeColors();
   const { t } = useTranslation();
   const joined = formatWhen(attendee.joined_at);
-  const statusTint = alreadyCheckedIn ? muted : success;
+  // A ticket awaiting its companions has marked NOBODY — the old line said
+  // "Marked present" here, which made the broken second step look done.
+  let presenceLabel = 'Marked present';
+  let statusTint = success;
+  if (pending) {
+    presenceLabel = t('mweb.hostScan.notMarkedYet');
+    statusTint = muted;
+  } else if (alreadyCheckedIn) {
+    presenceLabel = 'Already present';
+    statusTint = muted;
+  }
   // One QR can admit a whole group, so the head count is the first thing the
   // host needs at the door — it decides how many people walk past them.
   const partyText =
@@ -96,7 +110,7 @@ export function ScannedAttendeeCard({
             {attendee.full_name}
           </Text>
           <Text fontSize={12.5} fontWeight="700" color={statusTint}>
-            {alreadyCheckedIn ? 'Already present' : 'Marked present'}
+            {presenceLabel}
             {ticketCode ? ` · ${ticketCode}` : ''}
           </Text>
         </YStack>

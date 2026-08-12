@@ -46,16 +46,22 @@ function DetailRow({ icon, value, href }: Readonly<RowProps>) {
 interface Props {
   attendee: ScannedAttendee;
   alreadyCheckedIn: boolean;
+  /** True while the group's details are still being collected — nobody is
+   * marked yet, and the chip must not claim otherwise. */
+  pending?: boolean;
   ticketCode?: string;
   /** People this one ticket admits — a group booking scans once. */
   seats?: number;
 }
+
+type PresenceColor = 'success' | 'default' | 'warning';
 
 /** Who just walked in: photo, name, how many people the ticket admits, every
  * contact detail on file, and a link to their full profile. */
 export default function ScannedAttendeeCard({
   attendee,
   alreadyCheckedIn,
+  pending = false,
   ticketCode,
   seats = 1,
 }: Readonly<Props>) {
@@ -64,7 +70,17 @@ export default function ScannedAttendeeCard({
   // One QR can admit a whole group, so the head count is the first thing the
   // host needs at the door — it decides how many people walk past them.
   const partyText = seats === 1 ? labels.personOnTicket : labels.peopleOnTicket;
-  const presenceLabel = alreadyCheckedIn ? 'Already present' : 'Marked present';
+  // A ticket awaiting its companions has marked NOBODY — the old chip said
+  // "Marked present" here, which made the broken second step look done.
+  let presenceLabel = 'Marked present';
+  let presenceColor: PresenceColor = 'success';
+  if (pending) {
+    presenceLabel = labels.notMarkedYet;
+    presenceColor = 'warning';
+  } else if (alreadyCheckedIn) {
+    presenceLabel = 'Already present';
+    presenceColor = 'default';
+  }
 
   return (
     <Stack spacing={1.5}>
@@ -77,11 +93,7 @@ export default function ScannedAttendeeCard({
             {attendee.full_name}
           </Typography>
           <Stack direction="row" spacing={0.75} sx={{ mt: 0.5 }} flexWrap="wrap" useFlexGap>
-            <Chip
-              size="small"
-              color={alreadyCheckedIn ? 'default' : 'success'}
-              label={presenceLabel}
-            />
+            <Chip size="small" color={presenceColor} label={presenceLabel} />
             {attendee.city && <Chip size="small" variant="outlined" label={attendee.city} />}
             {ticketCode && <Chip size="small" variant="outlined" label={ticketCode} />}
           </Stack>

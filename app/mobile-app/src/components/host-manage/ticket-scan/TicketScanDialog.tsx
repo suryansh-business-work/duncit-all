@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
@@ -10,7 +10,9 @@ import { HostScanPodTicketDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CompanionsChecklist } from './CompanionsChecklist';
 import { CompanionsForm, type CompanionValue } from './CompanionsForm';
+import { ScanConfirmation } from './ScanConfirmation';
 import { ScannedAttendeeCard } from './ScannedAttendeeCard';
 import { ScannerFrame } from './ScannerFrame';
 import type { HostTicketScanResult } from './scan.types';
@@ -44,19 +46,31 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   const [result, setResult] = useState<HostTicketScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The scan that just FLIPPED the ticket — drives the confirmation overlay.
+  // Kept separately from `result` so dismissing it leaves the pane's state.
+  const [confirmed, setConfirmed] = useState<HostTicketScanResult | null>(null);
   // The token of the ticket on screen, so the second call — the one carrying
   // the group's details — scans the same ticket without another QR read.
   const [pendingToken, setPendingToken] = useState<string | null>(null);
 
+  // Closing does not cancel an in-flight scan, and the dialog stays mounted —
+  // without this, a late response repopulates the cleared state and the next
+  // open greets the host with the previous pod's ghost confirmation.
+  const epochRef = useRef(0);
+
   useEffect(() => {
+    epochRef.current += 1;
     setResult(null);
     setError(null);
+    setConfirmed(null);
+    setPendingToken(null);
     if (pod && permission && !permission.granted) {
       requestPermission().catch(() => undefined);
     }
   }, [pod]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (token: string, companions?: CompanionValue[]) => {
+    const epoch = epochRef.current;
     setBusy(true);
     setError(null);
     try {
@@ -65,9 +79,15 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
         { pod_doc_id: pod?.id ?? '', token, companions: companions ?? null },
         { auth: true },
       );
+      if (epoch !== epochRef.current) return;
+      const outcome = res.hostScanPodTicket as HostTicketScanResult;
       setPendingToken(token);
-      setResult(res.hostScanPodTicket as HostTicketScanResult);
+      setResult(outcome);
+      // Freshly marked (not a re-scan of someone already in) → confirm it
+      // unmissably. A one-line text swap read as "nothing happened".
+      if (outcome.ok && !outcome.already_checked_in) setConfirmed(outcome);
     } catch (err) {
+      if (epoch !== epochRef.current) return;
       setError(err instanceof Error ? err.message : 'Could not read that ticket');
     } finally {
       setBusy(false);
@@ -75,12 +95,18 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   };
 
   const close = () => {
+    epochRef.current += 1;
     setResult(null);
     setError(null);
+    setConfirmed(null);
+    setPendingToken(null);
     onClose();
   };
 
   const attendee = result?.attendee ?? null;
+  // Everyone this booking has accounted for — companions are on file even in
+  // the collecting state (a partially-recorded group renders its ticks).
+  const recorded = result?.companions ?? [];
 
   // What a successful scan actually says. The server's `message` is written for
   // the failure cases; on success it left the host reading the same neutral line
@@ -172,9 +198,21 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                       <ScannedAttendeeCard
                         attendee={attendee}
                         alreadyCheckedIn={!!result?.already_checked_in}
+                        pending={!!result?.requires_companions}
                         ticketCode={result?.ticket?.ticket_code}
                         seats={result?.ticket?.seats ?? 1}
                         onOpenProfile={() => onOpenProfile(attendee.user_id)}
+                      />
+                    ) : null}
+
+                    {recorded.length > 0 ? (
+                      <CompanionsChecklist
+                        title={t('mweb.hostScan.checkedInList')}
+                        people={recorded.map((companion) => ({
+                          key: `${companion.phone_number}-${companion.name}`,
+                          primary: companion.name,
+                          secondary: companion.phone_number,
+                        }))}
                       />
                     ) : null}
 
@@ -233,6 +271,11 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                 </XStack>
               </SafeAreaView>
             </YStack>
+            <ScanConfirmation
+              result={confirmed}
+              text={confirmation}
+              onDone={() => setConfirmed(null)}
+            />
           </YStack>
         </KeyboardScreen>
       </ModalThemeScope>

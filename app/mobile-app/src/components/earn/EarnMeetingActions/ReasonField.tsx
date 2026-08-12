@@ -1,4 +1,7 @@
-import { Text, TextArea, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Text, TextArea, XStack, YStack } from 'tamagui';
+
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   testID: string;
@@ -7,8 +10,10 @@ interface Props {
   onChangeText: (v: string) => void;
 }
 
-/** Required free-text reason captured before a reschedule / cancel. */
+/** Required free-text reason captured before a reschedule / cancel. The reason
+ * is screened by AI Monitoring on submit, so the field says so up front. */
 export function ReasonField({ testID, label, value, onChangeText }: Readonly<Props>) {
+  const { muted } = useThemeColors();
   return (
     <YStack gap={6} paddingTop={12}>
       <Text fontSize={13} fontWeight="600" color="$color">
@@ -26,6 +31,12 @@ export function ReasonField({ testID, label, value, onChangeText }: Readonly<Pro
         backgroundColor="$surface"
         borderColor="$borderColor"
       />
+      <XStack testID={`${testID}-ai-monitoring`} alignItems="center" gap={4}>
+        <MaterialIcons name="auto-awesome" size={12} color={muted} />
+        <Text fontSize={11.5} color="$muted">
+          AI Monitoring
+        </Text>
+      </XStack>
     </YStack>
   );
 }

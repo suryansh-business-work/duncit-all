@@ -7,6 +7,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { aiValidateMeetingReason } from '@modules/moderation/moderation.ai';
 import {
   sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
@@ -23,6 +24,36 @@ const MEETING_DEEP_LINK = '/earn';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
+
+/** Exact copy both clients show under the AI-monitored reason field. */
+const INVALID_REASON_MESSAGE = 'Please enter a valid reason related to your reschedule/cancellation request.';
+
+const invalidReason = () => new GraphQLError(INVALID_REASON_MESSAGE, { extensions: { code: 'BAD_USER_INPUT' } });
+
+const normalizeReason = (v: string) => v.trim().replaceAll(/\s+/g, ' ').toLowerCase();
+
+/**
+ * AI Monitoring gate for the reason a user types when cancelling or
+ * rescheduling their onboarding meeting. Rejects blank input, an exact repeat
+ * of a reason this user already submitted, and text the AI judges as not a
+ * genuine cancel/reschedule reason. The AI receives ONLY the reason text and
+ * fails open, so an AI outage never blocks the action itself.
+ */
+async function assertValidMeetingReason(userId: Types.ObjectId, reason?: string | null): Promise<string> {
+  const trimmed = reason?.trim() ?? '';
+  if (!trimmed) throw invalidReason();
+  const previous = await MeetingModel.find(
+    { user_id: userId, $or: [{ cancel_reason: { $ne: null } }, { reschedule_reason: { $ne: null } }] },
+    { cancel_reason: 1, reschedule_reason: 1 },
+  ).sort({ created_at: -1 }).limit(20).lean();
+  const norm = normalizeReason(trimmed);
+  const isDuplicate = previous.some(
+    (m) => normalizeReason(m.cancel_reason ?? '') === norm || normalizeReason(m.reschedule_reason ?? '') === norm,
+  );
+  if (isDuplicate) throw invalidReason();
+  if (!(await aiValidateMeetingReason(trimmed))) throw invalidReason();
+  return trimmed;
+}
 
 const pub = (doc: any, names?: Map<string, { name: string; email: string }>, catNames?: Map<string, string>) => {
   if (!doc) return null;
@@ -719,6 +750,7 @@ export const meetingService = {
     if (await isHolidayInstant(requestedAt)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
+    const cleanReason = await assertValidMeetingReason(uid, reason);
     // Supersede the current row (kept for audit), then raise a fresh request.
     doc.status = 'CANCELLED';
     doc.cancel_reason = 'Superseded by reschedule';
@@ -737,7 +769,7 @@ export const meetingService = {
       sub_category_id: doc.sub_category_id ?? null,
       status: 'REQUESTED',
       reschedule_count: (doc.reschedule_count ?? 0) + 1,
-      reschedule_reason: reason?.trim() || null,
+      reschedule_reason: cleanReason,
     });
     await notifyApplicant(fresh, 'booked');
     return pub(fresh);
@@ -746,10 +778,12 @@ export const meetingService = {
   /** User cancels their own active meeting — frees the slot and unlocks the Earn
    * card (kept as a 'Cancelled' history row, distinct from a staff 'Rejected'). */
   async cancelMyMeeting(userId: string, kind: SurveyKind, reason?: string | null) {
-    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind, status: { $in: ['REQUESTED', 'SCHEDULED'] } }).sort({ created_at: -1 });
+    const uid = new Types.ObjectId(userId);
+    const doc = await MeetingModel.findOne({ user_id: uid, kind, status: { $in: ['REQUESTED', 'SCHEDULED'] } }).sort({ created_at: -1 });
     if (!doc) throw notFound();
+    const cleanReason = await assertValidMeetingReason(uid, reason);
     doc.status = 'CANCELLED';
-    doc.cancel_reason = reason?.trim() || null;
+    doc.cancel_reason = cleanReason;
     doc.cancelled_by_staff = false;
     await doc.save();
     await notifyApplicant(doc, 'cancelled');

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
-import PlaceIcon from '@mui/icons-material/Place';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
+import VenuesLocationBar from './VenuesLocationBar';
 import AdCard from '../../components/ads/AdCard';
 import { interleaveAds, isAdEntry } from '../../components/ads/AdSlot';
 import { useActiveAds } from '../../components/ads/useActiveAds';
@@ -33,16 +33,28 @@ const SUPER_CATEGORIES = gql`
   }
 `;
 
+/** Names the selected location so the bar can say which city these venues are
+ * from. Same root field and fields the header already fetched, so cache-first
+ * resolves it without a second network call. */
+const VENUES_LOCATIONS = gql`
+  query VenuesLocationNames {
+    locations {
+      id
+      location_name
+    }
+  }
+`;
+
 const SEARCH_DEBOUNCE_MS = 400;
 
 interface Props {
   locationId: string;
-  cityLabel?: string;
 }
 
 /** Venues discovery — venues in the selected location with a server-side
- * debounced search + Super-category filter. Native twin: VenuesScreen. */
-export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
+ * debounced search + Super-category filter, and a location bar that opens the
+ * header's picker to change city. Native twin: VenuesScreen. */
+export default function VenuesPage({ locationId }: Readonly<Props>) {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -68,6 +80,10 @@ export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
   });
   const { ads } = useActiveAds('VENUE_LIST');
   const venues: ExploreVenue[] = data?.publicVenues ?? [];
+  const { data: locData } = useQuery(VENUES_LOCATIONS, { fetchPolicy: 'cache-first' });
+  const cityLabel = (locData?.locations ?? []).find(
+    (l: { id: string }) => l.id === locationId,
+  )?.location_name;
 
   return (
     <Stack
@@ -77,14 +93,7 @@ export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
       <Typography variant="h5" sx={{ fontWeight: 700 }}>
         Venues
       </Typography>
-      {cityLabel && (
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <PlaceIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
-          <Typography variant="caption" fontWeight={700} color="text.secondary">
-            Venues in {cityLabel}
-          </Typography>
-        </Stack>
-      )}
+      <VenuesLocationBar cityLabel={cityLabel} />
       <TextField
         size="small"
         placeholder="Search venues by name, type or area"

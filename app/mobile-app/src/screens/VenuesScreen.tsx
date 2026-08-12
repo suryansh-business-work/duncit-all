@@ -1,12 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { AdCard } from '@/components/ads/AdCard';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
-import { VenueCard } from '@/components/hosts-venues';
+import { VenueCard, VenuesLocationBar } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
@@ -59,7 +58,7 @@ function CategoryChips({
  * debounced search + Super-category filter. mWeb twin: /venues (VenuesPage). */
 export function VenuesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { primary, muted } = useThemeColors();
+  const { primary } = useThemeColors();
   const {
     venues,
     categories,
@@ -78,14 +77,7 @@ export function VenuesScreen() {
     <StackScreen title="Venues" testID="venues-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={12} padding={16} paddingBottom={40}>
-          {cityLabel ? (
-            <XStack alignItems="center" gap={4}>
-              <MaterialIcons name="place" size={14} color={muted} />
-              <Text fontSize={12.5} fontWeight="700" color="$muted">
-                Venues in {cityLabel}
-              </Text>
-            </XStack>
-          ) : null}
+          <VenuesLocationBar cityLabel={cityLabel} />
           <Input
             testID="venues-search"
             aria-label="Search venues"

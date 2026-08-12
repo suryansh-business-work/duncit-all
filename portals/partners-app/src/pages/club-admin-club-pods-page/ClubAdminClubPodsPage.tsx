@@ -7,7 +7,6 @@ import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip,
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import HistoryIcon from '@mui/icons-material/History';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -17,6 +16,7 @@ import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } 
 import { getClubVenueIds } from '../pods-page/partner-pod-config';
 import useClubAdminPodEditor, { CLUB_ADMIN_POD_CONFIG } from './useClubAdminPodEditor';
 import PodActivityDialog from './PodActivityDialog';
+import AiMonitorPill from './AiMonitorPill';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 
 export default function ClubAdminClubPodsPage() {
@@ -90,11 +90,6 @@ export default function ClubAdminClubPodsPage() {
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Activity & AI monitoring">
-        <IconButton size="small" onClick={() => setTrailPod(pod)}>
-          <HistoryIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
       <Tooltip title="Edit pod">
         <IconButton size="small" onClick={() => editor.openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
       </Tooltip>
@@ -141,6 +136,7 @@ export default function ClubAdminClubPodsPage() {
               <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>New Pod</Button>
             }
             renderActions={renderActions}
+            renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}
           />
         </Stack>
       </CardContent>

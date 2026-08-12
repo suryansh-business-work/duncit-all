@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TextField } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { blankMeetingReasonValues, type MeetingReasonValues } from './meeting-reason.types';
 
 export const meetingReasonSchema = z.object({
@@ -46,6 +47,10 @@ export default function MeetingReasonForm({ formId, label, helperText, onSubmit 
         error={!!errors.reason}
         helperText={errors.reason?.message ?? helperText}
       />
+      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.75, color: 'text.secondary' }}>
+        <AutoAwesomeIcon sx={{ fontSize: 14 }} />
+        <Typography variant="caption">AI Monitoring</Typography>
+      </Stack>
     </form>
   );
 }

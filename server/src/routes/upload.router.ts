@@ -8,6 +8,11 @@ import { pipeline } from 'node:stream/promises';
 import { logs } from '@observability/log';
 import { uploadFileToImagekit } from '@modules/platform/upload/upload.service';
 import { spendUploadTicket } from '@modules/platform/upload/uploadTicket';
+import {
+  artifactUrl,
+  ensureArtifactsDir,
+  newArtifactDestination,
+} from '@modules/platform/upload/buildArtifactStore';
 
 /**
  * The one route that accepts a file — browser, native app and CI all use it.
@@ -109,7 +114,22 @@ export function buildUploadRouter(): Router {
       return;
     }
 
-    const destPath = path.join(os.tmpdir(), `duncit-upload-${crypto.randomUUID()}`);
+    // A build artifact is spooled STRAIGHT into the directory it will be served
+    // from, so a 100 MB APK is written once. Spooling to tmp and moving would
+    // write it twice — and worse, the move would be a cross-device copy: in the
+    // container /tmp and the bind-mounted artifacts dir are different mounts, so
+    // fs.rename fails there with EXDEV.
+    const toBuilds = ticket.store === 'builds';
+    let storedName = '';
+    let destPath = path.join(os.tmpdir(), `duncit-upload-${crypto.randomUUID()}`);
+    if (toBuilds) {
+      await ensureArtifactsDir();
+      const dest = newArtifactDestination(String(req.query.fileName ?? '').trim() || 'artifact');
+      storedName = dest.name;
+      destPath = dest.path;
+    }
+
+    let keep = false;
     try {
       let spooled: Spooled | null;
       try {
@@ -130,6 +150,13 @@ export function buildUploadRouter(): Router {
 
       const fileName = String(req.query.fileName ?? '').trim() || spooled.fileName;
       try {
+        if (toBuilds) {
+          // Already in place. fileId is the on-disk name, which is the handle
+          // deleteAppBuild removes it by.
+          keep = true;
+          res.json({ url: await artifactUrl(storedName), fileId: storedName });
+          return;
+        }
         const uploaded = await uploadFileToImagekit({
           filePath: destPath,
           fileName,
@@ -148,9 +175,10 @@ export function buildUploadRouter(): Router {
         res.status(502).json({ message: error?.message || 'Upload failed' });
       }
     } finally {
-      // Always, including the paths that never created it — an artifact left in
-      // the container's tmpdir on every build fills the disk silently.
-      await fs.promises.unlink(destPath).catch(() => undefined);
+      // Always, except the one path that means to keep it — an artifact left in
+      // the container's tmpdir on every build fills the disk silently, and a
+      // half-written one left in the served directory is a broken download.
+      if (!keep) await fs.promises.unlink(destPath).catch(() => undefined);
     }
   });
 

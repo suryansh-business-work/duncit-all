@@ -21,12 +21,18 @@ services:
       OTEL_SERVICE_NAME: duncit-server-staging
       # Reach the staging WhatsApp gateway over the staging compose network.
       OPENWA_INTERNAL_URL: http://open-wa:2024
+      # Explicit for the same reason as prod: the image's final WORKDIR is
+      # /app/server, so the cwd-relative default would miss the bind mount.
+      APP_BUILDS_DIR: /app/app-builds
     ports:
       - "127.0.0.1:2101:2001"
     volumes:
       # Read-only Docker socket so the Tech portal's Server > Docker page can
       # list host containers (techDockerInfo) — same as prod.
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # CI build artifacts (APK/IPA) — same as prod, on the staging stack's own
+      # directory so the two never share a file.
+      - /opt/duncit-staging/app-builds:/app/app-builds
     networks:
       - default
       - signoz-net

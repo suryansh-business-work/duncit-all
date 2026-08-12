@@ -1593,7 +1593,7 @@ jobs:
         run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "mkdir -p ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/nginx ${{ env.STACK_DIR }}/open-wa-data"
+            "mkdir -p ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/nginx ${{ env.STACK_DIR }}/open-wa-data ${{ env.STACK_DIR }}/app-builds"
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/docker-compose.yml
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
@@ -1606,7 +1606,7 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/nginx/${{ env.NGINX_SITE }}
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh"
+            "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh; chmod 755 ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/app-builds"
 
       - name: Configure nginx + TLS (production)
         if: env.DEPLOY_ENV == 'production'

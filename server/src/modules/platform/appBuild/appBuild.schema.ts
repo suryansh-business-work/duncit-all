@@ -31,9 +31,19 @@ export const appBuildTypeDefs = gql`
     version: String!
     "The artifact's file name."
     build_name: String!
-    "ImageKit CDN URL — the download link. Empty on a FAILED build."
+    """
+    The download link, served from the VPS build store. Empty on a FAILED build,
+    and on a SUCCESS build whose artifact could not be stored.
+    """
     artifact_url: String!
+    "The handle the artifact is removed by — its file name in the build store."
     artifact_file_id: String!
+    """
+    Why a SUCCESS build has no download. Empty whenever there is one. A build
+    that compiled but could not be stored is still reported and announced, so
+    this is what tells the two apart.
+    """
+    artifact_error: String!
     size_mb: Float
     commit_sha: String!
     branch: String!
@@ -120,6 +130,12 @@ export const appBuildTypeDefs = gql`
     build_name: String
     artifact_url: String
     artifact_file_id: String
+    """
+    Why the artifact is missing on an otherwise successful build. Send this
+    instead of failing the report: a build that compiled still deserves its row
+    and its Slack post, and this is the line that explains the absent download.
+    """
+    artifact_error: String
     size_mb: Float
     commit_sha: String
     branch: String
@@ -162,5 +178,13 @@ export const appBuildTypeDefs = gql`
     """
     issueAppBuildCiToken: AppBuildCiToken!
     updateAppBuildSettings(input: UpdateAppBuildSettingsInput!): AppBuildSettings!
+    """
+    Delete a build and the artifact it points at. Tech/Super admin only.
+
+    The stored file goes with the row — leaving it would fill the disk with
+    artifacts nothing links to. An artifact that is already gone is not an
+    error: the row must always be removable.
+    """
+    deleteAppBuild(id: ID!): Boolean!
   }
 `;

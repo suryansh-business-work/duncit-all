@@ -15,6 +15,10 @@ services:
       # Reach the WhatsApp gateway over the internal Docker network — calling the
       # public domain from inside the container fails on hairpin NAT.
       OPENWA_INTERNAL_URL: http://open-wa:2024
+      # Set explicitly, not left to the cwd-relative default: the image's final
+      # WORKDIR is /app/server, so the default would resolve inside the app
+      # rather than onto the bind mount below.
+      APP_BUILDS_DIR: /app/app-builds
     ports:
       - "127.0.0.1:2001:2001"
     volumes:
@@ -22,6 +26,10 @@ services:
       # list host containers (techDockerInfo). The endpoint is gated to
       # SUPER_ADMIN/TECH_MANAGER; without this mount it degrades to "unavailable".
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # CI build artifacts (APK/IPA). They cannot go to ImageKit — it refuses
+      # anything over 20 MiB, which a release APK always is — so they live on
+      # the host and nginx serves them straight from this directory.
+      - /opt/duncit/app-builds:/app/app-builds
     networks:
       - default
       - signoz-net

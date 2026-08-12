@@ -16,9 +16,17 @@ const TTL_MS = 10 * 60 * 1000;
 /** A stray ticket is 100 bytes; this cap exists so a leak cannot grow forever. */
 const MAX_OPEN = 5000;
 
+/**
+ * Which store the upload lands in. Decided when the ticket is ISSUED, by the
+ * authenticated call that knows what is being uploaded — never inferred from
+ * the raw POST, which carries nothing but the ticket.
+ */
+export type UploadStore = 'imagekit' | 'builds';
+
 interface Ticket {
   userId: string;
   folder: string;
+  store: UploadStore;
   expiresAt: number;
 }
 
@@ -31,14 +39,18 @@ function sweep(): void {
   }
 }
 
-/** Issue a ticket for one upload by this user, into this folder. */
-export function issueUploadTicket(userId: string, folder: string): string {
+/** Issue a ticket for one upload by this user, into this folder and store. */
+export function issueUploadTicket(
+  userId: string,
+  folder: string,
+  store: UploadStore = 'imagekit'
+): string {
   sweep();
   // Refuse rather than grow without bound: something is very wrong if five
   // thousand tickets are open at once, and quietly eating memory hides it.
   if (tickets.size >= MAX_OPEN) throw new Error('Too many uploads in flight');
   const id = crypto.randomUUID();
-  tickets.set(id, { userId, folder, expiresAt: Date.now() + TTL_MS });
+  tickets.set(id, { userId, folder, store, expiresAt: Date.now() + TTL_MS });
   return id;
 }
 
@@ -46,12 +58,14 @@ export function issueUploadTicket(userId: string, folder: string): string {
  * Spend a ticket. Returns who it belonged to, or null if it is unknown, already
  * used or expired — the caller must treat all three the same way.
  */
-export function spendUploadTicket(id: string): { userId: string; folder: string } | null {
+export function spendUploadTicket(
+  id: string
+): { userId: string; folder: string; store: UploadStore } | null {
   sweep();
   const ticket = tickets.get(id);
   if (!ticket) return null;
   tickets.delete(id);
-  return { userId: ticket.userId, folder: ticket.folder };
+  return { userId: ticket.userId, folder: ticket.folder, store: ticket.store };
 }
 
 /** Test seam — tickets are process state. */

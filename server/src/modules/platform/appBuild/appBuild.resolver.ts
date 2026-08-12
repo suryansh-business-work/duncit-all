@@ -41,5 +41,9 @@ export const appBuildResolvers = {
       requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.updateSettings(args.input);
     },
+    deleteAppBuild: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.remove(args.id);
+    },
   },
 };

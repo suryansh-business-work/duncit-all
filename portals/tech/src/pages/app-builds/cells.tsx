@@ -1,6 +1,8 @@
 import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { downloadUrl, type AppBuildRow, type AppBuildStatus } from './queries';
 
 const STATUS_COLOR: Record<string, 'success' | 'error'> = {
@@ -66,31 +68,61 @@ export const makeRenderSlack = (postedLabel: string, skippedLabel: string) => {
   return renderSlack;
 };
 
+export interface LinkLabels {
+  download: string;
+  run: string;
+  delete: string;
+  /** Shown in place of the download icon when a SUCCESS build has no artifact. */
+  noArtifact: string;
+}
+
+/**
+ * A build that succeeded but has no artifact shows WHY, rather than an empty
+ * cell — a missing download is the thing somebody has to act on, so it cannot
+ * look the same as a build that simply failed.
+ */
+const renderMissing = (row: AppBuildRow, label: string) => (
+  <Tooltip title={row.artifact_error || label}>
+    <ErrorOutlineIcon fontSize="small" color="warning" />
+  </Tooltip>
+);
+
 /** Icon links stop propagation so opening them never also opens the details dialog. */
-export const makeRenderLinks = (downloadLabel: string, runLabel: string) => {
+export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: AppBuildRow) => void) => {
   const renderLinks = (row: AppBuildRow) => (
     <Box onClick={(e) => e.stopPropagation()}>
       {row.artifact_url && (
-        <Tooltip title={downloadLabel}>
-          <IconButton size="small" component="a" href={downloadUrl(row)} aria-label={downloadLabel}>
+        <Tooltip title={labels.download}>
+          <IconButton
+            size="small"
+            component="a"
+            href={downloadUrl(row)}
+            aria-label={labels.download}
+          >
             <DownloadIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
+      {!row.artifact_url && row.status === 'SUCCESS' && renderMissing(row, labels.noArtifact)}
       {row.workflow_run_url && (
-        <Tooltip title={runLabel}>
+        <Tooltip title={labels.run}>
           <IconButton
             size="small"
             component="a"
             href={row.workflow_run_url}
             target="_blank"
             rel="noreferrer"
-            aria-label={runLabel}
+            aria-label={labels.run}
           >
             <OpenInNewIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       )}
+      <Tooltip title={labels.delete}>
+        <IconButton size="small" onClick={() => onDelete(row)} aria-label={labels.delete}>
+          <DeleteOutlineIcon fontSize="small" color="error" />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
   return renderLinks;

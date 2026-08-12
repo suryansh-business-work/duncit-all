@@ -18,10 +18,23 @@ export interface IAppBuild extends Document {
   version: string;
   /** The artifact's file name, e.g. duncit-android-v1.52.30-6c8d121.apk. */
   build_name: string;
-  /** ImageKit CDN URL — the download link. Empty on a FAILED build. */
+  /**
+   * The download link. Empty on a FAILED build, and on a SUCCESS build whose
+   * artifact could not be stored — see artifact_error.
+   */
   artifact_url: string;
-  /** ImageKit fileId, kept so the file can be traced/removed later. */
+  /**
+   * The handle the artifact can be removed by: the on-disk file name in the
+   * VPS build store. Older rows hold an ImageKit fileId, from when artifacts
+   * lived there.
+   */
   artifact_file_id: string;
+  /**
+   * Why a SUCCESS build has no download. Empty whenever there IS one — this
+   * exists so "it compiled but the upload failed" is a visible outcome rather
+   * than a missing button.
+   */
+  artifact_error: string;
   size_mb: number | null;
   commit_sha: string;
   branch: string;
@@ -64,6 +77,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     build_name: { type: String, default: '' },
     artifact_url: { type: String, default: '' },
     artifact_file_id: { type: String, default: '' },
+    artifact_error: { type: String, default: '' },
     size_mb: { type: Number, default: null },
     commit_sha: { type: String, default: '', index: true },
     branch: { type: String, default: '' },

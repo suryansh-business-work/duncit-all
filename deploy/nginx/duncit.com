@@ -52,10 +52,33 @@ server {
     add_header Access-Control-Max-Age           "600"                  always;
     add_header Vary                             "Origin"               always;
 
-    # Files on their way to ImageKit — pod media from the apps, and a 60–150 MB
-    # APK/IPA from the android-build / ios-build workflows. The 25m server-level
-    # cap is sized for a GraphQL document and would 413 every build artifact, so
-    # this one route gets its own ceiling.
+    # CI build artifacts, served straight off disk — nginx does this far better
+    # than Node, and the file is already on this host.
+    #
+    # ImageKit is not an option for these: it refuses any upload over 20 MiB
+    # ("The file size exceeds 20971520 bytes limit"), which a release APK always
+    # exceeds. The server writes them to /opt/duncit/app-builds instead.
+    #
+    # The headers are the point. An .ipa IS a zip, and a store that content-sniffs
+    # serves it as application/zip — so the browser saves "…ipa" as a .zip and the
+    # file is useless. Forcing octet-stream plus an attachment disposition makes
+    # every artifact download under its own name and extension.
+    location /app-builds/ {
+        alias /opt/duncit/app-builds/;
+        default_type application/octet-stream;
+        types { }
+        add_header Content-Disposition "attachment" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        # Immutable: the stored name carries a random prefix, so a given URL is
+        # always the same bytes.
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        autoindex off;
+    }
+
+    # Files on their way to their store — pod media from the apps to ImageKit,
+    # and a 60–150 MB APK/IPA from the android-build / ios-build workflows to the
+    # directory above. The 25m server-level cap is sized for a GraphQL document
+    # and would 413 every build artifact, so this one route gets its own ceiling.
     #
     # proxy_request_buffering is off so nginx streams the body straight through to
     # Node rather than spooling the whole file to its own disk first. The server

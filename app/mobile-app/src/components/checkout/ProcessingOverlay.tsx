@@ -3,14 +3,28 @@ import { Spinner, Text, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
+interface ProcessingOverlayProps {
+  open: boolean;
+  /** Set only while the verify call has died and the payment is being read back
+   * from the server. */
+  message?: string | null;
+}
+
 /** Full-screen blocking overlay shown while a payment is being processed/verified.
  * Captures all touches so the form underneath can't be edited once the user has
  * submitted (e.g. after returning from the Razorpay sheet). RN twin of mWeb's
  * <Backdrop> on the checkout page. */
-export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
+export function ProcessingOverlay({ open, message }: Readonly<ProcessingOverlayProps>) {
   const { primary } = useThemeColors();
   const { t } = useTranslation();
   if (!open) return null;
+
+  // Once the client is reading the payment back, the money has ALREADY moved,
+  // so the overlay stops saying "processing" and says what is actually
+  // happening. Suppressing the transport error without telling the buyer left
+  // them staring at a spinner for half a minute after paying — which is how
+  // people end up paying twice.
+  const title = message ? t('mweb.checkout.confirmingTitle') : t('mweb.checkout.processingTitle');
 
   return (
     <YStack
@@ -42,8 +56,18 @@ export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
       >
         <Spinner size="large" color={primary} />
         <Text fontSize={16} fontWeight="700" color="#ffffff" textAlign="center">
-          {t('mweb.checkout.processingTitle')}
+          {title}
         </Text>
+        {message ? (
+          <Text
+            testID="checkout-confirming"
+            fontSize={13}
+            color="rgba(255,255,255,0.92)"
+            textAlign="center"
+          >
+            {message}
+          </Text>
+        ) : null}
         <Text fontSize={12.5} color="rgba(255,255,255,0.74)" textAlign="center">
           {t('mweb.checkout.processingNoteApp')}
         </Text>

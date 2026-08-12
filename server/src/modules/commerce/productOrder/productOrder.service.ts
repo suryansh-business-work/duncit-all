@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { GraphQLError } from 'graphql';
 
 import {
@@ -123,12 +123,12 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
  * ownership/dimensions so the order carries everything ShipRocket needs even if
  * the product is later edited or deleted. When the buyer chose a variant, the
  * variant's sku/image/dimensions win (correct parcel data per combination). */
-async function buildLineItem(line: any) {
+async function buildLineItem(line: any, session?: ClientSession) {
   const productId = String(line.product_id || '');
   const qty = Number(line.quantity ?? line.qty) || 0;
   const unit_cost = Number(line.unit_cost) || 0;
   const product = Types.ObjectId.isValid(productId)
-    ? await InventoryProductModel.findById(productId)
+    ? await InventoryProductModel.findById(productId).session(session ?? null)
     : null;
   const variantId = line.variant_id ? String(line.variant_id) : '';
   const variant = variantId
@@ -160,37 +160,35 @@ async function buildLineItem(line: any) {
  * product's inventory (and the bought variant's own count), and step the pod
  * row's sold_count so the pod's available_count reflects real sales. Runs only
  * when the order doc is newly created (idempotency comes from createFromPayment
- * skipping existing docs); best-effort — a counter failure never voids a paid
- * order.
+ * skipping existing docs).
+ *
+ * A failure here USED to be logged and stepped over, which is exactly how an
+ * order could exist with stock that was never decremented — the pod then went
+ * on selling units it had already shipped. It now propagates, so the order doc
+ * and the stock it consumed commit or roll back together.
  */
-async function recordStockForOrder(order: IProductOrder) {
+async function recordStockForOrder(order: IProductOrder, session?: ClientSession) {
   for (const item of order.line_items) {
     const qty = Number(item.qty) || 0;
     if (qty <= 0) continue;
-    try {
-      const inc: Record<string, number> = { inventory_count: -qty };
-      const options: Record<string, unknown> = {};
-      if (item.variant_id && Types.ObjectId.isValid(item.variant_id)) {
-        inc['variants.$[v].inventory_count'] = -qty;
-        options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
-      }
-      if (order.pod_id) {
-        // Pod-channel sales consume units the pod had reserved — release that
-        // share of the reservation so available stock stays truthful.
-        inc.requested_count = -qty;
-      }
-      await InventoryProductModel.updateOne({ _id: item.product_id }, { $inc: inc }, options);
-      if (order.pod_id) {
-        await PodModel.updateOne(
-          { _id: order.pod_id, 'product_requests.product_id': item.product_id },
-          { $inc: { 'product_requests.$.sold_count': qty } }
-        );
-      }
-    } catch (err) {
-      logs.server.error('productOrder', 'recordStockForOrder', {
-        error: err,
-        msg: 'stock decrement failed',
-      });
+    const inc: Record<string, number> = { inventory_count: -qty };
+    const options: Record<string, unknown> = { session };
+    if (item.variant_id && Types.ObjectId.isValid(item.variant_id)) {
+      inc['variants.$[v].inventory_count'] = -qty;
+      options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
+    }
+    if (order.pod_id) {
+      // Pod-channel sales consume units the pod had reserved — release that
+      // share of the reservation so available stock stays truthful.
+      inc.requested_count = -qty;
+    }
+    await InventoryProductModel.updateOne({ _id: item.product_id }, { $inc: inc }, options);
+    if (order.pod_id) {
+      await PodModel.updateOne(
+        { _id: order.pod_id, 'product_requests.product_id': item.product_id },
+        { $inc: { 'product_requests.$.sold_count': qty } },
+        { session }
+      );
     }
   }
 }
@@ -199,13 +197,14 @@ async function recordStockForOrder(order: IProductOrder) {
  * checkout of such a product always creates a ShipRocket shipment — regardless
  * of the checkout-level method. Mutates each matching line in place. This is the
  * bridge from a product's `delivery_target` to the order's `fulfilment_method`. */
-async function applyProductDeliveryOverrides(lines: any[]) {
+async function applyProductDeliveryOverrides(lines: any[], session?: ClientSession) {
   const ids = Array.from(
     new Set(lines.map((l) => String(l.product_id || '')).filter((id) => Types.ObjectId.isValid(id)))
   );
   if (ids.length === 0) return;
   const products = await InventoryProductModel.find({ _id: { $in: ids } })
     .select('delivery_target')
+    .session(session ?? null)
     .lean();
   const shiprocketIds = new Set(
     products
@@ -226,7 +225,10 @@ const EMPTY_WAREHOUSE: Warehouse = { id: '', nickname: '' };
 
 /** Map each product id → its Duncit warehouse ({ id, nickname }) so SHIP orders
  * carry the right pickup origin (nickname = the ShipRocket-registered pickup). */
-async function buildWarehouseMap(lines: any[]): Promise<Map<string, Warehouse>> {
+async function buildWarehouseMap(
+  lines: any[],
+  session?: ClientSession
+): Promise<Map<string, Warehouse>> {
   const map = new Map<string, Warehouse>();
   const productIds = Array.from(
     new Set(lines.map((l) => String(l.product_id || '')).filter((id) => Types.ObjectId.isValid(id)))
@@ -234,12 +236,16 @@ async function buildWarehouseMap(lines: any[]): Promise<Map<string, Warehouse>> 
   if (productIds.length === 0) return map;
   const products = await InventoryProductModel.find({ _id: { $in: productIds } })
     .select('pickup_location_id')
+    .session(session ?? null)
     .lean();
   const warehouseIds = Array.from(
     new Set(products.map((p: any) => (p.pickup_location_id ? String(p.pickup_location_id) : '')).filter(Boolean))
   );
   const warehouses = warehouseIds.length
-    ? await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('nickname').lean()
+    ? await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } })
+        .select('nickname')
+        .session(session ?? null)
+        .lean()
     : [];
   const nicknameById = new Map(warehouses.map((w: any) => [String(w._id), String(w.nickname ?? '')]));
   for (const product of products) {
@@ -304,10 +310,13 @@ function groupOrderLines(
 }
 
 /** venue_id per distinct pod, for a PICKUP order's pickup_venue_id. */
-async function loadVenueByPod(podIds: string[]): Promise<Map<string, any>> {
+async function loadVenueByPod(podIds: string[], session?: ClientSession): Promise<Map<string, any>> {
   const valid = Array.from(new Set(podIds.filter((id) => id && Types.ObjectId.isValid(id))));
   if (valid.length === 0) return new Map();
-  const pods = await PodModel.find({ _id: { $in: valid } }).select('venue_id').lean();
+  const pods = await PodModel.find({ _id: { $in: valid } })
+    .select('venue_id')
+    .session(session ?? null)
+    .lean();
   return new Map(pods.map((p: any) => [String(p._id), p.venue_id ?? null]));
 }
 
@@ -316,37 +325,45 @@ interface CreateOrderInput {
   shippingAddress: any;
   pickupVenueId: any;
   shippingCharge: number;
+  session?: ClientSession;
 }
 
 /** Persist the order doc for one (pod, method, warehouse) group. */
 async function createOrderForGroup(payment: IPayment, input: CreateOrderInput) {
-  const { group, shippingAddress, pickupVenueId, shippingCharge } = input;
-  const line_items = await Promise.all(group.lines.map(buildLineItem));
+  const { group, shippingAddress, pickupVenueId, shippingCharge, session } = input;
+  const line_items = await Promise.all(group.lines.map((l) => buildLineItem(l, session)));
   const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
   const isShip = group.method === 'SHIP';
   const charge = isShip ? round2(shippingCharge) : 0;
   const podObjId = Types.ObjectId.isValid(group.pod_id) ? new Types.ObjectId(group.pod_id) : null;
-  return ProductOrderModel.create({
-    order_no: newOrderNo(),
-    buyer_id: payment.user_id,
-    buyer_name: payment.user_name,
-    buyer_email: payment.user_email,
-    buyer_phone: payment.user_phone,
-    pod_id: podObjId,
-    payment_id: payment._id,
-    payment_ref: payment.payment_id,
-    line_items,
-    currency_symbol: payment.currency_symbol,
-    items_total,
-    shipping_charge: charge,
-    total: round2(items_total + charge),
-    fulfilment_method: group.method,
-    fulfilment_status: isShip ? 'AWAITING_SHIPMENT' : 'PENDING',
-    shipping_address: isShip ? shippingAddress : null,
-    pickup_venue_id: isShip ? null : pickupVenueId,
-    pickup_ref: isShip ? '' : newPickupRef(),
-    pickup_location_id: isShip ? group.warehouse.nickname : '',
-  });
+  // The array form is required with a session (and returns an array).
+  const [doc] = await ProductOrderModel.create(
+    [
+      {
+        order_no: newOrderNo(),
+        buyer_id: payment.user_id,
+        buyer_name: payment.user_name,
+        buyer_email: payment.user_email,
+        buyer_phone: payment.user_phone,
+        pod_id: podObjId,
+        payment_id: payment._id,
+        payment_ref: payment.payment_id,
+        line_items,
+        currency_symbol: payment.currency_symbol,
+        items_total,
+        shipping_charge: charge,
+        total: round2(items_total + charge),
+        fulfilment_method: group.method,
+        fulfilment_status: isShip ? 'AWAITING_SHIPMENT' : 'PENDING',
+        shipping_address: isShip ? shippingAddress : null,
+        pickup_venue_id: isShip ? null : pickupVenueId,
+        pickup_ref: isShip ? '' : newPickupRef(),
+        pickup_location_id: isShip ? group.warehouse.nickname : '',
+      },
+    ],
+    { session }
+  );
+  return doc;
 }
 
 export const productOrderService = {
@@ -354,22 +371,26 @@ export const productOrderService = {
 
   /**
    * Create the product order(s) for a finalized payment from its metadata
-   * snapshot — one order per fulfilment method (SHIP/PICKUP). Idempotent on
-   * (payment_id, method) so re-entrant finalize never duplicates. Best-effort:
-   * throws are swallowed by the caller so a paid checkout is never failed.
+   * snapshot — one order per (pod, fulfilment method, warehouse). Idempotent on
+   * that same key, so a re-entrant finalize never duplicates.
+   *
+   * Runs inside the payment finalizer's transaction: the order doc, the stock it
+   * consumed and the brand's points commit together or not at all. The
+   * ShipRocket call deliberately does NOT live here any more — it is a third
+   * party over HTTP, and the finalizer runs it after the commit.
    */
-  async createFromPayment(payment: IPayment) {
+  async createFromPayment(payment: IPayment, session?: ClientSession) {
     const meta = payment.metadata ?? {};
     const lines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
     if (lines.length === 0) return [];
 
-    await applyProductDeliveryOverrides(lines);
+    await applyProductDeliveryOverrides(lines, session);
     const topMethod = asMethod(meta.fulfilment_method ?? 'PICKUP');
     const fallbackPodId = payment.pod_id ? String(payment.pod_id) : '';
-    const warehouseMap = await buildWarehouseMap(lines);
+    const warehouseMap = await buildWarehouseMap(lines, session);
     const shippingCharges = buildShippingChargeMap(meta.shipping);
     const groups = groupOrderLines(lines, topMethod, warehouseMap, fallbackPodId);
-    const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id));
+    const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id), session);
     const shippingAddress = meta.shipping_address ?? null;
 
     const created: IProductOrder[] = [];
@@ -381,7 +402,7 @@ export const productOrderService = {
         pod_id: podObjId,
         fulfilment_method: group.method,
         pickup_location_id: pickupLocationId,
-      });
+      }).session(session ?? null);
       if (existing) {
         created.push(existing);
         continue;
@@ -391,18 +412,17 @@ export const productOrderService = {
         shippingAddress,
         pickupVenueId: venueByPod.get(group.pod_id) ?? null,
         shippingCharge: shippingChargeForGroup(shippingCharges, group),
+        session,
       });
       created.push(doc);
       // Point of sale: stock moves only when this order doc is first created.
-      await recordStockForOrder(doc);
+      await recordStockForOrder(doc, session);
       // Leaderboard points for the brand owner(s) behind this order's lines.
-      // Best-effort + idempotent inside the service, like everything else on
-      // this path — a points hiccup must never fail a paid order.
+      // Idempotent inside the service, so a replayed finalize re-inserts nothing.
       const { leaderboardService } = await import(
         '@modules/engagement/leaderboard/leaderboard.service'
       );
-      await leaderboardService.awardProductSales(doc);
-      if (group.method === 'SHIP') await this.tryCreateShipment(doc);
+      await leaderboardService.awardProductSales(doc, session);
     }
     return created.map(toPub);
   },

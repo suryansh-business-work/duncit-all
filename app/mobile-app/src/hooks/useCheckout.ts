@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import {
+  classifyConfirmedPayment,
+  confirmPaymentAfterTransportFailure,
+  isTransportError,
+} from '@duncit/utils';
 
 import {
   MobileAvailableCouponsDocument,
@@ -7,12 +12,14 @@ import {
   MobileCheckoutPodDocument,
   MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
+  MobileMyPaymentsDocument,
   MobilePublicFinanceDocument,
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import type { CheckoutBillingInput } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { CheckoutContact, CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   downloadPaymentInvoice,
   maybeSaveMainAddress,
@@ -39,7 +46,77 @@ export interface RazorpaySignature {
   razorpay_signature: string;
 }
 
+/** The payment a verified — or confirmed-after-the-fact — checkout resolves to. */
+export type VerifiedPayment = ResultOf<
+  typeof MobileVerifyRazorpayDocument
+>['verifyRazorpayPayment'];
+
 const CHECKOUT_URL = 'duncit-mobile://checkout';
+
+/**
+ * Verify the Razorpay signature — and, when THAT call dies in transport rather
+ * than in business logic, ask the server what actually happened instead of
+ * failing a buyer whose money has already left their account.
+ *
+ * Shared by the pod and the product checkout (rule 34); mWeb's
+ * useCheckoutSession does exactly the same (rule 27).
+ */
+export function useRazorpayVerification() {
+  const { t } = useTranslation();
+  // Set only while the payment is being read back. It is progress, never a
+  // failure — nothing has gone wrong yet except the request that asked.
+  const [confirmingMessage, setConfirmingMessage] = useState<string | null>(null);
+
+  /** The buyer's own payment row, read back by id. `payment(payment_doc_id)` is
+   * admin-guarded, so `myPayments` is the only read a buyer can make — and it
+   * has no limit argument, so this pulls the whole history every attempt. Keep
+   * MobileMyPaymentsDocument's selection to the fields the confirmation screen
+   * renders and NOTHING else; `Payment.pod` resolves a findById per row. */
+  const readMyPayment = async (paymentDocId: string): Promise<VerifiedPayment | null> => {
+    const data = await graphqlRequest(MobileMyPaymentsDocument, undefined, { auth: true });
+    return data.myPayments.find((row) => row.id === paymentDocId) ?? null;
+  };
+
+  const confirmAfterTransportFailure = async (paymentDocId: string): Promise<VerifiedPayment> => {
+    setConfirmingMessage(t('mweb.checkout.confirmingPayment'));
+    try {
+      const payment = await confirmPaymentAfterTransportFailure({
+        fetchStatus: () => readMyPayment(paymentDocId),
+      });
+      // The poll settles on whatever the server says, which includes a payment
+      // that genuinely FAILED or was REFUNDED. Each ending gets its own honest
+      // line; only a still-unknown one gets the "wait for your booking" copy.
+      const confirmed = classifyConfirmedPayment(payment);
+      if (confirmed.outcome === 'SUCCESS') return confirmed.payment;
+      // Only now is there something the buyer must read — and whichever ending
+      // it names, it never says "timeout" and never shows a raw network line.
+      throw new Error(t(confirmed.messageKey));
+    } finally {
+      setConfirmingMessage(null);
+    }
+  };
+
+  const verifyRazorpay = async (
+    paymentDocId: string,
+    sig: RazorpaySignature,
+  ): Promise<VerifiedPayment> => {
+    try {
+      const data = await graphqlRequest(
+        MobileVerifyRazorpayDocument,
+        { input: { payment_doc_id: paymentDocId, ...sig } },
+        { auth: true },
+      );
+      return data.verifyRazorpayPayment;
+    } catch (error) {
+      // A transport failure says nothing about the payment — only about the
+      // request that carried it.
+      if (!isTransportError(error)) throw error;
+      return await confirmAfterTransportFailure(paymentDocId);
+    }
+  };
+
+  return { verifyRazorpay, confirmingMessage };
+}
 
 /** Prefill the checkout form from the loaded user — contact + main-address seed
  * + the "same as my main address" default (on when a main address exists). */
@@ -108,6 +185,7 @@ export function useCheckout(podId: string, seats = 1) {
   const [me, setMe] = useState<CheckoutMe>(null);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
   useEffect(() => {
     let active = true;
@@ -195,18 +273,6 @@ export function useCheckout(podId: string, seats = 1) {
 
   const previewCoupon = (code: string, amount: number) => previewCouponRequest(code, podId, amount);
 
-  const verifyRazorpay = async (
-    paymentDocId: string,
-    sig: RazorpaySignature,
-  ): Promise<CheckoutPayment> => {
-    const data = await graphqlRequest(
-      MobileVerifyRazorpayDocument,
-      { input: { payment_doc_id: paymentDocId, ...sig } },
-      { auth: true },
-    );
-    return data.verifyRazorpayPayment;
-  };
-
   return {
     finance,
     pod,
@@ -217,6 +283,7 @@ export function useCheckout(podId: string, seats = 1) {
     pay,
     createRazorpayOrder,
     verifyRazorpay,
+    confirmingMessage,
     previewCoupon,
     downloadInvoice: downloadPaymentInvoice,
   };

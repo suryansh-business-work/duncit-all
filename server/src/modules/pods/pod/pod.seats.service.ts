@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { PodModel } from './pod.model';
 import { normalizeSeats } from './pod.seats';
 import { logs } from '@observability/log';
@@ -37,9 +37,18 @@ const NEEDED_SEATS = (seats: number) => ({
  * many seats they hold) and `$inc` composes under concurrency, so the pair stays
  * consistent without a transaction.
  *
+ * A `session` joins the caller's transaction: the payment finalizer claims the
+ * seat and writes the membership together, so a failure downstream gives the
+ * seat back instead of leaving it held by nobody.
+ *
  * @throws POD_FULL when the seats are gone — the caller must not book.
  */
-export async function claimSeats(podId: PodRef, userId: PodRef, seats = 1) {
+export async function claimSeats(
+  podId: PodRef,
+  userId: PodRef,
+  seats = 1,
+  session?: ClientSession
+) {
   const want = normalizeSeats(seats);
   const uid = new Types.ObjectId(userId.toString());
   const pod = await PodModel.findOneAndUpdate(
@@ -70,7 +79,7 @@ export async function claimSeats(podId: PodRef, userId: PodRef, seats = 1) {
       },
     },
     { $addToSet: { pod_attendees: uid }, $inc: { extra_seats: want - 1 } },
-    { new: true },
+    { new: true, session },
   );
   if (!pod) {
     throw new GraphQLError('Pod is full', { extensions: { code: 'POD_FULL' } });

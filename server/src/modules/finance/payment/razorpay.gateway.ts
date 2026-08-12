@@ -67,6 +67,43 @@ export async function createRazorpayOrder(args: {
   return { id: String(json.id) };
 }
 
+/** Payments Razorpay has recorded against one order — the source of truth when a
+ * client disappeared before it could verify. */
+export async function fetchRazorpayOrderPayments(
+  orderId: string
+): Promise<Array<{ id: string; status: string; amount: number }>> {
+  const { keyId, keySecret } = await getRazorpayKeys();
+  const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+  const res = await fetch(`${RAZORPAY_API}/orders/${orderId}/payments`, {
+    headers: { Authorization: auth },
+  });
+  const json: any = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const detail = json?.error?.description || `HTTP ${res.status}`;
+    throw new GraphQLError(`Razorpay order lookup failed: ${detail}`, {
+      extensions: { code: 'BAD_GATEWAY' },
+    });
+  }
+  const items: any[] = Array.isArray(json?.items) ? json.items : [];
+  return items.map((item) => ({
+    id: String(item?.id ?? ''),
+    status: String(item?.status ?? ''),
+    amount: Number(item?.amount ?? 0),
+  }));
+}
+
+/** True when Razorpay says this order has a captured (money-taken) payment. */
+export async function findCapturedPaymentForOrder(
+  orderId: string
+): Promise<{ id: string; amount: number } | null> {
+  const payments = await fetchRazorpayOrderPayments(orderId);
+  // `authorized` is money held, not taken — only `captured` means the buyer
+  // has actually been charged and therefore owes us a booking.
+  const captured = payments.find((payment) => payment.status === 'captured');
+  if (!captured) return null;
+  return { id: captured.id, amount: captured.amount };
+}
+
 /** Verify a checkout signature: HMAC_SHA256(`order_id|payment_id`, key_secret). */
 export async function verifyRazorpaySignature(args: {
   orderId: string;

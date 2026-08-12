@@ -74,6 +74,110 @@ export const paymentTypeDefs = /* GraphQL */ `
     paid_at: String
     created_at: String!
     updated_at: String!
+    finalize_state: String!
+    needs_refund: Boolean!
+    coins_earned: Float!
+  }
+
+  enum PaymentStepStatus {
+    PENDING
+    DONE
+    SKIPPED
+    FAILED
+  }
+
+  "One step of the post-payment finalization pipeline, in execution order."
+  type PaymentStep {
+    key: String!
+    "Human label for the Finance detail table."
+    label: String!
+    status: PaymentStepStatus!
+    "Why it was skipped, or the failure message."
+    detail: String!
+    "Ids of the documents this step created."
+    refs: [String!]!
+    at: String
+  }
+
+  "A thing checkout was supposed to create, verified by reading it back from the database."
+  type PaymentArtifact {
+    key: String!
+    label: String!
+    "True only when the document was actually found in the database — this is what draws the green tick."
+    created: Boolean!
+    "How many documents of this kind exist for the payment."
+    count: Int!
+    "Human-readable ids (ticket code, order no, membership id...)."
+    refs: [String!]!
+    "Set when the artifact is not applicable to this payment (e.g. no products bought)."
+    not_applicable: Boolean!
+  }
+
+  "One Duncit Coin ledger movement caused by this payment."
+  type PaymentCoinLine {
+    type: String!
+    amount: Float!
+    balance_after: Float!
+    source: String!
+    reason: String!
+    earn_pct: Float!
+    at: String!
+  }
+
+  "The coupon applied at checkout, resolved against the live coupon record."
+  type PaymentCouponInfo {
+    code: String!
+    discount: Float!
+    discount_type: String!
+    discount_value: Float!
+    title: String!
+    "False when the coupon record has since been deleted."
+    still_exists: Boolean!
+  }
+
+  "The pod booking this payment produced."
+  type PaymentPodBooking {
+    pod_id: ID!
+    pod_title: String!
+    pod_date_time: String
+    seats: Int!
+    membership_id: ID
+    membership_status: String
+    ticket_code: String
+    ticket_status: String
+  }
+
+  "One product order this payment produced."
+  type PaymentProductOrderLine {
+    id: ID!
+    order_no: String!
+    fulfilment_method: String!
+    fulfilment_status: String!
+    total: Float!
+    item_count: Int!
+    awb: String
+  }
+
+  "Everything checkout did for one payment — for the Finance Payment Logs detail page."
+  type PaymentDetail {
+    payment: Payment!
+    finalize_state: String!
+    finalize_attempts: Int!
+    finalized_at: String
+    finalize_error: String
+    needs_refund: Boolean!
+    steps: [PaymentStep!]!
+    artifacts: [PaymentArtifact!]!
+    coins: [PaymentCoinLine!]!
+    coupon: PaymentCouponInfo
+    pod_booking: PaymentPodBooking
+    product_orders: [PaymentProductOrderLine!]!
+    "Gross before coupon + coins, taken from the frozen checkout metadata."
+    original_total: Float!
+    "Coins spent on this payment (1 coin = 1 rupee off the gross)."
+    coins_redeemed: Float!
+    "Coins this payment earned the buyer back."
+    coins_earned: Float!
   }
 
   "Server-side table page for the shared table engine (paymentsTable)."
@@ -290,6 +394,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     paymentTotals(filter: PaymentFilterInput): PaymentTotals!
     paymentsTable(query: TableQueryInput): PaymentTablePage!
     payment(payment_doc_id: ID!): Payment
+    "Full audit of one payment: what it charged, what it created, and what failed."
+    paymentDetail(payment_doc_id: ID!): PaymentDetail!
     myPayments: [Payment!]!
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!

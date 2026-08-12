@@ -116,6 +116,7 @@ export function ProductCheckoutScreen() {
     payProduct,
     createRazorpayProductOrder,
     verifyRazorpay,
+    confirmingMessage,
     previewCoupon,
     downloadInvoice,
   } = useProductCheckout();
@@ -349,7 +350,7 @@ export function ProductCheckoutScreen() {
           setError(null);
         }}
       />
-      <ProcessingOverlay open={submitting} />
+      <ProcessingOverlay open={submitting} message={confirmingMessage} />
     </StackScreen>
   );
 }

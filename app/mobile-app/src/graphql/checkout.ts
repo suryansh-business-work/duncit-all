@@ -181,6 +181,28 @@ export const MobileVerifyRazorpayDocument = gql(`
   }
 `);
 
+/**
+ * The buyer's own payments, newest first — mWeb's MY_PAYMENTS. Polled ONLY
+ * when the verify mutation dies in transport: `payment(payment_doc_id)` is
+ * admin-guarded, so this is the one payment read a normal buyer can make. Its
+ * selection matches the verify mutation's, so a polled row is returned to the
+ * screen exactly as a verified one would be.
+ */
+export const MobileMyPaymentsDocument = gql(`
+  query MobileMyPayments {
+    myPayments {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`);
+
 /** Base64 PDF invoice for the completed payment — shared with pod history. */
 export const MobileCheckoutInvoiceDocument = gql(`
   query MobileCheckoutInvoicePdf($id: ID!) {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
@@ -15,6 +16,7 @@ const EMPTY_TOTALS = { count: 0, gross: 0, fee: 0, gst: 0 };
 
 export default function PaymentLogsPage() {
   const client = useApolloClient();
+  const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
 
   // KPI totals come from a filter-wide server aggregation (no row cap); the
@@ -56,6 +58,12 @@ export default function PaymentLogsPage() {
     const timer = globalThis.setInterval(() => refetchRef.current?.(), POLL_MS);
     return () => globalThis.clearInterval(timer);
   }, []);
+
+  // Opening a row is the audit page: what this payment charged and what it created.
+  const handleOpen = useCallback(
+    (p: PaymentRow) => navigate(`/payment-logs/${p.id}`),
+    [navigate],
+  );
 
   const [refundMut, { loading: refundLoading }] = useMutation(REFUND_PAYMENT);
   const [refundFor, setRefundFor] = useState<PaymentRow | null>(null);
@@ -123,6 +131,7 @@ export default function PaymentLogsPage() {
         downloadingId={downloadingId}
         onDownload={handleDownloadInvoice}
         onRefund={setRefundFor}
+        onOpen={handleOpen}
       />
 
       <RefundDialog

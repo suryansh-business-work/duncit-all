@@ -52,6 +52,8 @@ interface Props {
   downloadingId: string | null;
   onDownload: (p: PaymentRow) => void;
   onRefund: (p: PaymentRow) => void;
+  /** Opens the payment's audit page. Row actions stop propagation so they never open it. */
+  onOpen: (p: PaymentRow) => void;
 }
 
 export default function PaymentsTable({
@@ -60,6 +62,7 @@ export default function PaymentsTable({
   downloadingId,
   onDownload,
   onRefund,
+  onOpen,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<PaymentRow>[]>(() => {
     const renderActions = (p: PaymentRow) => (
@@ -69,7 +72,11 @@ export default function PaymentsTable({
             <IconButton
               size="small"
               disabled={!p.invoice_no || downloadingId === p.id}
-              onClick={() => onDownload(p)}
+              onClick={(event) => {
+                // The row opens the detail page; downloading must not also navigate.
+                event.stopPropagation();
+                onDownload(p);
+              }}
             >
               {downloadingId === p.id ? <CircularProgress size={16} /> : <DownloadIcon fontSize="small" />}
             </IconButton>
@@ -81,7 +88,10 @@ export default function PaymentsTable({
               size="small"
               color="warning"
               disabled={p.status !== 'SUCCESS'}
-              onClick={() => onRefund(p)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRefund(p);
+              }}
             >
               <UndoIcon fontSize="small" />
             </IconButton>
@@ -150,6 +160,7 @@ export default function PaymentsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPaymentRowId}
+      onRowClick={onOpen}
       emptyText="No payments yet."
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search txn id, invoice, name or email"

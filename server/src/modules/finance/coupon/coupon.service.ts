@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { CouponModel, type ICoupon } from './coupon.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
@@ -254,8 +254,18 @@ export const couponService = {
     };
   },
 
-  /** Increment the redemption counter after a successful paid checkout. */
-  async recordRedemption(code: string) {
-    await CouponModel.updateOne({ code: String(code).toUpperCase().trim() }, { $inc: { used_count: 1 } });
+  /**
+   * Increment the redemption counter after a successful paid checkout.
+   *
+   * Runs inside the finalizer's transaction, so `used_count` and the payment
+   * that consumed the coupon can never disagree: it used to be a separate call
+   * at each checkout call site, skipped entirely whenever finalization threw.
+   */
+  async recordRedemption(code: string, session?: ClientSession) {
+    await CouponModel.updateOne(
+      { code: String(code).toUpperCase().trim() },
+      { $inc: { used_count: 1 } },
+      { session }
+    );
   },
 };

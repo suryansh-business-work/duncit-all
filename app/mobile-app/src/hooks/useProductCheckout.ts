@@ -5,7 +5,6 @@ import {
   MobileAvailableCouponsDocument,
   MobileCheckoutMeDocument,
   MobilePublicFinanceDocument,
-  MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import {
   MobileCreateRazorpayProductOrderDocument,
@@ -16,11 +15,11 @@ import type { CheckoutFormValues } from '@/forms/checkout';
 import type { ProductCartItemInput } from '@/generated/graphql/graphql';
 import {
   buildCheckoutInitialValues,
+  useRazorpayVerification,
   type AvailableCoupon,
   type CheckoutMe,
   type FinanceSettings,
   type RazorpayOrder,
-  type RazorpaySignature,
 } from '@/hooks/useCheckout';
 import {
   downloadPaymentInvoice,
@@ -56,6 +55,7 @@ export function useProductCheckout() {
   const [me, setMe] = useState<CheckoutMe>(null);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
   useEffect(() => {
     let active = true;
@@ -116,18 +116,6 @@ export function useProductCheckout() {
     return data.createRazorpayProductOrder;
   };
 
-  const verifyRazorpay = async (
-    paymentDocId: string,
-    sig: RazorpaySignature,
-  ): Promise<ProductPayment> => {
-    const data = await graphqlRequest(
-      MobileVerifyRazorpayDocument,
-      { input: { payment_doc_id: paymentDocId, ...sig } },
-      { auth: true },
-    );
-    return data.verifyRazorpayPayment;
-  };
-
   const previewCoupon = (code: string, amount: number): Promise<CouponPreview> =>
     previewCouponRequest(code, '', amount);
 
@@ -140,6 +128,7 @@ export function useProductCheckout() {
     payProduct,
     createRazorpayProductOrder,
     verifyRazorpay,
+    confirmingMessage,
     previewCoupon,
     downloadInvoice: downloadPaymentInvoice,
   };

@@ -48,6 +48,7 @@ export function CheckoutScreen() {
     pay,
     createRazorpayOrder,
     verifyRazorpay,
+    confirmingMessage,
     previewCoupon,
     downloadInvoice,
   } = useCheckout(podId, Math.max(1, Number(route.params?.seats ?? 1) || 1));
@@ -250,7 +251,7 @@ export function CheckoutScreen() {
           setError('');
         }}
       />
-      <ProcessingOverlay open={submitting} />
+      <ProcessingOverlay open={submitting} message={confirmingMessage} />
     </StackScreen>
   );
 }

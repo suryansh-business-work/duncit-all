@@ -658,6 +658,25 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       close: 'Close',
       tapToClose: 'Tap anywhere to close',
     },
+    // "Pod Club Admin" in the host's per-pod action menu: who runs the club this
+    // pod belongs to, and how to reach them. The contact rows themselves are
+    // rendered by the shared ClubAdminCard, so only the chrome is keyed here.
+    // `menuItem` is duplicated word-for-word at `shell.podClubAdmin.menuItem`
+    // because @duncit/host-pod-actions resolves the label from whichever
+    // namespace the calling surface ships.
+    podClubAdmin: {
+      menuItem: 'Pod Club Admin',
+      title: 'Pod Club Admin',
+      caption: 'Contact the Club Admin',
+      // A club with no admin assigned yet is normal, not an error — the pod
+      // still runs, there is just nobody to call.
+      none: 'This pod’s club has no admin assigned yet.',
+      loadFailed: 'The club admin could not be loaded. Please try again.',
+      // Raising a ticket carries the pod through, so support never has to ask
+      // which pod this is about.
+      support: 'Raise a support ticket',
+      close: 'Close',
+    },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
     // the aspect labels are keyed from @duncit/utils' POD_FEEDBACK_ASPECT_KEY,
@@ -872,6 +891,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       processingTitle: 'Processing your payment…',
       processingNoteWeb: 'Please don’t close this tab.',
       processingNoteApp: 'Please don’t close this screen.',
+      // Shown when the verification request itself dies (timeout, dropped
+      // connection, a 502 mid-deploy) and the client falls back to asking the
+      // server what happened. The money has already moved, so this is progress,
+      // not a failure, and it never names the network. Both lines render INSIDE
+      // the same blocking overlay, above the "don't close this" note — a buyer
+      // who is shown a spinner and nothing else for thirty seconds pays again.
+      confirmingTitle: 'Confirming your payment…',
+      confirmingPayment:
+        'Your payment went through — we’re confirming it with the bank. Please don’t pay again; this can take a minute.',
       // The product order summary.
       orderSummary: 'Order summary',
       yourOrder: 'Your order',
@@ -916,6 +944,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       errorFailed: 'Payment failed. Please try again.',
       errorNotConfigured: 'Online payments are not configured yet. Please try again later.',
       errorNotVerified: 'Payment could not be verified.',
+      // The end of the confirmation wait: we still cannot say the payment
+      // settled, but the buyer HAS paid. So it says what is true, tells them
+      // where their booking will appear, and stops them paying twice — never
+      // "timeout", never a raw network message.
+      errorConfirmPending:
+        'Your payment is being confirmed — please don’t pay again. It will appear in your bookings shortly, and we’ll email your receipt once it’s confirmed.',
+      // The other two endings. The poll returns whichever status the server
+      // settled on, so a payment that definitively FAILED or was REFUNDED must
+      // be told so — sending that buyer to wait for a booking that will never
+      // exist is worse than the timeout we are hiding.
+      errorConfirmFailed:
+        'Your payment did not go through, so nothing has been booked. Any amount debited will be returned by your bank automatically — please try again.',
+      errorConfirmRefunded:
+        'This payment was refunded, so nothing has been booked. The amount is on its way back to your account — please try again if you still want to book.',
       errorCouponInvalid: 'Invalid coupon code',
       errorInvoiceUnavailable: 'Invoice not available',
       // mWeb only — it creates the gateway order itself and can fail before

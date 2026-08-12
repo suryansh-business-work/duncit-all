@@ -1,4 +1,6 @@
+import { GraphQLError } from 'graphql';
 import { paymentService, computeQuote } from './payment.service';
+import { paymentDetailService } from './payment.detail.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
@@ -49,6 +51,14 @@ export const paymentResolvers = {
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return paymentService.getById(args.payment_doc_id);
+    },
+    paymentDetail: async (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      const detail = await paymentDetailService.detail(args.payment_doc_id);
+      if (!detail) {
+        throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      return detail;
     },
     myPayments: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);

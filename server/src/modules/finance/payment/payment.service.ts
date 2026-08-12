@@ -6,11 +6,10 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/finance.model';
+import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { invoiceDataForPayment } from './payment.invoice';
-import { sendEmail } from '@services/email/email.service';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
-import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
+import { paymentFinalizer } from './payment.finalize';
 import {
   createRazorpayOrder,
   getRazorpayKeys,
@@ -20,7 +19,6 @@ import { couponService } from '@modules/finance/coupon/coupon.service';
 import { coinService } from '@modules/finance/coin/coin.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
-import { claimSeats } from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -40,7 +38,9 @@ const emptyBilling = () => ({
   country: 'India',
 });
 
-const toPub = (p: IPayment) => ({
+// Exported so a caller that ALREADY holds the document can shape it without a
+// second read: the public `Payment` must come out of exactly one mapper.
+export const toPub = (p: IPayment) => ({
   id: String(p._id),
   payment_id: p.payment_id,
   invoice_no: p.invoice_no,
@@ -68,6 +68,11 @@ const toPub = (p: IPayment) => ({
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
   paid_at: p.paid_at ? p.paid_at.toISOString() : null,
+  // How far the post-payment pipeline got, and whether it left money owing.
+  // Payments captured before the pipeline existed have no stored state.
+  finalize_state: p.finalize_state ?? 'NOT_STARTED',
+  needs_refund: p.needs_refund === true,
+  coins_earned: p.coins_earned ?? 0,
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });
@@ -646,164 +651,35 @@ function razorpaySheet(a: RazorpaySheetArgs) {
   };
 }
 
-/** Books the slot + records the PodMember row + evaluates badges for a paid pod.
- * Returns the booking (PodMember) id so the receipt email can deep-link to it. */
-async function bookPodForPayment(
-  pod: any,
-  userId: any,
-  paymentDocId: string,
-  seats = 1
-): Promise<string | null> {
-  if (!pod) return null;
-  let bookingId: string | null = null;
-  // A capture can be replayed (webhook retry, a manual re-verify). The seat
-  // claim below is an `$inc`, which is not idempotent, so the membership row is
-  // the key: if this payment already booked, there is nothing left to do.
-  const { PodMemberModel } = await import('@modules/pods/podMember/podMember.model');
-  const already = await PodMemberModel.findOne({
-    payment_id: new Types.ObjectId(paymentDocId),
-  }).select('_id');
-  if (already) return String(already._id);
-  // The buyer appears once (identity); the seats beyond their own are the
-  // pod-level counter, so occupancy stays right without duplicating an id.
-  //
-  // A failed claim used to be logged and stepped over, which then issued a
-  // membership and a ticket for seats nobody held. The money is already taken at
-  // this point, so the honest outcome is to book nothing and mark the payment for
-  // refund — Finance can see it, and the pod is not oversold.
-  try {
-    await claimSeats(pod._id, userId, seats);
-  } catch (e) {
-    logs.server.error('payment', 'bookPodForPayment', {
-      error: e,
-      msg: 'Seat claim failed after payment — booking skipped, refund required',
-      podId: String(pod._id),
-      paymentDocId,
-      seats,
-    });
-    await PaymentModel.updateOne(
-      { _id: paymentDocId },
-      { $set: { 'metadata.seat_claim_failed': true } },
+/**
+ * Phase 2 of finalization — the invoice PDF, the receipt email and the
+ * ShipRocket call. Deliberately NOT awaited: the booking core is already
+ * committed, so the mutation answers the moment the money and the seat agree
+ * instead of holding the buyer while a third party is written to.
+ *
+ * Anything that fails here leaves the payment at CORE_DONE for the reconciler.
+ */
+function deferSideEffects(paymentDocId: string, component: string): void {
+  paymentFinalizer
+    .runSideEffects(paymentDocId)
+    .catch((error) =>
+      logs.server.error('payment', component, { error, msg: 'Deferred side effects failed' })
     );
-    return null;
-  }
-  try {
-    const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
-    const member = await podMemberService.recordPaidJoin(
-      String(pod._id),
-      String(userId),
-      paymentDocId,
-      seats
-    );
-    bookingId = member?._id ? String(member._id) : null;
-  } catch (e) {
-    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'PodMember record failed' });
-  }
-  try {
-    const { evaluateBadgesForUser } = await import('@modules/engagement/badge/badge.service');
-    evaluateBadgesForUser(String(userId), 'POD_JOIN').catch(() => {});
-  } catch {
-    /* noop */
-  }
-  return bookingId;
 }
 
-/** Multi-line bill-to address for the invoice, composed from the frozen billing
- * snapshot. Empty parts drop out; returns [] when no address was captured. */
-/** Post-success side effects shared by every gateway: book the pod, generate the
- * invoice PDF and email the receipt. The payment doc must already be SUCCESS with
- * an invoice number + paid_at set. Best-effort — failures here never fail payment. */
-async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) {
-  const pod = doc.pod_id ? await PodModel.findById(doc.pod_id) : null;
-  // Seats come off the payment's own metadata, frozen when the order was priced.
-  const paidSeats = normalizeSeats((doc.metadata as any)?.seats ?? 1);
-  const bookingId = await bookPodForPayment(pod, doc.user_id, String(doc._id), paidSeats);
-  // Fulfilment: create the product order(s) for any add-on products bought.
-  // Best-effort + idempotent — never fail a paid checkout on a fulfilment hiccup.
-  try {
-    const { productOrderService } = await import('@modules/commerce/productOrder/productOrder.service');
-    await productOrderService.createFromPayment(doc);
-  } catch (e) {
-    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'ProductOrder creation failed' });
-  }
-  // Marketing attribution: credit this sale to the short link the buyer came
-  // through, if any. Every paid path funnels through here — dummy, 100%-off
-  // coupon and Razorpay alike — so this is the one place it belongs. Silent
-  // for the majority who never followed a link, and best-effort: attribution
-  // must never fail a payment that already succeeded.
-  try {
-    const { shortLinkJourneyService } = await import('@modules/crm/marketing/shortLinkJourney.service');
-    await shortLinkJourneyService.attributePayment({
-      userId: String(doc.user_id),
-      paymentId: String(doc._id),
-      amount: doc.total,
-      at: doc.paid_at ?? undefined,
-    });
-  } catch (e) {
-    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Short-link attribution failed' });
-  }
-  // Duncit Coins: the buyer earns a share of what they just spent back as
-  // coins. Every paid path funnels through here — dummy, 100%-off coupon,
-  // Razorpay, pod and product alike — so this is the one place it belongs.
-  // Idempotent per payment_id inside the service, and best-effort: a reward
-  // must never fail a payment that already succeeded.
-  // The redemption is settled first, then the reward is earned on `doc.total` —
-  // which is already net of the coins spent, so coins can never earn more coins.
-  try {
-    await coinService.redeemForPayment({
-      userId: String(doc.user_id),
-      paymentId: doc.payment_id,
-      coins: doc.coins_redeemed,
-      reason: doc.description || 'Purchase',
-    });
-    await coinService.creditForPayment({
-      userId: String(doc.user_id),
-      paymentId: doc.payment_id,
-      spendAmount: doc.total,
-      reason: doc.description || 'Purchase',
-      // Pod tickets and shop orders earn at separately configured rates.
-      targetType: doc.target_type,
-    });
-  } catch (e) {
-    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Coin settlement failed' });
-  }
-  try {
-    const pdf = await generateInvoicePdf(
-      await invoiceDataForPayment(doc, { paymentMethod: methodLabel })
-    );
-    const urlConfigs = await getUrlConfigs();
-    const bookingUrl = bookingId ? bookingLinkUrl(urlConfigs.appUrl, bookingId) : urlConfigs.appUrl;
-    await sendEmail({
-      to: doc.user_email,
-      subject: `Payment Receipt — ${doc.invoice_no}`,
-      template: 'payment-receipt',
-      category: 'billing',
-      vars: {
-        name: doc.user_name,
-        summary:
-          pod && (pod as any).pod_date_time
-            ? `${(pod as any).pod_title} — ${new Date((pod as any).pod_date_time).toLocaleString('en-IN')}`
-            : doc.description,
-        invoice_no: doc.invoice_no || '',
-        payment_id: doc.payment_id,
-        amount: `${fs.currency_symbol}${doc.total.toFixed(2)}`,
-        booking_url: bookingUrl,
-        // Templates already cached in the DB still carry the old `{{app_url}}`
-        // CTA, so it has to resolve to the same deep link (the disk template is
-        // only imported once, never re-synced).
-        app_url: bookingUrl,
-      },
-      attachments: [
-        {
-          filename: `invoice-${doc.invoice_no!.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`,
-          content: pdf,
-          contentType: 'application/pdf',
-        },
-      ],
-    });
-  } catch (e) {
-    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Receipt/invoice email failed' });
-  }
+/** Re-read after the finalizer's own write, so the response carries the promoted
+ * status + the invoice number rather than the pre-finalize snapshot. */
+async function reloadPub(paymentDocId: string) {
+  const fresh = await PaymentModel.findById(paymentDocId);
+  if (!fresh) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+  return toPub(fresh);
+}
+
+/** Capture + phase 1, then hand phase 2 off. Every gateway funnels through here. */
+async function settle(paymentDocId: string, methodLabel: string, component: string) {
+  await paymentFinalizer.finalizePayment(paymentDocId, methodLabel);
+  deferSideEffects(paymentDocId, component);
+  return reloadPub(paymentDocId);
 }
 
 type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };
@@ -938,13 +814,13 @@ export const paymentService = {
     } = await applyCoupon(input, payableAmount, userId);
     const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
 
-    const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
-    const paidAt = status === 'SUCCESS' ? new Date() : null;
-    const invoice_no = status === 'SUCCESS' ? await nextInvoiceNumber() : null;
-
+    // Created PENDING even on the happy path: the finalizer is the only thing
+    // that promotes a payment to SUCCESS, so there is exactly one promotion
+    // path however the money arrived.
+    const failed = !!input.simulate_failure;
     const doc = await PaymentModel.create({
       payment_id: newPaymentId(),
-      invoice_no,
+      invoice_no: null,
       user_id: user._id,
       ...buildBuyerFields(input, user),
       checkout_url: input.checkout_url,
@@ -961,18 +837,15 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      status,
+      status: failed ? 'FAILED' : 'PENDING',
       gateway: 'DUMMY',
-      gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
-      paid_at: paidAt,
+      gateway_ref: failed ? null : `dummy_${Date.now()}`,
+      paid_at: null,
       metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
     });
 
-    if (status === 'SUCCESS') {
-      await finalizePaidPayment(doc, fs, 'Dummy Gateway');
-      if (couponCode) await couponService.recordRedemption(couponCode);
-    }
-    return toPub(doc);
+    if (failed) return toPub(doc);
+    return settle(String(doc._id), 'Dummy Gateway', 'dummyCheckout');
   },
 
   /** Step 1 of live checkout: create a Razorpay order + a PENDING payment row,
@@ -1018,15 +891,13 @@ export const paymentService = {
       const settlement = freeSettlement(couponCode);
       const freeDoc = await PaymentModel.create({
         ...base,
-        invoice_no: await nextInvoiceNumber(),
-        status: 'SUCCESS',
+        invoice_no: null,
+        status: 'PENDING',
         gateway: settlement.gateway,
         gateway_ref: `free_${Date.now()}`,
-        paid_at: new Date(),
+        paid_at: null,
         metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
       });
-      await finalizePaidPayment(freeDoc, fs, settlement.label);
-      if (couponCode) await couponService.recordRedemption(couponCode);
       return razorpaySheet({
         paymentDocId: String(freeDoc._id),
         keyId,
@@ -1038,7 +909,7 @@ export const paymentService = {
         currencySymbol: quote.currency_symbol,
         total: 0,
         free: true,
-        payment: toPub(freeDoc),
+        payment: await settle(String(freeDoc._id), settlement.label, 'createRazorpayCheckout'),
       });
     }
 
@@ -1075,7 +946,13 @@ export const paymentService = {
     });
   },
 
-  /** Step 2 of live checkout: verify the signature, then finalize the payment. */
+  /**
+   * Step 2 of live checkout: verify the signature, then finalize the payment.
+   *
+   * Returns as soon as the booking core has committed. Everything slow — the
+   * invoice PDF, SMTP, ShipRocket — is deferred, because this call used to hold
+   * the buyer's phone open through all three and time out.
+   */
   async verifyRazorpayCheckout(input: any, userId: string) {
     const doc = await PaymentModel.findById(input.payment_doc_id);
     if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
@@ -1098,10 +975,9 @@ export const paymentService = {
       });
     }
 
-    const fs = await getFinanceSettings();
-    doc.status = 'SUCCESS';
-    doc.paid_at = new Date();
-    doc.invoice_no = await nextInvoiceNumber();
+    // Only the gateway's own facts are written here — the status, paid_at and
+    // invoice number all belong to the finalizer, which is the single place a
+    // payment is ever promoted.
     doc.gateway_ref = input.razorpay_payment_id;
     (doc as any).metadata = {
       ...(doc as any).metadata,
@@ -1109,9 +985,7 @@ export const paymentService = {
       razorpay_payment_id: input.razorpay_payment_id,
     };
     await doc.save();
-    await finalizePaidPayment(doc, fs, 'Razorpay');
-    if (doc.coupon_code) await couponService.recordRedemption(doc.coupon_code);
-    return toPub(doc);
+    return settle(String(doc._id), 'Razorpay', 'verifyRazorpayCheckout');
   },
 
   /** Live ShipRocket delivery estimate for a product cart (preview only). The
@@ -1155,13 +1029,11 @@ export const paymentService = {
     );
     const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
 
-    const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
-    const paidAt = status === 'SUCCESS' ? new Date() : null;
-    const invoice_no = status === 'SUCCESS' ? await nextInvoiceNumber() : null;
-
+    // PENDING until the finalizer promotes it — see dummyCheckout.
+    const failed = !!input.simulate_failure;
     const doc = await PaymentModel.create({
       payment_id: newPaymentId(),
-      invoice_no,
+      invoice_no: null,
       user_id: user._id,
       ...buildBuyerFields(input, user),
       checkout_url: input.checkout_url,
@@ -1178,18 +1050,15 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      status,
+      status: failed ? 'FAILED' : 'PENDING',
       gateway: 'DUMMY',
-      gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
-      paid_at: paidAt,
+      gateway_ref: failed ? null : `dummy_${Date.now()}`,
+      paid_at: null,
       metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal },
     });
 
-    if (status === 'SUCCESS') {
-      await finalizePaidPayment(doc, fs, 'Dummy Gateway');
-      if (couponCode) await couponService.recordRedemption(couponCode);
-    }
-    return toPub(doc);
+    if (failed) return toPub(doc);
+    return settle(String(doc._id), 'Dummy Gateway', 'dummyProductCheckout');
   },
 
   /** Step 1 of live product-cart checkout: create a Razorpay order + a PENDING
@@ -1241,15 +1110,13 @@ export const paymentService = {
       const settlement = freeSettlement(couponCode);
       const freeDoc = await PaymentModel.create({
         ...base,
-        invoice_no: await nextInvoiceNumber(),
-        status: 'SUCCESS',
+        invoice_no: null,
+        status: 'PENDING',
         gateway: settlement.gateway,
         gateway_ref: `free_${Date.now()}`,
-        paid_at: new Date(),
+        paid_at: null,
         metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal },
       });
-      await finalizePaidPayment(freeDoc, fs, settlement.label);
-      if (couponCode) await couponService.recordRedemption(couponCode);
       return razorpaySheet({
         paymentDocId: String(freeDoc._id),
         keyId,
@@ -1261,7 +1128,11 @@ export const paymentService = {
         currencySymbol: quote.currency_symbol,
         total: 0,
         free: true,
-        payment: toPub(freeDoc),
+        payment: await settle(
+          String(freeDoc._id),
+          settlement.label,
+          'createRazorpayProductCheckout'
+        ),
       });
     }
 

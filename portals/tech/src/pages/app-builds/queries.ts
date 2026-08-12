@@ -17,6 +17,8 @@ export interface AppBuildRow {
   version: string;
   build_name: string;
   artifact_url: string;
+  /** Why a SUCCESS build has no download. Empty whenever there is one. */
+  artifact_error: string;
   size_mb: number | null;
   commit_sha: string;
   branch: string;
@@ -58,6 +60,7 @@ export const APP_BUILDS_TABLE = gql`
         version
         build_name
         artifact_url
+        artifact_error
         size_mb
         commit_sha
         branch
@@ -103,6 +106,12 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
   }
 `;
 
+export const DELETE_APP_BUILD = gql`
+  mutation DeleteAppBuild($id: ID!) {
+    deleteAppBuild(id: $id)
+  }
+`;
+
 export const ISSUE_APP_BUILD_CI_TOKEN = gql`
   mutation IssueAppBuildCiToken {
     issueAppBuildCiToken {
@@ -114,8 +123,13 @@ export const ISSUE_APP_BUILD_CI_TOKEN = gql`
 `;
 
 /** ImageKit serves the file inline by default; this forces a download. */
-export const downloadUrl = (row: Pick<AppBuildRow, 'artifact_url'>): string =>
-  row.artifact_url ? `${row.artifact_url}?ik-attachment=true` : '';
+/**
+ * Artifacts are served by our own nginx now, which sends
+ * `Content-Disposition: attachment` for the whole directory — so the plain URL
+ * downloads. The old `?ik-attachment=true` was an ImageKit parameter and means
+ * nothing here.
+ */
+export const downloadUrl = (row: Pick<AppBuildRow, 'artifact_url'>): string => row.artifact_url;
 
 /** `+12 / -34 (5 files)` — or an em-dash when the range was unknown. */
 export const changesLabel = (row: AppBuildRow): string => {

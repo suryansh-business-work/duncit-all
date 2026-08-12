@@ -663,6 +663,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       ciCopyValue: 'Copy the token',
       ciCopied: 'Copied.',
       ciCopyFailed: 'Could not reach the clipboard — select the text and copy it manually.',
+      deleteAction: 'Delete',
+      deleteTitle: 'Delete this build?',
+      deleteMessage:
+        '{build} and its stored file are removed for good. The download link stops working immediately.',
+      deleted: 'Build deleted.',
+      noArtifact: 'The build succeeded but its file was not stored.',
     },
     mailAutomation: {
       title: 'Mail Automation',

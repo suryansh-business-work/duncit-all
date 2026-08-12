@@ -3,8 +3,8 @@ import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { postMessage } from '@modules/platform/slack/slack.gateway';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
-import { getImagekitConfig } from '@modules/platform/upload/upload.service';
 import { issueUploadTicket } from '@modules/platform/upload/uploadTicket';
+import { deleteArtifact } from '@modules/platform/upload/buildArtifactStore';
 import { signToken } from '@modules/access/user/user.service';
 import { getUrlConfigs } from '@config/url-configs';
 import type { AuthUser } from '@context';
@@ -69,6 +69,7 @@ const pub = (doc: IAppBuild) => ({
   build_name: doc.build_name,
   artifact_url: doc.artifact_url,
   artifact_file_id: doc.artifact_file_id,
+  artifact_error: doc.artifact_error ?? '',
   size_mb: doc.size_mb,
   commit_sha: doc.commit_sha,
   branch: doc.branch,
@@ -137,13 +138,25 @@ function buildBlocks(build: IAppBuild): unknown[] {
     if (build.commits.length > 8) lines.push(`… and ${build.commits.length - 8} more`);
     blocks.push({ type: 'section', text: { type: 'mrkdwn', text: lines.join('\n') } });
   }
+  // A successful build with nothing to download is worth SAYING, not just
+  // quietly missing a button — that is the case where someone has to go and
+  // fix the store before the next release.
+  if (build.status === 'SUCCESS' && !build.artifact_url) {
+    const why = build.artifact_error ? `: ${escapeMrkdwn(clip(build.artifact_error, 300))}` : '';
+    blocks.push({
+      type: 'context',
+      elements: [{ type: 'mrkdwn', text: `:warning: The build succeeded but the artifact was not stored${why}` }],
+    });
+  }
   const buttons: unknown[] = [];
   if (build.artifact_url) {
     buttons.push({
       type: 'button',
       text: { type: 'plain_text', text: 'Download' },
       style: 'primary',
-      url: `${build.artifact_url}?ik-attachment=true`,
+      // No ?ik-attachment: artifacts are served by our own nginx now, which
+      // sends Content-Disposition: attachment for the whole directory.
+      url: build.artifact_url,
     });
   }
   if (build.workflow_run_url) {
@@ -194,9 +207,12 @@ export const appBuildService = {
     if (!version) throw badInput('version is required');
     const status = input.status === 'FAILED' ? 'FAILED' : 'SUCCESS';
     const artifactUrl = optionalStr(input.artifact_url);
-    if (status === 'SUCCESS' && !artifactUrl) {
-      throw badInput('artifact_url is required for a SUCCESS build');
-    }
+    // A SUCCESS build with no artifact used to be refused as a mis-wired
+    // reporter. It is a real outcome: the app compiled and only the upload
+    // failed, and refusing it meant the most interesting build of the day —
+    // "it builds, but you cannot have it" — was the one nobody heard about.
+    // The row records it, Slack announces it, and artifact_error says why there
+    // is nothing to download.
     const build = await AppBuildModel.create({
       build_no: await nextBuildNo(),
       platform: input.platform,
@@ -205,6 +221,7 @@ export const appBuildService = {
       build_name: optionalStr(input.build_name),
       artifact_url: artifactUrl,
       artifact_file_id: optionalStr(input.artifact_file_id),
+      artifact_error: optionalStr(input.artifact_error),
       size_mb: optionalNum(input.size_mb),
       commit_sha: optionalStr(input.commit_sha),
       branch: optionalStr(input.branch),
@@ -254,29 +271,41 @@ export const appBuildService = {
   },
 
   /**
-   * Authorise one artifact upload through the server, which then puts it on
-   * ImageKit with the private key.
+   * Authorise one artifact upload through the server, which stores it on the
+   * VPS and serves it from nginx.
    *
-   * This used to hand CI an ImageKit signature so the artifact could go straight
-   * to ImageKit. A signature pairs the private key with the PUBLIC one, and a
-   * public key from a different ImageKit account fails every upload with
-   * "invalid signature parameter" — naming neither key. Uploading server-side
-   * removes the pairing, and with it that entire failure mode.
+   * Artifacts do NOT go to ImageKit. It refuses anything over 20 MiB — "The file
+   * size exceeds 20971520 bytes limit" — which an unsigned IPA slips under and a
+   * release APK never will, and that ceiling belongs to the account rather than
+   * to any setting we can change. Nothing here needs ImageKit configured any
+   * more, so a missing ImageKit no longer blocks a build from being recorded.
    */
   async uploadAuth(userId: string) {
-    const config = await getImagekitConfig();
-    if (!config.privateKey) {
-      throw new GraphQLError(
-        'ImageKit is not configured. Add it in Tech portal → Environment Variables → ImageKit.',
-        { extensions: { code: 'CONFIG_ERROR' } }
-      );
-    }
     const { serverUrl } = await getUrlConfigs();
     return {
       upload_url: `${serverUrl.replace(/\/$/, '')}/upload`,
-      ticket: issueUploadTicket(userId, APP_BUILDS_FOLDER),
+      ticket: issueUploadTicket(userId, APP_BUILDS_FOLDER, 'builds'),
       folder: APP_BUILDS_FOLDER,
     };
+  },
+
+  /**
+   * Delete a build: the row, and the artifact it points at.
+   *
+   * The file goes first-ish but its absence never blocks the row — an artifact
+   * that is already gone (pruned by hand, or never stored because the upload
+   * failed) must not leave a row nobody can remove.
+   */
+  async remove(id: string) {
+    const build = await AppBuildModel.findById(id);
+    if (!build) throw badInput('That build no longer exists');
+    if (build.artifact_file_id) await deleteArtifact(build.artifact_file_id);
+    await build.deleteOne();
+    logs.server.warn('appBuild', 'remove', {
+      build_no: build.build_no,
+      artifact: build.artifact_file_id,
+    });
+    return true;
   },
 
   async settings() {

@@ -223,11 +223,22 @@ try {
   const stats = getStats(range);
 
   let artifact = { url: '', fileId: '' };
+  let artifactError = '';
   let sizeMb = null;
   if (status === 'SUCCESS') {
-    console.log(`Uploading ${path.basename(artifactPath)}…`);
-    artifact = await uploadArtifact(token, artifactPath);
     sizeMb = Number((fs.statSync(artifactPath).size / 1024 / 1024).toFixed(2));
+    console.log(`Uploading ${path.basename(artifactPath)} (${sizeMb} MB)…`);
+    try {
+      artifact = await uploadArtifact(token, artifactPath);
+    } catch (err) {
+      // The app COMPILED. Losing the upload must not lose the announcement —
+      // "it builds, but you cannot download it" is the report most worth
+      // sending, and throwing here used to swallow it entirely. The row and the
+      // Slack post go out carrying the reason, and the step still exits 1 below
+      // so the workflow stays red and somebody fixes the store.
+      artifactError = err instanceof Error ? err.message : String(err);
+      console.error(`✗ artifact upload failed: ${artifactError}`);
+    }
   }
 
   const input = {
@@ -237,6 +248,7 @@ try {
     build_name: status === 'SUCCESS' ? path.basename(artifactPath) : '',
     artifact_url: artifact.url,
     artifact_file_id: artifact.fileId,
+    artifact_error: artifactError,
     size_mb: sizeMb,
     commit_sha: process.env.GITHUB_SHA || '',
     branch: process.env.GITHUB_REF_NAME || '',
@@ -255,6 +267,12 @@ try {
     console.log('  announced on Slack');
   } else if (result.slack_error) {
     console.log(`  Slack post skipped: ${result.slack_error}`);
+  }
+  // Recorded and announced, but the artifact is missing — a real half-failure,
+  // so the workflow goes red even though the report succeeded.
+  if (artifactError) {
+    console.error(`✗ report-app-build: recorded, but the artifact was not stored: ${artifactError}`);
+    process.exit(1);
   }
 } catch (err) {
   console.error(`✗ report-app-build: ${err instanceof Error ? err.message : err}`);

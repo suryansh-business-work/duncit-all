@@ -17,6 +17,7 @@ interface Props {
   fetchRows: TableFetch<AppBuildRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onRowClick: (row: AppBuildRow) => void;
+  onDelete: (row: AppBuildRow) => void;
 }
 
 export default function AppBuildsTable({
@@ -24,6 +25,7 @@ export default function AppBuildsTable({
   fetchRows,
   refetchRef,
   onRowClick,
+  onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
@@ -121,13 +123,21 @@ export default function AppBuildsTable({
       {
         field: 'artifact_url',
         headerName: t('tech.appBuilds.colLinks'),
-        width: 100,
+        width: 140,
         sortable: false,
-        cellRenderer: makeRenderLinks(t('tech.appBuilds.download'), t('tech.appBuilds.viewRun')),
+        cellRenderer: makeRenderLinks(
+          {
+            download: t('tech.appBuilds.download'),
+            run: t('tech.appBuilds.viewRun'),
+            delete: t('tech.appBuilds.deleteAction'),
+            noArtifact: t('tech.appBuilds.noArtifact'),
+          },
+          onDelete
+        ),
         valueGetter: (row) => row.artifact_url,
       },
     ];
-  }, [t]);
+  }, [t, onDelete]);
 
   return (
     <DuncitTable<AppBuildRow>

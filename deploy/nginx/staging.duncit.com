@@ -56,10 +56,26 @@ server {
     add_header Access-Control-Max-Age           "600"                  always;
     add_header Vary                             "Origin"               always;
 
-    # Files on their way to ImageKit — pod media from the apps, and a 60–150 MB
-    # APK/IPA from the android-build / ios-build workflows. The 25m server-level
-    # cap is sized for a GraphQL document and would 413 every build artifact, so
-    # this one route gets its own ceiling. Mirrors the production vhost.
+    # CI build artifacts, served straight off disk. ImageKit refuses anything
+    # over 20 MiB, which a release APK always exceeds, so they live here.
+    # octet-stream + attachment because an .ipa IS a zip and a sniffing store
+    # serves it as one, which saves it to disk under the wrong extension.
+    # Mirrors the production vhost.
+    location /app-builds/ {
+        alias /opt/duncit-staging/app-builds/;
+        default_type application/octet-stream;
+        types { }
+        add_header Content-Disposition "attachment" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        autoindex off;
+    }
+
+    # Files on their way to their store — pod media from the apps to ImageKit,
+    # and a 60–150 MB APK/IPA from the android-build / ios-build workflows to the
+    # directory above. The 25m server-level cap is sized for a GraphQL document
+    # and would 413 every build artifact, so this one route gets its own
+    # ceiling. Mirrors the production vhost.
     location /upload {
         if ($request_method = OPTIONS) {
             add_header Access-Control-Allow-Origin      $staging_cors_allow_origin     always;

@@ -226,6 +226,41 @@ const toPub = (v: IVenue) => ({
   updated_at: v.updated_at?.toISOString?.() ?? '',
 });
 
+/**
+ * SECURITY: `publicVenues`/`publicVenue` are UNAUTHENTICATED discovery
+ * queries. `toPub` above is the same serializer the admin/owner views use, so
+ * without this it returns every approved venue's GSTIN, PAN, bank account
+ * (account number/IFSC/UPI), owner email/phone/DOB/address, and uploaded
+ * verification-document URLs to anyone, signed in or not. This strips all of
+ * that — mirroring hostService.redactForPublic, which fixed the identical bug
+ * for `publicHosts`.
+ *
+ * What survives is what the discovery UIs actually render (mWeb/mobile Venues
+ * pages): name, type, capacity, amenities, address (city/locality — not the
+ * owner's personal address), photos, category, tags. Nothing here is a
+ * credential or PII.
+ */
+const redactForPublic = (v: ReturnType<typeof toPub>) => ({
+  ...v,
+  documents: [],
+  gstin: '',
+  pan: '',
+  bank_account: {
+    ...v.bank_account,
+    account_number: '',
+    ifsc_code: '',
+    upi_id: '',
+    account_holder_name: '',
+  },
+  owner_email: '',
+  owner_phone: '',
+  owner_dob: null,
+  owner_address: '',
+  reviewer_notes: '',
+  venue_share_pct: 0,
+  venue_commission_pct: 0,
+});
+
 /** Shared allowlists for the table engine (venuesTable / myVenuesTable —
  * DUNCIT TABLE CONTRACT v1). Only defaultSort differs per query. */
 const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
@@ -581,7 +616,7 @@ export const venueService = {
       q.$or = [{ venue_name: rx }, { venue_type: rx }, { city: rx }, { locality: rx }];
     }
     const docs = await VenueModel.find(q).sort({ created_at: -1 }).limit(200);
-    return docs.map(toPub);
+    return docs.map((d) => redactForPublic(toPub(d)));
   },
   /** Public single-venue detail — only an APPROVED, active venue is visible.
    * (The admin getById would leak drafts/rejected venues.) */
@@ -590,7 +625,7 @@ export const venueService = {
     const v = await VenueModel.findById(venueId);
     if (!v) return null;
     if (v.status !== 'APPROVED' || v.is_active === false) return null;
-    return toPub(v);
+    return redactForPublic(toPub(v));
   },
   /** Server-side table page (search/filter/sort/paginate) for the admin/
    * onboarding venuesTable query — same rows as list(). */

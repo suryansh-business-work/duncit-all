@@ -601,6 +601,30 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       lastChecked: 'Last checked {when} — {count} collections found',
       neverChecked: 'Not checked yet.',
     },
+    slack: {
+      title: 'Slack',
+      subtitle: 'Read a channel and reply to it, without leaving the portal.',
+      notConfigured:
+        'Add a Slack bot token in Environment Variables → Slack to connect a workspace.',
+      noChannels: 'No channels the bot can see yet — invite it to a channel.',
+      searchChannels: 'Search channels',
+      noChannelMatch: 'No channel matches that search.',
+      notMember: 'Not joined',
+      pickChannel: 'Pick a channel to read it.',
+      noMessages: 'Nothing has been posted here yet.',
+      channelMeta: '{id} · {members} members',
+      inviteBot:
+        'The bot is not in #{channel}, so Slack will not release its messages. Run /invite @your-bot in the channel.',
+      copyId: 'Copy channel ID',
+      copiedId: 'Channel ID copied.',
+      openInSlack: 'Open in Slack',
+      bot: 'bot',
+      replies: '{count} replies — open the thread in Slack',
+      composerPlaceholder: 'Message the channel — Enter sends, Shift+Enter for a new line',
+      send: 'Send',
+      blockKitToggle: 'Block Kit payload',
+      blockKitLabel: 'Block Kit blocks (JSON array)',
+    },
     appBuilds: {
       androidTitle: 'Android Builds',
       androidSubtitle:

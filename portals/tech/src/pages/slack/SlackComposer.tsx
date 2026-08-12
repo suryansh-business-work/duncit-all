@@ -1,82 +1,115 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { SEND_SLACK_MESSAGE, type SlackChannel } from './queries';
+import { Box, IconButton, Stack, TextField, Tooltip } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
+import CodeIcon from '@mui/icons-material/Code';
+import { useTranslation } from '@duncit/shell';
+import { notifyError } from '@duncit/dialogs';
+import { SEND_SLACK_MESSAGE } from './queries';
 
-interface Result {
-  ok: boolean;
-  message: string;
+interface Props {
+  channelId: string;
+  /** Pull the new message into the pane the moment Slack accepts it. */
+  onSent: () => void;
 }
 
-/** Test-send composer: post text (optionally Block Kit blocks) to a channel, or
- * the configured default channel. Backs "mai code se kuch bhi bhej sakata hu". */
-export default function SlackComposer({ channels }: Readonly<{ channels: SlackChannel[] }>) {
-  const [channel, setChannel] = useState('');
+/**
+ * The send half of the conversation. Enter sends, Shift+Enter makes a newline —
+ * the convention every chat client shares, so anything else feels broken.
+ *
+ * Block Kit stays available behind a toggle: it is how this page's messages are
+ * actually composed in code, and dropping it would remove the only place to try
+ * a payload before shipping it.
+ */
+export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [blocks, setBlocks] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
+  const [showBlocks, setShowBlocks] = useState(false);
   const [send, { loading }] = useMutation(SEND_SLACK_MESSAGE);
 
-  const onSend = () => {
-    const input = { channel: channel || undefined, text: text || undefined, blocks_json: blocks || undefined };
-    send({ variables: { input } })
-      .then((r) => setResult({ ok: true, message: `Sent — ts ${r.data?.sendSlackMessage?.ts ?? ''}` }))
-      .catch((e) => setResult({ ok: false, message: e instanceof Error ? e.message : 'Send failed' }));
+  const canSend = Boolean(channelId) && !loading && (text.trim() !== '' || blocks.trim() !== '');
+
+  const onSend = async () => {
+    if (!canSend) return;
+    try {
+      await send({
+        variables: {
+          input: {
+            channel: channelId,
+            text: text.trim() || undefined,
+            blocks_json: blocks.trim() || undefined,
+          },
+        },
+      });
+      setText('');
+      setBlocks('');
+      onSent();
+    } catch (err) {
+      // The server names the Slack error and the missing scope, so the raw
+      // message is the actionable text.
+      notifyError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    e.preventDefault();
+    onSend().catch(() => undefined);
   };
 
   return (
-    <Box>
-      <Typography variant="subtitle1" fontWeight={900} sx={{ mb: 1 }}>
-        Send a message
-      </Typography>
-      <Stack spacing={1.5}>
+    <Box sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
+      <Stack direction="row" spacing={1} alignItems="flex-end">
         <TextField
-          select
+          fullWidth
           size="small"
-          label="Channel"
-          value={channel}
-          onChange={(e) => setChannel(e.target.value)}
-        >
-          <MenuItem value="">Default channel</MenuItem>
-          {channels.map((c) => (
-            <MenuItem key={c.id} value={c.id}>
-              #{c.name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          size="small"
-          label="Message"
+          multiline
+          maxRows={6}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={t('tech.slack.composerPlaceholder')}
+          aria-label={t('tech.slack.composerPlaceholder')}
+        />
+        <Tooltip title={t('tech.slack.blockKitToggle')}>
+          <IconButton
+            size="small"
+            color={showBlocks ? 'primary' : 'default'}
+            aria-label={t('tech.slack.blockKitToggle')}
+            onClick={() => setShowBlocks((open) => !open)}
+          >
+            <CodeIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={t('tech.slack.send')}>
+          <span>
+            <IconButton
+              color="primary"
+              disabled={!canSend}
+              aria-label={t('tech.slack.send')}
+              onClick={() => {
+                onSend().catch(() => undefined);
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
+      {showBlocks && (
+        <TextField
+          fullWidth
+          size="small"
           multiline
           minRows={2}
-        />
-        <TextField
-          size="small"
-          label="Block Kit blocks (JSON array, optional)"
+          sx={{ mt: 1 }}
           value={blocks}
           onChange={(e) => setBlocks(e.target.value)}
-          multiline
-          minRows={2}
+          label={t('tech.slack.blockKitLabel')}
           placeholder='[{"type":"section","text":{"type":"mrkdwn","text":"*Hi*"}}]'
         />
-        {result && (
-          <Alert severity={result.ok ? 'success' : 'error'} onClose={() => setResult(null)}>
-            {result.message}
-          </Alert>
-        )}
-        <Box>
-          <Button
-            variant="contained"
-            disabled={loading || (!text.trim() && !blocks.trim())}
-            onClick={onSend}
-            sx={{ borderRadius: 999, fontWeight: 800 }}
-          >
-            Send
-          </Button>
-        </Box>
-      </Stack>
+      )}
     </Box>
   );
 }

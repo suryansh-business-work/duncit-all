@@ -36,7 +36,10 @@ const { parse } = require(
 const ROOTS = ['packages', 'portals', 'app/mweb', 'app/mobile-app'];
 const SKIP = new Set(['node_modules', 'dist', 'build', 'coverage', '.git', 'generated']);
 // Matches gql`...`, graphql`...` and /* GraphQL */ `...`.
-const TEMPLATE = /(?:\bgql|\bgraphql|\/\*\s*GraphQL\s*\*\/)\s*`([\s\S]*?)`/g;
+// The lookbehind rejects a backtick-quoted mention of the tag in prose: a
+// comment ending in "...its own `gql`" looks exactly like a template head, and
+// the scan then runs from there to the next backtick instead of over a document.
+const TEMPLATE = /(?<!`)(?:\bgql|\bgraphql|\/\*\s*GraphQL\s*\*\/)\s*`([\s\S]*?)`/g;
 
 function walk(dir, out = []) {
   let entries;

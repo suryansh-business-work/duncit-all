@@ -13,10 +13,13 @@ const SLACK_API = 'https://slack.com/api';
  * BOT TOKEN SCOPES, per method — the list nobody should have to rediscover
  * from a `missing_scope` error again.
  *
- *   conversations.list   channels:read   list public channels
- *                        groups:read     list private channels
- *   team.info            team:read       workspace domain, for archive links
- *   chat.postMessage     chat:write      post messages + in-app feedback
+ *   conversations.list    channels:read     list public channels
+ *                         groups:read       list private channels
+ *   team.info             team:read         workspace domain, for archive links
+ *   chat.postMessage      chat:write        post messages + in-app feedback
+ *   conversations.history channels:history  read a public channel's messages
+ *                         groups:history    read a private channel's messages
+ *   users.list            users:read        names + avatars for those messages
  *
  * Slack binds scopes to the token at INSTALL time, so a missing scope cannot be
  * fixed from this codebase — it is a workspace-admin action:
@@ -35,6 +38,8 @@ const REQUIRED_SCOPES = new Map<string, string[]>([
   ['conversations.list', ['channels:read', 'groups:read']],
   ['team.info', ['team:read']],
   ['chat.postMessage', ['chat:write']],
+  ['conversations.history', ['channels:history', 'groups:history']],
+  ['users.list', ['users:read']],
 ]);
 
 /** Every scope this gateway needs, deduped. */
@@ -200,6 +205,101 @@ export async function listChannels(): Promise<SlackChannel[]> {
     if (!cursor) break;
   }
   return channels;
+}
+
+export interface SlackUser {
+  id: string;
+  name: string;
+  avatar: string;
+  is_bot: boolean;
+}
+
+/**
+ * Directory cache. Every message in a channel names its author by id, so
+ * rendering one screenful would otherwise be one users.info call per distinct
+ * author, repeated on every poll. One users.list covers the workspace, and it
+ * changes on the timescale of people joining a company.
+ */
+const USER_CACHE_MS = 10 * 60 * 1000;
+let userCache: { at: number; users: Map<string, SlackUser> } | null = null;
+
+const USER_PAGE_SIZE = '200';
+const MAX_USER_PAGES = 25;
+
+/** Everyone in the workspace, by id. Needs `users:read`. */
+export async function listUsers(): Promise<Map<string, SlackUser>> {
+  if (userCache && Date.now() - userCache.at < USER_CACHE_MS) return userCache.users;
+  const users = new Map<string, SlackUser>();
+  let cursor = '';
+  for (let page = 0; page < MAX_USER_PAGES; page += 1) {
+    const params: Record<string, string> = { limit: USER_PAGE_SIZE };
+    if (cursor) params.cursor = cursor;
+    const data = await slackGet('users.list', params);
+    for (const m of data.members ?? []) {
+      const id = String(m.id ?? '');
+      if (!id) continue;
+      users.set(id, {
+        id,
+        // real_name is what people recognise; `name` is the handle, which is
+        // all a bot or a stripped-down profile has.
+        name: String(m.profile?.real_name || m.real_name || m.name || id),
+        avatar: String(m.profile?.image_48 ?? ''),
+        is_bot: !!m.is_bot,
+      });
+    }
+    cursor = String(data.response_metadata?.next_cursor ?? '');
+    if (!cursor) break;
+  }
+  userCache = { at: Date.now(), users };
+  return users;
+}
+
+export interface SlackMessage {
+  ts: string;
+  user_id: string;
+  user_name: string;
+  avatar: string;
+  text: string;
+  is_bot: boolean;
+  /** Replies hanging off this message; the pane says so rather than hiding them. */
+  reply_count: number;
+}
+
+/** Slack caps conversations.history at 1000; a chat pane wants the recent tail. */
+const MAX_HISTORY = 200;
+
+/**
+ * The recent messages of one channel, OLDEST FIRST.
+ *
+ * Slack returns newest-first because it pages backwards through time; a chat
+ * pane reads the other way, so the reversal happens here rather than in each
+ * client. Needs `channels:history` / `groups:history`, and the bot must be a
+ * member of the channel — Slack refuses history for a channel it is not in.
+ */
+export async function channelHistory(channel: string, limit: number): Promise<SlackMessage[]> {
+  const capped = Math.min(Math.max(limit, 1), MAX_HISTORY);
+  const data = await slackGet('conversations.history', {
+    channel,
+    limit: String(capped),
+  });
+  const users = await listUsers();
+  const messages: SlackMessage[] = (data.messages ?? []).map((m: any) => {
+    const userId = String(m.user ?? m.bot_id ?? '');
+    const known = users.get(userId);
+    // A bot post carries its display name inline and is usually absent from the
+    // user directory, so its own username is the only name it has.
+    const botName = String(m.username ?? m.bot_profile?.name ?? '');
+    return {
+      ts: String(m.ts ?? ''),
+      user_id: userId,
+      user_name: known?.name || botName || userId,
+      avatar: known?.avatar || String(m.bot_profile?.icons?.image_48 ?? ''),
+      text: String(m.text ?? ''),
+      is_bot: known?.is_bot ?? Boolean(m.bot_id),
+      reply_count: Number(m.reply_count ?? 0),
+    };
+  });
+  return messages.reverse();
 }
 
 export interface SlackTeam {

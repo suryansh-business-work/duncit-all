@@ -12,7 +12,7 @@ import {
   MobileCheckoutPodDocument,
   MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
-  MobileMyPaymentsDocument,
+  MobileMyPaymentDocument,
   MobilePublicFinanceDocument,
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
@@ -67,14 +67,12 @@ export function useRazorpayVerification() {
   // failure — nothing has gone wrong yet except the request that asked.
   const [confirmingMessage, setConfirmingMessage] = useState<string | null>(null);
 
-  /** The buyer's own payment row, read back by id. `payment(payment_doc_id)` is
-   * admin-guarded, so `myPayments` is the only read a buyer can make — and it
-   * has no limit argument, so this pulls the whole history every attempt. Keep
-   * MobileMyPaymentsDocument's selection to the fields the confirmation screen
-   * renders and NOTHING else; `Payment.pod` resolves a findById per row. */
+  /** The buyer's own payment row, read back by id. Keep MobileMyPaymentDocument's
+   * selection to the fields the confirmation screen renders and NOTHING else;
+   * `Payment.pod` resolves a findById per row. */
   const readMyPayment = async (paymentDocId: string): Promise<VerifiedPayment | null> => {
-    const data = await graphqlRequest(MobileMyPaymentsDocument, undefined, { auth: true });
-    return data.myPayments.find((row) => row.id === paymentDocId) ?? null;
+    const data = await graphqlRequest(MobileMyPaymentDocument, { id: paymentDocId }, { auth: true });
+    return data.myPayment ?? null;
   };
 
   const confirmAfterTransportFailure = async (paymentDocId: string): Promise<VerifiedPayment> => {

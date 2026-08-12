@@ -795,6 +795,24 @@ export const paymentService = {
     return docs.map(toPub);
   },
 
+  /**
+   * One of the buyer's OWN payments.
+   *
+   * `getById` is admin-only, so a client that needed to re-read a single payment
+   * had to pull the buyer's entire history and scan it — and the one moment it
+   * does that is the confirmation poll, i.e. exactly when the API is already
+   * degraded. Ownership is part of the filter rather than a check after the
+   * read, so a guessed id is indistinguishable from one that does not exist.
+   */
+  async getForUser(paymentDocId: string, userId: string) {
+    if (!Types.ObjectId.isValid(paymentDocId)) return null;
+    const d = await PaymentModel.findOne({
+      _id: new Types.ObjectId(paymentDocId),
+      user_id: new Types.ObjectId(userId),
+    });
+    return d ? toPub(d) : null;
+  },
+
   async dummyCheckout(input: any, userId: string) {
     const fs = await getFinanceSettings();
     if (!fs.dummy_mode) {

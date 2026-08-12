@@ -397,6 +397,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Full audit of one payment: what it charged, what it created, and what failed."
     paymentDetail(payment_doc_id: ID!): PaymentDetail!
     myPayments: [Payment!]!
+    "One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history."
+    myPayment(payment_doc_id: ID!): Payment
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
     "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."

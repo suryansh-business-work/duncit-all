@@ -64,6 +64,12 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       return paymentService.listForUser(u.id);
     },
+    myPayment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
+      // Scoped to the caller inside the query, so this needs no role — a buyer
+      // can only ever read their own row.
+      const u = requireAuth(ctx);
+      return paymentService.getForUser(args.payment_doc_id, u.id);
+    },
     checkoutQuote: async (
       _p: unknown,
       args: { input: { amount: number; pod_id?: string; seats?: number | null } },

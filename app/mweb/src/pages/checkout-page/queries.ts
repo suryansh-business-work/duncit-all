@@ -190,15 +190,16 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
 `;
 
 /**
- * The buyer's own payments, newest first. Polled ONLY when the verify mutation
- * dies in transport — `payment(payment_doc_id)` is admin-guarded, so this is
- * the one payment read a normal buyer can actually make. Selects exactly the
- * fields VERIFY_RAZORPAY_PAYMENT does, so a polled row drives the success
- * screen unchanged.
+ * One payment of the buyer's own. Polled ONLY when the verify mutation dies in
+ * transport, so it is deliberately the cheapest read that can answer the
+ * question: `payment(payment_doc_id)` is admin-guarded and `myPayments` would
+ * pull the buyer's entire history to find one row, at the exact moment the API
+ * is already struggling. Selects exactly the fields VERIFY_RAZORPAY_PAYMENT
+ * does, so a polled row drives the success screen unchanged.
  */
-export const MY_PAYMENTS = gql`
-  query CheckoutMyPayments {
-    myPayments {
+export const MY_PAYMENT = gql`
+  query CheckoutMyPayment($id: ID!) {
+    myPayment(payment_doc_id: $id) {
       id
       payment_id
       invoice_no
@@ -212,7 +213,7 @@ export const MY_PAYMENTS = gql`
 `;
 
 /** A payment as the checkout reads it back — the shape both the verify mutation
- * and the MY_PAYMENTS poll return. */
+ * and the MY_PAYMENT poll return. */
 export interface CheckoutPaymentRow {
   id: string;
   payment_id: string;

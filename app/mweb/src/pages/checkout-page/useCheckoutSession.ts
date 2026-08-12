@@ -18,7 +18,7 @@ import {
 import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
-  MY_PAYMENTS,
+  MY_PAYMENT,
   PREVIEW_COUPON,
   PUBLIC_FINANCE,
   UPDATE_MY_PROFILE,
@@ -74,7 +74,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
   // Every poll must reach the server — a cached answer would report the status
   // we already know is stale.
-  const [runMyPayments] = useLazyQuery(MY_PAYMENTS, { fetchPolicy: 'no-cache' });
+  const [runMyPayment] = useLazyQuery(MY_PAYMENT, { fetchPolicy: 'no-cache' });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -186,15 +186,12 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     }
   };
 
-  /** The buyer's own payment row, read back by id. `payment(payment_doc_id)` is
-   * admin-guarded, so `myPayments` is the only read a buyer can make — and it
-   * has no limit argument, so this pulls the whole history every attempt. Keep
-   * MY_PAYMENTS' selection to the fields the confirmation screen renders and
-   * NOTHING else; `Payment.pod` in particular resolves a findById per row. */
+  /** The buyer's own payment row, read back by id. Keep MY_PAYMENT's selection
+   * to the fields the confirmation screen renders and NOTHING else; `Payment.pod`
+   * in particular resolves a findById per row. */
   const readMyPayment = async (paymentDocId: string): Promise<CheckoutPaymentRow | null> => {
-    const res = await runMyPayments();
-    const rows = (res.data?.myPayments ?? []) as CheckoutPaymentRow[];
-    return rows.find((row) => row.id === paymentDocId) ?? null;
+    const res = await runMyPayment({ variables: { id: paymentDocId } });
+    return (res.data?.myPayment ?? null) as CheckoutPaymentRow | null;
   };
 
   /**

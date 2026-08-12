@@ -45,6 +45,9 @@ const CACHEABLE_FIELDS = new Set([
   'publicPartnerFaqs',
   'publicFinanceSettings',
   'publicSomethingForYou',
+  // Argument-keyed but user-independent: the same shared link unfurls the same
+  // card for every crawler, and a 60s TTL absorbs WhatsApp/Slack re-fetch storms.
+  'linkPreview',
 ]);
 
 const DEFAULT_TTL_SECONDS = 60;

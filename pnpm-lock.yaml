@@ -57,6 +57,9 @@ importers:
       '@duncit/host-pod-actions':
         specifier: workspace:*
         version: link:../../packages/host-pod-actions
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@duncit/location':
         specifier: workspace:*
         version: link:../../packages/location

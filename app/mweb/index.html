@@ -3,16 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F82C2E" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Duncit" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" sizes="512x512" href="/new-duncit-logo.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/new-duncit-logo.png" />
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/new-duncit-logo.png" />
+    <!-- Everything between these markers is REPLACED per request by
+         server/main.ts (title, description, OG/Twitter cards, theme color —
+         all server-side, localized, branding-driven). What sits here is only
+         what a raw `vite dev` serves. -->
+    <!-- meta:start -->
+    <meta name="theme-color" content="#F82C2E" />
+    <meta name="apple-mobile-web-app-title" content="Duncit" />
     <title>Duncit</title>
+    <!-- meta:end -->
   </head>
   <body>
     <!-- Static cold-start loader: shown instantly (no JS) and replaced by React

@@ -464,6 +464,24 @@ export type AppBuild = {
   workflow_run_url: Scalars['String']['output'];
 };
 
+/**
+ * A credential for the build workflows, shown once and never stored.
+ *
+ * CI cannot read this database without already being authenticated, so one secret
+ * has to live in GitHub — that part is unavoidable. What is avoidable is
+ * hand-crafting the JWT: this mints one for the signed-in admin, with exactly
+ * their roles, so the Tech portal is where the credential comes from even though
+ * GitHub is where it is kept.
+ */
+export type AppBuildCiToken = {
+  __typename?: 'AppBuildCiToken';
+  /** The account the token authenticates as. */
+  issued_for: Scalars['String']['output'];
+  /** The GitHub Actions repo secret this belongs in. */
+  secret_name: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
 export type AppBuildCommit = {
   __typename?: 'AppBuildCommit';
   author: Scalars['String']['output'];
@@ -486,6 +504,10 @@ export type AppBuildSettings = {
   __typename?: 'AppBuildSettings';
   android_channel?: Maybe<Scalars['String']['output']>;
   ios_channel?: Maybe<Scalars['String']['output']>;
+  /** When CI last reported any build. Null means the workflows have never reached us. */
+  last_reported_at?: Maybe<Scalars['String']['output']>;
+  /** Which account the last report authenticated as. */
+  last_reported_by?: Maybe<Scalars['String']['output']>;
 };
 
 export type AppBuildStatus =
@@ -501,18 +523,22 @@ export type AppBuildTablePage = {
 };
 
 /**
- * A one-shot ImageKit client-upload signature for a CI build artifact. The
- * private key never leaves the server; CI posts the file straight to ImageKit
- * (bypassing the server's upload body cap) with this signature.
+ * A one-shot pass that lets CI hand a build artifact to the server, which then
+ * puts it on ImageKit. This used to be an ImageKit client-upload signature, so CI
+ * could post straight to ImageKit and skip the server body cap. A signature needs
+ * the public and private keys to be a matched pair from one account, and when they
+ * are not, ImageKit rejects the upload as an invalid signature parameter and says
+ * nothing about which key is wrong. The server uploads on the private key alone
+ * now, so there is no signature and no public key to mismatch.
  */
 export type AppBuildUploadAuth = {
   __typename?: 'AppBuildUploadAuth';
-  expire: Scalars['Int']['output'];
   /** The ImageKit folder build artifacts land in. */
   folder: Scalars['String']['output'];
-  public_key: Scalars['String']['output'];
-  signature: Scalars['String']['output'];
-  token: Scalars['String']['output'];
+  /** Single-use and short-lived. Spent by the upload, so it is worthless in a log. */
+  ticket: Scalars['String']['output'];
+  /** POST the artifact here as multipart form-data, with the ticket in the query string. */
+  upload_url: Scalars['String']['output'];
 };
 
 /**
@@ -6342,7 +6368,7 @@ export type Mutation = {
   aiParseCrmLead: Scalars['String']['output'];
   /** Extract multiple leads from text — returns JSON { records: [...] }. */
   aiParseCrmLeads: Scalars['String']['output'];
-  /** Sign a direct-to-ImageKit upload for a build artifact. Tech/Super admin only. */
+  /** Authorise one build-artifact upload through the server. Tech/Super admin only. */
   appBuildUploadAuth: AppBuildUploadAuth;
   /** Redeem someone's referral code (once per account, not your own). */
   applyReferralCode: MyReferral;
@@ -6723,6 +6749,13 @@ export type Mutation = {
   incrementPodHits: Pod;
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
+  /**
+   * Mint a CI credential for the caller, to paste into the GitHub repo secret.
+   * Grants nothing the caller does not already hold — it re-signs their own
+   * identity — but it is audited, because a copyable long-lived token is worth
+   * knowing the origin of. Tech/Super admin only.
+   */
+  issueAppBuildCiToken: AppBuildCiToken;
   /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
   /**

@@ -359,7 +359,12 @@ async function startTwilioRecordedBridge(actionId: string, target: string) {
   return String(payload.sid || '');
 }
 
-async function signToken(payload: AuthUser): Promise<string> {
+/**
+ * The ONE place a Duncit JWT is minted. Exported so the Tech portal can hand CI
+ * a token for the signed-in admin — a second signer would be a second chance to
+ * disagree with the fallback secret below, and a token that verifies nowhere.
+ */
+export async function signToken(payload: AuthUser): Promise<string> {
   const secret = process.env.JWT_SECRET || 'dev-secret';
   // Intentionally NO `expiresIn`: Duncit sessions do not expire on their own.
   // The same fallback secret is used by every `jwt.verify` site (context.ts,

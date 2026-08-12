@@ -30,8 +30,12 @@ export const appBuildResolvers = {
       return appBuildService.report(args.input, user.email ?? user.id);
     },
     appBuildUploadAuth: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, BUILDS_MANAGE);
-      return appBuildService.uploadAuth();
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.uploadAuth(user.id);
+    },
+    issueAppBuildCiToken: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.ciToken(user);
     },
     updateAppBuildSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, BUILDS_MANAGE);

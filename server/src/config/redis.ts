@@ -57,8 +57,12 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
     const raw = await client.get(key);
     if (raw == null) return null;
     return JSON.parse(raw) as T;
-  } catch {
-    // A cache read failure (connection blip, corrupt entry) is a miss.
+  } catch (err) {
+    // A cache read failure (connection blip, corrupt entry) is a miss for the
+    // request in flight — but still worth a log line, since a GET that keeps
+    // failing while `connected` stays true (auth error, OOM, wrong-type key)
+    // silently defeats the whole cache with no other visible symptom.
+    logs.server.warn('redis', 'cacheGet', { error: err, key });
     return null;
   }
 }
@@ -67,8 +71,11 @@ export async function cacheSet(key: string, value: unknown, ttlSeconds: number):
   if (!client || !connected) return;
   try {
     await client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
-  } catch {
+  } catch (err) {
     // A cache write failure must never surface to the request that produced
-    // the value — the next request simply recomputes.
+    // the value — the next request simply recomputes. Logged for the same
+    // reason as cacheGet: a maxmemory/OOM condition here would otherwise be
+    // invisible ("Redis is not storing the data" with no trace of why).
+    logs.server.warn('redis', 'cacheSet', { error: err, key });
   }
 }

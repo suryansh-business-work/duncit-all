@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import { GraphQLError } from 'graphql';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
-import { signImagekitUpload } from '@modules/platform/upload/upload.service';
+import { uploadToImagekit } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { EnvEntryModel, type EnvCategory } from './envEntry.model';
 import {
@@ -188,51 +188,39 @@ const impl = {
     }
   },
 
-  /** Upload a browser-supplied file to the entry's ImageKit and return the URL. */
+  /**
+   * Upload a browser-supplied file to the entry's ImageKit and return the URL.
+   *
+   * Runs through `uploadToImagekit` — the same function every real upload calls —
+   * with this entry's own private key. That is the whole point: a test that
+   * authenticates its own way can pass while production fails, and can fail
+   * while production works.
+   *
+   * This test used to sign the upload with the public key, on the reasoning that
+   * browsers upload that way. They no longer do: uploads come through the server
+   * over Basic auth on the private key alone. So the signed test was failing on a
+   * mechanism nothing uses, and it demanded a public key nothing reads.
+   */
   async imagekitUpload(id: string, fileBase64: string, fileName: string): Promise<EnvTestRichResult> {
     const config = await rawConfig(id, 'IMAGEKIT');
     const privateKey = str(config, 'private_key');
-    const publicKey = str(config, 'public_key');
     if (!privateKey) return { ok: false, message: 'ImageKit private key is not configured' };
-    if (!publicKey) return { ok: false, message: 'ImageKit public key is not configured' };
     const raw = fileBase64.includes(',') ? fileBase64.split(',').pop() || '' : fileBase64;
     const bytes = Buffer.from(raw, 'base64');
     if (!bytes.length) return { ok: false, message: 'No file provided' };
     try {
-      const form = new FormData();
-      form.append('file', new Blob([new Uint8Array(bytes)]), fileName || 'test-upload');
-      form.append('fileName', fileName || `tech-test-${Date.now()}`);
-      form.append('useUniqueFileName', 'true');
-      form.append('folder', '/tech-tests');
-      // SIGNED, exactly the way a browser uploads — not Basic auth with the
-      // private key.
-      //
-      // Basic auth proves only that the private key works. Every real upload in
-      // the product is signed with the private key and sent with the PUBLIC one,
-      // so a pair from two different ImageKit accounts passes a Basic-auth test
-      // and fails every actual upload with "invalid signature parameter". This
-      // test used to be that false green.
-      const { token, expire, signature } = signImagekitUpload(privateKey);
-      form.append('publicKey', publicKey);
-      form.append('token', token);
-      form.append('expire', String(expire));
-      form.append('signature', signature);
-      const res = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-        method: 'POST',
-        body: form as any,
+      const uploaded = await uploadToImagekit({
+        fileBytes: bytes,
+        fileName: fileName || `tech-test-${Date.now()}`,
+        folder: '/tech-tests',
+        privateKey,
       });
-      const json: any = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const detail = json?.message || res.statusText;
-        // The one failure worth naming, because its message says nothing about
-        // its cause.
-        const hint = /signature/i.test(String(detail))
-          ? ' — the public and private keys are almost certainly from different ImageKit accounts.'
-          : '';
-        return { ok: false, message: `ImageKit upload failed: ${detail}${hint}` };
-      }
       await touch(id);
-      return { ok: true, message: 'Uploaded to ImageKit (signed, as the browser does)', url: json.url };
+      return {
+        ok: true,
+        message: 'Uploaded to ImageKit the way the product does — private key, no signature.',
+        url: uploaded.url,
+      };
     } catch (err: any) {
       return { ok: false, message: err?.message || 'ImageKit upload failed' };
     }

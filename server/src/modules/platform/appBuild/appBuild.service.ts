@@ -3,7 +3,11 @@ import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { postMessage } from '@modules/platform/slack/slack.gateway';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
-import { getImagekitConfig, signImagekitUpload } from '@modules/platform/upload/upload.service';
+import { getImagekitConfig } from '@modules/platform/upload/upload.service';
+import { issueUploadTicket } from '@modules/platform/upload/uploadTicket';
+import { signToken } from '@modules/access/user/user.service';
+import { getUrlConfigs } from '@config/url-configs';
+import type { AuthUser } from '@context';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   AppBuildModel,
@@ -249,23 +253,69 @@ export const appBuildService = {
     return { rows: docs.map(pub), total, page, page_size };
   },
 
-  /** Sign a direct-to-ImageKit upload so CI never needs the private key. */
-  async uploadAuth() {
+  /**
+   * Authorise one artifact upload through the server, which then puts it on
+   * ImageKit with the private key.
+   *
+   * This used to hand CI an ImageKit signature so the artifact could go straight
+   * to ImageKit. A signature pairs the private key with the PUBLIC one, and a
+   * public key from a different ImageKit account fails every upload with
+   * "invalid signature parameter" — naming neither key. Uploading server-side
+   * removes the pairing, and with it that entire failure mode.
+   */
+  async uploadAuth(userId: string) {
     const config = await getImagekitConfig();
-    if (!config.privateKey || !config.publicKey) {
+    if (!config.privateKey) {
       throw new GraphQLError(
         'ImageKit is not configured. Add it in Tech portal → Environment Variables → ImageKit.',
         { extensions: { code: 'CONFIG_ERROR' } }
       );
     }
-    const signed = signImagekitUpload(config.privateKey);
-    return { ...signed, public_key: config.publicKey, folder: APP_BUILDS_FOLDER };
+    const { serverUrl } = await getUrlConfigs();
+    return {
+      upload_url: `${serverUrl.replace(/\/$/, '')}/upload`,
+      ticket: issueUploadTicket(userId, APP_BUILDS_FOLDER),
+      folder: APP_BUILDS_FOLDER,
+    };
   },
 
   async settings() {
+    // Whether CI can actually reach us is not knowable from here — the secret
+    // lives in GitHub. The last report is the only honest evidence, so the
+    // settings page shows that instead of claiming a status it cannot check.
+    const latest = await AppBuildModel.findOne({}, { created_at: 1, reported_by: 1 })
+      .sort({ created_at: -1 })
+      .lean();
     return {
       android_channel: optionalStr(await getRuntimeEnvValue('SLACK_ANDROID_BUILDS_CHANNEL')) || null,
       ios_channel: optionalStr(await getRuntimeEnvValue('SLACK_IOS_BUILDS_CHANNEL')) || null,
+      last_reported_at: latest?.created_at?.toISOString() ?? null,
+      last_reported_by: optionalStr(latest?.reported_by) || null,
+    };
+  },
+
+  /**
+   * Re-sign the caller's own identity as a credential for the build workflows.
+   *
+   * Deliberately grants nothing new: the caller already holds a token with these
+   * roles, so this is a convenience over hand-crafting one, not an escalation.
+   * Nothing is stored — the token is shown once, and a replacement is a click
+   * away, so there is no copy of it here to leak.
+   */
+  async ciToken(user: AuthUser) {
+    const token = await signToken({
+      id: user.id,
+      email: user.email ?? null,
+      roles: user.roles,
+      assigned_city: user.assigned_city ?? null,
+      assigned_zones: user.assigned_zones ?? [],
+    });
+    // A long-lived copyable credential is worth being able to trace later.
+    logs.server.warn('appBuild', 'ciToken', { userId: user.id, email: user.email ?? '' });
+    return {
+      token,
+      secret_name: 'DUNCIT_RELEASE_TOKEN',
+      issued_for: user.email ?? user.id,
     };
   },
 

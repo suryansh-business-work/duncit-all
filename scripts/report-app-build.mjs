@@ -3,11 +3,18 @@
  * CI build reporter — runs at the end of the android-build / ios-build
  * workflows. It:
  *   1. reads the merged commits + diff stat for this push (GIT_BEFORE..GITHUB_SHA),
- *   2. asks the server to sign a direct-to-ImageKit upload (appBuildUploadAuth —
- *      the ImageKit private key never leaves the server, and the artifact goes
- *      straight to upload.imagekit.io so no server body cap applies),
+ *   2. asks the server for a one-shot upload pass (appBuildUploadAuth) and POSTs
+ *      the artifact to the server, which puts it on ImageKit with the private key,
  *   3. calls reportAppBuild, which stores the row the Tech portal's App Builds
  *      tables read and announces the build on the platform's Slack channel.
+ *
+ * Step 2 used to post straight to upload.imagekit.io with a server-signed
+ * signature, to skip the server's body cap. An ImageKit signature only
+ * authenticates while the public and private keys are a matched pair from one
+ * account, and when they are not it fails with "invalid signature parameter" and
+ * names neither key. The server uploads on the private key alone now — no
+ * signature, no public key — and the /upload nginx location carries a body cap
+ * sized for an artifact.
  *
  * Env:
  *   PLATFORM                 ANDROID | IOS (required)
@@ -29,7 +36,6 @@ import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
-const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 const MAX_COMMITS = 50;
 
 /* ── git helpers ──────────────────────────────────────────────────────────── */
@@ -150,26 +156,20 @@ async function lastReportedSha(token, platform) {
 
 async function uploadArtifact(token, filePath) {
   const auth = (
-    await gql(
-      'mutation{ appBuildUploadAuth{ token expire signature public_key folder } }',
-      {},
-      token
-    )
+    await gql('mutation{ appBuildUploadAuth{ upload_url ticket folder } }', {}, token)
   ).appBuildUploadAuth;
   const fileName = path.basename(filePath);
   const form = new FormData();
-  form.append('file', new Blob([fs.readFileSync(filePath)]), fileName);
-  form.append('fileName', fileName);
-  form.append('useUniqueFileName', 'true');
-  form.append('folder', auth.folder);
-  form.append('publicKey', auth.public_key);
-  form.append('signature', auth.signature);
-  form.append('expire', String(auth.expire));
-  form.append('token', auth.token);
-  const res = await fetch(IMAGEKIT_UPLOAD_URL, { method: 'POST', body: form });
+  // openAsBlob keeps the artifact on disk and lets fetch stream it. readFileSync
+  // would hold 150 MB in the runner's memory for no benefit.
+  form.append('file', await fs.openAsBlob(filePath), fileName);
+  // The ticket rides the query string, not the body: the server spends it before
+  // it starts parsing multipart, so an unauthorised request costs it nothing.
+  const query = new URLSearchParams({ ticket: auth.ticket, fileName });
+  const res = await fetch(`${auth.upload_url}?${query}`, { method: 'POST', body: form });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json.url) {
-    throw new Error(`ImageKit upload failed: ${json.message || res.statusText}`);
+    throw new Error(`Artifact upload failed: ${json.message || res.statusText}`);
   }
   return { url: json.url, fileId: json.fileId || '' };
 }
@@ -225,7 +225,7 @@ try {
   let artifact = { url: '', fileId: '' };
   let sizeMb = null;
   if (status === 'SUCCESS') {
-    console.log(`Uploading ${path.basename(artifactPath)} to ImageKit…`);
+    console.log(`Uploading ${path.basename(artifactPath)}…`);
     artifact = await uploadArtifact(token, artifactPath);
     sizeMb = Number((fs.statSync(artifactPath).size / 1024 / 1024).toFixed(2));
   }

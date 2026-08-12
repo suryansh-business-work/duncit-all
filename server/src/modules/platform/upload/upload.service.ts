@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { openAsBlob } from 'node:fs';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
@@ -63,38 +64,19 @@ export async function getImagekitConfig() {
 }
 
 /**
- * The signature a browser upload carries.
+ * Nothing here signs an upload any more, and that is deliberate.
  *
- * Per ImageKit: HMAC-SHA1(privateKey, token + expire), hex digest, where expire
- * is a Unix timestamp at most an hour ahead.
+ * ImageKit's browser upload authenticates with a public key plus an
+ * HMAC-SHA1(privateKey, token+expire) signature. That only works while the two
+ * keys are a matched pair from ONE account, and when they are not, ImageKit
+ * rejects every upload as an "invalid signature parameter" — a message that
+ * names neither key nor cause. Every upload now goes out over Basic auth with
+ * the private key alone, which is one credential that either works or does not.
  *
- * The token is a UUID because that is what ImageKit's own client SDK sends, and
- * therefore the only shape their endpoint is known to accept. It was hex here,
- * on a guess about "HTTP clients mangling hyphens" that cannot apply to a
- * browser FormData field — and an upload rejected for its token reports exactly
- * the same "invalid signature parameter" as a wrong key, which is why the guess
- * survived so long.
- *
- * It must also be unique per upload, so this is called per request and never
- * cached.
- *
- * Exported so the Tech portal's ImageKit test signs the way production does.
- * A test that authenticates some other way is a test that can pass while every
- * real upload fails.
+ * The public key is consequently unused by any upload path. It stays a
+ * configurable field (ImageKit's own client SDKs want it) but no upload, and no
+ * test of an upload, may depend on it again.
  */
-export function signImagekitUpload(privateKey: string, expireSeconds = 30 * 60) {
-  const token = crypto.randomUUID();
-  // Clamped here rather than trusted from the caller: ImageKit refuses an
-  // expiry more than an hour out, and it refuses it with the same "invalid
-  // signature parameter" as everything else, so the mistake would be invisible.
-  const window = Math.min(Math.max(60, expireSeconds), 60 * 60);
-  const expire = Math.floor(Date.now() / 1000) + window;
-  const signature = crypto
-    .createHmac('sha1', privateKey)
-    .update(`${token}${expire}`)
-    .digest('hex');
-  return { token, expire, signature };
-}
 
 /**
  * Where the browser should send a file, and the one-shot pass that lets it.
@@ -124,32 +106,39 @@ export async function getImagekitAuth(userId: string, folder = '/uploads') {
   };
 }
 
+export interface ImagekitUploadResult {
+  url: string;
+  fileId: string;
+  thumbnailUrl?: string;
+}
+
 /**
- * Server-side upload to ImageKit. Used when importing a URL (e.g. a Pexels
- * stock photo) — the server fetches the image, then posts it to ImageKit so
- * the file ends up on our CDN rather than being hot-linked.
+ * The ONE call that puts a file on ImageKit. Every upload — browser, native,
+ * Pexels import, CI artifact, the Tech portal's test — ends up here, so there is
+ * a single authentication mechanism to get right.
+ *
+ * `file` is a Blob rather than a Buffer because a Blob can be backed by a file
+ * on disk (fs.openAsBlob), which is what lets a 150 MB build artifact stream
+ * through without ever being held in memory.
  */
-export async function uploadToImagekit(opts: {
-  fileBytes: Buffer;
-  fileName: string;
-  folder?: string;
-  tags?: string[];
-}): Promise<{ url: string; fileId: string; thumbnailUrl?: string }> {
-  const config = await getImagekitConfig();
-  if (!config.privateKey) {
+async function postToImagekit(
+  privateKey: string,
+  file: Blob,
+  opts: { fileName: string; folder?: string; tags?: string[] }
+): Promise<ImagekitUploadResult> {
+  if (!privateKey) {
     throw new GraphQLError('ImageKit is not configured', {
       extensions: { code: 'CONFIG_ERROR' },
     });
   }
   const form = new FormData();
-  const blob = new Blob([new Uint8Array(opts.fileBytes)]);
-  form.append('file', blob, opts.fileName);
+  form.append('file', file, opts.fileName);
   form.append('fileName', opts.fileName);
   form.append('useUniqueFileName', 'true');
   if (opts.folder) form.append('folder', opts.folder);
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
-  const auth = 'Basic ' + Buffer.from(config.privateKey + ':').toString('base64');
+  const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');
   const res = await fetch(IMAGEKIT_UPLOAD_URL, {
     method: 'POST',
     headers: { Authorization: auth },
@@ -167,6 +156,44 @@ export async function uploadToImagekit(opts: {
     fileId: json.fileId,
     thumbnailUrl: json.thumbnailUrl,
   };
+}
+
+/**
+ * Server-side upload to ImageKit. Used when importing a URL (e.g. a Pexels
+ * stock photo) — the server fetches the image, then posts it to ImageKit so
+ * the file ends up on our CDN rather than being hot-linked.
+ *
+ * `privateKey` overrides the configured credentials so the Tech portal can test
+ * ONE named entry through this exact function. A test that authenticates its own
+ * way is a test that can pass while every real upload fails.
+ */
+export async function uploadToImagekit(opts: {
+  fileBytes: Buffer;
+  fileName: string;
+  folder?: string;
+  tags?: string[];
+  privateKey?: string;
+}): Promise<ImagekitUploadResult> {
+  const privateKey = opts.privateKey ?? (await getImagekitConfig()).privateKey;
+  return postToImagekit(privateKey, new Blob([new Uint8Array(opts.fileBytes)]), opts);
+}
+
+/**
+ * The same upload, streamed from a file on disk instead of from memory.
+ *
+ * A build artifact is 60–150 MB. Reading one into a Buffer to upload it costs
+ * that much resident memory on the API server (twice, while concatenating), for
+ * no benefit — openAsBlob hands ImageKit a lazily-read Blob, so the bytes go
+ * from disk to socket and peak memory stays flat regardless of file size.
+ */
+export async function uploadFileToImagekit(opts: {
+  filePath: string;
+  fileName: string;
+  folder?: string;
+  tags?: string[];
+}): Promise<ImagekitUploadResult> {
+  const { privateKey } = await getImagekitConfig();
+  return postToImagekit(privateKey, await openAsBlob(opts.filePath), opts);
 }
 
 // Documents are only accepted when the caller opts in (support attachments) —

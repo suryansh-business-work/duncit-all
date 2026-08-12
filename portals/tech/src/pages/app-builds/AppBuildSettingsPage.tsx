@@ -4,7 +4,7 @@ import { Alert, Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
 import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from '../slack/queries';
-import { AppBuildSettingsForm, type AppBuildSettingsValues } from './settings';
+import { AppBuildSettingsForm, CiCredentialsCard, type AppBuildSettingsValues } from './settings';
 import { APP_BUILD_SETTINGS, UPDATE_APP_BUILD_SETTINGS, type AppBuildSettings } from './queries';
 
 /**
@@ -20,9 +20,10 @@ export default function AppBuildSettingsPage() {
   const channelsQuery = useQuery<{ slackChannels: SlackChannel[] }>(SLACK_CHANNELS, {
     skip: !isConfigured,
   });
+  // NOT gated on Slack: a build is recorded whether or not it can be announced,
+  // so the CI credential below has to be reachable on a Slack-less install too.
   const settingsQuery = useQuery<{ appBuildSettings: AppBuildSettings }>(APP_BUILD_SETTINGS, {
     fetchPolicy: 'cache-and-network',
-    skip: !isConfigured,
   });
   const [save, saving] = useMutation(UPDATE_APP_BUILD_SETTINGS);
 
@@ -67,6 +68,7 @@ export default function AppBuildSettingsPage() {
           )}
         </CardContent>
       </Card>
+      {settings && <CiCredentialsCard settings={settings} />}
     </Box>
   );
 }

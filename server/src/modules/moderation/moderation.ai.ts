@@ -116,3 +116,42 @@ function buildProductUserContent(input: ModerateProductInput): unknown[] {
 
 export const aiModerateProduct = (input: ModerateProductInput): Promise<ModerationViolation[]> =>
   callAiModeration('moderation.product', buildProductUserContent(input));
+
+/**
+ * Fast text-only check that a meeting cancel/reschedule reason is genuine.
+ * Sends ONLY the reason text (no user data) to the default mini model for
+ * minimal latency. Fail-open: returns true when the key is missing or the call
+ * fails, so an AI outage never blocks a user from cancelling their meeting.
+ */
+export async function aiValidateMeetingReason(reason: string): Promise<boolean> {
+  try {
+    const [apiKey, baseUrl, model] = await Promise.all([
+      getRuntimeEnvValue('OPENAI_API_KEY'),
+      getRuntimeEnvValue('OPENAI_BASE_URL'),
+      getRuntimeEnvValue('OPENAI_MODEL'),
+    ]);
+    if (!apiKey) return true;
+    const systemPrompt = await getSystemPrompt('moderation.meeting_reason');
+    const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: model || 'gpt-4o-mini',
+        temperature: 0,
+        max_tokens: 16,
+        response_format: { type: 'json_object' as const },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: reason },
+        ],
+      }),
+    });
+    if (!res.ok) return true;
+    const json: any = await res.json();
+    const parsed = JSON.parse(String(json?.choices?.[0]?.message?.content ?? '')) as { valid?: unknown };
+    return parsed.valid !== false;
+  } catch {
+    return true;
+  }
+}

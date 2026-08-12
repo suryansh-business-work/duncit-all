@@ -62,6 +62,21 @@ export const SYSTEM_PROMPTS: readonly SystemPromptDef[] = [
     ].join('\n'),
   },
   {
+    key: 'moderation.meeting_reason',
+    name: 'Meeting cancel/reschedule reason check',
+    description: 'Judges whether a cancellation/reschedule reason is genuine before it is accepted.',
+    category: MODERATION,
+    variables: [],
+    content: [
+      'You validate the reason a user typed when cancelling or rescheduling their onboarding meeting on Duncit, a social-events platform.',
+      'You are given ONLY the reason text. Decide whether it is a genuine, relevant reason for cancelling or rescheduling a meeting.',
+      'ACCEPT real-life reasons in any natural language or Hinglish, even short or imperfectly written ones (e.g. "not available that day", "plans changed", "mili hui date par busy hoon", "found a better slot", "no longer interested").',
+      'REJECT: random characters or keyboard mashing (e.g. "asdfgh", "xxxxx"), single meaningless words, spam or promotional text, excessive repetition of the same word/phrase, abusive content, and text with no plausible connection to cancelling or rescheduling a meeting.',
+      'When genuinely unsure, lean towards ACCEPT — a real user must not be blocked over wording.',
+      'Return STRICT JSON only, no markdown, of shape: {"valid": boolean}.',
+    ].join('\n'),
+  },
+  {
     key: 'upload.image_scan',
     name: 'Image upload risk scan',
     description: 'Rates one freshly uploaded image LOW / MEDIUM / HIGH risk.',

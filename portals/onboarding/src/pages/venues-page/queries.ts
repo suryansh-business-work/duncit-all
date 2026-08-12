@@ -216,6 +216,15 @@ export const UPDATE_VENUE = gql`
   }
 `;
 
+/** Global default from Finance → Default Deductions. The Review dialog's
+ * commission field seeds from this whenever the venue has no override, so the
+ * number a reviewer sees is the one settlement will actually apply. */
+export const DEFAULT_VENUE_COMMISSION = gql`
+  query DefaultVenueCommission {
+    defaultVenueCommissionPct
+  }
+`;
+
 export const SET_VENUE_DEDUCTIONS = gql`
   mutation SetVenueDeductions($id: ID!, $venue_share_pct: Float!, $venue_commission_pct: Float!) {
     setVenueDeductions(venue_doc_id: $id, venue_share_pct: $venue_share_pct, venue_commission_pct: $venue_commission_pct) {

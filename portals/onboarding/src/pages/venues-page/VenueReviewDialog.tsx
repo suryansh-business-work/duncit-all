@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -28,6 +28,9 @@ interface Props {
   onReject: () => void;
   onSaveDeductions: (sharePct: number, commissionPct: number) => void;
   savingDeductions: boolean;
+  /** Finance → Default Deductions. Undefined until the query resolves — the
+   * commission field waits for it rather than seeding a misleading 0. */
+  defaultCommissionPct?: number;
 }
 
 const STATUS_COLOR: StatusColorMap = {
@@ -48,16 +51,35 @@ export default function VenueReviewDialog({
   onReject,
   onSaveDeductions,
   savingDeductions,
+  defaultCommissionPct,
 }: Readonly<Props>) {
-  const [commission, setCommission] = useState('0');
+  const [commission, setCommission] = useState('');
+  // What settlement applies today: the venue's own override, or — because a
+  // stored 0 means "follow the global default" — Finance → Default Deductions.
+  const storedPct = Number(active?.venue_commission_pct ?? 0);
+  const effectivePct = storedPct > 0 ? storedPct : defaultCommissionPct;
+
+  // Seed once per venue. Reseeding on every `active` identity change would wipe
+  // what the reviewer is typing when the parent merges a saved value back in.
+  const seededFor = useRef<string | null>(null);
   useEffect(() => {
-    setCommission(String(active?.venue_commission_pct ?? 0));
-  }, [active]);
+    if (!active?.id) {
+      seededFor.current = null;
+      return;
+    }
+    if (seededFor.current === active.id || effectivePct === undefined) return;
+    seededFor.current = active.id;
+    setCommission(String(effectivePct));
+  }, [active, effectivePct]);
 
   const valid = (v: string) => {
     const n = Number(v);
-    return Number.isFinite(n) && n >= 0 && n <= 100;
+    return v.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 100;
   };
+  // An untouched field holds the finance default, and saving that would pin this
+  // venue to today's number — cutting it out of every future change in Finance →
+  // Default Deductions. So saving is only offered once the number actually moves.
+  const unchanged = valid(commission) && Number(commission) === effectivePct;
   const saveDeductions = () => {
     // Venue share is no longer edited here — keep whatever the venue already has
     // and only override the per-venue commission (the default-deduction override).
@@ -157,8 +179,9 @@ export default function VenueReviewDialog({
               Venue deductions
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              The commission Duncit takes from the venue payout (after GST) — an override of the global
-              Default Deduction for this venue only. Leave at 0 to use the global default.
+              The commission Duncit takes from the venue payout (after GST). Defaults to the{' '}
+              {defaultCommissionPct ?? '—'}% set in Finance → Default Deductions; change it here to
+              override it for this venue only, or set 0 to always follow the default.
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1.5 }}>
               <TextField
@@ -168,6 +191,7 @@ export default function VenueReviewDialog({
                 value={commission}
                 onChange={(e) => setCommission(e.target.value)}
                 error={!valid(commission)}
+                helperText={valid(commission) ? undefined : 'Enter a number between 0 and 100.'}
                 inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' }}
                 InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 fullWidth
@@ -177,7 +201,7 @@ export default function VenueReviewDialog({
               variant="outlined"
               size="small"
               onClick={saveDeductions}
-              disabled={savingDeductions || !valid(commission)}
+              disabled={savingDeductions || !valid(commission) || unchanged}
               sx={{ mt: 1.5 }}
             >
               {savingDeductions ? 'Saving…' : 'Save deductions'}

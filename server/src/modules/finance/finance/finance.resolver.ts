@@ -13,9 +13,9 @@ import { requireRole, requireAuth } from '@middleware/rbac';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
-// Everyone who can open Review Host in the Onboarding console reads the global
-// default the commission field seeds from — the same role set host.resolver
-// guards the review mutations with, plus finance itself.
+// Everyone who can open Review Host or Review Venue in the Onboarding console
+// reads the global default those commission fields seed from — the same role
+// set host.resolver guards the review mutations with, plus finance itself.
 const COMMISSION_DEFAULT_READ = [...ADMIN_RW, 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
 
 async function assertPodActor(ctx: GraphQLContext, podId: string) {
@@ -116,6 +116,11 @@ export const financeResolvers = {
       requireRole(ctx, COMMISSION_DEFAULT_READ);
       const doc = await getFinanceSettings();
       return doc.default_host_commission_pct;
+    },
+    defaultVenueCommissionPct: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, COMMISSION_DEFAULT_READ);
+      const doc = await getFinanceSettings();
+      return doc.default_venue_commission_pct;
     },
     publicFinanceSettings: async () => {
       const doc = await getFinanceSettings();

@@ -489,6 +489,12 @@ export const financeTypeDefs = /* GraphQL */ `
     onboarding staff have no business reading.
     """
     defaultHostCommissionPct: Float!
+    """
+    The same, for venues — the Onboarding console's Review Venue dialog seeds
+    its commission field from this so a reviewer sees the number settlement
+    will actually apply when the venue carries no override of its own.
+    """
+    defaultVenueCommissionPct: Float!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
     paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
     # Live preview of the host/venue split for a pod given a venue bill.

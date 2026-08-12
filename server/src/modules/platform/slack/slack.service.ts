@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import {
+  channelHistory,
   isSlackConfigured,
   listChannels,
   postMessage,
@@ -45,6 +46,18 @@ export const slackService = {
       ...c,
       link: base ? `${base}/archives/${c.id}` : '',
     }));
+  },
+
+  /**
+   * Recent messages in a channel, oldest first — what the Tech portal's Slack
+   * page renders on the right of the channel list.
+   *
+   * Default 50: a screenful of context without asking Slack for a channel's
+   * whole recent life on every poll.
+   */
+  history(channel: string, limit?: number | null) {
+    if (!optionalStr(channel)) throw badInput('Select a channel to read');
+    return channelHistory(channel, limit ?? 50);
   },
 
   /**

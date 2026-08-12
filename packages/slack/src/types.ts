@@ -36,6 +36,24 @@ export interface SlackChannel {
   link: string;
 }
 
+/**
+ * One message already in a channel, as returned by `slackChannelHistory`.
+ *
+ * Authors come off Slack as opaque ids; the name and avatar are resolved
+ * server-side from the workspace directory, because only the server holds the
+ * bot token that can ask.
+ */
+export interface SlackMessage {
+  /** Slack's own message id — the epoch-seconds timestamp it was posted at. */
+  ts: string;
+  user_id: string;
+  user_name: string;
+  avatar: string;
+  text: string;
+  is_bot: boolean;
+  reply_count: number;
+}
+
 /** Rich, ergonomic options a caller composes — `blocks`/`attachments` are
  * arrays here and get serialised to JSON by `buildSlackMessageInput`. */
 export interface SlackMessageOptions {

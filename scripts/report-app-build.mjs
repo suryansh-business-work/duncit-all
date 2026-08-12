@@ -16,10 +16,19 @@
  * signature, no public key — and the /upload nginx location carries a body cap
  * sized for an artifact.
  *
+ * Called TWICE per workflow. Once with STATUS=RUNNING the moment the job starts,
+ * which opens the row the Tech portal shows spinning; once at the end with the
+ * outcome, which replaces that same row (they are joined on workflow_run_id).
+ * Only the second report announces anything on Slack.
+ *
  * Env:
  *   PLATFORM                 ANDROID | IOS (required)
- *   STATUS                   SUCCESS (default) | FAILED — FAILED reports skip the upload
- *   ARTIFACT_PATH            path to the .apk / .ipa (required for SUCCESS)
+ *   STATUS                   RUNNING | SUCCESS (default) | FAILED — only SUCCESS uploads
+ *   BUILD_STAGE              what the job is doing now; the stage a FAILED report blames
+ *   ERROR_MESSAGE            overrides the BUILD_STAGE-derived failure reason
+ *   ARTIFACT_PATHS           newline-separated paths to upload, PRIMARY FIRST
+ *                            (Android sends its .apk then its .aab; iOS one .ipa).
+ *                            Required for SUCCESS.
  *   DUNCIT_GRAPHQL_URL       default https://server.duncit.com/graphql
  *   DUNCIT_RELEASE_TOKEN     a SUPER_ADMIN / TECH_MANAGER JWT, OR
  *   DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD [+ DUNCIT_RELEASE_PORTAL_KEY]
@@ -142,20 +151,72 @@ async function resolveToken() {
   return data?.login?.token || null;
 }
 
-/** The newest build the server has for this platform — the changelog base. */
+/**
+ * The newest build the server has for this platform — the changelog base.
+ *
+ * Skips THIS run's own row. Since the workflow opens a RUNNING row at its start,
+ * the newest row is now usually us, and ranging from our own head would give
+ * every build an empty changelog.
+ */
 async function lastReportedSha(token, platform) {
   try {
     const data = await gql(
       `query($platform: AppBuildPlatform!){
-        appBuildsTable(platform: $platform, query: { page_size: 1 }) { rows { commit_sha } }
+        appBuildsTable(platform: $platform, query: { page_size: 5 }) {
+          rows { commit_sha workflow_run_id }
+        }
       }`,
       { platform },
       token
     );
-    return data?.appBuildsTable?.rows?.[0]?.commit_sha || null;
+    const runId = process.env.GITHUB_RUN_ID || '';
+    const rows = data?.appBuildsTable?.rows ?? [];
+    return rows.find((r) => r.commit_sha && r.workflow_run_id !== runId)?.commit_sha || null;
   } catch {
     return null;
   }
+}
+
+/** APK / AAB / IPA from the file name — the store never renames anything. */
+function artifactKind(name) {
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.aab')) return 'AAB';
+  if (lower.endsWith('.ipa')) return 'IPA';
+  return 'APK';
+}
+
+/** The files this run produced, in workflow order — the first is the primary. */
+const artifactPaths = () =>
+  (process.env.ARTIFACT_PATHS || '')
+    .split(/[\r\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+/**
+ * Upload every artifact, and describe each one either way.
+ *
+ * A file that fails to store does not sink the others or the report. An Android
+ * build whose AAB uploaded and whose APK did not is still a build worth having,
+ * and `error` is the field that says which half is missing — the same reasoning
+ * that made a SUCCESS-with-no-artifact a legal report in the first place.
+ */
+async function uploadAll(token, paths) {
+  const artifacts = [];
+  for (const filePath of paths) {
+    const name = path.basename(filePath);
+    const kind = artifactKind(name);
+    const sizeMb = Number((fs.statSync(filePath).size / 1024 / 1024).toFixed(2));
+    console.log(`Uploading ${name} (${sizeMb} MB)…`);
+    try {
+      const { url, fileId } = await uploadArtifact(token, filePath);
+      artifacts.push({ kind, name, url, file_id: fileId, size_mb: sizeMb, error: '' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${name} was not stored: ${message}`);
+      artifacts.push({ kind, name, url: '', file_id: '', size_mb: sizeMb, error: message });
+    }
+  }
+  return artifacts;
 }
 
 async function uploadArtifact(token, filePath) {
@@ -180,6 +241,13 @@ async function uploadArtifact(token, filePath) {
 
 /* ── main ─────────────────────────────────────────────────────────────────── */
 
+/**
+ * Deliberately selects only long-standing fields. The retry below repairs an
+ * unknown INPUT field, but nothing can repair a selection set the server has
+ * never heard of — so asking for anything new here would reintroduce the exact
+ * deploy-race failure it exists to prevent. What was uploaded is already known
+ * locally; there is no reason to ask for it back.
+ */
 const REPORT_MUTATION = `mutation($input: ReportAppBuildInput!){
   reportAppBuild(input:$input){ build_no artifact_url slack_ts slack_error }
 }`;
@@ -233,15 +301,40 @@ function durationSeconds() {
   return Math.max(0, Math.floor(Date.now() / 1000) - started);
 }
 
+const STATUSES = new Set(['RUNNING', 'SUCCESS', 'FAILED']);
+
+/**
+ * What to blame for a failed build.
+ *
+ * The workflow sets BUILD_STAGE before each long step, so whatever stage was
+ * current when the job died IS the stage that broke — no GitHub API call and no
+ * log scraping to find out. A red row that cannot say more than "failed" makes
+ * everyone open the run anyway.
+ */
+function failureMessage() {
+  const explicit = (process.env.ERROR_MESSAGE || '').trim();
+  if (explicit) return explicit;
+  const stage = (process.env.BUILD_STAGE || '').trim();
+  if (stage) return `Failed during: ${stage}`;
+  return 'The workflow failed before it reported a stage — see the run log.';
+}
+
 try {
   const platform = (process.env.PLATFORM || '').toUpperCase();
   if (platform !== 'ANDROID' && platform !== 'IOS') {
     throw new Error('PLATFORM must be ANDROID or IOS');
   }
-  const status = (process.env.STATUS || 'SUCCESS').toUpperCase() === 'FAILED' ? 'FAILED' : 'SUCCESS';
-  const artifactPath = process.env.ARTIFACT_PATH || '';
-  if (status === 'SUCCESS' && !fs.existsSync(artifactPath)) {
-    throw new Error(`ARTIFACT_PATH does not exist: ${artifactPath}`);
+  const requested = (process.env.STATUS || 'SUCCESS').toUpperCase();
+  const status = STATUSES.has(requested) ? requested : 'SUCCESS';
+  const paths = artifactPaths();
+  if (status === 'SUCCESS') {
+    if (paths.length === 0) {
+      throw new Error('ARTIFACT_PATHS is empty — a SUCCESS report must name what it built');
+    }
+    const missing = paths.filter((p) => !fs.existsSync(p));
+    if (missing.length > 0) {
+      throw new Error(`ARTIFACT_PATHS names files that do not exist: ${missing.join(', ')}`);
+    }
   }
 
   const token = await resolveToken();
@@ -260,34 +353,28 @@ try {
   const commits = getCommits(range);
   const stats = getStats(range);
 
-  let artifact = { url: '', fileId: '' };
-  let artifactError = '';
-  let sizeMb = null;
-  if (status === 'SUCCESS') {
-    sizeMb = Number((fs.statSync(artifactPath).size / 1024 / 1024).toFixed(2));
-    console.log(`Uploading ${path.basename(artifactPath)} (${sizeMb} MB)…`);
-    try {
-      artifact = await uploadArtifact(token, artifactPath);
-    } catch (err) {
-      // The app COMPILED. Losing the upload must not lose the announcement —
-      // "it builds, but you cannot download it" is the report most worth
-      // sending, and throwing here used to swallow it entirely. The row and the
-      // Slack post go out carrying the reason, and the step still exits 1 below
-      // so the workflow stays red and somebody fixes the store.
-      artifactError = err instanceof Error ? err.message : String(err);
-      console.error(`✗ artifact upload failed: ${artifactError}`);
-    }
-  }
+  // The app COMPILED. Losing an upload must not lose the announcement — "it
+  // builds, but you cannot download it" is the report most worth sending, and
+  // throwing used to swallow it entirely. The row and the Slack post go out
+  // carrying the reason, and the step still exits 1 below so the workflow stays
+  // red and somebody fixes the store.
+  const artifacts = status === 'SUCCESS' ? await uploadAll(token, paths) : [];
+  const primary = artifacts[0] ?? null;
 
   const input = {
     platform,
     status,
     version: readVersion(),
-    build_name: status === 'SUCCESS' ? path.basename(artifactPath) : '',
-    artifact_url: artifact.url,
-    artifact_file_id: artifact.fileId,
-    artifact_error: artifactError,
-    size_mb: sizeMb,
+    error_message: status === 'FAILED' ? failureMessage() : '',
+    artifacts,
+    // Mirrors of the primary artifact. A server that predates the list still
+    // lands the file that matters: the unknown-field retry drops `artifacts`
+    // and leaves these standing.
+    build_name: primary?.name ?? '',
+    artifact_url: primary?.url ?? '',
+    artifact_file_id: primary?.file_id ?? '',
+    artifact_error: primary?.error ?? '',
+    size_mb: primary?.size_mb ?? null,
     commit_sha: process.env.GITHUB_SHA || '',
     branch: process.env.GITHUB_REF_NAME || '',
     commits,
@@ -300,16 +387,20 @@ try {
   };
   const result = await reportBuild(input, token);
   console.log(`✓ Recorded ${result.build_no} (${status})`);
-  if (result.artifact_url) console.log(`  download: ${result.artifact_url}`);
+  for (const stored of artifacts.filter((a) => a.url)) {
+    console.log(`  ${stored.kind}: ${stored.url}`);
+  }
   if (result.slack_ts) {
     console.log('  announced on Slack');
   } else if (result.slack_error) {
     console.log(`  Slack post skipped: ${result.slack_error}`);
   }
-  // Recorded and announced, but the artifact is missing — a real half-failure,
-  // so the workflow goes red even though the report succeeded.
-  if (artifactError) {
-    console.error(`✗ report-app-build: recorded, but the artifact was not stored: ${artifactError}`);
+  // Recorded and announced, but a file is missing — a real half-failure, so the
+  // workflow goes red even though the report itself succeeded.
+  const unstored = artifacts.filter((a) => a.error);
+  if (unstored.length > 0) {
+    const detail = unstored.map((a) => `${a.name} (${a.error})`).join('; ');
+    console.error(`✗ report-app-build: recorded, but not stored: ${detail}`);
     process.exit(1);
   }
 } catch (err) {

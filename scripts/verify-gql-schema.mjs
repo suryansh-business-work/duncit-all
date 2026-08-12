@@ -35,8 +35,18 @@ const SCHEMA_ROOT = 'server/src';
 // field to exercise an error path, which is not a schema defect.
 const SKIP = new Set(['node_modules', 'dist', 'build', 'coverage', '.git', 'generated', '__tests__']);
 
-/** Where a template literal starts: after gql, graphql, or a GraphQL comment. */
-const TEMPLATE_HEAD = /(?:\bgql|\bgraphql|\/\*\s*GraphQL\s*\*\/)\s*`/g;
+/**
+ * Where a template literal starts: after gql, graphql, or a GraphQL comment.
+ *
+ * The lookbehind rejects a backtick-quoted mention of the tag in prose — a
+ * comment reading "wrap the SDL with this portal's own `gql`" ends in the exact
+ * characters a template head is made of, so the scanner opened a "template"
+ * there and read to the next backtick in the file, swallowing every real
+ * document after it. portals/tech/src/pages/slack/queries.ts was unvalidated
+ * that way, and reported as success, because the count of skipped documents is
+ * the only trace and nobody reads it.
+ */
+const TEMPLATE_HEAD = /(?<!`)(?:\bgql|\bgraphql|\/\*\s*GraphQL\s*\*\/)\s*`/g;
 /** `const NAME = ` immediately before a template literal. */
 const CONSTANT_HEAD = /(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*`/g;
 
@@ -235,7 +245,17 @@ let skipped = 0;
 for (const file of CLIENT_ROOTS.flatMap((root) => walk(path.join(repoRoot, root)))) {
   const source = readFileSync(file, 'utf8');
   const constants = readConstants(source);
-  for (const template of templatesIn(source)) {
+  // Tagged templates, plus the UNTAGGED constants a shared package exports for
+  // its consumers to wrap (`export const X_SDL = ...`, then `gql(X_SDL)` in
+  // each portal). Rule 40 pushes operations INTO those packages, so validating
+  // only what carries a gql tag leaves the single-sourced copy — the one every
+  // consumer runs — as the one nothing checks.
+  // Only operation-shaped constants: every other template literal in the file
+  // (a CSS block, a shell snippet) would otherwise be counted as a skipped
+  // document and bury the skip figure under noise.
+  const sdlConstants = [...constants.values()].filter((body) => OPERATION_START.test(body));
+  const candidates = [...templatesIn(source), ...sdlConstants];
+  for (const template of candidates) {
     const doc = checkableDocument(template, constants);
     if (!doc) {
       skipped++;

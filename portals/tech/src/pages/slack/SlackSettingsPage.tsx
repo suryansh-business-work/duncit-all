@@ -1,89 +1,40 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import LinkIcon from '@mui/icons-material/Link';
+import { Alert, Box, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
+import ChannelList from './ChannelList';
+import ConversationPane from './ConversationPane';
 import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from './queries';
-import SlackComposer from './SlackComposer';
 
-type CopyFn = (label: string, value: string) => void;
+/** Tall enough to read a conversation in, without the page itself scrolling —
+ * the two panes own their own overflow. */
+const PANE_HEIGHT = 'calc(100vh - 210px)';
 
-/** One channel row: name + badges + id/members/topic, with copy-ID and
- * copy-link actions. Hoisted so it isn't redefined each render (S6478). */
-function ChannelRow({ channel, onCopy }: Readonly<{ channel: SlackChannel; onCopy: CopyFn }>) {
-  const topicSuffix = channel.topic ? ` · ${channel.topic}` : '';
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent sx={{ py: 1.5 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography fontWeight={800} noWrap>
-                #{channel.name}
-              </Typography>
-              {channel.is_private && <Chip size="small" label="private" />}
-              {channel.is_member && <Chip size="small" color="success" label="joined" />}
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              {channel.id} · {channel.num_members} members{topicSuffix}
-            </Typography>
-          </Box>
-          <Tooltip title="Copy channel ID">
-            <IconButton
-              size="small"
-              aria-label={`Copy ${channel.name} ID`}
-              onClick={() => onCopy('channel ID', channel.id)}
-            >
-              <ContentCopyIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Copy channel link">
-            <span>
-              <IconButton
-                size="small"
-                aria-label={`Copy ${channel.name} link`}
-                disabled={!channel.link}
-                onClick={() => onCopy('channel link', channel.link)}
-              >
-                <LinkIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** Tech portal Slack Settings: the workspace's channels (copy ID/link) + a
- * test-send composer. Needs a bot token configured in Environment Variables. */
+/**
+ * Tech portal → Slack: the workspace as a chat client. Channels on the left,
+ * the selected channel's messages and a composer on the right.
+ *
+ * This replaced a flat list of channel cards with a copy-ID button, which could
+ * send but never show what came back — so verifying anything meant leaving for
+ * the real Slack.
+ */
 export default function SlackSettingsPage() {
+  const { t } = useTranslation();
   const configured = useQuery(SLACK_CONFIGURED, { fetchPolicy: 'cache-and-network' });
   const isConfigured = configured.data?.slackConfigured === true;
   const { data, loading, error } = useQuery(SLACK_CHANNELS, {
     skip: !isConfigured,
     fetchPolicy: 'cache-and-network',
   });
-  const [copied, setCopied] = useState('');
+  const [selected, setSelected] = useState<SlackChannel | null>(null);
   const channels: SlackChannel[] = data?.slackChannels ?? [];
 
-  const copy: CopyFn = (label, value) => {
-    globalThis.navigator.clipboard
-      ?.writeText(value)
-      .then(() => setCopied(label))
-      .catch(() => undefined);
-  };
+  // Open on a channel the bot can actually read, so the pane shows a
+  // conversation rather than the "invite the bot" warning on first load.
+  useEffect(() => {
+    if (selected || channels.length === 0) return;
+    setSelected(channels.find((c) => c.is_member) ?? channels[0] ?? null);
+  }, [channels, selected]);
 
   if (configured.loading && !configured.data) {
     return (
@@ -93,47 +44,55 @@ export default function SlackSettingsPage() {
     );
   }
 
+  if (!isConfigured) {
+    return (
+      <Stack spacing={2.5}>
+        <Typography variant="h4" fontWeight={950}>
+          {t('tech.slack.title')}
+        </Typography>
+        <Alert severity="warning">{t('tech.slack.notConfigured')}</Alert>
+      </Stack>
+    );
+  }
+
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2} sx={{ height: '100%' }}>
       <Box>
         <Typography variant="h4" fontWeight={950}>
-          Slack
+          {t('tech.slack.title')}
         </Typography>
-        <Typography color="text.secondary">
-          Pick a channel, copy its ID + link, and send messages to it.
-        </Typography>
+        <Typography color="text.secondary">{t('tech.slack.subtitle')}</Typography>
       </Box>
-      {isConfigured ? (
-        <>
-          {/* The server names the exact Slack error and the missing bot scope,
-              so the raw message is the actionable text — render it as-is. */}
-          {error && <Alert severity="error">{error.message}</Alert>}
-          {copied && (
-            <Alert severity="success" onClose={() => setCopied('')}>
-              Copied {copied}
-            </Alert>
-          )}
-          {loading && !data ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <CircularProgress />
-            </Stack>
-          ) : null}
-          {/* Only an empty SUCCESS is an empty workspace. Showing this next to a
-              failed query made a missing scope look like "no channels". */}
-          {!loading && !error && channels.length === 0 ? (
-            <Alert severity="info">No channels the bot can see yet — invite it to a channel.</Alert>
-          ) : null}
-          <Stack spacing={1}>
-            {channels.map((c) => (
-              <ChannelRow key={c.id} channel={c} onCopy={copy} />
-            ))}
-          </Stack>
-          <SlackComposer channels={channels} />
-        </>
-      ) : (
-        <Alert severity="warning">
-          Add a Slack bot token in Environment Variables → Slack to connect a workspace.
-        </Alert>
+      {/* The server names the exact Slack error and the missing bot scope, so
+          the raw message is the actionable text — render it as-is. */}
+      {error && <Alert severity="error">{error.message}</Alert>}
+      {loading && !data && (
+        <Stack alignItems="center" sx={{ py: 4 }}>
+          <CircularProgress />
+        </Stack>
+      )}
+      {!loading && !error && channels.length === 0 && (
+        <Alert severity="info">{t('tech.slack.noChannels')}</Alert>
+      )}
+      {channels.length > 0 && (
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ minHeight: 0 }}>
+          <Paper
+            variant="outlined"
+            sx={{ borderRadius: 3, width: { xs: '100%', md: 300 }, flexShrink: 0, height: PANE_HEIGHT }}
+          >
+            <ChannelList
+              channels={channels}
+              selectedId={selected?.id ?? ''}
+              onSelect={setSelected}
+            />
+          </Paper>
+          <Paper
+            variant="outlined"
+            sx={{ borderRadius: 3, flex: 1, minWidth: 0, height: PANE_HEIGHT, overflow: 'hidden' }}
+          >
+            <ConversationPane channel={selected} />
+          </Paper>
+        </Stack>
       )}
     </Stack>
   );

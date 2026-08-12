@@ -16,6 +16,14 @@ export const slackResolvers = {
       requireRole(ctx, SLACK_MANAGE);
       return slackService.channels();
     },
+    slackChannelHistory: (
+      _p: unknown,
+      args: { channel: string; limit?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, SLACK_MANAGE);
+      return slackService.history(args.channel, args.limit);
+    },
   },
   Mutation: {
     sendSlackMessage: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

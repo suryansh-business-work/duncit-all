@@ -18,6 +18,7 @@ exports:
   - 'SUBMIT_APP_FEEDBACK_SDL'
   - 'SLACK_CHANNELS_SDL'
   - 'SLACK_CONFIGURED_SDL'
+  - 'SLACK_CHANNEL_HISTORY_SDL'
   - 'header'
   - 'section'
   - 'fields'
@@ -257,6 +258,7 @@ everything else passes through unchanged.
 | `SUBMIT_APP_FEEDBACK_SDL` | `mutation SubmitAppFeedback($input: AppFeedbackInput!)` → `{ ok, channel, ts }` |
 | `SLACK_CHANNELS_SDL` | `query SlackChannels` → `{ id, name, is_private, is_member, num_members, topic, link }` |
 | `SLACK_CONFIGURED_SDL` | `query SlackConfigured` → `Boolean` |
+| `SLACK_CHANNEL_HISTORY_SDL` | `query SlackChannelHistory($channel: ID!, $limit: Int)` → `{ ts, user_id, user_name, avatar, text, is_bot, reply_count }` |
 
 Plain strings, not `DocumentNode` — see the next section for why.
 

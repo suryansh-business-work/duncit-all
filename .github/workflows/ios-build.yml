@@ -35,7 +35,12 @@ env:
   CYPRESS_INSTALL_BINARY: 0
   # Set (via GITHUB_ENV) the moment the packaged IPA is copied out — the failure
   # reporter uses it to tell "build failed" from "reporting failed".
-  ARTIFACT_PATH: ''
+  ARTIFACT_PATHS: ''
+  # What the job is doing, rewritten by a marker step before each long stage.
+  # A value written to GITHUB_ENV lands on the NEXT step, which is exactly what
+  # makes this work: the marker names the step that follows it, so whatever
+  # BUILD_STAGE holds when the job dies is the stage that actually broke.
+  BUILD_STAGE: ''
 
 jobs:
   build:
@@ -60,19 +65,52 @@ jobs:
           cache: npm
           cache-dependency-path: app/mobile-app/package-lock.json
 
+      - name: Report the build as started
+        # Opens the row the Tech portal shows spinning, so a build is visible
+        # while it is being made rather than only 15 minutes later. Best-effort
+        # on purpose: a build must not be abandoned because the table could not
+        # be told it began — the final report is the one that fails loudly.
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: IOS
+          STATUS: RUNNING
+          BUILD_STAGE: Starting up
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs
+
+      - name: 'Stage: install dependencies'
+        run: echo "BUILD_STAGE=Installing JS dependencies" >> "$GITHUB_ENV"
+
       - name: Install JS dependencies
         run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: 'Stage: codegen'
+        run: echo "BUILD_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
 
       - name: Generate GraphQL types
         # src/generated is gitignored — regenerated from the server schemas in this checkout.
         run: npm run codegen
 
+      - name: 'Stage: prebuild'
+        run: echo "BUILD_STAGE=Generating the native iOS project" >> "$GITHUB_ENV"
+
       - name: Generate the native ios project
         # ios/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform ios --no-install --clean
 
+      - name: 'Stage: pods'
+        run: echo "BUILD_STAGE=Installing CocoaPods dependencies" >> "$GITHUB_ENV"
+
       - name: Install CocoaPods dependencies
         run: npx pod-install ios
+
+      - name: 'Stage: archive'
+        run: echo "BUILD_STAGE=Compiling (xcodebuild archive)" >> "$GITHUB_ENV"
 
       - name: Archive (unsigned)
         run: |
@@ -88,6 +126,9 @@ jobs:
             -archivePath "$PWD/build/duncit.xcarchive" archive \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
+      - name: 'Stage: package'
+        run: echo "BUILD_STAGE=Packaging the IPA" >> "$GITHUB_ENV"
+
       - name: Package the IPA
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
@@ -98,9 +139,12 @@ jobs:
           mkdir -p "$STAGE/Payload"
           cp -R "$APP_PATH" "$STAGE/Payload/"
           (cd "$STAGE" && zip -qry "$RUNNER_TEMP/$ARTIFACT" Payload)
-          echo "ARTIFACT_PATH=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
+          echo "ARTIFACT_PATHS=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
 
-      - name: Upload to ImageKit & record the build
+      - name: 'Stage: upload and record'
+        run: echo "BUILD_STAGE=Uploading the artifact and recording the build" >> "$GITHUB_ENV"
+
+      - name: Upload the artifact & record the build
         working-directory: .
         env:
           PLATFORM: IOS
@@ -112,11 +156,13 @@ jobs:
         run: node scripts/report-app-build.mjs
 
       - name: Record the failure
-        # Only when no IPA was produced (ARTIFACT_PATH is set right after the
+        # Only when no IPA was produced (ARTIFACT_PATHS is set right after the
         # build) — a reporting/upload hiccup on a good build must stay a red
-        # workflow, not a false ':x: build failed' row and Slack alarm.
+        # workflow, not a false ':x: build failed' row and Slack alarm. That
+        # leaves the RUNNING row standing in the one case where the reporter
+        # itself is broken, which is honest: nothing it said could be trusted.
         # continue-on-error so a reporting hiccup never hides the real failure.
-        if: failure() && env.ARTIFACT_PATH == ''
+        if: failure() && env.ARTIFACT_PATHS == ''
         continue-on-error: true
         working-directory: .
         env:

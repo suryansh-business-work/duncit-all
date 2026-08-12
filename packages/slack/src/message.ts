@@ -74,6 +74,20 @@ export const SLACK_CONFIGURED_SDL = `
   }
 `;
 
+export const SLACK_CHANNEL_HISTORY_SDL = `
+  query SlackChannelHistory($channel: ID!, $limit: Int) {
+    slackChannelHistory(channel: $channel, limit: $limit) {
+      ts
+      user_id
+      user_name
+      avatar
+      text
+      is_bot
+      reply_count
+    }
+  }
+`;
+
 /** Authed feedback mutation — any signed-in user; the server stamps identity. */
 export const SUBMIT_APP_FEEDBACK_SDL = `
   mutation SubmitAppFeedback($input: AppFeedbackInput!) {

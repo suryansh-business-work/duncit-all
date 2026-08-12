@@ -18,6 +18,33 @@ export const slackTypeDefs = gql`
     ts: String!
   }
 
+  """
+  One message already posted in a channel. Authors arrive as ids, so the name
+  and avatar are resolved from the workspace directory server-side — a client
+  cannot do it without the bot token.
+  """
+  type SlackMessage {
+    "Slack's own message id: the epoch-seconds timestamp it was posted at."
+    ts: String!
+    user_id: String!
+    user_name: String!
+    avatar: String!
+    text: String!
+    is_bot: Boolean!
+    "Replies hanging off this message. Threads are read in Slack, not here."
+    reply_count: Int!
+  }
+
+  extend type Query {
+    """
+    Recent messages in one channel, OLDEST FIRST.
+
+    The bot must be a MEMBER of the channel — Slack refuses history for a
+    channel it was never invited to, however many scopes the token holds.
+    """
+    slackChannelHistory(channel: ID!, limit: Int): [SlackMessage!]!
+  }
+
   "Post a message — supports the full Slack message surface. Provide at least one of text/blocks/attachments."
   input SendSlackMessageInput {
     "Channel ID (e.g. C0123ABCD) — defaults to the configured default channel."

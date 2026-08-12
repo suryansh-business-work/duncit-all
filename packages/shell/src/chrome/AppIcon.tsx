@@ -3,6 +3,9 @@ import type { SvgIconProps } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
+import AndroidIcon from '@mui/icons-material/Android';
+import AppleIcon from '@mui/icons-material/Apple';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import ArticleIcon from '@mui/icons-material/Article';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
@@ -71,6 +74,9 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   accountTree: AccountTreeIcon,
   ai: SmartToyIcon,
   analytics: AnalyticsIcon,
+  android: AndroidIcon,
+  apple: AppleIcon,
+  installMobile: InstallMobileIcon,
   article: ArticleIcon,
   bug: BugReportIcon,
   calculator: CalculateIcon,

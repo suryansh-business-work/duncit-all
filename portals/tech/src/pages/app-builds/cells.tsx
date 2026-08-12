@@ -1,0 +1,97 @@
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { downloadUrl, type AppBuildRow, type AppBuildStatus } from './queries';
+
+const STATUS_COLOR: Record<string, 'success' | 'error'> = {
+  SUCCESS: 'success',
+  FAILED: 'error',
+};
+
+export type StatusLabels = Record<AppBuildStatus, string>;
+
+export const makeStatusOptions = (labels: StatusLabels) => [
+  { value: 'SUCCESS', label: labels.SUCCESS },
+  { value: 'FAILED', label: labels.FAILED },
+];
+
+export const getRowId = (row: AppBuildRow) => row.id;
+
+export const makeRenderStatus = (labels: StatusLabels) => {
+  const renderStatus = (row: AppBuildRow) => (
+    <Chip size="small" label={labels[row.status]} color={STATUS_COLOR[row.status] ?? 'error'} />
+  );
+  return renderStatus;
+};
+
+export const renderBuild = (row: AppBuildRow) => (
+  <Box>
+    <Typography variant="body2" noWrap title={row.build_name || row.build_no}>
+      {row.build_name || '—'}
+    </Typography>
+    <Typography variant="caption" color="text.secondary">
+      {row.build_no}
+    </Typography>
+  </Box>
+);
+
+export const renderCommit = (row: AppBuildRow) => {
+  const subject = row.commits[0]?.subject ?? '';
+  return (
+    <Box>
+      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: 12 }}>
+        {row.commit_sha ? row.commit_sha.slice(0, 7) : '—'}
+      </Typography>
+      {subject && (
+        <Typography variant="caption" color="text.secondary" noWrap title={subject}>
+          {subject}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+/** Slack outcome: posted / skipped-with-reason. The row is the record either way. */
+export const makeRenderSlack = (postedLabel: string, skippedLabel: string) => {
+  const renderSlack = (row: AppBuildRow) => {
+    if (row.slack_ts) {
+      return <Chip size="small" color="success" variant="outlined" label={postedLabel} />;
+    }
+    return (
+      <Tooltip title={row.slack_error ?? ''}>
+        <Chip size="small" variant="outlined" label={skippedLabel} />
+      </Tooltip>
+    );
+  };
+  return renderSlack;
+};
+
+/** Icon links stop propagation so opening them never also opens the details dialog. */
+export const makeRenderLinks = (downloadLabel: string, runLabel: string) => {
+  const renderLinks = (row: AppBuildRow) => (
+    <Box onClick={(e) => e.stopPropagation()}>
+      {row.artifact_url && (
+        <Tooltip title={downloadLabel}>
+          <IconButton size="small" component="a" href={downloadUrl(row)} aria-label={downloadLabel}>
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {row.workflow_run_url && (
+        <Tooltip title={runLabel}>
+          <IconButton
+            size="small"
+            component="a"
+            href={row.workflow_run_url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={runLabel}
+          >
+            <OpenInNewIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Box>
+  );
+  return renderLinks;
+};

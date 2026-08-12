@@ -103,6 +103,8 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'signing_secret', label: 'Signing Secret (optional)', secret: true, hint: 'Verifies inbound Slack events/webhooks' },
     { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
     { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
+    { name: 'android_builds_channel', label: 'Android Builds Channel (optional)', hint: 'Channel ID CI Android builds announce to (Tech → App Builds → Settings)' },
+    { name: 'ios_builds_channel', label: 'iOS Builds Channel (optional)', hint: 'Channel ID CI iOS builds announce to (Tech → App Builds → Settings)' },
   ],
   // Two different AiSensy credentials, on purpose. The campaign API key SENDS
   // (backend.aisensy.com/campaign/t1/api/v2) and can do nothing else — it
@@ -202,6 +204,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
   SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
   SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
+  SLACK_ANDROID_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_builds_channel' },
+  SLACK_IOS_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_builds_channel' },
   TURN_URLS: { category: 'TURN', field: 'urls' },
   TURN_USERNAME: { category: 'TURN', field: 'username' },
   TURN_CREDENTIAL: { category: 'TURN', field: 'credential' },

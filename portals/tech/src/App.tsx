@@ -19,6 +19,8 @@ import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
+import AppBuildsPage from './pages/app-builds';
+import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import MailAutomationPage from './pages/mail-automation';
 import AisensyPage from './pages/aisensy';
 import AppShell from './components/AppShell';
@@ -63,6 +65,19 @@ export default function App() {
         <Route path="/server/terminal" element={authed(<TerminalPage />)} />
         <Route path="/server/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
+        <Route path="/app-builds" element={<Navigate to="/app-builds/android" replace />} />
+        {/* Keyed per platform: the two routes render the same component shape, so
+            without a key React reconciles in place and the table would keep the
+            other platform's rows, prefs and query state. */}
+        <Route
+          path="/app-builds/android"
+          element={authed(<AppBuildsPage key="android" platform="ANDROID" />)}
+        />
+        <Route
+          path="/app-builds/ios"
+          element={authed(<AppBuildsPage key="ios" platform="IOS" />)}
+        />
+        <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
         <Route path="/aisensy" element={authed(<AisensyPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

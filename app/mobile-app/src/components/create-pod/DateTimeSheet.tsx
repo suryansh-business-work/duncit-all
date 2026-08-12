@@ -5,6 +5,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import {
+  composeSelection,
+  dayBlocked,
+  hourBlocked,
+  minuteBlocked,
+  seedFor,
+} from './date-time-limits';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = [0, 15, 30, 45];
@@ -23,19 +30,29 @@ export function buildMonthDays(year: number, month: number): (number | null)[] {
 interface SheetProps {
   testID: string;
   initial: Date | null;
+  /** Earliest pickable moment — earlier days/hours/minutes are blocked. */
+  minDateTime?: Date | null;
   muted: string;
   onDone: (picked: Date) => void;
 }
 
 /** Calendar grid + hour/minute chips — the body of the date-time sheet. */
-export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<SheetProps>) {
+export function CalendarSheet({
+  testID,
+  initial,
+  minDateTime = null,
+  muted,
+  onDone,
+}: Readonly<SheetProps>) {
   const { t } = useTranslation();
-  const seed = initial ?? new Date();
+  const seed = seedFor(initial, minDateTime);
   const [view, setView] = useState(new Date(seed.getFullYear(), seed.getMonth(), 1));
   const [day, setDay] = useState(seed.getDate());
   const [hour, setHour] = useState(seed.getHours());
   const [minute, setMinute] = useState(MINUTES.includes(seed.getMinutes()) ? seed.getMinutes() : 0);
   const days = buildMonthDays(view.getFullYear(), view.getMonth());
+  const picked = composeSelection(view, day, hour, minute);
+  const pickedBlocked = !!minDateTime && picked < minDateTime;
 
   const chip = (selected: boolean) =>
     ({
@@ -73,86 +90,106 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         </XStack>
       </XStack>
       <XStack flexWrap="wrap">
-        {days.map((d, index) => (
-          <YStack
-            // eslint-disable-next-line react/no-array-index-key -- leading blanks repeat null
-            key={`${view.getMonth()}-${index}`}
-            testID={d ? `${testID}-day-${d}` : undefined}
-            role={d ? 'button' : undefined}
-            aria-label={d ? t('mweb.createPod.dayAria', { vars: { day: d } }) : undefined}
-            onPress={d ? () => setDay(d) : undefined}
-            width="14.28%"
-            height={38}
-            alignItems="center"
-            justifyContent="center"
-          >
-            {d ? (
-              <YStack
-                width={32}
-                height={32}
-                alignItems="center"
-                justifyContent="center"
-                {...chip(d === day)}
-              >
-                <Text fontSize={13} fontWeight="700" color={d === day ? '$onPrimary' : '$color'}>
-                  {d}
-                </Text>
-              </YStack>
-            ) : null}
-          </YStack>
-        ))}
+        {days.map((d, index) => {
+          const blocked = !!d && dayBlocked(view, d, minDateTime);
+          const dayInk = d === day ? '$onPrimary' : '$color';
+          return (
+            <YStack
+              // eslint-disable-next-line react/no-array-index-key -- leading blanks repeat null
+              key={`${view.getMonth()}-${index}`}
+              testID={d ? `${testID}-day-${d}` : undefined}
+              role={d ? 'button' : undefined}
+              aria-label={d ? t('mweb.createPod.dayAria', { vars: { day: d } }) : undefined}
+              aria-disabled={d ? blocked : undefined}
+              onPress={d && !blocked ? () => setDay(d) : undefined}
+              width="14.28%"
+              height={38}
+              alignItems="center"
+              justifyContent="center"
+            >
+              {d ? (
+                <YStack
+                  width={32}
+                  height={32}
+                  alignItems="center"
+                  justifyContent="center"
+                  opacity={blocked ? 0.35 : 1}
+                  {...chip(d === day)}
+                >
+                  <Text fontSize={13} fontWeight="700" color={blocked ? '$muted' : dayInk}>
+                    {d}
+                  </Text>
+                </YStack>
+              ) : null}
+            </YStack>
+          );
+        })}
       </XStack>
       <Text fontSize={12} fontWeight="700" color="$muted">
         {t('mweb.createPod.timeHeading')}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap={6}>
-          {HOURS.map((h) => (
-            <YStack
-              key={h}
-              testID={`${testID}-hour-${h}`}
-              role="button"
-              aria-label={t('mweb.createPod.hourAria', { vars: { hour: h } })}
-              onPress={() => setHour(h)}
-              paddingHorizontal={12}
-              paddingVertical={7}
-              {...chip(h === hour)}
-            >
-              <Text fontSize={12.5} fontWeight="600" color={h === hour ? '$onPrimary' : '$color'}>
-                {pad(h)}
-              </Text>
-            </YStack>
-          ))}
+          {HOURS.map((h) => {
+            const blocked = hourBlocked(view, day, h, minDateTime);
+            const hourInk = h === hour ? '$onPrimary' : '$color';
+            return (
+              <YStack
+                key={h}
+                testID={`${testID}-hour-${h}`}
+                role="button"
+                aria-label={t('mweb.createPod.hourAria', { vars: { hour: h } })}
+                aria-disabled={blocked}
+                onPress={blocked ? undefined : () => setHour(h)}
+                paddingHorizontal={12}
+                paddingVertical={7}
+                opacity={blocked ? 0.35 : 1}
+                {...chip(h === hour)}
+              >
+                <Text fontSize={12.5} fontWeight="600" color={blocked ? '$muted' : hourInk}>
+                  {pad(h)}
+                </Text>
+              </YStack>
+            );
+          })}
         </XStack>
       </ScrollView>
       <XStack gap={6}>
-        {MINUTES.map((m) => (
-          <YStack
-            key={m}
-            testID={`${testID}-minute-${m}`}
-            role="button"
-            aria-label={t('mweb.createPod.minuteAria', { vars: { minute: m } })}
-            onPress={() => setMinute(m)}
-            paddingHorizontal={14}
-            paddingVertical={7}
-            {...chip(m === minute)}
-          >
-            <Text fontSize={12.5} fontWeight="600" color={m === minute ? '$onPrimary' : '$color'}>
-              :{pad(m)}
-            </Text>
-          </YStack>
-        ))}
+        {MINUTES.map((m) => {
+          const blocked = minuteBlocked(view, day, hour, m, minDateTime);
+          const minuteInk = m === minute ? '$onPrimary' : '$color';
+          return (
+            <YStack
+              key={m}
+              testID={`${testID}-minute-${m}`}
+              role="button"
+              aria-label={t('mweb.createPod.minuteAria', { vars: { minute: m } })}
+              aria-disabled={blocked}
+              onPress={blocked ? undefined : () => setMinute(m)}
+              paddingHorizontal={14}
+              paddingVertical={7}
+              opacity={blocked ? 0.35 : 1}
+              {...chip(m === minute)}
+            >
+              <Text fontSize={12.5} fontWeight="600" color={blocked ? '$muted' : minuteInk}>
+                :{pad(m)}
+              </Text>
+            </YStack>
+          );
+        })}
       </XStack>
       <XStack
         testID={`${testID}-done`}
         role="button"
         aria-label={t('mweb.createPod.done')}
-        onPress={() => onDone(new Date(view.getFullYear(), view.getMonth(), day, hour, minute))}
+        aria-disabled={pickedBlocked}
+        onPress={pickedBlocked ? undefined : () => onDone(picked)}
         height={46}
         alignItems="center"
         justifyContent="center"
         borderRadius={12}
         backgroundColor="$primary"
+        opacity={pickedBlocked ? 0.5 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={14} fontWeight="700" color="$onPrimary">

@@ -1,5 +1,5 @@
 import { Controller, type Control } from 'react-hook-form';
-import { format } from 'date-fns';
+import { addMinutes, format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
@@ -12,7 +12,7 @@ import { DateTimeField } from '../DateTimeField';
 import { SlotPicker } from '../SlotPicker';
 import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
-import { parseDateTimeText } from '../create-pod.form';
+import { MIN_POD_DURATION_MINUTES, parseDateTimeText } from '../create-pod.form';
 import type {
   CreatePodForm,
   CreatePodFormValues,
@@ -73,9 +73,17 @@ const venueMapQuery = (venue: CreatePodVenue | null): string => {
 /** Meeting details + schedule for a virtual pod — the venue/slot twin. */
 function VirtualMeetingFields({
   control,
+  startDateTime,
   duration,
-}: Readonly<{ control: Control<CreatePodFormValues>; duration: string | null }>) {
+}: Readonly<{
+  control: Control<CreatePodFormValues>;
+  startDateTime: Date | null;
+  duration: string | null;
+}>) {
   const { t } = useTranslation();
+  // The end picker only opens times after the start — the first 30 minutes
+  // are blocked too, since that is the minimum pod length.
+  const minEndDateTime = startDateTime ? addMinutes(startDateTime, MIN_POD_DURATION_MINUTES) : null;
   return (
     <YStack gap={14}>
       <FormTextField
@@ -105,6 +113,7 @@ function VirtualMeetingFields({
             required
             value={field.value}
             onChange={field.onChange}
+            minDateTime={new Date()}
             error={fieldState.error?.message}
             testID="pod_date_time_text"
           />
@@ -118,6 +127,7 @@ function VirtualMeetingFields({
             label={t('mweb.createPod.endDateTime')}
             value={field.value}
             onChange={field.onChange}
+            minDateTime={minEndDateTime}
             error={fieldState.error?.message}
             testID="pod_end_date_time_text"
           />
@@ -281,8 +291,9 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
     });
   };
 
+  const startDateTime = parseDateTimeText(watch('pod_date_time_text'));
   const duration = formatDurationBetween(
-    parseDateTimeText(watch('pod_date_time_text')),
+    startDateTime,
     parseDateTimeText(watch('pod_end_date_time_text')),
   );
 
@@ -299,7 +310,9 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
   };
 
   if (mode !== 'PHYSICAL') {
-    return <VirtualMeetingFields control={control} duration={duration} />;
+    return (
+      <VirtualMeetingFields control={control} startDateTime={startDateTime} duration={duration} />
+    );
   }
 
   const mapQuery = venueMapQuery(selectedVenue);

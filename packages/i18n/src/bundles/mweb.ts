@@ -1585,5 +1585,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       error: 'Could not load these pods. Please try again.',
       retry: 'Try again',
     },
+    // The Venues discovery list. Its location bar opens the SAME picker the
+    // header uses, so mWeb and native say the same thing about it (rule 27).
+    venues: {
+      locationIn: 'Venues in {city}',
+      // No location applied yet — the server then returns every public venue.
+      locationAll: 'Venues from all locations',
+      change: 'Change',
+      changeAria: 'Change location',
+    },
   },
 };

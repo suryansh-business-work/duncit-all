@@ -18,6 +18,24 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // overwrite the other surface's copy.
       languageHint: 'Choose the language for this portal.',
     },
+    /** The apps drawer's Jump to Portal dialog — shell chrome, so one copy for all consoles. */
+    jumpToPortal: {
+      title: 'Jump to Portal',
+      subtitle: 'Every Duncit console, one click away.',
+      close: 'Close',
+      loadError: 'Could not load the portal list. Please try again.',
+      accessTitle: 'Portals you can access',
+      noneAccessible: 'No consoles are open to your roles yet.',
+      noAccessTitle: "Portals you don't have access to",
+      noAccessHint: 'Request access and a super admin will review it from the Admin console.',
+      allAccess: 'You can open every portal.',
+      requestAccess: 'Request access',
+      requested: 'Requested',
+      requestedHint: 'Waiting for an admin decision.',
+      deniedHint: 'Your last request was declined — you can ask again.',
+      notRequestable: 'Granted personally by a super admin.',
+      requestFailed: 'Could not send the request. Please try again.',
+    },
     /** Word-for-word identical to `mweb.slots` — see the note there. */
     slots: {
       date: 'Date',
@@ -386,6 +404,34 @@ export const SHELL_BUNDLE: NestedCatalogue = {
    * portal, so the Admin console needs no extra dependency for its pages.
    */
   admin: {
+    /** Admin > Portal Access — the Jump to Portal request inbox. */
+    portalAccess: {
+      title: 'Portal Access',
+      subtitle: 'Jump to Portal requests — who asked for which console, and when.',
+      filterStatus: 'Filter by status',
+      statusPending: 'Pending',
+      statusApproved: 'Approved',
+      statusDenied: 'Denied',
+      statusAll: 'All',
+      colRequester: 'Requested by',
+      colPortal: 'Portal',
+      colRequestedAt: 'Requested at',
+      colReviewedAt: 'Reviewed at',
+      colStatus: 'Status',
+      colActions: 'Actions',
+      approve: 'Approve',
+      deny: 'Deny',
+      approveTitle: 'Approve portal access',
+      approveMessage:
+        'Grant {name} access to the {portal} portal? Their account gets the portal role and they are emailed.',
+      denyTitle: 'Deny portal access',
+      denyMessage: 'Deny {name} access to the {portal} portal? They are emailed about the decision.',
+      approved: 'Access approved — role granted and the requester emailed.',
+      denied: 'Request denied — the requester was emailed.',
+      failed: 'The action failed. Please try again.',
+      empty: 'No portal access requests match the current filters.',
+      searchPlaceholder: 'Search by requester name or email',
+    },
     leaderboard: {
       boardsTitle: 'Leaderboard Boards',
       boardsSubtitle:

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import LaunchIcon from '@mui/icons-material/Launch';
 
 /**
  * One entry in the apps drawer.
@@ -37,6 +38,13 @@ export const SHELL_TOOLS: ShellTool[] = [
     description: 'Message anyone with a staff console — admin, tech, finance, support and the rest.',
     icon: <ChatBubbleOutlineIcon />,
     keywords: ['chat', 'message', 'dm', 'colleague', 'coworker', 'team', 'talk', 'staff'],
+  },
+  {
+    key: 'jump-to-portal',
+    name: 'Jump to Portal',
+    description: 'Every Duncit console in one place — open yours, request access to the rest.',
+    icon: <LaunchIcon />,
+    keywords: ['portal', 'console', 'switch', 'jump', 'access', 'request', 'admin', 'apps'],
   },
 ];
 

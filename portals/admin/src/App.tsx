@@ -34,6 +34,7 @@ import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
+import PortalAccessPage from './pages/portal-access-page';
 import { getToken } from './lib/session';
 
 export default function App() {
@@ -73,6 +74,7 @@ export default function App() {
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
+                <Route path="/portal-access" element={<PortalAccessPage />} />
                 <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
                 <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
                 <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />

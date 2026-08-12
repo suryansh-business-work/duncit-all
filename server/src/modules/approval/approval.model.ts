@@ -13,6 +13,7 @@ export const APPROVAL_TYPES = [
   'ECOMM_BRAND_CHANGE',
   'ECOMM_PRODUCT_CHANGE',
   'WAREHOUSE_APPROVAL',
+  'PORTAL_ACCESS',
 ] as const;
 export type ApprovalType = (typeof APPROVAL_TYPES)[number];
 

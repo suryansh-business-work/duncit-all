@@ -15,6 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { FileManagerDialog } from '../../file-manager';
+import { JumpToPortalDialog } from '../jump-to-portal';
 import { matchesTool, SHELL_TOOLS, type ShellTool } from './tools';
 
 interface Props {
@@ -108,6 +109,10 @@ export function AppsDrawer({ open, onClose, extraTools, roles, onOpenChat }: Rea
 
       {openTool === 'file-manager' && (
         <FileManagerDialog open roles={roles} onClose={() => setOpenTool(null)} />
+      )}
+
+      {openTool === 'jump-to-portal' && (
+        <JumpToPortalDialog open onClose={() => setOpenTool(null)} />
       )}
 
 

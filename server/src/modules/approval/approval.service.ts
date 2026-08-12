@@ -108,6 +108,21 @@ async function applyEcommChange(doc: any) {
   }
 }
 
+/** Portal-access decision: approval grants the portal's role + emails the
+ * requester; denial only emails. Lives in the portals module; best-effort. */
+async function applyPortalAccessDecision(doc: any, status: 'APPROVED' | 'DENIED') {
+  try {
+    const { portalAccessService } = await import('@modules/portals/portalAccess.service');
+    await portalAccessService.applyDecision(doc, status);
+  } catch (err) {
+    logs.server.error('approval', 'applyPortalAccessDecision', {
+      error: err,
+      msg: 'applyPortalAccessDecision failed',
+      target_id: doc?.target_id ?? null,
+    });
+  }
+}
+
 /** Apply a warehouse-approval decision to its BrandPickupLocation: APPROVED makes
  * it usable, REJECTED keeps it blocked. Best-effort — never blocks the decision. */
 async function applyWarehouseReview(doc: any, status: 'APPROVED' | 'REJECTED') {
@@ -228,6 +243,8 @@ export const approvalService = {
     await doc.save();
     if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
       await applyEcommChange(doc);
+    } else if (doc.type === 'PORTAL_ACCESS') {
+      await applyPortalAccessDecision(doc, 'APPROVED');
     } else {
       // The only other type today is WAREHOUSE_APPROVAL; applyWarehouseReview
       // no-ops unless the request carries a warehouse target_id.
@@ -249,6 +266,8 @@ export const approvalService = {
     await doc.save();
     if (doc.type === 'WAREHOUSE_APPROVAL') {
       await applyWarehouseReview(doc, 'REJECTED');
+    } else if (doc.type === 'PORTAL_ACCESS') {
+      await applyPortalAccessDecision(doc, 'DENIED');
     }
     return pub(doc);
   },

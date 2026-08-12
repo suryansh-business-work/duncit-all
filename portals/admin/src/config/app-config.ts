@@ -79,6 +79,7 @@ export const appConfig = {
       ],
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
+    { label: 'Portal Access', to: '/portal-access', icon: 'lock' },
     {
       label: 'Upload Settings',
       icon: 'upload',
@@ -137,6 +138,12 @@ export const appConfig = {
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', to: '/something-for-you', section: 'Engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
+    {
+      label: 'Portal Access',
+      to: '/portal-access',
+      section: 'Approvals',
+      keywords: ['portal', 'access', 'request', 'jump', 'console', 'grant', 'role'],
+    },
     {
       label: 'Portals Upload Setting',
       to: '/upload-settings/portals',

@@ -61,6 +61,14 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.unsubscribe.mistake":
     "Didn't do this? Open the link above and switch anything back on. Emails already on their way may still arrive.",
 
+  // Jump-to-Portal access decisions (templates: portal-access-approved/-denied,
+  // authored in Tech > Emails > Templates — rule 28, no local MJML).
+  "email.portalAccess.approvedTitle": "Your portal access is live",
+  "email.portalAccess.approvedBody": "An admin approved your request. Sign in with your existing Duncit account to get started.",
+  "email.portalAccess.openPortal": "Open the portal",
+  "email.portalAccess.deniedTitle": "About your portal access request",
+  "email.portalAccess.deniedBody": "An admin reviewed your request and didn't approve it this time. Reply to this email if you have questions.",
+
   // The opt-out line the footer of every opt-out-able category carries.
   "email.fragment.unsubscribe": "Don't want these emails?",
   "email.fragment.unsubscribeLink": "Manage your email preferences",

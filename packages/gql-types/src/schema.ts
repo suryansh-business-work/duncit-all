@@ -3246,6 +3246,37 @@ export type DataCloneCollection = {
   status: Scalars['String']['output'];
 };
 
+/**
+ * One saved database connection.
+ *
+ * The connection string itself is never returned — uriMasked keeps the cluster
+ * and the user and drops the password, which is enough to recognise which
+ * account is saved and not enough to use it. connected is only true because the
+ * server actually reached that database, and collectionCount is what it counted
+ * there.
+ */
+export type DataCloneConnection = {
+  __typename?: 'DataCloneConnection';
+  collectionCount: Scalars['Int']['output'];
+  connected: Scalars['Boolean']['output'];
+  database: Scalars['String']['output'];
+  hasUri: Scalars['Boolean']['output'];
+  /** Why the last connect attempt failed, in the driver's own words. */
+  lastTestError?: Maybe<Scalars['String']['output']>;
+  lastTestedAt?: Maybe<Scalars['String']['output']>;
+  role: DataCloneRole;
+  uriMasked: Scalars['String']['output'];
+};
+
+/**
+ * A blank uri keeps the stored one, so the database name can be corrected
+ * without re-pasting credentials that are only ever shown masked.
+ */
+export type DataCloneConnectionInput = {
+  database: Scalars['String']['input'];
+  uri?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** A production -> staging clone. Runs server-side; the browser only polls it. */
 export type DataCloneJob = {
   __typename?: 'DataCloneJob';
@@ -3268,10 +3299,23 @@ export type DataCloneJob = {
   targetDatabase: Scalars['String']['output'];
 };
 
+/** Which end of a clone a saved connection is. There is exactly one of each. */
+export type DataCloneRole =
+  | 'PRODUCTION'
+  | 'STAGING';
+
+/** Both ends of a clone. A clone can only start when both are connected. */
+export type DataCloneSettings = {
+  __typename?: 'DataCloneSettings';
+  production: DataCloneConnection;
+  staging: DataCloneConnection;
+};
+
 /**
- * What a clone would read and write, resolved from the server environment.
- * The ready flag is false — with the reason in error — when the endpoints are
- * not configured, or when the target would resolve to the source database.
+ * What a clone would read and write, resolved from the two saved connections.
+ * The ready flag is false — with the reason in error — when either end is
+ * missing or has never been proved, or when the target would resolve to the
+ * source database.
  */
 export type DataCloneTargets = {
   __typename?: 'DataCloneTargets';
@@ -6684,6 +6728,8 @@ export type Mutation = {
   /** Auth-required: verify the current password and email a change-confirmation OTP. */
   requestPasswordChangeOtp: OtpRequestResult;
   requestPasswordResetOtp: OtpRequestResult;
+  /** Ask an admin for console access — lands in Admin > Portal Access; the decision is emailed. */
+  requestPortalAccess: PortalAccessEntry;
   /**
    * Email a sign-in code for a console.
    *
@@ -6724,6 +6770,11 @@ export type Mutation = {
   revokeBadge: Scalars['Boolean']['output'];
   revokeLeadSurveyLink: Scalars['Boolean']['output'];
   saveBrandPickupLocation: BrandPickupLocation;
+  /**
+   * Save one end and immediately prove it by connecting with exactly what was
+   * saved. Returns both ends, so the caller never has to merge two shapes.
+   */
+  saveDataCloneConnection: DataCloneSettings;
   /** Partner: create a new brand (omit brand_doc_id) or update an owned draft. */
   saveEcommBrand: EcommBrand;
   /** Register a native (Expo) push token for the signed-in device. */
@@ -6782,15 +6833,26 @@ export type Mutation = {
   setFeedbackReportStatus: FeedbackReport;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
+  /** Staff: temporarily deactivate/reactivate any catalogue product (reversible is_active flip; archive/restore own the ARCHIVED lifecycle). */
+  setInventoryProductActive: InventoryProduct;
   /** The same two actions from an unsubscribe link, with no sign-in. */
   setMailPreferenceByToken: MailPreference;
+  /** Partner: temporarily deactivate/reactivate an OWN brand — same reversible hide as setEcommBrandActive; placed orders are unaffected. */
+  setMyEcommBrandActive: EcommBrand;
   /** Persist the signed-in users language. Validated against active locales. */
   setMyLocale: User;
   /** Switch one category on or off for the signed-in person. */
   setMyMailPreference: MailPreference;
+  /** Partner: temporarily deactivate/reactivate an OWN approved listing (reversible; hidden from the shop while paused, placed orders unaffected). */
+  setMyProductListingActive: InventoryProduct;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
   setPodIdeaStatus: PodIdea;
+  /**
+   * Turn one console's header features on or off. Each flag is optional so a
+   * single switch can be flipped without restating the other.
+   */
+  setPortalAppFeatures: PortalMode;
   /** Replace the full set of entries assigned to a portal. */
   setPortalEnvEntries: Array<EnvEntry>;
   setPortalMode: PortalMode;
@@ -6888,6 +6950,8 @@ export type Mutation = {
   /** Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited. */
   techRestartContainer: TechRestartResult;
   testCommsProvider: CommsProviderTestResult;
+  /** Re-prove an already-saved connection — a rotated password changes the answer. */
+  testDataCloneConnection: DataCloneSettings;
   /**
    * Prove one entry's saved credentials against its vendor.
    *
@@ -8734,6 +8798,11 @@ export type MutationRequestPasswordResetOtpArgs = {
 };
 
 
+export type MutationRequestPortalAccessArgs = {
+  portal_key: Scalars['String']['input'];
+};
+
+
 export type MutationRequestPortalLoginOtpArgs = {
   input: PortalLoginOtpRequestInput;
 };
@@ -8862,6 +8931,12 @@ export type MutationRevokeLeadSurveyLinkArgs = {
 export type MutationSaveBrandPickupLocationArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSaveDataCloneConnectionArgs = {
+  input: DataCloneConnectionInput;
+  role: DataCloneRole;
 };
 
 
@@ -9079,11 +9154,23 @@ export type MutationSetHostDeductionsArgs = {
 };
 
 
+export type MutationSetInventoryProductActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  product_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetMailPreferenceByTokenArgs = {
   category: Scalars['String']['input'];
   e: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
   t: Scalars['String']['input'];
+};
+
+
+export type MutationSetMyEcommBrandActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  brand_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -9098,6 +9185,12 @@ export type MutationSetMyMailPreferenceArgs = {
 };
 
 
+export type MutationSetMyProductListingActiveArgs = {
+  active: Scalars['Boolean']['input'];
+  product_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationSetMySelectedLocationArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -9106,6 +9199,13 @@ export type MutationSetMySelectedLocationArgs = {
 export type MutationSetPodIdeaStatusArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
   status: PodIdeaStatus;
+};
+
+
+export type MutationSetPortalAppFeaturesArgs = {
+  apps_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  chat_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
 };
 
 
@@ -9372,6 +9472,11 @@ export type MutationTechRestartContainerArgs = {
 export type MutationTestCommsProviderArgs = {
   id: Scalars['ID']['input'];
   recipient: Scalars['String']['input'];
+};
+
+
+export type MutationTestDataCloneConnectionArgs = {
+  role: DataCloneRole;
 };
 
 
@@ -10354,6 +10459,7 @@ export type Payment = {
   /** Legacy one-line billing address, composed from the structured billing block. */
   billing_address: Scalars['String']['output'];
   checkout_url: Scalars['String']['output'];
+  coins_earned: Scalars['Float']['output'];
   /** Duncit Coins spent on this payment (1 coin = 1 rupee off the gross). */
   coins_redeemed: Scalars['Float']['output'];
   coupon_code?: Maybe<Scalars['String']['output']>;
@@ -10361,12 +10467,14 @@ export type Payment = {
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
   description: Scalars['String']['output'];
+  finalize_state: Scalars['String']['output'];
   gateway: Scalars['String']['output'];
   gateway_ref?: Maybe<Scalars['String']['output']>;
   gst_amount: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   id: Scalars['ID']['output'];
   invoice_no?: Maybe<Scalars['String']['output']>;
+  needs_refund: Scalars['Boolean']['output'];
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_id: Scalars['String']['output'];
   platform_fee_amount: Scalars['Float']['output'];
@@ -10384,11 +10492,98 @@ export type Payment = {
   user_phone?: Maybe<Scalars['String']['output']>;
 };
 
+/** A thing checkout was supposed to create, verified by reading it back from the database. */
+export type PaymentArtifact = {
+  __typename?: 'PaymentArtifact';
+  /** How many documents of this kind exist for the payment. */
+  count: Scalars['Int']['output'];
+  /** True only when the document was actually found in the database — this is what draws the green tick. */
+  created: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** Set when the artifact is not applicable to this payment (e.g. no products bought). */
+  not_applicable: Scalars['Boolean']['output'];
+  /** Human-readable ids (ticket code, order no, membership id...). */
+  refs: Array<Scalars['String']['output']>;
+};
+
+/** One Duncit Coin ledger movement caused by this payment. */
+export type PaymentCoinLine = {
+  __typename?: 'PaymentCoinLine';
+  amount: Scalars['Float']['output'];
+  at: Scalars['String']['output'];
+  balance_after: Scalars['Float']['output'];
+  earn_pct: Scalars['Float']['output'];
+  reason: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+/** The coupon applied at checkout, resolved against the live coupon record. */
+export type PaymentCouponInfo = {
+  __typename?: 'PaymentCouponInfo';
+  code: Scalars['String']['output'];
+  discount: Scalars['Float']['output'];
+  discount_type: Scalars['String']['output'];
+  discount_value: Scalars['Float']['output'];
+  /** False when the coupon record has since been deleted. */
+  still_exists: Scalars['Boolean']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** Everything checkout did for one payment — for the Finance Payment Logs detail page. */
+export type PaymentDetail = {
+  __typename?: 'PaymentDetail';
+  artifacts: Array<PaymentArtifact>;
+  coins: Array<PaymentCoinLine>;
+  /** Coins this payment earned the buyer back. */
+  coins_earned: Scalars['Float']['output'];
+  /** Coins spent on this payment (1 coin = 1 rupee off the gross). */
+  coins_redeemed: Scalars['Float']['output'];
+  coupon?: Maybe<PaymentCouponInfo>;
+  finalize_attempts: Scalars['Int']['output'];
+  finalize_error?: Maybe<Scalars['String']['output']>;
+  finalize_state: Scalars['String']['output'];
+  finalized_at?: Maybe<Scalars['String']['output']>;
+  needs_refund: Scalars['Boolean']['output'];
+  /** Gross before coupon + coins, taken from the frozen checkout metadata. */
+  original_total: Scalars['Float']['output'];
+  payment: Payment;
+  pod_booking?: Maybe<PaymentPodBooking>;
+  product_orders: Array<PaymentProductOrderLine>;
+  steps: Array<PaymentStep>;
+};
+
 export type PaymentFilterInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<PaymentStatus>;
   user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The pod booking this payment produced. */
+export type PaymentPodBooking = {
+  __typename?: 'PaymentPodBooking';
+  membership_id?: Maybe<Scalars['ID']['output']>;
+  membership_status?: Maybe<Scalars['String']['output']>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  seats: Scalars['Int']['output'];
+  ticket_code?: Maybe<Scalars['String']['output']>;
+  ticket_status?: Maybe<Scalars['String']['output']>;
+};
+
+/** One product order this payment produced. */
+export type PaymentProductOrderLine = {
+  __typename?: 'PaymentProductOrderLine';
+  awb?: Maybe<Scalars['String']['output']>;
+  fulfilment_method: Scalars['String']['output'];
+  fulfilment_status: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  item_count: Scalars['Int']['output'];
+  order_no: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
 };
 
 export type PaymentReleaseApprovalType =
@@ -10498,6 +10693,26 @@ export type PaymentStatus =
   | 'PENDING'
   | 'REFUNDED'
   | 'SUCCESS';
+
+/** One step of the post-payment finalization pipeline, in execution order. */
+export type PaymentStep = {
+  __typename?: 'PaymentStep';
+  at?: Maybe<Scalars['String']['output']>;
+  /** Why it was skipped, or the failure message. */
+  detail: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** Human label for the Finance detail table. */
+  label: Scalars['String']['output'];
+  /** Ids of the documents this step created. */
+  refs: Array<Scalars['String']['output']>;
+  status: PaymentStepStatus;
+};
+
+export type PaymentStepStatus =
+  | 'DONE'
+  | 'FAILED'
+  | 'PENDING'
+  | 'SKIPPED';
 
 /** Server-side table page for the shared table engine (paymentsTable). */
 export type PaymentTablePage = {
@@ -11549,6 +11764,20 @@ export type PolicyTypeCountTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One staff console in the Jump to Portal directory, with the signed-in user's standing. */
+export type PortalAccessEntry = {
+  __typename?: 'PortalAccessEntry';
+  /** False where access is not granted through this flow (the Admin console, ungated surfaces). */
+  can_request: Scalars['Boolean']['output'];
+  /** Whether the signed-in user's roles open this console today. */
+  has_access: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** The user's latest PORTAL_ACCESS request outcome for this console, if any. */
+  request_status?: Maybe<ApprovalStatus>;
+  url: Scalars['String']['output'];
+};
+
 export type PortalLoginOtpInput = {
   email: Scalars['String']['input'];
   otp: Scalars['String']['input'];
@@ -11563,6 +11792,13 @@ export type PortalLoginOtpRequestInput = {
 
 export type PortalMode = {
   __typename?: 'PortalMode';
+  /** Whether this console's header offers the Apps drawer. */
+  apps_enabled: Scalars['Boolean']['output'];
+  /**
+   * Whether this console's header offers "Chat with a coworker" — the docked
+   * staff chat and its entry in the apps drawer.
+   */
+  chat_enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   key: Scalars['String']['output'];
   kind: PortalModeKind;
@@ -11581,6 +11817,8 @@ export type PortalModeKind =
 /** Minimal shape every app polls publicly on load. */
 export type PortalModePublic = {
   __typename?: 'PortalModePublic';
+  apps_enabled: Scalars['Boolean']['output'];
+  chat_enabled: Scalars['Boolean']['output'];
   key: Scalars['String']['output'];
   mode: PortalModeState;
 };
@@ -12314,6 +12552,8 @@ export type Query = {
   dashboardTotals: DashboardTotals;
   /** One clone job by id, or the most recent one when id is omitted. Polled for progress. */
   dataCloneJob?: Maybe<DataCloneJob>;
+  /** The saved production + staging connections, seeded from the environment on first read. */
+  dataCloneSettings: DataCloneSettings;
   /** Source/target databases and the exclusion list, without starting anything. */
   dataCloneTargets: DataCloneTargets;
   /**
@@ -12596,6 +12836,8 @@ export type Query = {
   myPodMemberships: Array<PodMember>;
   /** My own pods that carry at least one co-host. */
   myPodsWithCoHosts: Array<Pod>;
+  /** Every staff console with whether the signed-in user can open it (Jump to Portal). */
+  myPortalAccess: Array<PortalAccessEntry>;
   myPosts: Array<Post>;
   /** Brand-admin analytics for one of the caller's own products. */
   myProductAnalytics: ProductAnalytics;
@@ -12647,6 +12889,8 @@ export type Query = {
   /** Admin Partners list — users holding a partner-portal role (Host / Venue Partner / Product Seller / Club Admin). */
   partnersTable: UserTablePage;
   payment?: Maybe<Payment>;
+  /** Full audit of one payment: what it charged, what it created, and what failed. */
+  paymentDetail: PaymentDetail;
   paymentInvoicePdfBase64: Scalars['String']['output'];
   paymentReleaseRequests: Array<PaymentReleaseRequest>;
   paymentReleaseRequestsTable: PaymentReleaseRequestTablePage;
@@ -14212,6 +14456,11 @@ export type QueryPartnersTableArgs = {
 
 
 export type QueryPaymentArgs = {
+  payment_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPaymentDetailArgs = {
   payment_doc_id: Scalars['ID']['input'];
 };
 

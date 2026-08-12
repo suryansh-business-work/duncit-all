@@ -12,6 +12,10 @@ export interface AppNavItem {
   icon?: string;
   /** Optional nested children — rendered as a collapsible group. */
   children?: AppNavItem[];
+  /** Caption line under the label — rendered only when `featured` is set. */
+  caption?: string;
+  /** Highlighted "featured" card treatment for a leaf (e.g. Partners' "Earn with Duncit"). */
+  featured?: boolean;
 }
 
 /** One entry of the header-wide global search. */

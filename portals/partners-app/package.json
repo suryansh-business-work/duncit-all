@@ -27,6 +27,7 @@
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/dialogs": "workspace:*",
+    "@duncit/earn": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/host-pod-actions": "workspace:*",
     "@duncit/location": "workspace:*",

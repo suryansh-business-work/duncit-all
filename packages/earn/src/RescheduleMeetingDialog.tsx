@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
@@ -12,20 +12,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import SlotPicker from '../survey-gate/SlotPicker';
-import { MEETING_SLOTS, type MeetingSlot } from '../survey-gate/queries';
+import EarnSlotPicker from './EarnSlotPicker';
+import { MEETING_SLOTS, RESCHEDULE_MY_MEETING, type MeetingSlot } from './queries';
 import { MeetingReasonForm } from './meeting-reason';
-
-const RESCHEDULE_MY_MEETING = gql`
-  mutation RescheduleMyMeeting($kind: SurveyKind!, $requested_at: String!, $reason: String) {
-    rescheduleMyMeeting(kind: $kind, requested_at: $requested_at, reason: $reason) {
-      id
-      requested_at
-      status
-      reschedule_count
-    }
-  }
-`;
 
 interface Props {
   open: boolean;
@@ -82,7 +71,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
             {slots.length === 0 ? (
               <Alert severity="info">No slots are open right now — please check back soon.</Alert>
             ) : (
-              <SlotPicker slots={slots} value={slot} onChange={setSlot} currentSlot={bookedAt} />
+              <EarnSlotPicker slots={slots} value={slot} onChange={setSlot} currentSlot={bookedAt} />
             )}
             {slot && (
               <Typography variant="body2">

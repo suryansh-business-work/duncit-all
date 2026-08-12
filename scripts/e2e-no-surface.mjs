@@ -30,6 +30,10 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/club-form', 'library — rendered end-to-end by admin + partners-app'],
   ['@duncit/datetime', 'pure date/time helpers, no DOM'],
   ['@duncit/dialogs', 'library — rendered end-to-end by every portal'],
+  [
+    '@duncit/earn',
+    'library — the Earn journey cards are rendered end-to-end by mWeb /earn and the partners-app Earn page',
+  ],
   ['@duncit/fallback-icons', 'static asset manifest; verified by scripts/verify-fallback-icons.mjs'],
   ['@duncit/forms', 'library — rendered end-to-end by every portal form'],
   ['@duncit/geo', 'pure geo helpers, no DOM'],

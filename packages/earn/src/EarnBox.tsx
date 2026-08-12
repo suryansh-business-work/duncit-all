@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Box, Button, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
 /** Contextual next-step action shown beside the "Already enabled" chip for a
  * role the user already holds (e.g. host more, register another venue). */
@@ -13,7 +12,8 @@ interface Props {
   icon: ReactNode;
   title: string;
   description: string;
-  to: string;
+  /** Unlocked card click — the surface decides where the application flow lives. */
+  onOpen: () => void;
   disabled: boolean;
   /** Chip text shown when disabled (role held / meeting pending). */
   disabledLabel?: string;
@@ -30,12 +30,11 @@ export default function EarnBox({
   icon,
   title,
   description,
-  to,
+  onOpen,
   disabled,
   disabledLabel = 'Already enabled',
   cta,
 }: Readonly<Props>) {
-  const navigate = useNavigate();
   return (
     <Card
       variant="outlined"
@@ -46,7 +45,7 @@ export default function EarnBox({
         '&:hover': { boxShadow: 'none' },
       }}
     >
-      <CardActionArea disabled={disabled} onClick={() => navigate(to)} sx={{ p: 1 }}>
+      <CardActionArea disabled={disabled} onClick={onOpen} sx={{ p: 1 }}>
         <CardContent>
           <Stack spacing={1.25} alignItems="flex-start">
             <Box

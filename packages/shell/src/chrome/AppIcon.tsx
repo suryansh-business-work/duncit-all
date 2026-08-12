@@ -58,6 +58,7 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import TuneIcon from '@mui/icons-material/Tune';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import LinkIcon from '@mui/icons-material/Link';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -142,6 +143,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   tune: TuneIcon,
   upload: CloudUploadIcon,
   'verified-user': VerifiedUserIcon,
+  'volunteer-activism': VolunteerActivismIcon,
   wallet: AccountBalanceWalletIcon,
   warehouse: WarehouseIcon,
   widgets: WidgetsIcon,

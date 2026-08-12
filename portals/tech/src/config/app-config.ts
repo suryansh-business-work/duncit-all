@@ -61,6 +61,15 @@ export const appConfig = {
       ],
     },
     { label: 'Slack', to: '/slack', icon: 'chat' },
+    {
+      label: 'App Builds',
+      icon: 'installMobile',
+      children: [
+        { label: 'Android', to: '/app-builds/android', icon: 'android' },
+        { label: 'iOS', to: '/app-builds/ios', icon: 'apple' },
+        { label: 'Settings', to: '/app-builds/settings', icon: 'settings' },
+      ],
+    },
     { label: 'AiSensy', to: '/aisensy', icon: 'whatsapp' },
     { label: 'Package Documentation', to: '/package-docs', icon: 'menuBook' },
   ],

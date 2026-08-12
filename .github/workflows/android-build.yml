@@ -1,0 +1,146 @@
+# Android APK on every merge to main — built ON THE RUNNER (never the VPS),
+# uploaded to ImageKit and recorded via reportAppBuild, which also announces it
+# on the configured Slack channel (Tech portal → App Builds → Settings).
+#
+# The build recipe mirrors app/mobile-app/Dockerfile.android step for step
+# (npm ci → codegen → expo prebuild → SDK 35 + NDK 27 → gradlew assembleRelease),
+# just directly on the runner where actions/cache can persist Gradle between runs.
+# The APK is signed with the debug keystore prebuild emits — the same internal-
+# distribution artifact local builds ship today (store builds stay on EAS).
+#
+# Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. ImageKit/Slack credentials
+# stay in the Tech portal env entries — the server signs the upload.
+name: Android Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never kill a running build. GitHub still keeps only the NEWEST queued run per
+# group, so a merge landing mid-build can be superseded — the reporter closes
+# that changelog gap by ranging from the last build the server recorded.
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  EXPO_PUBLIC_API_URL: https://server.duncit.com
+  CI: 1
+  EXPO_NO_TELEMETRY: 1
+  CYPRESS_INSTALL_BINARY: 0
+  # Set (via GITHUB_ENV) the moment the built APK is copied out — the failure
+  # reporter uses it to tell "build failed" from "reporting failed".
+  ARTIFACT_PATH: ''
+
+jobs:
+  build:
+    name: Build & publish APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: app/mobile-app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the report step describes the merged commit range.
+          fetch-depth: 0
+
+      - name: Record build start
+        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/mobile-app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install JS dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Generate GraphQL types
+        # src/generated is gitignored — regenerated from the server schemas in this checkout.
+        run: npm run codegen
+
+      - name: Generate the native android project
+        # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Install Android SDK 35 + NDK 27
+        # The runner ships an SDK but not NDK 27.1.12297006, which the
+        # withNdkVersion plugin pins (RN 0.81 needs NDK 27's libc++).
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.1.12297006"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-android-${{ runner.os }}-${{ hashFiles('app/mobile-app/package-lock.json') }}
+          restore-keys: gradle-android-${{ runner.os }}-
+
+      - name: Tune Gradle for the runner
+        # R8 runs in-process in this --no-daemon JVM and OOMs below ~4g
+        # (same lesson Dockerfile.android documents). Appended post-prebuild so
+        # regeneration can never drop it.
+        run: |
+          {
+            echo ''
+            echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseG1GC'
+            echo 'org.gradle.daemon=false'
+          } >> android/gradle.properties
+
+      - name: Build release APK
+        working-directory: app/mobile-app/android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Name the artifact
+        run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          ARTIFACT="duncit-android-v${APP_VERSION}-${SHORT_SHA}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$ARTIFACT"
+          echo "ARTIFACT_PATH=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
+
+      - name: Upload to ImageKit & record the build
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs
+
+      - name: Record the failure
+        # Only when no APK was produced (ARTIFACT_PATH is set right after the
+        # build) — a reporting/upload hiccup on a good build must stay a red
+        # workflow, not a false ':x: build failed' row and Slack alarm.
+        # continue-on-error so a reporting hiccup never hides the real failure.
+        if: failure() && env.ARTIFACT_PATH == ''
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          STATUS: FAILED
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs

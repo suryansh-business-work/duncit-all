@@ -1,0 +1,125 @@
+# iOS IPA on every merge to main — built on a GitHub macOS runner (never the
+# VPS), uploaded to ImageKit and recorded via reportAppBuild, which also
+# announces it on the configured Slack channel (Tech portal → App Builds →
+# Settings).
+#
+# UNSIGNED by necessity: no Apple signing certificates exist in this repo (store
+# builds go through EAS-managed credentials). The archive builds with code
+# signing off and is zipped into an .ipa — installable after signing (EAS,
+# Xcode, or a resign tool), and exactly what the App Builds table tracks per
+# merge. When Apple certs land as secrets, this workflow is where they plug in.
+#
+# Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD.
+name: iOS Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never kill a running build. GitHub still keeps only the NEWEST queued run per
+# group, so a merge landing mid-build can be superseded — the reporter closes
+# that changelog gap by ranging from the last build the server recorded.
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  EXPO_PUBLIC_API_URL: https://server.duncit.com
+  CI: 1
+  EXPO_NO_TELEMETRY: 1
+  CYPRESS_INSTALL_BINARY: 0
+  # Set (via GITHUB_ENV) the moment the packaged IPA is copied out — the failure
+  # reporter uses it to tell "build failed" from "reporting failed".
+  ARTIFACT_PATH: ''
+
+jobs:
+  build:
+    name: Build & publish IPA (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: app/mobile-app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the report step describes the merged commit range.
+          fetch-depth: 0
+
+      - name: Record build start
+        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/mobile-app/package-lock.json
+
+      - name: Install JS dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Generate GraphQL types
+        # src/generated is gitignored — regenerated from the server schemas in this checkout.
+        run: npm run codegen
+
+      - name: Generate the native ios project
+        # ios/ is gitignored (CNG) — regenerated from app.json + config plugins.
+        run: npx expo prebuild --platform ios --no-install --clean
+
+      - name: Install CocoaPods dependencies
+        run: npx pod-install ios
+
+      - name: Archive (unsigned)
+        run: |
+          WORKSPACE=$(ls ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/duncit.xcarchive" archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Package the IPA
+        run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          ARTIFACT="duncit-ios-v${APP_VERSION}-${SHORT_SHA}.ipa"
+          APP_PATH=$(find build/duncit.xcarchive/Products/Applications -maxdepth 1 -name '*.app' | head -1)
+          STAGE=$(mktemp -d)
+          mkdir -p "$STAGE/Payload"
+          cp -R "$APP_PATH" "$STAGE/Payload/"
+          (cd "$STAGE" && zip -qry "$RUNNER_TEMP/$ARTIFACT" Payload)
+          echo "ARTIFACT_PATH=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
+
+      - name: Upload to ImageKit & record the build
+        working-directory: .
+        env:
+          PLATFORM: IOS
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs
+
+      - name: Record the failure
+        # Only when no IPA was produced (ARTIFACT_PATH is set right after the
+        # build) — a reporting/upload hiccup on a good build must stay a red
+        # workflow, not a false ':x: build failed' row and Slack alarm.
+        # continue-on-error so a reporting hiccup never hides the real failure.
+        if: failure() && env.ARTIFACT_PATH == ''
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: IOS
+          STATUS: FAILED
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs

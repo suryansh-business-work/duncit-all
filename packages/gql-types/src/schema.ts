@@ -427,6 +427,95 @@ export type AppAnalyticsEventType =
   | 'TOUCH';
 
 /**
+ * One CI build of the mobile app — made by the android-build / ios-build
+ * GitHub Actions workflows on every merge to main, uploaded to ImageKit and
+ * announced on Slack. The row is the store of record; Slack is a notification.
+ */
+export type AppBuild = {
+  __typename?: 'AppBuild';
+  artifact_file_id: Scalars['String']['output'];
+  /** ImageKit CDN URL — the download link. Empty on a FAILED build. */
+  artifact_url: Scalars['String']['output'];
+  branch: Scalars['String']['output'];
+  /** The artifact's file name. */
+  build_name: Scalars['String']['output'];
+  /** Permanent human-readable id (DUN-BLD-000001). */
+  build_no: Scalars['String']['output'];
+  commit_sha: Scalars['String']['output'];
+  /** The commits this build shipped. */
+  commits: Array<AppBuildCommit>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  deletions?: Maybe<Scalars['Int']['output']>;
+  duration_seconds?: Maybe<Scalars['Int']['output']>;
+  files_changed?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  insertions?: Maybe<Scalars['Int']['output']>;
+  platform: AppBuildPlatform;
+  /** Who the CI authenticated as when it reported the build. */
+  reported_by: Scalars['String']['output'];
+  size_mb?: Maybe<Scalars['Float']['output']>;
+  slack_channel?: Maybe<Scalars['String']['output']>;
+  /** Why the Slack post did not happen, when it did not. */
+  slack_error?: Maybe<Scalars['String']['output']>;
+  slack_ts?: Maybe<Scalars['String']['output']>;
+  status: AppBuildStatus;
+  version: Scalars['String']['output'];
+  workflow_run_id: Scalars['String']['output'];
+  workflow_run_url: Scalars['String']['output'];
+};
+
+export type AppBuildCommit = {
+  __typename?: 'AppBuildCommit';
+  author: Scalars['String']['output'];
+  hash: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+};
+
+export type AppBuildCommitInput = {
+  author?: InputMaybe<Scalars['String']['input']>;
+  hash: Scalars['String']['input'];
+  subject: Scalars['String']['input'];
+};
+
+export type AppBuildPlatform =
+  | 'ANDROID'
+  | 'IOS';
+
+/** Which Slack channels build announcements post to (stored on the SLACK env entry). */
+export type AppBuildSettings = {
+  __typename?: 'AppBuildSettings';
+  android_channel?: Maybe<Scalars['String']['output']>;
+  ios_channel?: Maybe<Scalars['String']['output']>;
+};
+
+export type AppBuildStatus =
+  | 'FAILED'
+  | 'SUCCESS';
+
+export type AppBuildTablePage = {
+  __typename?: 'AppBuildTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AppBuild>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * A one-shot ImageKit client-upload signature for a CI build artifact. The
+ * private key never leaves the server; CI posts the file straight to ImageKit
+ * (bypassing the server's upload body cap) with this signature.
+ */
+export type AppBuildUploadAuth = {
+  __typename?: 'AppBuildUploadAuth';
+  expire: Scalars['Int']['output'];
+  /** The ImageKit folder build artifacts land in. */
+  folder: Scalars['String']['output'];
+  public_key: Scalars['String']['output'];
+  signature: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
+/**
  * In-app feedback / problem report from any signed-in user. The server stamps
  * the authenticated identity and routes it to the feedback channel.
  */
@@ -5534,6 +5623,27 @@ export type LegalDocumentVersion = {
   updated_by_name: Scalars['String']['output'];
 };
 
+/**
+ * The public slice of an entity that a link-preview card renders: a title, a
+ * short plain-text description and one image. Nothing else ever crosses this
+ * boundary — no contact, finance or membership data.
+ */
+export type LinkPreview = {
+  __typename?: 'LinkPreview';
+  description?: Maybe<Scalars['String']['output']>;
+  image_url?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+/** Which kind of page a shared mWeb link points at. */
+export type LinkPreviewKind =
+  | 'CLUB'
+  | 'POD'
+  | 'POST'
+  | 'PRODUCT'
+  | 'USER'
+  | 'VENUE';
+
 /** A language/country the platform can render in. */
 export type Locale = {
   __typename?: 'Locale';
@@ -6232,6 +6342,8 @@ export type Mutation = {
   aiParseCrmLead: Scalars['String']['output'];
   /** Extract multiple leads from text — returns JSON { records: [...] }. */
   aiParseCrmLeads: Scalars['String']['output'];
+  /** Sign a direct-to-ImageKit upload for a build artifact. Tech/Super admin only. */
+  appBuildUploadAuth: AppBuildUploadAuth;
   /** Redeem someone's referral code (once per account, not your own). */
   applyReferralCode: MyReferral;
   /** Approve the Club Admin — the table reads Active from here on. */
@@ -6715,6 +6827,12 @@ export type Mutation = {
   /** Seller reply to a review of their own product (single reply). */
   replyToProductReview: ProductReview;
   replyToTicket: Ticket;
+  /**
+   * Record a finished CI build (and announce it on the platform's Slack
+   * channel, best-effort). Tech/Super admin only — the workflow authenticates
+   * with a TECH_MANAGER JWT, the same way release-notify does.
+   */
+  reportAppBuild: AppBuild;
   /** Auth-required: email a confirmation OTP before self-serve account deletion. */
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
@@ -6988,6 +7106,7 @@ export type Mutation = {
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
   updateAiPrompt: AiPrompt;
+  updateAppBuildSettings: AppBuildSettings;
   updateAppPopup: AppPopup;
   updateAppSettings: AppSettings;
   /** Owner edits the editable subset of an APPROVED venue (documents append-only). */
@@ -8772,6 +8891,11 @@ export type MutationReplyToTicketArgs = {
 };
 
 
+export type MutationReportAppBuildArgs = {
+  input: ReportAppBuildInput;
+};
+
+
 export type MutationRequestBouncerCallbackArgs = {
   input: RequestCallbackInput;
 };
@@ -9593,6 +9717,11 @@ export type MutationUpdateAdPricingArgs = {
 export type MutationUpdateAiPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateAiPromptInput;
+};
+
+
+export type MutationUpdateAppBuildSettingsArgs = {
+  input: UpdateAppBuildSettingsInput;
 };
 
 
@@ -12357,6 +12486,9 @@ export type Query = {
   aisensyTemplates: Array<AisensyTemplate>;
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
+  appBuildSettings: AppBuildSettings;
+  /** CI builds of one platform, newest first (Tech portal App Builds tables). */
+  appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
   appSettings: AppSettings;
   appVersionInfo: AppVersionInfo;
@@ -12690,6 +12822,15 @@ export type Query = {
   legalDocumentsTable: LegalDocumentTablePage;
   /** Which signing methods this platform allows, from the feature flags. */
   legalSignatureMethods: Array<SignatureMethod>;
+  /**
+   * Hydrates the meta tags mWeb's HTML server injects for social crawlers.
+   *
+   * Deliberately unauthenticated: WhatsApp/Slack/X fetch a shared link with no
+   * session, and the unfurled card must still show the pod instead of a bare
+   * logo. The resolver returns null (never an error) for anything unknown,
+   * deleted or inactive, so a stale link degrades to the app's default card.
+   */
+  linkPreview?: Maybe<LinkPreview>;
   /**
    * Only the ads showing right now — approved, started, not yet ended. LIVE is
    * a date window rather than a stored status, so it needs its own query.
@@ -13303,6 +13444,12 @@ export type QueryAiPromptArgs = {
 
 export type QueryAiPromptsArgs = {
   filter?: InputMaybe<AiPromptFilter>;
+};
+
+
+export type QueryAppBuildsTableArgs = {
+  platform: AppBuildPlatform;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -14147,6 +14294,13 @@ export type QueryLegalDocumentsArgs = {
 
 export type QueryLegalDocumentsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryLinkPreviewArgs = {
+  id: Scalars['String']['input'];
+  kind: LinkPreviewKind;
+  secondary_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -15440,6 +15594,26 @@ export type RegisterInput = {
    */
   referral_code?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReportAppBuildInput = {
+  artifact_file_id?: InputMaybe<Scalars['String']['input']>;
+  artifact_url?: InputMaybe<Scalars['String']['input']>;
+  branch?: InputMaybe<Scalars['String']['input']>;
+  build_name?: InputMaybe<Scalars['String']['input']>;
+  commit_sha?: InputMaybe<Scalars['String']['input']>;
+  commits?: InputMaybe<Array<AppBuildCommitInput>>;
+  deletions?: InputMaybe<Scalars['Int']['input']>;
+  duration_seconds?: InputMaybe<Scalars['Int']['input']>;
+  files_changed?: InputMaybe<Scalars['Int']['input']>;
+  insertions?: InputMaybe<Scalars['Int']['input']>;
+  platform: AppBuildPlatform;
+  size_mb?: InputMaybe<Scalars['Float']['input']>;
+  /** Defaults to SUCCESS. FAILED rows carry no artifact. */
+  status?: InputMaybe<AppBuildStatus>;
+  version: Scalars['String']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+  workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** One selectable chip on the app's Report a Problem form. */
@@ -17044,6 +17218,13 @@ export type UpdateAiPromptInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   target_model?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateAppBuildSettingsInput = {
+  /** Slack channel ID (e.g. C0123ABCD) Android builds announce to. Empty clears it. */
+  android_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID iOS builds announce to. Empty clears it. */
+  ios_channel?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateAppSettingsInput = {

@@ -12564,6 +12564,12 @@ export type Query = {
    * onboarding staff have no business reading.
    */
   defaultHostCommissionPct: Scalars['Float']['output'];
+  /**
+   * The same, for venues — the Onboarding console's Review Venue dialog seeds
+   * its commission field from this so a reviewer sees the number settlement
+   * will actually apply when the venue carries no override of its own.
+   */
+  defaultVenueCommissionPct: Scalars['Float']['output'];
   /** Onboarding/admin: a single brand by id. */
   ecommBrand?: Maybe<EcommBrand>;
   /** Onboarding/admin: all brands, optionally filtered by status. */
@@ -12827,6 +12833,8 @@ export type Query = {
   /** All of the current user's onboarding meetings (one per kind). */
   myMeetings: Array<OnboardingMeeting>;
   myNotifications: Array<UserNotification>;
+  /** One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history. */
+  myPayment?: Maybe<Payment>;
   myPayments: Array<Payment>;
   /** An attended (past) pod the user has not yet rated — drives the post-pod feedback pop-up. */
   myPendingPodFeedback?: Maybe<BouncerPodInfo>;
@@ -14348,6 +14356,11 @@ export type QueryMyMeetingArgs = {
 export type QueryMyNotificationsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryMyPaymentArgs = {
+  payment_doc_id: Scalars['ID']['input'];
 };
 
 

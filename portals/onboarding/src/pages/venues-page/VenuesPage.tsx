@@ -1,11 +1,20 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
-import { APPROVE, DELETE_VENUE, REJECT, SET_VENUE_ACTIVE, SET_VENUE_DEDUCTIONS, VENUES_TABLE, type VenueRow } from './queries';
+import {
+  APPROVE,
+  DEFAULT_VENUE_COMMISSION,
+  DELETE_VENUE,
+  REJECT,
+  SET_VENUE_ACTIVE,
+  SET_VENUE_DEDUCTIONS,
+  VENUES_TABLE,
+  type VenueRow,
+} from './queries';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
@@ -17,6 +26,8 @@ export default function VenuesPage() {
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
+  const { data: defaultsData } = useQuery(DEFAULT_VENUE_COMMISSION, { fetchPolicy: 'cache-first' });
+  const defaultCommissionPct: number | undefined = defaultsData?.defaultVenueCommissionPct;
   const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refresh);
   const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
@@ -114,6 +125,7 @@ export default function VenuesPage() {
         onReject={doReject}
         onSaveDeductions={doSaveDeductions}
         savingDeductions={savingDeductions}
+        defaultCommissionPct={defaultCommissionPct}
       />
 
       <VenueEditDialog venue={editing} onClose={() => setEditing(null)} onSaved={refresh} />

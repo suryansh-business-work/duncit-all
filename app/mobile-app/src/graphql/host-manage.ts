@@ -11,6 +11,7 @@ export const HostPodsDocument = gql(`
       id
       pod_title
       pod_id
+      club_id
       club_slug
       pod_date_time
       pod_end_date_time
@@ -28,6 +29,25 @@ export const HostPodsDocument = gql(`
       zone_name
       venue_approval_status
       is_active
+    }
+  }
+`);
+
+/** Who runs a pod's club, read on demand when the host opens the club-admin
+ * sheet — the pod list stays free of contact details it would otherwise carry
+ * for every row. Twin of mWeb's PodClubAdmins (rule 27). */
+export const ClubAdminsDocument = gql(`
+  query MobileClubAdmins($club_doc_id: ID!) {
+    club(club_doc_id: $club_doc_id) {
+      id
+      club_admins {
+        id
+        name
+        avatar_url
+        email
+        phone
+        whatsapp
+      }
     }
   }
 `);

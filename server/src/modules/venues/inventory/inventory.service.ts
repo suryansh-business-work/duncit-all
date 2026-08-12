@@ -7,7 +7,7 @@ import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
-import { UserModel } from '@modules/access/user/user.model';
+import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -428,8 +428,10 @@ async function ownedListing(id: string, user: AuthUser | null) {
 
 async function requireEcommManager(user: AuthUser | null) {
   if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
-  const currentUser: any = await UserModel.findById(user.id).select('metadata.role_keys').lean();
-  const roles = (currentUser?.metadata?.role_keys ?? []) as string[];
+  // Resolved the same way `me { roles }` is — reading the role_keys cache here
+  // let this gate refuse a partner whose console had just rendered every
+  // control as enabled.
+  const roles = await effectiveRoleKeys(user.id);
   if (!roles.includes(ECOMM_MANAGER_ROLE)) {
     throw new GraphQLError('You must be an Ecomm Manager to manage product listings', { extensions: { code: 'FORBIDDEN' } });
   }

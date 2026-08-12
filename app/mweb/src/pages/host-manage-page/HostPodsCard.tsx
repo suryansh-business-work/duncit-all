@@ -17,6 +17,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { useHostPodActions } from '@duncit/host-pod-actions';
 import HostPodRow from './HostPodRow';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
+import PodClubAdminDialog, { type PodClubAdminTarget } from './PodClubAdminDialog';
 import {
   DEFAULT_HOST_PODS_FILTERS,
   activeHostFilterCount,
@@ -42,6 +43,7 @@ export default function HostPodsCard({
   const { menuHandlers, dialogs } = useHostPodActions(onChanged);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [clubAdminPod, setClubAdminPod] = useState<PodClubAdminTarget | null>(null);
 
   const visible = filterHostPods(pods, filters);
   const activeCount = activeHostFilterCount(filters);
@@ -69,7 +71,12 @@ export default function HostPodsCard({
     body = (
       <Stack spacing={1}>
         {visible.map((p: any) => (
-          <HostPodRow key={p.id} pod={p} actions={menuHandlers(p)} />
+          <HostPodRow
+            key={p.id}
+            pod={p}
+            actions={menuHandlers(p)}
+            onClubAdmin={() => setClubAdminPod(p)}
+          />
         ))}
       </Stack>
     );
@@ -104,6 +111,7 @@ export default function HostPodsCard({
         }}
         onClose={() => setFilterOpen(false)}
       />
+      <PodClubAdminDialog pod={clubAdminPod} onClose={() => setClubAdminPod(null)} />
       {dialogs}
     </Card>
   );

@@ -6,6 +6,7 @@ import { ActionRow } from '@/components/host-manage/ActionRow';
 import { FeedbackLinkRow } from '@/components/host-manage/FeedbackLinkRow';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -18,6 +19,7 @@ interface Props {
   onShareFeedback: () => void;
   onCopyFeedback: () => void;
   onCancel: () => void;
+  onClubAdmin: () => void;
 }
 
 /** Every per-pod action in one sheet, opened from the row's overflow button —
@@ -33,7 +35,9 @@ export function PodActionsSheet({
   onShareFeedback,
   onCopyFeedback,
   onCancel,
+  onClubAdmin,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink, danger, primary, success } = useThemeColors();
 
   return (
@@ -92,6 +96,13 @@ export function PodActionsSheet({
                   onOpen={onOpenFeedback}
                   onShare={onShareFeedback}
                   onCopy={onCopyFeedback}
+                />
+                <ActionRow
+                  testID="pod-action-club-admin"
+                  icon="support-agent"
+                  label={t('mweb.podClubAdmin.menuItem')}
+                  tint={primary}
+                  onPress={onClubAdmin}
                 />
                 <ActionRow
                   testID="pod-action-cancel"

@@ -43,6 +43,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const roles = me?.roles ?? [];
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
+  const showTourGuide = useFeatureFlag('tour_guide');
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   const effectiveMode = resolveMode(studioMode, roles);
@@ -109,6 +110,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             mode={effectiveMode}
             showPodPlans={showPodPlans}
             showLeaderboard={showLeaderboard}
+            showTourGuide={showTourGuide}
             onNavigate={go}
           />
 

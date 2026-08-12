@@ -5,7 +5,9 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import FeedbackLinkItem from './FeedbackLinkItem';
+import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props {
   podTitle: string;
@@ -18,6 +20,12 @@ interface Props {
   onShareFeedback: () => void;
   onCopyFeedback: () => void;
   onCancel: () => void;
+  /**
+   * Who runs this pod's club, and how to reach them. The card behind it is an
+   * mWeb/native surface, so the item only appears where that surface exists —
+   * a portal that passes nothing keeps the menu it had.
+   */
+  onClubAdmin?: () => void;
 }
 
 /**
@@ -36,7 +44,9 @@ export default function HostPodActionsMenu({
   onShareFeedback,
   onCopyFeedback,
   onCancel,
+  onClubAdmin,
 }: Readonly<Props>) {
+  const { labels } = useHostPodActionsConfig();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const pick = (action: () => void) => () => {
@@ -90,6 +100,14 @@ export default function HostPodActionsMenu({
           onShare={pick(onShareFeedback)}
           onCopy={pick(onCopyFeedback)}
         />
+        {onClubAdmin && (
+          <MenuItem onClick={pick(onClubAdmin)}>
+            <ListItemIcon>
+              <SupportAgentIcon fontSize="small" color="primary" />
+            </ListItemIcon>
+            <ListItemText primary={labels.clubAdmin} />
+          </MenuItem>
+        )}
         <MenuItem onClick={pick(onCancel)} sx={{ color: 'error.main' }}>
           <ListItemIcon>
             <CancelIcon fontSize="small" color="error" />

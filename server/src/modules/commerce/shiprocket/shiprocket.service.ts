@@ -328,6 +328,10 @@ export const shiprocketService = {
    */
   async createShipment(order: IProductOrder): Promise<IProductOrder> {
     if (order.fulfilment_method !== 'SHIP') return order;
+    // Already ordered with the courier. Creating a second ad-hoc order ships a
+    // second parcel and pays a second courier charge, and there is no undo — so
+    // the guard lives here, next to the call, not only in whatever retried it.
+    if (order.shiprocket?.order_id) return order;
     if (!(await isShiprocketConfigured())) return order;
     try {
       const pickup = await resolvePickup(order);

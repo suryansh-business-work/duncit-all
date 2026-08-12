@@ -27,6 +27,9 @@ interface Props {
   roles?: readonly string[] | null;
   /** Opens the docked chat panel — the layout owns it, not this drawer. */
   onOpenChat?: () => void;
+  /** Off drops the staff-chat entry, so the drawer never offers what the
+   * header has been told this console does not have (Admin setting). */
+  chatEnabled?: boolean;
 }
 
 /**
@@ -36,11 +39,23 @@ interface Props {
  * in, so reaching for the file manager mid-form does not cost you the form.
  * The sidebar stays the place for this portal's own pages.
  */
-export function AppsDrawer({ open, onClose, extraTools, roles, onOpenChat }: Readonly<Props>) {
+export function AppsDrawer({
+  open,
+  onClose,
+  extraTools,
+  roles,
+  onOpenChat,
+  chatEnabled = true,
+}: Readonly<Props>) {
   const [search, setSearch] = useState('');
   const [openTool, setOpenTool] = useState<string | null>(null);
 
-  const tools = useMemo(() => [...SHELL_TOOLS, ...(extraTools ?? [])], [extraTools]);
+  const tools = useMemo(() => {
+    const platform = chatEnabled
+      ? SHELL_TOOLS
+      : SHELL_TOOLS.filter((tool) => tool.key !== 'staff-chat');
+    return [...platform, ...(extraTools ?? [])];
+  }, [extraTools, chatEnabled]);
   const shown = useMemo(() => tools.filter((tool) => matchesTool(tool, search)), [tools, search]);
 
   const close = () => {

@@ -20,11 +20,13 @@ interface Props {
   pod: any;
   /** This row's wiring into the shared action dialogs. */
   actions: HostPodMenuHandlers;
+  /** Opens the club-admin card — mWeb's own dialog, not one the package owns. */
+  onClubAdmin: () => void;
 }
 
 /** One hosted pod row — link to the pod + the host's actions behind a single
  * overflow menu. A venue-rejected pod shows its status + the resubmission note. */
-export default function HostPodRow({ pod, actions }: Readonly<Props>) {
+export default function HostPodRow({ pod, actions, onClubAdmin }: Readonly<Props>) {
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
   const rejected = isVenueRejected(pod.venue_approval_status);
   const free = pod.pod_type === 'FREE';
@@ -64,7 +66,7 @@ export default function HostPodRow({ pod, actions }: Readonly<Props>) {
           color={free ? 'success' : 'primary'}
           variant="outlined"
         />
-        <HostPodActionsMenu {...actions} />
+        <HostPodActionsMenu {...actions} onClubAdmin={onClubAdmin} />
       </Stack>
       {rejected && (
         <Alert severity="warning" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ py: 0.25 }}>

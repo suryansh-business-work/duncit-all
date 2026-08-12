@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Alert,
@@ -46,13 +46,30 @@ export default function LeaderboardPage() {
     LEADERBOARD_BOARD,
     { variables: { category, period }, fetchPolicy: 'cache-and-network' }
   );
-  const { data: configData } = useQuery<{ leaderboardConfig: LeaderboardConfigData }>(
-    LEADERBOARD_CONFIG,
-    { fetchPolicy: 'cache-first' }
-  );
+  const { data: configData, loading: configLoading } = useQuery<{
+    leaderboardConfig: LeaderboardConfigData;
+  }>(LEADERBOARD_CONFIG, { fetchPolicy: 'cache-first' });
 
   const board = data?.leaderboard ?? null;
   const config = configData?.leaderboardConfig ?? null;
+
+  const spinner = (
+    <Stack alignItems="center" sx={{ py: 4 }}>
+      <CircularProgress size={24} />
+    </Stack>
+  );
+
+  let configSection: ReactNode = null;
+  if (configLoading && !config) {
+    configSection = spinner;
+  } else if (config) {
+    configSection = (
+      <>
+        <HowToEarnCard config={config} />
+        <RewardsCard config={config} category={category} />
+      </>
+    );
+  }
 
   return (
     <Box sx={{ p: 2 }}>
@@ -90,16 +107,9 @@ export default function LeaderboardPage() {
 
         {error && <Alert severity="error">{t('mweb.leaderboard.loadError')}</Alert>}
 
-        {loading && !data ? (
-          <Stack alignItems="center" sx={{ py: 4 }}>
-            <CircularProgress size={24} />
-          </Stack>
-        ) : (
-          <LeaderboardList rows={board?.rows ?? []} />
-        )}
+        {loading && !data ? spinner : <LeaderboardList rows={board?.rows ?? []} />}
 
-        {config && <HowToEarnCard config={config} />}
-        {config && <RewardsCard config={config} category={category} />}
+        {configSection}
       </Stack>
     </Box>
   );

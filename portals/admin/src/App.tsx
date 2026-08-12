@@ -7,6 +7,7 @@ import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import PortalAppSettingsPage from './pages/portal-app-settings';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
@@ -82,6 +83,7 @@ export default function App() {
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/portal-app-settings" element={<PortalAppSettingsPage />} />
                 <Route path="/localization/locales" element={<LocalesPage />} />
                 <Route path="/localization/translations" element={<TranslationsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />

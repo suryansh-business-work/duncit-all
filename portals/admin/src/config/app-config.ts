@@ -103,6 +103,7 @@ export const appConfig = {
       children: [
         { label: 'Branding', to: '/branding', icon: 'tune' },
         { label: 'Settings', to: '/settings', icon: 'settings' },
+        { label: 'Portal App Setting', to: '/portal-app-settings', icon: 'tune' },
       ],
     },
   ],
@@ -164,5 +165,11 @@ export const appConfig = {
     },
     { label: 'Branding', to: '/branding', section: 'System', keywords: ['logo', 'theme', 'identity'] },
     { label: 'Settings', to: '/settings', section: 'System', keywords: ['system', 'config', 'preferences'] },
+    {
+      label: 'Portal App Setting',
+      to: '/portal-app-settings',
+      section: 'System',
+      keywords: ['portal', 'header', 'chat', 'coworker', 'apps', 'drawer', 'console'],
+    },
   ],
 } satisfies AppConfig;

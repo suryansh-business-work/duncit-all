@@ -3,6 +3,7 @@ import { useTheme } from '@mui/material';
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride';
 import { findTour, type TourStep } from '@duncit/tours';
 import { useLocation } from 'react-router-dom';
+import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import { useTours } from './TourContext';
 
 /** Anchors are declared as `data-tour="<anchor>"` on the element they describe. */
@@ -61,6 +62,9 @@ export function TourRunner() {
   const location = useLocation();
   const { activeTourId, finishTour } = useTours();
   const [steps, setSteps] = useState<Step[]>([]);
+  // The kill switch: with `tour_guide` off no overlay can open, whatever armed
+  // it — the Tour Guide row is hidden, but the route stays reachable by URL.
+  const enabled = useFeatureFlag('tour_guide');
 
   useEffect(() => {
     setSteps([]);
@@ -105,7 +109,7 @@ export function TourRunner() {
     return () => globalThis.clearInterval(timer);
   }, [activeTourId, finishTour, location.pathname]);
 
-  if (!activeTourId || steps.length === 0) return null;
+  if (!enabled || !activeTourId || steps.length === 0) return null;
 
   const handleEvent = ({ status }: EventData) => {
     // Finished or skipped — both count as shown.

@@ -34,6 +34,10 @@ export interface AppHeaderProps {
   /** The docked chat panel state, owned by the layout it narrows. */
   chatOpen?: boolean;
   onToggleChat?: () => void;
+  /** Off hides the staff-chat button and its apps-drawer entry (Admin setting). */
+  chatEnabled?: boolean;
+  /** Off hides the apps button and the drawer with it (Admin setting). */
+  appsEnabled?: boolean;
 }
 
 /** The unified console AppBar: hamburger, brand, global search, mode toggle, account. */
@@ -49,6 +53,8 @@ export function AppHeader({
   tools,
   chatOpen = false,
   onToggleChat,
+  chatEnabled = true,
+  appsEnabled = true,
 }: Readonly<AppHeaderProps>) {
   const colorMode = useColorMode();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -56,6 +62,7 @@ export function AppHeader({
   // Only people who can sign into a staff console have coworkers to chat with,
   // and the server refuses the query to anyone else — so it is not asked.
   const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
+  const showChat = isStaff && chatEnabled;
 
   return (
     <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -103,14 +110,16 @@ export function AppHeader({
             >
               <SearchIcon fontSize="small" />
             </IconButton>
-            {isStaff && onToggleChat && (
+            {showChat && onToggleChat && (
               <StaffChatButton meId={user?.user_id} open={chatOpen} onToggle={onToggleChat} />
             )}
-            <Tooltip title="Apps">
-              <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
-                <AppsIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {appsEnabled && (
+              <Tooltip title="Apps">
+                <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
+                  <AppsIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
               <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
@@ -120,13 +129,16 @@ export function AppHeader({
           </>
         )}
       </Toolbar>
-      <AppsDrawer
-        open={appsOpen}
-        onClose={() => setAppsOpen(false)}
-        extraTools={tools}
-        roles={user?.roles}
-        onOpenChat={onToggleChat}
-      />
+      {appsEnabled && (
+        <AppsDrawer
+          open={appsOpen}
+          onClose={() => setAppsOpen(false)}
+          extraTools={tools}
+          roles={user?.roles}
+          onOpenChat={onToggleChat}
+          chatEnabled={chatEnabled}
+        />
+      )}
     </AppBar>
   );
 }

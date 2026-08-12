@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { TourGuideProvider, useTourGuideController } from 'rn-tourguide';
 
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMe } from '@/hooks/useMe';
 import { useThemeStore } from '@/stores/theme.store';
 import { useToursStore } from '@/stores/tours.store';
@@ -132,6 +133,10 @@ function TourRunner() {
  */
 export function NativeTourProvider({ children }: Readonly<{ children: ReactNode }>) {
   const scheme = useThemeStore((s) => s.scheme);
+  // The kill switch: with `tour_guide` off the runner never mounts, so nothing
+  // can open an overlay — the Tour Guide row is hidden, but the screen is still
+  // registered and reachable by deep link.
+  const enabled = useFeatureFlag('tour_guide');
 
   return (
     <TourGuideProvider
@@ -147,7 +152,7 @@ export function NativeTourProvider({ children }: Readonly<{ children: ReactNode 
       preventOutsideInteraction
     >
       {children}
-      <TourRunner />
+      {enabled ? <TourRunner /> : null}
     </TourGuideProvider>
   );
 }

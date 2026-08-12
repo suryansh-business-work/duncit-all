@@ -76,6 +76,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       linkCopied: 'Feedback link copied',
       copyFailed: 'Could not copy the link. Copy it from the feedback page instead.',
     },
+    /**
+     * Only the menu label lives here. The card behind it is an mWeb/native
+     * surface (rule 40 — the pair shares logic, never UI), so the portals
+     * resolve the label and never render the rest of `mweb.podClubAdmin`.
+     */
+    podClubAdmin: {
+      menuItem: 'Pod Club Admin',
+    },
     hostScan: {
       personOnTicket: 'person on this ticket',
       peopleOnTicket: 'people on this ticket',
@@ -431,6 +439,31 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       failed: 'The action failed. Please try again.',
       empty: 'No portal access requests match the current filters.',
       searchPlaceholder: 'Search by requester name or email',
+    },
+    // Which consoles offer the header's chat and apps buttons. One row per
+    // entry in the server's portal registry, so a portal added there shows up
+    // here without a code change.
+    portalApp: {
+      title: 'Portal App Settings',
+      subtitle:
+        'Choose which consoles offer “Chat with a coworker” and the Apps drawer in their header.',
+      hint: 'A change applies the next time that console is opened or reloaded. Turning chat off also removes it from the Apps drawer.',
+      colPortal: 'Portal',
+      colLink: 'Link',
+      colChat: 'Chat with a coworker',
+      colApps: 'App',
+      typePortal: 'Portal',
+      typeWebsite: 'Website',
+      typeApp: 'App',
+      // Websites and the member apps have no console header, so the switches
+      // say so instead of pretending to control something.
+      notApplicable: 'No console header',
+      empty: 'No portals registered.',
+      searchPlaceholder: 'Search by name or key',
+      on: 'On',
+      off: 'Off',
+      savedChat: 'Chat {state} for {portal}',
+      savedApps: 'App {state} for {portal}',
     },
     leaderboard: {
       boardsTitle: 'Leaderboard Boards',

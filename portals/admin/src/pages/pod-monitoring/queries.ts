@@ -28,6 +28,23 @@ export const POD_AUDIT_LOGS_TABLE = gql`
   }
 `;
 
+/** The AI-monitored action trail of one pod, for the per-pod activity dialog. */
+export const POD_AUDIT_LOGS = gql`
+  query PodAuditLogs($pod_doc_id: ID!) {
+    podAuditLogs(pod_doc_id: $pod_doc_id) {
+      id
+      action
+      source
+      actor_name
+      note
+      changes { field from to }
+      ai_risk
+      ai_summary
+      created_at
+    }
+  }
+`;
+
 export type PodAuditAction =
   | 'CREATE'
   | 'UPDATE'

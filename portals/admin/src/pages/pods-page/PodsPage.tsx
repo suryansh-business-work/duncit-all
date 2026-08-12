@@ -7,6 +7,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { makeNativeParityPodConfig, useMediaPickerBridge, type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { useFeatureFlag } from '@duncit/app-settings';
+import PodActivityDialog from '../pod-monitoring/PodActivityDialog';
 import { PODS_TABLE, type PodRow } from './queries';
 import CompletePodDialog from './complete-pod-dialog';
 import ReleaseSummaryDialog from './ReleaseSummaryDialog';
@@ -28,6 +29,7 @@ export default function PodsPage() {
   const lookups = usePodPageData();
   const [toast, setToast] = useState<string | null>(null);
   const [quickPod, setQuickPod] = useState<PodRow | null>(null);
+  const [trailPod, setTrailPod] = useState<PodRow | null>(null);
   // Cancelled pods stay editable, so they must be findable — off by default.
   const [showCancelled, setShowCancelled] = useState(false);
   const picker = useMediaPickerBridge();
@@ -118,8 +120,11 @@ export default function PodsPage() {
         onQuickEdit={setQuickPod}
         onDelete={editor.remove}
         onComplete={releaseRequest.openCompletePod}
+        onMonitor={setTrailPod}
         onView={(p) => navigate(`/pods/${p.id}`)}
       />
+
+      <PodActivityDialog pod={trailPod} onClose={() => setTrailPod(null)} />
 
       <CompletePodDialog
         open={!!releaseRequest.completePod}

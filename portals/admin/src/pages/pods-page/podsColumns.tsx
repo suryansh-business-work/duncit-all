@@ -3,6 +3,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { AttendanceChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import PodActionButtons from './PodActionButtons';
+import AiMonitorPill from '../pod-monitoring/AiMonitorPill';
 import type { PodRow } from './queries';
 import {
   POD_MODE_OPTIONS,
@@ -100,10 +101,11 @@ export interface PodsColumnDeps {
   onQuickEdit: (p: PodRow) => void;
   onDelete: (p: PodRow) => void;
   onComplete: (p: PodRow) => void;
+  onMonitor: (p: PodRow) => void;
 }
 
 export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<PodRow>[] {
-  const { showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete } = deps;
+  const { showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor } = deps;
   const placeValue = (p: PodRow) => {
     if (p.pod_mode === 'VIRTUAL') return p.meeting_platform ?? 'Virtual';
     if (p.venue_id) return venueName(p.venue_id);
@@ -197,6 +199,16 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       hide: true,
       width: 130,
       valueGetter: (p) => dateValue(p.created_at),
+    },
+    {
+      field: 'ai_monitor',
+      headerName: 'AI Monitoring',
+      sortable: false,
+      width: 150,
+      cellRenderer: (p: PodRow) => <AiMonitorPill onClick={() => onMonitor(p)} />,
+      // Renderer-only column: keyed on the title the activity dialog shows,
+      // so the cell repaints when an edit renames the pod.
+      valueGetter: (p) => p.pod_title,
     },
     { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
   ];

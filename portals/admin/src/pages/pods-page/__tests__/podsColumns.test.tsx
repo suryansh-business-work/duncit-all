@@ -36,6 +36,7 @@ const makeDeps = (over: Partial<PodsColumnDeps> = {}): PodsColumnDeps => ({
   onQuickEdit: vi.fn(),
   onDelete: vi.fn(),
   onComplete: vi.fn(),
+  onMonitor: vi.fn(),
   ...over,
 });
 
@@ -71,6 +72,7 @@ describe('buildPodsColumns / column set', () => {
       'is_active',
       'completed_at',
       'created_at',
+      'ai_monitor',
       'actions',
     ]);
   });
@@ -98,7 +100,7 @@ describe('buildPodsColumns / column set', () => {
     expect(fields[7]).toBe('pod_amount');
     expect(fields[8]).toBe('products');
     expect(fields[9]).toBe('no_of_spots');
-    expect(fields).toHaveLength(15);
+    expect(fields).toHaveLength(16);
   });
 
   it('hides the audit-only columns by default', () => {

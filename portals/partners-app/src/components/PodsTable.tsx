@@ -35,6 +35,9 @@ interface Props<T extends PodRowBase> {
   toolbarActions?: ReactNode;
   /** When provided, a trailing Actions column renders this per row. */
   renderActions?: (pod: T) => ReactNode;
+  /** When provided, an "AI Monitoring" column renders this per row — the
+   * club-admin list passes the activity-dialog pill; the host list does not. */
+  renderMonitor?: (pod: T) => ReactNode;
 }
 
 /** Booking-cycle state wins over the plain active/draft split, so a cancelled
@@ -75,6 +78,7 @@ export default function PodsTable<T extends PodRowBase>({
   emptyText,
   toolbarActions,
   renderActions,
+  renderMonitor,
 }: Readonly<Props<T>>) {
   const columns = useMemo<DuncitColumn<T>[]>(() => {
     const renderPod = (pod: T) => (
@@ -147,6 +151,18 @@ export default function PodsTable<T extends PodRowBase>({
         valueGetter: (pod) => (pod.completed_at ? format(new Date(pod.completed_at), 'dd MMM yyyy') : '—'),
       },
     ];
+    if (renderMonitor) {
+      cols.push({
+        field: 'ai_monitor',
+        headerName: 'AI Monitoring',
+        sortable: false,
+        width: 150,
+        cellRenderer: renderMonitor,
+        // Renderer-only column: keyed on the title the activity dialog shows,
+        // so the cell repaints when an edit renames the pod.
+        valueGetter: (pod) => pod.pod_title,
+      });
+    }
     if (renderActions) {
       cols.push({
         field: 'actions',
@@ -157,7 +173,7 @@ export default function PodsTable<T extends PodRowBase>({
       });
     }
     return cols;
-  }, [clubName, venueName, renderActions]);
+  }, [clubName, venueName, renderActions, renderMonitor]);
 
   return (
     <DuncitTable<T>

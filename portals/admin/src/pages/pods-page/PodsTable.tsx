@@ -15,6 +15,7 @@ interface Props {
   onQuickEdit: (p: PodRow) => void;
   onDelete: (p: PodRow) => void;
   onComplete: (p: PodRow) => void;
+  onMonitor: (p: PodRow) => void;
   onView: (p: PodRow) => void;
 }
 
@@ -31,6 +32,7 @@ export default function PodsTable({
   onQuickEdit,
   onDelete,
   onComplete,
+  onMonitor,
   onView,
 }: Readonly<Props>) {
   const showProducts = useFeatureFlag('is_product_visible');
@@ -45,8 +47,9 @@ export default function PodsTable({
         onQuickEdit,
         onDelete,
         onComplete,
+        onMonitor,
       }),
-    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete],
+    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor],
   );
 
   return (

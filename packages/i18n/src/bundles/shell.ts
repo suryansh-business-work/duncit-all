@@ -84,6 +84,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     podClubAdmin: {
       menuItem: 'Pod Club Admin',
     },
+    /** The per-pod "AI Monitoring" pill on the Admin + Partners pods tables —
+     * one copy here because the same pill opens the same activity dialog in
+     * both consoles. */
+    podMonitoring: {
+      aiMonitoring: 'AI Monitoring',
+    },
     hostScan: {
       personOnTicket: 'person on this ticket',
       peopleOnTicket: 'people on this ticket',

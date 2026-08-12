@@ -39,6 +39,10 @@ const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
   'owner',
 ]);
 
+/** Fields the approved-edit form locks and never persists — a venue approved
+ * before they became mandatory must still be able to save its section. */
+const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>(['gstin', 'pan']);
+
 interface Options {
   venue: any;
   locations: any[];
@@ -168,7 +172,8 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
     setError(null);
     setSaved(null);
     if (!venueId || !APPROVED_EDIT_SECTIONS.has(section)) return false;
-    const ok = await form.trigger(SECTION_FIELDS[section], { shouldFocus: true });
+    const fields = SECTION_FIELDS[section].filter((field) => !APPROVED_LOCKED_FIELDS.has(field));
+    const ok = await form.trigger(fields, { shouldFocus: true });
     if (!ok) return false;
     try {
       await saveApproved({

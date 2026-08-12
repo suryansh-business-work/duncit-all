@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, FormHelperText, IconButton, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -7,6 +7,8 @@ import MediaPickerDialog from '../../../components/MediaPickerDialog';
 
 interface Props {
   coverImageUrl: string;
+  /** Validation message for the (mandatory) cover image. */
+  coverError?: string;
   gallery: string[];
   disabled?: boolean;
   onCoverChange: (url: string) => void;
@@ -16,6 +18,7 @@ interface Props {
 /** Cover + gallery pickers with their upload dialogs, self-contained. */
 export default function VenueImagesField({
   coverImageUrl,
+  coverError,
   gallery,
   disabled,
   onCoverChange,
@@ -27,8 +30,8 @@ export default function VenueImagesField({
   return (
     <Stack spacing={2}>
       <Stack spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          Cover image
+        <Typography variant="body2" color={coverError ? 'error.main' : 'text.secondary'}>
+          Cover image *
         </Typography>
         {coverImageUrl && (
           <Box
@@ -59,6 +62,7 @@ export default function VenueImagesField({
         >
           {coverImageUrl ? 'Change cover image' : 'Upload cover image'}
         </Button>
+        {coverError && <FormHelperText error>{coverError}</FormHelperText>}
       </Stack>
       <Stack spacing={1}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>

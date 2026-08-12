@@ -44,7 +44,8 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="GSTIN (optional)"
+            label="GSTIN"
+            required
             disabled={approvedEdit}
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? (approvedEdit ? 'Locked after approval' : '15-character GST number, e.g. 22ABCDE1234F1Z5')}
@@ -57,7 +58,8 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="PAN (optional)"
+            label="PAN"
+            required
             disabled={approvedEdit}
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? (approvedEdit ? 'Locked after approval' : '10-character PAN, e.g. ABCDE1234F')}

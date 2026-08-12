@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Collapse, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from 'react-router-dom';
@@ -35,6 +36,36 @@ interface GroupItemProps extends NodeProps {
 
 interface NavNodeProps extends LeafItemProps, GroupItemProps {}
 
+const leafSx = {
+  mb: 0.25,
+  py: 0.75,
+  '&.Mui-selected': {
+    bgcolor: 'primary.main',
+    color: 'primary.contrastText',
+    '& .MuiListItemIcon-root': { color: 'inherit' },
+  },
+};
+
+/** A `featured` leaf (e.g. Partners' "Earn with Duncit") renders as a
+ * highlighted card: primary gradient wash, primary border and a caption line. */
+const featuredLeafSx = {
+  ...leafSx,
+  mt: 0.25,
+  mb: 0.75,
+  borderRadius: 2,
+  border: '1px solid',
+  borderColor: 'primary.main',
+  background: (theme: Theme) =>
+    `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.18)} 0%, ${alpha(theme.palette.primary.main, 0.04)} 100%)`,
+  '& .MuiListItemIcon-root': { color: 'primary.main' },
+  '&.Mui-selected': {
+    bgcolor: 'primary.main',
+    color: 'primary.contrastText',
+    '& .MuiListItemIcon-root': { color: 'inherit' },
+    '& .MuiListItemText-secondary': { color: 'inherit', opacity: 0.85 },
+  },
+};
+
 function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafItemProps>) {
   const selected = forceSelected ?? matches(pathname, item.to);
   return (
@@ -43,20 +74,17 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
       to={item.to ?? '#'}
       selected={selected}
       onClick={onNavigate}
-      sx={{
-        mb: 0.25,
-        py: 0.75,
-        '&.Mui-selected': {
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          '& .MuiListItemIcon-root': { color: 'inherit' },
-        },
-      }}
+      sx={item.featured ? featuredLeafSx : leafSx}
     >
       <ListItemIcon sx={{ minWidth: 34, color: 'text.secondary' }}>
         <AppIcon name={item.icon} fontSize="small" />
       </ListItemIcon>
-      <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600, variant: 'body2' }} />
+      <ListItemText
+        primary={item.label}
+        secondary={item.featured ? item.caption : undefined}
+        primaryTypographyProps={{ fontWeight: item.featured ? 800 : 600, variant: 'body2' }}
+        secondaryTypographyProps={{ variant: 'caption' }}
+      />
     </ListItemButton>
   );
 }

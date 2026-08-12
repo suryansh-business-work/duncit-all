@@ -47,6 +47,16 @@ export const appConfig: AppConfig = {
         { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
       ],
     },
+    // Featured invitation into the other earn journeys — the same entry
+    // mWeb/native show in their profile grids, styled as a highlighted card.
+    // Kept below the partner sections so landingPath() is unaffected.
+    {
+      label: 'Earn with Duncit',
+      caption: 'Host, list or sell',
+      to: '/earn',
+      icon: 'volunteer-activism',
+      featured: true,
+    },
     // Account-level, role-independent — same section as mWeb/native's
     // Manage Account list, which also places it right before FAQs.
     { label: 'Verification', to: '/verification', icon: 'verified-user' },

@@ -1,75 +1,38 @@
-import { gql, useQuery } from '@apollo/client';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import GroupsIcon from '@mui/icons-material/Groups';
-import {
-  EARN_JOURNEYS,
-  earnBoxState,
-  partnerPortalUrl,
-  type EarnJourney,
-  type EarnJourneyCta,
-  type EarnMeeting,
-} from '@duncit/onboarding';
-import EarnBox from './EarnBox';
-import EarnMeetingActions from './EarnMeetingActions';
+import { partnerPortalUrl } from '@duncit/onboarding';
+import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
+import { EarnJourneyList, EarnSurfaceProvider, type EarnSurfaceConfig } from '@duncit/earn';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useTranslation } from '../../i18n/useTranslation';
 
-const EARN_ME = gql`
-  query EarnMe {
-    me {
-      user_id
-      roles
-    }
-    myMeetings {
-      id
-      request_no
-      kind
-      status
-      approval_status
-      onboarded_status
-      scheduled_at
-      requested_at
-      reschedule_count
-    }
-  }
-`;
-
-// Journeys, copy and the locked/unlocked rules are shared with native and the
-// partner portal so the three cannot drift (they already had).
-const ICONS: Record<EarnJourney['iconKey'], JSX.Element> = {
-  host: <DashboardIcon />,
-  venue: <StorefrontIcon />,
-  ecomm: <Inventory2Icon />,
-  club: <GroupsIcon />,
-};
-
-/** "Earn with Duncit" — three ways to start earning. A box is disabled when the
- * user already holds the matching role, or while an onboarding meeting for it
- * is still pending. */
+/** "Earn with Duncit" — the shared journey cards (@duncit/earn) with mWeb's
+ * page chrome and navigation: surveys are in-app routes, approved venue/brand/
+ * club CTAs deep-link to the Partner Portal (preserved through login). */
 export default function EarnPage() {
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
-  const roles: string[] = data?.me?.roles ?? [];
-  const meetings: EarnMeeting[] = data?.myMeetings ?? [];
-  const showSkeleton = loading && !data;
+  const { t } = useTranslation();
   // The product-seller path is hidden when products are gated off — mirrors the
   // native EarnScreen so all three platforms behave identically.
   const showProducts = useFeatureFlag('is_product_visible');
-  const boxes = showProducts ? EARN_JOURNEYS : EARN_JOURNEYS.filter((box) => box.kind !== 'ECOMM');
 
-  // Approved-user next step: an in-app route (host) or the Partner Portal
-  // (venue/ecomm/club — opening the deep link there preserves it through login).
-  const runCta = (cta: EarnJourneyCta) => {
-    if (cta.target === 'internal') {
-      navigate(cta.internalTo);
-      return;
-    }
-    globalThis.window.location.replace(partnerPortalUrl(cta.partnerPath));
-  };
+  const config = useMemo<EarnSurfaceConfig>(
+    () => ({
+      openJourney: (journey) => navigate(journey.surveyPath),
+      runCta: (cta) => {
+        if (cta.target === 'internal') {
+          navigate(cta.internalTo);
+          return;
+        }
+        globalThis.window.location.replace(partnerPortalUrl(cta.partnerPath));
+      },
+      meetingSlotLabels: (rescheduling) => mwebMeetingLabels(t, rescheduling),
+      currentSlotBadge: mwebCurrentLabel(t),
+    }),
+    [navigate, t],
+  );
 
   return (
     <Stack
@@ -89,43 +52,9 @@ export default function EarnPage() {
           Pick a way to start earning on Duncit.
         </Typography>
       </Stack>
-      <Stack spacing={1.5}>
-        {showSkeleton
-          ? boxes.map((box) => (
-              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: '16px' }} />
-            ))
-          : null}
-        {showSkeleton ? null : boxes.map((box) => {
-          const state = earnBoxState(box, roles, meetings);
-          const { scheduledMeeting } = state;
-          const cta = state.approved
-            ? { label: box.cta.label, onClick: () => runCta(box.cta) }
-            : undefined;
-          return (
-            <Stack key={box.role} spacing={0}>
-              <EarnBox
-                icon={ICONS[box.iconKey]}
-                title={box.title}
-                description={state.description}
-                to={box.surveyPath}
-                disabled={state.disabled}
-                disabledLabel={state.disabledLabel}
-                cta={cta}
-              />
-              {scheduledMeeting && (
-                <EarnMeetingActions
-                  kind={box.kind}
-                  bookedAt={scheduledMeeting.scheduled_at ?? scheduledMeeting.requested_at ?? null}
-                  rescheduleCount={scheduledMeeting.reschedule_count ?? 0}
-                  onChanged={() => {
-                    refetch().catch(() => undefined);
-                  }}
-                />
-              )}
-            </Stack>
-          );
-        })}
-      </Stack>
+      <EarnSurfaceProvider config={config}>
+        <EarnJourneyList showProducts={showProducts} />
+      </EarnSurfaceProvider>
     </Stack>
   );
 }

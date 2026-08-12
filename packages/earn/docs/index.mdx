@@ -1,0 +1,88 @@
+---
+name: '@duncit/earn'
+summary: 'The MUI Earn with Duncit journey cards, meeting reschedule/cancel dialogs and their GraphQL documents, shared by mWeb and the Partners portal.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+exports:
+  - 'EarnSurfaceProvider'
+  - 'useEarnSurface'
+  - 'EarnJourneyList'
+  - 'EarnBox'
+  - 'EarnMeetingActions'
+  - 'RescheduleMeetingDialog'
+  - 'CancelMeetingDialog'
+  - 'useEarnProductsVisible'
+  - 'EARN_ME'
+  - 'MEETING_SLOTS'
+  - 'RESCHEDULE_MY_MEETING'
+  - 'CANCEL_MY_MEETING'
+  - 'PUBLIC_FEATURE_FLAGS'
+  - 'MeetingReasonForm'
+  - 'meetingReasonSchema'
+---
+
+# @duncit/earn
+
+The **rendered** Earn with Duncit feature for MUI surfaces: journey cards,
+the pending-meeting reschedule/cancel actions, both dialogs and the GraphQL
+documents they fire. mWeb's `/earn` page and the Partners portal's sidebar
+"Earn with Duncit" entry render the exact same components from here.
+
+The *rules* — which journeys exist, their copy, and when a card is locked,
+pending or approved — stay in `@duncit/onboarding` (framework-free), which the
+native app also consumes for its Tamagui twin. This package is the MUI layer on
+top: two MUI surfaces may share whole components, native shares logic only
+(rule 40).
+
+## Mount it
+
+Wrap the list in an `EarnSurfaceProvider`. The config is the full list of
+things the two surfaces disagree on:
+
+```tsx
+import { EarnJourneyList, EarnSurfaceProvider, type EarnSurfaceConfig } from '@duncit/earn';
+import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
+
+const config: EarnSurfaceConfig = {
+  // Unlocked card click — the application flow.
+  openJourney: (journey) => navigate(journey.surveyPath),
+  // Approved-role next step.
+  runCta: (cta) => {
+    if (cta.target === 'internal') { navigate(cta.internalTo); return; }
+    globalThis.window.location.replace(partnerPortalUrl(cta.partnerPath));
+  },
+  // Slot-picker copy from the surface's namespace (portal: shellMeetingLabels).
+  meetingSlotLabels: (rescheduling) => mwebMeetingLabels(t, rescheduling),
+  currentSlotBadge: mwebCurrentLabel(t),
+};
+
+<EarnSurfaceProvider config={config}>
+  <EarnJourneyList showProducts={showProducts} />
+</EarnSurfaceProvider>;
+```
+
+On the Partners portal the same four callbacks invert: `partner` CTA paths are
+*in-portal* routes (`navigate(cta.partnerPath)`), while the survey flow and the
+host CTA live on mWeb and open externally via `urlConfigs.mwebUrl`.
+
+## What it deliberately does not own
+
+- **Page chrome** — mWeb keeps its Back button + heading; the portal renders
+  its own header inside the shell. Only the card stack downward is shared.
+- **The product-visibility decision** — `EarnJourneyList` takes a
+  `showProducts` boolean. mWeb passes its generic `useFeatureFlag`; a portal
+  without one uses the exported `useEarnProductsVisible()` (same
+  `is_product_visible` semantics, default hidden).
+- **Journey copy and lock rules** — `@duncit/onboarding`.
+
+## GraphQL
+
+`EARN_ME` (roles + `myMeetings`), `MEETING_SLOTS`, `RESCHEDULE_MY_MEETING`,
+`CANCEL_MY_MEETING`, `PUBLIC_FEATURE_FLAGS`. The package calls
+`@apollo/client` hooks directly — both consumers already mount an
+`ApolloProvider`, so nothing is injected.

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import {
   Alert,
   Button,
@@ -10,16 +10,8 @@ import {
   DialogTitle,
   Stack,
 } from '@mui/material';
+import { CANCEL_MY_MEETING } from './queries';
 import { MeetingReasonForm } from './meeting-reason';
-
-const CANCEL_MY_MEETING = gql`
-  mutation CancelMyMeeting($kind: SurveyKind!, $reason: String) {
-    cancelMyMeeting(kind: $kind, reason: $reason) {
-      id
-      status
-    }
-  }
-`;
 
 interface Props {
   open: boolean;

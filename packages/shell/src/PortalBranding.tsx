@@ -6,7 +6,9 @@ const PORTAL_BRANDING = gql`
   query PortalBranding {
     branding {
       app_name
+      logo_url
       portals_favicon_url
+      portals_logo_url
       portals_splash_url
       portals_splash_type
       portals_font_family
@@ -84,10 +86,16 @@ export function PortalBranding(): React.ReactElement | null {
     () => globalThis.window !== undefined && !sessionStorage.getItem(SPLASH_SESSION_KEY),
   );
 
+  // Same fallback chain as useBranding's logo: the portal favicon wins, then
+  // the portal logo, then the global logo — so the tab icon follows the admin
+  // Branding settings even when no portal-specific favicon was uploaded. The
+  // static bundled icon only remains when nothing is configured at all.
+  const faviconUrl: string =
+    branding?.portals_favicon_url || branding?.portals_logo_url || branding?.logo_url || '';
+
   useEffect(() => {
-    const faviconUrl: string = branding?.portals_favicon_url || '';
     if (faviconUrl) applyFavicon(faviconUrl);
-  }, [branding?.portals_favicon_url]);
+  }, [faviconUrl]);
 
   useEffect(() => {
     const family: string = branding?.portals_font_family || '';

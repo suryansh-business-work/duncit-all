@@ -658,25 +658,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       close: 'Close',
       tapToClose: 'Tap anywhere to close',
     },
-    // "Pod Club Admin" in the host's per-pod action menu: who runs the club this
-    // pod belongs to, and how to reach them. The contact rows themselves are
-    // rendered by the shared ClubAdminCard, so only the chrome is keyed here.
-    // `menuItem` is duplicated word-for-word at `shell.podClubAdmin.menuItem`
-    // because @duncit/host-pod-actions resolves the label from whichever
-    // namespace the calling surface ships.
-    podClubAdmin: {
-      menuItem: 'Pod Club Admin',
-      title: 'Pod Club Admin',
-      caption: 'Contact the Club Admin',
-      // A club with no admin assigned yet is normal, not an error — the pod
-      // still runs, there is just nobody to call.
-      none: 'This pod’s club has no admin assigned yet.',
-      loadFailed: 'The club admin could not be loaded. Please try again.',
-      // Raising a ticket carries the pod through, so support never has to ask
-      // which pod this is about.
-      support: 'Raise a support ticket',
-      close: 'Close',
-    },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
     // the aspect labels are keyed from @duncit/utils' POD_FEEDBACK_ASPECT_KEY,

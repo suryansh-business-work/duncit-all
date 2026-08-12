@@ -71,7 +71,11 @@ export function useRazorpayVerification() {
    * selection to the fields the confirmation screen renders and NOTHING else;
    * `Payment.pod` resolves a findById per row. */
   const readMyPayment = async (paymentDocId: string): Promise<VerifiedPayment | null> => {
-    const data = await graphqlRequest(MobileMyPaymentDocument, { id: paymentDocId }, { auth: true });
+    const data = await graphqlRequest(
+      MobileMyPaymentDocument,
+      { id: paymentDocId },
+      { auth: true },
+    );
     return data.myPayment ?? null;
   };
 

@@ -1031,6 +1031,43 @@ export const podMemberService = {
   },
 
   /**
+   * A paid join, end to end, OUTSIDE the payment finalizer: the membership plus
+   * the three things that follow one — the ticket, the backout fill and the
+   * join points.
+   *
+   * The finalizer does not call this. It needs the membership and the ticket
+   * inside its transaction and the fill afterwards, so it composes the same
+   * primitives in its own order. This is the composition for every other
+   * caller, and it holds no logic of its own precisely so the two orderings
+   * cannot drift into two different definitions of "joined".
+   *
+   * Every step after the membership is best-effort: the booking is the thing
+   * that must not be lost, and a ticket or a points hiccup is recoverable.
+   */
+  async recordPaidJoin(
+    podDocId: string,
+    userId: string,
+    paymentDocId: string,
+    seats = 1
+  ): Promise<IPodMember> {
+    const member = await this.createPaidMembership(podDocId, userId, paymentDocId, seats);
+    try {
+      const { ticketService } = await import('@modules/pods/ticket/ticket.service');
+      await ticketService.ensureForMembership(String(member._id));
+    } catch (e) {
+      logs.server.warn('podMember', 'recordPaidJoin', { error: e, msg: 'Ticket issue failed' });
+    }
+    try {
+      const pod = await PodModel.findById(podDocId);
+      if (pod) await fillBackoutsAfterJoin(pod, userId);
+    } catch (e) {
+      logs.server.warn('podMember', 'recordPaidJoin', { error: e, msg: 'Backout fill failed' });
+    }
+    awardJoinPoints(userId, podDocId);
+    return member;
+  },
+
+  /**
    * Rejoin a pod the caller previously backed out of — no payment. Flips the
    * existing BACKED_OUT membership back to JOINED (reusing its join payment) and
    * re-adds the attendee. Allowed only until the pod completes / starts, and

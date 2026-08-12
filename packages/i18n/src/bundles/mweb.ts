@@ -1185,7 +1185,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       meetingLinkHint: 'Attendees join through this link',
       meetingNotes: 'Meeting notes',
       startDateTime: 'Start date & time',
-      endDateTime: 'End date & time (optional)',
+      endDateTime: 'End date & time',
       totalDuration: 'Total duration: {duration}',
       // Native only — mWeb schedules with MUI X's picker, which supplies its own
       // placeholder, calendar labels and confirm button.
@@ -1325,6 +1325,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         startRequired: 'Start date/time required',
         startFuture: 'Start date/time must be in the future',
         endAfterStart: 'End must be after start',
+        endMinDuration: 'End must be at least 30 minutes after the start',
         // Native only — its schedule is typed as text and must parse first.
         dateTimeFormat: 'Use YYYY-MM-DD HH:mm',
         // mWeb only — its pod type can be cleared, native's is always one of two.
@@ -1390,6 +1391,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       attendanceMarkedOne: '{name} is checked in.',
       attendanceMarkedGroup: '{name} and {count} more are checked in.',
       alreadyMarked: 'Already checked in',
+      // The buyer's chip while the rest of the group is still being collected —
+      // the old copy said "Marked present" before anyone actually was.
+      notMarkedYet: 'Not checked in yet',
+      // Heading for the green-tick roster of everyone this ticket let in.
+      checkedInList: 'Checked in on this ticket',
+      confirmDone: 'Done',
     },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —

@@ -1,9 +1,11 @@
 import { Controller } from 'react-hook-form';
+import { addMinutes } from 'date-fns';
 import { Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { formatDurationBetween, useDateFormat } from '../../../utils/dateFormat';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Virtual-pod branch of Step 3: meeting platform/link/notes + start/end pickers.
@@ -13,13 +15,18 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
     control,
     register,
     watch,
-    getValues,
     formState: { errors },
   } = form;
   const { dateFormat, timeFormat } = useDateFormat();
   const { t } = useTranslation();
   const dateTimeFormat = `${dateFormat} ${timeFormat}`;
-  const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
+  const startDateTime = watch('pod_date_time');
+  const duration = formatDurationBetween(startDateTime, watch('pod_end_date_time'));
+  // The end picker only opens times after the start — the first 30 minutes are
+  // blocked too, since that is the minimum pod length. Native twin.
+  const minEndDateTime = startDateTime
+    ? addMinutes(startDateTime, MIN_POD_DURATION_MINUTES)
+    : new Date();
 
   return (
     <Stack spacing={2}>
@@ -68,7 +75,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
               value={field.value}
               onChange={field.onChange}
               format={dateTimeFormat}
-              minDateTime={getValues('pod_date_time') ?? new Date()}
+              minDateTime={minEndDateTime}
               slotProps={{
                 textField: {
                   fullWidth: true,

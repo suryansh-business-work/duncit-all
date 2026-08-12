@@ -45,6 +45,11 @@ export interface HostPodActionLabels {
   attendanceMarkedOne: (name: string) => string;
   attendanceMarkedGroup: (name: string, count: number) => string;
   alreadyMarked: string;
+  /** The buyer's chip while the group's details are still being collected. */
+  notMarkedYet: string;
+  /** Heading for the green-tick roster of everyone this ticket let in. */
+  checkedInList: string;
+  confirmDone: string;
 }
 
 /** `mweb.*` — mWeb and the native app (rule 27: one namespace for both). */
@@ -74,6 +79,9 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     attendanceMarkedGroup: (name, count) =>
       t('mweb.hostScan.attendanceMarkedGroup', { vars: { name, count } }),
     alreadyMarked: t('mweb.hostScan.alreadyMarked'),
+    notMarkedYet: t('mweb.hostScan.notMarkedYet'),
+    checkedInList: t('mweb.hostScan.checkedInList'),
+    confirmDone: t('mweb.hostScan.confirmDone'),
   };
 }
 
@@ -104,6 +112,9 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     attendanceMarkedGroup: (name, count) =>
       t('shell.hostScan.attendanceMarkedGroup', { vars: { name, count } }),
     alreadyMarked: t('shell.hostScan.alreadyMarked'),
+    notMarkedYet: t('shell.hostScan.notMarkedYet'),
+    checkedInList: t('shell.hostScan.checkedInList'),
+    confirmDone: t('shell.hostScan.confirmDone'),
   };
 }
 

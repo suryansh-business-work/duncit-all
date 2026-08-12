@@ -101,6 +101,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       attendanceMarkedOne: '{name} is checked in.',
       attendanceMarkedGroup: '{name} and {count} more are checked in.',
       alreadyMarked: 'Already checked in',
+      notMarkedYet: 'Not checked in yet',
+      checkedInList: 'Checked in on this ticket',
+      confirmDone: 'Done',
     },
     /**
      * Staff chat — the panel every console renders in its header.

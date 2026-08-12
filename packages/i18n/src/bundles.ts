@@ -4,6 +4,7 @@ import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { MWEB_BUNDLE } from './bundles/mweb';
+import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { SHELL_BUNDLE } from './bundles/shell';
 import { WEBSITE_BUNDLE } from './bundles/website';
@@ -35,6 +36,7 @@ export {
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
+  PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   SHELL_BUNDLE,
   WEBSITE_BUNDLE,
@@ -47,6 +49,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   mweb: MWEB_BUNDLE,
+  partners: PARTNERS_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,
   shell: SHELL_BUNDLE,
   website: WEBSITE_BUNDLE,

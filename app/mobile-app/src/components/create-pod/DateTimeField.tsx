@@ -16,6 +16,8 @@ interface Props {
   label: string;
   value: string;
   onChange: (text: string) => void;
+  /** Earliest pickable moment — the calendar sheet blocks anything before it. */
+  minDateTime?: Date | null;
   error?: string;
   required?: boolean;
   testID: string;
@@ -30,6 +32,7 @@ export function DateTimeField({
   label,
   value,
   onChange,
+  minDateTime = null,
   error,
   required,
   testID,
@@ -114,6 +117,7 @@ export function DateTimeField({
                 <CalendarSheet
                   testID={testID}
                   initial={parsed}
+                  minDateTime={minDateTime}
                   muted={muted}
                   onDone={(picked) => {
                     onChange(format(picked, 'yyyy-MM-dd HH:mm'));

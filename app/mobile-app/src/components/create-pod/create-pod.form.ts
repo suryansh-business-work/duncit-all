@@ -13,6 +13,11 @@ import {
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 const DATE_TIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
 
+/** Minimum pod length — the end picker blocks the first 30 minutes after the
+ * start, and the schema enforces the same for typed times. mWeb twin. */
+export const MIN_POD_DURATION_MINUTES = 30;
+const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
+
 /** Parses the form's `YYYY-MM-DD HH:mm` local date-time text; null when invalid. */
 export function parseDateTimeText(text: string): Date | null {
   if (!DATE_TIME_RE.test(text)) return null;
@@ -97,6 +102,12 @@ function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tr
       code: 'custom',
       path: ['pod_end_date_time_text'],
       message: t('mweb.createPod.validation.endAfterStart'),
+    });
+  } else if (start && end && end.getTime() - start.getTime() < MIN_POD_DURATION_MS) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_end_date_time_text'],
+      message: t('mweb.createPod.validation.endMinDuration'),
     });
   }
 }

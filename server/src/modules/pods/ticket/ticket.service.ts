@@ -97,23 +97,30 @@ async function recordCompanions(
   const needed = Math.max(seats - 1, 0);
   if (needed === 0 || !membership) return 0;
   const onFile: any[] = membership.companions ?? [];
-  if (onFile.length >= needed) return 0;
+  // The count asked for is what is still MISSING, not the ticket's total —
+  // a booking whose seat count grew after some companions were recorded only
+  // owes the door the difference.
+  const remaining = needed - onFile.length;
+  if (remaining <= 0) return 0;
 
   const list = Array.isArray(supplied) ? supplied : [];
-  if (list.length === 0) return needed;
+  if (list.length === 0) return remaining;
 
   const { validate } = await import('@utils/validate');
   const { podCompanionsSchema } = await import('./ticket.validator');
   const { companions } = await validate(podCompanionsSchema, { companions: list });
   // Exactly, not "at least": a short list leaves people unaccounted for and a
   // long one admits more than the booking paid for.
-  if (companions.length !== needed) {
+  if (companions.length !== remaining) {
     throw new GraphQLError(
-      `This ticket admits ${seats} — enter details for the other ${needed} ${needed === 1 ? 'person' : 'people'}`,
+      `This ticket admits ${seats} — enter details for the other ${remaining} ${remaining === 1 ? 'person' : 'people'}`,
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
-  membership.companions = companions.map((c) => ({ ...c, added_at: new Date() }));
+  membership.companions = [
+    ...onFile,
+    ...companions.map((c) => ({ ...c, added_at: new Date() })),
+  ];
   await membership.save();
   return 0;
 }
@@ -506,6 +513,11 @@ export const ticketService = {
         ok: false,
         message: `This ticket is for another pod${t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : ''}`,
         already_checked_in: false,
+        // Every field the schema marks non-null, or this branch nulls one and
+        // the whole result errors instead of showing the message.
+        requires_companions: false,
+        companions_required: 0,
+        companions: [],
         ticket: toPub(t),
         attendee: null,
       };

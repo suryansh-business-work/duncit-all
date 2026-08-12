@@ -57,6 +57,7 @@ export {
   missingKeys,
   MWEB_BUNDLE,
   nestCatalogue,
+  PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   resolveLocale,
   SHELL_BUNDLE,

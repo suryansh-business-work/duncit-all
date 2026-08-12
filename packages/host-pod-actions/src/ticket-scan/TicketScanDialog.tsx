@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
@@ -13,7 +13,9 @@ import {
   Typography,
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import CompanionsChecklist from './CompanionsChecklist';
 import CompanionsForm from './CompanionsForm';
+import ScanConfirmationDialog from './ScanConfirmationDialog';
 import ScannedAttendeeCard from './ScannedAttendeeCard';
 import ScannerViewport from './ScannerViewport';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
@@ -62,6 +64,9 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   const [result, setResult] = useState<HostTicketScanResult | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  // The scan that just FLIPPED the ticket — drives the confirmation dialog.
+  // Kept separately from `result` so dismissing it leaves the pane's state.
+  const [confirmed, setConfirmed] = useState<HostTicketScanResult | null>(null);
   const [scan, scanState] = useMutation(HOST_SCAN_POD_TICKET);
 
   // Scanning pauses while a code is in flight and while its result is on
@@ -72,25 +77,43 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   // the group's details — scans the same ticket without another QR read.
   const [pendingToken, setPendingToken] = useState<string | null>(null);
 
+  // Closing does not cancel an in-flight scan, and the dialog stays mounted —
+  // without this, a late response repopulates the cleared state and the next
+  // open greets the host with the previous pod's ghost confirmation.
+  const epochRef = useRef(0);
+
   const submit = async (token: string, companions?: PodCompanionInput[]) => {
+    const epoch = epochRef.current;
     setFailure(null);
     try {
       const res = await scan({
         variables: { pod_doc_id: pod?.id, token, companions: companions ?? null },
       });
+      if (epoch !== epochRef.current) return;
+      const outcome: HostTicketScanResult | null = res.data?.hostScanPodTicket ?? null;
       setPendingToken(token);
-      setResult(res.data?.hostScanPodTicket ?? null);
+      setResult(outcome);
+      // Freshly marked (not a re-scan of someone already in) → confirm it
+      // unmissably. A one-line text swap read as "nothing happened".
+      if (outcome?.ok && !outcome.already_checked_in) setConfirmed(outcome);
     } catch (e: any) {
+      if (epoch !== epochRef.current) return;
       setFailure(e?.message ?? 'Could not read that ticket');
     }
   };
 
   const close = () => {
+    epochRef.current += 1;
     setResult(null);
     setFailure(null);
+    setConfirmed(null);
     setPendingToken(null);
     onClose();
   };
+
+  // Everyone this booking has accounted for — companions are on file even in
+  // the collecting state (a partially-recorded group renders its ticks).
+  const recorded = result?.companions ?? [];
 
   return (
     <Dialog open={!!pod} onClose={close} fullWidth maxWidth="xs">
@@ -135,8 +158,19 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                 <ScannedAttendeeCard
                   attendee={result.attendee}
                   alreadyCheckedIn={result.already_checked_in}
+                  pending={result.requires_companions}
                   ticketCode={result.ticket?.ticket_code}
                   seats={result.ticket?.seats ?? 1}
+                />
+              )}
+              {recorded.length > 0 && (
+                <CompanionsChecklist
+                  title={labels.checkedInList}
+                  people={recorded.map((companion) => ({
+                    key: `${companion.phone_number}-${companion.name}`,
+                    primary: companion.name,
+                    secondary: companion.phone_number,
+                  }))}
                 />
               )}
               {result.requires_companions && pendingToken && (
@@ -166,6 +200,11 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
           </Button>
         )}
       </DialogActions>
+      <ScanConfirmationDialog
+        result={confirmed}
+        text={confirmationText(confirmed, labels)}
+        onDone={() => setConfirmed(null)}
+      />
     </Dialog>
   );
 }

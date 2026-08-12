@@ -49,7 +49,8 @@ services:
     container_name: duncit-staging-mweb
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2103:80"
+      # 8080, not 80: mweb runs its non-root Node HTML/meta server, not nginx.
+      - "127.0.0.1:2103:8080"
 
   website:
     image: ${DOCKERHUB_USERNAME}/duncit-website:${IMAGE_TAG:-staging}

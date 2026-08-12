@@ -82,7 +82,21 @@ COPY app/mweb ./app/mweb
 RUN pnpm --filter mweb-app build
 
 # --- runner ---
-FROM public.ecr.aws/docker/library/nginx:alpine AS runner
-COPY --from=builder /repo/app/mweb/dist /usr/share/nginx/html
-COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+# Node, not nginx: every HTML response gets its meta tags (title, OG/Twitter
+# cards, theme color) composed SERVER-SIDE per request by server/main.ts, which
+# crawlers need because they never run the SPA. dist-server/main.mjs is a
+# self-contained bundle — no node_modules in the image. Static assets keep
+# spa.conf's exact cache behaviour, reimplemented in server/static-files.ts.
+FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+WORKDIR /app
+ARG VITE_GRAPHQL_URL
+ENV GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ENV NODE_ENV=production
+# Non-root (S6471) — which also means no port 80; compose maps the host port
+# onto 8080 instead.
+ENV PORT=8080
+COPY --from=builder /repo/app/mweb/dist ./dist
+COPY --from=builder /repo/app/mweb/dist-server ./dist-server
+USER node
+EXPOSE 8080
+CMD ["node", "dist-server/main.mjs"]

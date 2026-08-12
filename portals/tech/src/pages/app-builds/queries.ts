@@ -1,12 +1,24 @@
 import { gql } from '@apollo/client';
 
 export type AppBuildPlatform = 'ANDROID' | 'IOS';
-export type AppBuildStatus = 'SUCCESS' | 'FAILED';
+export type AppBuildStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
+export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
 
 export interface AppBuildCommit {
   hash: string;
   subject: string;
   author: string;
+}
+
+/** One file a build produced — Android makes an APK and an AAB from one compile. */
+export interface AppBuildArtifact {
+  kind: AppBuildArtifactKind;
+  name: string;
+  url: string;
+  file_id: string;
+  size_mb: number | null;
+  /** Why this one is missing. Empty whenever there is a url. */
+  error: string;
 }
 
 export interface AppBuildRow {
@@ -15,10 +27,13 @@ export interface AppBuildRow {
   platform: AppBuildPlatform;
   status: AppBuildStatus;
   version: string;
+  artifacts: AppBuildArtifact[];
   build_name: string;
   artifact_url: string;
   /** Why a SUCCESS build has no download. Empty whenever there is one. */
   artifact_error: string;
+  /** Why a FAILED build failed — the stage that broke. Empty otherwise. */
+  error_message: string;
   size_mb: number | null;
   commit_sha: string;
   branch: string;
@@ -58,9 +73,18 @@ export const APP_BUILDS_TABLE = gql`
         platform
         status
         version
+        artifacts {
+          kind
+          name
+          url
+          file_id
+          size_mb
+          error
+        }
         build_name
         artifact_url
         artifact_error
+        error_message
         size_mb
         commit_sha
         branch
@@ -122,14 +146,40 @@ export const ISSUE_APP_BUILD_CI_TOKEN = gql`
   }
 `;
 
-/** ImageKit serves the file inline by default; this forces a download. */
 /**
- * Artifacts are served by our own nginx now, which sends
- * `Content-Disposition: attachment` for the whole directory — so the plain URL
- * downloads. The old `?ik-attachment=true` was an ImageKit parameter and means
- * nothing here.
+ * The longest a build workflow can run — the larger `timeout-minutes` of the
+ * two, plus slack.
+ *
+ * A RUNNING row older than this cannot still be running: the runner was
+ * cancelled or killed, so nothing was left to report the outcome. Spinning
+ * forever claims a build is alive when it is not; saying so is honest.
  */
-export const downloadUrl = (row: Pick<AppBuildRow, 'artifact_url'>): string => row.artifact_url;
+const MAX_BUILD_MINUTES = 130;
+
+export const isStaleRunning = (row: AppBuildRow): boolean => {
+  if (row.status !== 'RUNNING' || !row.created_at) return false;
+  return Date.now() - new Date(row.created_at).getTime() > MAX_BUILD_MINUTES * 60_000;
+};
+
+/**
+ * Whole minutes a live build has been going.
+ *
+ * Derived on the client from created_at, so it advances on its own between
+ * polls — unlike anything the runner could report, which would be as old as
+ * the last report that carried it.
+ */
+export const runningMinutes = (row: AppBuildRow): number => {
+  if (!row.created_at) return 0;
+  return Math.max(0, Math.floor((Date.now() - new Date(row.created_at).getTime()) / 60_000));
+};
+
+/** `62.4 MB` for one file; `APK 62.4 MB · AAB 48.1 MB` when a build made several. */
+export const sizeLabel = (row: AppBuildRow): string => {
+  const sized = row.artifacts.filter((a) => a.size_mb != null);
+  if (sized.length === 0) return '—';
+  if (sized.length === 1) return `${(sized[0]?.size_mb ?? 0).toFixed(1)} MB`;
+  return sized.map((a) => `${a.kind} ${(a.size_mb ?? 0).toFixed(1)} MB`).join(' · ');
+};
 
 /** `+12 / -34 (5 files)` — or an em-dash when the range was unknown. */
 export const changesLabel = (row: AppBuildRow): string => {

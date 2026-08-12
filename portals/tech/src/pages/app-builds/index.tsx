@@ -1,17 +1,26 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { useConfirm, notifySuccess, notifyError } from '@duncit/dialogs';
-import { useApolloTableFetch } from '@duncit/table';
+import { useApolloTableFetch, type TableFetch } from '@duncit/table';
 import AppBuildsTable from './AppBuildsTable';
 import BuildDetailsDialog from './BuildDetailsDialog';
 import {
   APP_BUILDS_TABLE,
   DELETE_APP_BUILD,
+  isStaleRunning,
   type AppBuildPlatform,
   type AppBuildRow,
 } from './queries';
+
+/**
+ * How often a page showing a live build refreshes itself. A build takes 10–20
+ * minutes, so this is about watching it tick over rather than catching the
+ * moment it lands — often enough to feel live, rare enough that nobody notices
+ * the traffic.
+ */
+const LIVE_POLL_MS = 15_000;
 
 interface Props {
   platform: AppBuildPlatform;
@@ -29,13 +38,33 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<AppBuildRow | null>(null);
   const [removeBuild] = useMutation(DELETE_APP_BUILD);
-  const fetchRows = useApolloTableFetch<AppBuildRow>(
+  const [hasLiveBuild, setHasLiveBuild] = useState(false);
+  const baseFetch = useApolloTableFetch<AppBuildRow>(
     client,
     APP_BUILDS_TABLE,
     'appBuildsTable',
     { extraVariables: { platform } },
     [platform]
   );
+
+  // The page it just fetched is what decides whether to keep polling: no live
+  // build on screen, no timer. A stale RUNNING row does not count — nothing is
+  // coming to update it, so refreshing for it would spin forever.
+  const fetchRows = useCallback<TableFetch<AppBuildRow>>(
+    async (query) => {
+      const page = await baseFetch(query);
+      setHasLiveBuild(page.rows.some((r) => r.status === 'RUNNING' && !isStaleRunning(r)));
+      return page;
+    },
+    [baseFetch]
+  );
+
+  useEffect(() => {
+    if (!hasLiveBuild) return undefined;
+    const timer = globalThis.setInterval(() => refetchRef.current?.(), LIVE_POLL_MS);
+    return () => globalThis.clearInterval(timer);
+  }, [hasLiveBuild]);
+
   const openRow = useCallback((row: AppBuildRow) => setSelected(row), []);
   const closeRow = useCallback(() => setSelected(null), []);
 

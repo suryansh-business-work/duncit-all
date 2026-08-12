@@ -33,9 +33,14 @@ env:
   CI: 1
   EXPO_NO_TELEMETRY: 1
   CYPRESS_INSTALL_BINARY: 0
-  # Set (via GITHUB_ENV) the moment the built APK is copied out — the failure
-  # reporter uses it to tell "build failed" from "reporting failed".
-  ARTIFACT_PATH: ''
+  # Set (via GITHUB_ENV) the moment the built APK and AAB are copied out — the
+  # failure reporter uses it to tell "build failed" from "reporting failed".
+  ARTIFACT_PATHS: ''
+  # What the job is doing, rewritten by a marker step before each long stage.
+  # A value written to GITHUB_ENV lands on the NEXT step, which is exactly what
+  # makes this work: the marker names the step that follows it, so whatever
+  # BUILD_STAGE holds when the job dies is the stage that actually broke.
+  BUILD_STAGE: ''
 
 jobs:
   build:
@@ -65,16 +70,46 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Report the build as started
+        # Opens the row the Tech portal shows spinning, so a build is visible
+        # while it is being made rather than only when it is over. Best-effort
+        # on purpose: a build must not be abandoned because the table could not
+        # be told it began — the final report is the one that fails loudly.
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          STATUS: RUNNING
+          BUILD_STAGE: Starting up
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/report-app-build.mjs
+
+      - name: 'Stage: install dependencies'
+        run: echo "BUILD_STAGE=Installing JS dependencies" >> "$GITHUB_ENV"
+
       - name: Install JS dependencies
         run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: 'Stage: codegen'
+        run: echo "BUILD_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
 
       - name: Generate GraphQL types
         # src/generated is gitignored — regenerated from the server schemas in this checkout.
         run: npm run codegen
 
+      - name: 'Stage: prebuild'
+        run: echo "BUILD_STAGE=Generating the native Android project" >> "$GITHUB_ENV"
+
       - name: Generate the native android project
         # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform android --no-install --clean
+
+      - name: 'Stage: android sdk'
+        run: echo "BUILD_STAGE=Installing the Android SDK and NDK" >> "$GITHUB_ENV"
 
       - name: Install Android SDK 35 + NDK 27
         # The runner ships an SDK but not NDK 27.1.12297006, which the
@@ -113,6 +148,9 @@ jobs:
             echo 'org.gradle.daemon=false'
           } >> android/gradle.properties
 
+      - name: 'Stage: gradle distribution'
+        run: echo "BUILD_STAGE=Fetching the Gradle distribution" >> "$GITHUB_ENV"
+
       - name: Fetch the Gradle distribution
         # On a cold cache the wrapper downloads gradle-*-bin.zip itself, with ONE
         # attempt and no retry, so a connection dropped mid-transfer kills the
@@ -130,19 +168,40 @@ jobs:
           echo "::error::Could not fetch the Gradle distribution after 5 attempts"
           exit 1
 
-      - name: Build release APK
-        working-directory: app/mobile-app/android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: 'Stage: gradle build'
+        run: echo "BUILD_STAGE=Building the release APK and AAB" >> "$GITHUB_ENV"
 
-      - name: Name the artifact
+      - name: Build release APK and AAB
+        # Both from ONE gradle invocation: they share the compile, so building
+        # them separately would pay for it twice and could disagree.
+        # assembleRelease -> the APK people sideload; bundleRelease -> the AAB
+        # Play requires.
+        working-directory: app/mobile-app/android
+        run: ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+
+      - name: 'Stage: name the artifacts'
+        run: echo "BUILD_STAGE=Collecting the built artifacts" >> "$GITHUB_ENV"
+
+      - name: Name the artifacts
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
-          ARTIFACT="duncit-android-v${APP_VERSION}-${SHORT_SHA}.apk"
-          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$ARTIFACT"
-          echo "ARTIFACT_PATH=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
+          BASE="duncit-android-v${APP_VERSION}-${SHORT_SHA}"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$BASE.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$BASE.aab"
+          # Newline-separated, APK FIRST — the reporter treats the first path as
+          # the build's primary artifact.
+          {
+            echo "ARTIFACT_PATHS<<ARTIFACTS_EOF"
+            echo "$RUNNER_TEMP/$BASE.apk"
+            echo "$RUNNER_TEMP/$BASE.aab"
+            echo "ARTIFACTS_EOF"
+          } >> "$GITHUB_ENV"
 
-      - name: Upload to ImageKit & record the build
+      - name: 'Stage: upload and record'
+        run: echo "BUILD_STAGE=Uploading the artifacts and recording the build" >> "$GITHUB_ENV"
+
+      - name: Upload the artifacts & record the build
         working-directory: .
         env:
           PLATFORM: ANDROID
@@ -154,11 +213,13 @@ jobs:
         run: node scripts/report-app-build.mjs
 
       - name: Record the failure
-        # Only when no APK was produced (ARTIFACT_PATH is set right after the
+        # Only when nothing was produced (ARTIFACT_PATHS is set right after the
         # build) — a reporting/upload hiccup on a good build must stay a red
-        # workflow, not a false ':x: build failed' row and Slack alarm.
+        # workflow, not a false ':x: build failed' row and Slack alarm. That
+        # leaves the RUNNING row standing in the one case where the reporter
+        # itself is broken, which is honest: nothing it said could be trusted.
         # continue-on-error so a reporting hiccup never hides the real failure.
-        if: failure() && env.ARTIFACT_PATH == ''
+        if: failure() && env.ARTIFACT_PATHS == ''
         continue-on-error: true
         working-directory: .
         env:

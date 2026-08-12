@@ -6,7 +6,14 @@ export const appBuildTypeDefs = gql`
     IOS
   }
 
+  """
+  RUNNING is written when the workflow STARTS and replaced in place when it
+  finishes, so a build is visible while it is being made rather than only after.
+  A row can sit RUNNING forever if the runner is cancelled or killed mid-job —
+  nothing is left to report it — so treat an old RUNNING row as unknown, not live.
+  """
   enum AppBuildStatus {
+    RUNNING
     SUCCESS
     FAILED
   }
@@ -15,6 +22,30 @@ export const appBuildTypeDefs = gql`
     hash: String!
     subject: String!
     author: String!
+  }
+
+  """
+  What one build produced. Android emits two — an APK to sideload and an AAB to
+  upload to Play — and they are ONE build, so they share a row rather than
+  racing each other for the newest-first sort.
+  """
+  enum AppBuildArtifactKind {
+    APK
+    AAB
+    IPA
+  }
+
+  type AppBuildArtifact {
+    kind: AppBuildArtifactKind!
+    "The artifact's file name."
+    name: String!
+    "The download link, served from the VPS build store. Empty if it never stored."
+    url: String!
+    "The handle it is removed by — its file name in the build store."
+    file_id: String!
+    size_mb: Float
+    "Why this one is missing. Empty whenever there is a url."
+    error: String!
   }
 
   """
@@ -29,14 +60,21 @@ export const appBuildTypeDefs = gql`
     platform: AppBuildPlatform!
     status: AppBuildStatus!
     version: String!
-    "The artifact's file name."
+    """
+    Everything this build produced: an APK and an AAB on Android, an IPA on iOS.
+    Empty on a FAILED build. Rows written before builds shipped two artifacts
+    report their single one here too, so this is always the whole answer.
+    """
+    artifacts: [AppBuildArtifact!]!
+    "The primary artifact's file name (the APK on Android, the IPA on iOS)."
     build_name: String!
     """
-    The download link, served from the VPS build store. Empty on a FAILED build,
-    and on a SUCCESS build whose artifact could not be stored.
+    The primary artifact's download link, served from the VPS build store. Empty
+    on a FAILED build, and on a SUCCESS build whose artifact could not be stored.
+    Prefer the artifacts list — this names only the first of them.
     """
     artifact_url: String!
-    "The handle the artifact is removed by — its file name in the build store."
+    "The handle the primary artifact is removed by — its file name in the build store."
     artifact_file_id: String!
     """
     Why a SUCCESS build has no download. Empty whenever there is one. A build
@@ -44,6 +82,13 @@ export const appBuildTypeDefs = gql`
     this is what tells the two apart.
     """
     artifact_error: String!
+    """
+    Why a FAILED build failed — the workflow stage that broke, and the runner's
+    own message where there is one. Empty on every other status. A red row that
+    cannot say what went wrong sends you to the GitHub log for a fact the row
+    should already have.
+    """
+    error_message: String!
     size_mb: Float
     commit_sha: String!
     branch: String!
@@ -122,11 +167,27 @@ export const appBuildTypeDefs = gql`
     author: String
   }
 
+  input AppBuildArtifactInput {
+    kind: AppBuildArtifactKind!
+    name: String!
+    url: String
+    file_id: String
+    size_mb: Float
+    "Why this one is missing — the build still counts as a success without it."
+    error: String
+  }
+
   input ReportAppBuildInput {
     platform: AppBuildPlatform!
     "Defaults to SUCCESS. FAILED rows carry no artifact."
     status: AppBuildStatus
     version: String!
+    """
+    Everything the build produced. When present this is the whole truth and the
+    singular artifact_* fields below are ignored; those remain only so a reporter
+    talking to a server that predates this list still lands its primary artifact.
+    """
+    artifacts: [AppBuildArtifactInput!]
     build_name: String
     artifact_url: String
     artifact_file_id: String
@@ -136,6 +197,8 @@ export const appBuildTypeDefs = gql`
     and its Slack post, and this is the line that explains the absent download.
     """
     artifact_error: String
+    "Why the build failed. Ignored unless status is FAILED."
+    error_message: String
     size_mb: Float
     commit_sha: String
     branch: String
@@ -163,9 +226,14 @@ export const appBuildTypeDefs = gql`
 
   extend type Mutation {
     """
-    Record a finished CI build (and announce it on the platform's Slack
-    channel, best-effort). Tech/Super admin only — the workflow authenticates
-    with a TECH_MANAGER JWT, the same way release-notify does.
+    Record a CI build (and, once it finishes, announce it on the platform's
+    Slack channel, best-effort). Tech/Super admin only — the workflow
+    authenticates with a TECH_MANAGER JWT, the same way release-notify does.
+
+    Reports are keyed on workflow_run_id, so the RUNNING report a workflow sends
+    at its start and the SUCCESS/FAILED report it sends at its end are the SAME
+    row, not two. Slack hears only about the finished one — a channel that
+    announced every build twice would be ignored within a week.
     """
     reportAppBuild(input: ReportAppBuildInput!): AppBuild!
     "Authorise one build-artifact upload through the server. Tech/Super admin only."

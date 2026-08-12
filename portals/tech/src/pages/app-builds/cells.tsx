@@ -1,28 +1,72 @@
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { downloadUrl, type AppBuildRow, type AppBuildStatus } from './queries';
+import {
+  isStaleRunning,
+  runningMinutes,
+  type AppBuildArtifact,
+  type AppBuildRow,
+  type AppBuildStatus,
+} from './queries';
 
-const STATUS_COLOR: Record<string, 'success' | 'error'> = {
+const STATUS_COLOR: Record<string, 'success' | 'error' | 'info'> = {
+  RUNNING: 'info',
   SUCCESS: 'success',
   FAILED: 'error',
 };
 
-export type StatusLabels = Record<AppBuildStatus, string>;
+export type StatusLabels = Record<AppBuildStatus, string> & {
+  /** A RUNNING row too old to still be running — the runner died mid-job. */
+  stale: string;
+  /** Takes the whole minutes elapsed, e.g. "Running for 6 min". */
+  elapsed: (minutes: string) => string;
+};
 
 export const makeStatusOptions = (labels: StatusLabels) => [
+  { value: 'RUNNING', label: labels.RUNNING },
   { value: 'SUCCESS', label: labels.SUCCESS },
   { value: 'FAILED', label: labels.FAILED },
 ];
 
 export const getRowId = (row: AppBuildRow) => row.id;
 
-export const makeRenderStatus = (labels: StatusLabels) => {
-  const renderStatus = (row: AppBuildRow) => (
-    <Chip size="small" label={labels[row.status]} color={STATUS_COLOR[row.status] ?? 'error'} />
+/**
+ * The live build's own cell: a spinner while the workflow runs, and how long it
+ * has been going, so the table answers "is it nearly done?" without anybody
+ * opening GitHub.
+ */
+const RunningChip = ({ row, labels }: Readonly<{ row: AppBuildRow; labels: StatusLabels }>) => {
+  if (isStaleRunning(row)) {
+    return (
+      <Tooltip title={labels.stale}>
+        <Chip size="small" variant="outlined" color="warning" label={labels.RUNNING} />
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip title={labels.elapsed(String(runningMinutes(row)))}>
+      <Chip
+        size="small"
+        color="info"
+        variant="outlined"
+        icon={<CircularProgress size={12} thickness={6} color="inherit" />}
+        label={labels.RUNNING}
+      />
+    </Tooltip>
   );
+};
+
+export const makeRenderStatus = (labels: StatusLabels) => {
+  const renderStatus = (row: AppBuildRow) => {
+    if (row.status === 'RUNNING') return <RunningChip row={row} labels={labels} />;
+    return (
+      <Tooltip title={row.status === 'FAILED' ? row.error_message : ''}>
+        <Chip size="small" label={labels[row.status]} color={STATUS_COLOR[row.status] ?? 'error'} />
+      </Tooltip>
+    );
+  };
   return renderStatus;
 };
 
@@ -69,41 +113,48 @@ export const makeRenderSlack = (postedLabel: string, skippedLabel: string) => {
 };
 
 export interface LinkLabels {
-  download: string;
+  /** Takes the artifact kind, e.g. "Download APK". */
+  download: (kind: string) => string;
   run: string;
   delete: string;
-  /** Shown in place of the download icon when a SUCCESS build has no artifact. */
+  /** Shown in place of a download icon when an artifact never stored. */
   noArtifact: string;
 }
 
 /**
- * A build that succeeded but has no artifact shows WHY, rather than an empty
- * cell — a missing download is the thing somebody has to act on, so it cannot
- * look the same as a build that simply failed.
+ * One icon per file the build produced — an Android build offers its APK and
+ * its AAB from the same row. An artifact that never stored shows WHY rather
+ * than an empty gap, because a missing download is the thing somebody has to
+ * act on and it cannot look the same as a build that simply failed.
  */
-const renderMissing = (row: AppBuildRow, label: string) => (
-  <Tooltip title={row.artifact_error || label}>
-    <ErrorOutlineIcon fontSize="small" color="warning" />
-  </Tooltip>
-);
+const ArtifactLink = ({
+  artifact,
+  labels,
+}: Readonly<{ artifact: AppBuildArtifact; labels: LinkLabels }>) => {
+  if (!artifact.url) {
+    return (
+      <Tooltip title={artifact.error || labels.noArtifact}>
+        <ErrorOutlineIcon fontSize="small" color="warning" />
+      </Tooltip>
+    );
+  }
+  const label = labels.download(artifact.kind);
+  return (
+    <Tooltip title={label}>
+      <IconButton size="small" component="a" href={artifact.url} aria-label={label}>
+        <DownloadIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  );
+};
 
 /** Icon links stop propagation so opening them never also opens the details dialog. */
 export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: AppBuildRow) => void) => {
   const renderLinks = (row: AppBuildRow) => (
     <Box onClick={(e) => e.stopPropagation()}>
-      {row.artifact_url && (
-        <Tooltip title={labels.download}>
-          <IconButton
-            size="small"
-            component="a"
-            href={downloadUrl(row)}
-            aria-label={labels.download}
-          >
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {!row.artifact_url && row.status === 'SUCCESS' && renderMissing(row, labels.noArtifact)}
+      {row.artifacts.map((a) => (
+        <ArtifactLink key={a.kind} artifact={a} labels={labels} />
+      ))}
       {row.workflow_run_url && (
         <Tooltip title={labels.run}>
           <IconButton

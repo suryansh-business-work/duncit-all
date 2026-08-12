@@ -10,7 +10,13 @@ import {
   renderBuild,
   renderCommit,
 } from './cells';
-import { changesLabel, durationLabel, type AppBuildPlatform, type AppBuildRow } from './queries';
+import {
+  changesLabel,
+  durationLabel,
+  sizeLabel,
+  type AppBuildPlatform,
+  type AppBuildRow,
+} from './queries';
 
 interface Props {
   platform: AppBuildPlatform;
@@ -31,8 +37,11 @@ export default function AppBuildsTable({
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
   const columns = useMemo<DuncitColumn<AppBuildRow>[]>(() => {
     const statusLabels = {
+      RUNNING: t('tech.appBuilds.statusRunning'),
       SUCCESS: t('tech.appBuilds.statusSuccess'),
       FAILED: t('tech.appBuilds.statusFailed'),
+      stale: t('tech.appBuilds.statusStale'),
+      elapsed: (minutes: string) => t('tech.appBuilds.statusElapsed', { vars: { minutes } }),
     };
     return [
       dateColumn<AppBuildRow>({
@@ -84,9 +93,10 @@ export default function AppBuildsTable({
       },
       {
         field: 'size_mb',
+        // Wide enough for both of an Android build's files side by side.
         headerName: t('tech.appBuilds.colSize'),
-        width: 95,
-        valueGetter: (row) => (row.size_mb == null ? '—' : `${row.size_mb.toFixed(1)} MB`),
+        width: 175,
+        valueGetter: sizeLabel,
       },
       {
         field: 'duration_seconds',
@@ -123,11 +133,12 @@ export default function AppBuildsTable({
       {
         field: 'artifact_url',
         headerName: t('tech.appBuilds.colLinks'),
-        width: 140,
+        // Room for two downloads plus the run and delete icons.
+        width: 175,
         sortable: false,
         cellRenderer: makeRenderLinks(
           {
-            download: t('tech.appBuilds.download'),
+            download: (kind) => t('tech.appBuilds.downloadKind', { vars: { kind } }),
             run: t('tech.appBuilds.viewRun'),
             delete: t('tech.appBuilds.deleteAction'),
             noArtifact: t('tech.appBuilds.noArtifact'),

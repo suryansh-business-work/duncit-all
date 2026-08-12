@@ -119,7 +119,11 @@ async function gql(query, variables, token) {
     body: JSON.stringify({ query, variables }),
   });
   const json = await res.json().catch(() => ({}));
-  if (json.errors?.length) throw new Error(json.errors[0].message || 'GraphQL error');
+  if (json.errors?.length) {
+    const err = new Error(json.errors[0].message || 'GraphQL error');
+    err.graphQLErrors = json.errors;
+    throw err;
+  }
   if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}`);
   return json.data;
 }
@@ -179,6 +183,40 @@ async function uploadArtifact(token, filePath) {
 const REPORT_MUTATION = `mutation($input: ReportAppBuildInput!){
   reportAppBuild(input:$input){ build_no artifact_url slack_ts slack_error }
 }`;
+
+const UNKNOWN_FIELD_RE = /Field "([^"]+)" is not defined by type "ReportAppBuildInput"/g;
+
+/** Every input field the server said it has never heard of, across all errors. */
+function unknownInputFields(err) {
+  const names = (err?.graphQLErrors ?? []).flatMap((e) =>
+    [...(e.message || '').matchAll(UNKNOWN_FIELD_RE)].map((m) => m[1])
+  );
+  return [...new Set(names)];
+}
+
+/**
+ * A merge fires this workflow and the deploy workflow at the same instant, so a
+ * build that takes a quarter of an hour can finish reporting BEFORE the server
+ * carrying its own commit's schema is live. The only thing that older server
+ * cannot accept is whichever field the commit just added — and it names it. Drop
+ * exactly those and send again: the row and its Slack post are worth far more
+ * than one field, and losing a finished build to a deploy that is four minutes
+ * behind is the most expensive way possible to learn nothing.
+ */
+async function reportBuild(input, token) {
+  try {
+    return (await gql(REPORT_MUTATION, { input }, token)).reportAppBuild;
+  } catch (err) {
+    const unknown = unknownInputFields(err);
+    if (unknown.length === 0) throw err;
+    console.warn(
+      `⚠ server predates this commit — resending without: ${unknown.join(', ')}`
+    );
+    const trimmed = { ...input };
+    for (const field of unknown) delete trimmed[field];
+    return (await gql(REPORT_MUTATION, { input: trimmed }, token)).reportAppBuild;
+  }
+}
 
 function readVersion() {
   try {
@@ -260,7 +298,7 @@ try {
     workflow_run_url: process.env.RUN_URL || '',
     duration_seconds: durationSeconds(),
   };
-  const result = (await gql(REPORT_MUTATION, { input }, token)).reportAppBuild;
+  const result = await reportBuild(input, token);
   console.log(`✓ Recorded ${result.build_no} (${status})`);
   if (result.artifact_url) console.log(`  download: ${result.artifact_url}`);
   if (result.slack_ts) {

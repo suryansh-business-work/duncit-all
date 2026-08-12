@@ -638,11 +638,31 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       iosChannel: 'iOS builds channel',
       channelHint: 'Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to post nothing.',
       channelFormat: 'A Slack channel ID looks like C0123ABCD.',
+      channelUnknown:
+        'No channel with this ID is visible to the bot. The ID is still saved — invite the bot to the channel and the next build will announce itself there.',
       save: 'Save',
       saving: 'Saving…',
       saved: 'Build channels saved.',
       slackNotConfigured:
         'Slack is not connected. Add a bot token in Environment Variables → Slack first — builds are still recorded, they just cannot be announced.',
+      ciTitle: 'CI credentials',
+      ciSubtitle:
+        'The build workflows sign in with a token to record what they built. Generate it here, then keep it in GitHub — a workflow cannot read this database until it has authenticated, so that one secret has to live there.',
+      ciNeverReported:
+        'No build has ever been reported. Until the GitHub secret below is set, the android-build and ios-build workflows fail at their last step.',
+      ciLastReported: 'CI last reported on {when}, as {account}.',
+      ciIssue: 'Generate CI token',
+      ciIssuing: 'Generating…',
+      ciTokenIssued:
+        'Token generated for {account}. It carries your roles, so revoking your access revokes it.',
+      ciSecretName: 'GitHub secret name',
+      ciSecretValue: 'GitHub secret value',
+      ciTokenOnce:
+        'Shown once — it is not stored here. Add it under Settings → Secrets and variables → Actions on the repo. Lost it? Generate another; both keep working.',
+      ciCopyName: 'Copy the secret name',
+      ciCopyValue: 'Copy the token',
+      ciCopied: 'Copied.',
+      ciCopyFailed: 'Could not reach the clipboard — select the text and copy it manually.',
     },
     mailAutomation: {
       title: 'Mail Automation',

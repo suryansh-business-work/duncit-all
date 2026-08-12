@@ -62,15 +62,19 @@ export const appBuildTypeDefs = gql`
   }
 
   """
-  A one-shot ImageKit client-upload signature for a CI build artifact. The
-  private key never leaves the server; CI posts the file straight to ImageKit
-  (bypassing the server's upload body cap) with this signature.
+  A one-shot pass that lets CI hand a build artifact to the server, which then
+  puts it on ImageKit. This used to be an ImageKit client-upload signature, so CI
+  could post straight to ImageKit and skip the server body cap. A signature needs
+  the public and private keys to be a matched pair from one account, and when they
+  are not, ImageKit rejects the upload as an invalid signature parameter and says
+  nothing about which key is wrong. The server uploads on the private key alone
+  now, so there is no signature and no public key to mismatch.
   """
   type AppBuildUploadAuth {
-    token: String!
-    expire: Int!
-    signature: String!
-    public_key: String!
+    "POST the artifact here as multipart form-data, with the ticket in the query string."
+    upload_url: String!
+    "Single-use and short-lived. Spent by the upload, so it is worthless in a log."
+    ticket: String!
     "The ImageKit folder build artifacts land in."
     folder: String!
   }
@@ -79,6 +83,27 @@ export const appBuildTypeDefs = gql`
   type AppBuildSettings {
     android_channel: String
     ios_channel: String
+    "When CI last reported any build. Null means the workflows have never reached us."
+    last_reported_at: String
+    "Which account the last report authenticated as."
+    last_reported_by: String
+  }
+
+  """
+  A credential for the build workflows, shown once and never stored.
+
+  CI cannot read this database without already being authenticated, so one secret
+  has to live in GitHub — that part is unavoidable. What is avoidable is
+  hand-crafting the JWT: this mints one for the signed-in admin, with exactly
+  their roles, so the Tech portal is where the credential comes from even though
+  GitHub is where it is kept.
+  """
+  type AppBuildCiToken {
+    token: String!
+    "The GitHub Actions repo secret this belongs in."
+    secret_name: String!
+    "The account the token authenticates as."
+    issued_for: String!
   }
 
   input AppBuildCommitInput {
@@ -127,8 +152,15 @@ export const appBuildTypeDefs = gql`
     with a TECH_MANAGER JWT, the same way release-notify does.
     """
     reportAppBuild(input: ReportAppBuildInput!): AppBuild!
-    "Sign a direct-to-ImageKit upload for a build artifact. Tech/Super admin only."
+    "Authorise one build-artifact upload through the server. Tech/Super admin only."
     appBuildUploadAuth: AppBuildUploadAuth!
+    """
+    Mint a CI credential for the caller, to paste into the GitHub repo secret.
+    Grants nothing the caller does not already hold — it re-signs their own
+    identity — but it is audited, because a copyable long-lived token is worth
+    knowing the origin of. Tech/Super admin only.
+    """
+    issueAppBuildCiToken: AppBuildCiToken!
     updateAppBuildSettings(input: UpdateAppBuildSettingsInput!): AppBuildSettings!
   }
 `;

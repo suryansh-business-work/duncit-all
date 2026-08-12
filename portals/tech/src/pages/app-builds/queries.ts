@@ -36,6 +36,14 @@ export interface AppBuildRow {
 export interface AppBuildSettings {
   android_channel: string | null;
   ios_channel: string | null;
+  last_reported_at: string | null;
+  last_reported_by: string | null;
+}
+
+export interface AppBuildCiToken {
+  token: string;
+  secret_name: string;
+  issued_for: string;
 }
 
 export const APP_BUILDS_TABLE = gql`
@@ -78,6 +86,8 @@ export const APP_BUILD_SETTINGS = gql`
     appBuildSettings {
       android_channel
       ios_channel
+      last_reported_at
+      last_reported_by
     }
   }
 `;
@@ -87,6 +97,18 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
     updateAppBuildSettings(input: $input) {
       android_channel
       ios_channel
+      last_reported_at
+      last_reported_by
+    }
+  }
+`;
+
+export const ISSUE_APP_BUILD_CI_TOKEN = gql`
+  mutation IssueAppBuildCiToken {
+    issueAppBuildCiToken {
+      token
+      secret_name
+      issued_for
     }
   }
 `;

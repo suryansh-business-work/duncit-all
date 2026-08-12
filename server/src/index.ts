@@ -258,9 +258,14 @@ async function bootstrap() {
   // Node requires this to exceed keepAliveTimeout; otherwise a socket reused
   // right at the boundary is torn down mid-headers.
   httpServer.headersTimeout = 66_000;
-  // Pinned to the API block's proxy_read_timeout so the two ends agree on how
-  // long a slow mutation (invoice PDF, ShipRocket, a bulk import) may take.
-  httpServer.requestTimeout = 300_000;
+  // Pinned to the LONGEST proxy_read_timeout in front of us, which is the
+  // /upload block's 900s — requestTimeout is per-server and cannot be raised for
+  // one route. It measures time-to-receive the whole request, and /upload is the
+  // only route where that is a real duration: a 60–150 MB build artifact streams
+  // in with proxy_request_buffering off, so the clock runs while the CI runner
+  // uploads. Everything else is shielded by nginx buffering the request body
+  // before Node sees a byte, so the longer window is not slow-loris exposure.
+  httpServer.requestTimeout = 900_000;
 
   // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
   app.set('trust proxy', 1);

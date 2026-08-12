@@ -11,14 +11,21 @@ import {
 } from './checkout';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
+  classifyConfirmedPayment,
+  confirmPaymentAfterTransportFailure,
+  isTransportError,
+} from '@duncit/utils';
+import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
+  MY_PAYMENT,
   PREVIEW_COUPON,
   PUBLIC_FINANCE,
   UPDATE_MY_PROFILE,
   VERIFY_RAZORPAY_PAYMENT,
   type CheckoutContact,
   type CheckoutForm,
+  type CheckoutPaymentRow,
   type CouponPreview,
 } from './queries';
 import { loadRazorpay, type RazorpaySignature } from './razorpayCheckout';
@@ -65,6 +72,9 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
   const [doUpdateProfile] = useMutation(UPDATE_MY_PROFILE);
   const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
+  // Every poll must reach the server — a cached answer would report the status
+  // we already know is stale.
+  const [runMyPayment] = useLazyQuery(MY_PAYMENT, { fetchPolicy: 'no-cache' });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +85,10 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [coinsApplied, setCoinsApplied] = useState(0);
   const [pickedContact, setPickedContact] = useState<PickedContact | null>(null);
+  // Set only while the verify call has died and the payment is being read back
+  // from the server. It is progress, never a failure — the buyer's money has
+  // already moved and nothing has gone wrong yet.
+  const [confirmingMessage, setConfirmingMessage] = useState<string | null>(null);
 
   // The schemas cannot call `t` at module scope, so they are built here from the
   // reader's own catalogue — the validation messages are copy like any other.
@@ -172,6 +186,37 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     }
   };
 
+  /** The buyer's own payment row, read back by id. Keep MY_PAYMENT's selection
+   * to the fields the confirmation screen renders and NOTHING else; `Payment.pod`
+   * in particular resolves a findById per row. */
+  const readMyPayment = async (paymentDocId: string): Promise<CheckoutPaymentRow | null> => {
+    const res = await runMyPayment({ variables: { id: paymentDocId } });
+    return (res.data?.myPayment ?? null) as CheckoutPaymentRow | null;
+  };
+
+  /**
+   * The verify call died in transport, so the server may well have booked the
+   * spot the buyer has already paid for. Ask it what happened rather than
+   * reporting a failure we cannot stand behind, and only give up — calmly, and
+   * without the words "timeout" or "network" — once it still cannot tell us.
+   */
+  const confirmAfterTransportFailure = async (paymentDocId: string) => {
+    setConfirmingMessage(t('mweb.checkout.confirmingPayment'));
+    try {
+      const payment = await confirmPaymentAfterTransportFailure({
+        fetchStatus: () => readMyPayment(paymentDocId),
+      });
+      // The poll settles on whatever the server says, which includes a payment
+      // that genuinely FAILED or was REFUNDED. Each ending gets its own honest
+      // line; only a still-unknown one gets the "wait for your booking" copy.
+      const confirmed = classifyConfirmedPayment(payment);
+      if (confirmed.outcome === 'SUCCESS') finishSuccess(confirmed.payment);
+      else setError(t(confirmed.messageKey));
+    } finally {
+      setConfirmingMessage(null);
+    }
+  };
+
   const verifyRazorpay = async (paymentDocId: string, sig: RazorpaySignature) => {
     setSubmitting(true);
     try {
@@ -180,7 +225,11 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
       if (payment?.status === 'SUCCESS') finishSuccess(payment);
       else setError(t('mweb.checkout.errorNotVerified'));
     } catch (e: any) {
-      setError(parseApiError(e));
+      // A transport failure says nothing about the payment — only about the
+      // request. `submitting` stays true throughout, so the buyer keeps seeing
+      // the processing overlay instead of a network error.
+      if (isTransportError(e)) await confirmAfterTransportFailure(paymentDocId);
+      else setError(parseApiError(e));
     } finally {
       setSubmitting(false);
     }
@@ -231,6 +280,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     reset,
     submitting,
     setSubmitting,
+    confirmingMessage,
     error,
     setError,
     success,

@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import {
   CoinBalanceModel,
   CoinTransactionModel,
@@ -62,6 +62,9 @@ export const coinService = {
    *
    * `targetType` picks the rate — a pod ticket and a shop order earn at their
    * own configured percentages.
+   *
+   * @returns the coins actually granted (0 when the rate earns nothing or the
+   * payment had already been rewarded) — the payment mirrors it on `coins_earned`.
    */
   async creditForPayment(opts: {
     userId: string;
@@ -69,15 +72,17 @@ export const coinService = {
     spendAmount: number;
     reason: string;
     targetType?: PaymentTargetType | null;
-  }): Promise<void> {
-    if (!Types.ObjectId.isValid(opts.userId) || !opts.paymentId) return;
+    session?: ClientSession;
+  }): Promise<number> {
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.paymentId) return 0;
 
     const earnPct = await coinSettingsService.earnPctFor(opts.targetType);
     const value = coinsForSpend(opts.spendAmount, earnPct);
     // A 0% rate, or a spend too small to round up to one coin, earns nothing —
     // and must not leave an empty ledger row behind to explain.
-    if (value <= 0) return;
+    if (value <= 0) return 0;
 
+    const session = opts.session;
     const userId = new Types.ObjectId(opts.userId);
     // The balance moves first so the ledger row can record the resulting
     // balance_after in one write; the row's unique payment_id is what actually
@@ -88,28 +93,35 @@ export const coinService = {
       const balance = await CoinBalanceModel.findOneAndUpdate(
         { user_id: userId },
         { $inc: { balance: value, lifetime_earned: value } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true, session }
       );
-      await CoinTransactionModel.create({
-        user_id: userId,
-        type: 'CREDIT',
-        amount: value,
-        balance_after: balance!.balance,
-        source: 'PAYMENT_EARN',
-        reason: opts.reason,
-        payment_id: opts.paymentId,
-        earn_pct: earnPct,
-        spend_amount: opts.spendAmount,
-      });
+      await CoinTransactionModel.create(
+        [
+          {
+            user_id: userId,
+            type: 'CREDIT',
+            amount: value,
+            balance_after: balance!.balance,
+            source: 'PAYMENT_EARN',
+            reason: opts.reason,
+            payment_id: opts.paymentId,
+            earn_pct: earnPct,
+            spend_amount: opts.spendAmount,
+          },
+        ],
+        { session }
+      );
+      return value;
     } catch (e) {
       if ((e as { code?: number })?.code === DUPLICATE_KEY) {
         // Already granted for this payment. Roll the balance back to undo the
         // increment this duplicate attempt just applied.
         await CoinBalanceModel.updateOne(
           { user_id: userId },
-          { $inc: { balance: -value, lifetime_earned: -value } }
+          { $inc: { balance: -value, lifetime_earned: -value } },
+          { session }
         );
-        return;
+        return 0;
       }
       throw e;
     }
@@ -189,51 +201,69 @@ export const coinService = {
    * Spend coins the buyer applied to a payment. Idempotent per payment, and the
    * debit is a single guarded update: the balance can never go negative and two
    * concurrent checkouts can never both spend the same coins.
+   *
+   * @returns whether the coins are now spent for this payment. FALSE means the
+   * balance moved after the checkout was priced and nothing was debited — the
+   * caller granted a discount against coins it does not have, so it must undo
+   * the sale rather than record the redemption as done.
    */
   async redeemForPayment(opts: {
     userId: string;
     paymentId: string;
     coins: number;
     reason: string;
-  }): Promise<void> {
+    session?: ClientSession;
+  }): Promise<boolean> {
     const value = Math.floor(Number(opts.coins) || 0);
-    if (!Types.ObjectId.isValid(opts.userId) || !opts.paymentId || value <= 0) return;
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.paymentId || value <= 0) return false;
 
+    const session = opts.session;
     const userId = new Types.ObjectId(opts.userId);
     // `balance: { $gte: value }` is the whole guard — a checkout that raced
-    // another one to the same coins simply does not match, and the discount it
-    // already granted is the (bounded, logged) cost of losing that race.
+    // another one to the same coins simply does not match, and the caller is
+    // told so it can roll the discount back with the rest of the sale.
     const balance = await CoinBalanceModel.findOneAndUpdate(
       { user_id: userId, balance: { $gte: value } },
       { $inc: { balance: -value } },
-      { new: true }
+      { new: true, session }
     );
     if (!balance) {
       logs.server.warn('coin', 'redeemForPayment', {
-        msg: 'Coin redemption skipped — balance moved after checkout was priced',
+        msg: 'Coin redemption failed — balance moved after checkout was priced',
       });
-      return;
+      return false;
     }
     try {
-      await CoinTransactionModel.create({
-        user_id: userId,
-        type: 'DEBIT',
-        amount: value,
-        balance_after: balance.balance,
-        source: 'PAYMENT_REDEEM',
-        reason: opts.reason,
-        payment_id: opts.paymentId,
-        earn_pct: 0,
-        spend_amount: 0,
-      });
+      await CoinTransactionModel.create(
+        [
+          {
+            user_id: userId,
+            type: 'DEBIT',
+            amount: value,
+            balance_after: balance.balance,
+            source: 'PAYMENT_REDEEM',
+            reason: opts.reason,
+            payment_id: opts.paymentId,
+            earn_pct: 0,
+            spend_amount: 0,
+          },
+        ],
+        { session }
+      );
     } catch (e) {
       if ((e as { code?: number })?.code === DUPLICATE_KEY) {
         // Already redeemed for this payment — put back what this retry took.
-        await CoinBalanceModel.updateOne({ user_id: userId }, { $inc: { balance: value } });
-        return;
+        // The coins ARE spent for this payment, so this is a success.
+        await CoinBalanceModel.updateOne(
+          { user_id: userId },
+          { $inc: { balance: value } },
+          { session }
+        );
+        return true;
       }
       throw e;
     }
+    return true;
   },
 
   /**

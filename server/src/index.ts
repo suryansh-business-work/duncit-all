@@ -7,6 +7,7 @@ import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
+import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
@@ -236,8 +237,30 @@ async function bootstrap() {
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
 
+  // Payments: adopt captures Razorpay took while the client was gone, and
+  // re-run finalization side effects that failed the first time round.
+  startPaymentReconciler();
+
   const app = express();
   const httpServer = http.createServer(app);
+
+  /*
+    Socket timeouts, set explicitly because Node's defaults are wrong behind a
+    reverse proxy. Node drops an idle keep-alive socket after 5s while nginx
+    keeps its upstream connection open far longer, so nginx regularly writes a
+    request onto a socket Node has just decided to close — which surfaces to the
+    client as an intermittent 502 / "socket hang up" that no application code
+    explains. Each value below is chosen relative to deploy/nginx/duncit.com.
+  */
+  // Longer than nginx's upstream keepalive, so Node is never the side that
+  // closes an idle connection first and nginx never races that close.
+  httpServer.keepAliveTimeout = 65_000;
+  // Node requires this to exceed keepAliveTimeout; otherwise a socket reused
+  // right at the boundary is torn down mid-headers.
+  httpServer.headersTimeout = 66_000;
+  // Pinned to the API block's proxy_read_timeout so the two ends agree on how
+  // long a slow mutation (invoice PDF, ShipRocket, a bulk import) may take.
+  httpServer.requestTimeout = 300_000;
 
   // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
   app.set('trust proxy', 1);

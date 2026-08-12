@@ -2,6 +2,10 @@ import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { NotifyHost } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
+// Via @duncit/app-settings, which already re-exports the i18n package — the
+// portal gains the copy without gaining a dependency (and without the matching
+// Dockerfile COPY that a new @duncit/* dep would silently require).
+import { FINANCE_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
 import { appConfig } from './config/app-config';
@@ -18,6 +22,10 @@ mountPortal({
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.finance,
+  // This portal's OWN namespace, layered over the shell chrome's. Shipping it
+  // here is what compiles the copy into the build, so the payment screens read
+  // correctly offline and before the Localization API answers (rule 38).
+  i18nFallback: flattenCatalogue(FINANCE_BUNDLE),
   loadUser: createSessionUserLoader(apolloClient),
   extras: <NotifyHost />,
   children: <App />,

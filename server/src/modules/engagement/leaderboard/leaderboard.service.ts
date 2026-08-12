@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { logs } from '@observability/log';
 import {
   LEADERBOARD_CATEGORIES,
@@ -96,6 +96,7 @@ export const leaderboardService = {
     sourceType: LeaderboardSourceType;
     sourceId: string;
     podId?: string | null;
+    session?: ClientSession;
   }): Promise<void> {
     try {
       if (!Types.ObjectId.isValid(opts.userId) || !opts.sourceId) return;
@@ -103,14 +104,23 @@ export const leaderboardService = {
       const points = pointsFor(settings, opts.category);
       // A 0-point action is the admin turning that reward off — write nothing.
       if (points <= 0) return;
-      await LeaderboardPointModel.create({
-        category: opts.category,
-        user_id: new Types.ObjectId(opts.userId),
-        points,
-        source_type: opts.sourceType,
-        source_id: opts.sourceId,
-        pod_id: opts.podId && Types.ObjectId.isValid(opts.podId) ? new Types.ObjectId(opts.podId) : null,
-      });
+      // The array form is required with a session (and returns an array).
+      await LeaderboardPointModel.create(
+        [
+          {
+            category: opts.category,
+            user_id: new Types.ObjectId(opts.userId),
+            points,
+            source_type: opts.sourceType,
+            source_id: opts.sourceId,
+            pod_id:
+              opts.podId && Types.ObjectId.isValid(opts.podId)
+                ? new Types.ObjectId(opts.podId)
+                : null,
+          },
+        ],
+        { session: opts.session }
+      );
     } catch (e) {
       if ((e as { code?: number })?.code === DUPLICATE_KEY) return;
       logs.server.warn('leaderboard', 'award', {
@@ -121,13 +131,14 @@ export const leaderboardService = {
   },
 
   /** A member successfully joined a pod — paid, free, referral or rejoin. */
-  async awardPodJoin(userId: string, podDocId: string): Promise<void> {
+  async awardPodJoin(userId: string, podDocId: string, session?: ClientSession): Promise<void> {
     await this.award({
       category: 'USER',
       userId,
       sourceType: 'POD_JOIN',
       sourceId: podDocId,
       podId: podDocId,
+      session,
     });
   },
 
@@ -200,14 +211,16 @@ export const leaderboardService = {
    * replayed finalize re-inserts nothing, while a brand selling three products
    * in one order earns three times.
    */
-  async awardProductSales(order: any): Promise<void> {
+  async awardProductSales(order: any, session?: ClientSession): Promise<void> {
     const lines: any[] = Array.isArray(order?.line_items) ? order.line_items : [];
     const brandLines = lines.filter((l) => l.ownership === 'BRAND' && l.brand_id);
     if (brandLines.length === 0) return;
     try {
       const { EcommBrandModel } = await import('@modules/venues/ecommBrand/ecommBrand.model');
       const brandIds = [...new Set(brandLines.map((l) => String(l.brand_id)))];
-      const brands = await EcommBrandModel.find({ _id: { $in: brandIds } }).select('owner_user_id');
+      const brands = await EcommBrandModel.find({ _id: { $in: brandIds } })
+        .select('owner_user_id')
+        .session(session ?? null);
       const ownerByBrand = new Map(brands.map((b: any) => [String(b._id), b.owner_user_id ? String(b.owner_user_id) : null]));
       for (const line of brandLines) {
         const ownerId = ownerByBrand.get(String(line.brand_id));
@@ -218,6 +231,7 @@ export const leaderboardService = {
           sourceType: 'PRODUCT_SALE',
           sourceId: `${String(order._id)}:${String(line.product_id)}:${line.variant_id ?? ''}`,
           podId: order.pod_id ? String(order.pod_id) : null,
+          session,
         });
       }
     } catch (e) {

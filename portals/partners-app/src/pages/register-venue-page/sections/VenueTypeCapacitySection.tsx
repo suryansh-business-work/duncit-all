@@ -79,6 +79,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
               <TextField
                 {...field}
                 label="What is this capacity for?"
+                required
                 size="small"
                 fullWidth
                 error={Boolean(fieldState.error)}
@@ -94,6 +95,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
                 {...field}
                 type="number"
                 label="Capacity"
+                required
                 size="small"
                 sx={{ minWidth: 130 }}
                 inputProps={{ min: 1, step: 1 }}

@@ -23,6 +23,15 @@ export const appConfig = {
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     { label: 'Challenges', to: '/challenges', icon: 'challenge' },
+    {
+      label: 'Leaderboard',
+      icon: 'trophy',
+      children: [
+        { label: 'Boards', to: '/leaderboard', icon: 'insights' },
+        { label: 'Points Ledger', to: '/leaderboard/points', icon: 'receipt' },
+        { label: 'Settings & Rewards', to: '/leaderboard/settings', icon: 'tune' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

@@ -38,6 +38,7 @@ export function LeaderboardScreen() {
   const [period, setPeriod] = useState<LeaderboardPeriodKey>('MONTH');
   const [board, setBoard] = useState<BoardData | null>(null);
   const [config, setConfig] = useState<ConfigData | null>(null);
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -68,11 +69,28 @@ export function LeaderboardScreen() {
       .then((data) => active && setConfig(data.leaderboardConfig))
       .catch(() => {
         // Reference data — without it the earn/reward cards simply stay off.
-      });
+      })
+      .finally(() => active && setIsConfigLoading(false));
     return () => {
       active = false;
     };
   }, []);
+
+  let configBody = null;
+  if (isConfigLoading && !config) {
+    configBody = (
+      <YStack alignItems="center" paddingVertical={32} testID="leaderboard-config-loading">
+        <Spinner size="large" />
+      </YStack>
+    );
+  } else if (config) {
+    configBody = (
+      <>
+        <LeaderboardHowToEarn config={config} />
+        <LeaderboardRewards config={config} category={category} />
+      </>
+    );
+  }
 
   let boardBody;
   if (hasError) {
@@ -99,8 +117,7 @@ export function LeaderboardScreen() {
           <LeaderboardYourPoints board={board} isLoading={isLoading} />
           <LeaderboardPeriodToggle value={period} onChange={setPeriod} />
           {boardBody}
-          {config ? <LeaderboardHowToEarn config={config} /> : null}
-          {config ? <LeaderboardRewards config={config} category={category} /> : null}
+          {configBody}
         </YStack>
       </ScrollView>
     </StackScreen>

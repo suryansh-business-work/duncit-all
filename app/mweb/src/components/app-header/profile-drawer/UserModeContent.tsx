@@ -20,13 +20,15 @@ interface UserModeContentProps {
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
   showLeaderboard?: boolean;
+  /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
+  showTourGuide?: boolean;
   onNavigate: (to: string) => void;
 }
 
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card, the Manage Account list and — once switched
  * into a partner mode — that role's own menu, ending in Withdrawal. */
-export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, onNavigate }: Readonly<UserModeContentProps>) {
+export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   const percent = profileCompletion(me ?? {});
   const partnerMenus = buildPartnerMenus(roles, mode);
@@ -49,7 +51,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       {showLeaderboard && (
         <ManageAccountList title={t('mweb.leaderboard.title')} items={leaderboardItems} onNavigate={onNavigate} />
       )}
-      <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
+      <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans, showTourGuide)} onNavigate={onNavigate} />
       {partnerMenus.map((menu) => (
         <ManageAccountList key={menu.key} title={menu.title} items={menu.items} onNavigate={onNavigate} />
       ))}

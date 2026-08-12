@@ -69,6 +69,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
           <TextField
             {...field}
             label="Venue description"
+            required
             multiline
             minRows={3}
             error={Boolean(fieldState.error)}
@@ -78,8 +79,9 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
       />
       <VenueImagesField
         coverImageUrl={values.cover_image_url}
+        coverError={err('cover_image_url')}
         gallery={values.gallery}
-        onCoverChange={(url) => setValue('cover_image_url', url, { shouldDirty: true })}
+        onCoverChange={(url) => setValue('cover_image_url', url, { shouldDirty: true, shouldValidate: true })}
         onGalleryChange={(urls) => setValue('gallery', urls, { shouldDirty: true })}
       />
 

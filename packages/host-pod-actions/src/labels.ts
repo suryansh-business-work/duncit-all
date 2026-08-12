@@ -19,6 +19,8 @@ export type HostPodTranslate = (
 ) => string;
 
 export interface HostPodActionLabels {
+  /** "Pod Club Admin" — only rendered when the surface passes `onClubAdmin`. */
+  clubAdmin: string;
   /** The rating link in the pod's action menu. */
   feedbackLink: string;
   shareLink: string;
@@ -48,6 +50,7 @@ export interface HostPodActionLabels {
 /** `mweb.*` — mWeb and the native app (rule 27: one namespace for both). */
 export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
+    clubAdmin: t('mweb.podClubAdmin.menuItem'),
     feedbackLink: t('mweb.podFeedback.feedbackLink'),
     shareLink: t('mweb.podFeedback.shareLink'),
     copyLink: t('mweb.podFeedback.copyLink'),
@@ -77,6 +80,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
 /** `shell.*` — every MUI portal. Word-for-word identical to `mweb.*` above. */
 export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
+    clubAdmin: t('shell.podClubAdmin.menuItem'),
     feedbackLink: t('shell.podFeedback.feedbackLink'),
     shareLink: t('shell.podFeedback.shareLink'),
     copyLink: t('shell.podFeedback.copyLink'),

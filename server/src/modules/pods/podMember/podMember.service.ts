@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { PodMemberModel, type IPodMember, type JoinSource } from './podMember.model';
 import {
@@ -318,7 +318,7 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
  * outstanding and the membership alone cannot say which of them was filled.
  * Only a request that gave back the WHOLE booking ends the membership.
  */
-async function markSpotFilled(pod: any, request: IBackoutRequest, replacementUserId: string) {
+export async function markSpotFilled(pod: any, request: IBackoutRequest, replacementUserId: string) {
   const member = await PodMemberModel.findById(request.member_id);
   const wholeBooking = (request.seats ?? 1) >= (request.seats_before ?? 1);
   if (member && wholeBooking) {
@@ -350,7 +350,7 @@ async function markSpotFilled(pod: any, request: IBackoutRequest, replacementUse
  * Counting people here left a multi-seat pod short of the threshold, so the
  * backers-out stayed in BACKOUT_IN_PROCESS and never became refund-eligible.
  */
-async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
+export async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   const spots = pod.no_of_spots ?? 0;
   if (spots <= 0) return;
   // The open REQUESTS are what is reserved. A partial backout leaves its member
@@ -982,45 +982,89 @@ export const podMemberService = {
   },
 
   /**
-   * Used by paymentService after a successful paid checkout to record the
-   * membership row alongside attendee push.
+   * The membership row a paid checkout produces — and nothing else.
+   *
+   * The ticket, the backout fill and the points used to hang off this call as
+   * unguarded side effects, which is how a booking could commit with no ticket
+   * behind it. They now belong to the payment finalizer, which runs the ones
+   * that must be atomic inside its transaction and the rest afterwards.
+   *
+   * Deduped twice: by the payment (a replayed webhook must not book again) and
+   * by the pod+user pair (one booking per person per pod, see
+   * `assertNotAlreadyBooked` on the checkout side).
    */
-  async recordPaidJoin(podDocId: string, userId: string, paymentId: string, seats = 1) {
+  async createPaidMembership(
+    podDocId: string,
+    userId: string,
+    paymentDocId: string,
+    seats = 1,
+    session?: ClientSession
+  ): Promise<IPodMember> {
+    const paymentId = new Types.ObjectId(paymentDocId);
+    const byPayment = await PodMemberModel.findOne({ payment_id: paymentId }).session(session ?? null);
+    if (byPayment) return byPayment;
     const existing = await PodMemberModel.findOne({
       pod_id: new Types.ObjectId(podDocId),
       user_id: new Types.ObjectId(userId),
       status: 'JOINED',
-    });
+    }).session(session ?? null);
     if (existing) return existing;
-    const doc = await PodMemberModel.create({
-      pod_id: new Types.ObjectId(podDocId),
-      user_id: new Types.ObjectId(userId),
-      status: 'JOINED',
-      // Seats were priced and capacity-checked at checkout; the payment carries
-      // the count so a webhook replay books exactly what was paid for.
-      seats: normalizeSeats(seats),
-      joined_at: new Date(),
-      source: 'PAID',
-      payment_id: new Types.ObjectId(paymentId),
-      refund_status: 'NONE',
-    });
+    // The array form is required with a session (and returns an array).
+    const [doc] = await PodMemberModel.create(
+      [
+        {
+          pod_id: new Types.ObjectId(podDocId),
+          user_id: new Types.ObjectId(userId),
+          status: 'JOINED',
+          // Seats were priced and capacity-checked at checkout; the payment
+          // carries the count so a webhook replay books exactly what was paid for.
+          seats: normalizeSeats(seats),
+          joined_at: new Date(),
+          source: 'PAID',
+          payment_id: paymentId,
+          refund_status: 'NONE',
+        },
+      ],
+      { session }
+    );
+    return doc;
+  },
+
+  /**
+   * A paid join, end to end, OUTSIDE the payment finalizer: the membership plus
+   * the three things that follow one — the ticket, the backout fill and the
+   * join points.
+   *
+   * The finalizer does not call this. It needs the membership and the ticket
+   * inside its transaction and the fill afterwards, so it composes the same
+   * primitives in its own order. This is the composition for every other
+   * caller, and it holds no logic of its own precisely so the two orderings
+   * cannot drift into two different definitions of "joined".
+   *
+   * Every step after the membership is best-effort: the booking is the thing
+   * that must not be lost, and a ticket or a points hiccup is recoverable.
+   */
+  async recordPaidJoin(
+    podDocId: string,
+    userId: string,
+    paymentDocId: string,
+    seats = 1
+  ): Promise<IPodMember> {
+    const member = await this.createPaidMembership(podDocId, userId, paymentDocId, seats);
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
-      await ticketService.ensureForMembership(String(doc._id));
+      await ticketService.ensureForMembership(String(member._id));
     } catch (e) {
-      logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Ticket issue (paid join) failed' });
+      logs.server.warn('podMember', 'recordPaidJoin', { error: e, msg: 'Ticket issue failed' });
     }
-    // The payment flow pushes the attendee before recording the membership, so
-    // a fresh pod read sees the taken seat — fill in-process backouts it
-    // consumed. Best-effort: a fill failure must not fail the booking.
     try {
       const pod = await PodModel.findById(podDocId);
       if (pod) await fillBackoutsAfterJoin(pod, userId);
     } catch (e) {
-      logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Backout fill (paid join) failed' });
+      logs.server.warn('podMember', 'recordPaidJoin', { error: e, msg: 'Backout fill failed' });
     }
     awardJoinPoints(userId, podDocId);
-    return doc;
+    return member;
   },
 
   /**

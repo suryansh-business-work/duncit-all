@@ -89,6 +89,16 @@ export {
   type RazorpayErrorLike,
 } from './payment-failure';
 export {
+  CONFIRM_OUTCOME_KEYS,
+  classifyConfirmedPayment,
+  confirmPaymentAfterTransportFailure,
+  isTransportError,
+  type ConfirmPaymentOptions,
+  type ConfirmedPayment,
+  type PaymentStatusLike,
+  type UnconfirmedOutcome,
+} from './payment-confirm';
+export {
   POD_FEEDBACK_ASPECTS,
   POD_FEEDBACK_ASPECT_KEY,
   POD_FEEDBACK_ASPECT_LABEL,

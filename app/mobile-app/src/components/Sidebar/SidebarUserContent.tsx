@@ -32,6 +32,7 @@ export function SidebarUserContent({
   mode,
   showPodPlans,
   showLeaderboard = false,
+  showTourGuide = false,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
@@ -42,6 +43,8 @@ export function SidebarUserContent({
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
   showLeaderboard?: boolean;
+  /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
+  showTourGuide?: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
   const { t } = useTranslation();
@@ -80,7 +83,7 @@ export function SidebarUserContent({
       ) : null}
       <SidebarManageList
         title="Manage Account"
-        items={buildManageItems(showPodPlans)}
+        items={buildManageItems(showPodPlans, showTourGuide)}
         onNavigate={onNavigate}
       />
       {partnerMenus.map((menu) => (

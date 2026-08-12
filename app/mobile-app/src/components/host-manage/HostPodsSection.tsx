@@ -19,6 +19,7 @@ import { isVenueRejected } from '@/utils/venue-approval';
 import { HostPodsList } from './HostPodsList';
 import { HostPodsFilterSheet } from './HostPodsFilterSheet';
 import { PodActionsSheet } from './PodActionsSheet';
+import { PodClubAdminSheet } from './PodClubAdminSheet';
 import { TicketScanDialog, type ScanTarget } from './ticket-scan';
 import { PodDeleteDialog } from './PodDeleteDialog';
 import { PodEditDialog } from './PodEditDialog';
@@ -50,6 +51,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
   const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
   const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
+  const [clubAdminPod, setClubAdminPod] = useState<HostPod | null>(null);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -148,6 +150,23 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
         onCancel={() => {
           if (actionsPod) setDeletePod({ id: actionsPod.id, title: actionsPod.pod_title });
           setActionsPod(null);
+        }}
+        onClubAdmin={() => {
+          setClubAdminPod(actionsPod);
+          setActionsPod(null);
+        }}
+      />
+      <PodClubAdminSheet
+        pod={clubAdminPod}
+        onClose={() => setClubAdminPod(null)}
+        onSupport={() => {
+          if (clubAdminPod) {
+            navigation.navigate('SupportTickets', {
+              podId: clubAdminPod.id,
+              podTitle: clubAdminPod.pod_title,
+            });
+          }
+          setClubAdminPod(null);
         }}
       />
       <TicketScanDialog

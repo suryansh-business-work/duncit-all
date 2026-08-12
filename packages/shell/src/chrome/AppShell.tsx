@@ -9,6 +9,7 @@ import type { ShellTool } from './AppsDrawer/tools';
 import { StaffChatPanel } from '../staff-chat';
 import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppSidebar } from './AppSidebar';
+import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
 
 const MAIN_ID = 'app-main';
@@ -19,6 +20,8 @@ export interface AppShellPortalConfig {
   name: string;
   fullName?: string;
   footerCaption?: string;
+  /** Registry key — which row Admin > Portal App Settings configures. */
+  key?: string;
 }
 
 export interface AppShellProps {
@@ -76,7 +79,12 @@ export function AppShell({
   const openChat = useCallback(() => setChatOpen(true), []);
   const closeChat = useCallback(() => setChatOpen(false), []);
   const toggleChat = useCallback(() => setChatOpen((current) => !current), []);
+  const features = usePortalAppFeatures(config.key);
   const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
+  // The panel is mounted whether or not it shows, so turning chat off has to
+  // unmount it here too — otherwise the socket keeps ringing on a console that
+  // no longer offers chat.
+  const showChat = isStaff && features.chat;
 
   useEffect(() => {
     if (user && hasAccess === false) {
@@ -158,6 +166,8 @@ export function AppShell({
           tools={tools}
           chatOpen={chatOpen}
           onToggleChat={toggleChat}
+          chatEnabled={features.chat}
+          appsEnabled={features.apps}
         />
         <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -187,7 +197,7 @@ export function AppShell({
               its sidebar is open is a phone that only rings while you hold it.
               `open` decides what is on screen; the call window is separate and
               appears over the page either way. */}
-          {isStaff && (
+          {showChat && (
             <StaffChatPanel
               open={chatOpen}
               meId={user?.user_id ?? ''}

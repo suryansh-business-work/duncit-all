@@ -70,11 +70,12 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <DateField
             label="Owner DOB"
+            required
             value={field.value}
             onChange={field.onChange}
             onBlur={field.onBlur}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? 'Optional — used for identity checks'}
+            helperText={fieldState.error?.message ?? 'Used for identity checks'}
             maxDate={new Date()}
           />
         )}
@@ -86,10 +87,11 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
           <TextField
             {...field}
             label="Owner address"
+            required
             multiline
             minRows={2}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? 'Optional — correspondence address (max 500 characters)'}
+            helperText={fieldState.error?.message ?? 'Correspondence address (max 500 characters)'}
           />
         )}
       />

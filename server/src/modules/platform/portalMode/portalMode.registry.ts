@@ -30,6 +30,8 @@ export const PORTAL_REGISTRY: PortalRegistryEntry[] = [
   { key: 'hr', name: 'HR', kind: 'PORTAL', url: 'https://hr.duncit.com/' },
   { key: 'employee', name: 'Employee', kind: 'PORTAL', url: 'https://employee.duncit.com/' },
   { key: 'partners', name: 'Partners App', kind: 'PORTAL', url: 'https://partners-app.duncit.com/' },
+  { key: 'challenge', name: 'Challenges', kind: 'PORTAL', url: 'https://challenge.duncit.com/' },
+  { key: 'developers', name: 'Developers', kind: 'PORTAL', url: 'https://developers.duncit.com/' },
   { key: 'mweb', name: 'mWeb (Member App)', kind: 'APP', url: 'https://mweb.duncit.com/' },
   { key: 'website', name: 'duncit.com (Website)', kind: 'WEBSITE', url: 'https://duncit.com/' },
   { key: 'partners-website', name: 'Partners Website', kind: 'WEBSITE', url: 'https://partners.duncit.com/' },

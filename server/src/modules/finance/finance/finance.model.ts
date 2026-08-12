@@ -1,4 +1,4 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type ClientSession, type Document } from 'mongoose';
 
 export interface IFinanceSettings extends Document {
   singleton_key: string;
@@ -206,11 +206,18 @@ export async function setMinWithdrawals(patch: Partial<IMinWithdrawal>): Promise
   return getMinWithdrawals();
 }
 
-export async function nextInvoiceNumber(): Promise<string> {
+/**
+ * The next invoice number, allocated atomically.
+ *
+ * Takes the caller's transaction session when there is one, so a number handed
+ * to a booking that then rolls back is rolled back with it — otherwise the
+ * counter would step for an invoice nobody ever receives.
+ */
+export async function nextInvoiceNumber(session?: ClientSession): Promise<string> {
   const doc = await FinanceSettingsModel.findOneAndUpdate(
     { singleton_key: 'finance' },
     { $inc: { invoice_counter: 1 } },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { new: true, upsert: true, setDefaultsOnInsert: true, session }
   );
   const fy = (() => {
     const d = new Date();

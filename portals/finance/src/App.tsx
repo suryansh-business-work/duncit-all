@@ -13,6 +13,7 @@ import {
   HostCancelPage,
   VenueCancelPage,
   PaymentLogsPage,
+  PaymentDetailPage,
   PaymentReleasePage,
   WithdrawalsPage,
   WithdrawalSettingsPage,
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/cancellations/venue" element={authed(<VenueCancelPage />)} />
       <Route path="/cancellations/host" element={authed(<HostCancelPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
+      <Route path="/payment-logs/:id" element={authed(<PaymentDetailPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />

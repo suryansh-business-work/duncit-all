@@ -19,12 +19,12 @@ describe('profileSections', () => {
   });
 
   it('builds the manage list (account rows only) without Pod Plans by default', () => {
-    const labels = buildManageItems(false).map((i) => i.label);
+    const labels = buildManageItems(false, true).map((i) => i.label);
     expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'Tour Guide', 'FAQs']);
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
-    const labels = buildManageItems(true).map((i) => i.label);
+    const labels = buildManageItems(true, true).map((i) => i.label);
     expect(labels).toEqual([
       'Manage Account',
       'Saved Items',
@@ -36,7 +36,7 @@ describe('profileSections', () => {
   });
 
   it('routes every manage item to a Pod-Plans-gated screen name', () => {
-    expect(buildManageItems(true).map((i) => i.route)).toEqual([
+    expect(buildManageItems(true, true).map((i) => i.route)).toEqual([
       'Account',
       'Saved',
       'Verification',

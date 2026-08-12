@@ -158,7 +158,7 @@ export default function ProductCheckoutPage() {
           session.setError(null);
         }}
       />
-      <ProcessingBackdrop open={session.submitting} />
+      <ProcessingBackdrop open={session.submitting} message={session.confirmingMessage} />
     </Box>
   );
 }

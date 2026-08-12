@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
-import { UserModel } from '@modules/access/user/user.model';
+import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { sendEmail } from '@services/email/email.service';
@@ -137,8 +137,10 @@ async function loadOwned(userId: string, brandId: string) {
 // products (mirrors the venue → VENUE_OWNER grant).
 async function assignEcommRole(userId: Types.ObjectId) {
   const { userService } = await import('@modules/access/user/user.service');
-  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
-  const roles = new Set<string>((u?.metadata?.role_keys ?? []) as string[]);
+  // assignRoles REPLACES the whole set, so the set it is handed has to be the
+  // roles the user really holds. Built from the role_keys cache, a grant would
+  // delete every authoritative role the cache had drifted out of.
+  const roles = new Set<string>(await effectiveRoleKeys(String(userId)));
   roles.add('USER');
   roles.add('ECOMM_MANAGER');
   await userService.assignRoles(String(userId), Array.from(roles));
@@ -147,9 +149,8 @@ async function assignEcommRole(userId: Types.ObjectId) {
 /** Strip a single role from a user (used on brand hard-delete when they have no
  * remaining brand). No-op if the user is gone or never held the role. */
 async function removeUserRole(userId: string, role: string) {
-  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
-  const roles = (u?.metadata?.role_keys ?? []) as string[];
-  if (!u || !roles.includes(role)) return;
+  const roles = await effectiveRoleKeys(userId);
+  if (!roles.includes(role)) return;
   const { userService } = await import('@modules/access/user/user.service');
   await userService.assignRoles(userId, roles.filter((r) => r !== role));
 }

@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
@@ -271,44 +271,58 @@ export const ticketService = {
   toPub,
 
   /** Issue (idempotently) a ticket for a confirmed membership + email it. Safe to
-   * call from every join path — returns the existing ticket if already issued. */
-  async ensureForMembership(membershipId: string): Promise<ITicket | null> {
-    const existing = await TicketModel.findOne({ membership_id: new Types.ObjectId(membershipId) });
+   * call from every join path — returns the existing ticket if already issued.
+   *
+   * A `session` joins the payment finalizer's transaction, so the ticket and the
+   * membership it admits are written together: a booking can no longer commit
+   * with no ticket behind it. Every read here carries the session too, or it
+   * would look outside the snapshot and miss the membership just created. */
+  async ensureForMembership(membershipId: string, session?: ClientSession): Promise<ITicket | null> {
+    const existing = await TicketModel.findOne({ membership_id: new Types.ObjectId(membershipId) })
+      .session(session ?? null);
     if (existing) return existing;
 
-    const membership = await PodMemberModel.findById(membershipId);
+    const membership = await PodMemberModel.findById(membershipId).session(session ?? null);
     if (!membership) return null;
     const [pod, user] = await Promise.all([
-      PodModel.findById(membership.pod_id),
-      UserModel.findById(membership.user_id),
+      PodModel.findById(membership.pod_id).session(session ?? null),
+      UserModel.findById(membership.user_id).session(session ?? null),
     ]);
     if (!pod || !user) return null;
-    const venue = (pod as any).venue_id ? await VenueModel.findById((pod as any).venue_id) : null;
+    const venue = (pod as any).venue_id
+      ? await VenueModel.findById((pod as any).venue_id).session(session ?? null)
+      : null;
 
     const ticket_code = newTicketCode();
-    const doc = await TicketModel.create({
-      ticket_code,
-      membership_id: membership._id,
-      pod_id: pod._id,
-      user_id: user._id,
-      payment_id: (membership as any).payment_id ?? null,
-      status: 'VALID',
-      // One ticket per booking, admitting however many seats it holds.
-      seats: (membership as any).seats ?? 1,
-      qr_token: '',
-      snapshot: {
-        pod_title: (pod as any).pod_title,
-        pod_date_time: (pod as any).pod_date_time?.toISOString?.() ?? null,
-        pod_end_date_time: (pod as any).pod_end_date_time?.toISOString?.() ?? null,
-        pod_mode: (pod as any).pod_mode ?? 'PHYSICAL',
-        meeting_platform: (pod as any).meeting_platform ?? null,
-        venue_name: venue ? (venue as any).venue_name : null,
-        venue_address: venue ? venueAddress(venue) : null,
-        zone_name: (pod as any).zone_name ?? null,
-        user_name: userName(user),
-        user_email: (user as any).email ?? '',
-      },
-    });
+    // The array form is required with a session (and returns an array).
+    const [doc] = await TicketModel.create(
+      [
+        {
+          ticket_code,
+          membership_id: membership._id,
+          pod_id: pod._id,
+          user_id: user._id,
+          payment_id: (membership as any).payment_id ?? null,
+          status: 'VALID',
+          // One ticket per booking, admitting however many seats it holds.
+          seats: (membership as any).seats ?? 1,
+          qr_token: '',
+          snapshot: {
+            pod_title: (pod as any).pod_title,
+            pod_date_time: (pod as any).pod_date_time?.toISOString?.() ?? null,
+            pod_end_date_time: (pod as any).pod_end_date_time?.toISOString?.() ?? null,
+            pod_mode: (pod as any).pod_mode ?? 'PHYSICAL',
+            meeting_platform: (pod as any).meeting_platform ?? null,
+            venue_name: venue ? (venue as any).venue_name : null,
+            venue_address: venue ? venueAddress(venue) : null,
+            zone_name: (pod as any).zone_name ?? null,
+            user_name: userName(user),
+            user_email: (user as any).email ?? '',
+          },
+        },
+      ],
+      { session }
+    );
 
     doc.qr_token = signTicketToken({
       t: ticket_code,
@@ -316,23 +330,39 @@ export const ticketService = {
       p: String(pod._id),
       m: String(membership._id),
     });
-    await doc.save();
+    await doc.save({ session });
 
-    this.email(doc).catch((e) =>
-      logs.server.warn('ticket', 'ensureForMembership', {
-        error: e,
-        msg: 'Ticket email failed',
-        ticket_code,
-        membership_id: String(membership._id),
-      })
-    );
+    // NEVER inside a caller's transaction. A PDF + SMTP send is not rollback-able:
+    // `withTransaction` retries its callback on a write conflict, so an in-transaction
+    // send mails one ticket per attempt (each with a different code), and an abort
+    // later in the sequence ships a live-looking ticket for a booking that does not
+    // exist. The payment finalizer owns the send as a deferred, retried step; the
+    // session-less join paths still mail it here.
+    if (!session) {
+      this.email(doc).catch((e) =>
+        logs.server.warn('ticket', 'ensureForMembership', {
+          error: e,
+          msg: 'Ticket email failed',
+          ticket_code,
+          membership_id: String(membership._id),
+        })
+      );
+    }
     return doc;
+  },
+
+  /** Mail an already-issued ticket by id. The deferred half of the rule above:
+   * the payment finalizer calls this after the booking core has committed. */
+  async emailById(ticketDocId: string): Promise<void> {
+    const t = await TicketModel.findById(ticketDocId);
+    if (!t) throw new GraphQLError('Ticket not found', { extensions: { code: 'NOT_FOUND' } });
+    await this.email(t);
   },
 
   async email(t: ITicket) {
     const pdf = await pdfFor(t);
     const urls = await getUrlConfigs();
-    // A free join never reaches finalizePaidPayment, so this is the ONLY booking
+    // A free join never reaches the payment finalizer, so this is the ONLY booking
     // email such a member gets — without the deep link the whole feature is
     // invisible on free pods.
     const bookingUrl = bookingLinkUrl(urls.appUrl, String(t.membership_id));
@@ -391,8 +421,8 @@ export const ticketService = {
       user_id: new Types.ObjectId(userId),
     });
     // Issue-on-demand: a JOINED member always has a ticket. This covers the case
-    // where the membership pre-existed the paid join (so recordPaidJoin skipped
-    // issuance) and any post-payment race before the email side-effect runs.
+    // where the membership pre-existed the paid join (so the finalizer's pod leg
+    // reused it) and any post-payment race before the email side-effect runs.
     if (!t) {
       const membership = await PodMemberModel.findOne({
         pod_id: new Types.ObjectId(podDocId),

@@ -69,15 +69,17 @@ export const REFERRAL_TILE: ProfileTile = {
 
 /** The "Manage Account" grouped list — the account destinations not in the grid.
  * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
- * gates the Pod Plans row. */
-export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
+ * gates the Pod Plans row, `showTourGuide` the Tour Guide row. */
+export function buildManageItems(showPodPlans: boolean, showTourGuide: boolean): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
     { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
-    { key: 'tour', label: 'Tour Guide', caption: '', icon: 'tour', to: '/tour-guide' },
-    { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
   ];
+  if (showTourGuide) {
+    items.push({ key: 'tour', label: 'Tour Guide', caption: '', icon: 'tour', to: '/tour-guide' });
+  }
+  items.push({ key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' });
   if (showPodPlans) {
     // Pod Plans always slots in just before FAQs (the last row).
     items.splice(items.length - 1, 0, { key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });

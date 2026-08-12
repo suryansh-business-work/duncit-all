@@ -85,9 +85,16 @@ server {
         proxy_hide_header Access-Control-Expose-Headers;
         proxy_hide_header Access-Control-Max-Age;
 
-        proxy_connect_timeout 30s;
+        # Timeouts sized for the API, not for a static site. A checkout mutation
+        # can legitimately run for minutes (invoice PDF, ShipRocket, coin
+        # settlement); cutting it off mid-flight leaves money captured at the
+        # gateway with no booking behind it. send_timeout covers the client leg
+        # that proxy_send_timeout does not. The Node process is pinned to match
+        # these — see httpServer.requestTimeout in server/src/index.ts.
+        proxy_connect_timeout 60s;
         proxy_send_timeout    300s;
         proxy_read_timeout    300s;
+        send_timeout          300s;
 
         proxy_buffering         on;
         proxy_buffer_size       16k;

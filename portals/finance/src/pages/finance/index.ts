@@ -3,6 +3,7 @@ export { PodFinancePage, PodFinanceDetailPage } from './pod-finance-page';
 export { default as BackoutRefundPage, BackoutRefundDetailPage } from './backout-refund-page';
 export { CancellationsDashboardPage, HostCancelPage, VenueCancelPage } from './cancellations-page';
 export { default as PaymentLogsPage } from './PaymentLogsPage';
+export { default as PaymentDetailPage } from './payment-detail-page';
 export { default as PaymentReleasePage } from './PaymentReleasePage';
 export { default as WithdrawalsPage, WithdrawalSettingsPage } from './withdrawals-page';
 export { default as InvoiceManagementPage } from './InvoiceManagementPage';

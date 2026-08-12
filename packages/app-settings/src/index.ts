@@ -47,6 +47,7 @@ export {
 export {
   allFallbackEntries,
   createTranslator,
+  FINANCE_BUNDLE,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,

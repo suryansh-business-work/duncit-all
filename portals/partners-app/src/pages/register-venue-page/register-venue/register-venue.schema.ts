@@ -24,16 +24,21 @@ const documentSchema = z.object({
   url: z.string().trim().min(1, 'Upload the document file'),
 });
 
-const optionalPattern = (pattern: RegExp, message: string) =>
+const requiredPattern = (pattern: RegExp, requiredMessage: string, formatMessage: string) =>
   z
     .string()
     .trim()
-    .refine((value) => !value || pattern.test(value.toUpperCase()), message);
+    .min(1, requiredMessage)
+    .refine((value) => !value || pattern.test(value.toUpperCase()), formatMessage);
 
 export const registerVenueSchema = z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
-  description: z.string().trim().max(2000, 'Description must be 2000 characters or fewer'),
-  cover_image_url: z.string().trim().max(1000),
+  description: z
+    .string()
+    .trim()
+    .min(1, 'Venue description is required')
+    .max(2000, 'Description must be 2000 characters or fewer'),
+  cover_image_url: z.string().trim().min(1, 'Upload a cover image').max(1000),
   gallery: z.array(z.string().trim().max(1000)),
   super_category_id: z.string().trim().min(1, 'Select a super category'),
   category_id: z.string().trim().min(1, 'Select a category'),
@@ -59,8 +64,12 @@ export const registerVenueSchema = z.object({
   facilities: z.array(z.string().trim()),
   security: z.array(z.string().trim()),
   documents: z.array(documentSchema).min(1, 'Upload at least one document'),
-  gstin: optionalPattern(GSTIN_PATTERN, 'GSTIN must follow format like 22ABCDE1234F1Z5'),
-  pan: optionalPattern(PAN_PATTERN, 'PAN must follow format ABCDE1234F'),
+  gstin: requiredPattern(
+    GSTIN_PATTERN,
+    'GSTIN is required',
+    'GSTIN must follow format like 22ABCDE1234F1Z5'
+  ),
+  pan: requiredPattern(PAN_PATTERN, 'PAN is required', 'PAN must follow format ABCDE1234F'),
   owner_name: zodRules.personName('Owner name'),
   owner_email: zodRules.email('Owner email', { lengthFirst: true }),
   owner_phone: z
@@ -70,12 +79,17 @@ export const registerVenueSchema = z.object({
   owner_dob: z
     .string()
     .trim()
+    .min(1, 'Owner DOB is required')
     .refine((value) => {
       if (!value) return true;
       const date = new Date(value);
       return !Number.isNaN(date.getTime()) && date <= new Date();
     }, 'Enter a valid date of birth'),
-  owner_address: z.string().trim().max(500, 'Address must be 500 characters or fewer'),
+  owner_address: z
+    .string()
+    .trim()
+    .min(1, 'Owner address is required')
+    .max(500, 'Address must be 500 characters or fewer'),
 });
 
 /** Fields validated (and shown as incomplete in the rail) per section.

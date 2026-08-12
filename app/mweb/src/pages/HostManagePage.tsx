@@ -20,6 +20,7 @@ const HOST_PODS = gql`
       id
       pod_title
       pod_id
+      club_id
       club_slug
       pod_date_time
       pod_end_date_time

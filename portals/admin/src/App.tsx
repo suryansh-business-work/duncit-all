@@ -7,6 +7,7 @@ import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import PortalAppSettingsPage from './pages/portal-app-settings';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
@@ -34,9 +35,7 @@ import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
-import LeaderboardBoardsPage from './pages/leaderboard/LeaderboardBoardsPage';
-import LeaderboardPointsPage from './pages/leaderboard/LeaderboardPointsPage';
-import LeaderboardSettingsPage from './pages/leaderboard/LeaderboardSettingsPage';
+import PortalAccessPage from './pages/portal-access-page';
 import { getToken } from './lib/session';
 
 export default function App() {
@@ -76,6 +75,7 @@ export default function App() {
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
+                <Route path="/portal-access" element={<PortalAccessPage />} />
                 <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
                 <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
                 <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />
@@ -83,11 +83,9 @@ export default function App() {
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/portal-app-settings" element={<PortalAppSettingsPage />} />
                 <Route path="/localization/locales" element={<LocalesPage />} />
                 <Route path="/localization/translations" element={<TranslationsPage />} />
-                <Route path="/leaderboard" element={<LeaderboardBoardsPage />} />
-                <Route path="/leaderboard/points" element={<LeaderboardPointsPage />} />
-                <Route path="/leaderboard/settings" element={<LeaderboardSettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AppShell>

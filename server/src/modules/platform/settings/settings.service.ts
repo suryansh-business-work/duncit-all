@@ -305,6 +305,13 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    key: "tour_guide",
+    name: "Tour Guide",
+    description:
+      "Show the guided walkthroughs in the mobile app and mobile web — the Tour Guide row in the profile menu and the tour overlay itself.",
+    enabled: false,
+  },
+  {
     // Seeded ON so enabling this feature changes nothing for users already on
     // the current build — turning it OFF is the deliberate act.
     key: "force_app_update",

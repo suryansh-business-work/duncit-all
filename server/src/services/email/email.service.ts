@@ -602,6 +602,43 @@ export function sendPartnerAccessGrantedEmail(opts: {
   });
 }
 
+/** A Jump-to-Portal access request was approved — the console is open now.
+ * Template lives in Tech > Emails > Templates (slug: portal-access-approved). */
+export function sendPortalAccessApprovedEmail(opts: {
+  to: string;
+  name: string;
+  portal_name: string;
+  portal_url: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${opts.portal_name} portal access is live 🎉`,
+    template: 'portal-access-approved',
+    category: 'internal',
+    vars: {
+      name: opts.name,
+      portal_name: opts.portal_name,
+      portal_url: opts.portal_url,
+    },
+  });
+}
+
+/** A Jump-to-Portal access request was declined by an admin.
+ * Template lives in Tech > Emails > Templates (slug: portal-access-denied). */
+export function sendPortalAccessDeniedEmail(opts: {
+  to: string;
+  name: string;
+  portal_name: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${opts.portal_name} portal access request`,
+    template: 'portal-access-denied',
+    category: 'internal',
+    vars: { name: opts.name, portal_name: opts.portal_name },
+  });
+}
+
 export function sendAdminAccessRevokedEmail(opts: { to: string; name: string }) {
   return sendEmail({
     to: opts.to,

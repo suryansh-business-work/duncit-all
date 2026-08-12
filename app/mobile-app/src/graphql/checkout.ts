@@ -181,6 +181,30 @@ export const MobileVerifyRazorpayDocument = gql(`
   }
 `);
 
+/**
+ * One payment of the buyer's own — mWeb's MY_PAYMENT. Polled ONLY when the
+ * verify mutation dies in transport, so it is deliberately the cheapest read
+ * that can answer the question: `payment(payment_doc_id)` is admin-guarded and
+ * `myPayments` would pull the buyer's entire history to find one row, at the
+ * exact moment the API is already struggling. Its selection matches the verify
+ * mutation's, so a polled row is returned to the screen exactly as a verified
+ * one would be.
+ */
+export const MobileMyPaymentDocument = gql(`
+  query MobileMyPayment($id: ID!) {
+    myPayment(payment_doc_id: $id) {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`);
+
 /** Base64 PDF invoice for the completed payment — shared with pod history. */
 export const MobileCheckoutInvoiceDocument = gql(`
   query MobileCheckoutInvoicePdf($id: ID!) {

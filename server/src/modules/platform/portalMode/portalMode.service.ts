@@ -31,6 +31,10 @@ const pub = (doc: any) => ({
   name: doc.name,
   kind: doc.kind ?? 'PORTAL',
   mode: (doc.mode ?? 'LIVE') as PortalMode,
+  // A row written before these fields existed has neither, and it kept both
+  // features — so an absent value reads as on, not off.
+  chat_enabled: doc.chat_enabled !== false,
+  apps_enabled: doc.apps_enabled !== false,
   note: doc.note ?? '',
   url: URL_BY_KEY.get(doc.key) ?? null,
   updated_at: iso(doc.updated_at),
@@ -66,10 +70,19 @@ export const portalModeService = {
     return { rows: docs.map(pub), total, page, page_size };
   },
 
-  /** Public, unauthenticated read used by every app's gate. Fails open to LIVE. */
+  /**
+   * Public, unauthenticated read used by every app's gate and by the shell
+   * chrome. Fails open on every field: an unregistered key is LIVE with both
+   * header features on, exactly as a portal behaves with no row at all.
+   */
   async getPublic(key: string) {
     const doc = await PortalModeModel.findOne({ key: key.trim() }).lean();
-    return { key: key.trim(), mode: (doc?.mode ?? 'LIVE') as PortalMode };
+    return {
+      key: key.trim(),
+      mode: (doc?.mode ?? 'LIVE') as PortalMode,
+      chat_enabled: doc?.chat_enabled !== false,
+      apps_enabled: doc?.apps_enabled !== false,
+    };
   },
 
   async setMode(key: string, mode: PortalMode, note: string | null, updatedBy?: string | null) {
@@ -83,6 +96,35 @@ export const portalModeService = {
     const doc = await PortalModeModel.findOneAndUpdate(
       { key: known.key },
       { $set: { mode, note: note ?? '', updated_by: updatedBy || null, name: known.name, kind: known.kind } },
+      { new: true, upsert: true }
+    );
+    return pub(doc);
+  },
+
+  /**
+   * Header features for one console. Only the flags passed are written, so the
+   * Admin table can flip one switch per request without echoing the other back
+   * and overwriting a change made from another tab in between.
+   */
+  async setAppFeatures(
+    key: string,
+    features: { chat_enabled?: boolean | null; apps_enabled?: boolean | null },
+    updatedBy?: string | null
+  ) {
+    const known = PORTAL_REGISTRY.find((entry) => entry.key === key.trim());
+    if (!known) {
+      throw new GraphQLError('Unknown portal key', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const $set: Record<string, unknown> = {
+      updated_by: updatedBy || null,
+      name: known.name,
+      kind: known.kind,
+    };
+    if (typeof features.chat_enabled === 'boolean') $set.chat_enabled = features.chat_enabled;
+    if (typeof features.apps_enabled === 'boolean') $set.apps_enabled = features.apps_enabled;
+    const doc = await PortalModeModel.findOneAndUpdate(
+      { key: known.key },
+      { $set },
       { new: true, upsert: true }
     );
     return pub(doc);

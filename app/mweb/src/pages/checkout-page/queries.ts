@@ -189,6 +189,42 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
   }
 `;
 
+/**
+ * One payment of the buyer's own. Polled ONLY when the verify mutation dies in
+ * transport, so it is deliberately the cheapest read that can answer the
+ * question: `payment(payment_doc_id)` is admin-guarded and `myPayments` would
+ * pull the buyer's entire history to find one row, at the exact moment the API
+ * is already struggling. Selects exactly the fields VERIFY_RAZORPAY_PAYMENT
+ * does, so a polled row drives the success screen unchanged.
+ */
+export const MY_PAYMENT = gql`
+  query CheckoutMyPayment($id: ID!) {
+    myPayment(payment_doc_id: $id) {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`;
+
+/** A payment as the checkout reads it back — the shape both the verify mutation
+ * and the MY_PAYMENT poll return. */
+export interface CheckoutPaymentRow {
+  id: string;
+  payment_id: string;
+  invoice_no: string | null;
+  total: number;
+  currency_symbol: string;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+}
+
 /** Standalone product-cart checkout via the dummy gateway (no pod ticket).
  * Returns the same Payment fields the pod dummy checkout selects. */
 export const DUMMY_PRODUCT_CHECKOUT = gql`

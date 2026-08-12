@@ -1,0 +1,82 @@
+import { useNavigate } from 'react-router-dom';
+import { Alert, AlertTitle, Box, IconButton, Stack, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { StatusChip } from '@duncit/ui';
+import { useTranslation, type DateFormatter } from '@duncit/app-settings';
+import { STATUS_COLORS } from '../payment-logs-page/helpers';
+import type { PaymentDetail } from './queries';
+
+interface FinalizeWarning {
+  titleKey: string;
+  bodyKey: string;
+}
+
+/**
+ * The two finalize states Finance has to act on. NOT_STARTED and COMPLETE are
+ * absent on purpose — a lookup keyed on the state keeps this a single map read
+ * instead of a chain of conditionals.
+ */
+const FINALIZE_WARNINGS: Record<string, FinalizeWarning> = {
+  FAILED: {
+    titleKey: 'finance.payment.finalizeFailedTitle',
+    bodyKey: 'finance.payment.finalizeFailedBody',
+  },
+  CORE_DONE: {
+    titleKey: 'finance.payment.stillFinishingTitle',
+    bodyKey: 'finance.payment.stillFinishingBody',
+  },
+};
+
+interface Props {
+  detail: PaymentDetail;
+  formatDateTime: DateFormatter['formatDateTime'];
+}
+
+/** Identity line + the loud states: refund-required and a stalled/failed finalize. */
+export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly<Props>) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const p = detail.payment;
+  const warning = FINALIZE_WARNINGS[detail.finalize_state];
+  const paidAt = p.paid_at ? formatDateTime(p.paid_at) : t('finance.payment.notPaid');
+
+  return (
+    <Box sx={{ mb: 3 }}>
+      <Stack direction="row" spacing={1.5} alignItems="center">
+        <IconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Box sx={{ flex: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+              {p.payment_id}
+            </Typography>
+            <StatusChip status={p.status} colorMap={STATUS_COLORS} />
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {p.invoice_no ?? t('finance.payment.noInvoiceNumber')} · {p.gateway} · {paidAt}
+          </Typography>
+        </Box>
+      </Stack>
+
+      {detail.needs_refund && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          <AlertTitle>{t('finance.payment.refundRequired')}</AlertTitle>
+          {t('finance.payment.refundRequiredBody')}
+        </Alert>
+      )}
+
+      {warning && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          <AlertTitle>{t(warning.titleKey)}</AlertTitle>
+          {t(warning.bodyKey)}
+          {detail.finalize_error && (
+            <Typography variant="caption" component="div" sx={{ mt: 1, fontFamily: 'monospace' }}>
+              {detail.finalize_error}
+            </Typography>
+          )}
+        </Alert>
+      )}
+    </Box>
+  );
+}

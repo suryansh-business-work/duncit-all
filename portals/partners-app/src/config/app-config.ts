@@ -47,6 +47,9 @@ export const appConfig: AppConfig = {
         { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
       ],
     },
+    // Account-level, role-independent — same section as mWeb/native's
+    // Manage Account list, which also places it right before FAQs.
+    { label: 'Verification', to: '/verification', icon: 'verified-user' },
     { label: 'FAQs', to: '/faqs', icon: 'help' },
     { label: 'Support', to: '/support', icon: 'support' },
     { label: 'Policies', to: '/policies', icon: 'policy' },

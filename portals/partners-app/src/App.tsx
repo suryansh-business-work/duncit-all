@@ -29,6 +29,7 @@ import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminCl
 import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
 import ClubAdminPodDetailsPage from './pages/club-admin-pod-details-page/ClubAdminPodDetailsPage';
 import ClubAdminPodMonitoringPage from './pages/club-admin-monitoring-page/ClubAdminPodMonitoringPage';
+import VerificationPage from './pages/verification-page/VerificationPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -73,6 +74,7 @@ export default function App() {
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
       <Route path="/club-admin/clubs/:clubId/pods/:id" element={authed(<ClubAdminPodDetailsPage />)} />
       <Route path="/wallet" element={authed(<WalletPage />)} />
+      <Route path="/verification" element={authed(<VerificationPage />)} />
       <Route path="/support" element={authed(<SupportPage />)} />
       <Route path="/policies" element={authed(<PartnerPoliciesPage />)} />
       <Route path="/policies/:slug" element={authed(<PartnerPoliciesPage />)} />

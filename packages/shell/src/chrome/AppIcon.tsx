@@ -56,6 +56,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import TuneIcon from '@mui/icons-material/Tune';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import LinkIcon from '@mui/icons-material/Link';
@@ -140,6 +141,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   trophy: EmojiEventsIcon,
   tune: TuneIcon,
   upload: CloudUploadIcon,
+  'verified-user': VerifiedUserIcon,
   wallet: AccountBalanceWalletIcon,
   warehouse: WarehouseIcon,
   widgets: WidgetsIcon,

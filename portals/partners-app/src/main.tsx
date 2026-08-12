@@ -1,4 +1,5 @@
 import { mountPortal } from '@duncit/shell';
+import { flattenCatalogue, PARTNERS_BUNDLE } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -21,5 +22,9 @@ mountPortal({
   logsPortal: logs.portal['partners-app'],
   loadUser: createSessionUserLoader(apolloClient, { operationName: 'PartnerSessionMe' }),
   userStorageKey: 'partner_user',
+  // Via @duncit/app-settings, which already re-exports the i18n package — the
+  // portal gains the copy without gaining a dependency (and without the
+  // matching Dockerfile COPY that a new @duncit/* dep would silently require).
+  i18nFallback: flattenCatalogue(PARTNERS_BUNDLE),
   children: <App />,
 });

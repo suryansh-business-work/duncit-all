@@ -24,11 +24,19 @@ export const slackResolvers = {
       requireRole(ctx, SLACK_MANAGE);
       return slackService.history(args.channel, args.limit);
     },
+    slackPermissions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, SLACK_MANAGE);
+      return slackService.permissions();
+    },
   },
   Mutation: {
     sendSlackMessage: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, SLACK_MANAGE);
       return slackService.send(args.input);
+    },
+    joinSlackChannel: (_p: unknown, args: { channel: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, SLACK_MANAGE);
+      return slackService.join(args.channel);
     },
     // Any signed-in user may report a problem / send feedback; identity is taken
     // from the token, not the client, so this needs no Slack-manage role.

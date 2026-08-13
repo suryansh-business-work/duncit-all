@@ -23,11 +23,19 @@ export const appBuildResolvers = {
       requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.settings();
     },
+    appBuildTriggerConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.triggerConfig();
+    },
   },
   Mutation: {
     reportAppBuild: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.report(args.input, user.email ?? user.id);
+    },
+    triggerAppBuild: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.trigger(args.input, user);
     },
     appBuildUploadAuth: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, BUILDS_MANAGE);

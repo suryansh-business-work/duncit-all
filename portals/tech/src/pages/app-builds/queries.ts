@@ -1,8 +1,16 @@
 import { gql } from '@apollo/client';
 
 export type AppBuildPlatform = 'ANDROID' | 'IOS';
-export type AppBuildStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
+export type AppBuildStatus = 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED';
 export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
+export type AppBuildEnv = 'PRODUCTION' | 'STAGING';
+export type AppBuildTrigger = 'PUSH' | 'PORTAL';
+
+/** A stage the runner entered, stamped when it got there. */
+export interface AppBuildStage {
+  name: string;
+  at: string;
+}
 
 export interface AppBuildCommit {
   hash: string;
@@ -44,6 +52,14 @@ export interface AppBuildRow {
   workflow_run_url: string;
   duration_seconds: number | null;
   reported_by: string;
+  trigger_source: AppBuildTrigger;
+  /** Who started it — the portal account, or the GitHub actor who merged. */
+  triggered_by: string;
+  app_env: AppBuildEnv;
+  requested_artifacts: AppBuildArtifactKind[];
+  /** What the runner is doing now. Empty once the build is over. */
+  stage: string;
+  stages: AppBuildStage[];
   slack_channel: string | null;
   slack_ts: string | null;
   slack_error: string | null;
@@ -99,6 +115,15 @@ export const APP_BUILDS_TABLE = gql`
         workflow_run_url
         duration_seconds
         reported_by
+        trigger_source
+        triggered_by
+        app_env
+        requested_artifacts
+        stage
+        stages {
+          name
+          at
+        }
         slack_channel
         slack_ts
         slack_error
@@ -136,6 +161,39 @@ export const DELETE_APP_BUILD = gql`
   }
 `;
 
+export interface AppBuildTriggerConfig {
+  configured: boolean;
+  repository: string;
+  production_ref: string;
+  staging_ref: string;
+  reports_to: string;
+}
+
+export const APP_BUILD_TRIGGER_CONFIG = gql`
+  query AppBuildTriggerConfig {
+    appBuildTriggerConfig {
+      configured
+      repository
+      production_ref
+      staging_ref
+      reports_to
+    }
+  }
+`;
+
+export const TRIGGER_APP_BUILD = gql`
+  mutation TriggerAppBuild($input: TriggerAppBuildInput!) {
+    triggerAppBuild(input: $input) {
+      actions_url
+      build {
+        id
+        build_no
+        status
+      }
+    }
+  }
+`;
+
 export const ISSUE_APP_BUILD_CI_TOKEN = gql`
   mutation IssueAppBuildCiToken {
     issueAppBuildCiToken {
@@ -156,8 +214,20 @@ export const ISSUE_APP_BUILD_CI_TOKEN = gql`
  */
 const MAX_BUILD_MINUTES = 130;
 
+/** Statuses that mean "something is still expected to happen to this row". */
+const LIVE_STATUSES = new Set<AppBuildStatus>(['QUEUED', 'RUNNING']);
+
+export const isLive = (row: AppBuildRow): boolean => LIVE_STATUSES.has(row.status);
+
+/**
+ * A live row nothing is coming back for.
+ *
+ * RUNNING means the runner died mid-job; QUEUED means GitHub accepted the
+ * dispatch and never scheduled a runner for it. One threshold covers both —
+ * past the longest a build can legally take, neither can still be true.
+ */
 export const isStaleRunning = (row: AppBuildRow): boolean => {
-  if (row.status !== 'RUNNING' || !row.created_at) return false;
+  if (!isLive(row) || !row.created_at) return false;
   return Date.now() - new Date(row.created_at).getTime() > MAX_BUILD_MINUTES * 60_000;
 };
 

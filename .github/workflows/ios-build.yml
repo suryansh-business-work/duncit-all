@@ -1,7 +1,12 @@
-# iOS IPA on every merge to main — built on a GitHub macOS runner (never the
-# VPS), uploaded to ImageKit and recorded via reportAppBuild, which also
-# announces it on the configured Slack channel (Tech portal → App Builds →
-# Settings).
+# iOS IPA on every merge to main, and on demand from Tech → App Builds → Create
+# build. Built on a GitHub macOS runner (never the VPS), uploaded through the
+# server and recorded via reportAppBuild, which also announces it on the
+# configured Slack channel (Tech portal → App Builds → Settings).
+#
+# There is no artifact choice here, unlike Android: an unsigned IPA is the only
+# thing this can produce, so the only build-time question is `app_env` — what
+# the BUILT APP talks to, baked in at compile time. `report_url` is a separate
+# question: where the build records itself, always the portal that started it.
 #
 # UNSIGNED by necessity: no Apple signing certificates exist in this repo (store
 # builds go through EAS-managed credentials). The archive builds with code
@@ -10,13 +15,32 @@
 # merge. When Apple certs land as secrets, this workflow is where they plug in.
 #
 # Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
-# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD.
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. Add DUNCIT_RELEASE_TOKEN_STAGING
+# as well to let the staging portal start builds — each server signs its own
+# tokens, so production's is not valid there.
 name: iOS Build
 
 on:
   push:
     branches: [main]
+  # No artifact choice here, unlike Android: an unsigned IPA is the only thing
+  # this workflow can produce, so the only build-time question is which stack
+  # the app talks to.
   workflow_dispatch:
+    inputs:
+      app_env:
+        description: Which server and database the built app talks to
+        type: choice
+        options: [production, staging]
+        default: production
+      dispatch_id:
+        description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
+        type: string
+        default: ''
+      report_url:
+        description: GraphQL endpoint to record the build in. Empty reports to production.
+        type: string
+        default: ''
 
 # Never kill a running build. GitHub still keeps only the NEWEST queued run per
 # group, so a merge landing mid-build can be superseded — the reporter closes
@@ -29,7 +53,16 @@ permissions:
   contents: read
 
 env:
-  EXPO_PUBLIC_API_URL: https://server.duncit.com
+  # Baked into the binary at compile time, which is why it is a build-time
+  # choice and not a setting in the app. A push to main always means production;
+  # only an explicit dispatch can ask for staging.
+  EXPO_PUBLIC_API_URL: >-
+    ${{ inputs.app_env == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
+  # WHERE the build records itself, which is deliberately NOT the same question
+  # as which server its app talks to: a build always reports to the portal that
+  # started it, so a staging-pointed build triggered from production is still
+  # visible in production.
+  REPORT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
   CI: 1
   EXPO_NO_TELEMETRY: 1
   CYPRESS_INSTALL_BINARY: 0
@@ -47,6 +80,17 @@ jobs:
     name: Build & publish IPA (unsigned)
     runs-on: macos-15
     timeout-minutes: 120
+    env:
+      # Each server signs its own tokens, so a production JWT is not valid on
+      # staging. Picking the secret from where the build reports is what lets a
+      # staging portal start builds at all. The secrets context is unavailable
+      # in workflow-level env, which is why this lives on the job.
+      REPORT_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      REPORT_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      REPORT_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     defaults:
       run:
         working-directory: app/mobile-app
@@ -76,41 +120,88 @@ jobs:
           PLATFORM: IOS
           STATUS: RUNNING
           BUILD_STAGE: Starting up
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
 
       - name: 'Stage: install dependencies'
-        run: echo "BUILD_STAGE=Installing JS dependencies" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing JS dependencies
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Install JS dependencies
         run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: 'Stage: codegen'
-        run: echo "BUILD_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Generating GraphQL types
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Generate GraphQL types
         # src/generated is gitignored — regenerated from the server schemas in this checkout.
         run: npm run codegen
 
       - name: 'Stage: prebuild'
-        run: echo "BUILD_STAGE=Generating the native iOS project" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Generating the native iOS project
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Generate the native ios project
         # ios/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform ios --no-install --clean
 
       - name: 'Stage: pods'
-        run: echo "BUILD_STAGE=Installing CocoaPods dependencies" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing CocoaPods dependencies
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Install CocoaPods dependencies
         run: npx pod-install ios
 
       - name: 'Stage: archive'
-        run: echo "BUILD_STAGE=Compiling (xcodebuild archive)" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Compiling (xcodebuild archive)
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Archive (unsigned)
         run: |
@@ -127,7 +218,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
       - name: 'Stage: package'
-        run: echo "BUILD_STAGE=Packaging the IPA" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Packaging the IPA
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Package the IPA
         run: |
@@ -142,17 +242,28 @@ jobs:
           echo "ARTIFACT_PATHS=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
 
       - name: 'Stage: upload and record'
-        run: echo "BUILD_STAGE=Uploading the artifact and recording the build" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Uploading the artifact and recording the build
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Upload the artifact & record the build
         working-directory: .
         env:
           PLATFORM: IOS
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
 
       - name: Record the failure
@@ -168,9 +279,11 @@ jobs:
         env:
           PLATFORM: IOS
           STATUS: FAILED
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs

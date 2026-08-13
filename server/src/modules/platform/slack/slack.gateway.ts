@@ -20,6 +20,7 @@ const SLACK_API = 'https://slack.com/api';
  *   conversations.history channels:history  read a public channel's messages
  *                         groups:history    read a private channel's messages
  *   users.list            users:read        names + avatars for those messages
+ *   conversations.join    channels:join     add the bot to a public channel
  *
  * Slack binds scopes to the token at INSTALL time, so a missing scope cannot be
  * fixed from this codebase — it is a workspace-admin action:
@@ -40,10 +41,24 @@ const REQUIRED_SCOPES = new Map<string, string[]>([
   ['chat.postMessage', ['chat:write']],
   ['conversations.history', ['channels:history', 'groups:history']],
   ['users.list', ['users:read']],
+  ['conversations.join', ['channels:join']],
 ]);
 
-/** Every scope this gateway needs, deduped. */
-export const SLACK_BOT_SCOPES: string[] = [...new Set([...REQUIRED_SCOPES.values()].flat())];
+/**
+ * Scopes that buy a convenience rather than a feature, and so must NOT count
+ * against a token that works.
+ *
+ * `channels:join` only lets the portal add the bot to a public channel on your
+ * behalf; without it the same thing is done by typing /invite in Slack. Putting
+ * it in the required set would fail the connection test — and light up every
+ * existing install as broken — for a workspace whose Slack is entirely fine.
+ */
+export const SLACK_OPTIONAL_SCOPES: string[] = ['channels:join'];
+
+/** Every scope this gateway needs to do its job, deduped. */
+export const SLACK_BOT_SCOPES: string[] = [
+  ...new Set([...REQUIRED_SCOPES.values()].flat()),
+].filter((scope) => !SLACK_OPTIONAL_SCOPES.includes(scope));
 
 /** Slack sends scope lists as a comma string, sometimes with stray spaces. */
 const parseScopes = (raw: string | null | undefined): string[] =>
@@ -354,4 +369,81 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
   }
   const data = await slackPost('chat.postMessage', body);
   return { channel: String(data.channel ?? ''), ts: String(data.ts ?? '') };
+}
+
+/**
+ * Add the bot to a PUBLIC channel (needs `channels:join`).
+ *
+ * There is no private equivalent, by Slack's design: a private channel can only
+ * be joined by invitation from someone already in it, so the portal cannot fix
+ * that case and must say so instead of failing obscurely.
+ */
+export async function joinChannel(channel: string): Promise<SlackChannel> {
+  const data = await slackPost('conversations.join', { channel });
+  return toChannel(data.channel ?? { id: channel });
+}
+
+/** Why each scope is needed, in the words of what breaks without it. */
+const SCOPE_PURPOSE: Record<string, string> = {
+  'channels:read': 'List the public channels in the workspace.',
+  'groups:read': 'List the private channels the bot has been invited to.',
+  'team:read': 'Read the workspace domain, which channel links are built from.',
+  'chat:write': 'Post messages — replies from this page, build announcements and in-app feedback.',
+  'channels:history': 'Read the messages in a public channel.',
+  'groups:history': 'Read the messages in a private channel.',
+  'users:read': 'Show the names and avatars of the people who wrote those messages.',
+  'channels:join': 'Let this page add the bot to a public channel, instead of typing /invite in Slack.',
+};
+
+export interface SlackScopeStatus {
+  scope: string;
+  granted: boolean;
+  required: boolean;
+  purpose: string;
+}
+
+export interface SlackAuthStatus {
+  team: string;
+  /**
+   * False when Slack did not send the x-oauth-scopes header. Every `granted`
+   * below is then a guess, and the caller must say so rather than render a
+   * confident list of red crosses.
+   */
+  scopes_known: boolean;
+  scopes: SlackScopeStatus[];
+}
+
+/**
+ * Which scopes the installed token actually holds.
+ *
+ * Slack reports them in a RESPONSE HEADER, not the body, which is why this does
+ * its own fetch instead of going through slackCall — and why it is the only way
+ * to answer "why can this bot not read that channel?" without waiting for the
+ * call to fail.
+ */
+export async function authStatus(): Promise<SlackAuthStatus> {
+  const token = await botToken();
+  const res = await fetch(`${SLACK_API}/auth.test`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!data.ok) throw slackFailure('auth.test', data, res.status);
+
+  const header = res.headers?.get?.('x-oauth-scopes') ?? null;
+  const held = new Set(parseScopes(header));
+  const all = [...SLACK_BOT_SCOPES, ...SLACK_OPTIONAL_SCOPES];
+  return {
+    team: String(data.team ?? ''),
+    scopes_known: header !== null,
+    scopes: all.map((scope) => ({
+      scope,
+      granted: held.has(scope),
+      required: !SLACK_OPTIONAL_SCOPES.includes(scope),
+      purpose: SCOPE_PURPOSE[scope] ?? '',
+    })),
+  };
 }

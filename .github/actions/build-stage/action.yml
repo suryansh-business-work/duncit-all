@@ -1,0 +1,72 @@
+# Marks the stage a build is entering, and tells the Tech portal about it.
+#
+# Two jobs in one step because they are the same fact written to two places:
+#
+#  1. BUILD_STAGE in GITHUB_ENV. A value written to GITHUB_ENV lands on the NEXT
+#     step, which is exactly what makes it useful — the marker names the step
+#     that follows it, so whatever BUILD_STAGE holds when the job dies is the
+#     stage that actually broke, and the failure reporter can say so.
+#
+#  2. A RUNNING report, so a build that takes thirteen minutes can say what it
+#     is doing for all thirteen instead of only spinning. Progress is
+#     best-effort by construction (`|| true`): a build must never be abandoned
+#     because the table could not be told where it had got to.
+#
+# Composite actions cannot use continue-on-error on their own steps, hence the
+# `|| true`. They also do not inherit the job's `defaults.run.working-directory`,
+# hence the explicit workspace path.
+name: Report build stage
+description: Record the stage a build is entering and show it in the Tech portal while it runs.
+
+inputs:
+  stage:
+    description: Human-readable name of the stage being entered.
+    required: true
+  platform:
+    description: ANDROID or IOS.
+    required: true
+  dispatch_id:
+    description: Set when the Tech portal started this build, so the report claims its row.
+    required: false
+    default: ''
+  graphql_url:
+    description: GraphQL endpoint to report to.
+    required: true
+  release_token:
+    description: CI JWT for the server being reported to.
+    required: false
+    default: ''
+  release_email:
+    description: Fallback login, used only when no token is set.
+    required: false
+    default: ''
+  release_password:
+    description: Fallback login, used only when no token is set.
+    required: false
+    default: ''
+  run_url:
+    description: This workflow run's URL.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Mark the stage
+      shell: bash
+      run: echo "BUILD_STAGE=${{ inputs.stage }}" >> "$GITHUB_ENV"
+
+    - name: Report progress
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        STATUS: RUNNING
+        PROGRESS_ONLY: '1'
+        BUILD_STAGE: ${{ inputs.stage }}
+        DISPATCH_ID: ${{ inputs.dispatch_id }}
+        DUNCIT_GRAPHQL_URL: ${{ inputs.graphql_url }}
+        DUNCIT_RELEASE_TOKEN: ${{ inputs.release_token }}
+        DUNCIT_RELEASE_EMAIL: ${{ inputs.release_email }}
+        DUNCIT_RELEASE_PASSWORD: ${{ inputs.release_password }}
+        RUN_URL: ${{ inputs.run_url }}
+      run: node scripts/report-app-build.mjs || true

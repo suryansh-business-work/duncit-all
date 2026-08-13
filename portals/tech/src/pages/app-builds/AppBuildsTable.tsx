@@ -3,9 +3,12 @@ import { useTranslation } from '@duncit/shell';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import {
   getRowId,
+  makeEnvOptions,
+  makeRenderEnv,
   makeRenderLinks,
   makeRenderSlack,
   makeRenderStatus,
+  makeRenderTriggeredBy,
   makeStatusOptions,
   renderBuild,
   renderCommit,
@@ -37,11 +40,20 @@ export default function AppBuildsTable({
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
   const columns = useMemo<DuncitColumn<AppBuildRow>[]>(() => {
     const statusLabels = {
+      QUEUED: t('tech.appBuilds.statusQueued'),
       RUNNING: t('tech.appBuilds.statusRunning'),
       SUCCESS: t('tech.appBuilds.statusSuccess'),
       FAILED: t('tech.appBuilds.statusFailed'),
       stale: t('tech.appBuilds.statusStale'),
       elapsed: (minutes: string) => t('tech.appBuilds.statusElapsed', { vars: { minutes } }),
+    };
+    const envLabels = {
+      PRODUCTION: t('tech.appBuilds.envProduction'),
+      STAGING: t('tech.appBuilds.envStaging'),
+    };
+    const triggerLabels = {
+      PUSH: t('tech.appBuilds.triggerPush'),
+      PORTAL: t('tech.appBuilds.triggerPortal'),
     };
     return [
       dateColumn<AppBuildRow>({
@@ -103,6 +115,21 @@ export default function AppBuildsTable({
         headerName: t('tech.appBuilds.colDuration'),
         width: 95,
         valueGetter: durationLabel,
+      },
+      {
+        field: 'app_env',
+        headerName: t('tech.appBuilds.colEnv'),
+        width: 120,
+        filter: { type: 'select', options: makeEnvOptions(envLabels) },
+        cellRenderer: makeRenderEnv(envLabels),
+        valueGetter: (row) => row.app_env,
+      },
+      {
+        field: 'triggered_by',
+        headerName: t('tech.appBuilds.colTriggeredBy'),
+        minWidth: 190,
+        cellRenderer: makeRenderTriggeredBy(triggerLabels),
+        valueGetter: (row) => row.triggered_by || '—',
       },
       {
         field: 'branch',

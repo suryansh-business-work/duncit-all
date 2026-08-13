@@ -36,6 +36,31 @@ export interface SlackChannel {
   link: string;
 }
 
+/** One thing the bot is, or is not, allowed to do. */
+export interface SlackScope {
+  scope: string;
+  granted: boolean;
+  /** False for scopes that only buy a convenience — a missing one is not a fault. */
+  required: boolean;
+  purpose: string;
+}
+
+/** What the installed bot token may actually do, as returned by `slackPermissions`. */
+export interface SlackPermissions {
+  configured: boolean;
+  team: string;
+  /**
+   * False when Slack did not report the scopes. Every entry's `granted` is then
+   * unknown rather than false — a working token can decline to say.
+   */
+  scopes_known: boolean;
+  scopes: SlackScope[];
+  /** Why the scopes could not be read. Empty when they were. */
+  error: string;
+  app_url: string;
+  docs_url: string;
+}
+
 /**
  * One message already in a channel, as returned by `slackChannelHistory`.
  *

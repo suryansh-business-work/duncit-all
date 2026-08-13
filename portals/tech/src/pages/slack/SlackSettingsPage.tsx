@@ -4,6 +4,7 @@ import { Alert, Box, CircularProgress, Paper, Stack, Typography } from '@mui/mat
 import { useTranslation } from '@duncit/shell';
 import ChannelList from './ChannelList';
 import ConversationPane from './ConversationPane';
+import SlackPermissionsButton from './SlackPermissionsButton';
 import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from './queries';
 
 /** Tall enough to read a conversation in, without the page itself scrolling —
@@ -22,7 +23,7 @@ export default function SlackSettingsPage() {
   const { t } = useTranslation();
   const configured = useQuery(SLACK_CONFIGURED, { fetchPolicy: 'cache-and-network' });
   const isConfigured = configured.data?.slackConfigured === true;
-  const { data, loading, error } = useQuery(SLACK_CHANNELS, {
+  const { data, loading, error, refetch } = useQuery(SLACK_CHANNELS, {
     skip: !isConfigured,
     fetchPolicy: 'cache-and-network',
   });
@@ -57,12 +58,16 @@ export default function SlackSettingsPage() {
 
   return (
     <Stack spacing={2} sx={{ height: '100%' }}>
-      <Box>
-        <Typography variant="h4" fontWeight={950}>
-          {t('tech.slack.title')}
-        </Typography>
-        <Typography color="text.secondary">{t('tech.slack.subtitle')}</Typography>
-      </Box>
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+        <Box>
+          <Typography variant="h4" fontWeight={950}>
+            {t('tech.slack.title')}
+          </Typography>
+          <Typography color="text.secondary">{t('tech.slack.subtitle')}</Typography>
+        </Box>
+        {/* Every failure below is a permissions question; this is the answer. */}
+        <SlackPermissionsButton />
+      </Stack>
       {/* The server names the exact Slack error and the missing bot scope, so
           the raw message is the actionable text — render it as-is. */}
       {error && <Alert severity="error">{error.message}</Alert>}
@@ -90,7 +95,12 @@ export default function SlackSettingsPage() {
             variant="outlined"
             sx={{ borderRadius: 3, flex: 1, minWidth: 0, height: PANE_HEIGHT, overflow: 'hidden' }}
           >
-            <ConversationPane channel={selected} />
+            <ConversationPane
+              channel={selected}
+              onChannelsChanged={() => {
+                refetch().catch(() => undefined);
+              }}
+            />
           </Paper>
         </Stack>
       )}

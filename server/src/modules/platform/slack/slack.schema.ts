@@ -35,6 +35,47 @@ export const slackTypeDefs = gql`
     reply_count: Int!
   }
 
+  "One thing the bot is, or is not, allowed to do."
+  type SlackScope {
+    "The Slack scope name, e.g. channels:history."
+    scope: String!
+    granted: Boolean!
+    """
+    False for scopes that only buy a convenience. A workspace can withhold one
+    and everything else still works, so a missing optional scope is not a fault.
+    """
+    required: Boolean!
+    "What stops working without it, in plain terms."
+    purpose: String!
+  }
+
+  """
+  What the installed bot token may actually do.
+
+  Every Slack failure this portal can show is really a permissions question, and
+  Slack answers it in a response HEADER that nobody can see. This is that header,
+  turned into a list, plus the links to change it.
+  """
+  type SlackPermissions {
+    "False when no bot token is configured at all."
+    configured: Boolean!
+    "The workspace the token belongs to. Empty when it could not be read."
+    team: String!
+    """
+    False when Slack did not report the token's scopes. Every scope below is
+    then unknown rather than ungranted — a token can work perfectly and still
+    not say so, and rendering that as a column of red crosses would be a lie.
+    """
+    scopes_known: Boolean!
+    scopes: [SlackScope!]!
+    "Why the scopes could not be read, when they could not. Empty otherwise."
+    error: String!
+    "Where a workspace admin changes any of this."
+    app_url: String!
+    "Slack's own reference for what these scopes mean."
+    docs_url: String!
+  }
+
   extend type Query {
     """
     Recent messages in one channel, OLDEST FIRST.
@@ -43,6 +84,8 @@ export const slackTypeDefs = gql`
     channel it was never invited to, however many scopes the token holds.
     """
     slackChannelHistory(channel: ID!, limit: Int): [SlackMessage!]!
+    "What the bot token is allowed to do, and where to change it."
+    slackPermissions: SlackPermissions!
   }
 
   "Post a message — supports the full Slack message surface. Provide at least one of text/blocks/attachments."
@@ -97,6 +140,14 @@ export const slackTypeDefs = gql`
   extend type Mutation {
     "Post a message to a Slack channel (full message surface)."
     sendSlackMessage(input: SendSlackMessageInput!): SlackSendResult!
+    """
+    Add the bot to a PUBLIC channel, which is the fix for not_in_channel.
+
+    Needs the channels:join scope. Private channels cannot be joined by any API
+    — Slack only admits a bot to one by invitation from someone already inside
+    it — so this refuses them rather than failing at Slack with a vaguer error.
+    """
+    joinSlackChannel(channel: ID!): SlackChannel!
     """
     File an in-app problem report. Any signed-in user; identity is server-stamped.
 

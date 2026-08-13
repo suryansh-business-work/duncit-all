@@ -29,7 +29,14 @@
  *   ARTIFACT_PATHS           newline-separated paths to upload, PRIMARY FIRST
  *                            (Android sends its .apk then its .aab; iOS one .ipa).
  *                            Required for SUCCESS.
- *   DUNCIT_GRAPHQL_URL       default https://server.duncit.com/graphql
+ *   PROGRESS_ONLY            '1' to send just "still running, doing X" and stop:
+ *                            no changelog, no diff stat, no upload.
+ *   DISPATCH_ID              set by the Tech portal; claims the row it already
+ *                            created instead of opening a second one.
+ *   DUNCIT_GRAPHQL_URL       where to record the build. Defaults to production;
+ *                            a portal-started build points this at the server
+ *                            that started it, which is not necessarily the one
+ *                            the built app talks to.
  *   DUNCIT_RELEASE_TOKEN     a SUPER_ADMIN / TECH_MANAGER JWT, OR
  *   DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD [+ DUNCIT_RELEASE_PORTAL_KEY]
  *   GIT_BEFORE               github.event.before (commit range base)
@@ -304,6 +311,52 @@ function durationSeconds() {
 const STATUSES = new Set(['RUNNING', 'SUCCESS', 'FAILED']);
 
 /**
+ * What every report carries regardless of kind, so a build is identifiable
+ * before it has produced anything.
+ *
+ * `dispatch_id` is set only when the Tech portal started this build. It is what
+ * lets the run CLAIM the row the portal already created, instead of opening a
+ * second one — the dispatch REST call answers with no run id, so this is the
+ * only join key that exists on the first report.
+ */
+function reportIdentity(platform) {
+  return {
+    platform,
+    dispatch_id: (process.env.DISPATCH_ID || '').trim(),
+    // Only a push build has a GitHub actor worth naming; a portal build already
+    // recorded who pressed the button, and the server keeps that.
+    triggered_by: (process.env.GITHUB_ACTOR || '').trim(),
+    commit_sha: process.env.GITHUB_SHA || '',
+    branch: process.env.GITHUB_REF_NAME || '',
+    workflow_run_id: process.env.GITHUB_RUN_ID || '',
+    workflow_run_url: process.env.RUN_URL || '',
+  };
+}
+
+/**
+ * A progress ping: "still going, currently doing X".
+ *
+ * Deliberately skips the changelog, the diff stat and every upload. Those cost
+ * git work and an extra round trip, and a build sends one of these before each
+ * long stage — paying for the full report seven times to move a label would
+ * make the reporting slower than some of the stages it reports.
+ */
+async function reportProgress(platform, token) {
+  const stage = (process.env.BUILD_STAGE || '').trim();
+  const result = await reportBuild(
+    {
+      ...reportIdentity(platform),
+      status: 'RUNNING',
+      version: readVersion(),
+      stage,
+      duration_seconds: durationSeconds(),
+    },
+    token
+  );
+  console.log(`✓ ${result.build_no}: ${stage || 'running'}`);
+}
+
+/**
  * What to blame for a failed build.
  *
  * The workflow sets BUILD_STAGE before each long step, so whatever stage was
@@ -326,8 +379,9 @@ try {
   }
   const requested = (process.env.STATUS || 'SUCCESS').toUpperCase();
   const status = STATUSES.has(requested) ? requested : 'SUCCESS';
+  const progressOnly = (process.env.PROGRESS_ONLY || '') === '1';
   const paths = artifactPaths();
-  if (status === 'SUCCESS') {
+  if (status === 'SUCCESS' && !progressOnly) {
     if (paths.length === 0) {
       throw new Error('ARTIFACT_PATHS is empty — a SUCCESS report must name what it built');
     }
@@ -349,6 +403,13 @@ try {
     );
   }
 
+  // Nothing below this line is needed to move a progress label, and all of it
+  // costs git work or a round trip.
+  if (progressOnly) {
+    await reportProgress(platform, token);
+    process.exit(0);
+  }
+
   const range = commitRange(await lastReportedSha(token, platform));
   const commits = getCommits(range);
   const stats = getStats(range);
@@ -362,9 +423,13 @@ try {
   const primary = artifacts[0] ?? null;
 
   const input = {
-    platform,
+    ...reportIdentity(platform),
     status,
     version: readVersion(),
+    // The stage is the answer on a RUNNING report and part of the reason on a
+    // FAILED one, where failureMessage() already names it. A finished build is
+    // not in a stage, and the server clears it.
+    stage: status === 'RUNNING' ? (process.env.BUILD_STAGE || '').trim() : '',
     error_message: status === 'FAILED' ? failureMessage() : '',
     artifacts,
     // Mirrors of the primary artifact. A server that predates the list still
@@ -375,14 +440,10 @@ try {
     artifact_file_id: primary?.file_id ?? '',
     artifact_error: primary?.error ?? '',
     size_mb: primary?.size_mb ?? null,
-    commit_sha: process.env.GITHUB_SHA || '',
-    branch: process.env.GITHUB_REF_NAME || '',
     commits,
     files_changed: stats.files_changed ?? null,
     insertions: stats.insertions ?? null,
     deletions: stats.deletions ?? null,
-    workflow_run_id: process.env.GITHUB_RUN_ID || '',
-    workflow_run_url: process.env.RUN_URL || '',
     duration_seconds: durationSeconds(),
   };
   const result = await reportBuild(input, token);

@@ -2,13 +2,21 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import {
+  authStatus,
   channelHistory,
   isSlackConfigured,
+  joinChannel,
   listChannels,
   postMessage,
   teamInfo,
   type PostMessageInput,
+  type SlackChannel,
 } from './slack.gateway';
+
+/** Where a workspace admin changes what the bot may do. */
+const SLACK_APPS_URL = 'https://api.slack.com/apps';
+/** Slack's own reference for the scopes listed on the permissions panel. */
+const SLACK_SCOPES_DOC_URL = 'https://api.slack.com/scopes';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
@@ -27,6 +35,18 @@ function parseJsonArray(raw: string | null | undefined, field: string): unknown[
   return parsed;
 }
 
+/** The workspace URL without its trailing slash — what archive links hang off. */
+const archiveBase = (teamUrl: string): string => teamUrl.replace(/\/$/, '');
+
+/**
+ * A channel plus the deep link that reaches it in Slack. One place, because
+ * every channel this module returns needs it and `link` is non-null in the SDL.
+ */
+const withLink = (channel: SlackChannel, base: string) => ({
+  ...channel,
+  link: base ? `${base}/archives/${channel.id}` : '',
+});
+
 const optionalBool = (v: unknown): boolean | undefined => (v == null ? undefined : !!v);
 const optionalStr = (v: string | null | undefined): string | undefined => {
   const s = String(v ?? '').trim();
@@ -41,11 +61,8 @@ export const slackService = {
   /** Channels the bot can see, each with a deep archive link for copy/share. */
   async channels() {
     const [team, channels] = await Promise.all([teamInfo(), listChannels()]);
-    const base = team.url.replace(/\/$/, '');
-    return channels.map((c) => ({
-      ...c,
-      link: base ? `${base}/archives/${c.id}` : '',
-    }));
+    const base = archiveBase(team.url);
+    return channels.map((c) => withLink(c, base));
   },
 
   /**
@@ -58,6 +75,62 @@ export const slackService = {
   history(channel: string, limit?: number | null) {
     if (!optionalStr(channel)) throw badInput('Select a channel to read');
     return channelHistory(channel, limit ?? 50);
+  },
+
+  /**
+   * What the bot is allowed to do, scope by scope.
+   *
+   * Exists because every Slack failure this page can produce is really a
+   * permissions question, and the answer lives in a header nobody can see.
+   * Reported even when Slack refuses the call, since "the token is dead" is
+   * itself the answer and throwing would leave the panel blank.
+   */
+  async permissions() {
+    const base = {
+      app_url: SLACK_APPS_URL,
+      docs_url: SLACK_SCOPES_DOC_URL,
+    };
+    if (!(await isSlackConfigured())) {
+      return { ...base, configured: false, team: '', scopes_known: false, error: '', scopes: [] };
+    }
+    try {
+      const status = await authStatus();
+      return { ...base, configured: true, error: '', ...status };
+    } catch (err) {
+      return {
+        ...base,
+        configured: true,
+        team: '',
+        scopes_known: false,
+        scopes: [],
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+  },
+
+  /**
+   * Add the bot to a public channel, which is what `not_in_channel` is asking
+   * for. Private channels are refused here rather than at Slack: there is no
+   * API that joins one, so the only fix is an invitation from inside it.
+   */
+  async join(channel: string) {
+    const id = optionalStr(channel);
+    if (!id) throw badInput('Select a channel to join');
+    // Refused HERE, not at Slack. conversations.join answers a private channel
+    // with `method_not_supported_for_channel_type`, which reads like a bug in
+    // this code rather than the one thing the caller can actually act on.
+    const known = await listChannels();
+    const target = known.find((c) => c.id === id);
+    if (target?.is_private) {
+      throw badInput(
+        `#${target.name} is private, and no Slack API can add a bot to a private channel. Someone already in it has to run /invite @your-bot there.`
+      );
+    }
+    const [joined, team] = await Promise.all([joinChannel(id), teamInfo()]);
+    logs.server.info('slack', 'join', { channel: id });
+    // conversations.join answers with the channel but not always with
+    // is_member, and the caller's whole question is whether it worked.
+    return { ...withLink(joined, archiveBase(team.url)), is_member: true };
   },
 
   /**

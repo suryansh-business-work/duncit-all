@@ -5,6 +5,7 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { parseApiError } from '@duncit/utils';
 import { StatCard } from '@duncit/ui';
 import { AppIcon } from '@duncit/shell';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import type { TableQueryState } from '@duncit/table';
 import CancellationsTable from './CancellationsTable';
 import CancellationDetailDialog from './CancellationDetailDialog';
@@ -49,46 +50,67 @@ export default function CancellationsDashboardPage() {
     [client],
   );
 
+  const widgets: DashboardWidget[] = [
+    ...CARDS.map((card, index) => ({
+      id: card.key,
+      bare: true,
+      // Five tiles across twelve columns: two rows of two-and-a-half is
+      // unreadable, so they run 3-wide and wrap onto a second row.
+      defaultLayout: { x: (index % 4) * 3, y: Math.floor(index / 4) * 2, w: 3, h: 2 },
+      minW: 2,
+      minH: 2,
+      content: (
+        <StatCard
+          label={card.label}
+          value={card.money ? money(sym, stats?.[card.key] ?? 0) : String(stats?.[card.key] ?? 0)}
+          icon={<AppIcon name={card.icon} fontSize="small" />}
+          loading={loading && !stats}
+          sx={{ borderRadius: 3, height: '100%' }}
+        />
+      ),
+    })),
+    {
+      id: 'cancellations-table',
+      title: 'Every cancelled pod',
+      disablePadding: true,
+      defaultLayout: { x: 0, y: 4, w: 12, h: 8 },
+      minW: 4,
+      minH: 4,
+      content: (
+        <CancellationsTable
+          tableId="finance-cancellations-all"
+          fetchRows={fetchRows}
+          onRowClick={setSelected}
+          showKind
+          emptyText="No pods have been cancelled yet."
+        />
+      ),
+    },
+  ];
+
   return (
-    <Box>
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-        <EventBusyIcon color="primary" />
-        <Box>
-          <Typography variant="h5" fontWeight={700}>
-            Cancel & Refunds
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Every cancelled pod — who cancelled it, why, and where the money went.
-          </Typography>
-        </Box>
-      </Stack>
-
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{parseApiError(error)}</Alert>}
-
-      <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2} sx={{ mb: 3 }}>
-        {CARDS.map((card) => {
-          const value = stats?.[card.key] ?? 0;
-          return (
-            <StatCard
-              key={card.key}
-              label={card.label}
-              value={card.money ? money(sym, value) : String(value)}
-              icon={<AppIcon name={card.icon} fontSize="small" />}
-              loading={loading && !stats}
-              sx={{ borderRadius: 3, flex: '1 1 200px', minWidth: 200 }}
-            />
-          );
-        })}
-      </Stack>
-
-      <CancellationsTable
-        tableId="finance-cancellations-all"
-        fetchRows={fetchRows}
-        onRowClick={setSelected}
-        showKind
-        emptyText="No pods have been cancelled yet."
+    <>
+      <DuncitDashboard
+        dashboardId="finance.cancellations"
+        header={
+          <Box>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <EventBusyIcon color="primary" />
+              <Box>
+                <Typography variant="h5" fontWeight={700}>
+                  Cancel & Refunds
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Every cancelled pod — who cancelled it, why, and where the money went.
+                </Typography>
+              </Box>
+            </Stack>
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{parseApiError(error)}</Alert>}
+          </Box>
+        }
+        widgets={widgets}
       />
       <CancellationDetailDialog row={selected} onClose={() => setSelected(null)} />
-    </Box>
+    </>
   );
 }

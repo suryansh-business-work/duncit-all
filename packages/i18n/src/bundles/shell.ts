@@ -414,6 +414,31 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         closePreview: 'Close preview',
       },
     },
+    /**
+     * The draggable dashboard grid (@duncit/dashboard). Every console's
+     * dashboard renders through it, so the toolbar copy is shell chrome — one
+     * set of keys rather than seventeen.
+     */
+    dashboard: {
+      customise: 'Customise layout',
+      customiseHint: 'Drag widgets by their handle, or drag a corner to resize.',
+      editing: 'Editing layout',
+      dragHandle: 'Drag to move this widget',
+      save: 'Save layout',
+      saving: 'Saving…',
+      // Success is silent by design: the grid leaves edit mode, which is the
+      // confirmation. Only failures get copy, and they render inline above the
+      // grid rather than as a toast — a third of the consoles mount no
+      // NotifyHost, so a toast there would say nothing at all.
+      saveFailed: 'Could not save your layout. Please try again.',
+      cancel: 'Cancel',
+      reset: 'Reset to default',
+      resetTitle: 'Reset this dashboard?',
+      resetBody: 'Your saved arrangement is deleted and the default layout comes back. This affects only you.',
+      resetConfirm: 'Reset layout',
+      resetFailed: 'Could not reset your layout. Please try again.',
+      loadFailed: 'Could not load your saved layout — showing the default arrangement.',
+    },
   },
   /**
    * Admin portal copy — same reasoning as `tech` below: it rides in THIS

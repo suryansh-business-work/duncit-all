@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, Avatar, Box, Card, CardActionArea, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { AccountSummaryCard } from '@duncit/shell';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { appConfig } from '../config/app-config';
 import DashboardKpis from './dashboard/DashboardKpis';
 import MeetingScheduleStrip from './dashboard/MeetingScheduleStrip';
@@ -50,6 +51,30 @@ const ONBOARDING_DASHBOARD = gql`
   }
 `;
 
+type StatusCardProps = Readonly<{
+  to: string;
+  title: string;
+  chartTitle: string;
+  counts: Parameters<typeof StatusBreakdownChart>[0]['counts'];
+}>;
+
+/** One "X by status" panel — the whole card opens that entity's list. */
+function StatusCard({ to, title, chartTitle, counts }: StatusCardProps) {
+  const navigate = useNavigate();
+  return (
+    <Card variant="outlined" sx={{ height: '100%' }}>
+      <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
+        <CardContent>
+          <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
+            {title}
+          </Typography>
+          <StatusBreakdownChart title={chartTitle} counts={counts} />
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(ONBOARDING_DASHBOARD, { fetchPolicy: 'cache-and-network' });
@@ -85,88 +110,103 @@ export default function DashboardPage() {
     .map((m: { created_at?: string | null }) => ({ submitted_at: m.created_at }));
   const trend = monthlyOnboarding(hosts, venues, brands, clubAdmins);
 
-  return (
-    <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1.75}>
-        <Avatar
-          src={me?.profile_photo || undefined}
-          sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontWeight: 800 }}
-        >
-          {firstName.charAt(0).toUpperCase()}
-        </Avatar>
-        <Box>
-          <Typography variant="h5" fontWeight={800}>
-            Welcome back, {firstName}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {appConfig.tagline}
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
-            {(me?.roles ?? []).map((role: string) => (
-              <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
-            ))}
-          </Stack>
-        </Box>
-      </Stack>
-
-      <DashboardKpis kpis={kpis} />
-
-      <Box>
-        <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
-          Meeting schedule
-        </Typography>
+  const widgets: DashboardWidget[] = [
+    {
+      id: 'kpis',
+      bare: true,
+      defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
+      minH: 2,
+      content: <DashboardKpis kpis={kpis} />,
+    },
+    {
+      id: 'meeting-schedule',
+      title: 'Meeting schedule',
+      defaultLayout: { x: 0, y: 2, w: 12, h: 3 },
+      minH: 3,
+      content: (
         <MeetingScheduleStrip
           counts={meetingCounts}
           onOpen={(kind) => navigate(`/meetings/${kind.toLowerCase()}?status=REQUESTED`)}
         />
-      </Box>
+      ),
+    },
+    {
+      id: 'hosts-by-status',
+      bare: true,
+      defaultLayout: { x: 0, y: 5, w: 4, h: 5 },
+      minW: 3,
+      minH: 4,
+      content: <StatusCard to="/hosts" title="Hosts by status" chartTitle="Host" counts={hostCounts} />,
+    },
+    {
+      id: 'venues-by-status',
+      bare: true,
+      defaultLayout: { x: 4, y: 5, w: 4, h: 5 },
+      minW: 3,
+      minH: 4,
+      content: <StatusCard to="/venues" title="Venues by status" chartTitle="Venue" counts={venueCounts} />,
+    },
+    {
+      id: 'brands-by-status',
+      bare: true,
+      defaultLayout: { x: 8, y: 5, w: 4, h: 5 },
+      minW: 3,
+      minH: 4,
+      content: (
+        <StatusCard
+          to="/ecomm-brands"
+          title="E-Commerce brands by status"
+          chartTitle="Brand"
+          counts={brandCounts}
+        />
+      ),
+    },
+    {
+      id: 'onboarding-trend',
+      title: 'Onboarding trend (last 6 months)',
+      subtitle: 'Hosts, Venues, Brands and Club Admins by month.',
+      defaultLayout: { x: 0, y: 10, w: 12, h: 6 },
+      minW: 4,
+      minH: 4,
+      content: <OnboardingTrendChart buckets={trend} />,
+    },
+    {
+      id: 'account-summary',
+      bare: true,
+      defaultLayout: { x: 0, y: 16, w: 12, h: 4 },
+      minW: 4,
+      minH: 3,
+      content: <AccountSummaryCard user={me} />,
+    },
+  ];
 
-      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' } }}>
-        <Card variant="outlined" sx={{ height: '100%' }}>
-          <CardActionArea onClick={() => navigate('/hosts')} sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
-                Hosts by status
-              </Typography>
-              <StatusBreakdownChart title="Host" counts={hostCounts} />
-            </CardContent>
-          </CardActionArea>
-        </Card>
-        <Card variant="outlined" sx={{ height: '100%' }}>
-          <CardActionArea onClick={() => navigate('/venues')} sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
-                Venues by status
-              </Typography>
-              <StatusBreakdownChart title="Venue" counts={venueCounts} />
-            </CardContent>
-          </CardActionArea>
-        </Card>
-        <Card variant="outlined" sx={{ height: '100%' }}>
-          <CardActionArea onClick={() => navigate('/ecomm-brands')} sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
-                E-Commerce brands by status
-              </Typography>
-              <StatusBreakdownChart title="Brand" counts={brandCounts} />
-            </CardContent>
-          </CardActionArea>
-        </Card>
-      </Box>
-
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
-            Onboarding trend (last 6 months)
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-            Hosts, Venues, Brands and Club Admins by month.
-          </Typography>
-          <OnboardingTrendChart buckets={trend} />
-        </CardContent>
-      </Card>
-
-      <AccountSummaryCard user={me} />
-    </Stack>
+  return (
+    <DuncitDashboard
+      dashboardId="onboarding.overview"
+      header={
+        <Stack direction="row" alignItems="center" spacing={1.75}>
+          <Avatar
+            src={me?.profile_photo || undefined}
+            sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontWeight: 800 }}
+          >
+            {firstName.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="h5" fontWeight={800}>
+              Welcome back, {firstName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {appConfig.tagline}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+              {(me?.roles ?? []).map((role: string) => (
+                <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
+              ))}
+            </Stack>
+          </Box>
+        </Stack>
+      }
+      widgets={widgets}
+    />
   );
 }

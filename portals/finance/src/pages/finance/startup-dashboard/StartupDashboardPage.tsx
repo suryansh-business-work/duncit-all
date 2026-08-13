@@ -4,6 +4,7 @@ import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { FOUNDER_DASHBOARD, SAVE_FOUNDER_SETTING } from './queries';
 import type { FounderDashboardData, FounderMetric } from './types';
 import MetricGrid from './MetricGrid';
@@ -13,6 +14,9 @@ const yearStart = () => {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth() - 11, 1);
 };
+
+/** A metric section is roughly this many rows tall — enough for a 4-up grid. */
+const SECTION_HEIGHT = 5;
 
 export default function StartupDashboardPage() {
   const [from, setFrom] = useState<Date | null>(yearStart());
@@ -42,64 +46,93 @@ export default function StartupDashboardPage() {
     setActive(null);
   };
 
+  // Each metric category is a widget keyed on its own `key`, so a founder can
+  // put Revenue above Growth and keep it that way — and a category the server
+  // adds later lands at the bottom rather than displacing one they moved.
+  const widgets: DashboardWidget[] = dashboard
+    ? [
+        {
+          id: 'founder-overview',
+          bare: true,
+          defaultLayout: { x: 0, y: 0, w: 12, h: SECTION_HEIGHT },
+          minW: 4,
+          minH: 3,
+          content: (
+            <MetricGrid
+              title="Founder Overview"
+              icon="insights"
+              metrics={dashboard.top}
+              highlight
+              onInfo={openInfo}
+              onSettings={openSettings}
+            />
+          ),
+        },
+        ...dashboard.categories.map((cat, index) => ({
+          id: `category-${cat.key}`,
+          bare: true,
+          defaultLayout: {
+            x: 0,
+            y: SECTION_HEIGHT * (index + 1),
+            w: 12,
+            h: SECTION_HEIGHT,
+          },
+          minW: 4,
+          minH: 3,
+          content: (
+            <MetricGrid
+              title={cat.label}
+              icon={cat.icon}
+              metrics={cat.metrics}
+              onInfo={openInfo}
+              onSettings={openSettings}
+            />
+          ),
+        })),
+      ]
+    : [];
+
+  const header = (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      justifyContent="space-between"
+      alignItems={{ xs: 'flex-start', sm: 'center' }}
+      spacing={2}
+    >
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          Startup Dashboard
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Founder KPIs across revenue, growth, customers and operations.
+        </Typography>
+      </Box>
+      <Stack direction="row" spacing={1.5}>
+        <DatePicker
+          label="From"
+          value={from}
+          onChange={setFrom}
+          slotProps={{ textField: { size: 'small' } }}
+        />
+        <DatePicker label="To" value={to} onChange={setTo} slotProps={{ textField: { size: 'small' } }} />
+      </Stack>
+    </Stack>
+  );
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-          spacing={2}
-          sx={{ mb: 3 }}
-        >
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              Startup Dashboard
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Founder KPIs across revenue, growth, customers and operations.
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={1.5}>
-            <DatePicker
-              label="From"
-              value={from}
-              onChange={setFrom}
-              slotProps={{ textField: { size: 'small' } }}
-            />
-            <DatePicker label="To" value={to} onChange={setTo} slotProps={{ textField: { size: 'small' } }} />
-          </Stack>
-        </Stack>
-
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
         {loading && !dashboard ? (
-          <Stack alignItems="center" sx={{ py: 8 }}>
-            <CircularProgress />
+          <Stack spacing={3}>
+            {header}
+            <Stack alignItems="center" sx={{ py: 8 }}>
+              <CircularProgress />
+            </Stack>
           </Stack>
         ) : (
-          dashboard && (
-            <>
-              <MetricGrid
-                title="Founder Overview"
-                icon="insights"
-                metrics={dashboard.top}
-                highlight
-                onInfo={openInfo}
-                onSettings={openSettings}
-              />
-              {dashboard.categories.map((cat) => (
-                <MetricGrid
-                  key={cat.key}
-                  title={cat.label}
-                  icon={cat.icon}
-                  metrics={cat.metrics}
-                  onInfo={openInfo}
-                  onSettings={openSettings}
-                />
-              ))}
-            </>
-          )
+          <DuncitDashboard dashboardId="finance.startup" header={header} widgets={widgets} />
         )}
 
         <MetricDrawer

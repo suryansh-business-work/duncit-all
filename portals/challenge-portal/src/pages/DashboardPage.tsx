@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, CircularProgress, Stack } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { PageHeader, StatCard } from '@duncit/ui';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { CHALLENGE_STATS, type ChallengeStats } from '../graphql/challenges';
 
 interface DashboardCard {
@@ -24,34 +24,37 @@ export default function DashboardPage() {
   });
   const stats = data?.challengeStats;
 
-  return (
-    <Stack spacing={2.5}>
-      <PageHeader
-        title="Challenges Dashboard"
-        subtitle="An overview of challenges across the platform."
+  const widgets: DashboardWidget[] = CARDS.map((card, index) => ({
+    id: card.key,
+    bare: true,
+    defaultLayout: { x: index * 4, y: 0, w: 4, h: 2 },
+    minW: 2,
+    minH: 2,
+    content: (
+      <StatCard
+        layout="valueFirst"
+        label={card.label}
+        value={stats?.[card.key] ?? 0}
+        icon={card.icon}
+        loading={loading && !stats}
+        onClick={() => navigate('/challenges')}
+        valueVariant="h4"
+        valueSx={{ lineHeight: 1 }}
+        sx={{ height: '100%' }}
       />
+    ),
+  }));
 
-      {loading && !stats ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : (
-        <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 2 }}>
-          {CARDS.map((card) => (
-            <StatCard
-              key={card.key}
-              layout="valueFirst"
-              label={card.label}
-              value={stats?.[card.key] ?? 0}
-              icon={card.icon}
-              onClick={() => navigate('/challenges')}
-              valueVariant="h4"
-              valueSx={{ lineHeight: 1 }}
-              sx={{ flex: '1 1 220px', minWidth: 220 }}
-            />
-          ))}
-        </Stack>
-      )}
-    </Stack>
+  return (
+    <DuncitDashboard
+      dashboardId="challenge.overview"
+      header={
+        <PageHeader
+          title="Challenges Dashboard"
+          subtitle="An overview of challenges across the platform."
+        />
+      }
+      widgets={widgets}
+    />
   );
 }

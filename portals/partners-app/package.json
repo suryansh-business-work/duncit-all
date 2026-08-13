@@ -26,6 +26,7 @@
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
+    "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/earn": "workspace:*",
     "@duncit/forms": "workspace:*",

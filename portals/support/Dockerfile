@@ -45,6 +45,7 @@ COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/tabs/package.json ./packages/tabs/
+COPY packages/dashboard/package.json ./packages/dashboard/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/app-settings/package.json ./packages/app-settings/

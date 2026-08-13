@@ -1,14 +1,14 @@
 import { useQuery } from '@apollo/client';
-import { Stack } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import { AppIcon } from '@duncit/shell';
 import { PageHeader, StatCard } from '@duncit/ui';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { WEBSITE_CONTENT, type WebsiteContentItem } from '../content/queries';
 import { NEWSLETTER_SUBSCRIBERS, type Subscriber } from '../newsletter/queries';
 import { CONTACT_SUBMISSIONS, type ContactSubmission } from '../contact-submissions/queries';
 import { FAQ_SUBMISSIONS, type FaqSubmission } from '../faq-submissions/queries';
 
-const STAT_CARD_SX = { borderRadius: 3, flex: '1 1 200px', minWidth: 200 } as const;
+const STAT_CARD_SX = { borderRadius: 3, height: '100%' } as const;
 const STAT_SKELETON = { width: 60, height: 48 } as const;
 
 interface DashboardStatProps {
@@ -66,20 +66,42 @@ export default function DashboardPage() {
 
   const name = user?.first_name || user?.full_name || 'there';
 
+  // Every tile is its own widget: the six sections are watched by different
+  // people, and each of them wants a different one first. The array is rebuilt
+  // each render on purpose — the grid keys its layout off the widget ids.
+  const tile = (
+    id: string,
+    x: number,
+    y: number,
+    content: DashboardWidget['content'],
+  ): DashboardWidget => ({
+    id,
+    bare: true,
+    defaultLayout: { x, y, w: 4, h: 2 },
+    minW: 2,
+    minH: 2,
+    content,
+  });
+
+  const widgets: DashboardWidget[] = [
+    tile('career', 0, 0, <DashboardStat label="Career" value={countByType('CAREERS')} icon="work" to="/careers" loading={content.loading} hint="Published & draft posts" />),
+    tile('newsroom', 4, 0, <DashboardStat label="Newsroom" value={countByType('NEWSROOM')} icon="newspaper" to="/newsroom" loading={content.loading} hint="Published & draft entries" />),
+    tile('blog', 8, 0, <DashboardStat label="Blog" value={countByType('BLOG')} icon="article" to="/blog" loading={content.loading} hint="Published & draft articles" />),
+    tile('newsletter', 0, 2, <DashboardStat label="Newsletter" value={subscribers.length} icon="email" to="/newsletter" loading={newsletter.loading} hint={`${activeSubs} active`} />),
+    tile('contact', 4, 2, <DashboardStat label="Contact" value={contacts.length} icon="contactMail" to="/contact-submissions" loading={contact.loading} hint={`${newContacts} new`} />),
+    tile('faq', 8, 2, <DashboardStat label="FAQ" value={faqs.length} icon="help" to="/faq-submissions" loading={faq.loading} hint={`${newFaqs} new`} />),
+  ];
+
   return (
-    <Stack spacing={2.5}>
-      <PageHeader
-        title={`Hi ${name}, welcome back`}
-        subtitle="A live overview of the content and submissions across duncit.com."
-      />
-      <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
-        <DashboardStat label="Career" value={countByType('CAREERS')} icon="work" to="/careers" loading={content.loading} hint="Published & draft posts" />
-        <DashboardStat label="Newsroom" value={countByType('NEWSROOM')} icon="newspaper" to="/newsroom" loading={content.loading} hint="Published & draft entries" />
-        <DashboardStat label="Blog" value={countByType('BLOG')} icon="article" to="/blog" loading={content.loading} hint="Published & draft articles" />
-        <DashboardStat label="Newsletter" value={subscribers.length} icon="email" to="/newsletter" loading={newsletter.loading} hint={`${activeSubs} active`} />
-        <DashboardStat label="Contact" value={contacts.length} icon="contactMail" to="/contact-submissions" loading={contact.loading} hint={`${newContacts} new`} />
-        <DashboardStat label="FAQ" value={faqs.length} icon="help" to="/faq-submissions" loading={faq.loading} hint={`${newFaqs} new`} />
-      </Stack>
-    </Stack>
+    <DuncitDashboard
+      dashboardId="website.overview"
+      header={
+        <PageHeader
+          title={`Hi ${name}, welcome back`}
+          subtitle="A live overview of the content and submissions across duncit.com."
+        />
+      }
+      widgets={widgets}
+    />
   );
 }

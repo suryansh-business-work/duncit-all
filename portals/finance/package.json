@@ -27,6 +27,7 @@
   "dependencies": {
     "@apollo/client": "^3.10.4",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
@@ -50,8 +51,8 @@
     "date-fns": "^2.30.0",
     "graphql": "^16.8.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.0",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",

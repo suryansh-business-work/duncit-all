@@ -89,7 +89,8 @@ export default function ClubAdminDashboardPage() {
       fitContent: true,
       defaultLayout: { x: 0, y: 2, w: 12, h: 6 },
       minW: 4,
-      minH: 4,
+      // minH floors the measured height — keep it low or empty states pin a void.
+      minH: 2,
       content: <ClubAdminTrendChart trend={dashboard.trend} />,
     },
     {

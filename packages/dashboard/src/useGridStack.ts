@@ -123,6 +123,10 @@ export function useGridStack({
       // While static (not editing) the only movers are programmatic — a
       // fitContent widget re-measuring, a breakpoint collapse. Not user edits.
       if (grid.opts.staticGrid) return;
+      // GridStack raises the same event for its own moves (auto-sizing, column
+      // changes) and flags them — without this a fitContent re-measure that
+      // pushes neighbours down would light up Save with no user edit.
+      if (grid.isIgnoreChangeCB()) return;
       onChangeRef.current(readGrid(grid));
     });
 
@@ -131,12 +135,41 @@ export function useGridStack({
     // after its query lands, until the next window resize. Observing the card
     // (which is natural-height) cannot loop: resizeToContent changes the slot
     // around the card, not the card itself.
+    //
+    // Never resize mid-gesture: resizeToContent's beginUpdate would overwrite
+    // the engine's pre-drag snapshot, breaking Esc-cancel and the drop's
+    // change detection (the guard upstream added for #2823 does not cover this
+    // path). A growth that lands during a drag is applied after the drop.
     let contentObserver: ResizeObserver | undefined;
+    let disposed = false;
+    let gestureActive = false;
+    const pendingFits = new Set<HTMLElement>();
+    const beginGesture = () => {
+      gestureActive = true;
+    };
+    const endGesture = () => {
+      gestureActive = false;
+      // Next macrotask, so GridStack has fully settled the gesture first.
+      globalThis.setTimeout(() => {
+        if (disposed) return;
+        for (const item of pendingFits) grid.resizeToContent(item);
+        pendingFits.clear();
+      }, 0);
+    };
+    grid.on('dragstart', beginGesture);
+    grid.on('resizestart', beginGesture);
+    grid.on('dragstop', endGesture);
+    grid.on('resizestop', endGesture);
     if (typeof ResizeObserver !== 'undefined') {
       contentObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const item = entry.target.closest('.grid-stack-item');
-          if (item instanceof HTMLElement) grid.resizeToContent(item);
+          if (!(item instanceof HTMLElement)) continue;
+          if (gestureActive) {
+            pendingFits.add(item);
+          } else {
+            grid.resizeToContent(item);
+          }
         }
       });
       for (const card of el.querySelectorAll(
@@ -147,6 +180,7 @@ export function useGridStack({
     }
 
     return () => {
+      disposed = true;
       contentObserver?.disconnect();
       grid.offAll();
       // `false` keeps the DOM: React owns those nodes and will unmount them.

@@ -112,7 +112,8 @@ export default function HostDashboardPage() {
       fitContent: true,
       defaultLayout: { x: 0, y: 4, w: 12, h: 7 },
       minW: 4,
-      minH: 4,
+      // minH floors the measured height — keep it low or empty states pin a void.
+      minH: 2,
       content: <HostInsightsCharts insights={insights} currencySymbol={currency} />,
     },
     {

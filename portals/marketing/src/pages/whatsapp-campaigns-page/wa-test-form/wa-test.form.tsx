@@ -20,6 +20,8 @@ import { emptyValues, toTestInput, waTestSchema, type WaTestInput, type WaTestVa
 interface Props {
   open: boolean;
   busy: boolean;
+  /** The campaign a Campaigns row started this test from. */
+  campaignName?: string;
   names: WaCampaignNameOption[];
   onClose: () => void;
   onSubmit: (input: WaTestInput) => Promise<boolean>;
@@ -32,8 +34,18 @@ const PARAMS_HINT =
  * Send one message to one number before pointing a template at an audience.
  * Same server path as a campaign, so a template that works here works there.
  */
-export default function WaTestForm({ open, busy, names, onClose, onSubmit }: Readonly<Props>) {
+export default function WaTestForm({
+  open,
+  busy,
+  campaignName,
+  names,
+  onClose,
+  onSubmit,
+}: Readonly<Props>) {
   const { options, campaigns, templates } = useCampaignOptions(names);
+  // The campaign the test was started from wins; the first option is only the
+  // fallback for a test opened without one.
+  const startCampaign = campaignName || options[0]?.value || '';
   const {
     control,
     handleSubmit,
@@ -42,16 +54,14 @@ export default function WaTestForm({ open, busy, names, onClose, onSubmit }: Rea
     watch,
     formState: { isValid },
   } = useForm<WaTestValues>({
-    defaultValues: emptyValues(options[0]?.value ?? ''),
+    defaultValues: emptyValues(''),
     resolver: zodResolver(waTestSchema),
     mode: 'onChange',
   });
 
   useEffect(() => {
-    if (open) reset(emptyValues(options[0]?.value ?? ''));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the first
-    // option matters, and re-running on every options identity would wipe typing
-  }, [open, options[0]?.value, reset]);
+    if (open) reset(emptyValues(startCampaign));
+  }, [open, startCampaign, reset]);
 
   // A test proves the template, so it carries exactly the params the template
   // expects — the same rule the campaign form follows.

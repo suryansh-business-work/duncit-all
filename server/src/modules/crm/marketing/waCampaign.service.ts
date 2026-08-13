@@ -10,7 +10,19 @@ import {
   listTemplates,
 } from '@modules/platform/aisensy/aisensy.project';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { WaCampaignModel, type WaCampaignAudience } from './waCampaign.model';
+import {
+  WaCampaignModel,
+  WA_CAMPAIGN_AUDIENCES,
+  type WaCampaignAudience,
+} from './waCampaign.model';
+import {
+  getWaPricing,
+  ratePerMessage,
+  toTemplateCategory,
+  WaPricingModel,
+  type IWaPricing,
+} from './waPricing.model';
+import { waDashboard, type WaDashboardRange } from './waCampaign.dashboard';
 import { WaCampaignNameModel } from './waCampaignName.model';
 import {
   WaCampaignRecipientModel,
@@ -21,10 +33,13 @@ import {
   countReachable,
   destinationFor,
   fillParams,
+  manualUsers,
   recipientUsers,
+  searchReachableUsers,
   userNameFor,
   usersByIds,
   WA_VARIABLES,
+  type RecipientScope,
 } from './waCampaign.recipients';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -36,6 +51,7 @@ const notFound = () => new GraphQLError('Campaign not found', { extensions: { co
 const PROGRESS_EVERY = 20;
 
 const str = (v: unknown) => String(v ?? '').trim();
+const digitsOnly = (v: unknown) => str(v).replaceAll(/\D/g, '');
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
 /** setTimeout tops out here; a schedule further out re-arms in hops. */
@@ -43,12 +59,26 @@ const MAX_TIMER_DELAY = 2_147_483_647;
 /** Live timers for SCHEDULED campaigns in THIS process, by campaign id. */
 const timers = new Map<string, NodeJS.Timeout>();
 
+/** What a send cost: the rate it froze times the messages that actually went
+ * out. Skipped and failed people were never billed, so they never count. */
+const costOf = (doc: any) => Number(doc.msg_rate ?? 0) * Number(doc.sent_count ?? 0);
+
 const toPub = (doc: any) => ({
   campaign_id: doc.campaign_id,
   name: doc.name,
   wa_campaign_name: doc.wa_campaign_name,
   audience: doc.audience,
   audience_list_id: doc.audience_list_id ? String(doc.audience_list_id) : null,
+  user_ids: (doc.user_ids ?? []).map(String),
+  contacts: (doc.contacts ?? []).map((contact: any) => ({
+    name: contact.name ?? '',
+    extension: contact.extension ?? '',
+    number: contact.number ?? '',
+  })),
+  template_name: doc.template_name ?? '',
+  template_category: doc.template_category ?? '',
+  msg_rate: Number(doc.msg_rate ?? 0),
+  cost: costOf(doc),
   template_params: doc.template_params ?? [],
   status: doc.status,
   scheduled_at: iso(doc.scheduled_at),
@@ -68,6 +98,24 @@ const toNameOption = (doc: any) => ({
   description: doc.description ?? '',
 });
 
+const toPricing = (doc: IWaPricing) => ({
+  marketing_per_msg: Number(doc.marketing_per_msg ?? 0),
+  utility_per_msg: Number(doc.utility_per_msg ?? 0),
+  authentication_per_msg: Number(doc.authentication_per_msg ?? 0),
+  service_per_msg: Number(doc.service_per_msg ?? 0),
+  currency_symbol: doc.currency_symbol ?? '₹',
+});
+
+/** A rate is money per message: a real number, never negative. A typo that
+ * saves a negative rate would turn a bill into a credit. */
+function rate(value: unknown, label: string): number {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw badInput(`${label} rate must be zero or more`);
+  }
+  return amount;
+}
+
 /** Allowlists for the shared table engine (waCampaignsTable — DUNCIT TABLE CONTRACT v1). */
 const WA_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['name', 'wa_campaign_name'],
@@ -76,6 +124,7 @@ const WA_TABLE_CONFIG: TableEntityConfig = {
     wa_campaign_name: 'wa_campaign_name',
     audience: 'audience',
     status: 'status',
+    template_category: 'template_category',
     recipient_count: 'recipient_count',
     sent_count: 'sent_count',
     failed_count: 'failed_count',
@@ -85,6 +134,7 @@ const WA_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     audience: { type: 'enum' },
     status: { type: 'enum' },
+    template_category: { type: 'enum' },
     sent_at: { type: 'date' },
     created_at: { type: 'date' },
   },
@@ -133,11 +183,21 @@ const CSV_HEADER = [
   'At',
 ];
 
+interface ManualContactInput {
+  name?: string | null;
+  extension?: string | null;
+  number?: string | null;
+}
+
 interface SendInput {
   name?: string | null;
   wa_campaign_name?: string | null;
   audience?: WaCampaignAudience | null;
   audience_list_id?: string | null;
+  /** SPECIFIC_USERS — the accounts picked in the portal. */
+  user_ids?: (string | null)[] | null;
+  /** MANUAL_NUMBERS — numbers typed in, which may belong to no account. */
+  contacts?: (ManualContactInput | null)[] | null;
   template_params?: (string | null)[] | null;
   /** ISO time to send at. Absent, or already past, means send now. */
   scheduled_at?: string | null;
@@ -153,33 +213,113 @@ function parseSchedule(raw?: string | null): Date | null {
   return date.getTime() > Date.now() ? date : null;
 }
 
-/** Validate what the portal sent, resolving the campaign name against the saved
- * list so a send can only ever use a name somebody deliberately added. */
+const AUDIENCES = new Set<string>(WA_CAMPAIGN_AUDIENCES);
+
+/** Who this send goes to, checked against the kind it claims to be. Each kind
+ * carries exactly one thing, so the stored document can never say "these users"
+ * and "this list" at the same time. */
+function validateScope(input: SendInput) {
+  const audience = (
+    AUDIENCES.has(String(input.audience)) ? input.audience : 'ALL_USERS'
+  ) as WaCampaignAudience;
+  const audienceListId = str(input.audience_list_id);
+  if (audience === 'AUDIENCE_LIST' && !Types.ObjectId.isValid(audienceListId)) {
+    throw badInput('Pick the audience list to send to');
+  }
+  const userIds = (input.user_ids ?? []).map(str).filter(Types.ObjectId.isValid);
+  if (audience === 'SPECIFIC_USERS' && userIds.length === 0) {
+    throw badInput('Pick at least one person to send to');
+  }
+  const contacts = (input.contacts ?? []).map((contact) => ({
+    name: str(contact?.name),
+    extension: digitsOnly(contact?.extension),
+    number: digitsOnly(contact?.number),
+  }));
+  if (audience === 'MANUAL_NUMBERS') {
+    if (contacts.length === 0) throw badInput('Add at least one contact to send to');
+    if (contacts.some((contact) => !contact.name || !contact.extension || !contact.number)) {
+      throw badInput('Every contact needs a name, a country code and a number');
+    }
+  }
+  return {
+    audience,
+    audience_list_id: audience === 'AUDIENCE_LIST' ? audienceListId : null,
+    user_ids: audience === 'SPECIFIC_USERS' ? userIds : [],
+    contacts: audience === 'MANUAL_NUMBERS' ? contacts : [],
+  };
+}
+
+/**
+ * The template this campaign sends, what a message on it costs, and whether
+ * AiSensy has the campaign at all.
+ *
+ * Best effort on purpose: the Project API is a second credential the send
+ * itself does not need, so a console that cannot read it still sends — the
+ * campaign just records no category and no rate, and the saved name list is
+ * left to vouch for the name.
+ */
+async function resolveCampaign(waCampaignName: string) {
+  const pricing = await getWaPricing();
+  try {
+    const [campaigns, templates] = await Promise.all([listCampaigns(), listTemplates()]);
+    const campaign = campaigns.find((row) => row.name === waCampaignName);
+    const template = templates.find((row) => row.name === campaign?.template_name);
+    const category = toTemplateCategory(template?.category) ?? '';
+    return {
+      known: !!campaign,
+      template_name: template?.name ?? str(campaign?.template_name),
+      template_category: category,
+      msg_rate: ratePerMessage(pricing, category),
+    };
+  } catch (e) {
+    logs.server.warn('waCampaign', 'resolveCampaign', {
+      error: e,
+      wa_campaign_name: waCampaignName,
+    });
+    return { known: false, template_name: '', template_category: '', msg_rate: 0 };
+  }
+}
+
+/**
+ * Validate what the portal sent.
+ *
+ * The campaign name has to be one somebody vouched for: either AiSensy itself
+ * returned it, or it is on the saved list. AiSensy's own answer wins where it
+ * exists — the saved list was only ever a stand-in for a catalogue the send
+ * key cannot read, and a name that is on neither fails every message in the
+ * send, one at a time.
+ */
 async function validateSendInput(input: SendInput) {
   const name = str(input.name);
   if (name.length < 3) throw badInput('Give this campaign a name of at least 3 characters');
   const waCampaignName = str(input.wa_campaign_name);
-  const known = await WaCampaignNameModel.findOne({ name: waCampaignName });
-  if (!known) throw badInput('Pick a WhatsApp campaign name from the list');
-  const audience = input.audience === 'AUDIENCE_LIST' ? 'AUDIENCE_LIST' : 'ALL_USERS';
-  const audienceListId = str(input.audience_list_id);
-  if (audience === 'AUDIENCE_LIST' && !Types.ObjectId.isValid(audienceListId)) {
-    throw badInput('Pick the audience list to send to');
+  const resolved = await resolveCampaign(waCampaignName);
+  if (!resolved.known && !(await WaCampaignNameModel.findOne({ name: waCampaignName }))) {
+    throw badInput('AiSensy has no campaign by that name — pick one, or add the name under Settings');
   }
   const templateParams = (input.template_params ?? []).map(str);
   if (templateParams.some((param) => !param)) {
     throw badInput('Fill every template parameter before sending');
   }
   assertKnownTokens(templateParams);
+  const { known, ...pricing } = resolved;
   return {
     name,
     wa_campaign_name: waCampaignName,
-    audience: audience as WaCampaignAudience,
-    audience_list_id: audience === 'AUDIENCE_LIST' ? audienceListId : null,
+    ...validateScope(input),
+    ...pricing,
     template_params: templateParams,
     scheduled_at: parseSchedule(input.scheduled_at),
   };
 }
+
+/** The stored campaign's own answer to "who does this reach" — read from the
+ * document so a run can never resolve against anything but what was saved. */
+const scopeOf = (doc: any): RecipientScope => ({
+  audience_list_id: doc.audience_list_id,
+  user_ids: doc.user_ids ?? [],
+  contacts: doc.contacts ?? [],
+});
 
 interface RecipientRow {
   campaign_id: string;
@@ -255,7 +395,7 @@ async function runSend(campaignId: string) {
   if (doc.status === 'CANCELLED') return;
   doc.status = 'SENDING';
   try {
-    const users = await recipientUsers(doc.audience as WaCampaignAudience, doc.audience_list_id);
+    const users = await recipientUsers(doc.audience as WaCampaignAudience, scopeOf(doc));
     doc.recipient_count = users.length;
     await doc.save();
     let pending: RecipientRow[] = [];
@@ -310,6 +450,25 @@ async function refreshCounters(doc: any) {
   await doc.save();
 }
 
+/** A recipient row's identity for a retry: the account it belongs to, or — for
+ * a typed-in contact, which has no account — the number itself. */
+const retryKey = (row: any) => String(row.user_id ?? '') || `#${row.destination ?? ''}`;
+
+/**
+ * Who a retry re-attempts against, keyed the same way the rows are. Accounts
+ * are re-read from the database because a retry exists for data that may have
+ * changed; typed-in contacts are re-read from the campaign, because that is the
+ * only place they ever lived.
+ */
+async function retryTargets(doc: any, rows: readonly any[]) {
+  if (doc.audience === 'MANUAL_NUMBERS') {
+    const users = manualUsers(doc.contacts ?? []);
+    return new Map(users.map((user) => [`#${destinationFor(user)}`, user as Record<string, any>]));
+  }
+  const users = await usersByIds(rows.map((row) => row.user_id).filter(Boolean));
+  return new Map(users.map((user: any) => [String(user._id), user as Record<string, any>]));
+}
+
 /**
  * Re-attempt the people a send did not reach, reading them from the campaign's
  * own rows. Each row is UPDATED rather than duplicated, so a campaign keeps one
@@ -326,10 +485,9 @@ async function runRetry(campaignId: string) {
       campaign_id: campaignId,
       status: { $in: UNREACHED },
     }).exec();
-    const users = await usersByIds(rows.map((row) => row.user_id).filter(Boolean));
-    const byId = new Map(users.map((user: any) => [String(user._id), user]));
+    const byKey = await retryTargets(doc, rows);
     for (const [index, row] of rows.entries()) {
-      const user = byId.get(String(row.user_id ?? ''));
+      const user = byKey.get(retryKey(row));
       // The account is gone — there is nobody left to retry against, and the
       // row keeps saying why it was never reached.
       if (user) {
@@ -433,8 +591,41 @@ export const waCampaignService = {
     return true;
   },
 
-  reach: (audience: WaCampaignAudience, audienceListId?: string | null) =>
-    countReachable(audience, audienceListId),
+  /** How many messages this send would actually produce, for every kind of
+   * recipient list — one answer, so the portal never counts for itself. */
+  reach: (audience: WaCampaignAudience, scope: RecipientScope) => countReachable(audience, scope),
+
+  /** The accounts a "send to these people" picker offers. */
+  userSearch: (search: string) => searchReachableUsers(str(search)),
+
+  /** What WhatsApp cost and reached over a window. */
+  dashboard: (range: WaDashboardRange) => waDashboard(range),
+
+  /** What a message costs, by category. */
+  async pricing() {
+    return toPricing(await getWaPricing());
+  },
+
+  /**
+   * Change the rate card. It applies to sends made from now on: every campaign
+   * froze its own rate when it was created, which is what keeps a past send's
+   * cost from moving under a price change.
+   */
+  async updatePricing(input: Record<string, unknown>) {
+    const rates = {
+      marketing_per_msg: rate(input.marketing_per_msg, 'Marketing'),
+      utility_per_msg: rate(input.utility_per_msg, 'Utility'),
+      authentication_per_msg: rate(input.authentication_per_msg, 'Authentication'),
+      service_per_msg: rate(input.service_per_msg, 'Service'),
+      currency_symbol: str(input.currency_symbol) || '₹',
+    };
+    const doc = await WaPricingModel.findOneAndUpdate(
+      { singleton_key: 'whatsapp' },
+      { $set: rates },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).exec();
+    return toPricing(doc as IWaPricing);
+  },
 
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<any>(

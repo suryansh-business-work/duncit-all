@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -8,20 +8,17 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   MenuItem,
   Stack,
-  Switch,
-  TextField,
-  Typography,
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { RhfTextField } from '@duncit/forms';
-import DateTimeField from '../../../components/DateTimeField';
+import TemplateSample from '../wa-aisensy/TemplateSample';
 import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
-import { WA_AUDIENCE_OPTIONS } from '../helpers';
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
 import ParamsField from './ParamsField';
+import RecipientFields from './RecipientFields';
+import ScheduleField from './ScheduleField';
 import { useWaReach } from './useWaReach';
 import {
   emptyValues,
@@ -36,33 +33,30 @@ interface Props {
   busy: boolean;
   /** Prefilled values when repeating a past send; null starts empty. */
   initial?: WaCampaignValues | null;
+  /** The AiSensy campaign a Campaigns row started this send from. */
+  campaignName?: string;
   names: WaCampaignNameOption[];
   audienceLists: WaAudienceList[];
   variables: WaCampaignVariable[];
   onClose: () => void;
-  onManageNames: () => void;
   onSubmit: (input: SendWaCampaignInput) => void;
 }
 
 const reachText = (reach: number) => {
-  if (reach === 0) return 'Nobody in this audience has a usable WhatsApp number.';
+  if (reach === 0) return 'Nobody in this list has a usable WhatsApp number.';
   const noun = reach === 1 ? 'message' : 'messages';
   return `This sends ${reach.toLocaleString()} WhatsApp ${noun}.`;
 };
-
-/** Switching the schedule on lands an hour from now — a sane, editable start
- * rather than an empty picker. */
-const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
 export default function WaCampaignForm({
   open,
   busy,
   initial,
+  campaignName,
   names,
   audienceLists,
   variables,
   onClose,
-  onManageNames,
   onSubmit,
 }: Readonly<Props>) {
   const {
@@ -79,20 +73,19 @@ export default function WaCampaignForm({
   });
 
   useEffect(() => {
-    if (open) reset(initial ?? emptyValues());
-  }, [open, initial, reset]);
+    if (open) reset(initial ?? emptyValues(campaignName));
+  }, [open, initial, campaignName, reset]);
 
-  const audience = watch('audience');
-  const reach = useWaReach(audience, watch('audience_list_id'));
-  const { options: campaignOptions, live, campaigns, templates } = useCampaignOptions(names);
-  const waCampaignName = watch('wa_campaign_name');
-  const template = templateFor(waCampaignName, campaigns, templates);
+  const values = watch();
+  const reach = useWaReach(values);
+  const { options: campaignOptions, campaigns, templates } = useCampaignOptions(names);
+  const template = templateFor(values.wa_campaign_name, campaigns, templates);
 
   // The template decides how many params a send must carry, so the rows follow
   // it rather than the marketer counting {{n}} by hand. Only when AiSensy told
   // us — otherwise the rows stay the marketer's to add.
   const paramCount = template?.param_count;
-  const rowCount = watch('template_params').length;
+  const rowCount = values.template_params.length;
   useEffect(() => {
     // Already the right shape — a duplicated send arrives with its params
     // filled, and re-laying them out would wipe what it came with.
@@ -103,22 +96,19 @@ export default function WaCampaignForm({
       { shouldValidate: true }
     );
   }, [paramCount, rowCount, setValue]);
+
   // The button says what pressing it does — schedule, or send right now.
-  const scheduled = !!watch('scheduled_at');
+  const scheduled = !!values.scheduled_at;
   let submitLabel = scheduled ? 'Schedule' : 'Send now';
   if (busy) submitLabel = scheduled ? 'Scheduling…' : 'Sending…';
   // The variable list is whatever the server supports — no copy of it here.
   const variableList = variables.map((variable) => `{{${variable.name}}}`).join(', ');
   const paramsHint = `Literal text, or a variable filled per recipient: ${variableList}. Somebody whose variable is empty is skipped rather than sent a blank.`;
 
-  const campaignHint = live
-    ? 'Live from AiSensy — only a campaign whose status is Live will send'
-    : 'The approved AiSensy campaign this send uses';
-
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <form noValidate onSubmit={handleSubmit((values) => onSubmit(toSendInput(values)))}>
-        <DialogTitle>New WhatsApp campaign</DialogTitle>
+      <form noValidate onSubmit={handleSubmit((form) => onSubmit(toSendInput(form)))}>
+        <DialogTitle>Send WhatsApp campaign</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <RhfTextField
@@ -126,7 +116,7 @@ export default function WaCampaignForm({
               name="name"
               label="Campaign name (internal)"
               required
-              hint="How you recognise this send in the table"
+              hint="How you recognise this send in the logs"
             />
             <RhfTextField
               control={control}
@@ -134,11 +124,11 @@ export default function WaCampaignForm({
               label="WhatsApp campaign"
               select
               required
-              hint={campaignHint}
+              hint="The approved AiSensy campaign this send uses"
             >
               {campaignOptions.length === 0 && (
                 <MenuItem disabled value="">
-                  No campaign names yet — add one with Manage names
+                  No campaign names yet — add one under Settings
                 </MenuItem>
               )}
               {campaignOptions.map((option) => (
@@ -148,61 +138,14 @@ export default function WaCampaignForm({
               ))}
             </RhfTextField>
 
-            {template && (
-              <Alert severity="success" icon={false}>
-                <Typography variant="caption" fontWeight={800} display="block">
-                  {template.name} · {template.language} · {template.status}
-                </Typography>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {template.body}
-                </Typography>
-              </Alert>
-            )}
+            {template && <TemplateSample template={template} />}
 
-            <Controller
+            <RecipientFields
               control={control}
-              name="audience"
-              render={({ field }) => (
-                <TextField
-                  select
-                  label="Target audience"
-                  fullWidth
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(event) => {
-                    field.onChange(event.target.value);
-                    setValue('audience_list_id', '');
-                  }}
-                >
-                  {WA_AUDIENCE_OPTIONS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
+              setValue={setValue}
+              audience={values.audience}
+              audienceLists={audienceLists}
             />
-
-            {audience === 'AUDIENCE_LIST' && (
-              <RhfTextField
-                control={control}
-                name="audience_list_id"
-                label="Audience list"
-                select
-                hint="Membership is recomputed when you send"
-              >
-                {audienceLists.length === 0 && (
-                  <MenuItem disabled value="">
-                    No saved lists yet — create one under Target Audience
-                  </MenuItem>
-                )}
-                {audienceLists.map((list) => (
-                  <MenuItem key={list.id} value={list.id}>
-                    {`${list.name} · ${list.member_count.toLocaleString()}`}
-                  </MenuItem>
-                ))}
-              </RhfTextField>
-            )}
 
             {reach !== null && (
               <Alert severity={reach > 0 ? 'info' : 'warning'} icon={<GroupIcon fontSize="small" />}>
@@ -212,49 +155,16 @@ export default function WaCampaignForm({
 
             <ParamsField control={control} hint={paramsHint} />
 
-            <Controller
-              control={control}
-              name="scheduled_at"
-              render={({ field, fieldState }) => (
-                <Stack spacing={1}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={!!field.value}
-                        // Turning it off clears the time — a hidden schedule is
-                        // how a send goes out at the wrong hour.
-                        onChange={(_, on) => field.onChange(on ? defaultScheduleIso() : '')}
-                      />
-                    }
-                    label="Schedule for later"
-                  />
-                  {field.value ? (
-                    <DateTimeField
-                      label="Send at"
-                      value={field.value}
-                      onChange={field.onChange}
-                      minDateTime={new Date()}
-                      error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? ' '}
-                    />
-                  ) : null}
-                </Stack>
-              )}
-            />
+            <ScheduleField control={control} />
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between' }}>
-          <Button type="button" onClick={onManageNames} disabled={busy}>
-            Manage names
+        <DialogActions>
+          <Button type="button" onClick={onClose} disabled={busy}>
+            Cancel
           </Button>
-          <Stack direction="row" spacing={1}>
-            <Button type="button" onClick={onClose} disabled={busy}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
-              {submitLabel}
-            </Button>
-          </Stack>
+          <Button type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
+            {submitLabel}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

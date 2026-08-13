@@ -1,7 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
-export type PaymentTargetType = 'POD' | 'PRODUCT' | 'OTHER';
+export type PaymentTargetType = 'POD' | 'PRODUCT' | 'GIFT_CARD' | 'OTHER';
 
 /**
  * Every thing checkout is supposed to do after the money lands, in execution
@@ -17,6 +17,7 @@ export type PaymentStepKey =
   | 'LEADERBOARD_POINTS'
   | 'PRODUCT_ORDERS'
   | 'STOCK_ADJUSTED'
+  | 'GIFT_CARD_ISSUED'
   | 'COUPON_REDEEMED'
   | 'COINS_REDEEMED'
   | 'COINS_EARNED'
@@ -25,6 +26,7 @@ export type PaymentStepKey =
   | 'TICKET_EMAIL'
   | 'INVOICE_PDF'
   | 'RECEIPT_EMAIL'
+  | 'GIFT_CARD_EMAIL'
   | 'SHIPMENT';
 
 export type PaymentStepStatus = 'PENDING' | 'DONE' | 'SKIPPED' | 'FAILED';
@@ -160,7 +162,7 @@ const paymentSchema = new Schema<IPayment>(
     billing_address: { type: String, default: '' },
     billing: { type: billingSchema, default: () => ({}) },
     checkout_url: { type: String, default: '' },
-    target_type: { type: String, enum: ['POD', 'PRODUCT', 'OTHER'], default: 'POD' },
+    target_type: { type: String, enum: ['POD', 'PRODUCT', 'GIFT_CARD', 'OTHER'], default: 'POD' },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
     description: { type: String, default: '' },
     subtotal: { type: Number, required: true, min: 0 },

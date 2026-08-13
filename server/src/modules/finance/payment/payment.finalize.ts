@@ -52,6 +52,7 @@ const STEP_ORDER: PaymentStepKey[] = [
   'LEADERBOARD_POINTS',
   'PRODUCT_ORDERS',
   'STOCK_ADJUSTED',
+  'GIFT_CARD_ISSUED',
   'COUPON_REDEEMED',
   'COINS_REDEEMED',
   'COINS_EARNED',
@@ -60,6 +61,7 @@ const STEP_ORDER: PaymentStepKey[] = [
   'TICKET_EMAIL',
   'INVOICE_PDF',
   'RECEIPT_EMAIL',
+  'GIFT_CARD_EMAIL',
   'SHIPMENT',
 ];
 
@@ -78,6 +80,7 @@ const DEFERRED_STEP_KEYS: PaymentStepKey[] = [
   'TICKET_EMAIL',
   'INVOICE_PDF',
   'RECEIPT_EMAIL',
+  'GIFT_CARD_EMAIL',
   'SHIPMENT',
 ];
 
@@ -271,6 +274,30 @@ async function runProductLeg(ctx: CoreContext): Promise<void> {
   step(ctx, 'STOCK_ADJUSTED', 'DONE', plural(lines.length, 'line', 'lines'), orderIds);
 }
 
+async function runGiftCardLeg(ctx: CoreContext): Promise<void> {
+  const p = ctx.payment;
+  if (p.target_type !== 'GIFT_CARD') {
+    step(ctx, 'GIFT_CARD_ISSUED', 'SKIPPED', 'This payment bought no gift card');
+    return;
+  }
+  const facts = (p.metadata as Record<string, any>)?.gift_card;
+  if (!facts) {
+    throw new GraphQLError('This gift card payment carries no card facts', {
+      extensions: { code: 'INTERNAL_SERVER_ERROR' },
+    });
+  }
+  // Inside the transaction: a rolled-back payment must not leave a live card
+  // behind. The card's unique payment_id absorbs every replay of this leg.
+  const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
+  const card = await giftcardService.issueForPayment({
+    paymentId: p.payment_id,
+    purchaserId: String(p.user_id),
+    facts,
+    session: ctx.session,
+  });
+  step(ctx, 'GIFT_CARD_ISSUED', 'DONE', card.code, [String(card._id)]);
+}
+
 async function runCoinLeg(ctx: CoreContext): Promise<void> {
   const p = ctx.payment;
   const reason = p.description || 'Purchase';
@@ -378,6 +405,7 @@ async function runCore(
   runCaptureLeg(ctx, methodLabel);
   await runPodLeg(ctx);
   await runProductLeg(ctx);
+  await runGiftCardLeg(ctx);
   await runCoinLeg(ctx);
   await runCouponLeg(ctx);
   for (const key of DEFERRED_STEP_KEYS) {
@@ -544,6 +572,19 @@ async function createShipments(ctx: DeferredContext): Promise<StepOutcome> {
   };
 }
 
+/** The gift card itself — the code, the personal note and the redeem link,
+ * mailed to whoever the card is for. Deferred like the receipt: SMTP cannot be
+ * rolled back, and the card only exists once the core has committed. */
+async function emailGiftCard(ctx: DeferredContext): Promise<StepOutcome> {
+  const p = ctx.payment;
+  if (p.target_type !== 'GIFT_CARD') {
+    return { status: 'SKIPPED', detail: 'This payment bought no gift card' };
+  }
+  const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
+  const sent = await giftcardService.emailForPayment(p);
+  return { detail: sent.to, refs: [sent.cardId] };
+}
+
 /**
  * The entry ticket's own e-mail — a PDF build plus an SMTP send, deferred for
  * the same reason the receipt is: it cannot be rolled back. The core issues the
@@ -696,6 +737,7 @@ export const paymentFinalizer = {
     await guardStep(ctx, 'BACKOUT_FILL', () => fillBackouts(ctx));
     await guardStep(ctx, 'LINK_ATTRIBUTION', () => attributeShortLink(ctx));
     await guardStep(ctx, 'TICKET_EMAIL', () => emailTicket(ctx));
+    await guardStep(ctx, 'GIFT_CARD_EMAIL', () => emailGiftCard(ctx));
     await guardStep(ctx, 'SHIPMENT', () => createShipments(ctx));
     await emailReceipt(ctx);
 

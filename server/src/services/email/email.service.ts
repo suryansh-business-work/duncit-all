@@ -891,6 +891,29 @@ export function sendVenueSlotRequestEmail(opts: {
   });
 }
 
+export function sendGiftCardReceivedEmail(opts: {
+  to: string;
+  recipient_name: string;
+  sender_name: string;
+  /** Pre-formatted face value, e.g. '₹500.00'. */
+  amount: string;
+  /** The card's theme line, e.g. a category name or the localized shop label. */
+  scope_label: string;
+  code: string;
+  /** The personal note, or '' — the template renders the line verbatim. */
+  message_line: string;
+  redeem_url: string;
+  expires_on: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `${opts.sender_name} sent you a Duncit gift card 🎁`,
+    template: 'gift-card-received',
+    category: 'transactional',
+    vars: opts,
+  });
+}
+
 export function sendPodUpdatedEmail(opts: {
   to: string;
   name: string;

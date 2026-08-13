@@ -163,3 +163,42 @@ export const productShippingQuoteSchema = yup.object({
   items: yup.array().min(1, 'Your cart is empty').required('Items are required'),
   delivery_pincode: yup.string().trim().matches(pincodeRegex, 'Enter a valid pincode').required('Delivery pincode is required'),
 });
+
+// Gift card purchase. The scope/amount limits live in giftcardService
+// (purchaseFacts knows the configured min/max and the category levels) — this
+// only asserts the shape, but every field MUST be declared or stripUnknown
+// deletes it before the service sees it.
+export const dummyGiftCardCheckoutSchema = yup.object({
+  scope_type: yup.string().oneOf(['SHOP', 'SUPER', 'CATEGORY', 'SUB']).required(),
+  scope_category_id: yup.string().trim().nullable().default(null),
+  amount: yup.number().typeError('Amount must be a number').moreThan(0).required(),
+  recipient_email: yup
+    .string()
+    .trim()
+    .email('Enter a valid recipient email')
+    .max(254)
+    .nullable()
+    .default(null),
+  recipient_name: yup.string().trim().max(160).nullable().default(null),
+  message: yup.string().trim().max(300).nullable().default(null),
+  contact_name: yup.string().trim().max(160).optional(),
+  contact_email: yup.string().trim().email().required('Email is required'),
+  contact_phone: yup.string().trim().max(32).optional(),
+  contact_phone_extension: optionalPhoneExtension,
+  contact_phone_number: optionalPhoneNumber,
+  billing: optionalCheckoutBillingSchema.optional().default(undefined),
+  billing_address: yup.string().trim().max(500).optional(),
+  checkout_url: yup
+    .string()
+    .trim()
+    .max(2048)
+    .required('Checkout URL is required')
+    .test('is-url', 'checkout_url must be a valid URL', (val) => {
+      if (!val) return false;
+      try { new URL(val); return true; } catch { return false; }
+    }),
+  simulate_failure: yup.boolean().default(false),
+});
+
+/** Live Razorpay gift card order — same fields, no simulate_failure. */
+export const giftCardCheckoutSchema = dummyGiftCardCheckoutSchema.omit(['simulate_failure']);

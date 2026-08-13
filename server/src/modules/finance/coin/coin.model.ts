@@ -12,6 +12,7 @@ export type CoinTxnSource =
   | 'PAYMENT_REDEEM'
   | 'REFERRAL_EARN'
   | 'REFERRAL_SIGNUP'
+  | 'GIFT_CARD_REDEEM'
   | 'ADMIN_GRANT'
   | 'ADMIN_DEDUCT';
 
@@ -43,6 +44,9 @@ export interface ICoinTransaction extends Document {
   /** The referral that earned this row. The same job as payment_id, for the
    * other way coins are earned — one referral pays its referrer once. */
   referral_id: string | null;
+  /** The gift card whose value became these coins. The same job as payment_id,
+   * for the third way coins arrive — one card converts exactly once. */
+  gift_card_id: string | null;
   /** The admin who typed this adjustment, on ADMIN_GRANT / ADMIN_DEDUCT rows
    * only. A manual grant has no payment and no referral to explain it, so
    * without this the ledger cannot answer who created the coins. */
@@ -77,6 +81,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
         'PAYMENT_REDEEM',
         'REFERRAL_EARN',
         'REFERRAL_SIGNUP',
+        'GIFT_CARD_REDEEM',
         'ADMIN_GRANT',
         'ADMIN_DEDUCT',
       ],
@@ -85,6 +90,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     reason: { type: String, default: '', trim: true, maxlength: 300 },
     payment_id: { type: String, default: null },
     referral_id: { type: String, default: null },
+    gift_card_id: { type: String, default: null },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     earn_pct: { type: Number, default: 0 },
     spend_amount: { type: Number, default: 0 },
@@ -125,6 +131,16 @@ coinTxnSchema.index(
 coinTxnSchema.index(
   { referral_id: 1, source: 1 },
   { unique: true, partialFilterExpression: { referral_id: { $type: 'string' } } }
+);
+
+// The same guard for the third way coins arrive: a gift card converting into
+// coins. One card pays out exactly once, however many times the redeem
+// mutation is retried or two holders of a shared code race — the database
+// decides, not a read-then-write check. New index: lands via the same
+// syncIndexes() boot seed (`coinIndexes` in index.ts).
+coinTxnSchema.index(
+  { gift_card_id: 1, source: 1 },
+  { unique: true, partialFilterExpression: { gift_card_id: { $type: 'string' } } }
 );
 
 /**

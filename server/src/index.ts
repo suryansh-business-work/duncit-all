@@ -208,6 +208,20 @@ async function bootstrap() {
     const { coinSettingsService } = await import('@modules/finance/coin/coin.settings.service');
     await coinSettingsService.seed();
   });
+  // Builds the gift card unique indexes (code, payment_id, the once-only
+  // redeem guard) — new unique indexes only land through syncIndexes at boot.
+  await safeSeed('giftCardIndexes', async () => {
+    const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
+    await giftcardService.syncIndexes();
+  });
+  // Creates the gift card sales policy singleton (amount presets, validity) so
+  // the buy page has amounts on day one.
+  await safeSeed('giftCardSettings', async () => {
+    const { giftCardSettingsService } = await import(
+      '@modules/finance/giftcard/giftcard.settings.service'
+    );
+    await giftCardSettingsService.seed();
+  });
   await safeSeed('crmServicesOfferedSlugs', async () => {
     const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
     await serviceOfferedService.backfillSlugs();

@@ -180,6 +180,56 @@ export const coinService = {
   },
 
   /**
+   * Convert a gift card's value into coins — the redemption of a purchased
+   * card. A flat amount, like a referral: nothing was spent, so no rate
+   * applies; the card's face value simply moves into the balance.
+   *
+   * Idempotent per GIFT CARD, enforced by the unique (gift_card_id, source)
+   * index rather than a read-then-write check, because two holders of a shared
+   * code racing the redeem button would both pass that check and mint the value
+   * twice. The loser undoes its own increment, exactly as the payment path does.
+   *
+   * @returns the coins actually credited (0 when this card already paid out).
+   */
+  async creditForGiftCard(opts: {
+    userId: string;
+    giftCardId: string;
+    coins: number;
+    reason: string;
+  }): Promise<number> {
+    const value = Math.max(0, Math.floor(opts.coins));
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.giftCardId || value <= 0) return 0;
+
+    const userId = new Types.ObjectId(opts.userId);
+    try {
+      const balance = await CoinBalanceModel.findOneAndUpdate(
+        { user_id: userId },
+        { $inc: { balance: value, lifetime_earned: value } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      await CoinTransactionModel.create({
+        user_id: userId,
+        type: 'CREDIT',
+        amount: value,
+        balance_after: balance!.balance,
+        source: 'GIFT_CARD_REDEEM',
+        reason: opts.reason,
+        gift_card_id: opts.giftCardId,
+      });
+      return value;
+    } catch (e) {
+      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+        await CoinBalanceModel.updateOne(
+          { user_id: userId },
+          { $inc: { balance: -value, lifetime_earned: -value } }
+        );
+        return 0;
+      }
+      throw e;
+    }
+  },
+
+  /**
    * Drop index definitions the schema no longer declares and build the ones it
    * does. The referral guard moved from `{referral_id}` to
    * `{referral_id, source}`, and mongoose's autoIndex only ADDS — left alone,

@@ -6,6 +6,7 @@ export { tableQueryToGql } from './gql';
 export { filterChipLabel } from './toolbar/filterState';
 export { makeApolloTableFetch, useApolloTableFetch } from './apolloFetch';
 export type { ApolloTableFetchOptions, TableGqlClient } from './apolloFetch';
+export { clientTableFetch } from './clientFetch';
 export {
   actionsColumn,
   activeChipColumn,

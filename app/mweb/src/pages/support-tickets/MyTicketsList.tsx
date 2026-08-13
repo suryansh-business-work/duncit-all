@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Chip, CircularProgress, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useTabParam } from '@duncit/ui';
+import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { formatDistanceToNow } from 'date-fns';
 import { MY_TICKETS, type TicketListItem, type TicketStatus } from './queries';
 
@@ -32,13 +32,21 @@ export default function MyTicketsList() {
   const { data, loading } = useQuery<{ myTickets: TicketListItem[] }>(MY_TICKETS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [filter, setFilter] = useTabParam<Filter>({ values: FILTERS, fallback: 'ALL' });
-
   const all = data?.myTickets ?? [];
-  const items = filter === 'ALL' ? all : all.filter((t) => t.status === filter);
 
   const countFor = (f: Filter): number =>
     f === 'ALL' ? all.length : all.filter((t) => t.status === f).length;
+
+  const tabs = useTabParam<Filter>({
+    items: FILTERS.map((f) => ({
+      value: f,
+      label: `${LABEL[f]} (${countFor(f)})`,
+      sx: { fontWeight: 600 },
+    })),
+    fallback: 'ALL',
+  });
+  const filter = tabs.value;
+  const items = filter === 'ALL' ? all : all.filter((t) => t.status === filter);
 
   const emptyOrList =
     items.length === 0 ? (
@@ -76,17 +84,12 @@ export default function MyTicketsList() {
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
         Your tickets
       </Typography>
-      <Tabs
-        value={filter}
-        onChange={(_e, v) => setFilter(v)}
+      <DuncitTabs
+        {...tabs}
         variant="scrollable"
         scrollButtons={false}
         sx={{ minHeight: 36, mb: 1, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
-      >
-        {FILTERS.map((f) => (
-          <Tab key={f} value={f} label={`${LABEL[f]} (${countFor(f)})`} sx={{ fontWeight: 600 }} />
-        ))}
-      </Tabs>
+      />
 
       {loading && all.length === 0 ? (
         <Box sx={{ p: 3, textAlign: 'center' }}>

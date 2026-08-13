@@ -6,12 +6,10 @@ import {
   Chip,
   CircularProgress,
   Stack,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { followActionFor, followStatusFrom } from '@duncit/utils';
 import HostList from './hosts-venues-page/HostList';
 import VenueList from './hosts-venues-page/VenueList';
@@ -26,10 +24,16 @@ import HostsVenuesIntroCard from './hosts-venues-page/HostsVenuesIntroCard';
 import MeetingStatusCard from './hosts-venues-page/MeetingStatusCard';
 
 type DirectoryTab = 'HOSTS' | 'VENUES';
-const DIRECTORY_TABS: DirectoryTab[] = ['HOSTS', 'VENUES'];
+
+/** Label with its live count, so the strip is built from data rather than markup. */
+const countedLabel = (text: string, count: number) => (
+  <Stack direction="row" spacing={1} alignItems="center">
+    <span>{text}</span>
+    <Chip size="small" label={count} />
+  </Stack>
+);
 
 export default function HostsVenuesPage() {
-  const [tab, setTab] = useTabParam<DirectoryTab>({ values: DIRECTORY_TABS, fallback: 'HOSTS' });
   const hostsQ = useQuery(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
   const venuesQ = useQuery(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
   const [followUser] = useMutation(FOLLOW_USER);
@@ -45,6 +49,13 @@ export default function HostsVenuesPage() {
   // button must say Requested there, not fall back to Follow.
   const requestedIds = new Set<string>((me?.requested_user_ids ?? []) as string[]);
   const statusFor = (id: string) => followStatusFrom(followingIds, requestedIds, id);
+
+  const directoryTabs: DuncitTabItem<DirectoryTab>[] = [
+    { value: 'HOSTS', label: countedLabel('Hosts', hosts.length) },
+    { value: 'VENUES', label: countedLabel('Venues', venues.length) },
+  ];
+  const tabs = useTabParam<DirectoryTab>({ items: directoryTabs, fallback: 'HOSTS' });
+  const tab = tabs.value;
 
   const toggleFollow = async (targetUserId: string) => {
     if (!targetUserId || targetUserId === me?.user_id) return;
@@ -126,32 +137,12 @@ export default function HostsVenuesPage() {
       <MeetingStatusCard kind="HOST" />
       <MeetingStatusCard kind="VENUE" />
 
-      <Tabs
-        value={tab}
-        onChange={(_e, v) => setTab(v)}
+      <DuncitTabs
+        {...tabs}
         textColor="primary"
         TabIndicatorProps={{ sx: { display: 'none' } }}
         sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 700 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
-      >
-        <Tab
-          value="HOSTS"
-          label={
-            <Stack direction="row" spacing={1} alignItems="center">
-              <span>Hosts</span>
-              <Chip size="small" label={hosts.length} />
-            </Stack>
-          }
-        />
-        <Tab
-          value="VENUES"
-          label={
-            <Stack direction="row" spacing={1} alignItems="center">
-              <span>Venues</span>
-              <Chip size="small" label={venues.length} />
-            </Stack>
-          }
-        />
-      </Tabs>
+      />
 
       {content}
     </Stack>

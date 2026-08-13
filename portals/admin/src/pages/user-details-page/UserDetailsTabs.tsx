@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box } from '@mui/material';
 import { tokens } from '@duncit/theme';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 
 export interface UserDetailsTabItem {
   /** Stable slug — this is what the URL carries, so it must not follow the label. */
@@ -11,16 +11,15 @@ export interface UserDetailsTabItem {
 }
 
 export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTabItem[] }>) {
-  const [value, setValue] = useTabParam({
-    values: tabs.map((tab) => tab.value),
+  const strip = useTabParam({
+    items: tabs.map(({ value, label }) => ({ value, label })),
     fallback: tabs[0]?.value ?? '',
   });
-  const active = tabs.find((tab) => tab.value === value);
+  const active = tabs.find((tab) => tab.value === strip.value);
   return (
     <Box sx={{ minWidth: 0 }}>
-      <Tabs
-        value={value}
-        onChange={(_, nextValue) => setValue(nextValue)}
+      <DuncitTabs
+        {...strip}
         variant="scrollable"
         scrollButtons="auto"
         allowScrollButtonsMobile
@@ -34,9 +33,7 @@ export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTa
           borderColor: 'divider',
           '& .MuiTab-root': { minHeight: 40, px: 1.5, textTransform: 'none' },
         }}
-      >
-        {tabs.map((tab) => <Tab key={tab.value} value={tab.value} label={tab.label} />)}
-      </Tabs>
+      />
       <Box sx={{ pt: 2 }}>{active?.content}</Box>
     </Box>
   );

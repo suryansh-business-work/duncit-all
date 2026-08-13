@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
-import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useTabParam } from '@duncit/ui';
+import { Box, Stack, Typography } from '@mui/material';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import PostDialog from './profile-page/post-dialog/PostDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
 import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
@@ -12,7 +12,10 @@ const EMPTY_TEXT: Record<FollowingFeedSource, string> = {
   PEOPLE: 'Follow people to see their posts here',
 };
 
-const SOURCES: FollowingFeedSource[] = ['CLUBS', 'PEOPLE'];
+const SOURCE_TABS: DuncitTabItem<FollowingFeedSource>[] = [
+  { value: 'CLUBS', label: 'Clubs' },
+  { value: 'PEOPLE', label: 'People' },
+];
 
 interface FeedClubsData {
   superCategories: { id: string; slug: string }[];
@@ -21,7 +24,8 @@ interface FeedClubsData {
 
 export default function FollowPage({ superCategorySlug }: Readonly<{ superCategorySlug?: string }>) {
   const apollo = useApolloClient();
-  const [tab, setTab] = useTabParam<FollowingFeedSource>({ values: SOURCES, fallback: 'CLUBS' });
+  const tabs = useTabParam<FollowingFeedSource>({ items: SOURCE_TABS, fallback: 'CLUBS' });
+  const tab = tabs.value;
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const meQuery = useQuery(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });
   const clubsQuery = useQuery<FeedClubsData>(FEED_CLUBS, {
@@ -65,15 +69,11 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         </Typography>
       </Box>
 
-      <Tabs
-        value={tab}
-        onChange={(_, value) => setTab(value)}
+      <DuncitTabs
+        {...tabs}
         variant="fullWidth"
         sx={{ minHeight: 40, '& .MuiTab-root': { fontWeight: 700, minHeight: 40 } }}
-      >
-        <Tab value="CLUBS" label="Clubs" />
-        <Tab value="PEOPLE" label="People" />
-      </Tabs>
+      />
 
       <FollowFeedList
         source={tab}

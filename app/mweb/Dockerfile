@@ -53,9 +53,10 @@ COPY packages/location/package.json ./packages/location/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/tabs/package.json ./packages/tabs/
+COPY packages/ui/package.json ./packages/ui/
 COPY packages/pod-product-picker/package.json ./packages/pod-product-picker/
 COPY packages/table/package.json ./packages/table/
-COPY packages/ui/package.json ./packages/ui/
 COPY packages/slack/package.json ./packages/slack/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/slots/package.json ./packages/slots/

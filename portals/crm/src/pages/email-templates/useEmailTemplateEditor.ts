@@ -2,12 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { DELETE, EMAIL_TEMPLATE, RENDER, UPDATE, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
-import { useTabParam } from '@duncit/ui';
+import { useTabParam } from '@duncit/tabs';
+import { PANE_TABS, type PaneTab } from './PreviewVariablesPane';
 
 export type Snack = { kind: 'success' | 'error'; msg: string };
-
-type PaneTab = 'preview' | 'code';
-const PANE_TABS: PaneTab[] = ['preview', 'code'];
 
 /** State + actions for editing one CRM email template (loaded by template_id). */
 export function useEmailTemplateEditor(templateId: string) {
@@ -21,7 +19,9 @@ export function useEmailTemplateEditor(templateId: string) {
 
   const template = data?.emailTemplate ?? null;
   const [draft, setDraft] = useState<EmailTemplate | null>(null);
-  const [tab, setTab] = useTabParam<PaneTab>({ values: PANE_TABS, fallback: 'preview' });
+  const paneTabs = useTabParam<PaneTab>({ items: PANE_TABS, fallback: 'preview' });
+  const tab = paneTabs.value;
+  const setTab = paneTabs.onChange;
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewErrors, setPreviewErrors] = useState<string[]>([]);
   const [detected, setDetected] = useState<string[]>([]);

@@ -5,8 +5,6 @@ import {
   Box,
   CircularProgress,
   Stack,
-  Tab,
-  Tabs,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -19,7 +17,7 @@ import {
   type LeaderboardCategory,
   type LeaderboardPeriodKey,
 } from '@duncit/utils';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import YourPointsCard from './YourPointsCard';
 import LeaderboardList from './LeaderboardList';
 import HowToEarnCard from './HowToEarnCard';
@@ -40,10 +38,11 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function LeaderboardPage() {
   const { t } = useTranslation();
-  const [category, setCategory] = useTabParam<LeaderboardCategory>({
-    values: LEADERBOARD_CATEGORIES,
+  const tabs = useTabParam<LeaderboardCategory>({
+    items: LEADERBOARD_CATEGORIES.map((cat) => ({ value: cat, label: t(LEADERBOARD_TAB_KEY[cat]) })),
     fallback: 'USER',
   });
+  const category = tabs.value;
   const [period, setPeriod] = useState<LeaderboardPeriodKey>('MONTH');
 
   const { data, loading, error } = useQuery<{ leaderboard: LeaderboardBoardData }>(
@@ -82,16 +81,7 @@ export default function LeaderboardPage() {
           {t('mweb.leaderboard.title')}
         </Typography>
 
-        <Tabs
-          value={category}
-          onChange={(_e, next: LeaderboardCategory) => setCategory(next)}
-          variant="scrollable"
-          allowScrollButtonsMobile
-        >
-          {LEADERBOARD_CATEGORIES.map((cat) => (
-            <Tab key={cat} value={cat} label={t(LEADERBOARD_TAB_KEY[cat])} />
-          ))}
-        </Tabs>
+        <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
 
         <YourPointsCard board={board} loading={loading} />
 

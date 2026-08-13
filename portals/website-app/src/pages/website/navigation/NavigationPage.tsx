@@ -1,11 +1,17 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
-  Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Tab, Tabs, Typography,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import NavItemDialog, { type NavItemValues } from './NavItemDialog';
 import NavigationTable from './NavigationTable';
 import {
@@ -16,10 +22,8 @@ import {
 /** Marketing-website navigation manager — the sites bake these links in at
  * build time (a redeploy picks up changes). */
 export default function NavigationPage() {
-  const [site, setSite] = useTabParam<WebsiteNavSite>({
-    values: NAV_SITES.map((s) => s.value),
-    fallback: 'MAIN',
-  });
+  const tabs = useTabParam<WebsiteNavSite>({ items: NAV_SITES, fallback: 'MAIN' });
+  const site = tabs.value;
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refetchTable = () => refetchRef.current?.();
@@ -62,11 +66,7 @@ export default function NavigationPage() {
       <Typography variant="body2" color="text.secondary">
         Header + footer links for every marketing website. Changes go live on the next site deploy.
       </Typography>
-      <Tabs value={site} onChange={(_e, next) => setSite(next)} variant="scrollable">
-        {NAV_SITES.map((s) => (
-          <Tab key={s.value} value={s.value} label={s.label} />
-        ))}
-      </Tabs>
+      <DuncitTabs {...tabs} variant="scrollable" />
       {/* key remounts the table so the tab switch resets paging onto the new site. */}
       <NavigationTable
         key={site}

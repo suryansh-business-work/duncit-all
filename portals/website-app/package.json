@@ -30,6 +30,7 @@
     "@duncit/media-picker": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",
+    "@duncit/tabs": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",

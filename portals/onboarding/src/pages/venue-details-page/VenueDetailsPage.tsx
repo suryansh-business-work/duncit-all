@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stack, Tab, Tabs } from '@mui/material';
-import { BackHeader, QueryGuard, useTabParam } from '@duncit/ui';
+import { Stack } from '@mui/material';
+import { BackHeader, QueryGuard } from '@duncit/ui';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenuePodsTab from './VenuePodsTab';
@@ -9,7 +10,7 @@ import VenuePodsTab from './VenuePodsTab';
 // Slot Availability + Account Health are not applicable to onboarded venue
 // details and are intentionally not shown here.
 type VenueTab = 'overview' | 'pods';
-const TABS: { value: VenueTab; label: string }[] = [
+const TABS: DuncitTabItem<VenueTab>[] = [
   { value: 'overview', label: 'Overview' },
   { value: 'pods', label: 'Pods' },
 ];
@@ -19,10 +20,8 @@ export default function VenueDetailsPage() {
   const navigate = useNavigate();
   // Also the deep link: /venues/:id?selectedtab=pods opens the Pods tab from
   // the Onboarded Venues table's pod-count button.
-  const [tab, setTab] = useTabParam<VenueTab>({
-    values: TABS.map((t) => t.value),
-    fallback: 'overview',
-  });
+  const tabs = useTabParam<VenueTab>({ items: TABS, fallback: 'overview' });
+  const tab = tabs.value;
   const { data, loading, error } = useQuery<{ venue: AdminVenueDetails | null }>(VENUE_DETAILS, {
     variables: { venue_doc_id: venueId },
     fetchPolicy: 'cache-and-network',
@@ -53,11 +52,7 @@ export default function VenueDetailsPage() {
               titleSx={{ lineHeight: 1.1 }}
             />
 
-            <Tabs value={tab} onChange={(_e, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
-              {TABS.map((item) => (
-                <Tab key={item.value} value={item.value} label={item.label} />
-              ))}
-            </Tabs>
+            <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
 
             {tab === 'overview' && <VenueOverviewCard venue={venue} />}
 

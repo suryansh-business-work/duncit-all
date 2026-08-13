@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTabParam } from '@duncit/ui';
+import { useTabParam } from '@duncit/tabs';
+import { VENUE_SECTIONS, sectionsForMode } from '../sections/venue-sections';
 import { FINAL, STEP1, STEP2, STEP3, UPDATE_APPROVED_VENUE } from '../queries';
 import { SECTION_FIELDS, registerVenueSchema } from './register-venue.schema';
 import {
@@ -22,15 +23,8 @@ import {
 export type EditableSectionKey = Exclude<VenueSectionKey, 'review' | 'leaves'>;
 export type SectionState = 'complete' | 'incomplete';
 
-const SECTION_ORDER: VenueSectionKey[] = [
-  'details',
-  'type-capacity',
-  'amenities',
-  'documents',
-  'owner',
-  'leaves',
-  'review',
-];
+/** Full order — what "the section after this one" means, review included. */
+const SECTION_ORDER: VenueSectionKey[] = VENUE_SECTIONS.map((section) => section.key);
 
 /** Sections updateApprovedVenue can persist (amenities are locked post-approval). */
 const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
@@ -53,10 +47,15 @@ interface Options {
 }
 
 export function useRegisterVenueForm({ venue, locations, account, mode, onPersisted }: Readonly<Options>) {
-  const [active, setActive] = useTabParam<VenueSectionKey>({
-    values: SECTION_ORDER,
+  // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
+  // to ?selectedtab=review — a section its rail does not offer and its form
+  // would render as nothing.
+  const sectionTabs = useTabParam<VenueSectionKey>({
+    items: sectionsForMode(mode).map((section) => ({ value: section.key, label: section.label })),
     fallback: 'details',
   });
+  const active = sectionTabs.value;
+  const setActive = sectionTabs.onChange;
   const [venueId, setVenueId] = useState<string | null>(venue?.id ?? null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);

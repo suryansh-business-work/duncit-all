@@ -1,6 +1,6 @@
 ---
 name: '@duncit/ui'
-summary: 'The MUI primitives every portal used to hand-roll — KPI stat card, status chip, label/value row, page and back headers, the query guard trio, a debounce hook and URL-backed tab selection.'
+summary: 'The MUI primitives every portal used to hand-roll — KPI stat card, status chip, label/value row, page and back headers, the query guard trio and a debounce hook.'
 category: 'ui'
 zeroDeps: false
 frameworkFree: false
@@ -35,8 +35,6 @@ exports:
   - 'BackButton'
   - 'QueryGuard'
   - 'useDebouncedValue'
-  - 'useTabParam'
-  - 'TAB_PARAM'
   - 'mergeSx'
   - 'ModerationBlockedDialog'
   - 'LanguageSelect'
@@ -405,53 +403,6 @@ peers — nothing here bundles a second React or MUI. The router peer is easy to
 renders `component={RouterLink}` when given `to`, so a `BackHeader`/`BackButton` used with `to`
 **must be inside a router context** or it throws. Pass `onClick`/`onBack` instead if there is no
 router (that path renders a plain `<Button>`).
-
-## `useTabParam` — every MUI tab strip keeps its selection in the URL
-
-A `<Tabs>` whose selection lives in `useState` loses it on reload, and a link to that page always
-lands on the first tab. `useTabParam` swaps that `useState` for the query string, so a refresh, a
-pasted link and Back all reopen the tab that was open. It is the only way tab state is held in the
-portals and mWeb — a new strip does not get its own `useState`.
-
-```tsx
-import { Tab, Tabs } from '@mui/material';
-import { useTabParam } from '@duncit/ui';
-
-type PodTab = 'upcoming' | 'past';
-const POD_TABS: PodTab[] = ['upcoming', 'past'];
-
-const [tab, setTab] = useTabParam<PodTab>({ values: POD_TABS, fallback: 'upcoming' });
-
-<Tabs value={tab} onChange={(_event, next) => setTab(next)}>
-  {POD_TABS.map((key) => <Tab key={key} value={key} label={LABELS[key]} />)}
-</Tabs>
-// → /pods?selectedtab=past
-```
-
-Three things it does that a `useState` + effect pair gets wrong:
-
-- **The selection is derived, never mirrored.** A value the strip no longer offers — a
-  server-driven category that disappeared, a deleted variant, a hand-typed link — resolves to
-  `fallback` on the next render, with no effect to keep two copies in step. That is why
-  `values` may be empty on the first paint while the catalogue is still loading.
-- **The setter is stable.** Both of react-router's returns change identity on every navigation,
-  so a setter closing over them would too, and an effect that lists the setter in its deps would
-  re-fire on its own write forever. Put `setTab` in a dependency array freely.
-- **Writes replace the history entry.** A tab is a view of the page, not a destination —
-  pushing one entry per switch means Back walks through five tabs before it leaves.
-
-**Give every `<Tab>` an explicit `value`.** Without it MUI falls back to the child index, and
-the URL then carries `?selectedtab=2`, which means nothing to a reader and shifts the moment a
-tab is inserted.
-
-**One key per route.** The default is `selectedtab`. A route that renders a SECOND strip — a
-nested category rail, or a dialog that opens over the page — passes its own
-`param: 'selectedtab_<scope>'`. Sharing one key means every switch on one strip snaps the other
-back to its fallback. The keys in use today: `selectedtab_category` (Tech › Environment),
-`selectedtab_media` (the media picker), `selectedtab_file` (the shell's file manager),
-`selectedtab_emaillog`, `selectedtab_connections`, `selectedtab_signature`, `selectedtab_variant`.
-
-Needs a router context, like `BackButton` with `to` — see the peer-dependency note above.
 
 ## `useDebouncedValue` is not needed inside a table
 

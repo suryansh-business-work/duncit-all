@@ -1,14 +1,17 @@
-import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import EnvVariablesTab from './EnvVariablesTab';
 import PortalMappingTab from './PortalMappingTab';
 
 type Section = 'variables' | 'mapping';
-const SECTIONS: Section[] = ['variables', 'mapping'];
+const SECTIONS: DuncitTabItem<Section>[] = [
+  { value: 'variables', label: 'Variables' },
+  { value: 'mapping', label: 'Portal Mapping' },
+];
 
 export default function EnvironmentPage() {
-  const [section, setSection] = useTabParam<Section>({ values: SECTIONS, fallback: 'variables' });
+  const tabs = useTabParam<Section>({ items: SECTIONS, fallback: 'variables' });
 
   return (
     <Stack spacing={2.5}>
@@ -22,12 +25,9 @@ export default function EnvironmentPage() {
         </Box>
       </Stack>
 
-      <Tabs value={section} onChange={(_, v) => setSection(v)}>
-        <Tab value="variables" label="Variables" />
-        <Tab value="mapping" label="Portal Mapping" />
-      </Tabs>
+      <DuncitTabs {...tabs} />
 
-      {section === 'variables' ? <EnvVariablesTab /> : <PortalMappingTab />}
+      {tabs.value === 'variables' ? <EnvVariablesTab /> : <PortalMappingTab />}
     </Stack>
   );
 }

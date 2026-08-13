@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import type { SignatureMethod } from '../graphql/documents';
 
 /** The brief's ceiling, enforced here as well as on the server. */
@@ -51,12 +49,16 @@ export default function SignaturePad({
   onChange,
   typedName,
 }: Readonly<Props>) {
-  // Own key — the signing page this sits on may carry its own tab strip.
-  const [tab, setTab] = useTabParam<SignatureMethod>({
-    values: methods,
+  // Own key — the signing page this sits on may carry its own tab strip. The
+  // items are the ENABLED methods, so a link naming a switched-off one falls
+  // back rather than showing a tab that leads to a rejected save.
+  const tabs = useTabParam<SignatureMethod>({
+    items: methods.map((m) => ({ value: m, label: METHOD_LABEL[m] })),
     fallback: method ?? methods[0] ?? 'DRAW',
     param: 'selectedtab_signature',
   });
+  const tab = tabs.value;
+  const setTab = tabs.onChange;
   const [typed, setTyped] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -161,11 +163,7 @@ export default function SignaturePad({
 
   return (
     <Stack spacing={1.5}>
-      <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="scrollable">
-        {methods.map((m) => (
-          <Tab key={m} value={m} label={METHOD_LABEL[m]} />
-        ))}
-      </Tabs>
+      <DuncitTabs {...tabs} variant="scrollable" />
 
       {error && <Alert severity="error">{error}</Alert>}
 

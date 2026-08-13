@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, LinearProgress, Stack, Tab, Tabs } from '@mui/material';
+import { Alert, Button, LinearProgress, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import {
@@ -20,7 +20,7 @@ import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entr
 import TestDrawer from './test-panels';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 
 /** Manage the named entries within each environment category. */
 export default function EnvVariablesTab() {
@@ -43,11 +43,12 @@ export default function EnvVariablesTab() {
   // Its own key: the page's Variables/Portal Mapping strip already owns
   // `selectedtab`. Until the catalogue lands there is nothing to match, so the
   // first server category stands in — including for a link naming a category.
-  const [active, setActive] = useTabParam<EnvCategory>({
-    values: categories.map((c) => c.category),
+  const tabs = useTabParam<EnvCategory>({
+    items: categories.map((c) => ({ value: c.category, label: c.label })),
     fallback: categories[0]?.category ?? '',
     param: 'selectedtab_category',
   });
+  const active = tabs.value;
 
   // Server-paged rows for the active category tab; the tab pins a category filter.
   const fetchRows = useApolloTableFetch<EnvEntry>(
@@ -132,9 +133,7 @@ export default function EnvVariablesTab() {
         password: do not share it, and delete it once you are done.
       </Alert>
 
-      <Tabs value={active} onChange={(_, v) => setActive(v)} variant="scrollable" scrollButtons="auto">
-        {categories.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
-      </Tabs>
+      <DuncitTabs {...tabs} variant="scrollable" scrollButtons="auto" />
       {/* key remounts the table per category so the page/query state resets with the tab. */}
       <EnvEntriesTable
         key={active}

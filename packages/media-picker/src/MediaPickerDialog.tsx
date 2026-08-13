@@ -10,14 +10,12 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Tab,
-  Tabs,
   useMediaQuery,
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import DeviceUploadTab from './DeviceUploadTab';
 import SelectionTray from './SelectionTray';
 import PexelsPhotosTab from './PexelsPhotosTab';
@@ -55,7 +53,6 @@ export default function MediaPickerDialog({
   // Resolved in the body, not as a default parameter: a hook cannot run in
   // the parameter list, and a caller-supplied heading must still win.
   const heading = title ?? t('media.picker.title');
-  const [tab, setTab] = useTabParam<PickerTab>({ values: PICKER_TABS, fallback: 'device', param: 'selectedtab_media' });
   const [error, setError] = useState<string | null>(null);
   const multi = max > 1;
   const selection = useMediaSelection(max, open);
@@ -80,6 +77,19 @@ export default function MediaPickerDialog({
     () => allowDocuments ?? /pdf/i.test(accept),
     [allowDocuments, accept],
   );
+
+  // Below the allow* flags on purpose — a Pexels tab the caller's `accept` rules
+  // out is rendered disabled, and the strip is built from that same data.
+  const tabs = useTabParam<PickerTab>({
+    items: [
+      { value: 'device', label: t('media.picker.fromDevice') },
+      { value: 'photos', label: t('media.picker.pexelsPhotos'), disabled: !allowImage },
+      { value: 'videos', label: t('media.picker.pexelsVideos'), disabled: !allowVideo },
+    ],
+    fallback: 'device',
+    param: 'selectedtab_media',
+  });
+  const tab = tabs.value;
 
   const device = useDeviceUpload({
     open,
@@ -123,15 +133,7 @@ export default function MediaPickerDialog({
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-      <Tabs
-        value={tab}
-        onChange={(_e, v) => setTab(v)}
-        sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <Tab value="device" label={t('media.picker.fromDevice')} />
-        <Tab value="photos" label={t('media.picker.pexelsPhotos')} disabled={!allowImage} />
-        <Tab value="videos" label={t('media.picker.pexelsVideos')} disabled={!allowVideo} />
-      </Tabs>
+      <DuncitTabs {...tabs} sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }} />
       {/* Free to SHRINK. A hard minHeight here is a floor on a flex child of the
           dialog's column, so on a short screen the paper grew past the viewport
           and took the actions row — the button that finishes the pick — off the

@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { useDebouncedValue, useTabParam } from '@duncit/ui';
+import { useDebouncedValue } from '@duncit/ui';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import {
   Alert,
   Box,
@@ -12,9 +15,7 @@ import {
   ListItemButton,
   ListItemText,
   Stack,
-  Tab,
   TablePagination,
-  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -37,7 +38,12 @@ const TAB_CONFIG: Record<BrowserTab, { label: string; query: typeof WA_COMMUNITI
  * Each tab is server-side searchable + paginated; Extract pulls fresh data. */
 export default function WhatsAppBrowser() {
   const { start: startExtraction, job, setOnDone } = useExtraction();
-  const [tab, setTab] = useTabParam<BrowserTab>({ values: TAB_KEYS, fallback: 'communities' });
+  const tabs = useTabParam<BrowserTab>({
+    items: TAB_KEYS.map((key) => ({ value: key, label: TAB_CONFIG[key].label })),
+    fallback: 'communities',
+  });
+  const tab = tabs.value;
+  const setTab = tabs.onChange;
   const [community, setCommunity] = useState<GroupRef | null>(null);
   const [members, setMembers] = useState<GroupRef | null>(null);
   const [searchInput, setSearchInput] = useState('');
@@ -81,11 +87,7 @@ export default function WhatsAppBrowser() {
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }} flexWrap="wrap" gap={1}>
-        <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
-          {TAB_KEYS.map((key) => (
-            <Tab key={key} value={key} label={TAB_CONFIG[key].label} />
-          ))}
-        </Tabs>
+        <DuncitTabs {...tabs} />
         <Button size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => void startExtraction()}>
           {running ? 'Extracting…' : 'Extract'}
         </Button>

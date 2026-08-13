@@ -25,7 +25,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/i18n": "workspace:*",
-    "@duncit/ui": "workspace:*",
+    "@duncit/tabs": "workspace:*",
     "@duncit/utils": "workspace:*",
     "react-easy-crop": "^5.0.8"
   },

@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ScienceIcon from '@mui/icons-material/Science';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { useTabParam } from '@duncit/ui';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
 import WaCampaignDetailDialog from './wa-campaign-detail';
@@ -25,7 +25,14 @@ import {
 } from './queries';
 
 type WaTab = 'sends' | 'campaigns' | 'templates';
-const WA_TABS: WaTab[] = ['sends', 'campaigns', 'templates'];
+
+/* Three sections, three questions: what have we sent, what can we send
+   against, and what do those templates actually say. */
+const WA_TABS: DuncitTabItem<WaTab>[] = [
+  { value: 'sends', label: 'Sends' },
+  { value: 'campaigns', label: 'Campaigns' },
+  { value: 'templates', label: 'Templates' },
+];
 
 interface SetupData {
   waCampaignConfigured: boolean;
@@ -42,7 +49,8 @@ interface SetupData {
 export default function WhatsappCampaignsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [tab, setTab] = useTabParam<WaTab>({ values: WA_TABS, fallback: 'sends' });
+  const tabs = useTabParam<WaTab>({ items: WA_TABS, fallback: 'sends' });
+  const tab = tabs.value;
   const [formOpen, setFormOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
@@ -127,13 +135,7 @@ export default function WhatsappCampaignsPage() {
         )}
       </Stack>
 
-      {/* Three sections, three questions: what have we sent, what can we send
-          against, and what do those templates actually say. */}
-      <Tabs value={tab} onChange={(_, next) => setTab(next)} sx={{ mb: 2 }}>
-        <Tab value="sends" label="Sends" />
-        <Tab value="campaigns" label="Campaigns" />
-        <Tab value="templates" label="Templates" />
-      </Tabs>
+      <DuncitTabs {...tabs} sx={{ mb: 2 }} />
 
       {tab === 'sends' && !configured && (
         <Alert severity="warning" sx={{ mb: 2 }}>

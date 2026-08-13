@@ -29,6 +29,8 @@ export default function CoinDashboardPage() {
     {
       id: 'coin-tiles',
       bare: true,
+      // Seven tiles at four per row always wrap — h2 shows one cut row.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
       minH: 2,
       content: <CoinStatTiles stats={stats} loading={loading} />,

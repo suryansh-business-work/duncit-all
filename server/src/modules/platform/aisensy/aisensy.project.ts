@@ -8,17 +8,18 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
  * template back. That needs this second, project-scoped credential, which the
  * Tech portal holds as Project ID + Project API Key.
  *
- * Confirmed from AiSensy's published reference: the base is
- * `{host}/project-apis/v1/project/{project_id}`, auth is the
- * `X-AiSensy-Project-API-Pwd` header, and `messages` is a path under it.
- * The two LIST paths below are the one thing their docs do not publish in
- * readable form (the reference renders only in a browser), so they follow the
- * same shape. A wrong path is not silent: the error carries the exact URL and
- * AiSensy's own reply, and correcting it is a one-line change here.
+ * Confirmed from AiSensy's Project API reference (aisensy.stoplight.io): the
+ * base is `{host}/project-apis/v1/project/{project_id}`, auth is the
+ * `X-AiSensy-Project-API-Pwd` header. "Get Campaigns" is — despite its name —
+ * a POST of `{skip, limit, campaignType}` to `/campaigns` (a GET 404s), and
+ * templates come from a GET on `/wa_template/` (trailing slash as documented,
+ * `limit` capped at 100). The project id must be the 24-hex id from the
+ * AiSensy dashboard, not the project's display name.
  */
 const DEFAULT_BASE_URL = 'https://apis.aisensy.com';
 const CAMPAIGNS_PATH = 'campaigns';
-const TEMPLATES_PATH = 'templates';
+const TEMPLATES_PATH = 'wa_template/';
+const LIST_LIMIT = 100;
 
 interface ProjectConfig {
   projectId: string;
@@ -52,18 +53,37 @@ const notConfigured = () =>
     extensions: { code: 'BAD_REQUEST' },
   });
 
-async function projectGet(path: string): Promise<unknown> {
+/** AiSensy project ids are Mongo-style 24-hex — the dashboard URL's id, never the name. */
+const PROJECT_ID_RE = /^[\da-f]{24}$/i;
+
+const badProjectId = () =>
+  new GraphQLError(
+    'AiSensy Project ID must be the 24-character id from your dashboard URL (app.aisensy.com/projects/<id>), not the project name — fix it in the Tech portal',
+    { extensions: { code: 'BAD_REQUEST' } }
+  );
+
+async function projectRequest(path: string, postBody?: Record<string, unknown>): Promise<unknown> {
   const config = await projectConfig();
   if (!config) throw notConfigured();
+  if (!PROJECT_ID_RE.test(config.projectId)) throw badProjectId();
   const url = `${config.baseUrl}/project-apis/v1/project/${config.projectId}/${path}`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json', 'X-AiSensy-Project-API-Pwd': config.key },
-  });
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'X-AiSensy-Project-API-Pwd': config.key,
+  };
+  const init: RequestInit = { headers };
+  if (postBody) {
+    init.method = 'POST';
+    headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(postBody);
+  }
+  const res = await fetch(url, init);
   const body = await res.text();
   if (!res.ok) {
     // The URL is in the message on purpose: a 404 here means the path, not the
     // credentials, and the reader needs to see which path was asked for.
-    throw new GraphQLError(`AiSensy Project API: GET ${url} → HTTP ${res.status} ${body.slice(0, 200)}`, {
+    const method = init.method ?? 'GET';
+    throw new GraphQLError(`AiSensy Project API: ${method} ${url} → HTTP ${res.status} ${body.slice(0, 200)}`, {
       extensions: { code: 'BAD_GATEWAY' },
     });
   }
@@ -112,11 +132,12 @@ const str = (row: Record<string, any>, ...keys: string[]) => {
   return '';
 };
 
-/** The BODY component's text out of a WhatsApp template definition. */
+/** The BODY component's text out of a WhatsApp template definition. AiSensy's
+ * Project API puts the full text (body + button labels) in `text`. */
 function bodyText(row: Record<string, any>): string {
   const components = Array.isArray(row.components) ? row.components : [];
   const body = components.find((c: any) => String(c?.type ?? '').toUpperCase() === 'BODY');
-  return trimmed(body?.text) || trimmed(row.body);
+  return trimmed(body?.text) || trimmed(row.body) || trimmed(row.text);
 }
 
 /** Highest {{n}} in the body — what "templateParams length" has to match. */
@@ -125,27 +146,38 @@ function paramCount(body: string): number {
   return numbers.length > 0 ? Math.max(...numbers) : 0;
 }
 
-/** The project's API campaigns, as AiSensy has them right now. */
+/** The project's campaigns, as AiSensy has them right now. */
 export async function listCampaigns(): Promise<AisensyCampaign[]> {
-  return toArray(await projectGet(CAMPAIGNS_PATH)).map((row) => ({
+  const payload = await projectRequest(CAMPAIGNS_PATH, {
+    skip: 0,
+    limit: LIST_LIMIT,
+    campaignType: 'ALL',
+  });
+  return toArray(payload).map((row) => ({
     name: str(row, 'name', 'campaignName'),
     status: str(row, 'status', 'state'),
-    template_name: str(row, 'templateName', 'template_name', 'template'),
+    template_name:
+      trimmed(row.message_payload?.template?.name) || str(row, 'templateName', 'template_name', 'template'),
     type: str(row, 'type', 'campaignType'),
   }));
 }
 
 /** The project's WhatsApp message templates. */
 export async function listTemplates(): Promise<AisensyTemplate[]> {
-  return toArray(await projectGet(TEMPLATES_PATH)).map((row) => {
+  const payload = await projectRequest(`${TEMPLATES_PATH}?limit=${LIST_LIMIT}`);
+  return toArray(payload).map((row) => {
     const body = bodyText(row);
+    // AiSensy declares the count itself; the regex is the fallback for rows
+    // that predate the field.
+    const declared = Number(row.total_parameters);
+    const param_count = Number.isInteger(declared) && declared > 0 ? declared : paramCount(body);
     return {
       name: str(row, 'name', 'templateName', 'elementName'),
       status: str(row, 'status'),
       category: str(row, 'category'),
       language: str(row, 'language', 'languageCode', 'language_code'),
       body,
-      param_count: paramCount(body),
+      param_count,
     };
   });
 }

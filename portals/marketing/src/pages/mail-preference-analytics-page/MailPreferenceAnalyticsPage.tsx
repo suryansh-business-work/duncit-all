@@ -106,17 +106,21 @@ export default function MailPreferenceAnalyticsPage() {
     {
       id: 'by-category',
       bare: true,
+      // One row per mail category — the category list is data, not layout.
+      fitContent: true,
       defaultLayout: { x: 0, y: 2, w: 7, h: 6 },
       minW: 3,
-      minH: 4,
+      // minH floors the measured height — keep it low or empty states pin a void.
+      minH: 2,
       content: <CategoryBreakdown rows={summary?.by_category ?? []} />,
     },
     {
       id: 'by-source',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 7, y: 2, w: 5, h: 6 },
       minW: 3,
-      minH: 4,
+      minH: 2,
       content: <SourceBreakdown rows={summary?.by_source ?? []} />,
     },
     {

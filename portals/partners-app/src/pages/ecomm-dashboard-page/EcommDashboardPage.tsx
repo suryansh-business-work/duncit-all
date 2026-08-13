@@ -17,9 +17,13 @@ export default function EcommDashboardPage() {
       id: 'performance',
       title: 'E-commerce performance',
       headerActions: loading ? <CircularProgress size={22} /> : undefined,
+      // The card row is one line at desktop and wraps below ~1050px — a fixed
+      // h is dead space in one shape and a cut in the other.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 4 },
       minW: 4,
-      minH: 3,
+      // minH floors the measured height — keep it low or empty stats pin a void.
+      minH: 2,
       content: <EcommStatCards stats={stats} />,
     },
   ];

@@ -70,6 +70,8 @@ export default function EmailsDashboardPage() {
     {
       id: 'silent-discards',
       bare: true,
+      // The alert is either absent or taller than one row — never exactly h1.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 1 },
       minH: 1,
       content: <SilentDiscardAlert count={d.silently_discarded} />,
@@ -77,6 +79,7 @@ export default function EmailsDashboardPage() {
     {
       id: 'headline-tiles',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 0, y: 1, w: 12, h: 2 },
       minH: 2,
       content: <HeadlineTiles data={d} />,
@@ -84,25 +87,30 @@ export default function EmailsDashboardPage() {
     {
       id: 'not-delivered-reasons',
       bare: true,
+      // One bar per reason, and the reason count is the server's to decide.
+      fitContent: true,
       defaultLayout: { x: 0, y: 3, w: 12, h: 5 },
       minW: 4,
-      minH: 3,
+      // minH floors the measured height — keep it low or a zero-failure day pins a void.
+      minH: 2,
       content: <DistributionCard title="Why nothing went out" buckets={d.not_delivered_reasons} />,
     },
     {
       id: 'not-delivered-templates',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 0, y: 8, w: 6, h: 5 },
       minW: 3,
-      minH: 3,
+      minH: 2,
       content: <DistributionCard title="Templates that did not deliver" buckets={templateBuckets} />,
     },
     {
       id: 'repeat-failures',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 6, y: 8, w: 6, h: 5 },
       minW: 3,
-      minH: 3,
+      minH: 2,
       content: <RepeatFailuresCard rows={d.repeat_failures} />,
     },
   ];

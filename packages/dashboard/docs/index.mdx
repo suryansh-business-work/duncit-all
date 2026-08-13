@@ -108,6 +108,7 @@ export default function DashboardPage() {
 | `minW` / `minH` | Smallest the user may drag it. Defaults to the declared size, capped at 3×2. |
 | `disablePadding` | Body renders edge-to-edge — for tables and charts with their own insets. |
 | `bare` | No card chrome at all. For a section that is already a run of cards (a KPI strip). |
+| `fitContent` | Height follows the content (GridStack `sizeToContent`) instead of a fixed row count. For content whose natural height the page cannot know — a KPI strip that wraps with the viewport, a chart block — so it is never cut off and never leaves dead space. The user still drags it and resizes its width; height re-snaps to the content. **Leave unset** for bodies that fill whatever height they are given (tables, virtualised lists) — auto would collapse them to their minimum. |
 
 ### Where the layout lives
 
@@ -145,8 +146,11 @@ default `y` values should read the way the page should read on a phone.
 
 Rearranging is behind a **Customise layout** button rather than always live: a dashboard is mostly
 read, and a grid that moves when a pointer drifts across a card header is a dashboard people stop
-trusting. In edit mode each widget grows a drag grip in its header — GridStack listens on that
-class alone, so clicking a chart, a table row or a button inside a widget can never move it.
+trusting. In edit mode the whole widget header becomes the drag handle (with a grip icon as the
+affordance) — GridStack listens on that class alone, so clicking a chart, a table row or a button
+inside a widget can never move it. The grip itself is deliberately **not** a `<button>`:
+GridStack's `skipMouseDown` list refuses to start a drag from anything inside a real button, which
+is also what keeps `headerActions` buttons clickable while their header drags.
 
 **Save** writes the arrangement, **Cancel** puts back what was there when editing began, and
 **Reset to default** (behind a confirm) deletes the stored row.

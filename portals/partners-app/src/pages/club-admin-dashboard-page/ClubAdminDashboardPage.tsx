@@ -76,6 +76,9 @@ export default function ClubAdminDashboardPage() {
     {
       id: 'kpis',
       bare: true,
+      // Four titled KPI groups (~700px) — an h2 window hides almost all of it
+      // behind a nested scrollbar.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
       minH: 2,
       content: <ClubAdminKpiCards kpis={dashboard.kpis} loading={loading && !data} />,
@@ -83,9 +86,11 @@ export default function ClubAdminDashboardPage() {
     {
       id: 'trend',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 0, y: 2, w: 12, h: 6 },
       minW: 4,
-      minH: 4,
+      // minH floors the measured height — keep it low or empty states pin a void.
+      minH: 2,
       content: <ClubAdminTrendChart trend={dashboard.trend} />,
     },
     {

@@ -121,13 +121,13 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     {
       name: 'project_id',
       label: 'Project ID (optional)',
-      hint: 'AiSensy project id — the id in your Project API URL. Needed to read campaigns/templates',
+      hint: 'The 24-character id in your AiSensy dashboard URL (app.aisensy.com/projects/<id>) — not the project name',
     },
     {
       name: 'project_api_key',
-      label: 'Project API Key (optional)',
+      label: 'Project API Password (optional)',
       secret: true,
-      hint: 'Project API key / App Access Code — reads campaign + template details, never sends',
+      hint: 'Custom App password — AiSensy dashboard → Manage → Custom Apps → create one (shows key, password, shared secret). Reads campaigns + templates, never sends',
     },
     {
       name: 'project_api_base_url',

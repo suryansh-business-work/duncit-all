@@ -54,9 +54,12 @@ export default function StartupDashboardPage() {
         {
           id: 'founder-overview',
           bare: true,
+          // Metric count per section is server-driven — no fixed h is right.
+          fitContent: true,
           defaultLayout: { x: 0, y: 0, w: 12, h: SECTION_HEIGHT },
           minW: 4,
-          minH: 3,
+          // minH floors the measured height — keep it low or a sparse section pins a void.
+          minH: 2,
           content: (
             <MetricGrid
               title="Founder Overview"
@@ -71,6 +74,7 @@ export default function StartupDashboardPage() {
         ...dashboard.categories.map((cat, index) => ({
           id: `category-${cat.key}`,
           bare: true,
+          fitContent: true,
           defaultLayout: {
             x: 0,
             y: SECTION_HEIGHT * (index + 1),
@@ -78,7 +82,7 @@ export default function StartupDashboardPage() {
             h: SECTION_HEIGHT,
           },
           minW: 4,
-          minH: 3,
+          minH: 2,
           content: (
             <MetricGrid
               title={cat.label}

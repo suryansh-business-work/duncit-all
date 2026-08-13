@@ -125,7 +125,9 @@ export default function DashboardPage() {
       id: 'documents-by-type',
       title: 'Documents by type',
       disablePadding: true,
-      defaultLayout: { x: 0, y: 2, w: 12, h: 6 },
+      // Toolbar + header + pagination alone are ~150px, so h6 always scrolled
+      // internally even for a handful of rows.
+      defaultLayout: { x: 0, y: 2, w: 12, h: 7 },
       minW: 4,
       minH: 4,
       content: (
@@ -147,7 +149,7 @@ export default function DashboardPage() {
       id: 'policies-by-type',
       title: 'Policies by type',
       disablePadding: true,
-      defaultLayout: { x: 0, y: 8, w: 12, h: 6 },
+      defaultLayout: { x: 0, y: 9, w: 12, h: 7 },
       minW: 4,
       minH: 4,
       content: (

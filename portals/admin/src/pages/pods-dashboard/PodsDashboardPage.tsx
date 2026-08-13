@@ -38,6 +38,8 @@ export default function PodsDashboardPage() {
       {
         id: 'tiles',
         bare: true,
+        // Ten tiles wrap with the viewport — a fixed row count cuts them off.
+        fitContent: true,
         defaultLayout: { x: 0, y: 0, w: 12, h: 3 },
         minH: 2,
         content: (
@@ -61,9 +63,11 @@ export default function PodsDashboardPage() {
       {
         id: 'ratings',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 0, y: 8, w: 4, h: 6 },
         minW: 3,
-        minH: 4,
+        // minH floors the measured height — keep it low or empty states pin a void.
+        minH: 2,
         content: (
           <PodRatingsCard
             aspects={board?.ratings?.aspects ?? []}
@@ -75,9 +79,10 @@ export default function PodsDashboardPage() {
       {
         id: 'best-rated',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 4, y: 8, w: 4, h: 6 },
         minW: 3,
-        minH: 4,
+        minH: 2,
         content: (
           <PodListCard
             title="Best rated"
@@ -91,9 +96,10 @@ export default function PodsDashboardPage() {
       {
         id: 'needs-attention',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 8, y: 8, w: 4, h: 6 },
         minW: 3,
-        minH: 4,
+        minH: 2,
         content: (
           <PodListCard
             title="Needs attention"
@@ -107,9 +113,10 @@ export default function PodsDashboardPage() {
       {
         id: 'starting-next',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 0, y: 14, w: 12, h: 6 },
         minW: 4,
-        minH: 4,
+        minH: 2,
         content: (
           <PodListCard
             title="Starting next"

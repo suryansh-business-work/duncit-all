@@ -102,6 +102,8 @@ export default function WelcomePage() {
     {
       id: 'at-a-glance',
       title: 'At a glance',
+      // A single chip row under the header — h3 is mostly empty space.
+      fitContent: true,
       defaultLayout: { x: 0, y: 4, w: 12, h: 3 },
       minW: 4,
       minH: 2,

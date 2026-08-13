@@ -114,6 +114,8 @@ export default function DashboardPage() {
     {
       id: 'kpis',
       bare: true,
+      // The KPI grid wraps to two rows below md — fixed h cuts it there.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
       minH: 2,
       content: <DashboardKpis kpis={kpis} />,
@@ -173,9 +175,12 @@ export default function DashboardPage() {
     {
       id: 'account-summary',
       bare: true,
-      defaultLayout: { x: 0, y: 16, w: 12, h: 4 },
+      // The card does not stretch, so an oversized slot shows as a void.
+      fitContent: true,
+      defaultLayout: { x: 0, y: 16, w: 12, h: 2 },
       minW: 4,
-      minH: 3,
+      // minH floors the MEASURED height too — 3 would pin the void back.
+      minH: 2,
       content: <AccountSummaryCard user={me} />,
     },
   ];

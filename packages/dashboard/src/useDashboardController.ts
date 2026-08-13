@@ -55,18 +55,31 @@ export function useDashboardController(
 
   // The page rebuilds `widgets` on every render (their content holds live query
   // data), so the layout is keyed off the widget SET, not the array identity.
+  // `fitContent` is part of the key: GridStack reads it from the DOM only at
+  // init, so toggling it must rebuild the grid.
   const widgetsRef = useRef(widgets);
   widgetsRef.current = widgets;
-  const widgetsKey = widgets.map((widget) => widget.id).join('|');
+  const widgetsKey = widgets
+    .map((widget) => (widget.fitContent ? `${widget.id}!` : widget.id))
+    .join('|');
 
   const layout = useMemo(
     () => (ready ? resolveLayout(widgetsRef.current, saved) : null),
     [ready, widgetsKey, saved]
   );
 
-  const handleChange = useCallback((items: DashboardLayoutItem[]) => {
-    setDirty(!layoutsEqual(items, baselineRef.current));
-  }, []);
+  const autoHeightIds = useMemo(
+    () => new Set(widgetsRef.current.filter((widget) => widget.fitContent).map((w) => w.id)),
+    [widgetsKey]
+  );
+
+  // Auto-measured heights are not user edits, so they never make Save light up.
+  const handleChange = useCallback(
+    (items: DashboardLayoutItem[]) => {
+      setDirty(!layoutsEqual(items, baselineRef.current, autoHeightIds));
+    },
+    [autoHeightIds]
+  );
 
   const grid = useGridStack({
     containerRef,
@@ -74,6 +87,7 @@ export function useDashboardController(
     editing,
     widgetsKey,
     cellHeight,
+    autoHeightIds,
     onChange: handleChange,
   });
 

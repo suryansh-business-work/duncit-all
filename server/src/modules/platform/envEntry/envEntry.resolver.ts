@@ -22,6 +22,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   SLACK: 'Slack',
   AISENSY: 'AiSensy (WhatsApp)',
   TURN: 'TURN relay (staff calls)',
+  GITHUB: 'GitHub (app builds)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

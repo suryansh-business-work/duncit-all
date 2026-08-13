@@ -4,6 +4,7 @@ import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   aisensyConnection,
+  githubConnection,
   razorpayConnection,
   shiprocketConnection,
   slackConnection,
@@ -193,6 +194,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   SHIPROCKET: shiprocketConnection,
   SLACK: slackConnection,
   AISENSY: (str) => aisensyConnection(str),
+  GITHUB: githubConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

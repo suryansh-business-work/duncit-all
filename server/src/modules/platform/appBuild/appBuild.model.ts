@@ -1,9 +1,31 @@
 import { Schema, model, type Document } from 'mongoose';
 
 export type AppBuildPlatform = 'ANDROID' | 'IOS';
-export type AppBuildStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
+/**
+ * QUEUED is the portal's doing: a build started from Tech exists as a row
+ * BEFORE GitHub has a runner for it, because the dispatch REST call answers
+ * 204 with no run id and the operator still needs to see that their click
+ * landed. CI moves it to RUNNING with the run url attached.
+ */
+export type AppBuildStatus = 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED';
 
 export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
+
+/** Which stack the built app talks to — NOT where this row is recorded. */
+export type AppBuildEnv = 'PRODUCTION' | 'STAGING';
+
+/** What started the build. */
+export type AppBuildTrigger = 'PUSH' | 'PORTAL';
+
+/**
+ * One stage of a run, stamped when the runner entered it. The workflow reports
+ * these as it goes, so a build that is still running can say what it is doing
+ * rather than only how long it has been doing something.
+ */
+export interface IAppBuildStage {
+  name: string;
+  at: Date;
+}
 
 export interface IAppBuildCommit {
   hash: string;
@@ -79,6 +101,32 @@ export interface IAppBuild extends Document {
   /** Who the CI authenticated as when it reported the build. */
   reported_by: string;
   /**
+   * Correlates the row the portal created at dispatch with the reports the
+   * runner sends later. It travels as a workflow input, so it is the only join
+   * key available BEFORE a run id exists.
+   */
+  dispatch_id: string;
+  /** PUSH for a merge to main, PORTAL for a Create build in Tech. */
+  trigger_source: AppBuildTrigger;
+  /**
+   * The person who started it: the portal account for PORTAL builds, the
+   * GitHub actor who merged for PUSH builds. "Who ran this" is otherwise only
+   * answerable from a GitHub run page that expires.
+   */
+  triggered_by: string;
+  /** Which server + database the built app points at. */
+  app_env: AppBuildEnv;
+  /**
+   * What the operator asked for. Kept apart from `artifacts` (what was
+   * actually produced) so an APK that was requested and never appeared is a
+   * visible gap rather than an absence.
+   */
+  requested_artifacts: AppBuildArtifactKind[];
+  /** The stage the runner is in now — the headline while it is still running. */
+  stage: string;
+  /** Every stage it has entered, in order. */
+  stages: IAppBuildStage[];
+  /**
    * What happened to the Slack announcement. Slack is a NOTIFICATION, not the
    * store of record — the row is. An unposted build stays visible here.
    */
@@ -110,12 +158,27 @@ const appBuildArtifactSchema = new Schema<IAppBuildArtifact>(
   { _id: false }
 );
 
+const appBuildStageSchema = new Schema<IAppBuildStage>(
+  {
+    name: { type: String, required: true, trim: true },
+    at: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
 const appBuildSchema = new Schema<IAppBuild>(
   {
     build_no: { type: String, required: true, unique: true, index: true },
     platform: { type: String, enum: ['ANDROID', 'IOS'], required: true, index: true },
-    status: { type: String, enum: ['RUNNING', 'SUCCESS', 'FAILED'], default: 'SUCCESS', index: true },
-    version: { type: String, required: true, trim: true, index: true },
+    status: {
+      type: String,
+      enum: ['QUEUED', 'RUNNING', 'SUCCESS', 'FAILED'],
+      default: 'SUCCESS',
+      index: true,
+    },
+    // Empty until the runner reads app.json: a build queued from the portal is
+    // a real row before anything has checked out the branch it will build.
+    version: { type: String, default: '', trim: true, index: true },
     artifacts: { type: [appBuildArtifactSchema], default: [] },
     build_name: { type: String, default: '' },
     artifact_url: { type: String, default: '' },
@@ -133,6 +196,13 @@ const appBuildSchema = new Schema<IAppBuild>(
     workflow_run_url: { type: String, default: '' },
     duration_seconds: { type: Number, default: null },
     reported_by: { type: String, default: '' },
+    dispatch_id: { type: String, default: '' },
+    trigger_source: { type: String, enum: ['PUSH', 'PORTAL'], default: 'PUSH', index: true },
+    triggered_by: { type: String, default: '' },
+    app_env: { type: String, enum: ['PRODUCTION', 'STAGING'], default: 'PRODUCTION', index: true },
+    requested_artifacts: { type: [String], default: [] },
+    stage: { type: String, default: '' },
+    stages: { type: [appBuildStageSchema], default: [] },
     slack_channel: { type: String, default: null },
     slack_ts: { type: String, default: null },
     slack_error: { type: String, default: null },
@@ -148,6 +218,12 @@ appBuildSchema.index({ platform: 1, created_at: -1 });
 // hand-made report and on every row written before builds reported their
 // start, and a unique index would let only one of those exist.
 appBuildSchema.index({ platform: 1, workflow_run_id: 1 });
+
+// How a portal-dispatched row finds the reports of the run it started. Checked
+// BEFORE workflow_run_id, because the row exists before the run does. Sparse
+// and non-unique for the same reason as the index above: dispatch_id is '' on
+// every push-triggered and pre-existing row.
+appBuildSchema.index({ dispatch_id: 1 }, { sparse: true });
 
 export const AppBuildModel = model<IAppBuild>('AppBuild', appBuildSchema);
 

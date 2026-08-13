@@ -135,6 +135,20 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'https://apis.aisensy.com',
     },
   ],
+  // Lets the Tech portal start a build instead of only recording one CI already
+  // started. Dispatching a workflow is a WRITE on Actions, so this token is the
+  // one credential here that can change what runs in the repo — keep it on a
+  // machine account with access to this repository and nothing else.
+  GITHUB: [
+    {
+      name: 'token',
+      label: 'Access Token',
+      secret: true,
+      hint: 'Fine-grained PAT with Actions: Read and write (classic: repo + workflow)',
+    },
+    { name: 'owner', label: 'Repository Owner', hint: 'The user or org, e.g. suryansh-business-work' },
+    { name: 'repo', label: 'Repository Name', hint: 'e.g. duncit-all' },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -153,6 +167,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   SLACK: 'https://api.slack.com/apps',
   AISENSY: 'https://app.aisensy.com/',
   TURN: 'https://github.com/coturn/coturn',
+  GITHUB: 'https://github.com/settings/personal-access-tokens',
 };
 
 const secretSet = new Set<string>();
@@ -215,6 +230,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
   AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },
   AISENSY_PROJECT_API_BASE_URL: { category: 'AISENSY', field: 'project_api_base_url' },
+  GITHUB_TOKEN: { category: 'GITHUB', field: 'token' },
+  GITHUB_OWNER: { category: 'GITHUB', field: 'owner' },
+  GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
 };
 
 export function maskSecret(value: string) {

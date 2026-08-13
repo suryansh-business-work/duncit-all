@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from '@duncit/shell';
 import { useConfirm, notifySuccess, notifyError } from '@duncit/dialogs';
 import { useApolloTableFetch, type TableFetch } from '@duncit/table';
 import AppBuildsTable from './AppBuildsTable';
 import BuildDetailsDialog from './BuildDetailsDialog';
+import { CreateBuildDialog } from './create-build';
 import {
   APP_BUILDS_TABLE,
   DELETE_APP_BUILD,
+  isLive,
   isStaleRunning,
   type AppBuildPlatform,
   type AppBuildRow,
@@ -37,6 +40,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const confirm = useConfirm();
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<AppBuildRow | null>(null);
+  const [creating, setCreating] = useState(false);
   const [removeBuild] = useMutation(DELETE_APP_BUILD);
   const [hasLiveBuild, setHasLiveBuild] = useState(false);
   const baseFetch = useApolloTableFetch<AppBuildRow>(
@@ -53,7 +57,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const fetchRows = useCallback<TableFetch<AppBuildRow>>(
     async (query) => {
       const page = await baseFetch(query);
-      setHasLiveBuild(page.rows.some((r) => r.status === 'RUNNING' && !isStaleRunning(r)));
+      setHasLiveBuild(page.rows.some((r) => isLive(r) && !isStaleRunning(r)));
       return page;
     },
     [baseFetch]
@@ -99,13 +103,18 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
 
   return (
     <Box>
-      <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" fontWeight={700}>
-          {title}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {subtitle}
-        </Typography>
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Stack>
+          <Typography variant="h5" fontWeight={700}>
+            {title}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {subtitle}
+          </Typography>
+        </Stack>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreating(true)}>
+          {t('tech.appBuilds.triggerAction')}
+        </Button>
       </Stack>
       <AppBuildsTable
         platform={platform}
@@ -115,6 +124,12 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
         onDelete={onDelete}
       />
       <BuildDetailsDialog build={selected} onClose={closeRow} />
+      <CreateBuildDialog
+        open={creating}
+        platform={platform}
+        onClose={() => setCreating(false)}
+        onQueued={() => refetchRef.current?.()}
+      />
     </Box>
   );
 }

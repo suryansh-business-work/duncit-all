@@ -11,11 +11,41 @@ export const appBuildTypeDefs = gql`
   finishes, so a build is visible while it is being made rather than only after.
   A row can sit RUNNING forever if the runner is cancelled or killed mid-job —
   nothing is left to report it — so treat an old RUNNING row as unknown, not live.
+
+  QUEUED belongs to builds started from the Tech portal. Dispatching a workflow
+  answers with no run id, so the row is written first and the runner claims it
+  by dispatch_id. A QUEUED row that never becomes RUNNING means GitHub accepted
+  the dispatch and never scheduled it.
   """
   enum AppBuildStatus {
+    QUEUED
     RUNNING
     SUCCESS
     FAILED
+  }
+
+  "Which server and database the built app talks to."
+  enum AppBuildEnv {
+    PRODUCTION
+    STAGING
+  }
+
+  "What started a build."
+  enum AppBuildTrigger {
+    "A merge to main."
+    PUSH
+    "Someone pressed Create build in the Tech portal."
+    PORTAL
+  }
+
+  """
+  A stage the runner entered, stamped when it got there. Reported as the build
+  goes, so a running build can say what it is doing rather than only how long it
+  has been doing it.
+  """
+  type AppBuildStage {
+    name: String!
+    at: String!
   }
 
   type AppBuildCommit {
@@ -102,6 +132,30 @@ export const appBuildTypeDefs = gql`
     duration_seconds: Int
     "Who the CI authenticated as when it reported the build."
     reported_by: String!
+    """
+    Correlates the row the portal wrote at dispatch with the reports the runner
+    sends afterwards. Empty on push-triggered builds, which have a run id from
+    their first report and need no other join key.
+    """
+    dispatch_id: String!
+    trigger_source: AppBuildTrigger!
+    """
+    Who started it — the portal account that pressed Create build, or the GitHub
+    actor whose merge triggered it.
+    """
+    triggered_by: String!
+    "Which server and database this build's app points at."
+    app_env: AppBuildEnv!
+    """
+    What was asked for, as opposed to the artifacts list, which is what was
+    actually produced.
+    An APK that was requested and never appeared is a gap you can see.
+    """
+    requested_artifacts: [AppBuildArtifactKind!]!
+    "What the runner is doing now. Empty once the build is over."
+    stage: String!
+    "Every stage this run has entered, in order."
+    stages: [AppBuildStage!]!
     slack_channel: String
     slack_ts: String
     "Why the Slack post did not happen, when it did not."
@@ -183,6 +237,20 @@ export const appBuildTypeDefs = gql`
     status: AppBuildStatus
     version: String!
     """
+    The dispatch this run is fulfilling, when the portal started it. Claims the
+    QUEUED row the portal already wrote instead of creating a second one, and
+    carries the operator's env and artifact choices onto the reports.
+    """
+    dispatch_id: String
+    """
+    What the runner is doing right now, e.g. "Compiling with Gradle". Sent with
+    a RUNNING report as the build moves through its stages; each distinct value
+    is appended to the build's stage list.
+    """
+    stage: String
+    "The GitHub actor whose merge triggered a push build."
+    triggered_by: String
+    """
     Everything the build produced. When present this is the whole truth and the
     singular artifact_* fields below are ignored; those remain only so a reporter
     talking to a server that predates this list still lands its primary artifact.
@@ -211,6 +279,39 @@ export const appBuildTypeDefs = gql`
     duration_seconds: Int
   }
 
+  """
+  A build asked for from the Tech portal, rather than one that happened because
+  something was merged.
+  """
+  input TriggerAppBuildInput {
+    platform: AppBuildPlatform!
+    """
+    Which server and database the built app talks to. This is baked into the
+    binary at compile time and cannot be changed afterwards, which is the whole
+    reason the choice is here.
+    """
+    app_env: AppBuildEnv!
+    """
+    Which artifacts to produce. Android accepts APK, AAB or both; iOS accepts
+    only IPA. Asking for fewer is faster — an APK-only Android build skips the
+    bundle task entirely.
+    """
+    artifacts: [AppBuildArtifactKind!]!
+    "Branch or tag to build. Defaults to main for PRODUCTION, staging for STAGING."
+    ref: String
+  }
+
+  "Where a dispatched build can be watched while the runner picks it up."
+  type TriggerAppBuildResult {
+    build: AppBuild!
+    """
+    The workflow's run list on GitHub, filtered to this branch. A dispatch
+    answers before a run exists, so this is the only link available until the
+    runner sends its first report and the row gains a real run url.
+    """
+    actions_url: String!
+  }
+
   input UpdateAppBuildSettingsInput {
     "Slack channel ID (e.g. C0123ABCD) Android builds announce to. Empty clears it."
     android_channel: String
@@ -218,10 +319,32 @@ export const appBuildTypeDefs = gql`
     ios_channel: String
   }
 
+  "Whether the portal can start builds, and what it would build from."
+  type AppBuildTriggerConfig {
+    """
+    False when no GitHub token is configured. The Create build button is
+    disabled rather than hidden, so the reason is discoverable.
+    """
+    configured: Boolean!
+    "owner/repo builds are dispatched against. Empty when not configured."
+    repository: String!
+    "Default branch for a PRODUCTION build."
+    production_ref: String!
+    "Default branch for a STAGING build."
+    staging_ref: String!
+    """
+    Where a dispatched build reports back to — this server. A build always
+    records itself in the portal it was started from, whichever stack its app
+    is pointed at.
+    """
+    reports_to: String!
+  }
+
   extend type Query {
     "CI builds of one platform, newest first (Tech portal App Builds tables)."
     appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput): AppBuildTablePage!
     appBuildSettings: AppBuildSettings!
+    appBuildTriggerConfig: AppBuildTriggerConfig!
   }
 
   extend type Mutation {
@@ -236,6 +359,19 @@ export const appBuildTypeDefs = gql`
     announced every build twice would be ignored within a week.
     """
     reportAppBuild(input: ReportAppBuildInput!): AppBuild!
+    """
+    Start a build from the portal. Tech/Super admin only.
+
+    Writes a QUEUED row, then dispatches the platform's workflow with the
+    operator's choices as inputs. The row is written FIRST and deleted again if
+    GitHub refuses the dispatch, so a build the operator can see always
+    corresponds to a run GitHub accepted.
+
+    The run reports back to THIS server whatever env its app is pointed at, so
+    a build started here is visible here. That also means a staging portal needs
+    its own CI token in the repo secrets.
+    """
+    triggerAppBuild(input: TriggerAppBuildInput!): TriggerAppBuildResult!
     "Authorise one build-artifact upload through the server. Tech/Super admin only."
     appBuildUploadAuth: AppBuildUploadAuth!
     """

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
@@ -13,11 +14,20 @@ import {
   AppBuildModel,
   nextBuildNo,
   type AppBuildArtifactKind,
+  type AppBuildEnv,
   type AppBuildPlatform,
   type AppBuildStatus,
   type IAppBuild,
   type IAppBuildArtifact,
+  type IAppBuildStage,
 } from './appBuild.model';
+import {
+  dispatchWorkflow,
+  githubRepoConfig,
+  requireGithubRepoConfig,
+  workflowRunsUrl,
+  WORKFLOW_FILE,
+} from './github.gateway';
 
 /** Where CI build artifacts land on ImageKit (release-notify's folder). */
 export const APP_BUILDS_FOLDER = '/app-builds';
@@ -32,6 +42,22 @@ const PLATFORM_LABEL: Record<AppBuildPlatform, string> = {
   IOS: 'iOS',
 };
 
+/**
+ * The branch each env is built from by default — the same mapping the deploy
+ * workflow uses, so a staging build is made from the code that is running on
+ * staging rather than from whatever main happens to hold.
+ */
+const DEFAULT_REF: Record<AppBuildEnv, string> = {
+  PRODUCTION: 'main',
+  STAGING: 'staging',
+};
+
+/** What each platform is able to produce. iOS has exactly one answer. */
+const ALLOWED_ARTIFACTS: Record<AppBuildPlatform, AppBuildArtifactKind[]> = {
+  ANDROID: ['APK', 'AAB'],
+  IOS: ['IPA'],
+};
+
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
 const optionalStr = (v: string | null | undefined): string => String(v ?? '').trim();
@@ -41,7 +67,15 @@ const optionalNum = (v: unknown): number | null => {
 };
 
 const APP_BUILD_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['build_no', 'version', 'build_name', 'commit_sha', 'branch', 'commits.subject'],
+  searchFields: [
+    'build_no',
+    'version',
+    'build_name',
+    'commit_sha',
+    'branch',
+    'commits.subject',
+    'triggered_by',
+  ],
   // Every column the table renders sortable must be listed here — resolveSort
   // silently ignores anything else, so a gap makes the header arrow lie.
   sortFields: {
@@ -52,12 +86,15 @@ const APP_BUILD_TABLE_CONFIG: TableEntityConfig = {
     duration_seconds: 'duration_seconds',
     branch: 'branch',
     reported_by: 'reported_by',
+    app_env: 'app_env',
+    triggered_by: 'triggered_by',
     created_at: 'created_at',
   },
   filterFields: {
     status: { type: 'enum' },
     version: { type: 'string' },
     branch: { type: 'string' },
+    app_env: { type: 'enum' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },
@@ -125,6 +162,13 @@ const pub = (doc: IAppBuild) => ({
   workflow_run_url: doc.workflow_run_url,
   duration_seconds: doc.duration_seconds,
   reported_by: doc.reported_by,
+  dispatch_id: doc.dispatch_id ?? '',
+  trigger_source: doc.trigger_source ?? 'PUSH',
+  triggered_by: doc.triggered_by ?? '',
+  app_env: doc.app_env ?? 'PRODUCTION',
+  requested_artifacts: doc.requested_artifacts ?? [],
+  stage: doc.stage ?? '',
+  stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at?.toISOString() ?? '' })),
   slack_channel: doc.slack_channel,
   slack_ts: doc.slack_ts,
   slack_error: doc.slack_error,
@@ -153,7 +197,7 @@ function headline(build: IAppBuild): string {
   return `:package: New ${label} build v${build.version} (${build.build_no})`;
 }
 
-const STATUSES = new Set(['RUNNING', 'SUCCESS', 'FAILED']);
+const STATUSES = new Set(['QUEUED', 'RUNNING', 'SUCCESS', 'FAILED']);
 
 /** Anything unrecognised means a reporter we do not control — call it SUCCESS,
  * the value this input has defaulted to since the first build. */
@@ -325,40 +369,58 @@ function inputArtifacts(input: any): IAppBuildArtifact[] {
 }
 
 /**
- * The row this report belongs to: the one this workflow run already opened, or
- * a brand new one.
- *
- * A workflow reports TWICE — RUNNING the moment it starts, then its outcome —
- * and both describe one build, so the second overwrites the first instead of
- * doubling the table. `workflow_run_id` is what joins them.
+ * The artifacts a trigger may ask for, refusing anything the platform cannot
+ * make. Asking Android for an IPA is a caller bug, and silently dropping it
+ * would produce a build that quietly ignores half its request.
  */
-async function upsertBuild(
-  input: any,
-  status: AppBuildStatus,
-  version: string,
-  reportedBy: string
-): Promise<IAppBuild> {
-  const runId = optionalStr(input.workflow_run_id);
+function requestedArtifacts(platform: AppBuildPlatform, asked: unknown): AppBuildArtifactKind[] {
+  const allowed = ALLOWED_ARTIFACTS[platform];
+  const list = Array.isArray(asked) ? (asked as AppBuildArtifactKind[]) : [];
+  // De-duplicated, and kept in the platform's own order so the primary artifact
+  // (the APK, the IPA) is always first however the caller listed them.
+  const chosen = allowed.filter((kind) => list.includes(kind));
+  const unsupported = list.filter((kind) => !allowed.includes(kind));
+  if (unsupported.length > 0) {
+    throw badInput(`${PLATFORM_LABEL[platform]} cannot build ${unsupported.join(', ')}`);
+  }
+  if (chosen.length === 0) throw badInput('Pick at least one artifact to build');
+  return chosen;
+}
+
+/**
+ * The produced-files half of a report, or nothing at all.
+ *
+ * A progress report says only where the build has got to. Letting it write the
+ * empty artifact list it never sent would clear a file the build had already
+ * stored, so an absent `artifacts` means "unchanged" rather than "none".
+ */
+function artifactFields(input: any) {
+  if (input.artifacts === undefined && input.build_name === undefined) return {};
   const artifacts = inputArtifacts(input);
   // The FIRST file is the primary one — the APK on Android, the IPA on iOS —
   // whether or not it stored. The singular columns mirror it so every reader
   // written before builds made two files still sees the one that matters.
   const primary = artifacts[0] ?? null;
-  const fields = {
-    platform: input.platform,
-    status,
-    version,
+  return {
     artifacts,
     build_name: primary?.name ?? '',
     artifact_url: primary?.url ?? '',
     artifact_file_id: primary?.file_id ?? '',
     artifact_error: primary?.error ?? '',
-    // Only a failure carries a reason. Keeping one on a row that later
-    // succeeded would leave a green build explaining how it broke.
-    error_message: status === 'FAILED' ? optionalStr(input.error_message) : '',
     size_mb: primary?.size_mb ?? null,
-    commit_sha: optionalStr(input.commit_sha),
-    branch: optionalStr(input.branch),
+  };
+}
+
+/**
+ * The changelog half, on the same "absent means unchanged" rule.
+ *
+ * The start report establishes what the build is shipping; the seven progress
+ * reports that follow carry none of it, and overwriting with their silence
+ * would blank the Changes column for the whole build.
+ */
+function changelogFields(input: any) {
+  if (input.commits === undefined) return {};
+  return {
     commits: (input.commits ?? [])
       .map((c: any) => ({
         hash: optionalStr(c.hash),
@@ -369,18 +431,91 @@ async function upsertBuild(
     files_changed: optionalNum(input.files_changed),
     insertions: optionalNum(input.insertions),
     deletions: optionalNum(input.deletions),
+  };
+}
+
+/**
+ * The row a report belongs to, if one is already open for it.
+ *
+ * Two join keys, checked in this order because they become available in this
+ * order. A portal build has a row BEFORE it has a run — the dispatch answers
+ * with no run id — so `dispatch_id` is the only thing that can claim it on the
+ * first report. Everything after that (and every push build) joins on the run.
+ */
+async function openRowFor(input: any, runId: string): Promise<IAppBuild | null> {
+  const dispatchId = optionalStr(input.dispatch_id);
+  if (dispatchId) {
+    const claimed = await AppBuildModel.findOne({ dispatch_id: dispatchId });
+    if (claimed) return claimed;
+  }
+  // A hand-made report has no run id, and every one of those would otherwise
+  // look like the same run and overwrite the last.
+  if (!runId) return null;
+  return AppBuildModel.findOne({ platform: input.platform, workflow_run_id: runId });
+}
+
+/**
+ * The stage list after this report. A stage is appended only when it CHANGES,
+ * so the repeated RUNNING reports a long stage produces do not fill the
+ * timeline with the same line over and over.
+ */
+function nextStages(existing: IAppBuild | null, stage: string): { stages?: IAppBuildStage[] } {
+  if (!stage) return {};
+  const current = existing?.stages ?? [];
+  if (current.at(-1)?.name === stage) return {};
+  return { stages: [...current, { name: stage, at: new Date() }] };
+}
+
+/**
+ * The row this report belongs to: the one this build already opened, or a
+ * brand new one.
+ *
+ * A workflow reports MANY times — QUEUED from the portal, RUNNING at the start
+ * and at each stage, then its outcome — and all of them describe one build, so
+ * later reports overwrite earlier ones instead of multiplying the table.
+ */
+async function upsertBuild(
+  input: any,
+  status: AppBuildStatus,
+  version: string,
+  reportedBy: string
+): Promise<IAppBuild> {
+  const runId = optionalStr(input.workflow_run_id);
+  const existing = await openRowFor(input, runId);
+  const stage = optionalStr(input.stage);
+  // The runner is the authority on progress while it is running, and on nothing
+  // once it has stopped: a finished build is not "Compiling with Gradle".
+  const liveStage = status === 'QUEUED' || status === 'RUNNING' ? stage : '';
+  const fields = {
+    platform: input.platform,
+    status,
+    version,
+    stage: liveStage,
+    ...nextStages(existing, stage),
+    // Who asked for this build and what they asked for is known at DISPATCH and
+    // nowhere else. A report that does not carry it must not blank it — only a
+    // push build, which genuinely has a GitHub actor to name, fills it in here.
+    ...(optionalStr(input.triggered_by) && !existing?.triggered_by
+      ? { triggered_by: optionalStr(input.triggered_by) }
+      : {}),
+    ...artifactFields(input),
+    ...changelogFields(input),
+    // Only a failure carries a reason. Keeping one on a row that later
+    // succeeded would leave a green build explaining how it broke.
+    error_message: status === 'FAILED' ? optionalStr(input.error_message) : '',
+    commit_sha: optionalStr(input.commit_sha),
+    branch: optionalStr(input.branch),
     workflow_run_id: runId,
     workflow_run_url: optionalStr(input.workflow_run_url),
     duration_seconds: optionalNum(input.duration_seconds),
     reported_by: reportedBy,
   };
-  // A hand-made report has no run id, and every one of those would otherwise
-  // look like the same run and overwrite the last.
-  const existing = runId
-    ? await AppBuildModel.findOne({ platform: input.platform, workflow_run_id: runId })
-    : null;
   if (!existing) {
-    return AppBuildModel.create({ build_no: await nextBuildNo(), ...fields });
+    return AppBuildModel.create({
+      build_no: await nextBuildNo(),
+      dispatch_id: optionalStr(input.dispatch_id),
+      ...fields,
+    });
   }
   // created_at deliberately stays at the RUNNING report: for a build, "when"
   // means when it started, not when it happened to finish.
@@ -476,6 +611,86 @@ export const appBuildService = {
     await build.deleteOne();
     logs.server.warn('appBuild', 'remove', { build_no: build.build_no, artifacts: files.join(',') });
     return true;
+  },
+
+  /** What the Create build dialog needs to know before it can offer anything. */
+  async triggerConfig() {
+    const [cfg, { serverUrl }] = await Promise.all([githubRepoConfig(), getUrlConfigs()]);
+    return {
+      configured: cfg !== null,
+      repository: cfg ? `${cfg.owner}/${cfg.repo}` : '',
+      production_ref: DEFAULT_REF.PRODUCTION,
+      staging_ref: DEFAULT_REF.STAGING,
+      reports_to: serverUrl.replace(/\/$/, ''),
+    };
+  },
+
+  /**
+   * Start a build from the portal.
+   *
+   * Order matters and is the opposite of the obvious one: the row is written
+   * BEFORE the dispatch and deleted again if GitHub refuses. Dispatching first
+   * would leave a run nothing in the table corresponds to — invisible until it
+   * reports, with no way for the operator to know their click did anything —
+   * and the row is what carries the dispatch_id the run will claim itself by.
+   */
+  async trigger(input: any, user: AuthUser) {
+    const platform: AppBuildPlatform = input.platform;
+    const appEnv: AppBuildEnv = input.app_env;
+    const artifacts = requestedArtifacts(platform, input.artifacts);
+    const ref = optionalStr(input.ref) || DEFAULT_REF[appEnv];
+    const cfg = await requireGithubRepoConfig();
+
+    const { serverUrl } = await getUrlConfigs();
+    const dispatchId = randomUUID();
+    const build = await AppBuildModel.create({
+      build_no: await nextBuildNo(),
+      platform,
+      status: 'QUEUED',
+      dispatch_id: dispatchId,
+      trigger_source: 'PORTAL',
+      triggered_by: user.email ?? user.id,
+      app_env: appEnv,
+      requested_artifacts: artifacts,
+      branch: ref,
+      stage: 'Waiting for a runner',
+      stages: [{ name: 'Queued', at: new Date() }],
+    });
+
+    try {
+      // Every input is a STRING: workflow_dispatch has no array or enum type on
+      // the wire, so the artifact list travels comma-separated and the workflow
+      // splits it. app_env is lowercased to match the workflow's `choice`
+      // options exactly — GitHub validates a dispatched choice against that
+      // list and rejects anything else, and our enum is uppercase.
+      const inputs: Record<string, string> = {
+        app_env: appEnv.toLowerCase(),
+        dispatch_id: dispatchId,
+        report_url: `${serverUrl.replace(/\/$/, '')}/graphql`,
+      };
+      // Only Android declares an artifacts input, because only Android has a
+      // choice to make. The dispatch API refuses any input a workflow does not
+      // declare — 422 "Unexpected inputs provided" — so sending it to iOS
+      // anyway would fail every iOS build before it started.
+      if (platform === 'ANDROID') inputs.artifacts = artifacts.join(',');
+      await dispatchWorkflow(cfg, WORKFLOW_FILE[platform], ref, inputs);
+    } catch (err) {
+      // The build never started, so its row must not survive to look queued
+      // forever. Removing it also returns the build_no's slot to nothing —
+      // the counter does not rewind, which is intended: ids are never reused.
+      await build.deleteOne();
+      throw err;
+    }
+
+    logs.server.warn('appBuild', 'trigger', {
+      build_no: build.build_no,
+      platform,
+      app_env: appEnv,
+      ref,
+      artifacts: artifacts.join(','),
+      triggered_by: build.triggered_by,
+    });
+    return { build: pub(build), actions_url: workflowRunsUrl(cfg, WORKFLOW_FILE[platform], ref) };
   },
 
   async settings() {

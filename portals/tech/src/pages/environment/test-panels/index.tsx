@@ -26,12 +26,15 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     case 'OPENAI':
     case 'GEMINI':
       return <AiTestPanel entry={entry} />;
-    // One panel, four providers: the server decides what each test does, so
-    // this list only says which categories have one (see envEntry.connection.ts).
+    // One panel, five providers: the server decides what each test does, so
+    // this list only says which categories have one. It must stay in step with
+    // CONNECTION_CHECKS in envEntry.connection.ts — a category missing here
+    // opens an empty drawer and the probe behind it is never reachable.
     case 'SLACK':
     case 'SHIPROCKET':
     case 'RAZORPAY':
     case 'AISENSY':
+    case 'GITHUB':
       return <ConnectionTestPanel entry={entry} />;
     default:
       return null;

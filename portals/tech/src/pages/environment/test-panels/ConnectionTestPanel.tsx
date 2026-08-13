@@ -20,6 +20,8 @@ const WHAT_IT_DOES: Record<string, string> = {
     'Reads one payment back with this key id and secret. Nothing is created and no money moves.',
   AISENSY:
     'Sends a REAL WhatsApp template message through this campaign. AiSensy keys can make no other call, so this is the only way to prove one works.',
+  GITHUB:
+    'Reads the repository back with this token to prove it is reachable. It cannot prove the token may START a workflow — the only test for that is pressing Create build.',
 };
 
 /** Only AiSensy needs somewhere to send to. */

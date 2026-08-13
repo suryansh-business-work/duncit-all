@@ -326,6 +326,56 @@ export async function aisensyConnection(
   };
 }
 
+// --- GitHub -----------------------------------------------------------------
+
+/**
+ * Proves the token can SEE the repository, which is the half that can actually
+ * be proven. Whether it may start a workflow cannot be — see the note below on
+ * why the permissions GitHub reports here are the wrong ones to judge that by.
+ */
+export async function githubConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const owner = str('owner');
+  const repo = str('repo');
+  const slug = `${owner}/${repo}`;
+  if (!str('token') || !owner || !repo) {
+    return { ok: false, message: 'Access token, owner and repository name are all required', details: [] };
+  }
+
+  const res = await fetchJson(`https://api.github.com/repos/${slug}`, {
+    headers: {
+      Authorization: `Bearer ${str('token')}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!res.ok) {
+    // 404 is what GitHub answers for "exists but your token cannot see it", so
+    // it must not be reported as a typo in the repository name.
+    const reason = res.status === 404 ? 'no such repository, or the token cannot see it' : String(res.data.message ?? '');
+    return { ok: false, message: `GitHub rejected the request (HTTP ${res.status}): ${reason}`, details: [] };
+  }
+
+  const details: string[] = [];
+  const remaining = res.header('x-ratelimit-remaining');
+  if (remaining !== null) details.push(`${remaining} API requests left in the current rate-limit window.`);
+
+  // `permissions.push` is CONTENTS write, not Actions write, and the two come
+  // apart on exactly the token this category recommends: a fine-grained PAT
+  // with Actions: Read and write and Metadata: Read reports push=false and
+  // dispatches builds perfectly well. There is no read-only probe for Actions
+  // write — the only honest one would be starting a real build — so reaching
+  // the repository is the pass mark, and the ambiguity is stated rather than
+  // guessed at in either direction.
+  if (res.data.permissions?.push === true) {
+    details.push('The token can write to this repository, so it can start builds.');
+  } else {
+    details.push(
+      'Could not confirm write access from here — GitHub only reports Contents permission on this call, not Actions. If Create build is refused, give the token Actions: Read and write (classic: the repo and workflow scopes).'
+    );
+  }
+  return { ok: true, message: `Connected to ${String(res.data.full_name ?? slug)}`, details };
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -338,6 +388,7 @@ const CONNECTION_CHECKS = {
   SHIPROCKET: shiprocketConnection,
   RAZORPAY: razorpayConnection,
   AISENSY: aisensyConnection,
+  GITHUB: githubConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

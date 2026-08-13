@@ -1,6 +1,7 @@
-# Android APK on every merge to main — built ON THE RUNNER (never the VPS),
-# uploaded to ImageKit and recorded via reportAppBuild, which also announces it
-# on the configured Slack channel (Tech portal → App Builds → Settings).
+# Android APK + AAB on every merge to main, and on demand from Tech → App Builds
+# → Create build. Built ON THE RUNNER (never the VPS), uploaded through the
+# server and recorded via reportAppBuild, which also announces it on the
+# configured Slack channel (Tech portal → App Builds → Settings).
 #
 # The build recipe mirrors app/mobile-app/Dockerfile.android step for step
 # (npm ci → codegen → expo prebuild → SDK 35 + NDK 27 → gradlew assembleRelease),
@@ -8,15 +9,43 @@
 # The APK is signed with the debug keystore prebuild emits — the same internal-
 # distribution artifact local builds ship today (store builds stay on EAS).
 #
+# TWO DIFFERENT SERVERS are in play on a dispatched build and confusing them is
+# the easy mistake: `app_env` chooses what the BUILT APP talks to, and is baked
+# in at compile time; `report_url` chooses where the build RECORDS ITSELF, and
+# is always the portal that started it. A staging-pointed build triggered from
+# production is therefore listed in production.
+#
 # Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
-# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. ImageKit/Slack credentials
-# stay in the Tech portal env entries — the server signs the upload.
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. Add DUNCIT_RELEASE_TOKEN_STAGING
+# as well to let the staging portal start builds — each server signs its own
+# tokens, so production's is not valid there. ImageKit/Slack credentials stay in
+# the Tech portal env entries.
 name: Android Build
 
 on:
   push:
     branches: [main]
+  # The Tech portal dispatches this with every input filled in; a human running
+  # it from the Actions tab gets the same defaults a merge to main would.
   workflow_dispatch:
+    inputs:
+      app_env:
+        description: Which server and database the built app talks to
+        type: choice
+        options: [production, staging]
+        default: production
+      artifacts:
+        description: What to build — APK, AAB, or APK,AAB for both
+        type: string
+        default: APK,AAB
+      dispatch_id:
+        description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
+        type: string
+        default: ''
+      report_url:
+        description: GraphQL endpoint to record the build in. Empty reports to production.
+        type: string
+        default: ''
 
 # Never kill a running build. GitHub still keeps only the NEWEST queued run per
 # group, so a merge landing mid-build can be superseded — the reporter closes
@@ -29,7 +58,16 @@ permissions:
   contents: read
 
 env:
-  EXPO_PUBLIC_API_URL: https://server.duncit.com
+  # Baked into the binary at compile time, which is why it is a build-time
+  # choice and not a setting in the app. A push to main always means production;
+  # only an explicit dispatch can ask for staging.
+  EXPO_PUBLIC_API_URL: >-
+    ${{ inputs.app_env == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
+  # WHERE the build records itself, which is deliberately NOT the same question
+  # as which server its app talks to: a build always reports to the portal that
+  # started it, so a staging-pointed build triggered from production is still
+  # visible in production.
+  REPORT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
   CI: 1
   EXPO_NO_TELEMETRY: 1
   CYPRESS_INSTALL_BINARY: 0
@@ -47,6 +85,20 @@ jobs:
     name: Build & publish APK
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      # Each server signs its own tokens, so a production JWT is not valid on
+      # staging. Picking the secret from where the build reports is what lets a
+      # staging portal start builds at all. The secrets context is unavailable
+      # in workflow-level env, which is why this lives on the job.
+      REPORT_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      REPORT_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      REPORT_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      # A merge to main wants everything; a dispatch builds only what was asked
+      # for, and an APK-only build skips the bundle task entirely.
+      WANTED_ARTIFACTS: ${{ inputs.artifacts || 'APK,AAB' }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     defaults:
       run:
         working-directory: app/mobile-app
@@ -58,6 +110,14 @@ jobs:
 
       - name: Record build start
         run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Normalise the artifact list
+        # Both readers below match on exact commas (",APK,"), so "APK, AAB" —
+        # the natural way to type it when dispatching by hand — would match the
+        # APK and silently drop the AAB. Normalised ONCE here rather than at
+        # each use, and the write lands on every following step.
+        run: |
+          echo "WANTED_ARTIFACTS=$(echo "$WANTED_ARTIFACTS" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v5
         with:
@@ -81,35 +141,73 @@ jobs:
           PLATFORM: ANDROID
           STATUS: RUNNING
           BUILD_STAGE: Starting up
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
 
       - name: 'Stage: install dependencies'
-        run: echo "BUILD_STAGE=Installing JS dependencies" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing JS dependencies
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Install JS dependencies
         run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: 'Stage: codegen'
-        run: echo "BUILD_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Generating GraphQL types
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Generate GraphQL types
         # src/generated is gitignored — regenerated from the server schemas in this checkout.
         run: npm run codegen
 
       - name: 'Stage: prebuild'
-        run: echo "BUILD_STAGE=Generating the native Android project" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Generating the native Android project
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Generate the native android project
         # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform android --no-install --clean
 
       - name: 'Stage: android sdk'
-        run: echo "BUILD_STAGE=Installing the Android SDK and NDK" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing the Android SDK and NDK
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Install Android SDK 35 + NDK 27
         # The runner ships an SDK but not NDK 27.1.12297006, which the
@@ -149,7 +247,16 @@ jobs:
           } >> android/gradle.properties
 
       - name: 'Stage: gradle distribution'
-        run: echo "BUILD_STAGE=Fetching the Gradle distribution" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Fetching the Gradle distribution
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Fetch the Gradle distribution
         # On a cold cache the wrapper downloads gradle-*-bin.zip itself, with ONE
@@ -169,47 +276,100 @@ jobs:
           exit 1
 
       - name: 'Stage: gradle build'
-        run: echo "BUILD_STAGE=Building the release APK and AAB" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Compiling with Gradle
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
-      - name: Build release APK and AAB
-        # Both from ONE gradle invocation: they share the compile, so building
-        # them separately would pay for it twice and could disagree.
-        # assembleRelease -> the APK people sideload; bundleRelease -> the AAB
-        # Play requires.
+      - name: Build the release artifacts
+        # Whatever was asked for, from ONE gradle invocation: the APK and the AAB
+        # share the compile, so building them separately would pay for it twice
+        # and could disagree. assembleRelease -> the APK people sideload;
+        # bundleRelease -> the AAB Play requires.
         working-directory: app/mobile-app/android
-        run: ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+        run: |
+          TASKS=""
+          case ",$WANTED_ARTIFACTS," in *,APK,*) TASKS="$TASKS assembleRelease" ;; esac
+          case ",$WANTED_ARTIFACTS," in *,AAB,*) TASKS="$TASKS bundleRelease" ;; esac
+          if [ -z "$TASKS" ]; then
+            echo "::error::No buildable artifact in '$WANTED_ARTIFACTS' — expected APK, AAB or both"
+            exit 1
+          fi
+          echo "Building:$TASKS"
+          # Unquoted on purpose: $TASKS is a list of gradle tasks, not one word.
+          # shellcheck disable=SC2086
+          ./gradlew $TASKS --no-daemon --stacktrace
 
       - name: 'Stage: name the artifacts'
-        run: echo "BUILD_STAGE=Collecting the built artifacts" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Collecting the built artifacts
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Name the artifacts
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           BASE="duncit-android-v${APP_VERSION}-${SHORT_SHA}"
-          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$BASE.apk"
-          cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$BASE.aab"
+          # Copy FIRST, write the env file second. Under `bash -e` a failing cp
+          # inside the heredoc block would abort it after the opening
+          # ARTIFACT_PATHS<<ARTIFACTS_EOF line, leaving the delimiter unclosed —
+          # the runner then dies on "Matching delimiter not found", which
+          # replaces the real error in the log with a confusing one.
+          PATHS=""
+          case ",$WANTED_ARTIFACTS," in *,APK,*)
+            cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$BASE.apk"
+            PATHS="$RUNNER_TEMP/$BASE.apk"
+            ;;
+          esac
+          case ",$WANTED_ARTIFACTS," in *,AAB,*)
+            cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$BASE.aab"
+            PATHS="${PATHS:+$PATHS$'\n'}$RUNNER_TEMP/$BASE.aab"
+            ;;
+          esac
           # Newline-separated, APK FIRST — the reporter treats the first path as
-          # the build's primary artifact.
+          # the build's primary artifact. Only what was actually built is listed.
           {
             echo "ARTIFACT_PATHS<<ARTIFACTS_EOF"
-            echo "$RUNNER_TEMP/$BASE.apk"
-            echo "$RUNNER_TEMP/$BASE.aab"
+            echo "$PATHS"
             echo "ARTIFACTS_EOF"
           } >> "$GITHUB_ENV"
 
       - name: 'Stage: upload and record'
-        run: echo "BUILD_STAGE=Uploading the artifacts and recording the build" >> "$GITHUB_ENV"
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Uploading the artifacts and recording the build
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
 
       - name: Upload the artifacts & record the build
         working-directory: .
         env:
           PLATFORM: ANDROID
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
 
       - name: Record the failure
@@ -225,9 +385,11 @@ jobs:
         env:
           PLATFORM: ANDROID
           STATUS: FAILED
-          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
-          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
           GIT_BEFORE: ${{ github.event.before }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs

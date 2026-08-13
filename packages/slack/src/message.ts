@@ -88,6 +88,46 @@ export const SLACK_CHANNEL_HISTORY_SDL = `
   }
 `;
 
+/**
+ * What the bot token may do, scope by scope.
+ *
+ * Slack reports a token's scopes in a response HEADER, so this is the only way
+ * for any client to know why a call was refused before making it.
+ */
+export const SLACK_PERMISSIONS_SDL = `
+  query SlackPermissions {
+    slackPermissions {
+      configured
+      team
+      scopes_known
+      error
+      app_url
+      docs_url
+      scopes {
+        scope
+        granted
+        required
+        purpose
+      }
+    }
+  }
+`;
+
+/** Add the bot to a public channel — the fix for a not_in_channel refusal. */
+export const JOIN_SLACK_CHANNEL_SDL = `
+  mutation JoinSlackChannel($channel: ID!) {
+    joinSlackChannel(channel: $channel) {
+      id
+      name
+      is_private
+      is_member
+      num_members
+      topic
+      link
+    }
+  }
+`;
+
 /** Authed feedback mutation — any signed-in user; the server stamps identity. */
 export const SUBMIT_APP_FEEDBACK_SDL = `
   mutation SubmitAppFeedback($input: AppFeedbackInput!) {

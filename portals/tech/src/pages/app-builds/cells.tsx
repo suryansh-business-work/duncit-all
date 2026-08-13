@@ -4,6 +4,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {
+  isLive,
   isStaleRunning,
   runningMinutes,
   type AppBuildArtifact,
@@ -11,23 +12,30 @@ import {
   type AppBuildStatus,
 } from './queries';
 
-const STATUS_COLOR: Record<string, 'success' | 'error' | 'info'> = {
+const STATUS_COLOR: Record<string, 'success' | 'error' | 'info' | 'default'> = {
+  QUEUED: 'default',
   RUNNING: 'info',
   SUCCESS: 'success',
   FAILED: 'error',
 };
 
 export type StatusLabels = Record<AppBuildStatus, string> & {
-  /** A RUNNING row too old to still be running — the runner died mid-job. */
+  /** A live row too old to still be live — the runner died, or never started. */
   stale: string;
   /** Takes the whole minutes elapsed, e.g. "Running for 6 min". */
   elapsed: (minutes: string) => string;
 };
 
 export const makeStatusOptions = (labels: StatusLabels) => [
+  { value: 'QUEUED', label: labels.QUEUED },
   { value: 'RUNNING', label: labels.RUNNING },
   { value: 'SUCCESS', label: labels.SUCCESS },
   { value: 'FAILED', label: labels.FAILED },
+];
+
+export const makeEnvOptions = (labels: Record<string, string>) => [
+  { value: 'PRODUCTION', label: labels.PRODUCTION ?? 'PRODUCTION' },
+  { value: 'STAGING', label: labels.STAGING ?? 'STAGING' },
 ];
 
 export const getRowId = (row: AppBuildRow) => row.id;
@@ -37,22 +45,23 @@ export const getRowId = (row: AppBuildRow) => row.id;
  * has been going, so the table answers "is it nearly done?" without anybody
  * opening GitHub.
  */
-const RunningChip = ({ row, labels }: Readonly<{ row: AppBuildRow; labels: StatusLabels }>) => {
+const LiveChip = ({ row, labels }: Readonly<{ row: AppBuildRow; labels: StatusLabels }>) => {
   if (isStaleRunning(row)) {
     return (
       <Tooltip title={labels.stale}>
-        <Chip size="small" variant="outlined" color="warning" label={labels.RUNNING} />
+        <Chip size="small" variant="outlined" color="warning" label={labels[row.status]} />
       </Tooltip>
     );
   }
+  const elapsed = labels.elapsed(String(runningMinutes(row)));
   return (
-    <Tooltip title={labels.elapsed(String(runningMinutes(row)))}>
+    <Tooltip title={row.stage ? `${row.stage} — ${elapsed}` : elapsed}>
       <Chip
         size="small"
         color="info"
         variant="outlined"
         icon={<CircularProgress size={12} thickness={6} color="inherit" />}
-        label={labels.RUNNING}
+        label={labels[row.status]}
       />
     </Tooltip>
   );
@@ -60,7 +69,7 @@ const RunningChip = ({ row, labels }: Readonly<{ row: AppBuildRow; labels: Statu
 
 export const makeRenderStatus = (labels: StatusLabels) => {
   const renderStatus = (row: AppBuildRow) => {
-    if (row.status === 'RUNNING') return <RunningChip row={row} labels={labels} />;
+    if (isLive(row)) return <LiveChip row={row} labels={labels} />;
     return (
       <Tooltip title={row.status === 'FAILED' ? row.error_message : ''}>
         <Chip size="small" label={labels[row.status]} color={STATUS_COLOR[row.status] ?? 'error'} />
@@ -95,6 +104,38 @@ export const renderCommit = (row: AppBuildRow) => {
       )}
     </Box>
   );
+};
+
+/**
+ * Which stack the built app talks to. Staging is called out in colour because
+ * it is baked in at compile time — an installed build cannot be pointed
+ * somewhere else, so handing a tester the wrong one wastes the whole build.
+ */
+export const makeRenderEnv = (labels: Record<string, string>) => {
+  const renderEnv = (row: AppBuildRow) => (
+    <Chip
+      size="small"
+      variant="outlined"
+      color={row.app_env === 'STAGING' ? 'warning' : 'default'}
+      label={labels[row.app_env] ?? row.app_env}
+    />
+  );
+  return renderEnv;
+};
+
+/** Who started it, and whether they pressed a button or merged something. */
+export const makeRenderTriggeredBy = (labels: Record<string, string>) => {
+  const renderTriggeredBy = (row: AppBuildRow) => (
+    <Box>
+      <Typography variant="body2" noWrap title={row.triggered_by}>
+        {row.triggered_by || '—'}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        {labels[row.trigger_source] ?? row.trigger_source}
+      </Typography>
+    </Box>
+  );
+  return renderTriggeredBy;
 };
 
 /** Slack outcome: posted / skipped-with-reason. The row is the record either way. */

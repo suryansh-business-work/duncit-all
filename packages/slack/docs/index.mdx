@@ -19,6 +19,8 @@ exports:
   - 'SLACK_CHANNELS_SDL'
   - 'SLACK_CONFIGURED_SDL'
   - 'SLACK_CHANNEL_HISTORY_SDL'
+  - 'SLACK_PERMISSIONS_SDL'
+  - 'JOIN_SLACK_CHANNEL_SDL'
   - 'header'
   - 'section'
   - 'fields'
@@ -259,8 +261,20 @@ everything else passes through unchanged.
 | `SLACK_CHANNELS_SDL` | `query SlackChannels` → `{ id, name, is_private, is_member, num_members, topic, link }` |
 | `SLACK_CONFIGURED_SDL` | `query SlackConfigured` → `Boolean` |
 | `SLACK_CHANNEL_HISTORY_SDL` | `query SlackChannelHistory($channel: ID!, $limit: Int)` → `{ ts, user_id, user_name, avatar, text, is_bot, reply_count }` |
+| `SLACK_PERMISSIONS_SDL` | `query SlackPermissions` → `{ configured, team, scopes_known, error, app_url, docs_url, scopes { scope, granted, required, purpose } }` |
+| `JOIN_SLACK_CHANNEL_SDL` | `mutation JoinSlackChannel($channel: ID!)` → the joined `SlackChannel` |
 
 Plain strings, not `DocumentNode` — see the next section for why.
+
+### Membership is not permission
+
+The two Slack failures that look like bugs are both neither. A bot needs the right **scope**
+to call `conversations.history` at all, and it separately needs to be a **member** of the
+channel it is asking about — Slack answers `not_in_channel` for the second even when every
+scope is granted. `SLACK_PERMISSIONS_SDL` answers the first (Slack reports a token's scopes
+in a response header, so only the server can read them) and `JOIN_SLACK_CHANNEL_SDL` fixes
+the second for public channels. A **private** channel cannot be joined by any API: someone
+already inside it has to invite the bot.
 
 ## No live preview
 

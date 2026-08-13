@@ -20,6 +20,8 @@ interface UserModeContentProps {
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
   showLeaderboard?: boolean;
+  /** Server `membership` feature flag — the whole section hides without it. */
+  showMembership?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
   onNavigate: (to: string) => void;
@@ -28,7 +30,7 @@ interface UserModeContentProps {
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card, the Manage Account list and — once switched
  * into a partner mode — that role's own menu, ending in Withdrawal. */
-export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
+export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   const percent = profileCompletion(me ?? {});
   const partnerMenus = buildPartnerMenus(roles, mode);
@@ -36,6 +38,16 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [
     { key: 'leaderboard', label: t('mweb.leaderboard.sidebarLabel'), caption: '', icon: 'leaderboard', to: '/leaderboard' },
+  ];
+  const membershipItems: ProfileTile[] = [
+    {
+      key: 'membership',
+      label: t('mweb.membership.sidebarLabel'),
+      caption: '',
+      icon: 'membership',
+      to: '/membership',
+      badge: t('mweb.membership.comingSoon'),
+    },
   ];
   return (
     <>
@@ -50,6 +62,9 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       <ReferralCard onNavigate={onNavigate} />
       {showLeaderboard && (
         <ManageAccountList title={t('mweb.leaderboard.title')} items={leaderboardItems} onNavigate={onNavigate} />
+      )}
+      {showMembership && (
+        <ManageAccountList title={t('mweb.membership.title')} items={membershipItems} onNavigate={onNavigate} />
       )}
       <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans, showTourGuide)} onNavigate={onNavigate} />
       {partnerMenus.map((menu) => (

@@ -28,6 +28,24 @@ function ManageRow({
         <Text flex={1} fontSize={14} fontWeight="700" color="$color">
           {item.label}
         </Text>
+        {/* Outlined rather than filled: the theme has no soft/tint token, and a
+            solid $primary fill would shout louder than the row it labels. */}
+        {item.badge ? (
+          <Text
+            fontSize={10}
+            fontWeight="700"
+            textTransform="uppercase"
+            letterSpacing={0.3}
+            color="$primary"
+            borderWidth={1}
+            borderColor="$primary"
+            borderRadius={999}
+            paddingHorizontal={7}
+            paddingVertical={2}
+          >
+            {item.badge}
+          </Text>
+        ) : null}
         <MaterialIcons name="chevron-right" size={20} color={muted} />
       </XStack>
       {showDivider ? <Separator borderColor="$borderColor" /> : null}

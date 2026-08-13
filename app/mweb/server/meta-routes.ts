@@ -109,6 +109,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/referral', titleKey: 'mweb.meta.referral.title', descriptionKey: 'mweb.meta.referral.description' },
   { pattern: '/duncit-coin', titleKey: 'mweb.meta.coin.title' },
   { pattern: '/leaderboard', titleKey: 'mweb.meta.leaderboard.title' },
+  { pattern: '/membership', titleKey: 'mweb.meta.membership.title', descriptionKey: 'mweb.meta.membership.description' },
   { pattern: '/pod-plans', titleKey: 'mweb.meta.podPlans.title' },
   { pattern: '/pod-history', titleKey: 'mweb.meta.podHistory.title' },
   { pattern: '/pod-history/:membershipId', titleKey: 'mweb.meta.podHistory.title' },

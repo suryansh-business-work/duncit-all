@@ -1,5 +1,5 @@
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
 
 /** One commit that went into a build. */
 export interface ReleaseCommit {
@@ -115,32 +115,23 @@ export async function buildChangelog(
   meta: ChangelogMeta
 ): Promise<Changelog> {
   const fallback = mechanicalChangelog(commits, meta);
-  const apiKey = (await getRuntimeEnvValue('OPENAI_API_KEY')).trim();
-  if (!apiKey || commits.length === 0) return fallback;
+  if (commits.length === 0) return fallback;
 
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')).trim() || 'gpt-4o-mini';
-  const base = ((await getRuntimeEnvValue('OPENAI_BASE_URL')).trim() || 'https://api.openai.com/v1').replace(/\/$/, '');
   const { system, user } = await buildPrompt(commits, meta);
 
   try {
-    const resp = await fetch(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-      }),
+    const res = await openaiChat({
+      task: 'platform.release_notes',
+      detail: meta.version,
+      temperature: 0.4,
+      json: true,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
     });
-    if (!resp.ok) return fallback;
-    const json = (await resp.json()) as { choices?: { message?: { content?: string } }[] };
-    const content = json?.choices?.[0]?.message?.content;
-    if (!content) return fallback;
-    const parsed: unknown = JSON.parse(content);
+    if (!res.ok) return fallback;
+    const parsed: unknown = JSON.parse(res.content);
     return isChangelog(parsed) ? parsed : fallback;
   } catch {
     return fallback;

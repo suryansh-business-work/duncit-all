@@ -32,7 +32,7 @@ export {
 } from '@duncit/breadcrumb';
 export { AppIcon } from './chrome/AppIcon';
 // The apps drawer behind the header's nine dots, and the file manager it opens.
-export { AppsDrawer, SHELL_TOOLS, type ShellTool } from './chrome/AppsDrawer';
+export { AppsDrawer, useShellTools, type ShellTool } from './chrome/AppsDrawer';
 export { FileManagerDialog } from './file-manager';
 export { StaffChatPanel } from './staff-chat';
 export { StaffChatButton } from './staff-chat/StaffChatButton';

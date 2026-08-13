@@ -109,16 +109,62 @@ const HAS_A_NUMBER = {
   ],
 };
 
-async function recipientFilter(audience: WaCampaignAudience, audienceListId?: unknown) {
-  if (audience !== 'AUDIENCE_LIST') return HAS_A_NUMBER;
-  const { audienceListService } = await import('./audienceList.service');
-  const ids = await audienceListService.memberIds(String(audienceListId ?? ''));
-  return { ...HAS_A_NUMBER, _id: { $in: ids } };
+/** Who a send resolves against, beyond the audience kind itself. */
+export interface RecipientScope {
+  audience_list_id?: unknown;
+  /** SPECIFIC_USERS — the accounts that were picked. */
+  user_ids?: readonly unknown[];
+  /** MANUAL_NUMBERS — numbers typed in, which may belong to no account. */
+  contacts?: readonly ManualContact[];
 }
 
+export interface ManualContact {
+  name: string;
+  extension: string;
+  number: string;
+}
+
+async function recipientFilter(audience: WaCampaignAudience, scope: RecipientScope) {
+  if (audience === 'AUDIENCE_LIST') {
+    const { audienceListService } = await import('./audienceList.service');
+    const ids = await audienceListService.memberIds(String(scope.audience_list_id ?? ''));
+    return { ...HAS_A_NUMBER, _id: { $in: ids } };
+  }
+  if (audience === 'SPECIFIC_USERS') {
+    return { ...HAS_A_NUMBER, _id: { $in: [...(scope.user_ids ?? [])] } };
+  }
+  return HAS_A_NUMBER;
+}
+
+/**
+ * A typed-in contact as the send loop sees a person. Shaped like the slice of a
+ * user document `destinationFor` and `fillParams` read, so one delivery path
+ * serves both — an account and a number somebody pasted in.
+ *
+ * Only the name resolves as a variable here: there is no account behind these,
+ * so a template that wants {{city}} skips them, exactly as it would skip an
+ * account with no city.
+ */
+export function manualUsers(contacts: readonly ManualContact[]) {
+  return contacts.map((contact) => {
+    const name = str(contact.name);
+    const [first = '', ...rest] = name.split(/\s+/);
+    return {
+      _id: null,
+      profile: { first_name: first, last_name: rest.join(' ') },
+      auth: { phone: { extension: digits(contact.extension), number: digits(contact.number) } },
+    };
+  });
+}
+
+/** Typed-in contacts that carry a number WhatsApp can actually be given. */
+const reachableContacts = (contacts: readonly ManualContact[]) =>
+  manualUsers(contacts).filter((user) => destinationFor(user)).length;
+
 /** How many people this audience reaches right now. */
-export async function countReachable(audience: WaCampaignAudience, audienceListId?: unknown) {
-  return UserModel.countDocuments(await recipientFilter(audience, audienceListId));
+export async function countReachable(audience: WaCampaignAudience, scope: RecipientScope = {}) {
+  if (audience === 'MANUAL_NUMBERS') return reachableContacts(scope.contacts ?? []);
+  return UserModel.countDocuments(await recipientFilter(audience, scope));
 }
 
 /** Only the fields a send reads — a campaign has no business loading whole
@@ -126,12 +172,48 @@ export async function countReachable(audience: WaCampaignAudience, audienceListI
 const SEND_FIELDS =
   'profile.first_name profile.last_name profile.city profile.state communication.whatsapp auth.phone';
 
-/** The recipients themselves, with only the fields a send needs. */
-export async function recipientUsers(audience: WaCampaignAudience, audienceListId?: unknown) {
-  return UserModel.find(await recipientFilter(audience, audienceListId))
+/** The recipients themselves, with only the fields a send needs. Typed-in
+ * contacts never touch the database — they ARE the recipients. */
+export async function recipientUsers(audience: WaCampaignAudience, scope: RecipientScope = {}) {
+  if (audience === 'MANUAL_NUMBERS') return manualUsers(scope.contacts ?? []);
+  return UserModel.find(await recipientFilter(audience, scope))
     .select(SEND_FIELDS)
     .lean()
     .exec();
+}
+
+/** The accounts a "send to these people" picker offers: live users who carry a
+ * number WhatsApp can be given, matched on name, email or number. Capped —
+ * a picker is for choosing a few, and an audience list is for choosing many. */
+export async function searchReachableUsers(search: string, limit = 20) {
+  const term = str(search);
+  if (term.length < 2) return [];
+  const like = new RegExp(term.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
+  const users = await UserModel.find({
+    ...HAS_A_NUMBER,
+    $and: [
+      {
+        $or: [
+          { 'profile.first_name': like },
+          { 'profile.last_name': like },
+          { 'auth.email': like },
+          { 'auth.phone.number': like },
+          { 'communication.whatsapp.number': like },
+        ],
+      },
+    ],
+  })
+    .select(SEND_FIELDS)
+    .limit(limit)
+    .lean()
+    .exec();
+  return users
+    .map((user: any) => ({
+      id: String(user._id),
+      name: userNameFor(user),
+      destination: destinationFor(user),
+    }))
+    .filter((option) => option.destination);
 }
 
 /** The same slim rows for a known set of people. A retry works from the

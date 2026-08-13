@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -144,36 +144,26 @@ export function parseAiVerdict(content: string): { risk: PodAuditRisk; summary: 
  */
 export async function reviewLogWithAi(log: IPodAuditLog): Promise<void> {
   try {
-    const [apiKey, baseUrl] = await Promise.all([
-      getRuntimeEnvValue('OPENAI_API_KEY'),
-      getRuntimeEnvValue('OPENAI_BASE_URL'),
-    ]);
     const fallbackSummary = log.ai_summary || heuristicSummary(log);
     let risk = log.ai_risk === 'PENDING' ? heuristicRisk(log.action, log.changes) : log.ai_risk;
     let summary = fallbackSummary;
-    if (apiKey) {
-      const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
-      const res = await fetch(`${base}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 0,
-          max_tokens: 200,
-          response_format: { type: 'json_object' as const },
-          messages: [
-            { role: 'system', content: await getSystemPrompt('pod.audit_review') },
-            { role: 'user', content: buildAiUserContent(log) },
-          ],
-        }),
-      });
-      if (res.ok) {
-        const json: any = await res.json();
-        const verdict = parseAiVerdict(String(json?.choices?.[0]?.message?.content ?? ''));
-        if (verdict) {
-          risk = verdict.risk;
-          summary = verdict.summary || fallbackSummary;
-        }
+    const res = await openaiChat({
+      task: 'moderation.pod_audit',
+      detail: log.action,
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 200,
+      json: true,
+      messages: [
+        { role: 'system', content: await getSystemPrompt('pod.audit_review') },
+        { role: 'user', content: buildAiUserContent(log) },
+      ],
+    });
+    if (res.ok) {
+      const verdict = parseAiVerdict(res.content);
+      if (verdict) {
+        risk = verdict.risk;
+        summary = verdict.summary || fallbackSummary;
       }
     }
     log.ai_risk = risk;

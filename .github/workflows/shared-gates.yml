@@ -116,3 +116,11 @@ jobs:
       # because nothing in CI had ever imported it.
       - name: GraphQL documents match the schema
         run: node scripts/verify-gql-schema.mjs
+
+      # The Ask Bot's navigation map is prose, so tsc sees nothing wrong with a
+      # page whose surface key is misspelt — and the link resolver drops exactly
+      # those, leaving the bot answering confidently with no link at all. This
+      # checks every page resolves, every surface has pages, and each surface's
+      # local / staging / production address is built the way it should be.
+      - name: Ask Bot navigation map is consistent
+        run: pnpm --filter server check:askbot

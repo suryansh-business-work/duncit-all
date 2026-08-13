@@ -1,40 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
-import type { AisensyCampaign, AisensyTemplate } from '../queries';
+import type { AisensyTemplate, WaCampaignNameOption } from '../queries';
 import AisensySection from './AisensySection';
+import CampaignRowActions from './CampaignRowActions';
 import AisensyDetailDialog, { type AisensyFact } from './AisensyDetailDialog';
 import { templateFor, useAisensyCatalogue } from './useAisensyCatalogue';
 import {
   AISENSY_CAMPAIGN_STATUS_COLORS,
+  campaignRows,
   campaignSearchText,
   paramsLabel,
   statusKey,
+  type CampaignRow,
 } from './helpers';
 
 const EMPTY = '—';
 
-const getRowId = (campaign: AisensyCampaign) => campaign.name;
+const getRowId = (campaign: CampaignRow) => campaign.name;
 
 /** A campaign AiSensy will accept a send for is Live — anything else is shown
  * as-is so the reason a send fails is visible before sending. */
-const renderStatus = (campaign: AisensyCampaign) => (
-  <StatusChip
-    status={statusKey(campaign.status)}
-    label={campaign.status}
-    colorMap={AISENSY_CAMPAIGN_STATUS_COLORS}
-  />
-);
+const renderStatus = (campaign: CampaignRow) =>
+  campaign.status ? (
+    <StatusChip
+      status={statusKey(campaign.status)}
+      label={campaign.status}
+      colorMap={AISENSY_CAMPAIGN_STATUS_COLORS}
+    />
+  ) : null;
 
-const COLUMNS: DuncitColumn<AisensyCampaign>[] = [
-  { field: 'name', headerName: 'Campaign', flex: 1, minWidth: 220 },
-  { field: 'type', headerName: 'Type', width: 140 },
-  { field: 'status', headerName: 'Status', width: 130, cellRenderer: renderStatus },
-  { field: 'template_name', headerName: 'Template', flex: 1, minWidth: 200 },
-];
-
-const factsFor = (campaign: AisensyCampaign, template: AisensyTemplate | null): AisensyFact[] => [
+const factsFor = (campaign: CampaignRow, template: AisensyTemplate | null): AisensyFact[] => [
   { label: 'Type', value: campaign.type || EMPTY },
   { label: 'Template', value: campaign.template_name || EMPTY },
   {
@@ -46,19 +43,53 @@ const factsFor = (campaign: AisensyCampaign, template: AisensyTemplate | null): 
 
 /** Why a campaign has no sample — a named template AiSensy did not return is a
  * different problem from a campaign that names none. */
-const missingNoteFor = (campaign: AisensyCampaign | null) => {
+const missingNoteFor = (campaign: CampaignRow | null) => {
   if (!campaign?.template_name) {
-    return 'This campaign does not name a template, so there is nothing to preview.';
+    return 'AiSensy did not say which template this campaign sends, so there is nothing to preview.';
   }
   return `AiSensy did not return the template “${campaign.template_name}”. Check it still exists under Templates.`;
 };
 
-/** The API campaigns AiSensy has for this project, read live. */
-export default function AisensyCampaigns() {
+interface Props {
+  /** The saved names, which carry this tab when AiSensy cannot be read. */
+  names: WaCampaignNameOption[];
+  /** Starts a real send against this campaign. */
+  onSend: (campaign: CampaignRow) => void;
+  /** Sends one test message on it, before pointing it at anybody. */
+  onTest: (campaign: CampaignRow) => void;
+}
+
+/** The campaigns that can be sent, and where a send begins: you send the
+ * campaign you are looking at, not one picked again from a dropdown. */
+export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Props>) {
   const { configured, campaigns, templates, loading, error } = useAisensyCatalogue();
   const [openName, setOpenName] = useState<string | null>(null);
 
-  const fetchRows = useMemo(() => clientTableFetch(campaigns, campaignSearchText), [campaigns]);
+  // AiSensy's own list wins wherever it answered; the saved names carry the tab
+  // when it did not, so a missing Project credential cannot stop a send.
+  const live = configured && !error && campaigns.length > 0;
+  const rows = useMemo(() => campaignRows(campaigns, names, live), [campaigns, names, live]);
+
+  const columns = useMemo<DuncitColumn<CampaignRow>[]>(
+    () => [
+      { field: 'name', headerName: 'Campaign', flex: 1, minWidth: 220 },
+      { field: 'type', headerName: 'Type', width: 150 },
+      { field: 'status', headerName: 'Status', width: 120, cellRenderer: renderStatus },
+      { field: 'template_name', headerName: 'Template', flex: 1, minWidth: 180 },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        width: 110,
+        sortable: false,
+        cellRenderer: (campaign) => (
+          <CampaignRowActions campaign={campaign} onSend={onSend} onTest={onTest} />
+        ),
+      },
+    ],
+    [onSend, onTest]
+  );
+
+  const fetchRows = useMemo(() => clientTableFetch(rows, campaignSearchText), [rows]);
 
   // The table re-reads only when its own query changes, so a fresh AiSensy
   // answer has to ask for the re-read — otherwise it keeps showing the list it
@@ -68,33 +99,50 @@ export default function AisensyCampaigns() {
     refetchRef.current?.();
   }, [fetchRows]);
 
-  const selected = campaigns.find((campaign) => campaign.name === openName) ?? null;
+  const selected = rows.find((campaign) => campaign.name === openName) ?? null;
   const template = selected ? templateFor(selected.name, campaigns, templates) : null;
+
+  const table = (
+    <DuncitTable<CampaignRow>
+      tableId="marketing-aisensy-campaigns"
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getRowId}
+      onRowClick={(campaign) => setOpenName(campaign.name)}
+      searchPlaceholder="Search campaign, status or template"
+      emptyText="No campaign matches that search."
+      refetchRef={refetchRef}
+    />
+  );
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
         Campaigns as AiSensy has them right now. A send only works against one whose status is
-        Live. Open a row to see the message it sends.
+        Live. Open a row to see the message it sends, or use Send to point it at people.
       </Typography>
-      <AisensySection
-        configured={configured}
-        loading={loading}
-        error={error}
-        count={campaigns.length}
-        emptyText="AiSensy returned no campaigns for this project."
-      >
-        <DuncitTable<AisensyCampaign>
-          tableId="marketing-aisensy-campaigns"
-          columns={COLUMNS}
-          fetchRows={fetchRows}
-          getRowId={getRowId}
-          onRowClick={(campaign) => setOpenName(campaign.name)}
-          searchPlaceholder="Search campaign, status or template"
-          emptyText="No campaign matches that search."
-          refetchRef={refetchRef}
-        />
-      </AisensySection>
+
+      {live ? (
+        <AisensySection
+          configured={configured}
+          loading={loading}
+          error={error}
+          count={rows.length}
+          emptyText="AiSensy returned no campaigns for this project."
+        >
+          {table}
+        </AisensySection>
+      ) : (
+        <>
+          <Alert severity="warning">
+            AiSensy's Project API is not answering, so these are the campaign names saved here —
+            without their status or template. Add the <strong>Project ID</strong> and{' '}
+            <strong>Project API Key</strong> in the Tech portal (Environment Variables → AiSensy) to
+            read the real list. Sending still works.
+          </Alert>
+          {table}
+        </>
+      )}
 
       <AisensyDetailDialog
         title={selected?.name ?? null}

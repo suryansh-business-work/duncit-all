@@ -5,6 +5,31 @@ export const waCampaignTypeDefs = gql`
   enum WaCampaignAudience {
     ALL_USERS
     AUDIENCE_LIST
+    "Accounts picked one by one — their saved WhatsApp number is used."
+    SPECIFIC_USERS
+    "Numbers typed in, which may belong to nobody with an account."
+    MANUAL_NUMBERS
+  }
+
+  "One typed-in recipient. The country code is its own field so it is never guessed."
+  type WaManualContact {
+    name: String!
+    extension: String!
+    number: String!
+  }
+
+  input WaManualContactInput {
+    name: String!
+    extension: String!
+    number: String!
+  }
+
+  "An account the 'send to these people' picker offers — one that carries a usable number."
+  type WaUserOption {
+    id: ID!
+    name: String!
+    "Country code + number, digits only, exactly as AiSensy would be given it."
+    destination: String!
   }
 
   enum WaCampaignStatus {
@@ -70,6 +95,18 @@ export const waCampaignTypeDefs = gql`
     wa_campaign_name: String!
     audience: WaCampaignAudience!
     audience_list_id: ID
+    "SPECIFIC_USERS only — the accounts that were picked."
+    user_ids: [ID!]!
+    "MANUAL_NUMBERS only — the numbers this send was given."
+    contacts: [WaManualContact!]!
+    "The template behind the campaign, as AiSensy had it when this send was created."
+    template_name: String!
+    "MARKETING, UTILITY, AUTHENTICATION or SERVICE — empty when AiSensy never said."
+    template_category: String!
+    "The per-message rate frozen at send time. A later price change never moves it."
+    msg_rate: Float!
+    "msg_rate × sent_count — what the messages that actually went out cost."
+    cost: Float!
     template_params: [String!]!
     status: WaCampaignStatus!
     "When a scheduled send is due. Null for one that went out immediately."
@@ -151,10 +188,67 @@ export const waCampaignTypeDefs = gql`
     audience: WaCampaignAudience!
     "AUDIENCE_LIST audience only — the saved Target Audience list."
     audience_list_id: ID
+    "SPECIFIC_USERS audience only — the accounts to send to."
+    user_ids: [ID!]
+    "MANUAL_NUMBERS audience only — the numbers to send to."
+    contacts: [WaManualContactInput!]
     "Ordered template variables — literal text, or {{first_name}} style tokens."
     template_params: [String!]!
     "ISO time to send at. Absent, or already past, sends immediately."
     scheduled_at: String
+  }
+
+  "What a WhatsApp message costs, by the category Meta bills on."
+  type WaPricing {
+    marketing_per_msg: Float!
+    utility_per_msg: Float!
+    authentication_per_msg: Float!
+    "Service conversations are free today — a rate is kept so that can change without a deploy."
+    service_per_msg: Float!
+    currency_symbol: String!
+  }
+
+  input UpdateWaPricingInput {
+    marketing_per_msg: Float!
+    utility_per_msg: Float!
+    authentication_per_msg: Float!
+    service_per_msg: Float!
+    currency_symbol: String!
+  }
+
+  "What one category cost over the window."
+  type WaDashboardCategory {
+    "MARKETING, UTILITY, AUTHENTICATION, SERVICE — or empty for sends AiSensy never categorised."
+    category: String!
+    campaigns: Int!
+    messages: Int!
+    failed: Int!
+    skipped: Int!
+    cost: Float!
+  }
+
+  "A send worth looking at first — the ones that cost the most."
+  type WaDashboardCampaign {
+    campaign_id: ID!
+    name: String!
+    wa_campaign_name: String!
+    template_category: String!
+    messages: Int!
+    cost: Float!
+    status: WaCampaignStatus!
+    sent_at: String
+  }
+
+  "What WhatsApp cost and reached over a window. Every figure uses the rate each send froze."
+  type WaDashboard {
+    currency_symbol: String!
+    campaigns: Int!
+    messages_sent: Int!
+    messages_failed: Int!
+    messages_skipped: Int!
+    total_cost: Float!
+    by_category: [WaDashboardCategory!]!
+    top_campaigns: [WaDashboardCampaign!]!
   }
 
   extend type Query {
@@ -164,8 +258,19 @@ export const waCampaignTypeDefs = gql`
     waCampaignNames: [WaCampaignNameOption!]!
     "Variables a template parameter may use."
     waCampaignVariables: [WaCampaignVariable!]!
-    "How many people this audience reaches on WhatsApp right now."
-    waCampaignReach(audience: WaCampaignAudience!, audience_list_id: ID): Int!
+    "How many messages this recipient list would actually produce right now."
+    waCampaignReach(
+      audience: WaCampaignAudience!
+      audience_list_id: ID
+      user_ids: [ID!]
+      contacts: [WaManualContactInput!]
+    ): Int!
+    "Accounts the 'send to these people' picker offers, matched on name, email or number."
+    waCampaignUserSearch(search: String!): [WaUserOption!]!
+    "What a WhatsApp message costs, by category."
+    waPricing: WaPricing!
+    "What WhatsApp cost and reached over a window (ISO dates; absent means all time)."
+    waCampaignDashboard(from: String, to: String): WaDashboard!
     waCampaignsTable(query: TableQueryInput): WaCampaignTablePage!
     "One campaign in full — the detail view behind a table row."
     waCampaign(campaign_id: ID!): WaCampaign!
@@ -193,5 +298,7 @@ export const waCampaignTypeDefs = gql`
     "Send one test message to one number, through the same path a campaign uses."
     sendWaTestMessage(input: SendWaTestInput!): WaTestSendResult!
     deleteWaCampaign(campaign_id: ID!): Boolean!
+    "Change the rate card. Applies to sends made from now on — past sends keep the rate they froze."
+    updateWaPricing(input: UpdateWaPricingInput!): WaPricing!
   }
 `;

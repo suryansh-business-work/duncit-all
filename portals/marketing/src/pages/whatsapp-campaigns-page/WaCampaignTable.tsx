@@ -12,17 +12,23 @@ import { StatusChip } from '@duncit/ui';
 import {
   WA_AUDIENCE_LABELS,
   WA_AUDIENCE_OPTIONS,
+  WA_CATEGORY_OPTIONS,
   WA_STATUS_COLORS,
   WA_STATUS_OPTIONS,
   canCancel,
   canDelete,
+  categoryLabel,
   labelFor,
+  waMoney,
+  waRate,
 } from './helpers';
 import type { WaCampaignRow } from './queries';
 
 interface Props {
   fetchRows: TableFetch<WaCampaignRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  /** The symbol the rate card is kept in — costs are printed in it. */
+  currency: string;
   /** Opens the campaign's detail view — who it reached and who it did not. */
   onOpen: (row: WaCampaignRow) => void;
   /** Calls off a scheduled send before its hour. */
@@ -55,9 +61,23 @@ const renderStatus = (row: WaCampaignRow) => (
   <StatusChip status={row.status} colorMap={WA_STATUS_COLORS} />
 );
 
+/** What this send has cost so far, with the rate it froze underneath — a total
+ * with no rate beside it cannot be checked. */
+const renderCost = (row: WaCampaignRow, currency: string) => (
+  <Box sx={{ lineHeight: 1.2 }}>
+    <Typography variant="body2" fontWeight={700} component="div">
+      {waMoney(row.cost, currency)}
+    </Typography>
+    <Typography variant="caption" color="text.secondary" component="div">
+      {row.msg_rate > 0 ? `${waRate(row.msg_rate, currency)}/msg` : 'No rate'}
+    </Typography>
+  </Box>
+);
+
 export default function WaCampaignTable({
   fetchRows,
   refetchRef,
+  currency,
   onOpen,
   onCancel,
   onDelete,
@@ -88,10 +108,26 @@ export default function WaCampaignTable({
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
+      {
+        field: 'template_category',
+        headerName: 'Category',
+        width: 140,
+        filter: { type: 'select', options: WA_CATEGORY_OPTIONS },
+        valueGetter: (row) => categoryLabel(row.template_category),
+      },
       { field: 'recipient_count', headerName: 'Recipients', width: 120 },
       { field: 'sent_count', headerName: 'Sent', width: 100 },
       { field: 'failed_count', headerName: 'Failed', width: 100 },
       { field: 'skipped_count', headerName: 'Skipped', width: 110 },
+      {
+        // Derived from the frozen rate and the messages that went out, so the
+        // server has nothing to sort on — the column says so by not offering it.
+        field: 'cost',
+        headerName: 'Cost',
+        width: 130,
+        sortable: false,
+        cellRenderer: (row) => renderCost(row, currency),
+      },
       dateColumn<WaCampaignRow>({
         field: 'scheduled_at',
         headerName: 'Scheduled for',
@@ -137,7 +173,7 @@ export default function WaCampaignTable({
         },
       }),
     ],
-    [busy, onCancel, onDelete]
+    [busy, currency, onCancel, onDelete]
   );
 
 
@@ -148,7 +184,7 @@ export default function WaCampaignTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onOpen}
-      emptyText="No WhatsApp campaigns yet."
+      emptyText="Nothing sent yet — start a send from the Campaigns tab."
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or WhatsApp campaign"
       refetchRef={refetchRef}

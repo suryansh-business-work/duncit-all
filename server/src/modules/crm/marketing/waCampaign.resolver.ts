@@ -1,5 +1,6 @@
 import { waCampaignService } from './waCampaign.service';
 import type { WaCampaignAudience } from './waCampaign.model';
+import type { ManualContact } from './waCampaign.recipients';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -22,11 +23,36 @@ export const waCampaignResolvers = {
     },
     waCampaignReach: (
       _p: unknown,
-      args: { audience: WaCampaignAudience; audience_list_id?: string | null },
+      args: {
+        audience: WaCampaignAudience;
+        audience_list_id?: string | null;
+        user_ids?: string[] | null;
+        contacts?: ManualContact[] | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return waCampaignService.reach(args.audience, args.audience_list_id);
+      return waCampaignService.reach(args.audience, {
+        audience_list_id: args.audience_list_id,
+        user_ids: args.user_ids ?? [],
+        contacts: args.contacts ?? [],
+      });
+    },
+    waCampaignUserSearch: (_p: unknown, args: { search: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.userSearch(args.search);
+    },
+    waPricing: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.pricing();
+    },
+    waCampaignDashboard: (
+      _p: unknown,
+      args: { from?: string | null; to?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.dashboard({ from: args.from, to: args.to });
     },
     waCampaignsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -90,6 +116,10 @@ export const waCampaignResolvers = {
     deleteWaCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.remove(args.campaign_id);
+    },
+    updateWaPricing: (_p: unknown, args: { input: Record<string, unknown> }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.updatePricing(args.input);
     },
   },
 };

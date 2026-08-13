@@ -14,9 +14,11 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from '../../i18n/useTranslation';
 import { FileManagerDialog } from '../../file-manager';
 import { JumpToPortalDialog } from '../jump-to-portal';
-import { matchesTool, SHELL_TOOLS, type ShellTool } from './tools';
+import { AskBotDialog } from '../ask-bot';
+import { matchesTool, useShellTools, type ShellTool } from './tools';
 
 interface Props {
   open: boolean;
@@ -47,15 +49,17 @@ export function AppsDrawer({
   onOpenChat,
   chatEnabled = true,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [openTool, setOpenTool] = useState<string | null>(null);
+  const shellTools = useShellTools();
 
   const tools = useMemo(() => {
     const platform = chatEnabled
-      ? SHELL_TOOLS
-      : SHELL_TOOLS.filter((tool) => tool.key !== 'staff-chat');
+      ? shellTools
+      : shellTools.filter((tool) => tool.key !== 'staff-chat');
     return [...platform, ...(extraTools ?? [])];
-  }, [extraTools, chatEnabled]);
+  }, [extraTools, chatEnabled, shellTools]);
   const shown = useMemo(() => tools.filter((tool) => matchesTool(tool, search)), [tools, search]);
 
   const close = () => {
@@ -73,9 +77,9 @@ export function AppsDrawer({
       >
         <Stack direction="row" alignItems="center" sx={{ px: 2, pt: 2, pb: 1 }}>
           <Typography variant="h6" sx={{ flex: 1 }}>
-            Apps
+            {t('shell.appsDrawer.title')}
           </Typography>
-          <IconButton onClick={close} aria-label="Close apps">
+          <IconButton onClick={close} aria-label={t('shell.appsDrawer.close')}>
             <CloseIcon />
           </IconButton>
         </Stack>
@@ -87,7 +91,7 @@ export function AppsDrawer({
             autoFocus
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search apps"
+            placeholder={t('shell.appsDrawer.search')}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -116,7 +120,7 @@ export function AppsDrawer({
           ))}
           {shown.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 3 }}>
-              Nothing matches “{search}”.
+              {t('shell.appsDrawer.noMatch', { vars: { term: search } })}
             </Typography>
           )}
         </List>
@@ -130,9 +134,9 @@ export function AppsDrawer({
         <JumpToPortalDialog open onClose={() => setOpenTool(null)} />
       )}
 
-
+      {openTool === 'ask-bot' && <AskBotDialog open onClose={() => setOpenTool(null)} />}
     </>
   );
 }
 
-export { SHELL_TOOLS, type ShellTool } from './tools';
+export { useShellTools, type ShellTool } from './tools';

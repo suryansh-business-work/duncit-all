@@ -5,6 +5,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { PORTAL_REGISTRY } from '@modules/platform/portalMode/portalMode.registry';
 import { PORTAL_GATE_EXEMPT_KEYS, PORTAL_ROLE_REQUIREMENTS } from './portal.constants';
+import { hasPortalAccess } from './portal.gate';
 import {
   sendPortalAccessApprovedEmail,
   sendPortalAccessDeniedEmail,
@@ -23,14 +24,6 @@ const badRequest = (message: string) =>
 
 /** The staff consoles only — the member app and websites are not "portals" to jump to. */
 const consoles = () => PORTAL_REGISTRY.filter((p) => p.kind === 'PORTAL');
-
-/** Same decision assertPortalLogin enforces, as a boolean for the directory. */
-function hasPortalAccess(portalKey: string, roleKeys: readonly string[]): boolean {
-  if (PORTAL_GATE_EXEMPT_KEYS.has(portalKey)) return true;
-  if (roleKeys.includes('SUPER_ADMIN')) return true;
-  const allowed = PORTAL_ROLE_REQUIREMENTS[portalKey];
-  return !!allowed && roleKeys.some((role) => allowed.includes(role));
-}
 
 const canRequest = (portalKey: string) =>
   !NON_REQUESTABLE.has(portalKey) && !PORTAL_GATE_EXEMPT_KEYS.has(portalKey);

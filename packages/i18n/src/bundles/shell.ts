@@ -36,6 +36,61 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       notRequestable: 'Granted personally by a super admin.',
       requestFailed: 'Could not send the request. Please try again.',
     },
+    /** The apps drawer itself — the nine dots in every console's header. */
+    appsDrawer: {
+      title: 'Apps',
+      search: 'Search apps',
+      close: 'Close apps',
+      noMatch: 'Nothing matches “{term}”.',
+      fileManager: {
+        name: 'File Manager',
+        description: 'Everything uploaded to ImageKit — upload, search, crop, copy a link.',
+      },
+      staffChat: {
+        name: 'Chat with a coworker',
+        description: 'Message anyone with a staff console — admin, tech, finance, support and the rest.',
+      },
+      jumpToPortal: {
+        name: 'Jump to Portal',
+        description: 'Every Duncit console in one place — open yours, request access to the rest.',
+      },
+      askBot: {
+        name: 'Ask Bot',
+        description: 'Ask where anything lives across Duncit and get a link straight to it.',
+      },
+    },
+    /** The apps drawer's Ask Bot — the bot list, and the chat behind each bot. */
+    askBot: {
+      title: 'Ask Bot',
+      close: 'Close',
+      back: 'All bots',
+      listSubtitle: 'Pick a bot to talk to. More will appear here as they are built.',
+      loadError: 'Could not load the bots. Please try again.',
+      notConfigured: 'Not ready yet — a tech admin needs to add the OpenAI key in the Tech portal.',
+      unavailable: 'Unavailable',
+      placeholder: 'Ask where something is…',
+      send: 'Send',
+      thinking: 'Looking it up…',
+      answerError: 'Could not get an answer. Please try again.',
+      restart: 'Start over',
+      tryAsking: 'Try asking',
+      thenAsk: 'Then ask',
+      noAccess: 'You cannot open this console yet',
+      noAccessHint: 'Ask for it under Jump to Portal in this same drawer.',
+      noLocalAddress: 'Open this one in the Duncit app — it has no local address.',
+      bots: {
+        navigation: {
+          name: 'Navigation Knowledge Bot',
+          description:
+            'Knows every page in every console, in mWeb and in the app — where it is and what you can do there.',
+          greeting:
+            'Ask me where anything lives on Duncit. I will tell you which console or app it is in, what you can do there, and give you a link straight to it.',
+          suggestion1: 'Where do I approve a venue?',
+          suggestion2: 'Where can I see failed emails?',
+          suggestion3: 'Where does a member change their language?',
+        },
+      },
+    },
     /** Word-for-word identical to `mweb.slots` — see the note there. */
     slots: {
       date: 'Date',

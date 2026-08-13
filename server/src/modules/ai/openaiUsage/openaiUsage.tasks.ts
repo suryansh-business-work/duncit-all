@@ -35,6 +35,7 @@ export const OPENAI_TASKS = {
   'crm.lead_chat': { label: 'Lead assistant chat', module: 'CRM' },
   'crm.call_assistant': { label: 'Call assistant turn', module: 'CRM' },
   'platform.release_notes': { label: 'Release changelog', module: 'Platform' },
+  'askbot.navigation': { label: 'Navigation bot answer', module: 'Ask Bot' },
 } as const satisfies Record<string, OpenAiTaskMeta>;
 
 export type OpenAiTaskKey = keyof typeof OPENAI_TASKS;

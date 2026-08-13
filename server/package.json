@@ -10,6 +10,7 @@
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json && node scripts/copy-email-templates.js",
     "start": "node -r ./dist/tracing.js dist/index.js",
     "check:schema": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-schema.ts",
+    "check:askbot": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-askbot-catalog.ts",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "test": "jest",

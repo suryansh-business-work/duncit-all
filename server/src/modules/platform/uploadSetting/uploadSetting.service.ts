@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   LEGACY_MOBILE_MWEB_SURFACE,
@@ -198,41 +198,31 @@ export function parseScanVerdict(content: string): { risk: 'LOW' | 'MEDIUM' | 'H
  */
 export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
   try {
-    const [apiKey, baseUrl] = await Promise.all([
-      getRuntimeEnvValue('OPENAI_API_KEY'),
-      getRuntimeEnvValue('OPENAI_BASE_URL'),
-    ]);
     let risk: IMediaScanLog['risk'] = 'LOW';
     let summary = 'AI review unavailable — no verdict.';
-    if (apiKey) {
-      const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
-      const res = await fetch(`${base}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 0,
-          max_tokens: 200,
-          response_format: { type: 'json_object' as const },
-          messages: [
-            { role: 'system', content: await getSystemPrompt('upload.image_scan') },
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: `Folder: ${log.folder || '/'} — review this uploaded image.` },
-                { type: 'image_url', image_url: { url: log.url } },
-              ],
-            },
+    const res = await openaiChat({
+      task: 'moderation.image_scan',
+      detail: log.file_name || log.folder || '',
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 200,
+      json: true,
+      messages: [
+        { role: 'system', content: await getSystemPrompt('upload.image_scan') },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: `Folder: ${log.folder || '/'} — review this uploaded image.` },
+            { type: 'image_url', image_url: { url: log.url } },
           ],
-        }),
-      });
-      if (res.ok) {
-        const json: any = await res.json();
-        const verdict = parseScanVerdict(String(json?.choices?.[0]?.message?.content ?? ''));
-        if (verdict) {
-          risk = verdict.risk;
-          summary = verdict.summary || summary;
-        }
+        },
+      ],
+    });
+    if (res.ok) {
+      const verdict = parseScanVerdict(res.content);
+      if (verdict) {
+        risk = verdict.risk;
+        summary = verdict.summary || summary;
       }
     }
     log.risk = risk;

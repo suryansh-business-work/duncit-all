@@ -163,6 +163,12 @@ async function bootstrap() {
     const { aiPromptService } = await import('@modules/ai/prompt/prompt.service');
     await aiPromptService.seedDefaults();
   });
+  // The OpenAI rate card. Every usage row is priced when it is written, so a
+  // missing rate is not repairable later — seed it before anything can call out.
+  await safeSeed('openAiPrices', async () => {
+    const { openAiUsageService } = await import('@modules/ai/openaiUsage/openaiUsage.service');
+    await openAiUsageService.seedDefaults();
+  });
   await safeSeed('emailTemplates', async () => {
     const { emailTemplateService } = await import('@modules/content/emailTemplate/emailTemplate.service');
     // Fragments first: a template imported on this same boot may already name

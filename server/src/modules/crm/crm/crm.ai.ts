@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
+import { openAiGraphQLError, openAiInvalidJsonError } from '@services/openai/openai.errors';
 import * as C from './crm.constants';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
 import { WebsitePageModel } from '@modules/crm/websitePage/websitePage.model';
@@ -73,40 +74,24 @@ const SHAPES: Record<CrmAiEntity, string> = {
 };
 
 /** Shared OpenAI JSON call: posts the messages, returns validated JSON content. */
-async function chatJson(systemContent: string, userContent: string): Promise<string> {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', { extensions: { code: 'AI_NOT_CONFIGURED' } });
-  }
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0.1,
-      response_format: { type: 'json_object' as const },
-      messages: [
-        { role: 'system', content: systemContent },
-        { role: 'user', content: userContent },
-      ],
-    }),
+async function chatJson(systemContent: string, userContent: string, detail: string): Promise<string> {
+  const res = await openaiChat({
+    task: 'crm.lead_parse',
+    detail,
+    temperature: 0.1,
+    json: true,
+    messages: [
+      { role: 'system', content: systemContent },
+      { role: 'user', content: userContent },
+    ],
   });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 300)}`, { extensions: { code: 'AI_UPSTREAM_ERROR' } });
-  }
-  const json: any = await resp.json();
-  const content: string | undefined = json?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new GraphQLError('OpenAI returned an empty response', { extensions: { code: 'AI_EMPTY_RESPONSE' } });
-  }
+  if (!res.ok) throw openAiGraphQLError(res);
   try {
-    JSON.parse(content);
+    JSON.parse(res.content);
   } catch {
-    throw new GraphQLError('OpenAI did not return valid JSON', { extensions: { code: 'AI_INVALID_JSON' } });
+    throw openAiInvalidJsonError();
   }
-  return content;
+  return res.content;
 }
 
 export interface ChatMessage {
@@ -115,23 +100,10 @@ export interface ChatMessage {
 }
 
 /** OpenAI chat returning free-form text/HTML (no JSON mode). */
-async function chatText(messages: { role: string; content: string }[]): Promise<string> {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) throw new GraphQLError('OPENAI_API_KEY is not configured on the server', { extensions: { code: 'AI_NOT_CONFIGURED' } });
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, temperature: 0.3, messages }),
-  });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 300)}`, { extensions: { code: 'AI_UPSTREAM_ERROR' } });
-  }
-  const json: any = await resp.json();
-  const content: string | undefined = json?.choices?.[0]?.message?.content;
-  if (!content) throw new GraphQLError('OpenAI returned an empty response', { extensions: { code: 'AI_EMPTY_RESPONSE' } });
-  return content;
+async function chatText(messages: OpenAiMessage[], detail: string): Promise<string> {
+  const res = await openaiChat({ task: 'crm.lead_chat', detail, temperature: 0.3, messages });
+  if (!res.ok) throw openAiGraphQLError(res);
+  return res.content;
 }
 
 /** Build a compact context string about a lead, including its scraped website pages. */
@@ -179,7 +151,10 @@ export async function leadAiChat(entity: CrmAiEntity, leadId: string, messages: 
     lead_kind: entity === 'VENUE_LEAD' ? 'venue' : 'host',
     context,
   });
-  return chatText([{ role: 'system', content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))]);
+  return chatText(
+    [{ role: 'system', content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+    `${entity} ${leadId}`
+  );
 }
 
 export async function parseCrmLeadText(entity: CrmAiEntity, text: string): Promise<string> {
@@ -187,7 +162,7 @@ export async function parseCrmLeadText(entity: CrmAiEntity, text: string): Promi
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   const system = await getSystemPrompt('crm.parse_lead', { shape: SHAPES[entity] });
-  return chatJson(system, `Parse the following ${entity} description:\n\n${text.slice(0, 6000)}`);
+  return chatJson(system, `Parse the following ${entity} description:\n\n${text.slice(0, 6000)}`, `${entity} (one)`);
 }
 
 /**
@@ -200,5 +175,5 @@ export async function parseCrmLeadsText(entity: CrmAiEntity, text: string): Prom
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   const system = await getSystemPrompt('crm.parse_leads', { shape: SHAPES[entity] });
-  return chatJson(system, `Extract every ${entity} from the following text:\n\n${text.slice(0, 8000)}`);
+  return chatJson(system, `Extract every ${entity} from the following text:\n\n${text.slice(0, 8000)}`, `${entity} (bulk)`);
 }

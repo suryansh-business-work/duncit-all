@@ -1,6 +1,6 @@
 import { logs } from '@observability/log';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
 import type { IMailAutomationAccount } from './mailAutomation.model';
 
 /**
@@ -65,30 +65,20 @@ export function renderTemplate(template: string, variables: Record<string, strin
   );
 }
 
-async function openAiChat(system: string, user: string): Promise<string> {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+async function openAiChat(system: string, user: string, detail: string): Promise<string> {
+  const res = await openaiChat({
+    task: 'support.mail_reply',
+    detail,
+    temperature: 0.4,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
   });
-  if (!resp.ok) {
-    const body = await resp.text().catch(() => '');
-    throw new Error(`OpenAI error (${resp.status}): ${body.slice(0, 300)}`);
-  }
-  const json = (await resp.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = json.choices?.[0]?.message?.content?.trim();
-  if (!content) throw new Error('OpenAI returned an empty reply');
-  return content;
+  // The caller treats a throw as "use the rendered template instead", so the
+  // unconfigured case must keep raising rather than returning empty text.
+  if (!res.ok) throw new Error(res.message);
+  return res.content.trim();
 }
 
 /**
@@ -121,7 +111,7 @@ export async function composeReply(
       '',
       context.bodyText.slice(0, 4000),
     ].join('\n');
-    const text = await openAiChat(system, user);
+    const text = await openAiChat(system, user, account.email);
     if (!keepsReference(text, variables.ticket_no)) {
       logs.server.warn('mail-automation', 'composeReply', {
         msg: 'AI reply dropped the ticket reference; sending the operator template instead',

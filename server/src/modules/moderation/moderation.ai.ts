@@ -1,5 +1,6 @@
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
+import type { OpenAiTaskKey } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import type { ModerationViolation } from './moderation.rules';
 
 /** Pod content submitted for moderation. `image_urls` are the uploaded cover
@@ -52,39 +53,34 @@ function parseAiViolations(content: string): ModerationViolation[] {
  * obvious violations. Uses the 'gpt-4o' model explicitly (NOT the OPENAI_MODEL
  * default, which is gpt-4o-mini) for the deepest analysis and vision support.
  */
-async function callAiModeration(promptKey: string, userContent: unknown[]): Promise<ModerationViolation[]> {
+async function callAiModeration(
+  task: OpenAiTaskKey,
+  promptKey: string,
+  userContent: unknown[],
+  detail: string,
+): Promise<ModerationViolation[]> {
   try {
-    const [apiKey, baseUrl] = await Promise.all([
-      getRuntimeEnvValue('OPENAI_API_KEY'),
-      getRuntimeEnvValue('OPENAI_BASE_URL'),
-    ]);
-    if (!apiKey) return [];
-    const systemPrompt = await getSystemPrompt(promptKey);
-    const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
-    const res = await fetch(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        temperature: 0,
-        max_tokens: 800,
-        response_format: { type: 'json_object' as const },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent },
-        ],
-      }),
+    const res = await openaiChat({
+      task,
+      detail,
+      // NOT the OPENAI_MODEL default (gpt-4o-mini) — the deepest analysis, with vision.
+      model: 'gpt-4o',
+      temperature: 0,
+      max_tokens: 800,
+      json: true,
+      messages: [
+        { role: 'system', content: await getSystemPrompt(promptKey) },
+        { role: 'user', content: userContent },
+      ],
     });
-    if (!res.ok) return [];
-    const json: any = await res.json();
-    return parseAiViolations(String(json?.choices?.[0]?.message?.content ?? ''));
+    return res.ok ? parseAiViolations(res.content) : [];
   } catch {
     return [];
   }
 }
 
 export const aiModeratePod = (input: ModeratePodInput): Promise<ModerationViolation[]> =>
-  callAiModeration('moderation.pod', buildUserContent(input));
+  callAiModeration('moderation.pod', 'moderation.pod', buildUserContent(input), input.pod_title);
 
 /** One variant's moderatable text (labels + description). */
 export interface ModerateProductVariant {
@@ -115,7 +111,12 @@ function buildProductUserContent(input: ModerateProductInput): unknown[] {
 }
 
 export const aiModerateProduct = (input: ModerateProductInput): Promise<ModerationViolation[]> =>
-  callAiModeration('moderation.product', buildProductUserContent(input));
+  callAiModeration(
+    'moderation.product',
+    'moderation.product',
+    buildProductUserContent(input),
+    input.product_name
+  );
 
 /**
  * Fast text-only check that a meeting cancel/reschedule reason is genuine.
@@ -125,31 +126,18 @@ export const aiModerateProduct = (input: ModerateProductInput): Promise<Moderati
  */
 export async function aiValidateMeetingReason(reason: string): Promise<boolean> {
   try {
-    const [apiKey, baseUrl, model] = await Promise.all([
-      getRuntimeEnvValue('OPENAI_API_KEY'),
-      getRuntimeEnvValue('OPENAI_BASE_URL'),
-      getRuntimeEnvValue('OPENAI_MODEL'),
-    ]);
-    if (!apiKey) return true;
-    const systemPrompt = await getSystemPrompt('moderation.meeting_reason');
-    const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
-    const res = await fetch(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: model || 'gpt-4o-mini',
-        temperature: 0,
-        max_tokens: 16,
-        response_format: { type: 'json_object' as const },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: reason },
-        ],
-      }),
+    const res = await openaiChat({
+      task: 'moderation.meeting_reason',
+      temperature: 0,
+      max_tokens: 16,
+      json: true,
+      messages: [
+        { role: 'system', content: await getSystemPrompt('moderation.meeting_reason') },
+        { role: 'user', content: reason },
+      ],
     });
     if (!res.ok) return true;
-    const json: any = await res.json();
-    const parsed = JSON.parse(String(json?.choices?.[0]?.message?.content ?? '')) as { valid?: unknown };
+    const parsed = JSON.parse(res.content) as { valid?: unknown };
     return parsed.valid !== false;
   } catch {
     return true;

@@ -1,7 +1,8 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { openaiChat } from '@services/openai/openai.client';
+import { openAiGraphQLError, openAiInvalidJsonError } from '@services/openai/openai.errors';
 import { buildFillReference, resolveClubReferences } from './ai-fill-context';
 import { importRemoteImage, pexelsSearch } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
@@ -133,64 +134,25 @@ async function buildUserMessage(entity: Entity, prompt?: string | null): Promise
 }
 
 export async function generateDummy(entity: Entity, prompt?: string | null): Promise<string> {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
-      extensions: { code: 'AI_NOT_CONFIGURED' },
-    });
-  }
-
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const body = {
-    model,
+  const res = await openaiChat({
+    task: 'ai.dummy_data',
+    detail: entity,
     temperature: 0.9,
-    response_format: { type: 'json_object' as const },
+    json: true,
     messages: [
       { role: 'system', content: await buildSystemPrompt(entity, prompt) },
       { role: 'user', content: await buildUserMessage(entity, prompt) },
     ],
-  };
-
-  let resp: Response;
-  try {
-    resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err: any) {
-    throw new GraphQLError(`Failed to reach OpenAI: ${err?.message || err}`, {
-      extensions: { code: 'AI_NETWORK_ERROR' },
-    });
-  }
-
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
-      extensions: { code: 'AI_UPSTREAM_ERROR' },
-    });
-  }
-
-  const json: any = await resp.json();
-  const content: string | undefined = json?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new GraphQLError('OpenAI returned an empty response', {
-      extensions: { code: 'AI_EMPTY_RESPONSE' },
-    });
-  }
+  });
+  if (!res.ok) throw openAiGraphQLError(res);
 
   // Validate it parses; rethrow as GraphQL error if not.
   try {
-    JSON.parse(content);
+    JSON.parse(res.content);
   } catch {
-    throw new GraphQLError('OpenAI did not return valid JSON', {
-      extensions: { code: 'AI_INVALID_JSON' },
-    });
+    throw openAiInvalidJsonError();
   }
-  return content;
+  return res.content;
 }
 
 // ---------------------------------------------------------------------------
@@ -302,13 +264,6 @@ interface AiMjmlTemplateInput {
 }
 
 async function generateProductDescription(input: DescribeProductInput): Promise<string> {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
-      extensions: { code: 'AI_NOT_CONFIGURED' },
-    });
-  }
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const context = [
     `Product name: ${input.product_name}`,
     input.brand_name ? `Brand: ${input.brand_name}` : null,
@@ -320,10 +275,11 @@ async function generateProductDescription(input: DescribeProductInput): Promise<
     .filter(Boolean)
     .join('\n');
 
-  const body = {
-    model,
+  const res = await openaiChat({
+    task: 'ai.product_copy',
+    detail: input.product_name,
     temperature: 0.7,
-    response_format: { type: 'json_object' as const },
+    json: true,
     messages: [
       { role: 'system', content: await getSystemPrompt('generate.product_copy') },
       {
@@ -331,34 +287,14 @@ async function generateProductDescription(input: DescribeProductInput): Promise<
         content: `Write marketing copy for this product.\n\n${context}`,
       },
     ],
-  };
-
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
-      extensions: { code: 'AI_UPSTREAM_ERROR' },
-    });
-  }
-  const json: any = await resp.json();
-  const content: string | undefined = json?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new GraphQLError('OpenAI returned an empty response', {
-      extensions: { code: 'AI_EMPTY_RESPONSE' },
-    });
-  }
+  if (!res.ok) throw openAiGraphQLError(res);
   try {
-    JSON.parse(content);
+    JSON.parse(res.content);
   } catch {
-    throw new GraphQLError('OpenAI did not return valid JSON', {
-      extensions: { code: 'AI_INVALID_JSON' },
-    });
+    throw openAiInvalidJsonError();
   }
-  return content;
+  return res.content;
 }
 
 function normalizeLocationAreas(content: string): string {
@@ -403,17 +339,11 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
-      extensions: { code: 'AI_NOT_CONFIGURED' },
-    });
-  }
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const body = {
-    model,
+  const res = await openaiChat({
+    task: 'ai.location_areas',
+    detail: `${city}, ${state}`,
     temperature: 0.2,
-    response_format: { type: 'json_object' as const },
+    json: true,
     messages: [
       { role: 'system', content: await getSystemPrompt('generate.city_zones') },
       {
@@ -421,26 +351,9 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
         content: `Country: ${country}\nState: ${state}\nCity: ${city}`,
       },
     ],
-  };
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
-      extensions: { code: 'AI_UPSTREAM_ERROR' },
-    });
-  }
-  const json: any = await resp.json();
-  const content: string | undefined = json?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new GraphQLError('OpenAI returned an empty response', {
-      extensions: { code: 'AI_EMPTY_RESPONSE' },
-    });
-  }
-  return normalizeLocationAreas(content);
+  if (!res.ok) throw openAiGraphQLError(res);
+  return normalizeLocationAreas(res.content);
 }
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -486,21 +399,14 @@ async function adminUserContext(prompt: string) {
 }
 
 async function adminAiChat(prompt: string) {
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
-      extensions: { code: 'AI_NOT_CONFIGURED' },
-    });
-  }
   // Give the model live platform data so it can answer counts/summaries/trends
   // instead of falling back to "I couldn't find any …". Best-effort.
   const [context, platform] = await Promise.all([
     adminUserContext(prompt),
     analyticsService.dashboardTotals(null).catch(() => null),
   ]);
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const body = {
-    model,
+  const res = await openaiChat({
+    task: 'ai.admin_chat',
     temperature: 0.2,
     messages: [
       { role: 'system', content: await getSystemPrompt('admin.assistant') },
@@ -509,20 +415,11 @@ async function adminAiChat(prompt: string) {
         content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ platform_stats: platform, users: context }, null, 2)}`,
       },
     ],
-  };
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
-      extensions: { code: 'AI_UPSTREAM_ERROR' },
-    });
-  }
-  const json: any = await resp.json();
-  return json?.choices?.[0]?.message?.content || 'No answer returned.';
+  // An empty answer was never an error here — the assistant says so instead.
+  if (res.ok) return res.content;
+  if (res.code === 'EMPTY') return 'No answer returned.';
+  throw openAiGraphQLError(res);
 }
 
 async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
@@ -530,17 +427,11 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
   if (!prompt) {
     throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
-  if (!apiKey) {
-    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
-      extensions: { code: 'AI_NOT_CONFIGURED' },
-    });
-  }
-  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
-  const body = {
-    model,
+  const res = await openaiChat({
+    task: 'ai.email_mjml',
+    detail: prompt.slice(0, 120),
     temperature: 0.35,
-    response_format: { type: 'json_object' as const },
+    json: true,
     messages: [
       { role: 'system', content: await getSystemPrompt('generate.email_mjml') },
       {
@@ -548,21 +439,9 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
         content: `Instruction: ${prompt}\n\nExisting MJML:\n${(input.current_mjml || '').slice(0, 12000)}`,
       },
     ],
-  };
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
-      extensions: { code: 'AI_UPSTREAM_ERROR' },
-    });
-  }
-  const json: any = await resp.json();
-  const content = json?.choices?.[0]?.message?.content;
-  const parsed = JSON.parse(content || '{}');
+  if (!res.ok) throw openAiGraphQLError(res);
+  const parsed = JSON.parse(res.content || '{}');
   const mjml = String(parsed?.mjml ?? '').trim();
   if (!/<mjml[\s>]/i.test(mjml)) {
     throw new GraphQLError('OpenAI did not return valid MJML', {

@@ -23,12 +23,25 @@ export const appConfig = {
   nav: [
     { label: 'Welcome', to: '/', icon: 'dashboard' },
     { label: 'AI Library', to: '/library', icon: 'library' },
+    {
+      label: 'OpenAI',
+      icon: 'ai',
+      children: [
+        { label: 'Dashboard', to: '/openai', icon: 'analytics' },
+        { label: 'Logs', to: '/openai/logs', icon: 'article' },
+      ],
+    },
   ],
   modules: [
     {
       title: 'Prompt Library',
       description: 'Curate reusable AI prompts and track their token size.',
       icon: 'library',
+    },
+    {
+      title: 'OpenAI',
+      description: 'Every OpenAI call across the platform, with its tokens and cost.',
+      icon: 'ai',
     },
   ],
 } satisfies AppConfig;

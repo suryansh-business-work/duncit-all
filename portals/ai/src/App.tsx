@@ -3,6 +3,8 @@ import { ProfilePage, createAuthed } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import PromptLibraryPage from './pages/prompt-library';
+import OpenAiDashboardPage from './pages/openai-dashboard';
+import OpenAiLogsPage from './pages/openai-logs';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -15,6 +17,8 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
       <Route path="/library" element={authed(<PromptLibraryPage />)} />
+      <Route path="/openai" element={authed(<OpenAiDashboardPage />)} />
+      <Route path="/openai/logs" element={authed(<OpenAiLogsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

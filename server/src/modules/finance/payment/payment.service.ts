@@ -17,6 +17,10 @@ import {
 } from './razorpay.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { coinService } from '@modules/finance/coin/coin.service';
+import {
+  giftcardService,
+  type GiftCardPurchaseFacts,
+} from '@modules/finance/giftcard/giftcard.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -617,6 +621,37 @@ const productPaymentMetadata = (input: any, resolution: ProductPayableResolution
   shipping: resolution.shipping,
 });
 
+/** Metadata blob for a gift card purchase — the frozen facts the issue leg
+ * replays on payment success, never the client's word at that later moment. */
+const giftCardPaymentMetadata = (input: any, facts: GiftCardPurchaseFacts) => ({
+  source: 'app_giftcard_checkout',
+  checkout_url: input.checkout_url,
+  pod_id: null,
+  gift_card: facts,
+});
+
+/** A gift card charges exactly its face value: no platform fee and no GST at
+ * sale (a prepaid instrument is taxed when the goods are bought with it), and
+ * no coupon or coin discounts — stored value must not buy stored value. */
+async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
+  const fs = await getFinanceSettings();
+  return {
+    subtotal: round2(amount),
+    platform_fee_pct: 0,
+    platform_fee_amount: 0,
+    gst_pct: 0,
+    gst_amount: 0,
+    total: round2(amount),
+    currency_symbol: fs.currency_symbol,
+    dummy_mode: fs.dummy_mode,
+  };
+}
+
+/** The payment row's human line. Payment descriptions are server-side English
+ * data, like 'Pod booking · …' — clients localize their own UI copy. */
+const giftCardDescription = (facts: GiftCardPurchaseFacts) =>
+  facts.scope_name ? `Gift card · ${facts.scope_name}` : 'Gift card · Pod Shop';
+
 interface RazorpaySheetArgs {
   paymentDocId: string;
   keyId: string;
@@ -1170,6 +1205,118 @@ export const paymentService = {
       gateway_ref: order.id,
       paid_at: null,
       metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal, razorpay_order_id: order.id },
+    });
+
+    return razorpaySheet({
+      paymentDocId: String(doc._id),
+      keyId,
+      orderId: order.id,
+      amountPaise,
+      businessName: fs.business_name,
+      description,
+      input,
+      currencySymbol: quote.currency_symbol,
+      total: quote.total,
+      free: false,
+      payment: null,
+    });
+  },
+
+  /** Gift card purchase via the dummy gateway. The card itself is created only
+   * by the finalizer's issue leg, from the facts frozen in the metadata. */
+  async dummyGiftCardCheckout(input: any, userId: string) {
+    const fs = await getFinanceSettings();
+    if (!fs.dummy_mode) {
+      throw new GraphQLError('Live payment gateway is not configured. Enable dummy mode to test.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+
+    await giftcardService.assertPurchaseEnabled();
+    const facts = await giftcardService.purchaseFacts(input);
+    const quote = await giftCardQuote(facts.amount);
+
+    // PENDING until the finalizer promotes it — see dummyCheckout.
+    const failed = !!input.simulate_failure;
+    const doc = await PaymentModel.create({
+      payment_id: newPaymentId(),
+      invoice_no: null,
+      user_id: user._id,
+      ...buildBuyerFields(input, user),
+      checkout_url: input.checkout_url,
+      target_type: 'GIFT_CARD',
+      pod_id: null,
+      description: giftCardDescription(facts),
+      subtotal: quote.subtotal,
+      platform_fee_pct: quote.platform_fee_pct,
+      platform_fee_amount: quote.platform_fee_amount,
+      gst_pct: quote.gst_pct,
+      gst_amount: quote.gst_amount,
+      total: quote.total,
+      currency_symbol: quote.currency_symbol,
+      coupon_code: null,
+      coupon_discount: 0,
+      coins_redeemed: 0,
+      status: failed ? 'FAILED' : 'PENDING',
+      gateway: 'DUMMY',
+      gateway_ref: failed ? null : `dummy_${Date.now()}`,
+      paid_at: null,
+      metadata: giftCardPaymentMetadata(input, facts),
+    });
+
+    if (failed) return toPub(doc);
+    return settle(String(doc._id), 'Dummy Gateway', 'dummyGiftCardCheckout');
+  },
+
+  /** Step 1 of live gift card checkout: create a Razorpay order + a PENDING
+   * GIFT_CARD payment. Verified via the shared verifyRazorpayPayment. The face
+   * value is always at least the configured minimum, so no free path exists. */
+  async createRazorpayGiftCardCheckout(input: any, userId: string) {
+    const fs = await getFinanceSettings();
+    const { keyId } = await getRazorpayKeys();
+    const user = await UserModel.findById(userId);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+
+    await giftcardService.assertPurchaseEnabled();
+    const facts = await giftcardService.purchaseFacts(input);
+    const quote = await giftCardQuote(facts.amount);
+    const payment_id = newPaymentId();
+    const description = giftCardDescription(facts);
+
+    const amountPaise = Math.round(quote.total * 100);
+    const order = await createRazorpayOrder({
+      amountPaise,
+      currency: 'INR',
+      receipt: payment_id,
+      notes: { kind: 'gift_card', user_id: String(user._id) },
+    });
+
+    const doc = await PaymentModel.create({
+      payment_id,
+      invoice_no: null,
+      user_id: user._id,
+      ...buildBuyerFields(input, user),
+      checkout_url: input.checkout_url,
+      target_type: 'GIFT_CARD',
+      pod_id: null,
+      description,
+      subtotal: quote.subtotal,
+      platform_fee_pct: quote.platform_fee_pct,
+      platform_fee_amount: quote.platform_fee_amount,
+      gst_pct: quote.gst_pct,
+      gst_amount: quote.gst_amount,
+      total: quote.total,
+      currency_symbol: quote.currency_symbol,
+      coupon_code: null,
+      coupon_discount: 0,
+      coins_redeemed: 0,
+      status: 'PENDING',
+      gateway: 'RAZORPAY',
+      gateway_ref: order.id,
+      paid_at: null,
+      metadata: { ...giftCardPaymentMetadata(input, facts), razorpay_order_id: order.id },
     });
 
     return razorpaySheet({

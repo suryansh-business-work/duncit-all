@@ -14,6 +14,7 @@ const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
   'payment-release-approved': 'Payment release approved',
   'venue-slot-request': 'New slot booking request — {{pod_title}}',
   'pod-backout-spot-filled': 'Your spot was filled — {{pod_title}}',
+  'gift-card-received': '{{sender_name}} sent you a Duncit gift card 🎁',
 };
 
 /** Walk the MJML source and extract every {{ var }} reference. */

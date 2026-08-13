@@ -9,6 +9,7 @@ export const paymentTypeDefs = /* GraphQL */ `
   enum PaymentTargetType {
     POD
     PRODUCT
+    GIFT_CARD
     OTHER
   }
 
@@ -366,6 +367,51 @@ export const paymentTypeDefs = /* GraphQL */ `
     delivery_pincode: String!
   }
 
+  """
+  Buying a gift card. The card is charged at face value (no fee, no GST — tax
+  applies when the goods are bought), and coupons/coins are deliberately not
+  accepted: stored value must not buy stored value. The card itself is created
+  only on payment success.
+  """
+  input GiftCardCheckoutInput {
+    "The card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one."
+    scope_type: GiftCardScopeType!
+    scope_category_id: ID
+    "Face value in whole rupees, within the configured min/max."
+    amount: Float!
+    "Who the card is for. Empty means the buyer keeps it."
+    recipient_email: String
+    recipient_name: String
+    "Personal note printed on the card and in the email."
+    message: String
+    contact_name: String
+    contact_email: String!
+    contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
+    billing: CheckoutBillingInput
+    billing_address: String
+    checkout_url: String!
+  }
+
+  input DummyGiftCardCheckoutInput {
+    scope_type: GiftCardScopeType!
+    scope_category_id: ID
+    amount: Float!
+    recipient_email: String
+    recipient_name: String
+    message: String
+    contact_name: String
+    contact_email: String!
+    contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
+    billing: CheckoutBillingInput
+    billing_address: String
+    checkout_url: String!
+    simulate_failure: Boolean
+  }
+
   "One (pod, warehouse) group's delivery estimate in a product-cart shipping quote — each group ships (and is charged) separately."
   type ProductShippingQuoteLine {
     "The pod this shipment group belongs to (null/empty when the cart line carried no pod)."
@@ -414,5 +460,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     dummyProductCheckout(input: DummyProductCheckoutInput!): Payment!
     "Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment)."
     createRazorpayProductOrder(input: ProductCheckoutInput!): RazorpayOrder!
+    "Gift card purchase via the dummy gateway."
+    dummyGiftCardCheckout(input: DummyGiftCardCheckoutInput!): Payment!
+    "Gift card purchase via Razorpay (step 1; verify with verifyRazorpayPayment)."
+    createRazorpayGiftCardOrder(input: GiftCardCheckoutInput!): RazorpayOrder!
   }
 `;

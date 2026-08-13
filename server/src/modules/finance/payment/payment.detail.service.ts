@@ -41,6 +41,7 @@ const STEP_LABELS: Record<PaymentStepKey, string> = {
   LEADERBOARD_POINTS: 'Leaderboard points awarded',
   PRODUCT_ORDERS: 'Product orders created',
   STOCK_ADJUSTED: 'Stock adjusted',
+  GIFT_CARD_ISSUED: 'Gift card issued',
   COUPON_REDEEMED: 'Coupon redemption counted',
   COINS_REDEEMED: 'Duncit Coins spent',
   COINS_EARNED: 'Duncit Coins earned',
@@ -49,6 +50,7 @@ const STEP_LABELS: Record<PaymentStepKey, string> = {
   TICKET_EMAIL: 'Entry ticket e-mailed',
   INVOICE_PDF: 'Invoice PDF generated',
   RECEIPT_EMAIL: 'Receipt e-mailed',
+  GIFT_CARD_EMAIL: 'Gift card e-mailed',
   SHIPMENT: 'Shipment booked',
 };
 

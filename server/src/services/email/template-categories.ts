@@ -72,7 +72,9 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   // `marketing` on purpose: it confirms an action the person just took, so it
   // has to arrive even to somebody who has switched marketing off — which is
   // exactly who receives it.
-  transactional: ['event-ticket', 'unsubscribe-confirmed', 'welcome'],
+  // `gift-card-received` is transactional, not notification: the code in it IS
+  // the value somebody paid for, so an opt-out must never be able to eat it.
+  transactional: ['event-ticket', 'gift-card-received', 'unsubscribe-confirmed', 'welcome'],
 
   // No template sends as these yet; the fragments exist for when one does.
   service: [],
@@ -109,6 +111,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'email-verification-otp': "You're receiving this because you use Duncit.",
   'event-ticket': "You're receiving this because you booked a Duncit event.",
   'faq-received': "You're receiving this because you contacted us.",
+  'gift-card-received': '{{t:email.giftCard.footer}}',
   'grievance-received': "You're receiving this because you raised a grievance with us.",
   'host-request-acknowledged': "You're receiving this because you applied to host a new category on Duncit.",
   'host-request-approved': "You're receiving this because you applied to host a new category on Duncit.",

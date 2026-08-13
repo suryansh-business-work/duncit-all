@@ -57,8 +57,13 @@ export const coinSettingsService = {
    * priced differently — a physical product carries a cost of goods a seat in a
    * pod does not — so they earn at their own rates. `OTHER` is a catch-all with
    * no shop economics behind it, so it follows the pod rate.
+   *
+   * A GIFT_CARD purchase earns NOTHING: the card converts to coins on
+   * redemption, so paying an earn rate on top would mint loyalty value out of
+   * buying stored value.
    */
   async earnPctFor(targetType: PaymentTargetType | null | undefined): Promise<number> {
+    if (targetType === 'GIFT_CARD') return 0;
     const doc = await this.get();
     return targetType === 'PRODUCT' ? doc.shop_earn_pct : doc.pod_join_earn_pct;
   },

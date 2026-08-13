@@ -7,7 +7,9 @@ import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import {
   dummyCheckoutSchema,
+  dummyGiftCardCheckoutSchema,
   dummyProductCheckoutSchema,
+  giftCardCheckoutSchema,
   productCheckoutSchema,
   productShippingQuoteSchema,
   razorpayOrderSchema,
@@ -118,6 +120,16 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       const input = await validate(productCheckoutSchema, args.input);
       return paymentService.createRazorpayProductCheckout(input, u.id);
+    },
+    dummyGiftCardCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(dummyGiftCardCheckoutSchema, args.input);
+      return paymentService.dummyGiftCardCheckout(input, u.id);
+    },
+    createRazorpayGiftCardOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(giftCardCheckoutSchema, args.input);
+      return paymentService.createRazorpayGiftCardCheckout(input, u.id);
     },
   },
 };

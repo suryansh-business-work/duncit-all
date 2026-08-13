@@ -321,6 +321,13 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    key: "gift_cards",
+    name: "Gift Cards",
+    description:
+      "Show the Gift Cards section (buy a themed card, redeem a code into Duncit Coins) in the mobile app and mobile web sidebar, and allow purchases.",
+    enabled: false,
+  },
+  {
     // Seeded ON so enabling this feature changes nothing for users already on
     // the current build — turning it OFF is the deliberate act.
     key: "force_app_update",

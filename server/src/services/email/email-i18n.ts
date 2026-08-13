@@ -41,6 +41,15 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.venueSlotRequest.reviewAll": "See all pending requests",
   "email.venueSlotRequest.footer":
     "You're receiving this because a host requested one of your venue's availability slots.",
+  "email.giftCard.shopScope": "Pod Shop",
+  "email.giftCard.title": "You received a gift card",
+  "email.giftCard.intro": "sent you a Duncit gift card.",
+  "email.giftCard.expires": "Valid until",
+  "email.giftCard.redeemCta": "Redeem into Duncit Coins",
+  "email.giftCard.howItWorks":
+    "Tap the button (or enter the code in the app under Gift Cards > Redeem) and the full value lands in your Duncit Coins instantly. Coins pay for pod bookings and Pod Shop orders at checkout.",
+  "email.giftCard.footer":
+    "You're receiving this because someone bought a Duncit gift card for this address.",
   "email.grievance.title": "Grievance received",
   "email.grievance.heading": "We have your grievance",
   "email.grievance.intro":

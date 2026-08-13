@@ -214,6 +214,14 @@ async function bootstrap() {
     const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();
   });
+  // Membership tiers + the comparison rows the apps render. $setOnInsert only,
+  // so a catalogue Admin has edited survives every redeploy.
+  await safeSeed('membership', async () => {
+    const { membershipService } = await import(
+      '@modules/engagement/membership/membership.service'
+    );
+    await membershipService.seedDefaults();
+  });
 
   // Status-page incidents: seed minimum historical data so the 90-day chart
   // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).

@@ -51,6 +51,10 @@ export const AISENSY_CATALOGUE = gql`
       language
       body
       param_count
+      header
+      header_format
+      footer
+      buttons
     }
   }
 `;
@@ -184,6 +188,12 @@ export interface AisensyTemplate {
   language: string;
   body: string;
   param_count: number;
+  /** The header line — empty for a media header or no header at all. */
+  header: string;
+  /** TEXT, IMAGE, VIDEO, DOCUMENT — empty when there is no header. */
+  header_format: string;
+  footer: string;
+  buttons: string[];
 }
 
 export interface WaCampaignRecipientRow {

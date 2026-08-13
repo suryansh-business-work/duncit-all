@@ -122,6 +122,14 @@ export interface AisensyTemplate {
   body: string;
   /** How many variables the body expects — the number of params a send needs. */
   param_count: number;
+  /** The HEADER component's text — empty for a media header or no header. */
+  header: string;
+  /** TEXT, IMAGE, VIDEO, DOCUMENT — empty when the template has no header. */
+  header_format: string;
+  /** The small grey line under the body, when the template has one. */
+  footer: string;
+  /** The button labels WhatsApp draws under the message, in order. */
+  buttons: string[];
 }
 
 const str = (row: Record<string, any>, ...keys: string[]) => {
@@ -132,12 +140,36 @@ const str = (row: Record<string, any>, ...keys: string[]) => {
   return '';
 };
 
-/** The BODY component's text out of a WhatsApp template definition. AiSensy's
- * Project API puts the full text (body + button labels) in `text`. */
-function bodyText(row: Record<string, any>): string {
+/** One component out of a WhatsApp template definition — HEADER, BODY, FOOTER
+ * or BUTTONS. A template carries at most one of each. */
+function componentOf(row: Record<string, any>, type: string): Record<string, any> | null {
   const components = Array.isArray(row.components) ? row.components : [];
-  const body = components.find((c: any) => String(c?.type ?? '').toUpperCase() === 'BODY');
+  return components.find((c: any) => String(c?.type ?? '').toUpperCase() === type) ?? null;
+}
+
+/** The BODY component's text. AiSensy's Project API puts the full text
+ * (body + button labels) in `text`. */
+function bodyText(row: Record<string, any>): string {
+  const body = componentOf(row, 'BODY');
   return trimmed(body?.text) || trimmed(row.body) || trimmed(row.text);
+}
+
+/** The header, as WhatsApp draws it: a bold line, or a media placeholder whose
+ * kind is all a preview can show — the media itself is chosen per send. */
+function headerOf(row: Record<string, any>): { header: string; header_format: string } {
+  const header = componentOf(row, 'HEADER');
+  if (!header) return { header: '', header_format: '' };
+  return {
+    header: trimmed(header.text),
+    header_format: (trimmed(header.format) || 'TEXT').toUpperCase(),
+  };
+}
+
+/** The button labels, in the order WhatsApp stacks them under the message. */
+function buttonLabels(row: Record<string, any>): string[] {
+  const block = componentOf(row, 'BUTTONS');
+  const buttons = Array.isArray(block?.buttons) ? block.buttons : [];
+  return buttons.map((button: any) => trimmed(button?.text)).filter(Boolean);
 }
 
 /** Highest {{n}} in the body — what "templateParams length" has to match. */
@@ -178,6 +210,9 @@ export async function listTemplates(): Promise<AisensyTemplate[]> {
       language: str(row, 'language', 'languageCode', 'language_code'),
       body,
       param_count,
+      ...headerOf(row),
+      footer: trimmed(componentOf(row, 'FOOTER')?.text),
+      buttons: buttonLabels(row),
     };
   });
 }

@@ -112,6 +112,14 @@ export const waCampaignTypeDefs = gql`
     body: String!
     "How many variables the body expects — the number of params a send must fill."
     param_count: Int!
+    "The HEADER component's text — empty for a media header or no header."
+    header: String!
+    "TEXT, IMAGE, VIDEO or DOCUMENT — empty when the template has no header."
+    header_format: String!
+    "The small grey line under the body, when the template has one."
+    footer: String!
+    "The button labels WhatsApp draws under the message, in order."
+    buttons: [String!]!
   }
 
   type WaTestSendResult {

@@ -25,6 +25,7 @@ export type ProfileIconKey =
   | 'wallet'
   | 'coin'
   | 'leaderboard'
+  | 'membership'
   | 'host'
   | 'venue'
   | 'ecomm'
@@ -37,6 +38,9 @@ export interface ProfileTile {
   caption: string;
   icon: ProfileIconKey;
   to: string;
+  /** Optional pill after the label (e.g. "Coming soon"). Already translated by
+   * the caller — this module holds no copy. */
+  badge?: string;
 }
 
 /** The 2×2 quick-action grid — the four primary consumer destinations. */

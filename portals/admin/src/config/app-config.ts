@@ -56,6 +56,14 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Membership',
+      icon: 'ticket',
+      children: [
+        { label: 'Plans', to: '/membership/plans', icon: 'description' },
+        { label: 'Subscribers', to: '/membership/subscribers', icon: 'people' },
+      ],
+    },
+    {
       label: 'Marketing',
       icon: 'marketing',
       children: [{ label: 'Coupons', to: '/coupons', icon: 'percent' }],
@@ -131,6 +139,18 @@ export const appConfig = {
     { label: 'Event Tickets', to: '/event-tickets', section: 'Pods', keywords: ['qr', 'check-in'] },
     { label: 'Pod Settings', to: '/pod-settings', section: 'Pods', keywords: ['draft', 'retention', 'config'] },
     { label: 'Pod Monitoring (AI)', to: '/pod-monitoring', section: 'Pods', keywords: ['audit', 'ai', 'activity', 'risk', 'log'] },
+    {
+      label: 'Plans',
+      to: '/membership/plans',
+      section: 'Membership',
+      keywords: ['membership', 'tier', 'pricing', 'access', 'connect', 'elite', 'luxe', 'benefit'],
+    },
+    {
+      label: 'Subscribers',
+      to: '/membership/subscribers',
+      section: 'Membership',
+      keywords: ['membership', 'notify', 'waitlist', 'news'],
+    },
     { label: 'Coupons', to: '/coupons', section: 'Marketing', keywords: ['discount', 'promo'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },
     { label: 'Locations', to: '/locations', section: 'Catalog' },

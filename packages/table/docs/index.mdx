@@ -27,6 +27,7 @@ exports:
   - 'useTablePrefs'
   - 'makeApolloTableFetch'
   - 'useApolloTableFetch'
+  - 'clientTableFetch'
   - 'tableQueryToGql'
   - 'buildAgTheme'
   - 'filterChipLabel'
@@ -318,6 +319,7 @@ await fetchRows(payoutQuery);
 | `useTablePrefs` | `(tableId: string) => { hiddenOverrides: Record<string, boolean>; toggleColumn; resetColumns; density; toggleDensity }` | Reads/writes `localStorage`, every access wrapped in try/catch. Density defaults to `'standard'`. |
 | `makeApolloTableFetch` | `<Row>(client, query, resultKey, options?) => TableFetch<Row>` | Outside React only. `options`: `extraFilters`, `mapQuery`, `extraVariables`, `buildVariables`, `mapRow`, `fetchPolicy` (default `'network-only'`). |
 | `useApolloTableFetch` | `<Row>(client, query, resultKey, options?, deps?) => TableFetch<Row>` | The same thing memoized — **always** this one inside a component. |
+| `clientTableFetch` | `<T>(rows: readonly T[], searchOf: (row: T) => string) => TableFetch<T>` | For rows the page already holds (a full list query, a live third-party read, an embedded list). Applies search → sort → page slice in memory. Ignores column `filter`s, so don't declare any. Memoize it (`useMemo` on the rows) inside a component. |
 | `TableGqlClient` | `{ query(options: { query: unknown; variables?: Record<string, unknown>; fetchPolicy?: string }): Promise<{ data: unknown }> }` | Structural, so the package needs no `@apollo/client` dependency. |
 | `tableQueryToGql` | `(q: TableQueryState) => { query: {...} }` | The single client→server mapping. |
 | `filterChipLabel` | `<T>(columns, filter: TableFilterValue) => string` | Falls back to `filter.field` when no column matches. |

@@ -115,6 +115,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ProductCheckout: 'product-checkout',
       AddressBook: 'address-book',
       Leaderboard: 'leaderboard',
+      Membership: 'membership',
       // The shop, using mWeb's paths. These screens have existed all along but
       // were missing from this map, so a shared /shop or /product link opened
       // the app on NotFound — the one outcome worse than staying in the browser.

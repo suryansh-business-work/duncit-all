@@ -32,6 +32,7 @@ export function SidebarUserContent({
   mode,
   showPodPlans,
   showLeaderboard = false,
+  showMembership = false,
   showTourGuide = false,
   onNavigate,
 }: Readonly<{
@@ -43,6 +44,8 @@ export function SidebarUserContent({
   showPodPlans: boolean;
   /** Server `leaderboard` feature flag — the whole section hides without it. */
   showLeaderboard?: boolean;
+  /** Server `membership` feature flag — the whole section hides without it. */
+  showMembership?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
   onNavigate: (route: MenuRoute) => void;
@@ -59,6 +62,16 @@ export function SidebarUserContent({
       caption: '',
       icon: 'emoji-events',
       route: 'Leaderboard',
+    },
+  ];
+  const membershipItems: ProfileTile[] = [
+    {
+      key: 'membership',
+      label: t('mweb.membership.sidebarLabel'),
+      caption: '',
+      icon: 'card-membership',
+      route: 'Membership',
+      badge: t('mweb.membership.comingSoon'),
     },
   ];
   return (
@@ -78,6 +91,13 @@ export function SidebarUserContent({
         <SidebarManageList
           title={t('mweb.leaderboard.title')}
           items={leaderboardItems}
+          onNavigate={onNavigate}
+        />
+      ) : null}
+      {showMembership ? (
+        <SidebarManageList
+          title={t('mweb.membership.title')}
+          items={membershipItems}
           onNavigate={onNavigate}
         />
       ) : null}

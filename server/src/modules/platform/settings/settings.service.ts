@@ -305,6 +305,15 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    // Seeded ON: the tiers ship as "coming soon" with every CTA disabled, so
+    // showing the page costs nothing — this flag is the switch to pull it back.
+    key: "membership",
+    name: "Membership",
+    description:
+      "Show the Membership section (tier pricing, comparison table and the notify-me form) in the mobile app and mobile web sidebar.",
+    enabled: true,
+  },
+  {
     key: "tour_guide",
     name: "Tour Guide",
     description:

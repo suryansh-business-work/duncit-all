@@ -75,6 +75,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       coin: { title: 'Duncit Coin' },
       leaderboard: { title: 'Leaderboard' },
+      membership: {
+        title: 'Membership',
+        description: 'Duncit membership tiers — what each one gets you, and what it costs.',
+      },
       podPlans: { title: 'Pod plans' },
       podHistory: { title: 'Pod history' },
       booking: { title: 'Your booking' },
@@ -1602,6 +1606,38 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       rewardRankRange: 'Ranks #{from}–#{to}',
       rewardsEmpty: 'Rewards for this board will be announced soon.',
       anonymous: 'Duncit member',
+    },
+    // Membership — mWeb and native render the SAME screen (rule 27), so every
+    // key here is used by BOTH. The tiers, their prices and every comparison
+    // row come from Admin > Membership; nothing here quotes a price or a
+    // benefit, so editing the catalogue never leaves this copy lying.
+    membership: {
+      title: 'Membership',
+      sidebarLabel: 'See the plans',
+      comingSoon: 'Coming soon',
+      heading: 'Membership is on its way',
+      subheading:
+        'Four tiers, built around the one thing that is actually scarce on Duncit — a spot in the pod you want. Here is what each one is shaping up to include.',
+      compareTitle: 'Compare the plans',
+      compareHint: 'Scroll sideways to see every tier.',
+      benefitColumn: 'Benefit',
+      included: 'Included',
+      notIncluded: 'Not included',
+      ctaDisabledHint: 'Plans are not on sale yet.',
+      footnote: '* Fair-use limits apply. Every price and benefit here is provisional.',
+      notifyTitle: 'Want to know the moment it opens?',
+      notifyBody:
+        'We will email you when membership goes live — and you will get first pick of the launch tiers.',
+      notifyEmailLabel: 'Your email',
+      notifyEmailHint: 'Taken from your profile. Change it in Manage Account.',
+      notifyCta: 'Notify me',
+      notifySubmitting: 'Signing you up…',
+      notifyDone: 'You are on the list',
+      notifyDoneBody: 'We will email you as soon as membership opens.',
+      notifyError: 'We could not sign you up. Please try again.',
+      notifyNoEmail: 'Add an email address to your profile first.',
+      loadError: 'Membership plans could not be loaded. Please try again.',
+      empty: 'Membership plans will be announced soon.',
     },
     // Refer & Earn — mWeb and native render the SAME screen (rule 27), so every
     // key here is used by BOTH unless its comment says otherwise. The reward and

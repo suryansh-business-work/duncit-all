@@ -1,4 +1,4 @@
-import { Box, List, ListItemButton, ListItemIcon, ListItemText, Paper, Typography } from '@mui/material';
+import { Box, Chip, List, ListItemButton, ListItemIcon, ListItemText, Paper, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { profileIcon } from './profileIcons';
 import type { ProfileTile } from './profileSections';
@@ -34,6 +34,7 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
                 {profileIcon(item.icon)}
               </ListItemIcon>
               <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700 }} />
+              {item.badge && <Chip size="small" color="warning" label={item.badge} sx={{ mr: 0.75 }} />}
               <ChevronRightIcon fontSize="small" color="disabled" />
             </ListItemButton>
           ))}

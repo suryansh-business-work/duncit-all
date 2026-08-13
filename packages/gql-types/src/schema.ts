@@ -362,7 +362,15 @@ export type AisensyTemplate = {
   __typename?: 'AisensyTemplate';
   /** The template's BODY text, with its {{1}} placeholders intact. */
   body: Scalars['String']['output'];
+  /** The button labels WhatsApp draws under the message, in order. */
+  buttons: Array<Scalars['String']['output']>;
   category: Scalars['String']['output'];
+  /** The small grey line under the body, when the template has one. */
+  footer: Scalars['String']['output'];
+  /** The HEADER component's text — empty for a media header or no header. */
+  header: Scalars['String']['output'];
+  /** TEXT, IMAGE, VIDEO or DOCUMENT — empty when the template has no header. */
+  header_format: Scalars['String']['output'];
   language: Scalars['String']['output'];
   name: Scalars['String']['output'];
   /** How many variables the body expects — the number of params a send must fill. */
@@ -433,21 +441,30 @@ export type AppAnalyticsEventType =
  */
 export type AppBuild = {
   __typename?: 'AppBuild';
+  /** Which server and database this build's app points at. */
+  app_env: AppBuildEnv;
   /**
    * Why a SUCCESS build has no download. Empty whenever there is one. A build
    * that compiled but could not be stored is still reported and announced, so
    * this is what tells the two apart.
    */
   artifact_error: Scalars['String']['output'];
-  /** The handle the artifact is removed by — its file name in the build store. */
+  /** The handle the primary artifact is removed by — its file name in the build store. */
   artifact_file_id: Scalars['String']['output'];
   /**
-   * The download link, served from the VPS build store. Empty on a FAILED build,
-   * and on a SUCCESS build whose artifact could not be stored.
+   * The primary artifact's download link, served from the VPS build store. Empty
+   * on a FAILED build, and on a SUCCESS build whose artifact could not be stored.
+   * Prefer the artifacts list — this names only the first of them.
    */
   artifact_url: Scalars['String']['output'];
+  /**
+   * Everything this build produced: an APK and an AAB on Android, an IPA on iOS.
+   * Empty on a FAILED build. Rows written before builds shipped two artifacts
+   * report their single one here too, so this is always the whole answer.
+   */
+  artifacts: Array<AppBuildArtifact>;
   branch: Scalars['String']['output'];
-  /** The artifact's file name. */
+  /** The primary artifact's file name (the APK on Android, the IPA on iOS). */
   build_name: Scalars['String']['output'];
   /** Permanent human-readable id (DUN-BLD-000001). */
   build_no: Scalars['String']['output'];
@@ -456,23 +473,86 @@ export type AppBuild = {
   commits: Array<AppBuildCommit>;
   created_at?: Maybe<Scalars['String']['output']>;
   deletions?: Maybe<Scalars['Int']['output']>;
+  /**
+   * Correlates the row the portal wrote at dispatch with the reports the runner
+   * sends afterwards. Empty on push-triggered builds, which have a run id from
+   * their first report and need no other join key.
+   */
+  dispatch_id: Scalars['String']['output'];
   duration_seconds?: Maybe<Scalars['Int']['output']>;
+  /**
+   * Why a FAILED build failed — the workflow stage that broke, and the runner's
+   * own message where there is one. Empty on every other status. A red row that
+   * cannot say what went wrong sends you to the GitHub log for a fact the row
+   * should already have.
+   */
+  error_message: Scalars['String']['output'];
   files_changed?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   insertions?: Maybe<Scalars['Int']['output']>;
   platform: AppBuildPlatform;
   /** Who the CI authenticated as when it reported the build. */
   reported_by: Scalars['String']['output'];
+  /**
+   * What was asked for, as opposed to the artifacts list, which is what was
+   * actually produced.
+   * An APK that was requested and never appeared is a gap you can see.
+   */
+  requested_artifacts: Array<AppBuildArtifactKind>;
   size_mb?: Maybe<Scalars['Float']['output']>;
   slack_channel?: Maybe<Scalars['String']['output']>;
   /** Why the Slack post did not happen, when it did not. */
   slack_error?: Maybe<Scalars['String']['output']>;
   slack_ts?: Maybe<Scalars['String']['output']>;
+  /** What the runner is doing now. Empty once the build is over. */
+  stage: Scalars['String']['output'];
+  /** Every stage this run has entered, in order. */
+  stages: Array<AppBuildStage>;
   status: AppBuildStatus;
+  trigger_source: AppBuildTrigger;
+  /**
+   * Who started it — the portal account that pressed Create build, or the GitHub
+   * actor whose merge triggered it.
+   */
+  triggered_by: Scalars['String']['output'];
   version: Scalars['String']['output'];
   workflow_run_id: Scalars['String']['output'];
   workflow_run_url: Scalars['String']['output'];
 };
+
+export type AppBuildArtifact = {
+  __typename?: 'AppBuildArtifact';
+  /** Why this one is missing. Empty whenever there is a url. */
+  error: Scalars['String']['output'];
+  /** The handle it is removed by — its file name in the build store. */
+  file_id: Scalars['String']['output'];
+  kind: AppBuildArtifactKind;
+  /** The artifact's file name. */
+  name: Scalars['String']['output'];
+  size_mb?: Maybe<Scalars['Float']['output']>;
+  /** The download link, served from the VPS build store. Empty if it never stored. */
+  url: Scalars['String']['output'];
+};
+
+export type AppBuildArtifactInput = {
+  /** Why this one is missing — the build still counts as a success without it. */
+  error?: InputMaybe<Scalars['String']['input']>;
+  file_id?: InputMaybe<Scalars['String']['input']>;
+  kind: AppBuildArtifactKind;
+  name: Scalars['String']['input'];
+  size_mb?: InputMaybe<Scalars['Float']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * What one build produced. Android emits two — an APK to sideload and an AAB to
+ * upload to Play — and they are ONE build, so they share a row rather than
+ * racing each other for the newest-first sort.
+ */
+export type AppBuildArtifactKind =
+  | 'AAB'
+  | 'APK'
+  | 'IPA';
 
 /**
  * A credential for the build workflows, shown once and never stored.
@@ -505,6 +585,11 @@ export type AppBuildCommitInput = {
   subject: Scalars['String']['input'];
 };
 
+/** Which server and database the built app talks to. */
+export type AppBuildEnv =
+  | 'PRODUCTION'
+  | 'STAGING';
+
 export type AppBuildPlatform =
   | 'ANDROID'
   | 'IOS';
@@ -520,8 +605,32 @@ export type AppBuildSettings = {
   last_reported_by?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * A stage the runner entered, stamped when it got there. Reported as the build
+ * goes, so a running build can say what it is doing rather than only how long it
+ * has been doing it.
+ */
+export type AppBuildStage = {
+  __typename?: 'AppBuildStage';
+  at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/**
+ * RUNNING is written when the workflow STARTS and replaced in place when it
+ * finishes, so a build is visible while it is being made rather than only after.
+ * A row can sit RUNNING forever if the runner is cancelled or killed mid-job —
+ * nothing is left to report it — so treat an old RUNNING row as unknown, not live.
+ *
+ * QUEUED belongs to builds started from the Tech portal. Dispatching a workflow
+ * answers with no run id, so the row is written first and the runner claims it
+ * by dispatch_id. A QUEUED row that never becomes RUNNING means GitHub accepted
+ * the dispatch and never scheduled it.
+ */
 export type AppBuildStatus =
   | 'FAILED'
+  | 'QUEUED'
+  | 'RUNNING'
   | 'SUCCESS';
 
 export type AppBuildTablePage = {
@@ -530,6 +639,35 @@ export type AppBuildTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<AppBuild>;
   total: Scalars['Int']['output'];
+};
+
+/** What started a build. */
+export type AppBuildTrigger =
+  /** Someone pressed Create build in the Tech portal. */
+  | 'PORTAL'
+  /** A merge to main. */
+  | 'PUSH';
+
+/** Whether the portal can start builds, and what it would build from. */
+export type AppBuildTriggerConfig = {
+  __typename?: 'AppBuildTriggerConfig';
+  /**
+   * False when no GitHub token is configured. The Create build button is
+   * disabled rather than hidden, so the reason is discoverable.
+   */
+  configured: Scalars['Boolean']['output'];
+  /** Default branch for a PRODUCTION build. */
+  production_ref: Scalars['String']['output'];
+  /**
+   * Where a dispatched build reports back to — this server. A build always
+   * records itself in the portal it was started from, whichever stack its app
+   * is pointed at.
+   */
+  reports_to: Scalars['String']['output'];
+  /** owner/repo builds are dispatched against. Empty when not configured. */
+  repository: Scalars['String']['output'];
+  /** Default branch for a STAGING build. */
+  staging_ref: Scalars['String']['output'];
 };
 
 /**
@@ -3340,6 +3478,37 @@ export type CrmWebsiteScrapeResult = {
   saved: Scalars['Int']['output'];
 };
 
+/**
+ * The signed-in user's saved arrangement of one dashboard. Null from
+ * myDashboardLayout when they have never customised it — the client then
+ * renders the dashboard's built-in defaults.
+ */
+export type DashboardLayout = {
+  __typename?: 'DashboardLayout';
+  dashboard_id: Scalars['ID']['output'];
+  items: Array<DashboardLayoutItem>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** One widget's place on a dashboard grid, in GridStack column/row units. */
+export type DashboardLayoutItem = {
+  __typename?: 'DashboardLayoutItem';
+  h: Scalars['Int']['output'];
+  w: Scalars['Int']['output'];
+  /** The widget's stable id, as declared by the dashboard's widget catalogue. */
+  widget_id: Scalars['ID']['output'];
+  x: Scalars['Int']['output'];
+  y: Scalars['Int']['output'];
+};
+
+export type DashboardLayoutItemInput = {
+  h: Scalars['Int']['input'];
+  w: Scalars['Int']['input'];
+  widget_id: Scalars['ID']['input'];
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
+};
+
 export type DashboardTotals = {
   __typename?: 'DashboardTotals';
   clubs: Array<SuperCategoryCount>;
@@ -3943,6 +4112,7 @@ export type EnvCategory =
   | 'AISENSY'
   | 'EMAIL'
   | 'GEMINI'
+  | 'GITHUB'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'IMAGEKIT'
@@ -6255,6 +6425,151 @@ export type MeetingStatus =
   | 'REQUESTED'
   | 'SCHEDULED';
 
+/** One row of the comparison table, with a cell per plan. */
+export type MembershipBenefit = {
+  __typename?: 'MembershipBenefit';
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Section heading the row sits under. Rows group by this, in sort order. */
+  group: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  values: Array<MembershipBenefitValue>;
+};
+
+export type MembershipBenefitInput = {
+  group: Scalars['String']['input'];
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  label: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  values?: InputMaybe<Array<MembershipBenefitValueInput>>;
+};
+
+/** Server-side table page for the shared table engine (membershipBenefitsTable). */
+export type MembershipBenefitTablePage = {
+  __typename?: 'MembershipBenefitTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MembershipBenefit>;
+  total: Scalars['Int']['output'];
+};
+
+/** A present values array replaces the whole row; scalars are patched individually. */
+export type MembershipBenefitUpdateInput = {
+  group?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  values?: InputMaybe<Array<MembershipBenefitValueInput>>;
+};
+
+/** One plan's cell on a comparison row. Free text so a cell can read 12h, 10% or a tick. */
+export type MembershipBenefitValue = {
+  __typename?: 'MembershipBenefitValue';
+  plan_key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type MembershipBenefitValueInput = {
+  plan_key: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Somebody who asked to be notified when membership opens. */
+export type MembershipNewsSubscriber = {
+  __typename?: 'MembershipNewsSubscriber';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** Server-side table page for the shared table engine (membershipNewsSubscribersTable). */
+export type MembershipNewsSubscriberTablePage = {
+  __typename?: 'MembershipNewsSubscriberTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MembershipNewsSubscriber>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * One membership tier. Every price is TEXT, not a number: a tier can read
+ * "Free" or "Invite only", and the currency is part of what Admin edits.
+ */
+export type MembershipPlan = {
+  __typename?: 'MembershipPlan';
+  /** Hex accent for the card. Empty falls back to the app's primary colour. */
+  accent_color: Scalars['String']['output'];
+  /** Ribbon on the card. Empty means no ribbon. */
+  badge_label: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Label on the call to action, which stays disabled while membership is coming soon. */
+  cta_label: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** The headline price as shown, for example 1,499 with its currency symbol. */
+  price_label: Scalars['String']['output'];
+  /** The qualifier under the price, for example: / year or a monthly alternative. */
+  price_note: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  /** One line under the name — who the tier is for. */
+  tagline: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type MembershipPlanInput = {
+  accent_color?: InputMaybe<Scalars['String']['input']>;
+  badge_label?: InputMaybe<Scalars['String']['input']>;
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  price_label?: InputMaybe<Scalars['String']['input']>;
+  price_note?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Server-side table page for the shared table engine (membershipPlansTable). */
+export type MembershipPlanTablePage = {
+  __typename?: 'MembershipPlanTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MembershipPlan>;
+  total: Scalars['Int']['output'];
+};
+
+/** The key is immutable — benefit cells reference it, so renaming would orphan them. */
+export type MembershipPlanUpdateInput = {
+  accent_color?: InputMaybe<Scalars['String']['input']>;
+  badge_label?: InputMaybe<Scalars['String']['input']>;
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price_label?: InputMaybe<Scalars['String']['input']>;
+  price_note?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The whole pricing screen in one round trip. is_subscribed is the CALLER's
+ * own state, which is why this query is never response-cached.
+ */
+export type MembershipPricing = {
+  __typename?: 'MembershipPricing';
+  benefits: Array<MembershipBenefit>;
+  /** True when the caller already asked to be told when membership opens. */
+  is_subscribed: Scalars['Boolean']['output'];
+  plans: Array<MembershipPlan>;
+};
+
 export type MembershipStatus =
   | 'BACKED_OUT'
   | 'BACKOUT_IN_PROCESS'
@@ -6512,6 +6827,8 @@ export type Mutation = {
   createLegalDocument: LegalDocument;
   createLocation: Location;
   createMarketingCampaign: MarketingCampaign;
+  createMembershipBenefit: MembershipBenefit;
+  createMembershipPlan: MembershipPlan;
   createNotification: Notification;
   createPartnerPod: Pod;
   createPaymentReleaseRequest: PaymentReleaseRequest;
@@ -6632,6 +6949,8 @@ export type Mutation = {
   deleteMarketingCampaign: Scalars['Boolean']['output'];
   /** Delete files by id. Returns how many ImageKit actually removed. */
   deleteMediaFiles: Scalars['Int']['output'];
+  deleteMembershipBenefit: Scalars['Boolean']['output'];
+  deleteMembershipPlan: Scalars['Boolean']['output'];
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
@@ -6777,6 +7096,14 @@ export type Mutation = {
   /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
   /**
+   * Add the bot to a PUBLIC channel, which is the fix for not_in_channel.
+   *
+   * Needs the channels:join scope. Private channels cannot be joined by any API
+   * — Slack only admits a bot to one by invitation from someone already inside
+   * it — so this refuses them rather than failing at Slack with a vaguer error.
+   */
+  joinSlackChannel: SlackChannel;
+  /**
    * Grant Google sign-in to an existing email/password account, then sign in.
    *
    * This is the "allow" half of the consent step loginWithGoogle triggers with
@@ -6879,9 +7206,14 @@ export type Mutation = {
   replyToProductReview: ProductReview;
   replyToTicket: Ticket;
   /**
-   * Record a finished CI build (and announce it on the platform's Slack
-   * channel, best-effort). Tech/Super admin only — the workflow authenticates
-   * with a TECH_MANAGER JWT, the same way release-notify does.
+   * Record a CI build (and, once it finishes, announce it on the platform's
+   * Slack channel, best-effort). Tech/Super admin only — the workflow
+   * authenticates with a TECH_MANAGER JWT, the same way release-notify does.
+   *
+   * Reports are keyed on workflow_run_id, so the RUNNING report a workflow sends
+   * at its start and the SUCCESS/FAILED report it sends at its end are the SAME
+   * row, not two. Slack hears only about the finished one — a channel that
+   * announced every build twice would be ignored within a week.
    */
   reportAppBuild: AppBuild;
   /** Auth-required: email a confirmation OTP before self-serve account deletion. */
@@ -6914,6 +7246,11 @@ export type Mutation = {
   rescheduleMyMeeting: OnboardingMeeting;
   /** Restore a system prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
+  /**
+   * Forget the caller's arrangement of one dashboard so it falls back to the
+   * built-in defaults. Returns true whether or not a row existed.
+   */
+  resetDashboardLayout: Scalars['Boolean']['output'];
   /** Restore one of the nine to the header and footer it shipped with. */
   resetEmailFragment: EmailFragment;
   resetPasswordWithOtp: Scalars['Boolean']['output'];
@@ -6939,6 +7276,12 @@ export type Mutation = {
   revokeBadge: Scalars['Boolean']['output'];
   revokeLeadSurveyLink: Scalars['Boolean']['output'];
   saveBrandPickupLocation: BrandPickupLocation;
+  /**
+   * Store the caller's arrangement of one dashboard, replacing any previous
+   * one. Positions only — widget ids the running build does not define are
+   * simply ignored when the dashboard next renders.
+   */
+  saveDashboardLayout: DashboardLayout;
   /**
    * Save one end and immediately prove it by connecting with exactly what was
    * saved. Returns both ends, so the caller never has to merge two shapes.
@@ -7111,6 +7454,11 @@ export type Mutation = {
   submitVenueStep3: Venue;
   /** Submit/replace an IDENTITY document — moves it to PENDING. */
   submitVerification: Verification;
+  /**
+   * Add the caller to the notify-me list. The address is read from their
+   * profile, never from the request, so nobody can subscribe another inbox.
+   */
+  subscribeMembershipNews: MembershipNewsSubscriber;
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
@@ -7149,6 +7497,19 @@ export type Mutation = {
   togglePodLike: Pod;
   togglePostLike: Post;
   toggleSavedPod: SavedPodState;
+  /**
+   * Start a build from the portal. Tech/Super admin only.
+   *
+   * Writes a QUEUED row, then dispatches the platform's workflow with the
+   * operator's choices as inputs. The row is written FIRST and deleted again if
+   * GitHub refuses the dispatch, so a build the operator can see always
+   * corresponds to a run GitHub accepted.
+   *
+   * The run reports back to THIS server whatever env its app is pointed at, so
+   * a build started here is visible here. That also means a staging portal needs
+   * its own CI token in the repo secrets.
+   */
+  triggerAppBuild: TriggerAppBuildResult;
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
@@ -7205,6 +7566,8 @@ export type Mutation = {
   updateMediaFile: MediaItem;
   updateMeeting: OnboardingMeeting;
   updateMeetingAvailability: MeetingAvailability;
+  updateMembershipBenefit: MembershipBenefit;
+  updateMembershipPlan: MembershipPlan;
   updateMyInterests: User;
   updateMyPetProfile: User;
   updateMyProductListing: InventoryProduct;
@@ -7875,6 +8238,16 @@ export type MutationCreateMarketingCampaignArgs = {
 };
 
 
+export type MutationCreateMembershipBenefitArgs = {
+  input: MembershipBenefitInput;
+};
+
+
+export type MutationCreateMembershipPlanArgs = {
+  input: MembershipPlanInput;
+};
+
+
 export type MutationCreateNotificationArgs = {
   input: CreateNotificationInput;
 };
@@ -8263,6 +8636,16 @@ export type MutationDeleteMarketingCampaignArgs = {
 
 export type MutationDeleteMediaFilesArgs = {
   fileIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationDeleteMembershipBenefitArgs = {
+  benefit_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMembershipPlanArgs = {
+  plan_id: Scalars['ID']['input'];
 };
 
 
@@ -8661,6 +9044,11 @@ export type MutationJoinFreePodArgs = {
 };
 
 
+export type MutationJoinSlackChannelArgs = {
+  channel: Scalars['ID']['input'];
+};
+
+
 export type MutationLinkGoogleAccountArgs = {
   input: GoogleAuthInput;
 };
@@ -9011,6 +9399,11 @@ export type MutationResetAiPromptArgs = {
 };
 
 
+export type MutationResetDashboardLayoutArgs = {
+  dashboard_id: Scalars['ID']['input'];
+};
+
+
 export type MutationResetEmailFragmentArgs = {
   key: Scalars['String']['input'];
 };
@@ -9111,6 +9504,12 @@ export type MutationRevokeLeadSurveyLinkArgs = {
 export type MutationSaveBrandPickupLocationArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSaveDashboardLayoutArgs = {
+  dashboard_id: Scalars['ID']['input'];
+  items: Array<DashboardLayoutItemInput>;
 };
 
 
@@ -9739,6 +10138,11 @@ export type MutationToggleSavedPodArgs = {
 };
 
 
+export type MutationTriggerAppBuildArgs = {
+  input: TriggerAppBuildInput;
+};
+
+
 export type MutationUnfollowClubArgs = {
   club_id: Scalars['ID']['input'];
 };
@@ -10031,6 +10435,18 @@ export type MutationUpdateMeetingArgs = {
 
 export type MutationUpdateMeetingAvailabilityArgs = {
   input: MeetingAvailabilityInput;
+};
+
+
+export type MutationUpdateMembershipBenefitArgs = {
+  benefit_id: Scalars['ID']['input'];
+  input: MembershipBenefitUpdateInput;
+};
+
+
+export type MutationUpdateMembershipPlanArgs = {
+  input: MembershipPlanUpdateInput;
+  plan_id: Scalars['ID']['input'];
 };
 
 
@@ -12543,6 +12959,7 @@ export type Query = {
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
   appBuildSettings: AppBuildSettings;
+  appBuildTriggerConfig: AppBuildTriggerConfig;
   /** CI builds of one platform, newest first (Tech portal App Builds tables). */
   appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
@@ -12956,6 +13373,16 @@ export type Query = {
   meetingHolidays: Array<MeetingHoliday>;
   /** Bookable slots (others' bookings disabled). Pass kind so the user's own other-flow bookings show unavailable; staff pass exclude_meeting_id to keep the meeting being scheduled selectable. */
   meetingSlots: Array<MeetingSlot>;
+  /** Admin > Membership > Plans > Benefits. */
+  membershipBenefits: Array<MembershipBenefit>;
+  membershipBenefitsTable: MembershipBenefitTablePage;
+  /** Admin > Membership > Subscribers. */
+  membershipNewsSubscribersTable: MembershipNewsSubscriberTablePage;
+  /** Admin > Membership > Plans. */
+  membershipPlans: Array<MembershipPlan>;
+  membershipPlansTable: MembershipPlanTablePage;
+  /** The membership pricing screen — mWeb and the native app render this. */
+  membershipPricing: MembershipPricing;
   /**  Account health for the signed-in user. Always returns a record (default base = 100).  */
   myAccountHealth: HealthScore;
   myActiveBouncerSos?: Maybe<BouncerSosAlert>;
@@ -13003,6 +13430,12 @@ export type Query = {
    * field on User.
    */
   myConnectedAccounts: ConnectedAccounts;
+  /**
+   * The signed-in user's layout for one dashboard, or null when they have
+   * never saved one. Always scoped to the caller — a layout is a personal
+   * preference and is never readable for anybody else.
+   */
+  myDashboardLayout?: Maybe<DashboardLayout>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
   myEcommBrands: Array<EcommBrand>;
   /** Server-side table sibling of myEcommBrands — always scoped to the caller's own brands. */
@@ -13266,10 +13699,19 @@ export type Query = {
   /** Aggregated click analytics for one link. */
   shortLinkStats: ShortLinkStats;
   shortLinksTable: ShortLinkTablePage;
+  /**
+   * Recent messages in one channel, OLDEST FIRST.
+   *
+   * The bot must be a MEMBER of the channel — Slack refuses history for a
+   * channel it was never invited to, however many scopes the token holds.
+   */
+  slackChannelHistory: Array<SlackMessage>;
   /** Channels the Slack bot can see, each with a copyable archive link. */
   slackChannels: Array<SlackChannel>;
   /** Whether a Slack bot token is configured (Tech portal). */
   slackConfigured: Scalars['Boolean']['output'];
+  /** What the bot token is allowed to do, and where to change it. */
+  slackPermissions: SlackPermissions;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
   /**
@@ -14482,6 +14924,21 @@ export type QueryMeetingSlotsArgs = {
 };
 
 
+export type QueryMembershipBenefitsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMembershipNewsSubscribersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMembershipPlansTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryMyActiveBouncerSosArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -14529,6 +14986,11 @@ export type QueryMyClubPodsSummaryArgs = {
 
 export type QueryMyCoHostedPodsArgs = {
   status?: InputMaybe<CoHostStatus>;
+};
+
+
+export type QueryMyDashboardLayoutArgs = {
+  dashboard_id: Scalars['ID']['input'];
 };
 
 
@@ -15136,6 +15598,12 @@ export type QueryShortLinksTableArgs = {
 };
 
 
+export type QuerySlackChannelHistoryArgs = {
+  channel: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryStaffCallsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   peer_id: Scalars['ID']['input'];
@@ -15661,18 +16129,40 @@ export type ReportAppBuildInput = {
   artifact_error?: InputMaybe<Scalars['String']['input']>;
   artifact_file_id?: InputMaybe<Scalars['String']['input']>;
   artifact_url?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Everything the build produced. When present this is the whole truth and the
+   * singular artifact_* fields below are ignored; those remain only so a reporter
+   * talking to a server that predates this list still lands its primary artifact.
+   */
+  artifacts?: InputMaybe<Array<AppBuildArtifactInput>>;
   branch?: InputMaybe<Scalars['String']['input']>;
   build_name?: InputMaybe<Scalars['String']['input']>;
   commit_sha?: InputMaybe<Scalars['String']['input']>;
   commits?: InputMaybe<Array<AppBuildCommitInput>>;
   deletions?: InputMaybe<Scalars['Int']['input']>;
+  /**
+   * The dispatch this run is fulfilling, when the portal started it. Claims the
+   * QUEUED row the portal already wrote instead of creating a second one, and
+   * carries the operator's env and artifact choices onto the reports.
+   */
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
   duration_seconds?: InputMaybe<Scalars['Int']['input']>;
+  /** Why the build failed. Ignored unless status is FAILED. */
+  error_message?: InputMaybe<Scalars['String']['input']>;
   files_changed?: InputMaybe<Scalars['Int']['input']>;
   insertions?: InputMaybe<Scalars['Int']['input']>;
   platform: AppBuildPlatform;
   size_mb?: InputMaybe<Scalars['Float']['input']>;
+  /**
+   * What the runner is doing right now, e.g. "Compiling with Gradle". Sent with
+   * a RUNNING report as the build moves through its stages; each distinct value
+   * is appended to the build's stage list.
+   */
+  stage?: InputMaybe<Scalars['String']['input']>;
   /** Defaults to SUCCESS. FAILED rows carry no artifact. */
   status?: InputMaybe<AppBuildStatus>;
+  /** The GitHub actor whose merge triggered a push build. */
+  triggered_by?: InputMaybe<Scalars['String']['input']>;
   version: Scalars['String']['input'];
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
@@ -16202,6 +16692,67 @@ export type SlackChannel = {
   name: Scalars['String']['output'];
   num_members: Scalars['Int']['output'];
   topic: Scalars['String']['output'];
+};
+
+/**
+ * One message already posted in a channel. Authors arrive as ids, so the name
+ * and avatar are resolved from the workspace directory server-side — a client
+ * cannot do it without the bot token.
+ */
+export type SlackMessage = {
+  __typename?: 'SlackMessage';
+  avatar: Scalars['String']['output'];
+  is_bot: Scalars['Boolean']['output'];
+  /** Replies hanging off this message. Threads are read in Slack, not here. */
+  reply_count: Scalars['Int']['output'];
+  text: Scalars['String']['output'];
+  /** Slack's own message id: the epoch-seconds timestamp it was posted at. */
+  ts: Scalars['String']['output'];
+  user_id: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/**
+ * What the installed bot token may actually do.
+ *
+ * Every Slack failure this portal can show is really a permissions question, and
+ * Slack answers it in a response HEADER that nobody can see. This is that header,
+ * turned into a list, plus the links to change it.
+ */
+export type SlackPermissions = {
+  __typename?: 'SlackPermissions';
+  /** Where a workspace admin changes any of this. */
+  app_url: Scalars['String']['output'];
+  /** False when no bot token is configured at all. */
+  configured: Scalars['Boolean']['output'];
+  /** Slack's own reference for what these scopes mean. */
+  docs_url: Scalars['String']['output'];
+  /** Why the scopes could not be read, when they could not. Empty otherwise. */
+  error: Scalars['String']['output'];
+  scopes: Array<SlackScope>;
+  /**
+   * False when Slack did not report the token's scopes. Every scope below is
+   * then unknown rather than ungranted — a token can work perfectly and still
+   * not say so, and rendering that as a column of red crosses would be a lie.
+   */
+  scopes_known: Scalars['Boolean']['output'];
+  /** The workspace the token belongs to. Empty when it could not be read. */
+  team: Scalars['String']['output'];
+};
+
+/** One thing the bot is, or is not, allowed to do. */
+export type SlackScope = {
+  __typename?: 'SlackScope';
+  granted: Scalars['Boolean']['output'];
+  /** What stops working without it, in plain terms. */
+  purpose: Scalars['String']['output'];
+  /**
+   * False for scopes that only buy a convenience. A workspace can withhold one
+   * and everything else still works, so a missing optional scope is not a fault.
+   */
+  required: Scalars['Boolean']['output'];
+  /** The Slack scope name, e.g. channels:history. */
+  scope: Scalars['String']['output'];
 };
 
 export type SlackSendResult = {
@@ -17232,6 +17783,40 @@ export type TranslationValueEntry = {
 export type TranslationValueInput = {
   locale: Scalars['String']['input'];
   value: Scalars['String']['input'];
+};
+
+/**
+ * A build asked for from the Tech portal, rather than one that happened because
+ * something was merged.
+ */
+export type TriggerAppBuildInput = {
+  /**
+   * Which server and database the built app talks to. This is baked into the
+   * binary at compile time and cannot be changed afterwards, which is the whole
+   * reason the choice is here.
+   */
+  app_env: AppBuildEnv;
+  /**
+   * Which artifacts to produce. Android accepts APK, AAB or both; iOS accepts
+   * only IPA. Asking for fewer is faster — an APK-only Android build skips the
+   * bundle task entirely.
+   */
+  artifacts: Array<AppBuildArtifactKind>;
+  platform: AppBuildPlatform;
+  /** Branch or tag to build. Defaults to main for PRODUCTION, staging for STAGING. */
+  ref?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where a dispatched build can be watched while the runner picks it up. */
+export type TriggerAppBuildResult = {
+  __typename?: 'TriggerAppBuildResult';
+  /**
+   * The workflow's run list on GitHub, filtered to this branch. A dispatch
+   * answers before a run exists, so this is the only link available until the
+   * runner sends its first report and the row gains a real run url.
+   */
+  actions_url: Scalars['String']['output'];
+  build: AppBuild;
 };
 
 /** One row of the user's unified support history (every category in one list). */

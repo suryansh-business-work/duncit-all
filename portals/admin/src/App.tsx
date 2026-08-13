@@ -34,6 +34,7 @@ import BadgesPage from './pages/BadgesPage';
 import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
+import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membership';
 import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
 import { getToken } from './lib/session';
@@ -74,6 +75,8 @@ export default function App() {
                 <Route path="/something-for-you" element={<SomethingForYouPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
+                <Route path="/membership/plans" element={<MembershipPlansPage />} />
+                <Route path="/membership/subscribers" element={<MembershipSubscribersPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
                 <Route path="/portal-access" element={<PortalAccessPage />} />
                 <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { useTabParam } from '@duncit/ui';
 import PostDialog from './profile-page/post-dialog/PostDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
 import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
@@ -11,6 +12,8 @@ const EMPTY_TEXT: Record<FollowingFeedSource, string> = {
   PEOPLE: 'Follow people to see their posts here',
 };
 
+const SOURCES: FollowingFeedSource[] = ['CLUBS', 'PEOPLE'];
+
 interface FeedClubsData {
   superCategories: { id: string; slug: string }[];
   clubs: FeedClub[];
@@ -18,7 +21,7 @@ interface FeedClubsData {
 
 export default function FollowPage({ superCategorySlug }: Readonly<{ superCategorySlug?: string }>) {
   const apollo = useApolloClient();
-  const [tab, setTab] = useState<FollowingFeedSource>('CLUBS');
+  const [tab, setTab] = useTabParam<FollowingFeedSource>({ values: SOURCES, fallback: 'CLUBS' });
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const meQuery = useQuery(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });
   const clubsQuery = useQuery<FeedClubsData>(FEED_CLUBS, {

@@ -32,6 +32,7 @@ COPY packages/logs/package.json ./packages/logs/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/ui/package.json ./packages/ui/
 # @duncit/media-picker now localises its own copy, so its dependency closure
 # (app-settings -> datetime + user-context) must exist before pnpm installs.
 COPY packages/app-settings/package.json ./packages/app-settings/

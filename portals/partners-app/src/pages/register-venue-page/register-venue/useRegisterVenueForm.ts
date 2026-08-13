@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTabParam } from '@duncit/ui';
 import { FINAL, STEP1, STEP2, STEP3, UPDATE_APPROVED_VENUE } from '../queries';
 import { SECTION_FIELDS, registerVenueSchema } from './register-venue.schema';
 import {
@@ -52,7 +53,10 @@ interface Options {
 }
 
 export function useRegisterVenueForm({ venue, locations, account, mode, onPersisted }: Readonly<Options>) {
-  const [active, setActive] = useState<VenueSectionKey>('details');
+  const [active, setActive] = useTabParam<VenueSectionKey>({
+    values: SECTION_ORDER,
+    fallback: 'details',
+  });
   const [venueId, setVenueId] = useState<string | null>(venue?.id ?? null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);

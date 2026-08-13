@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { useTabParam } from '@duncit/ui';
 import { formatDistanceToNow } from 'date-fns';
 import { MY_TICKETS, type TicketListItem, type TicketStatus } from './queries';
 
@@ -32,7 +32,7 @@ export default function MyTicketsList() {
   const { data, loading } = useQuery<{ myTickets: TicketListItem[] }>(MY_TICKETS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [filter, setFilter] = useState<Filter>('ALL');
+  const [filter, setFilter] = useTabParam<Filter>({ values: FILTERS, fallback: 'ALL' });
 
   const all = data?.myTickets ?? [];
   const items = filter === 'ALL' ? all : all.filter((t) => t.status === filter);

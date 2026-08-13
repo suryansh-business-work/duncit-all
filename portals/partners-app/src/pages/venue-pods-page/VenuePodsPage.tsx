@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Card, MenuItem, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import type { TableFilterValue, TableQueryState } from '@duncit/table';
+import { useTabParam } from '@duncit/ui';
 import { MY_VENUES } from '../register-venue-page/queries';
 import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
@@ -22,7 +23,7 @@ const ALL_VENUES = 'ALL';
 
 export default function VenuePodsPage() {
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
-  const [tab, setTab] = useState<VenuePodTab>('ALL');
+  const [tab, setTab] = useTabParam<VenuePodTab>({ values: TAB_ORDER, fallback: 'ALL' });
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);

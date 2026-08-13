@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
+import { useTabParam } from '@duncit/ui';
 import FollowButton from './FollowButton';
 import ResponsiveDialog from './ResponsiveDialog';
 import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
@@ -39,6 +40,7 @@ export const FOLLOW_LISTS = gql`
 `;
 
 type Tab = 'followers' | 'following';
+const TABS: Tab[] = ['followers', 'following'];
 type Person = {
   user_id: string;
   username: string;
@@ -97,10 +99,17 @@ interface Props {
  * Lists each person's avatar, name, @handle + a follow toggle; rows open /u/:id. */
 export default function FollowListDialog({ open, onClose, userId, initialTab, viewerId }: Readonly<Props>) {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>(initialTab);
+  // Own key: this dialog opens over pages that have their own tab strip.
+  const [tab, setTab] = useTabParam<Tab>({
+    values: TABS,
+    fallback: initialTab,
+    param: 'selectedtab_connections',
+  });
+  // Which count was clicked decides the tab, so opening pins it in the URL —
+  // otherwise a key left over from the last open would outrank the prop.
   useEffect(() => {
     if (open) setTab(initialTab);
-  }, [open, initialTab]);
+  }, [open, initialTab, setTab]);
 
   const { data, loading, refetch } = useQuery(FOLLOW_LISTS, {
     variables: { userId },

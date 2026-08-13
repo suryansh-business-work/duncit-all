@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Box,
@@ -15,6 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { notify } from '@duncit/dialogs';
+import { useTabParam } from '@duncit/ui';
 import EmailLogMeta from './EmailLogMeta';
 import EmailLogVars from './EmailLogVars';
 import { EMAIL_LOG_ONE, type EmailLogDetail } from './queries';
@@ -41,7 +41,12 @@ const TABS: { key: TabKey; label: string }[] = [
  * person received — not what the template says today.
  */
 export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
-  const [tab, setTab] = useState<TabKey>('preview');
+  // Own key — the drawer opens over the Email Logs table, not instead of it.
+  const [tab, setTab] = useTabParam<TabKey>({
+    values: TABS.map((t) => t.key),
+    fallback: 'preview',
+    param: 'selectedtab_emaillog',
+  });
   const { data, loading } = useQuery<{ emailLog: EmailLogDetail | null }>(EMAIL_LOG_ONE, {
     variables: { id: logId },
     skip: !logId,

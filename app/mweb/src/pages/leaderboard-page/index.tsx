@@ -19,6 +19,7 @@ import {
   type LeaderboardCategory,
   type LeaderboardPeriodKey,
 } from '@duncit/utils';
+import { useTabParam } from '@duncit/ui';
 import YourPointsCard from './YourPointsCard';
 import LeaderboardList from './LeaderboardList';
 import HowToEarnCard from './HowToEarnCard';
@@ -39,7 +40,10 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function LeaderboardPage() {
   const { t } = useTranslation();
-  const [category, setCategory] = useState<LeaderboardCategory>('USER');
+  const [category, setCategory] = useTabParam<LeaderboardCategory>({
+    values: LEADERBOARD_CATEGORIES,
+    fallback: 'USER',
+  });
   const [period, setPeriod] = useState<LeaderboardPeriodKey>('MONTH');
 
   const { data, loading, error } = useQuery<{ leaderboard: LeaderboardBoardData }>(

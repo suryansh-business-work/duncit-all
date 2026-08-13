@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useTabParam } from '@duncit/ui';
 import type { SignatureMethod } from '../graphql/documents';
 
 /** The brief's ceiling, enforced here as well as on the server. */
@@ -50,7 +51,12 @@ export default function SignaturePad({
   onChange,
   typedName,
 }: Readonly<Props>) {
-  const [tab, setTab] = useState<SignatureMethod>(method ?? methods[0] ?? 'DRAW');
+  // Own key — the signing page this sits on may carry its own tab strip.
+  const [tab, setTab] = useTabParam<SignatureMethod>({
+    values: methods,
+    fallback: method ?? methods[0] ?? 'DRAW',
+    param: 'selectedtab_signature',
+  });
   const [typed, setTyped] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,7 +66,7 @@ export default function SignaturePad({
   // configuration changes while the dialog is open.
   useEffect(() => {
     if (methods.length > 0 && !methods.includes(tab)) setTab(methods[0]);
-  }, [methods, tab]);
+  }, [methods, tab, setTab]);
 
   const canvasPoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -155,7 +161,7 @@ export default function SignaturePad({
 
   return (
     <Stack spacing={1.5}>
-      <Tabs value={tab} onChange={(_e, v) => setTab(v as SignatureMethod)} variant="scrollable">
+      <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="scrollable">
         {methods.map((m) => (
           <Tab key={m} value={m} label={METHOD_LABEL[m]} />
         ))}

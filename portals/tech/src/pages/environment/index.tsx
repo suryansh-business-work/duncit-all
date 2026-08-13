@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import { useTabParam } from '@duncit/ui';
 import EnvVariablesTab from './EnvVariablesTab';
 import PortalMappingTab from './PortalMappingTab';
 
 type Section = 'variables' | 'mapping';
+const SECTIONS: Section[] = ['variables', 'mapping'];
 
 export default function EnvironmentPage() {
-  const [section, setSection] = useState<Section>('variables');
+  const [section, setSection] = useTabParam<Section>({ values: SECTIONS, fallback: 'variables' });
 
   return (
     <Stack spacing={2.5}>

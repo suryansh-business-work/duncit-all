@@ -2,8 +2,8 @@
  * @duncit/ui — shared MUI portal primitives.
  *
  * One copy of the KPI stat tile, status chip, label/value detail row, page and
- * back headers, query guard trio and the debounced-value hook that every
- * portal used to hand-roll.
+ * back headers, query guard trio, the debounced-value hook and the
+ * URL-backed tab selection that every portal used to hand-roll.
  */
 export { StatCard, usageColor } from './stat-card';
 export type { StatCardBarColor, StatCardIconBox, StatCardLayout, StatCardProps } from './stat-card';
@@ -20,6 +20,8 @@ export type { BackButtonProps, BackHeaderProps } from './BackHeader';
 export { QueryGuard } from './QueryGuard';
 export type { QueryGuardProps } from './QueryGuard';
 export { useDebouncedValue } from './useDebouncedValue';
+export { TAB_PARAM, useTabParam } from './useTabParam';
+export type { UseTabParamOptions } from './useTabParam';
 export { mergeSx } from './mergeSx';
 export { ModerationBlockedDialog } from './ModerationBlockedDialog';
 export type { BlockedViolation, ModerationBlockedDialogProps } from './ModerationBlockedDialog';

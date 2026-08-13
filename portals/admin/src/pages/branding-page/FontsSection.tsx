@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Autocomplete, Box, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { useTabParam } from '@duncit/ui';
 import type { BrandingFormState } from './queries';
 import { GOOGLE_FONTS, googleFontCssUrl } from './googleFonts';
 
@@ -34,8 +35,11 @@ interface Props {
 /** Branding → Fonts: a Google Font per platform (Mobile / mWeb / Portals tabs).
  * Empty = the platform's built-in default (Quicksand). */
 export default function FontsSection({ form, setForm }: Readonly<Props>) {
-  const [tab, setTab] = useState(0);
-  const platform = PLATFORMS[tab] ?? PLATFORMS[0];
+  const [tab, setTab] = useTabParam<FontField>({
+    values: PLATFORMS.map((p) => p.field),
+    fallback: 'mobile_font_family',
+  });
+  const platform = PLATFORMS.find((p) => p.field === tab) ?? PLATFORMS[0];
   const value = form[platform.field];
   useFontPreview(value);
 
@@ -43,7 +47,7 @@ export default function FontsSection({ form, setForm }: Readonly<Props>) {
     <Stack spacing={2}>
       <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="fullWidth">
         {PLATFORMS.map((p) => (
-          <Tab key={p.field} label={p.label} />
+          <Tab key={p.field} value={p.field} label={p.label} />
         ))}
       </Tabs>
       <Typography variant="caption" color="text.secondary">

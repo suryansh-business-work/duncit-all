@@ -11,8 +11,12 @@ import {
   type Tpl,
 } from './queries';
 import { useConfirm } from '@duncit/dialogs';
+import { useTabParam } from '@duncit/ui';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
+
+type PaneTab = 'preview' | 'code';
+const PANE_TABS: PaneTab[] = ['preview', 'code'];
 
 export function useEmailTemplateEditor() {
   const confirm = useConfirm();
@@ -30,7 +34,7 @@ export function useEmailTemplateEditor() {
 
   const [selected, setSelected] = useState<string | null>(null);
   const [draft, setDraft] = useState<Tpl | null>(null);
-  const [tab, setTab] = useState<'preview' | 'code'>('preview');
+  const [tab, setTab] = useTabParam<PaneTab>({ values: PANE_TABS, fallback: 'preview' });
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewErrors, setPreviewErrors] = useState<string[]>([]);
   const [detected, setDetected] = useState<string[]>([]);

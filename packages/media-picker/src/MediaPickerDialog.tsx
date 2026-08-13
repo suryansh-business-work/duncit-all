@@ -17,6 +17,7 @@ import {
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { useTabParam } from '@duncit/ui';
 import DeviceUploadTab from './DeviceUploadTab';
 import SelectionTray from './SelectionTray';
 import PexelsPhotosTab from './PexelsPhotosTab';
@@ -30,6 +31,10 @@ const noop = () => {};
 
 /** Comfortable on a laptop, and free to be shorter on a phone. */
 const PANEL_MIN_HEIGHT = { xs: 220, sm: 380 };
+
+/** Own query key — this dialog opens over pages that own `selectedtab`. */
+const PICKER_TABS = ['device', 'photos', 'videos'] as const;
+type PickerTab = (typeof PICKER_TABS)[number];
 
 export default function MediaPickerDialog({
   open,
@@ -50,7 +55,7 @@ export default function MediaPickerDialog({
   // Resolved in the body, not as a default parameter: a hook cannot run in
   // the parameter list, and a caller-supplied heading must still win.
   const heading = title ?? t('media.picker.title');
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useTabParam<PickerTab>({ values: PICKER_TABS, fallback: 'device', param: 'selectedtab_media' });
   const [error, setError] = useState<string | null>(null);
   const multi = max > 1;
   const selection = useMediaSelection(max, open);
@@ -123,9 +128,9 @@ export default function MediaPickerDialog({
         onChange={(_e, v) => setTab(v)}
         sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label={t('media.picker.fromDevice')} />
-        <Tab label={t('media.picker.pexelsPhotos')} disabled={!allowImage} />
-        <Tab label={t('media.picker.pexelsVideos')} disabled={!allowVideo} />
+        <Tab value="device" label={t('media.picker.fromDevice')} />
+        <Tab value="photos" label={t('media.picker.pexelsPhotos')} disabled={!allowImage} />
+        <Tab value="videos" label={t('media.picker.pexelsVideos')} disabled={!allowVideo} />
       </Tabs>
       {/* Free to SHRINK. A hard minHeight here is a floor on a flex child of the
           dialog's column, so on a short screen the paper grew past the viewport
@@ -143,7 +148,7 @@ export default function MediaPickerDialog({
           <SelectionTray urls={selection.urls} max={max} onRemove={selection.remove} />
         )}
 
-        <Box sx={{ display: tab === 0 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
+        <Box sx={{ display: tab === 'device' ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <DeviceUploadTab
             accept={accept}
             fileInputRef={device.fileInputRef}
@@ -160,9 +165,9 @@ export default function MediaPickerDialog({
           />
         </Box>
 
-        <Box sx={{ display: tab === 1 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
+        <Box sx={{ display: tab === 'photos' ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <PexelsPhotosTab
-            active={tab === 1 && allowImage}
+            active={tab === 'photos' && allowImage}
             open={open}
             folder={folder}
             seedQuery={seedQuery}
@@ -175,9 +180,9 @@ export default function MediaPickerDialog({
           />
         </Box>
 
-        <Box sx={{ display: tab === 2 ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
+        <Box sx={{ display: tab === 'videos' ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>
           <PexelsVideosTab
-            active={tab === 2 && allowVideo}
+            active={tab === 'videos' && allowVideo}
             open={open}
             folder={folder}
             onPicked={handlePicked}
@@ -190,7 +195,7 @@ export default function MediaPickerDialog({
         <Button onClick={onClose} disabled={device.uploading}>
           Cancel
         </Button>
-        {tab === 0 && (
+        {tab === 'device' && (
           <Button
             variant={multi ? 'outlined' : 'contained'}
             disabled={!device.picked || device.uploading || (multi && selection.atLimit)}

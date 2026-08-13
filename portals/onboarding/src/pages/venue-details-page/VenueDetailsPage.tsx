@@ -1,24 +1,28 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Stack, Tab, Tabs } from '@mui/material';
-import { BackHeader, QueryGuard } from '@duncit/ui';
+import { BackHeader, QueryGuard, useTabParam } from '@duncit/ui';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenuePodsTab from './VenuePodsTab';
 
 // Slot Availability + Account Health are not applicable to onboarded venue
 // details and are intentionally not shown here.
-const TABS = ['Overview', 'Pods'] as const;
+type VenueTab = 'overview' | 'pods';
+const TABS: { value: VenueTab; label: string }[] = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'pods', label: 'Pods' },
+];
 
 export default function VenueDetailsPage() {
   const { venueId = '' } = useParams<{ venueId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  // Deep-link support: /venues/:id?tab=pods opens the Pods tab (from the
-  // Onboarded Venues table's pod-count button).
-  const initialTab = searchParams.get('tab') === 'pods' ? TABS.indexOf('Pods') : 0;
-  const [tab, setTab] = useState(initialTab);
+  // Also the deep link: /venues/:id?selectedtab=pods opens the Pods tab from
+  // the Onboarded Venues table's pod-count button.
+  const [tab, setTab] = useTabParam<VenueTab>({
+    values: TABS.map((t) => t.value),
+    fallback: 'overview',
+  });
   const { data, loading, error } = useQuery<{ venue: AdminVenueDetails | null }>(VENUE_DETAILS, {
     variables: { venue_doc_id: venueId },
     fetchPolicy: 'cache-and-network',
@@ -50,14 +54,14 @@ export default function VenueDetailsPage() {
             />
 
             <Tabs value={tab} onChange={(_e, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
-              {TABS.map((label) => (
-                <Tab key={label} label={label} />
+              {TABS.map((item) => (
+                <Tab key={item.value} value={item.value} label={item.label} />
               ))}
             </Tabs>
 
-            {tab === 0 && <VenueOverviewCard venue={venue} />}
+            {tab === 'overview' && <VenueOverviewCard venue={venue} />}
 
-            {tab === 1 && <VenuePodsTab venueId={venue.id} />}
+            {tab === 'pods' && <VenuePodsTab venueId={venue.id} />}
           </Stack>
         );
       }}

@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Box, Card, Tab, Tabs } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { useTabParam } from '@duncit/ui';
 
 export interface LeadTab {
   /** Stable id for selection + a11y. */
@@ -24,7 +25,10 @@ interface Props {
  * a thin-bordered Card so the whole strip feels like one piece.
  */
 export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props>) {
-  const [value, setValue] = useState(defaultValue ?? tabs[0]?.value);
+  const [value, setValue] = useTabParam({
+    values: tabs.map((t) => t.value),
+    fallback: defaultValue ?? tabs[0]?.value ?? '',
+  });
   const active = tabs.find((t) => t.value === value) ?? tabs[0];
 
   return (

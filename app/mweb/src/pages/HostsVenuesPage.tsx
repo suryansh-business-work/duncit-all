@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { useTabParam } from '@duncit/ui';
 import { followActionFor, followStatusFrom } from '@duncit/utils';
 import HostList from './hosts-venues-page/HostList';
 import VenueList from './hosts-venues-page/VenueList';
@@ -24,8 +25,11 @@ import {
 import HostsVenuesIntroCard from './hosts-venues-page/HostsVenuesIntroCard';
 import MeetingStatusCard from './hosts-venues-page/MeetingStatusCard';
 
+type DirectoryTab = 'HOSTS' | 'VENUES';
+const DIRECTORY_TABS: DirectoryTab[] = ['HOSTS', 'VENUES'];
+
 export default function HostsVenuesPage() {
-  const [tab, setTab] = useState<'HOSTS' | 'VENUES'>('HOSTS');
+  const [tab, setTab] = useTabParam<DirectoryTab>({ values: DIRECTORY_TABS, fallback: 'HOSTS' });
   const hostsQ = useQuery(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
   const venuesQ = useQuery(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
   const [followUser] = useMutation(FOLLOW_USER);

@@ -18,6 +18,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useTabParam } from '@duncit/ui';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
 
@@ -43,6 +44,8 @@ interface Props {
 }
 
 type TabKey = 'info' | 'edit';
+const READER_TABS: TabKey[] = ['info'];
+const WRITER_TABS: TabKey[] = ['info', 'edit'];
 
 /**
  * One file, opened INSIDE the dialog rather than in a drawer over it.
@@ -67,7 +70,13 @@ export default function FileDetailsView({
   siblings,
   onNavigate,
 }: Readonly<Props>) {
-  const [tab, setTab] = useState<TabKey>('info');
+  // Own key — this panel sits beside the grid inside the File Manager dialog,
+  // which opens over portal pages that have their own tab strip.
+  const [tab, setTab] = useTabParam<TabKey>({
+    values: canWrite ? WRITER_TABS : READER_TABS,
+    fallback: 'info',
+    param: 'selectedtab_file',
+  });
   const [name, setName] = useState(file.name);
   const [tags, setTags] = useState<string[]>(file.tags);
   const [rename, renameState] = useMutation(RENAME_MEDIA_FILE);
@@ -77,7 +86,7 @@ export default function FileDetailsView({
     setTab('info');
     setName(file.name);
     setTags(file.tags);
-  }, [file]);
+  }, [file, setTab]);
 
   const busy = renameState.loading || updateState.loading;
 

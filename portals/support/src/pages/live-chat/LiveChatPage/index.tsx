@@ -12,6 +12,7 @@ import {
   type SupportChatSessionPage,
   type SupportChatStatus,
 } from '../../../graphql/supportChat';
+import { useTabParam } from '@duncit/ui';
 import { useSupportSocket, type ChatTypingPayload } from '../../../lib/useSupportSocket';
 import CreateUserDialog from '../CreateUserDialog';
 import SessionInbox from './SessionInbox';
@@ -23,8 +24,13 @@ function typingLabelFor(p: ChatTypingPayload, fallbackName: string): string {
   return `${p.name || fallbackName} is typing…`;
 }
 
+const SESSION_FILTERS: SupportChatStatus[] = ['OPEN', 'CLOSED'];
+
 export default function LiveChatPage() {
-  const [statusFilter, setStatusFilter] = useState<SupportChatStatus>('OPEN');
+  const [statusFilter, setStatusFilter] = useTabParam<SupportChatStatus>({
+    values: SESSION_FILTERS,
+    fallback: 'OPEN',
+  });
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);

@@ -25,6 +25,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/i18n": "workspace:*",
+    "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*",
     "react-easy-crop": "^5.0.8"
   },
@@ -34,7 +35,8 @@
     "@mui/material": ">=5",
     "graphql": ">=16",
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "react-router-dom": ">=6"
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",

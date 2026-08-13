@@ -1,14 +1,21 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import { tokens } from '@duncit/theme';
+import { useTabParam } from '@duncit/ui';
 
 export interface UserDetailsTabItem {
+  /** Stable slug — this is what the URL carries, so it must not follow the label. */
+  value: string;
   label: string;
   content: ReactNode;
 }
 
 export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTabItem[] }>) {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useTabParam({
+    values: tabs.map((tab) => tab.value),
+    fallback: tabs[0]?.value ?? '',
+  });
+  const active = tabs.find((tab) => tab.value === value);
   return (
     <Box sx={{ minWidth: 0 }}>
       <Tabs
@@ -28,9 +35,9 @@ export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTa
           '& .MuiTab-root': { minHeight: 40, px: 1.5, textTransform: 'none' },
         }}
       >
-        {tabs.map((tab) => <Tab key={tab.label} label={tab.label} />)}
+        {tabs.map((tab) => <Tab key={tab.value} value={tab.value} label={tab.label} />)}
       </Tabs>
-      <Box sx={{ pt: 2 }}>{tabs[value]?.content}</Box>
+      <Box sx={{ pt: 2 }}>{active?.content}</Box>
     </Box>
   );
 }

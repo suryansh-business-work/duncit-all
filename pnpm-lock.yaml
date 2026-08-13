@@ -1021,12 +1021,18 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
       react-easy-crop:
         specifier: ^5.0.8
         version: 5.5.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom:
+        specifier: '>=6'
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4

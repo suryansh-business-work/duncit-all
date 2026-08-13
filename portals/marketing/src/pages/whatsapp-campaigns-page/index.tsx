@@ -6,6 +6,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
+import { useTabParam } from '@duncit/ui';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
 import WaCampaignDetailDialog from './wa-campaign-detail';
@@ -23,6 +24,9 @@ import {
   type WaCampaignVariable,
 } from './queries';
 
+type WaTab = 'sends' | 'campaigns' | 'templates';
+const WA_TABS: WaTab[] = ['sends', 'campaigns', 'templates'];
+
 interface SetupData {
   waCampaignConfigured: boolean;
   waCampaignNames: WaCampaignNameOption[];
@@ -38,7 +42,7 @@ interface SetupData {
 export default function WhatsappCampaignsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [tab, setTab] = useState<'sends' | 'campaigns' | 'templates'>('sends');
+  const [tab, setTab] = useTabParam<WaTab>({ values: WA_TABS, fallback: 'sends' });
   const [formOpen, setFormOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);

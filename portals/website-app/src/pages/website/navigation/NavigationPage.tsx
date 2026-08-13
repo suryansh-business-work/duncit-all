@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
+import { useTabParam } from '@duncit/ui';
 import NavItemDialog, { type NavItemValues } from './NavItemDialog';
 import NavigationTable from './NavigationTable';
 import {
@@ -15,7 +16,10 @@ import {
 /** Marketing-website navigation manager — the sites bake these links in at
  * build time (a redeploy picks up changes). */
 export default function NavigationPage() {
-  const [site, setSite] = useState<WebsiteNavSite>('MAIN');
+  const [site, setSite] = useTabParam<WebsiteNavSite>({
+    values: NAV_SITES.map((s) => s.value),
+    fallback: 'MAIN',
+  });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refetchTable = () => refetchRef.current?.();

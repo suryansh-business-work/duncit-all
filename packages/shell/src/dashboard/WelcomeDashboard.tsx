@@ -108,6 +108,10 @@ export function WelcomeDashboard({
     widgets.push({
       id: 'portal-body',
       bare: true,
+      // The body is whatever the portal passes — finance's KPI row wraps with
+      // the viewport, ads stacks KPIs above a table. No fixed row count fits
+      // them all, and an undersized one nests a scrollbar inside the page's.
+      fitContent: true,
       defaultLayout: { x: 0, y: row, w: 12, h: 4 },
       minH: 2,
       content: children,
@@ -118,12 +122,14 @@ export function WelcomeDashboard({
   widgets.push({
     id: 'account-summary',
     bare: true,
-    defaultLayout: { x: 0, y: row, w: 12, h: 4 },
+    // The card does not stretch, so an oversized slot shows as a void below it.
+    fitContent: true,
+    defaultLayout: { x: 0, y: row, w: 12, h: 2 },
     minW: 4,
-    minH: 3,
+    minH: 2,
     content: <AccountSummaryCard user={me} />,
   });
-  row += 4;
+  row += 2;
 
   if (modules?.length) {
     widgets.push({

@@ -13,6 +13,8 @@ export default function LeaderboardBoardsPage() {
     {
       id: 'board-stats',
       bare: true,
+      // Five stat cards wrap to two rows below lg — a fixed h cuts them off.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 3 },
       minH: 2,
       content: <BoardStatsCards />,

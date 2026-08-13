@@ -71,7 +71,22 @@ export function useDashboardLayout(dashboardId: string): DashboardLayoutState {
       const next = [...items];
       setPending(next);
       writeCachedLayout(dashboardId, next);
-      await runSave({ variables: { dashboard_id: dashboardId, items: toDto(next) } });
+      await runSave({
+        variables: { dashboard_id: dashboardId, items: toDto(next) },
+        // `DashboardLayout` has no id, so Apollo cannot normalise the payload
+        // into `myDashboardLayout(dashboard_id:…)` on its own — without this a
+        // remount replays the pre-save cache entry for one network round-trip.
+        update: (cache, { data: resp }) => {
+          const layout = (resp as { saveDashboardLayout?: DashboardLayoutDto } | null | undefined)
+            ?.saveDashboardLayout;
+          if (!layout) return;
+          cache.writeQuery({
+            query: MY_DASHBOARD_LAYOUT,
+            variables: { dashboard_id: dashboardId },
+            data: { myDashboardLayout: layout },
+          });
+        },
+      });
     },
     [dashboardId, runSave]
   );

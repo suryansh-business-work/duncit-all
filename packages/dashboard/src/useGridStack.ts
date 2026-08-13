@@ -15,6 +15,11 @@ export interface UseGridStackOptions {
   /** Changes when the widget SET changes, forcing a rebuild of the grid. */
   widgetsKey: string;
   cellHeight?: number;
+  /**
+   * Ids of `fitContent` widgets. Their on-grid `h` is measured from content,
+   * so layout comparisons must not treat it as user state.
+   */
+  autoHeightIds?: ReadonlySet<string>;
   /** Called after every user-driven move or resize. */
   onChange: (items: DashboardLayoutItem[]) => void;
 }
@@ -70,6 +75,7 @@ export function useGridStack({
   editing,
   widgetsKey,
   cellHeight = CELL_HEIGHT,
+  autoHeightIds,
   onChange,
 }: UseGridStackOptions): GridStackHandle {
   const gridRef = useRef<GridStack | null>(null);
@@ -94,6 +100,14 @@ export function useGridStack({
         float: false,
         animate: true,
         handle: `.${DRAG_HANDLE_CLASS}`,
+        // Corners plus the bottom and side edges — the default is the one
+        // south-east corner, which makes resizing feel broken.
+        resizable: { handles: 'e,se,s,sw,w' },
+        // Handles only exist while editing, so "always" means "while editing".
+        // The default ('mobile') auto-hides them behind display:none until the
+        // pointer is already over the item — invisible affordances read as
+        // "resize is broken".
+        alwaysShowResizeHandle: true,
         // Editing is opt-in; the effect below turns it on with the toolbar.
         staticGrid: true,
       },
@@ -106,10 +120,34 @@ export function useGridStack({
 
     grid.on('change', () => {
       if (applyingRef.current) return;
+      // While static (not editing) the only movers are programmatic — a
+      // fitContent widget re-measuring, a breakpoint collapse. Not user edits.
+      if (grid.opts.staticGrid) return;
       onChangeRef.current(readGrid(grid));
     });
 
+    // GridStack watches only the grid's WIDTH — it never observes item
+    // content. Without this, a fitContent card keeps its loading-state height
+    // after its query lands, until the next window resize. Observing the card
+    // (which is natural-height) cannot loop: resizeToContent changes the slot
+    // around the card, not the card itself.
+    let contentObserver: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== 'undefined') {
+      contentObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const item = entry.target.closest('.grid-stack-item');
+          if (item instanceof HTMLElement) grid.resizeToContent(item);
+        }
+      });
+      for (const card of el.querySelectorAll(
+        '.grid-stack-item[gs-size-to-content] > .grid-stack-item-content > :first-child'
+      )) {
+        contentObserver.observe(card);
+      }
+    }
+
     return () => {
+      contentObserver?.disconnect();
       grid.offAll();
       // `false` keeps the DOM: React owns those nodes and will unmount them.
       grid.destroy(false);
@@ -123,15 +161,18 @@ export function useGridStack({
 
   // A layout that arrives after mount (the server's copy replacing the cached
   // one, or a Reset) is pushed onto the live grid rather than re-rendered.
+  // fitContent heights are compared as "equal" — the grid's h for those is a
+  // measurement, and re-applying the stored h would only make GridStack snap it
+  // straight back, pulsing the page on every Apollo response.
   useEffect(() => {
     const grid = gridRef.current;
     if (!grid || !layout) return;
-    if (layoutsEqual(readGrid(grid), layout)) return;
+    if (layoutsEqual(readGrid(grid), layout, autoHeightIds)) return;
 
     applyingRef.current = true;
     applyLayout(grid, layout);
     applyingRef.current = false;
-  }, [layout]);
+  }, [layout, autoHeightIds]);
 
   const handleRef = useRef<GridStackHandle>({
     read: () => (gridRef.current ? readGrid(gridRef.current) : []),

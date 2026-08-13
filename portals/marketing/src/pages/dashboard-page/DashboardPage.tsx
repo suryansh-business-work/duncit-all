@@ -97,6 +97,8 @@ export default function DashboardPage() {
       {
         id: 'clicks-over-time',
         bare: true,
+        // Fixed-height plot in a non-stretching card — h5 leaves a void.
+        fitContent: true,
         defaultLayout: { x: 0, y: 2, w: 12, h: 5 },
         minW: 4,
         minH: 4,
@@ -105,17 +107,20 @@ export default function DashboardPage() {
       {
         id: 'top-links',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 0, y: 7, w: 6, h: 6 },
         minW: 3,
-        minH: 4,
+        // minH floors the measured height — keep it low or empty states pin a void.
+        minH: 2,
         content: <TopLinksCard links={links.top} onOpen={(link) => navigate(`/short-links/${link.id}`)} />,
       },
       {
         id: 'campaign-performance',
         bare: true,
+        fitContent: true,
         defaultLayout: { x: 6, y: 7, w: 6, h: 6 },
         minW: 3,
-        minH: 4,
+        minH: 2,
         content: (
           <CampaignPerformanceCard
             campaigns={campaigns.recent}

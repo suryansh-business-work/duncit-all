@@ -67,6 +67,9 @@ function buildWidgets(info: ServerInfo): DashboardWidget[] {
     {
       id: 'details',
       bare: true,
+      // Two columns of natural-height panels that stack to one below md — the
+      // h8 default only fits the two-column shape by coincidence.
+      fitContent: true,
       defaultLayout: { x: 0, y: 2, w: 12, h: 8 },
       minW: 4,
       minH: 4,

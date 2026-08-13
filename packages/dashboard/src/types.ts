@@ -46,4 +46,15 @@ export interface DashboardWidget {
    * section that is already a run of cards of its own (a KPI strip).
    */
   bare?: boolean;
+  /**
+   * The widget's height follows its content instead of a fixed row count
+   * (GridStack `sizeToContent`). For content whose natural height the page
+   * cannot know up front — a KPI strip that wraps with the viewport, a chart
+   * block — so it is never cut off and never leaves dead space. The user can
+   * still drag it and resize its width; its height re-snaps to the content.
+   * Leave unset for bodies that fill whatever height they are given (tables,
+   * lists) — those need a fixed `h` to size against, and auto would collapse
+   * them to their minimum.
+   */
+  fitContent?: boolean;
 }

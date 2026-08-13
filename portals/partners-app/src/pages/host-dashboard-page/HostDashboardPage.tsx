@@ -86,6 +86,8 @@ export default function HostDashboardPage() {
     {
       id: 'stat-cards',
       bare: true,
+      // Six cards wrap to two rows below lg — a fixed h cuts them off there.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
       minH: 2,
       content: (
@@ -106,6 +108,8 @@ export default function HostDashboardPage() {
     {
       id: 'insights',
       bare: true,
+      // Fixed-height chart and progress rows — h7 leaves ~200px of void.
+      fitContent: true,
       defaultLayout: { x: 0, y: 4, w: 12, h: 7 },
       minW: 4,
       minH: 4,
@@ -114,9 +118,14 @@ export default function HostDashboardPage() {
     {
       id: 'health',
       bare: true,
+      // A single row card, and nothing at all without health data — h4 is a
+      // blank band either way.
+      fitContent: true,
       defaultLayout: { x: 0, y: 11, w: 12, h: 4 },
       minW: 4,
-      minH: 3,
+      // minH floors the MEASURED height too; the card is one row, and with no
+      // health data it renders nothing — anything above 1 pins a blank band.
+      minH: 1,
       content: <HostHealthCard health={health} podsCompleted={earnings.pods_completed} />,
     },
   ];

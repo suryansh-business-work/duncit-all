@@ -44,6 +44,8 @@ export default function VenueDashboardPage() {
     {
       id: 'stat-cards',
       bare: true,
+      // Six cards wrap to two rows below lg — a fixed h cuts them off there.
+      fitContent: true,
       defaultLayout: { x: 0, y: 0, w: 12, h: 2 },
       minH: 2,
       content: <VenueStatCards stats={stats} loading={statsQuery.loading && !statsQuery.data} />,

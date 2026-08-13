@@ -67,25 +67,30 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
     {
       id: 'by-level',
       bare: true,
+      // Bucket counts are data-driven; four levels leave h5 mostly empty.
+      fitContent: true,
       defaultLayout: { x: 0, y: 2, w: 4, h: 5 },
       minW: 3,
-      minH: 3,
+      // minH floors the measured height — keep it low or empty ranges pin a void.
+      minH: 2,
       content: <DistributionCard title="By level" buckets={d.by_level} />,
     },
     {
       id: 'by-source',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 4, y: 2, w: 4, h: 5 },
       minW: 3,
-      minH: 3,
+      minH: 2,
       content: <DistributionCard title="By source" buckets={d.by_source} />,
     },
     {
       id: 'by-environment',
       bare: true,
+      fitContent: true,
       defaultLayout: { x: 8, y: 2, w: 4, h: 5 },
       minW: 3,
-      minH: 3,
+      minH: 2,
       content: <DistributionCard title="By environment" buckets={d.by_environment} />,
     },
     {

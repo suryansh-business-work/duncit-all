@@ -4,30 +4,47 @@ import { DashboardWidgetCard } from './DashboardWidgetCard';
 import type { DashboardLayoutItem, DashboardWidget } from './types';
 
 /**
- * How GridStack's own chrome is themed. Its stylesheet positions the items; the
- * placeholder and the resize grip are ours, so they follow the MUI palette in
- * both colour modes instead of GridStack's fixed grey.
+ * How GridStack's own chrome is themed. gridstack.css addresses these elements
+ * as `.grid-stack > .grid-stack-item > …` (three classes), so every selector
+ * here leads with `&.grid-stack` — one class more — or the override silently
+ * loses the specificity contest, which is exactly how the stock rotated-arrow
+ * resize glyph used to bleed through the intended corner bracket.
  */
 const GRID_SX = {
-  '& .grid-stack-item-content': { inset: 0, overflow: 'visible' },
-  '& .grid-stack-placeholder > .placeholder-content': {
+  '&.grid-stack > .grid-stack-placeholder > .placeholder-content': {
     border: '2px dashed',
     borderColor: 'primary.main',
     borderRadius: 2,
     bgcolor: 'action.hover',
   },
-  '& .ui-resizable-handle': { opacity: 0, transition: 'opacity .15s' },
-  '&:not(.grid-stack-static) .grid-stack-item:hover .ui-resizable-handle': { opacity: 1 },
-  '& .ui-resizable-se': {
-    width: 16,
-    height: 16,
-    right: 2,
-    bottom: 2,
-    borderRight: '2px solid',
-    borderBottom: '2px solid',
-    borderColor: 'primary.main',
-    borderBottomRightRadius: 4,
+  // GridStack draws corner handles as a rotated arrow glyph; replace that with
+  // a plain corner bracket. The handle elements only exist while editing, so
+  // "always visible" here still means "only in edit mode".
+  '&.grid-stack > .grid-stack-item > .ui-resizable-se, &.grid-stack > .grid-stack-item > .ui-resizable-sw':
+    {
+      backgroundImage: 'none',
+      transform: 'none',
+      width: 18,
+      height: 18,
+      bottom: 10,
+      borderBottom: '3px solid',
+      borderColor: 'primary.main',
+      opacity: 0.55,
+      transition: 'opacity .15s',
+    },
+  '&.grid-stack > .grid-stack-item > .ui-resizable-se': {
+    right: 10,
+    borderRight: '3px solid',
+    borderRightColor: 'primary.main',
+    borderBottomRightRadius: 6,
   },
+  '&.grid-stack > .grid-stack-item > .ui-resizable-sw': {
+    left: 10,
+    borderLeft: '3px solid',
+    borderLeftColor: 'primary.main',
+    borderBottomLeftRadius: 6,
+  },
+  '&.grid-stack > .grid-stack-item:hover > .ui-resizable-handle': { opacity: 1 },
 } as const;
 
 export type DashboardGridProps = Readonly<{
@@ -86,6 +103,7 @@ export function DashboardGrid({
             gs-h={slot.h}
             gs-min-w={widget.minW ?? Math.min(size.w, 3)}
             gs-min-h={widget.minH ?? Math.min(size.h, 2)}
+            gs-size-to-content={widget.fitContent ? 'true' : undefined}
           >
             <div className="grid-stack-item-content">
               <DashboardWidgetCard widget={widget} editing={editing} dragLabel={dragLabel} />

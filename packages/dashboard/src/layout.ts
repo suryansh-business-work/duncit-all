@@ -108,15 +108,24 @@ export function serialiseNodes(nodes: readonly GridNodeLike[]): DashboardLayoutI
   return items;
 }
 
-/** Same widgets in the same slots — used to know whether Save has anything to do. */
+/**
+ * Same widgets in the same slots — used to know whether Save has anything to do.
+ *
+ * `ignoreHeightFor` names the `fitContent` widgets: their `h` on the live grid
+ * is whatever the content measured, not what the layout stored, so comparing it
+ * would report every stored layout as "different" and push it onto a grid that
+ * is already arranged correctly.
+ */
 export function layoutsEqual(
   a: readonly DashboardLayoutItem[],
-  b: readonly DashboardLayoutItem[]
+  b: readonly DashboardLayoutItem[],
+  ignoreHeightFor?: ReadonlySet<string>
 ): boolean {
   if (a.length !== b.length) return false;
   const byId = new Map(b.map((item) => [item.id, item]));
   return a.every((item) => {
     const other = byId.get(item.id);
-    return !!other && other.x === item.x && other.y === item.y && other.w === item.w && other.h === item.h;
+    if (!other || other.x !== item.x || other.y !== item.y || other.w !== item.w) return false;
+    return other.h === item.h || !!ignoreHeightFor?.has(item.id);
   });
 }

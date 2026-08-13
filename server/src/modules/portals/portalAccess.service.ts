@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { AuthUser } from '@context';
 import { ApprovalRequestModel } from '@modules/approval/approval.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { PORTAL_REGISTRY } from '@modules/platform/portalMode/portalMode.registry';
 import { PORTAL_GATE_EXEMPT_KEYS, PORTAL_ROLE_REQUIREMENTS } from './portal.constants';
 import {
@@ -37,13 +38,22 @@ const canRequest = (portalKey: string) =>
 export const portalAccessService = {
   /** The Jump to Portal directory for the signed-in user. */
   async directory(user: AuthUser) {
-    const requests = await ApprovalRequestModel.find({
-      type: 'PORTAL_ACCESS',
-      subject_user_id: user.id,
-    })
-      .sort({ created_at: 1 })
-      .select('target_id status')
-      .lean();
+    // Roles come from the DB, NEVER from `user.roles`: that is a snapshot the
+    // JWT took at login, and Duncit tokens never expire. A role granted after
+    // that — an approved PORTAL_ACCESS request, an admin role grant — would
+    // leave the portal reading as locked, and because the request is no longer
+    // PENDING the row renders "Request access" again to someone who already
+    // has it.
+    const [roleKeys, requests] = await Promise.all([
+      effectiveRoleKeys(user.id),
+      ApprovalRequestModel.find({
+        type: 'PORTAL_ACCESS',
+        subject_user_id: user.id,
+      })
+        .sort({ created_at: 1 })
+        .select('target_id status')
+        .lean(),
+    ]);
     // Ascending sort so the LATEST request per portal wins the map.
     const latest = new Map<string, string>();
     for (const request of requests) {
@@ -53,7 +63,7 @@ export const portalAccessService = {
       key: portal.key,
       name: portal.name,
       url: portal.url,
-      has_access: hasPortalAccess(portal.key, user.roles),
+      has_access: hasPortalAccess(portal.key, roleKeys),
       can_request: canRequest(portal.key),
       request_status: latest.get(portal.key) ?? null,
     }));
@@ -66,7 +76,7 @@ export const portalAccessService = {
     if (!canRequest(portalKey)) {
       throw badRequest('Access to this portal is not granted through requests');
     }
-    if (hasPortalAccess(portalKey, user.roles)) {
+    if (hasPortalAccess(portalKey, await effectiveRoleKeys(user.id))) {
       throw badRequest('You already have access to this portal');
     }
     const pending = await ApprovalRequestModel.exists({

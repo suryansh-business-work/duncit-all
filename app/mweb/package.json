@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.52.38",
+  "version": "1.52.40",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,6 +39,7 @@
     "@duncit/regex": "workspace:*",
     "@duncit/slack": "workspace:*",
     "@duncit/slots": "workspace:*",
+    "@duncit/tabs": "workspace:*",
     "@duncit/tours": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",

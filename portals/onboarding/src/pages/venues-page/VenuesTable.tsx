@@ -84,7 +84,7 @@ const renderPods = (v: VenueRow) => (
       color="inherit"
       startIcon={<EventNoteIcon fontSize="small" />}
       component={RouterLink}
-      to={`/venues/${v.id}?tab=pods`}
+      to={`/venues/${v.id}?selectedtab=pods`}
     >
       {v.pod_count ?? 0}
     </Button>

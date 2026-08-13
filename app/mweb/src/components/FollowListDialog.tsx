@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -6,11 +6,10 @@ import {
   Box,
   CircularProgress,
   Stack,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FollowButton from './FollowButton';
 import ResponsiveDialog from './ResponsiveDialog';
 import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
@@ -39,6 +38,10 @@ export const FOLLOW_LISTS = gql`
 `;
 
 type Tab = 'followers' | 'following';
+const TABS: DuncitTabItem<Tab>[] = [
+  { value: 'followers', label: 'Followers' },
+  { value: 'following', label: 'Following' },
+];
 type Person = {
   user_id: string;
   username: string;
@@ -97,10 +100,19 @@ interface Props {
  * Lists each person's avatar, name, @handle + a follow toggle; rows open /u/:id. */
 export default function FollowListDialog({ open, onClose, userId, initialTab, viewerId }: Readonly<Props>) {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>(initialTab);
+  // Own key: this dialog opens over pages that have their own tab strip.
+  const tabs = useTabParam<Tab>({
+    items: TABS,
+    fallback: initialTab,
+    param: 'selectedtab_connections',
+  });
+  const tab = tabs.value;
+  const selectTab = tabs.onChange;
+  // Which count was clicked decides the tab, so opening pins it in the URL —
+  // otherwise a key left over from the last open would outrank the prop.
   useEffect(() => {
-    if (open) setTab(initialTab);
-  }, [open, initialTab]);
+    if (open) selectTab(initialTab);
+  }, [open, initialTab, selectTab]);
 
   const { data, loading, refetch } = useQuery(FOLLOW_LISTS, {
     variables: { userId },
@@ -149,10 +161,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} title="Connections" sheetMaxHeight="80dvh">
-      <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth" sx={{ mb: 1 }}>
-        <Tab value="followers" label="Followers" />
-        <Tab value="following" label="Following" />
-      </Tabs>
+      <DuncitTabs {...tabs} variant="fullWidth" sx={{ mb: 1 }} />
       {loading && people.length === 0 ? (
         <Stack alignItems="center" sx={{ py: 4 }}>
           <CircularProgress size={28} />

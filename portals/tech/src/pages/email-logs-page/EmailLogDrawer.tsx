@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Box,
@@ -8,13 +7,12 @@ import {
   Drawer,
   IconButton,
   Stack,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { notify } from '@duncit/dialogs';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import EmailLogMeta from './EmailLogMeta';
 import EmailLogVars from './EmailLogVars';
 import { EMAIL_LOG_ONE, type EmailLogDetail } from './queries';
@@ -27,10 +25,10 @@ interface Props {
 
 type TabKey = 'preview' | 'html' | 'vars';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'preview', label: 'Preview' },
-  { key: 'html', label: 'HTML' },
-  { key: 'vars', label: 'Variables' },
+const TABS: DuncitTabItem<TabKey>[] = [
+  { value: 'preview', label: 'Preview', sx: { minHeight: 40 } },
+  { value: 'html', label: 'HTML', sx: { minHeight: 40 } },
+  { value: 'vars', label: 'Variables', sx: { minHeight: 40 } },
 ];
 
 /**
@@ -41,7 +39,13 @@ const TABS: { key: TabKey; label: string }[] = [
  * person received — not what the template says today.
  */
 export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
-  const [tab, setTab] = useState<TabKey>('preview');
+  // Own key — the drawer opens over the Email Logs table, not instead of it.
+  const tabs = useTabParam<TabKey>({
+    items: TABS,
+    fallback: 'preview',
+    param: 'selectedtab_emaillog',
+  });
+  const tab = tabs.value;
   const { data, loading } = useQuery<{ emailLog: EmailLogDetail | null }>(EMAIL_LOG_ONE, {
     variables: { id: logId },
     skip: !logId,
@@ -85,11 +89,7 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
         <Stack sx={{ flex: 1, minHeight: 0 }}>
           <EmailLogMeta row={row} />
           <Divider />
-          <Tabs value={tab} onChange={(_e, v) => setTab(v)} sx={{ px: 1, minHeight: 40 }}>
-            {TABS.map((t) => (
-              <Tab key={t.key} value={t.key} label={t.label} sx={{ minHeight: 40 }} />
-            ))}
-          </Tabs>
+          <DuncitTabs {...tabs} sx={{ px: 1, minHeight: 40 }} />
           <Divider />
 
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>

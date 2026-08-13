@@ -7,8 +7,6 @@ import {
   Divider,
   IconButton,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Tooltip,
   Typography,
@@ -19,10 +17,31 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import TuneIcon from '@mui/icons-material/Tune';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CloseIcon from '@mui/icons-material/Close';
+import { DuncitTabs, type DuncitTabItem } from '@duncit/tabs';
 import type { EmailTemplate } from '../../api/emailTemplates.gql';
 import { HOST_VARIABLES, VENUE_VARIABLES } from '../../config/leadVariables';
 import VariablesValuesEditor from '../../components/email/VariablesValuesEditor';
 import VariableChips from './VariableChips';
+
+export type PaneTab = 'preview' | 'code';
+
+/** The strip, as data — the editor hook reads the same list to validate the URL. */
+export const PANE_TABS: DuncitTabItem<PaneTab>[] = [
+  {
+    value: 'preview',
+    label: 'Preview',
+    icon: <VisibilityIcon fontSize="small" />,
+    iconPosition: 'start',
+    sx: { minHeight: 40 },
+  },
+  {
+    value: 'code',
+    label: 'Variables',
+    icon: <TuneIcon fontSize="small" />,
+    iconPosition: 'start',
+    sx: { minHeight: 40 },
+  },
+];
 
 interface Props {
   draft: EmailTemplate;
@@ -78,10 +97,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Stack direction="row" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tab} onChange={(_e, v) => setTab(v)} sx={{ flex: 1, minHeight: 40 }}>
-          <Tab icon={<VisibilityIcon fontSize="small" />} iconPosition="start" label="Preview" value="preview" sx={{ minHeight: 40 }} />
-          <Tab icon={<TuneIcon fontSize="small" />} iconPosition="start" label="Variables" value="code" sx={{ minHeight: 40 }} />
-        </Tabs>
+        <DuncitTabs items={PANE_TABS} value={tab} onChange={setTab} sx={{ flex: 1, minHeight: 40 }} />
         {tab === 'preview' && (
           <Tooltip title="Full screen preview">
             <IconButton size="small" sx={{ mr: 0.5 }} onClick={() => setFullscreen(true)}><FullscreenIcon fontSize="small" /></IconButton>

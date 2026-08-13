@@ -338,9 +338,15 @@ shared `@duncit/*` package, not a third copy.** This is rule 34 made operational
   `@duncit/forms` · money/format/download/pod-economics → `@duncit/utils` ·
   dates/clock → `@duncit/datetime` (admin-configured format via
   `@duncit/app-settings`) · portal chrome/boot/session → `@duncit/shell` · tables →
-  `@duncit/table` · dialogs/confirm → `@duncit/dialogs` · status chips/small UI →
+  `@duncit/table` · tab strips → `@duncit/tabs` · dialogs/confirm →
+  `@duncit/dialogs` · status chips/small UI →
   `@duncit/ui` · GraphQL types/enums → `@duncit/gql-types` · logging →
   `@duncit/logs` · localization → `@duncit/i18n`.
+- **Never render MUI's `<Tabs>`/`<Tab>` directly.** Every tab strip in mWeb and
+  the portals is `<DuncitTabs items={…} />` from `@duncit/tabs` — built from an
+  items array rather than hardcoded children, with its selection in the URL via
+  `useTabParam` (`?selectedtab=`). A raw `<Tabs>` loses the open tab on reload,
+  and a `<Tab>` written without a `value` puts a bare index in the URL.
 - **The mWeb ↔ native pair (rule 27) shares LOGIC, never UI**: pure derivations,
   filters, state machines and constants go in a framework-free package both apps
   import; the MUI and Tamagui components stay separate and thin. A file whose

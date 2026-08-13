@@ -65,6 +65,7 @@ export default function UserDetailsPage() {
       <UserDetailsTabs
         tabs={[
           {
+            value: 'profile',
             label: 'Profile',
             content: (
             <Card sx={{ height: '100%' }}>
@@ -77,8 +78,9 @@ export default function UserDetailsPage() {
             </Card>
             ),
           },
-          { label: 'Interests', content: <UserInterestsSection user={s.user} /> },
+          { value: 'interests', label: 'Interests', content: <UserInterestsSection user={s.user} /> },
           {
+            value: 'access',
             label: 'Access',
             content: (
               <Stack spacing={2}>
@@ -86,12 +88,13 @@ export default function UserDetailsPage() {
               </Stack>
             ),
           },
-          { label: 'Badges', content: <UserBadgesSection userId={userId} /> },
-          { label: 'Verification', content: <UserVerificationsSection userId={userId} /> },
-          { label: 'Surveys', content: <UserSurveysSection userId={userId} /> },
-          { label: 'Health', content: <UserHealthSection userId={userId} /> },
-          { label: 'Activity', content: <UserActivitySection userId={userId} /> },
+          { value: 'badges', label: 'Badges', content: <UserBadgesSection userId={userId} /> },
+          { value: 'verification', label: 'Verification', content: <UserVerificationsSection userId={userId} /> },
+          { value: 'surveys', label: 'Surveys', content: <UserSurveysSection userId={userId} /> },
+          { value: 'health', label: 'Health', content: <UserHealthSection userId={userId} /> },
+          { value: 'activity', label: 'Activity', content: <UserActivitySection userId={userId} /> },
           {
+            value: 'contact-logs',
             label: 'Call & Email Logs',
             content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,
           },

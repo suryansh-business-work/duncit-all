@@ -40,13 +40,14 @@ COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
-COPY packages/ui/package.json ./packages/ui/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/tabs/package.json ./packages/tabs/
+COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/

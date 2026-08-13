@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Card, MenuItem, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { Alert, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import type { TableFilterValue, TableQueryState } from '@duncit/table';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { MY_VENUES } from '../register-venue-page/queries';
 import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
@@ -22,7 +23,11 @@ const ALL_VENUES = 'ALL';
 
 export default function VenuePodsPage() {
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
-  const [tab, setTab] = useState<VenuePodTab>('ALL');
+  const tabs = useTabParam<VenuePodTab>({
+    items: TAB_ORDER.map((key) => ({ value: key, label: `${TAB_LABELS[key]} (${counts[key]})` })),
+    fallback: 'ALL',
+  });
+  const tab = tabs.value;
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -102,16 +107,7 @@ export default function VenuePodsPage() {
 
       {podsQuery.error && <Alert severity="error">{podsQuery.error.message}</Alert>}
 
-      <Tabs
-        value={tab}
-        onChange={(_event, next: VenuePodTab) => setTab(next)}
-        variant="scrollable"
-        allowScrollButtonsMobile
-      >
-        {TAB_ORDER.map((key) => (
-          <Tab key={key} value={key} label={`${TAB_LABELS[key]} (${counts[key]})`} />
-        ))}
-      </Tabs>
+      <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
 
       <VenuePodsTable
         fetchRows={fetchRows}

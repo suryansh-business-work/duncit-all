@@ -1,0 +1,150 @@
+---
+name: '@duncit/tabs'
+summary: 'The MUI tab strip every surface renders — DuncitTabs plus useTabParam, which keeps the selection in the URL (?selectedtab=) instead of component state.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/media-picker'
+  - 'packages/shell'
+  - 'portals/admin'
+  - 'portals/crm'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'DuncitTabs'
+  - 'useTabParam'
+  - 'TAB_PARAM'
+  - 'DuncitTabItem'
+  - 'DuncitTabsState'
+  - 'DuncitTabsProps'
+  - 'UseTabParamOptions'
+  - 'TabValue'
+---
+
+## Why this exists
+
+Twenty-four `<Tabs>` strips across mWeb, the seventeen portals and the shared dialogs, and every
+one of them held its selection in a `useState`. That meant three things went wrong in the same
+way everywhere: a reload dropped you back on the first tab, a link to the page could not name a
+tab, and a `<Tab>` written without an explicit `value` silently fell back to its child index.
+
+This package holds the one strip and the one hook. A new tab strip does not get a `useState`, and
+it does not hand-roll a query-string read either.
+
+## Use it
+
+The common shape — the strip owns its own selection, so the hook's return spreads straight in:
+
+```tsx
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+
+type PodTab = 'upcoming' | 'past';
+
+const POD_TABS: DuncitTabItem<PodTab>[] = [
+  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'past', label: 'Past' },
+];
+
+export default function PodsPage() {
+  const tabs = useTabParam<PodTab>({ items: POD_TABS, fallback: 'upcoming' });
+  const { data } = useQuery(PODS, { variables: { scope: tabs.value } });
+
+  return (
+    <Stack spacing={2}>
+      <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+      <PodList rows={data?.pods ?? []} />
+    </Stack>
+  );
+}
+// → /pods?selectedtab=past
+```
+
+`useTabParam` returns exactly `<DuncitTabs>`'s controlled contract — `{ items, value, onChange }`
+— which is why the spread works and why the page reads `tabs.value`. Selecting a tab
+programmatically is `tabs.onChange('past')`; that is the same door a click goes through.
+
+When the **parent** owns the selection (a presentational filter strip, a wizard rail whose state
+lives in the form hook), pass the same three props by hand:
+
+```tsx
+<DuncitTabs items={SESSION_FILTERS} value={statusFilter} onChange={onStatusChange} variant="fullWidth" />
+```
+
+There is no third mode. Every layout prop MUI's `<Tabs>` takes — `variant`, `scrollButtons`,
+`allowScrollButtonsMobile`, `textColor`, `TabIndicatorProps`, `sx`, `aria-label` — passes
+straight through, and each item carries its own `icon`, `iconPosition`, `disabled`, `sx` and
+`testId`.
+
+## What the hook does that a `useState` + effect pair gets wrong
+
+- **The selection is derived, never mirrored.** A value the strip no longer offers — a
+  server-driven category that disappeared, a deleted variant, a hand-typed link — resolves to
+  `fallback` on the next render, with no effect keeping two copies in step. That is what lets
+  `items` be empty on the first paint while the catalogue is still loading, which is exactly the
+  Tech portal's Environment rail.
+- **The setter is stable.** Both of react-router's returns change identity on every navigation,
+  so a setter closing over them would too, and an effect that legitimately lists the setter in
+  its deps would re-fire on its own write, forever. Put `tabs.onChange` in a dependency array
+  freely.
+- **Writes replace the history entry.** A tab is a view of the page, not a destination; pushing
+  one entry per switch means Back walks through five tabs before it leaves the page.
+
+## `value` is a slug, not a position
+
+`DuncitTabs` gives every `<Tab>` the `value` from its item, and that is the point of the
+component rather than a detail of it. MUI falls back to the child index when a tab has no value,
+and since the selection is written to the URL, that index is what a shared link carries:
+`?selectedtab=2` means nothing to a reader and points at a different tab the moment one is
+inserted above it.
+
+The one honest exception is a list whose tabs have no identity of their own — product variants
+are numbered because nothing else names them. Those items pass `key` as well, because an array
+index used as a React key is its own bug (Sonar S6479):
+
+```tsx
+const items = fields.map((field, index) => ({ value: index, key: field.id, label: labelFor(index) }));
+```
+
+## One key per route
+
+The default key is `selectedtab`. A route that renders a SECOND, independent strip — a nested
+category rail, or a dialog that opens over the page — passes its own `param`. Sharing one key
+means every switch on one strip snaps the other back to its fallback.
+
+| Key | Owner |
+| --- | --- |
+| `selectedtab` | the page's primary strip |
+| `selectedtab_category` | Tech › Environment, the category rail under Variables/Portal Mapping |
+| `selectedtab_media` | `@duncit/media-picker`'s dialog |
+| `selectedtab_file` | the shell's File Manager details panel |
+| `selectedtab_emaillog` | Tech › Email Logs drawer |
+| `selectedtab_connections` | mWeb's followers/following dialog |
+| `selectedtab_signature` | Legal's signature pad |
+| `selectedtab_variant` | Partners' product variant editor |
+
+A dialog keeps its key after it closes, which is deliberate: reopening it lands on the tab you
+last used. It is the page's own strip that must never be the thing that moves.
+
+## Peer dependencies, including the router
+
+`react`, `react-dom`, `@mui/material` and `react-router-dom` are peers — nothing here bundles a
+second React or MUI. The router peer is the one to remember: `useTabParam` calls
+`useSearchParams`, so a strip that owns its selection **must render inside a router context**. A
+`<DuncitTabs>` driven entirely by its parent's props does not touch the router at all.
+
+## Coverage
+
+The package declares the repo's 100/100/100/100 threshold in its own `vitest.config.ts`. The
+suite itself is not written yet — the repo-wide test pause was in force when the package landed,
+and the shared-packages CI job that would run the threshold is commented out for the same
+reason. Restoring the pause means writing `__tests__/DuncitTabs.test.tsx` and
+`__tests__/useTabParam.test.tsx` first, alongside the router wrappers the migrated call sites'
+existing suites now need.

@@ -8,8 +8,6 @@ import {
   Divider,
   IconButton,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -18,6 +16,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
 
@@ -43,6 +42,18 @@ interface Props {
 }
 
 type TabKey = 'info' | 'edit';
+const INFO_TAB: DuncitTabItem<TabKey> = {
+  value: 'info',
+  label: 'Info',
+  sx: { minHeight: 36, minWidth: 0, px: 1 },
+};
+const EDIT_TAB: DuncitTabItem<TabKey> = {
+  value: 'edit',
+  label: 'Edit',
+  sx: { minHeight: 36, minWidth: 0, px: 1 },
+};
+const READER_TABS: DuncitTabItem<TabKey>[] = [INFO_TAB];
+const WRITER_TABS: DuncitTabItem<TabKey>[] = [INFO_TAB, EDIT_TAB];
 
 /**
  * One file, opened INSIDE the dialog rather than in a drawer over it.
@@ -67,7 +78,15 @@ export default function FileDetailsView({
   siblings,
   onNavigate,
 }: Readonly<Props>) {
-  const [tab, setTab] = useState<TabKey>('info');
+  // Own key — this panel sits beside the grid inside the File Manager dialog,
+  // which opens over portal pages that have their own tab strip.
+  const tabs = useTabParam<TabKey>({
+    items: canWrite ? WRITER_TABS : READER_TABS,
+    fallback: 'info',
+    param: 'selectedtab_file',
+  });
+  const tab = tabs.value;
+  const setTab = tabs.onChange;
   const [name, setName] = useState(file.name);
   const [tags, setTags] = useState<string[]>(file.tags);
   const [rename, renameState] = useMutation(RENAME_MEDIA_FILE);
@@ -77,7 +96,7 @@ export default function FileDetailsView({
     setTab('info');
     setName(file.name);
     setTags(file.tags);
-  }, [file]);
+  }, [file, setTab]);
 
   const busy = renameState.loading || updateState.loading;
 
@@ -165,16 +184,7 @@ export default function FileDetailsView({
         )}
       </Stack>
 
-      <Tabs
-        value={tab}
-        onChange={(_event, next) => setTab(next)}
-        variant="scrollable"
-        scrollButtons={false}
-        sx={{ minHeight: 36 }}
-      >
-        <Tab value="info" label="Info" sx={{ minHeight: 36, minWidth: 0, px: 1 }} />
-        {canWrite && <Tab value="edit" label="Edit" sx={{ minHeight: 36, minWidth: 0, px: 1 }} />}
-      </Tabs>
+      <DuncitTabs {...tabs} variant="scrollable" scrollButtons={false} sx={{ minHeight: 36 }} />
       <Divider sx={{ mb: 2 }} />
 
       {tab === 'info' && <FileInfoPanel file={file} />}

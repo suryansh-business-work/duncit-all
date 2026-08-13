@@ -4,10 +4,9 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
+import { DuncitTabs } from '@duncit/tabs';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -19,24 +18,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import SendIcon from '@mui/icons-material/Send';
 import type { SectionState } from '../register-venue/useRegisterVenueForm';
 import type { RegisterVenueMode, VenueSectionKey } from '../register-venue';
+import { sectionsForMode } from './venue-sections';
 
 export const RAIL_WIDTH = 250;
-
-export interface VenueSectionDef {
-  key: VenueSectionKey;
-  label: string;
-  hint: string;
-}
-
-export const VENUE_SECTIONS: VenueSectionDef[] = [
-  { key: 'details', label: 'Venue Details', hint: 'Name, images, category & location' },
-  { key: 'type-capacity', label: 'Type & Capacity', hint: 'Venue type + capacity list' },
-  { key: 'amenities', label: 'Amenities & Security', hint: 'Facilities, amenities & safety' },
-  { key: 'documents', label: 'Venue Documents', hint: 'Uploads with document type' },
-  { key: 'owner', label: 'Owner Details', hint: 'Contact for slot requests' },
-  { key: 'leaves', label: 'Leaves & Holidays', hint: 'Closed dates — never bookable' },
-  { key: 'review', label: 'Review & Submit', hint: 'Check everything and submit' },
-];
 
 const SECTION_ICONS: Record<VenueSectionKey, JSX.Element> = {
   details: <StorefrontIcon fontSize="small" />,
@@ -62,11 +46,6 @@ const stateIcon = (key: VenueSectionKey, sectionState: Props['sectionState']) =>
   }
   return <RadioButtonUncheckedIcon color="disabled" sx={{ fontSize: 18 }} />;
 };
-
-/** Sections shown for the mode: an approved venue has nothing to submit, so
- * Review & Submit disappears; everything else stays navigable. */
-export const sectionsForMode = (mode: RegisterVenueMode): VenueSectionDef[] =>
-  mode === 'edit-approved' ? VENUE_SECTIONS.filter((section) => section.key !== 'review') : VENUE_SECTIONS;
 
 /** 250px side drawer listing the registration sections (md+); collapses to
  * scrollable tabs on small screens. */
@@ -112,18 +91,19 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
           ))}
         </List>
       </Box>
-      <Tabs
+      <DuncitTabs
+        items={sections.map((section) => ({
+          value: section.key,
+          label: section.label,
+          sx: { fontWeight: 800 },
+        }))}
         value={active}
-        onChange={(_event, next) => onSelect(next)}
+        onChange={onSelect}
         variant="scrollable"
         allowScrollButtonsMobile
         aria-label="Registration sections"
         sx={{ display: { xs: 'flex', md: 'none' }, borderBottom: 1, borderColor: 'divider', mb: 2 }}
-      >
-        {sections.map((section) => (
-          <Tab key={section.key} value={section.key} label={section.label} sx={{ fontWeight: 800 }} />
-        ))}
-      </Tabs>
+      />
     </>
   );
 }

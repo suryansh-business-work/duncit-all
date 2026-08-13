@@ -6,15 +6,34 @@ import {
   Chip,
   IconButton,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CodeIcon from '@mui/icons-material/Code';
+import { DuncitTabs, type DuncitTabItem } from '@duncit/tabs';
 import type { Tpl } from './queries';
+
+export type PaneTab = 'preview' | 'code';
+
+/** The strip, as data — the editor hook reads the same list to validate the URL. */
+export const PANE_TABS: DuncitTabItem<PaneTab>[] = [
+  {
+    value: 'preview',
+    label: 'Preview',
+    icon: <VisibilityIcon fontSize="small" />,
+    iconPosition: 'start',
+    sx: { minHeight: 40 },
+  },
+  {
+    value: 'code',
+    label: 'Variables',
+    icon: <CodeIcon fontSize="small" />,
+    iconPosition: 'start',
+    sx: { minHeight: 40 },
+  },
+];
 
 interface Props {
   draft: Tpl;
@@ -63,26 +82,12 @@ export default function PreviewVariablesPane({
         flexDirection: 'column',
       }}
     >
-      <Tabs
+      <DuncitTabs
+        items={PANE_TABS}
         value={tab}
-        onChange={(_e, v) => setTab(v)}
+        onChange={setTab}
         sx={{ borderBottom: 1, borderColor: 'divider', minHeight: 40 }}
-      >
-        <Tab
-          icon={<VisibilityIcon fontSize="small" />}
-          iconPosition="start"
-          label="Preview"
-          value="preview"
-          sx={{ minHeight: 40 }}
-        />
-        <Tab
-          icon={<CodeIcon fontSize="small" />}
-          iconPosition="start"
-          label="Variables"
-          value="code"
-          sx={{ minHeight: 40 }}
-        />
-      </Tabs>
+      />
       {tab === 'preview' ? (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && (

@@ -45,10 +45,11 @@ COPY packages/theme/package.json ./packages/theme/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/tabs/package.json ./packages/tabs/
+COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/forms/package.json ./packages/forms/
-COPY packages/ui/package.json ./packages/ui/
 COPY packages/ad-request-form/package.json ./packages/ad-request-form/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/

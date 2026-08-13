@@ -1,12 +1,13 @@
-import { useState, type ReactNode } from 'react';
-import { Box, Card, Tab, Tabs } from '@mui/material';
+import { type ReactElement, type ReactNode } from 'react';
+import { Box, Card } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 
 export interface LeadTab {
   /** Stable id for selection + a11y. */
   value: string;
   label: string;
-  icon?: ReactNode;
+  icon?: ReactElement;
   render: () => ReactNode;
 }
 
@@ -24,8 +25,17 @@ interface Props {
  * a thin-bordered Card so the whole strip feels like one piece.
  */
 export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props>) {
-  const [value, setValue] = useState(defaultValue ?? tabs[0]?.value);
-  const active = tabs.find((t) => t.value === value) ?? tabs[0];
+  const strip = useTabParam({
+    items: tabs.map((t) => ({
+      value: t.value,
+      label: t.label,
+      icon: t.icon,
+      iconPosition: 'start' as const,
+      testId: `lead-tab-${t.value}`,
+    })),
+    fallback: defaultValue ?? tabs[0]?.value ?? '',
+  });
+  const active = tabs.find((t) => t.value === strip.value) ?? tabs[0];
 
   return (
     <Box data-testid={rest['data-testid']}>
@@ -41,9 +51,8 @@ export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props
           bgcolor: t.palette.background.paper,
         })}
       >
-        <Tabs
-          value={value}
-          onChange={(_, v) => setValue(v)}
+        <DuncitTabs
+          {...strip}
           variant="scrollable"
           scrollButtons="auto"
           allowScrollButtonsMobile
@@ -61,18 +70,7 @@ export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props
             },
             '& .MuiTabs-indicator': { height: 3, borderRadius: 1 },
           })}
-        >
-          {tabs.map((t) => (
-            <Tab
-              key={t.value}
-              value={t.value}
-              label={t.label}
-              icon={t.icon as any}
-              iconPosition="start"
-              data-testid={`lead-tab-${t.value}`}
-            />
-          ))}
-        </Tabs>
+        />
       </Card>
 
       {/* Render only the active panel — cheaper than mounting all of them, and

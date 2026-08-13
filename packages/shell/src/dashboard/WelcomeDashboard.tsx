@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Grid, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { AppIcon } from '../chrome/AppIcon';
 import type { AppModule } from '../types';
 import { AccountSummaryCard } from './AccountSummaryCard';
@@ -22,54 +23,49 @@ const DASHBOARD_ME = gql`
   }
 `;
 
-type ModulesGridProps = Readonly<{ name: string; modules: readonly AppModule[] }>;
-
-function ModulesGrid({ name, modules }: ModulesGridProps) {
+/** One "coming soon" module tile. Each is its own widget, so a console can be
+ *  rearranged around the module its team actually waits on. */
+function ModuleCard({ module }: Readonly<{ module: AppModule }>) {
   return (
-    <Box>
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-        {name} modules
-      </Typography>
-      <Grid container spacing={2}>
-        {modules.map((module) => (
-          <Grid key={module.title} item xs={12} sm={6} md={3}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Stack spacing={1}>
-                  <Box sx={{ color: 'primary.main' }}>
-                    <AppIcon name={module.icon} />
-                  </Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    {module.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {module.description}
-                  </Typography>
-                  <Chip label="Coming soon" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Stack spacing={1}>
+          <Box sx={{ color: 'primary.main' }}>
+            <AppIcon name={module.icon} />
+          </Box>
+          <Typography variant="subtitle2" fontWeight={700}>
+            {module.title}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {module.description}
+          </Typography>
+          <Chip label="Coming soon" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
 
 export type WelcomeDashboardProps = Readonly<{
-  /** Portal short name (`appConfig.name`) — heads the modules grid ("HR modules"). */
+  /**
+   * Stable key this portal's saved layouts are stored under — e.g. `hr.overview`.
+   * Every console using this dashboard needs its own, or two portals would
+   * share (and overwrite) one arrangement.
+   */
+  dashboardId: string;
+  /** Portal short name (`appConfig.name`) — heads the modules section ("HR modules"). */
   name: string;
   /** Sub-header line under the greeting (`appConfig.tagline`). */
   tagline: string;
   /**
    * "Coming soon" module cards (`appConfig.modules`). When provided (even `[]`)
-   * the "{name} modules" grid renders after the account card — the
-   * hr/employee/ads-portal layout.
+   * each becomes a widget after the account card — the hr/employee/ads-portal
+   * layout.
    */
   modules?: readonly AppModule[];
   /**
-   * Custom body rendered between the greeting header and the account card, which
-   * then moves last — the finance layout (its KPI "overview" section goes here).
+   * Custom body rendered as the first widget, which pushes the account card
+   * below it — the finance layout (its KPI "overview" section goes here).
    */
   children?: ReactNode;
 }>;
@@ -77,8 +73,18 @@ export type WelcomeDashboardProps = Readonly<{
 /**
  * The `me`-query welcome dashboard (greeting + role chips + account card)
  * previously duplicated as `pages/DashboardPage.tsx` across five portals.
+ *
+ * It renders through the shared grid, so the greeting stays a fixed header
+ * while the body, the account card and every module tile are widgets the
+ * reader can arrange and keep.
  */
-export function WelcomeDashboard({ name, tagline, modules, children }: WelcomeDashboardProps) {
+export function WelcomeDashboard({
+  dashboardId,
+  name,
+  tagline,
+  modules,
+  children,
+}: WelcomeDashboardProps) {
   const { data, loading, error } = useQuery(DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
   const me = data?.me;
 
@@ -95,28 +101,75 @@ export function WelcomeDashboard({ name, tagline, modules, children }: WelcomeDa
   }
 
   const firstName = me?.first_name || me?.full_name?.split(' ')[0] || 'there';
+  const widgets: DashboardWidget[] = [];
+  let row = 0;
+
+  if (children) {
+    widgets.push({
+      id: 'portal-body',
+      bare: true,
+      defaultLayout: { x: 0, y: row, w: 12, h: 4 },
+      minH: 2,
+      content: children,
+    });
+    row += 4;
+  }
+
+  widgets.push({
+    id: 'account-summary',
+    bare: true,
+    defaultLayout: { x: 0, y: row, w: 12, h: 4 },
+    minW: 4,
+    minH: 3,
+    content: <AccountSummaryCard user={me} />,
+  });
+  row += 4;
+
+  if (modules?.length) {
+    widgets.push({
+      id: 'modules-heading',
+      bare: true,
+      defaultLayout: { x: 0, y: row, w: 12, h: 1 },
+      minH: 1,
+      content: (
+        <Typography variant="subtitle1" fontWeight={700}>
+          {name} modules
+        </Typography>
+      ),
+    });
+    row += 1;
+
+    for (const [index, module] of modules.entries()) {
+      widgets.push({
+        id: `module-${module.title}`,
+        bare: true,
+        defaultLayout: { x: (index % 4) * 3, y: row + Math.floor(index / 4) * 3, w: 3, h: 3 },
+        minW: 2,
+        minH: 2,
+        content: <ModuleCard module={module} />,
+      });
+    }
+  }
 
   return (
-    <Stack spacing={2.5}>
-      <Box>
-        <Typography variant="h5" fontWeight={800}>
-          Welcome back, {firstName}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {tagline}
-        </Typography>
-        <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>
-          {(me?.roles ?? []).map((role: string) => (
-            <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
-          ))}
-        </Stack>
-      </Box>
-
-      {children}
-
-      <AccountSummaryCard user={me} />
-
-      {modules ? <ModulesGrid name={name} modules={modules} /> : null}
-    </Stack>
+    <DuncitDashboard
+      dashboardId={dashboardId}
+      header={
+        <Box>
+          <Typography variant="h5" fontWeight={800}>
+            Welcome back, {firstName}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {tagline}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>
+            {(me?.roles ?? []).map((role: string) => (
+              <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
+            ))}
+          </Stack>
+        </Box>
+      }
+      widgets={widgets}
+    />
   );
 }

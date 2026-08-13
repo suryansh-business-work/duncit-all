@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import { PageHeader, QueryGuard } from '@duncit/ui';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import DistributionCard from '../telemetry-dashboard/DistributionCard';
 import { RANGE_OPTIONS } from '../telemetry-dashboard/queries';
 import HeadlineTiles from './HeadlineTiles';
@@ -31,47 +32,80 @@ export default function EmailsDashboardPage() {
   const d = data?.emailLogDashboard;
   const templateBuckets = labelTemplateBuckets(d?.not_delivered_templates ?? []);
 
-  return (
-    <Stack spacing={3}>
-      <PageHeader
-        title="Emails Dashboard"
-        subtitle="Delivery across every email the product tried to send, including the attempts that never left."
-        actions={
-          <TextField
-            select
-            size="small"
-            label="Range"
-            value={rangeDays}
-            onChange={(e) => setRangeDays(Number(e.target.value))}
-            sx={{ minWidth: 160 }}
-          >
-            {RANGE_OPTIONS.map((r) => (
-              <MenuItem key={r.value} value={r.value}>
-                {r.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        }
-      />
-
-      <QueryGuard
-        loading={loading && !data}
-        error={error}
-        errorText={error?.message}
-        spinnerSx={{ py: 6 }}
-      >
-        {d && (
-          <Stack spacing={3}>
-            <SilentDiscardAlert count={d.silently_discarded} />
-            <HeadlineTiles data={d} />
-            <DistributionCard title="Why nothing went out" buckets={d.not_delivered_reasons} />
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="flex-start">
-              <DistributionCard title="Templates that did not deliver" buckets={templateBuckets} />
-              <RepeatFailuresCard rows={d.repeat_failures} />
-            </Stack>
-          </Stack>
-        )}
-      </QueryGuard>
-    </Stack>
+  const header = (
+    <PageHeader
+      title="Emails Dashboard"
+      subtitle="Delivery across every email the product tried to send, including the attempts that never left."
+      actions={
+        <TextField
+          select
+          size="small"
+          label="Range"
+          value={rangeDays}
+          onChange={(e) => setRangeDays(Number(e.target.value))}
+          sx={{ minWidth: 160 }}
+        >
+          {RANGE_OPTIONS.map((r) => (
+            <MenuItem key={r.value} value={r.value}>
+              {r.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      }
+    />
   );
+
+  if (!d) {
+    return (
+      <Stack spacing={3}>
+        {header}
+        <QueryGuard loading={loading && !data} error={error} errorText={error?.message} spinnerSx={{ py: 6 }}>
+          {() => null}
+        </QueryGuard>
+      </Stack>
+    );
+  }
+
+  const widgets: DashboardWidget[] = [
+    {
+      id: 'silent-discards',
+      bare: true,
+      defaultLayout: { x: 0, y: 0, w: 12, h: 1 },
+      minH: 1,
+      content: <SilentDiscardAlert count={d.silently_discarded} />,
+    },
+    {
+      id: 'headline-tiles',
+      bare: true,
+      defaultLayout: { x: 0, y: 1, w: 12, h: 2 },
+      minH: 2,
+      content: <HeadlineTiles data={d} />,
+    },
+    {
+      id: 'not-delivered-reasons',
+      bare: true,
+      defaultLayout: { x: 0, y: 3, w: 12, h: 5 },
+      minW: 4,
+      minH: 3,
+      content: <DistributionCard title="Why nothing went out" buckets={d.not_delivered_reasons} />,
+    },
+    {
+      id: 'not-delivered-templates',
+      bare: true,
+      defaultLayout: { x: 0, y: 8, w: 6, h: 5 },
+      minW: 3,
+      minH: 3,
+      content: <DistributionCard title="Templates that did not deliver" buckets={templateBuckets} />,
+    },
+    {
+      id: 'repeat-failures',
+      bare: true,
+      defaultLayout: { x: 6, y: 8, w: 6, h: 5 },
+      minW: 3,
+      minH: 3,
+      content: <RepeatFailuresCard rows={d.repeat_failures} />,
+    },
+  ];
+
+  return <DuncitDashboard dashboardId="tech.emails" header={header} widgets={widgets} />;
 }

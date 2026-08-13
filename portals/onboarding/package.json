@@ -24,6 +24,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/category": "workspace:*",
+    "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",

@@ -1,11 +1,12 @@
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ForumIcon from '@mui/icons-material/Forum';
 import { PageHeader, StatCard } from '@duncit/ui';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import {
   BOUNCER_SOS_ALERTS,
   BOUNCER_CALLBACK_REQUESTS,
@@ -37,7 +38,7 @@ function SupportStatCard({ label, count, icon, color, to }: Readonly<SupportStat
       onClick={() => navigate(to)}
       valueVariant="h4"
       valueSx={{ lineHeight: 1 }}
-      sx={{ flex: '1 1 200px', minWidth: 200 }}
+      sx={{ height: '100%' }}
     />
   );
 }
@@ -71,43 +72,88 @@ export default function DashboardPage() {
     onChatSessionUpdate: () => chats.refetch(),
   });
 
-  return (
-    <Stack spacing={2.5}>
-      <PageHeader
-        title="Support Dashboard"
-        subtitle="Live overview of safety alerts, callbacks, tickets and chats awaiting your team."
-      />
+  // Each queue is its own widget rather than one "KPI strip", so a shift lead
+  // can put the count they actually watch first.
+  const widgets = useMemo<DashboardWidget[]>(
+    () => [
+      {
+        id: 'sos',
+        bare: true,
+        defaultLayout: { x: 0, y: 0, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label="Active SOS alerts"
+            count={sos.data?.bouncerSosAlerts.total ?? 0}
+            icon={<WarningAmberIcon fontSize="large" />}
+            color="error.main"
+            to="/sos"
+          />
+        ),
+      },
+      {
+        id: 'callbacks',
+        bare: true,
+        defaultLayout: { x: 3, y: 0, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label="Pending callbacks"
+            count={callbacks.data?.bouncerCallbackRequests.total ?? 0}
+            icon={<PhoneCallbackIcon fontSize="large" />}
+            color="warning.main"
+            to="/callbacks"
+          />
+        ),
+      },
+      {
+        id: 'tickets',
+        bare: true,
+        defaultLayout: { x: 6, y: 0, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label="Open tickets"
+            count={tickets.data?.tickets.total ?? 0}
+            icon={<ConfirmationNumberIcon fontSize="large" />}
+            color="primary.main"
+            to="/tickets"
+          />
+        ),
+      },
+      {
+        id: 'chats',
+        bare: true,
+        defaultLayout: { x: 9, y: 0, w: 3, h: 2 },
+        minW: 2,
+        minH: 2,
+        content: (
+          <SupportStatCard
+            label="Open chats"
+            count={chats.data?.supportChatSessions.total ?? 0}
+            icon={<ForumIcon fontSize="large" />}
+            color="success.main"
+            to="/live-chat"
+          />
+        ),
+      },
+    ],
+    [sos.data, callbacks.data, tickets.data, chats.data],
+  );
 
-      <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 2 }}>
-        <SupportStatCard
-          label="Active SOS alerts"
-          count={sos.data?.bouncerSosAlerts.total ?? 0}
-          icon={<WarningAmberIcon fontSize="large" />}
-          color="error.main"
-          to="/sos"
+  return (
+    <DuncitDashboard
+      dashboardId="support.overview"
+      header={
+        <PageHeader
+          title="Support Dashboard"
+          subtitle="Live overview of safety alerts, callbacks, tickets and chats awaiting your team."
         />
-        <SupportStatCard
-          label="Pending callbacks"
-          count={callbacks.data?.bouncerCallbackRequests.total ?? 0}
-          icon={<PhoneCallbackIcon fontSize="large" />}
-          color="warning.main"
-          to="/callbacks"
-        />
-        <SupportStatCard
-          label="Open tickets"
-          count={tickets.data?.tickets.total ?? 0}
-          icon={<ConfirmationNumberIcon fontSize="large" />}
-          color="primary.main"
-          to="/tickets"
-        />
-        <SupportStatCard
-          label="Open chats"
-          count={chats.data?.supportChatSessions.total ?? 0}
-          icon={<ForumIcon fontSize="large" />}
-          color="success.main"
-          to="/live-chat"
-        />
-      </Stack>
-    </Stack>
+      }
+      widgets={widgets}
+    />
   );
 }

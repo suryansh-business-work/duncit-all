@@ -1,18 +1,11 @@
 import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PolicyIcon from '@mui/icons-material/Policy';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { PageHeader } from '@duncit/ui';
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import {
   LEGAL_DOCUMENT_STATS,
   LEGAL_DOCUMENT_STATS_TABLE,
@@ -23,9 +16,6 @@ import { POLICY_STATS_TABLE, type PolicyTypeCount } from '../graphql/policies';
 
 // Aggregate rows are keyed by document_type (no id field on the server type).
 const getStatsRowId = (r: LegalDocumentTypeCount) => r.document_type;
-
-/** One shape for every dashboard card, so a new one cannot drift from the rest. */
-const CARD_SX = { flex: '1 1 220px', minWidth: 220 } as const;
 
 // Allowlists (LEGAL_DOCUMENT_STATS_TABLE_CONFIG): sort document_type/count;
 // filter document_type (text) + count (number).
@@ -44,13 +34,38 @@ const POLICY_STATS_COLUMNS: DuncitColumn<PolicyTypeCount>[] = [
   { field: 'count', headerName: 'Total policies', width: 140, filter: { type: 'number' } },
 ];
 
-export default function DashboardPage() {
+type NavCardProps = Readonly<{
+  icon: React.ReactNode;
+  heading: React.ReactNode;
+  caption: string;
+  to: string;
+}>;
+
+/** One way-in tile: an icon beside a heading, the whole card clickable. */
+function NavCard({ icon, heading, caption, to }: NavCardProps) {
   const navigate = useNavigate();
-  const client = useApolloClient();
-  const { data, loading } = useQuery<{ legalDocumentStats: LegalDocumentStats }>(
-    LEGAL_DOCUMENT_STATS,
-    { fetchPolicy: 'cache-and-network' }
+  return (
+    <Card variant="outlined" sx={{ height: '100%' }}>
+      <CardActionArea onClick={() => navigate(to)} sx={{ height: '100%' }}>
+        <CardContent>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {icon}
+            <Box>{heading}</Box>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {caption}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+    </Card>
   );
+}
+
+export default function DashboardPage() {
+  const client = useApolloClient();
+  const { data } = useQuery<{ legalDocumentStats: LegalDocumentStats }>(LEGAL_DOCUMENT_STATS, {
+    fetchPolicy: 'cache-and-network',
+  });
   const stats = data?.legalDocumentStats;
 
   const fetchRows = useApolloTableFetch<LegalDocumentTypeCount>(
@@ -65,96 +80,100 @@ export default function DashboardPage() {
     'policyStatsTable',
   );
 
+  const widgets: DashboardWidget[] = [
+    {
+      id: 'documents-tile',
+      bare: true,
+      defaultLayout: { x: 0, y: 0, w: 6, h: 2 },
+      minW: 3,
+      minH: 2,
+      content: (
+        <NavCard
+          to="/documents"
+          icon={<DescriptionIcon fontSize="large" color="primary" />}
+          caption="Total documents"
+          heading={
+            <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+              {stats?.total ?? 0}
+            </Typography>
+          }
+        />
+      ),
+    },
+    {
+      // Policies has no count to head with: this card is the way in to the
+      // list, not a measure of it.
+      id: 'policies-tile',
+      bare: true,
+      defaultLayout: { x: 6, y: 0, w: 6, h: 2 },
+      minW: 3,
+      minH: 2,
+      content: (
+        <NavCard
+          to="/policies"
+          icon={<PolicyIcon fontSize="large" color="primary" />}
+          caption="View, manage, and publish platform policies."
+          heading={
+            <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+              Policies
+            </Typography>
+          }
+        />
+      ),
+    },
+    {
+      id: 'documents-by-type',
+      title: 'Documents by type',
+      disablePadding: true,
+      defaultLayout: { x: 0, y: 2, w: 12, h: 6 },
+      minW: 4,
+      minH: 4,
+      content: (
+        <DuncitTable<LegalDocumentTypeCount>
+          tableId="legal-documents-by-type"
+          columns={STATS_COLUMNS}
+          fetchRows={fetchRows}
+          getRowId={getStatsRowId}
+          emptyText="No documents yet. Create one from the Documents section."
+          defaultSort={{ field: 'count', dir: 'desc' }}
+          searchPlaceholder="Search document type"
+        />
+      ),
+    },
+    {
+      // The same section, one module along. Counted from the policies
+      // themselves, so creating, retyping or deleting one moves these numbers
+      // on the next read.
+      id: 'policies-by-type',
+      title: 'Policies by type',
+      disablePadding: true,
+      defaultLayout: { x: 0, y: 8, w: 12, h: 6 },
+      minW: 4,
+      minH: 4,
+      content: (
+        <DuncitTable<PolicyTypeCount>
+          tableId="legal-policies-by-type"
+          columns={POLICY_STATS_COLUMNS}
+          fetchRows={fetchPolicyRows}
+          getRowId={getPolicyStatsRowId}
+          emptyText="No policies yet. Create one from the Policies section."
+          defaultSort={{ field: 'count', dir: 'desc' }}
+          searchPlaceholder="Search policy type"
+        />
+      ),
+    },
+  ];
+
   return (
-    <Stack spacing={2.5}>
-      <PageHeader
-        title="Legal Dashboard"
-        subtitle="An overview of your legal documents and policies by type."
-      />
-
-      {loading && !stats ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : (
-        <>
-          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 2 }}>
-            <Card variant="outlined" sx={CARD_SX}>
-              <CardActionArea onClick={() => navigate('/documents')}>
-                <CardContent>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <DescriptionIcon fontSize="large" color="primary" />
-                    <Box>
-                      <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                        {stats?.total ?? 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total documents
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-
-            {/* Same shell as Documents — outlined card, action area, icon beside
-                the text, and the same flex basis so the two wrap together on a
-                narrow screen. Policies has no count to head with: this card is
-                the way in to the list, not a measure of it. */}
-            <Card variant="outlined" sx={CARD_SX}>
-              <CardActionArea onClick={() => navigate('/policies')}>
-                <CardContent>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <PolicyIcon fontSize="large" color="primary" />
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
-                        Policies
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        View, manage, and publish platform policies.
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Stack>
-
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Documents by type
-            </Typography>
-            <DuncitTable<LegalDocumentTypeCount>
-              tableId="legal-documents-by-type"
-              columns={STATS_COLUMNS}
-              fetchRows={fetchRows}
-              getRowId={getStatsRowId}
-              emptyText="No documents yet. Create one from the Documents section."
-              defaultSort={{ field: 'count', dir: 'desc' }}
-              searchPlaceholder="Search document type"
-            />
-          </Box>
-
-          {/* The same section, one module along. Counted from the policies
-              themselves, so creating, retyping or deleting one moves these
-              numbers on the next read — and a type nobody has used does not
-              appear, exactly as an unused document type does not. */}
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Policies by type
-            </Typography>
-            <DuncitTable<PolicyTypeCount>
-              tableId="legal-policies-by-type"
-              columns={POLICY_STATS_COLUMNS}
-              fetchRows={fetchPolicyRows}
-              getRowId={getPolicyStatsRowId}
-              emptyText="No policies yet. Create one from the Policies section."
-              defaultSort={{ field: 'count', dir: 'desc' }}
-              searchPlaceholder="Search policy type"
-            />
-          </Box>
-        </>
-      )}
-    </Stack>
+    <DuncitDashboard
+      dashboardId="legal.overview"
+      header={
+        <PageHeader
+          title="Legal Dashboard"
+          subtitle="An overview of your legal documents and policies by type."
+        />
+      }
+      widgets={widgets}
+    />
   );
 }

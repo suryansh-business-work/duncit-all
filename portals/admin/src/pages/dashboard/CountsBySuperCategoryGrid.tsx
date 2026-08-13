@@ -1,4 +1,7 @@
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
+// The surrounding Card, title and "Total N" now come from the dashboard widget
+// this renders inside (@duncit/dashboard) — only the chart and the per-category
+// tiles live here.
 import { useTheme } from '@mui/material/styles';
 import {
   ArcElement,
@@ -17,30 +20,18 @@ interface Counts {
 }
 
 interface Props {
-  title: string;
   counts: Counts[];
-  total: number;
   color?: string;
 }
 
-export default function CountsBySuperCategoryGrid({ title, counts, total, color = '#FF4D4F' }: Readonly<Props>) {
+export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }: Readonly<Props>) {
   const theme = useTheme();
   const palette = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626', '#0891b2'];
   const labels = counts.map((c) => c.super_category_name || c.super_category_slug || 'Uncategorised');
   const values = counts.map((c) => c.count);
 
   return (
-    <Card>
-      <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
-          <Typography variant="overline" color="text.secondary">
-            Total {total}
-          </Typography>
-        </Stack>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch">
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch">
           <Box sx={{ height: 220, flex: '0 0 280px', minWidth: 0 }}>
             <Doughnut
               data={{
@@ -106,8 +97,6 @@ export default function CountsBySuperCategoryGrid({ title, counts, total, color 
             </Card>
           ))}
           </Stack>
-        </Stack>
-      </CardContent>
-    </Card>
+    </Stack>
   );
 }

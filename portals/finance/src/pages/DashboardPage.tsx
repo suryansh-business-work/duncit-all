@@ -5,7 +5,7 @@ import { FinanceKpis } from './finance/dashboard';
 
 export default function DashboardPage() {
   return (
-    <WelcomeDashboard name={appConfig.name} tagline={appConfig.tagline}>
+    <WelcomeDashboard dashboardId="finance.overview" name={appConfig.name} tagline={appConfig.tagline}>
       <Box>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
           {appConfig.name} overview

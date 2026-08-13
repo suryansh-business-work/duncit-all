@@ -1,0 +1,152 @@
+---
+name: '@duncit/dashboard'
+summary: 'The draggable dashboard every Duncit console renders — DuncitDashboard, a responsive GridStack grid whose per-user layout is saved server-side.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/developers'
+  - 'portals/employee'
+  - 'portals/finance'
+  - 'portals/hr'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'DuncitDashboard'
+  - 'DashboardWidget'
+  - 'DashboardWidgetCard'
+  - 'DashboardToolbar'
+  - 'DashboardGrid'
+  - 'DashboardLayoutItem'
+  - 'DashboardPosition'
+  - 'useDashboardLayout'
+  - 'useDashboardController'
+  - 'resolveLayout'
+  - 'defaultLayout'
+  - 'serialiseNodes'
+  - 'layoutsEqual'
+  - 'normalisePosition'
+  - 'GRID_COLUMNS'
+  - 'CELL_HEIGHT'
+  - 'BREAKPOINTS'
+  - 'DRAG_HANDLE_CLASS'
+---
+
+## Why this exists
+
+Every console had a dashboard, and every dashboard was a hand-written `<Stack spacing={2.5}>` of
+sections in an order somebody picked once. A finance analyst who only ever looks at pending
+payouts still scrolled past the greeting card; a support lead who lives in the SOS count could not
+put it beside the callbacks count. Seventeen pages, seventeen fixed arrangements, none of them
+anybody's.
+
+This package is the arrangement. A page declares **what** it shows — an array of widgets, each
+with a default slot and a minimum size — and the package owns **where**: a responsive twelve-column
+grid, drag and resize behind an explicit edit mode, and a layout stored per user so it follows
+them from the laptop to the desktop.
+
+## Using it
+
+```tsx
+import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
+import { PageHeader } from '@duncit/ui';
+
+export default function DashboardPage() {
+  const { data, loading } = useQuery(SUPPORT_COUNTS);
+
+  const widgets: DashboardWidget[] = [
+    {
+      id: 'sos',
+      title: 'Active SOS alerts',
+      content: <StatTile value={data?.sos ?? 0} loading={loading} />,
+      defaultLayout: { x: 0, y: 0, w: 3, h: 2 },
+      minW: 2,
+      minH: 2,
+    },
+    {
+      id: 'tickets-table',
+      title: 'Open tickets',
+      headerActions: <Button size="small">View all</Button>,
+      content: <DuncitTable tableId="support-open-tickets" {...tableProps} />,
+      defaultLayout: { x: 0, y: 2, w: 12, h: 6 },
+      disablePadding: true,
+      minH: 4,
+    },
+  ];
+
+  return (
+    <DuncitDashboard
+      dashboardId="support.overview"
+      header={<PageHeader title="Support Dashboard" subtitle="Live overview of your queues." />}
+      widgets={widgets}
+    />
+  );
+}
+```
+
+### The widget
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Stable key a saved layout refers to. **Renaming one returns that widget to its default slot for everybody who had moved it** — treat it like a database column name. |
+| `title` / `subtitle` | Rendered in the widget header. Omit both for a header-less panel. |
+| `headerActions` | The header's right-hand slot — a filter, a "View all", a menu. |
+| `content` | The body. It scrolls inside its slot rather than pushing the grid around. |
+| `defaultLayout` | `{ x, y, w, h }` in grid units, `w` out of 12, `h` × 76px. |
+| `minW` / `minH` | Smallest the user may drag it. Defaults to the declared size, capped at 3×2. |
+| `disablePadding` | Body renders edge-to-edge — for tables and charts with their own insets. |
+| `bare` | No card chrome at all. For a section that is already a run of cards (a KPI strip). |
+
+### Where the layout lives
+
+`myDashboardLayout` / `saveDashboardLayout` / `resetDashboardLayout` on the server, keyed by
+`(user_id, dashboard_id)`, mirrored into `localStorage` so the grid paints in its saved shape on
+the first frame instead of flashing the default arrangement. The server copy wins whenever the two
+disagree — the user may have rearranged this dashboard on another machine. Logging out clears the
+mirror along with everything else in `localStorage`, so a shared browser never leaks one person's
+layout to the next.
+
+**Absent means default.** Reset deletes the row rather than writing the defaults into it, so a
+dashboard whose default arrangement changes in a later release reaches everybody who never
+customised it.
+
+## Two drifts it survives
+
+A stored layout outlives the release that wrote it, so `resolveLayout` reconciles rather than
+trusts:
+
+- a widget the running build **no longer defines** is dropped — its stored slot names nothing;
+- a widget shipped **since** the save has no stored slot, and taking its default would drop it on
+  top of a widget the user deliberately moved there, so it is appended **below** the saved ones,
+  keeping only its size.
+
+That is why the widget catalogue is code and only positions are data.
+
+## Responsiveness
+
+Twelve columns above 1100px, six between 700 and 1100, and a single stacked column below —
+GridStack's `breakpointForWindow`, so it follows the window rather than the container. In the
+one-column mode `w` stops mattering and widgets stack in `y` order, which is why a dashboard's
+default `y` values should read the way the page should read on a phone.
+
+## Editing
+
+Rearranging is behind a **Customise layout** button rather than always live: a dashboard is mostly
+read, and a grid that moves when a pointer drifts across a card header is a dashboard people stop
+trusting. In edit mode each widget grows a drag grip in its header — GridStack listens on that
+class alone, so clicking a chart, a table row or a button inside a widget can never move it.
+
+**Save** writes the arrangement, **Cancel** puts back what was there when editing began, and
+**Reset to default** (behind a confirm) deletes the stored row.

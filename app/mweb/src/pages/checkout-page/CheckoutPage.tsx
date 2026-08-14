@@ -8,7 +8,7 @@ import { toCheckoutContact, toCheckoutBilling } from './checkout';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import GatewayChip from './GatewayChip';
-import OrderSummaryCard from './OrderSummaryCard';
+import OrderSummaryCard, { type CheckoutDiscount } from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
 import ProcessingBackdrop from './ProcessingBackdrop';
 import SavedAddressPicker from './SavedAddressPicker';
@@ -64,6 +64,29 @@ export default function CheckoutPage() {
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
   // The coupon discounts the whole pod bill, so coins redeem against its result.
   const coins = useCoinRedemption(session, session.coupon?.ok ? session.coupon.final_total : amount);
+  // What is actually charged, broken up the same way. Coins and coupons cut the
+  // GROSS, and the server re-quotes on what is left, so the tax owed drops with
+  // it — reusing the undiscounted breakup here would print a GST nobody pays.
+  const payBreakup = useMemo(
+    () => buildBreakup(coins.effectiveTotal, session.finance),
+    [coins.effectiveTotal, session.finance]
+  );
+  // The deductions, in the order they are taken. Coins are 1:1 with the rupee,
+  // so the count applied IS the amount off.
+  const discounts = useMemo(() => {
+    const rows: CheckoutDiscount[] = [];
+    if (session.coupon?.ok && session.coupon.discount_amount > 0) {
+      rows.push({
+        key: 'coupon',
+        label: t('mweb.checkout.couponDiscount', { vars: { code: session.coupon.code ?? '' } }),
+        amount: session.coupon.discount_amount,
+      });
+    }
+    if (coins.applied > 0) {
+      rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coins.applied });
+    }
+    return rows;
+  }, [session.coupon, coins.applied, t]);
   // What an agent needs if a payment times out and a ticket has to be opened.
   const payment = usePaymentFailure(() => ({
     description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',
@@ -167,7 +190,7 @@ export default function CheckoutPage() {
         {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} seats={seats} unitAmount={unitAmount} />
+          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}

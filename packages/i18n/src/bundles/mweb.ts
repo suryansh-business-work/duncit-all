@@ -936,6 +936,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — it lists the tax as a component of the price above it.
       inclusiveOf: 'Inclusive of:',
       gst: 'GST ({pct}%)',
+      // Money taken OFF the bill, listed in the breakdown itself rather than
+      // only under the pay button — a total that ignores a discount the buyer
+      // can see applied above it reads as the discount having failed. The coin
+      // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
+      couponDiscount: 'Coupon {code}',
       totalPayable: 'Total payable',
       // Venue charges are settled at the door and are NOT part of the online
       // payment, which is the one thing this copy has to make unmistakable.

@@ -4,11 +4,14 @@ import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
 import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import { venueSideOf } from '@modules/finance/finance/breakdown.math';
 import { resolveEffectiveRates } from '@modules/finance/finance/settlement.service';
+import { whatsappService, type WaSendInput } from '@modules/platform/whatsapp/whatsapp.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -361,6 +364,171 @@ async function bulkShiftedWindow(
   return overlap ? null : { start, end };
 }
 
+/** `destinationFor` reads the number off these two fields, so a narrower
+ * projection makes every WhatsApp send skip with "No WhatsApp number". */
+const WA_CONTACT_FIELDS =
+  'profile.first_name profile.last_name auth.phone communication.whatsapp';
+
+const contactName = (u: any) =>
+  `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim();
+
+/** Every WhatsApp template prints the date and the time as two placeholders,
+ * unlike the single combined string the in-app note and the emails use. */
+const waWhen = (at: Date) => ({
+  date: at.toLocaleString('en-IN', { dateStyle: 'medium' }),
+  time: at.toLocaleString('en-IN', { timeStyle: 'short' }),
+});
+
+/** Everything the decision templates fill, resolved once for all six sends. */
+interface SlotDecisionFacts {
+  entityId: string;
+  podTitle: string;
+  venueName: string;
+  clubId: unknown;
+  hostName: string;
+  date: string;
+  time: string;
+  hosts: any[];
+  owner: any;
+}
+
+/** The club admin the pod is handed to. */
+async function clubAdminName(clubId: unknown): Promise<string> {
+  const club = await ClubModel.findById(clubId).select('admin_user_ids').lean();
+  const adminId = (club?.admin_user_ids ?? [])[0];
+  if (!adminId) return '';
+  const admin = await UserModel.findById(adminId)
+    .select('profile.first_name profile.last_name')
+    .lean();
+  return contactName(admin);
+}
+
+/** The decision to the pod's hosts — every one of them, matching the in-app
+ * note, so a co-hosted pod costs one message per host. */
+function hostDecisionSends(facts: SlotDecisionFacts, approved: boolean): WaSendInput[] {
+  const event = approved ? 'HOST_SLOT_APPROVED' : 'HOST_SLOT_REJECTED';
+  return facts.hosts.map((host) => {
+    const name = contactName(host);
+    return {
+      event,
+      entityId: facts.entityId,
+      user: host,
+      name,
+      params: [name, facts.podTitle, facts.podTitle, facts.date, facts.time, facts.venueName, facts.podTitle],
+    };
+  });
+}
+
+/** The same decision back to the venue owner who made it — the approval also
+ * carries the Venue Studio link, the rejection does not. */
+async function venueDecisionSends(facts: SlotDecisionFacts, approved: boolean): Promise<WaSendInput[]> {
+  if (!facts.owner) return [];
+  const name = contactName(facts.owner);
+  const to = { entityId: facts.entityId, user: facts.owner, name };
+  if (approved) {
+    // The Partners portal's venue home, the same surface the slot-request email
+    // sends them to — mWeb's `/venues/manage` does not exist over there.
+    const { partnersUrl } = await getUrlConfigs();
+    const studioUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/dashboard`;
+    return [
+      {
+        ...to,
+        event: 'VENUE_SLOT_APPROVED',
+        params: [name, facts.podTitle, facts.podTitle, facts.date, facts.time, facts.hostName, studioUrl],
+      },
+    ];
+  }
+  return [
+    {
+      ...to,
+      event: 'VENUE_SLOT_REJECTED',
+      params: [name, facts.podTitle, facts.podTitle, facts.date, facts.time, facts.hostName],
+    },
+  ];
+}
+
+/** "Your pod is live" to both sides of the booking — one campaign, one key per
+ * audience. Only the primary host is told; the co-hosts already have the
+ * approval message above. */
+async function podPublishedSends(facts: SlotDecisionFacts): Promise<WaSendInput[]> {
+  const clubAdmin = await clubAdminName(facts.clubId);
+  // The template's whole point is naming the club admin the pod was handed to,
+  // and a blank value would be recorded FAILED rather than sent.
+  if (!clubAdmin) return [];
+  const details = [
+    facts.podTitle,
+    facts.podTitle,
+    facts.date,
+    facts.time,
+    facts.venueName,
+    facts.hostName,
+    clubAdmin,
+  ];
+  const sends: WaSendInput[] = [];
+  if (facts.owner) {
+    const ownerName = contactName(facts.owner);
+    sends.push({
+      event: 'VENUE_POD_PUBLISHED',
+      entityId: facts.entityId,
+      user: facts.owner,
+      name: ownerName,
+      params: [ownerName, ...details],
+    });
+  }
+  const host = facts.hosts[0];
+  if (host) {
+    sends.push({
+      event: 'HOST_POD_PUBLISHED',
+      entityId: facts.entityId,
+      user: host,
+      name: facts.hostName,
+      params: [facts.hostName, ...details],
+    });
+  }
+  return sends;
+}
+
+/** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
+ * to the venue owner, plus the pod-is-live pair once it is approved. The sends
+ * themselves never throw; the lookups feeding them can. */
+async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolean) {
+  try {
+    const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
+    if (!venue) return;
+    const [hosts, owner] = await Promise.all([
+      UserModel.find({ _id: { $in: pod.pod_hosts_id ?? [] } })
+        .select(WA_CONTACT_FIELDS)
+        .lean(),
+      UserModel.findById(venue.owner_user_id).select(WA_CONTACT_FIELDS).lean(),
+    ]);
+    const { date, time } = waWhen(slot.start_at);
+    const facts: SlotDecisionFacts = {
+      entityId: String(pod._id),
+      podTitle: pod.pod_title ?? '',
+      venueName: venue.venue_name ?? '',
+      clubId: pod.club_id,
+      hostName: contactName(hosts[0]),
+      date,
+      time,
+      hosts,
+      owner,
+    };
+    const sends = [
+      ...hostDecisionSends(facts, approved),
+      ...(await venueDecisionSends(facts, approved)),
+    ];
+    if (approved) sends.push(...(await podPublishedSends(facts)));
+    await whatsappService.sendEach(sends);
+  } catch (err) {
+    logs.server.error('venueSlot', 'whatsappSlotDecision', {
+      error: err,
+      msg: 'decision whatsapp failed',
+      approved,
+      slot_id: String(slot._id),
+    });
+  }
+}
+
 /** Best-effort in-app note to the pod's hosts when a venue decides a request. */
 async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean, reason?: string | null) {
   try {
@@ -386,6 +554,8 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
       slot_id: String(slot._id),
     });
   }
+  // Outside the block above so a failed in-app note still reaches WhatsApp.
+  await whatsappSlotDecision(pod, slot, approved);
 }
 
 /** One pending booking request row: the slot joined with its requesting pod,

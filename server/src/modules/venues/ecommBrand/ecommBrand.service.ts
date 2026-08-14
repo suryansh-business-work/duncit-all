@@ -3,9 +3,11 @@ import { Types } from 'mongoose';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
+import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { logs } from '@observability/log';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
@@ -146,6 +148,11 @@ async function assignEcommRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(roles));
 }
 
+/** The owner's own account, with only the fields a WhatsApp send reads: the
+ * number lives on the user, never on the brand's contact details. */
+const waRecipient = (userId: Types.ObjectId) =>
+  UserModel.findById(userId).select('auth.phone communication.whatsapp').lean();
+
 /** Strip a single role from a user (used on brand hard-delete when they have no
  * remaining brand). No-op if the user is gone or never held the role. */
 async function removeUserRole(userId: string, role: string) {
@@ -282,6 +289,11 @@ export const ecommBrandService = {
   async approve(id: string, notes?: string, tags?: string[]) {
     const brand = await EcommBrandModel.findById(id);
     if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    // The change-request path re-runs this on brands that are already approved
+    // (so the owner keeps their role), and an admin re-approves to edit notes or
+    // tags. Both stay allowed; the message only goes out on the transition,
+    // because it carries no entity for the duplicate index to key on.
+    const wasApproved = brand.status === 'APPROVED';
     brand.status = 'APPROVED';
     brand.approved_at = new Date();
     brand.rejected_at = null;
@@ -297,6 +309,15 @@ export const ecommBrandService = {
       '@modules/venues/brandPickupLocation/brandPickupLocation.service'
     );
     await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
+    if (!wasApproved) {
+      const categories = (brand.product_categories ?? []).join(', ');
+      await whatsappService.send({
+        event: 'ECOMM_BRAND_ADDED',
+        user: await waRecipient(brand.owner_user_id),
+        name: brand.contact_person,
+        params: [brand.contact_person, brand.brand_name, categories],
+      });
+    }
     return toPub(brand);
   },
 
@@ -331,6 +352,10 @@ export const ecommBrandService = {
   async setActive(id: string, active: boolean) {
     const brand = await EcommBrandModel.findById(id);
     if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    // Nothing changed, so nobody is told: an account message carries no entity
+    // for the WhatsApp duplicate index to key on, and the partner's own toggle
+    // would otherwise bill a message every time it is pressed.
+    if (brand.is_active === active) return toPub(brand);
     brand.is_active = active;
     await brand.save();
 
@@ -357,6 +382,13 @@ export const ecommBrandService = {
         msg: `email failed for ${slug}`,
       });
     }
+
+    await whatsappService.send({
+      event: active ? 'ECOMM_ACCOUNT_REACTIVATED' : 'ECOMM_ACCOUNT_SUSPENDED',
+      user: await waRecipient(brand.owner_user_id),
+      name: brand.contact_person,
+      params: [brand.contact_person],
+    });
 
     return toPub(brand);
   },

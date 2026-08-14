@@ -67,6 +67,8 @@ export const financeTypeDefs = /* GraphQL */ `
     host_payout_mode: PayoutMode!
     payout_day_of_week: Int!
     payout_time: String!
+    "Working days a refund takes to reach the customer, as quoted in every cancellation message."
+    refund_processing_days: Int!
     currency_symbol: String!
     invoice_prefix: String!
     dummy_mode: Boolean!
@@ -107,6 +109,7 @@ export const financeTypeDefs = /* GraphQL */ `
     host_payout_mode: PayoutMode
     payout_day_of_week: Int
     payout_time: String
+    refund_processing_days: Int
     currency_symbol: String
     invoice_prefix: String
     dummy_mode: Boolean

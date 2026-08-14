@@ -30,6 +30,7 @@ import type {
 import type { UpdateMyProfileDTO, PetProfileDTO } from '@modules/access/profile/profile.validator';
 import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
 import { assertPortalLogin } from '@modules/portals';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
@@ -418,6 +419,42 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
   } catch (err) {
     logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: err, msg: 'partner access notify failed', userId });
   }
+}
+
+/**
+ * The welcome a new account gets, whichever door it came in through — email
+ * signup, Google signup or the admin form. One helper so a fourth door cannot
+ * quietly get the mail and miss the message. `origin` names the caller in the
+ * log, exactly as the three separate sends used to.
+ */
+async function welcomeNewAccount(created: any, origin: string) {
+  // Unconditional: an account with no address records a FAILED welcome row
+  // rather than vanishing, which is the one place it can still be noticed.
+  sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
+    logs.server.error('user.service', origin, { error: e, msg: 'Email send failed' })
+  );
+  // A phone is optional and is not asked for at signup, so most fresh accounts
+  // have no reachable number and record a SKIPPED row.
+  await whatsappService.send({
+    event: 'USER_WELCOME',
+    user: created,
+    name: created.profile?.first_name,
+    params: [created.profile?.first_name],
+  });
+}
+
+/**
+ * Which account-status message a change earns, if any.
+ *
+ * INACTIVE and SUSPENDED both mean "cannot sign in", so the only edge worth a
+ * message is the one that crosses ACTIVE — and re-saving a status it already
+ * holds must stay silent, because an account-level send has no entity for the
+ * funnel's unique index to dedupe on.
+ */
+function accountStatusEvent(before: string, after: string): string | null {
+  if (before === after) return null;
+  if (after === 'ACTIVE') return 'USER_ACCOUNT_REACTIVATED';
+  return before === 'ACTIVE' ? 'USER_ACCOUNT_SUSPENDED' : null;
 }
 
 /** Downgrade a user's APPROVED onboarding entity when its role is revoked.
@@ -951,11 +988,7 @@ export const userService = {
       throw e;
     }
 
-    // Unconditional: an account with no address records a FAILED welcome row
-    // rather than vanishing, which is the one place it can still be noticed.
-    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
-      logs.server.error('user.service', 'register', { error: e, msg: 'Email send failed' })
-    );
+    await welcomeNewAccount(created, 'register');
     return authPayload(created);
   },
 
@@ -1262,11 +1295,7 @@ export const userService = {
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
-    // Unconditional: an account with no address records a FAILED welcome row
-    // rather than vanishing, which is the one place it can still be noticed.
-    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
-      logs.server.error('user.service', 'signupWithGoogle', { error: e, msg: 'Email send failed' })
-    );
+    await welcomeNewAccount(created, 'signupWithGoogle');
     await UserModel.updateOne(
       { _id: created._id },
       {
@@ -2492,17 +2521,20 @@ export const userService = {
       assignedCity: input.assigned_city ?? null,
     });
 
-    // Unconditional: an account with no address records a FAILED welcome row
-    // rather than vanishing, which is the one place it can still be noticed.
-    sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
-      logs.server.error('user.service', 'create', { error: e, msg: 'Email send failed' })
-    );
+    await welcomeNewAccount(created, 'create');
     const fresh = await UserModel.findById(created._id);
     return toPublic(fresh);
   },
 
   async update(user_id: string, input: UpdateUserDTO) {
     const set = buildAdminUserSet(input);
+    // `{ new: true }` below hands back the AFTER value, so the status this write
+    // moves away from has to be read while it still exists — without it every
+    // re-save of an already-suspended account looks like a fresh suspension.
+    const before =
+      input.status === undefined
+        ? null
+        : await UserModel.findById(user_id).select('metadata.status').lean();
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
@@ -2517,6 +2549,16 @@ export const userService = {
       });
     }
     const fresh = await UserModel.findById(user_id);
+    const statusEvent =
+      before && input.status ? accountStatusEvent(before.metadata?.status ?? '', input.status) : null;
+    if (statusEvent) {
+      await whatsappService.send({
+        event: statusEvent,
+        user: fresh,
+        name: fresh?.profile?.first_name,
+        params: [fresh?.profile?.first_name],
+      });
+    }
     // Admin edits move the same fields a user can change about themselves —
     // name, email, phone, roles — so they must reach the same two places: that
     // person's open sessions, and the mirrored copies the admin tables search.

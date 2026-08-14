@@ -8,10 +8,14 @@ import {
   type FulfilmentStatus,
   type IProductOrder,
 } from './productOrder.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { InventoryProductModel, type IInventoryProduct } from '@modules/venues/inventory/inventory.model';
+import { sendProductOwnerWhatsApp } from '@modules/venues/inventory/inventory.service';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -156,6 +160,18 @@ async function buildLineItem(line: any, session?: ClientSession) {
 }
 
 /**
+ * "Out of stock" is the CROSSING, not the state — without a before-value every
+ * later order of an already-empty product would send the brand another message.
+ * `$inc` is atomic, so the count before this decrement is exactly `after + qty`
+ * and no second read can disagree with it.
+ */
+async function notifyStockOutIfEmptied(product: IInventoryProduct, qty: number) {
+  const after = Number(product.inventory_count) || 0;
+  if (after > 0 || after + qty <= 0) return;
+  await sendProductOwnerWhatsApp(product, 'ECOMM_STOCK_OUT', Math.max(0, after));
+}
+
+/**
  * Point-of-sale stock movement for a freshly created order: decrement the
  * product's inventory (and the bought variant's own count), and step the pod
  * row's sold_count so the pod's available_count reflects real sales. Runs only
@@ -182,7 +198,14 @@ async function recordStockForOrder(order: IProductOrder, session?: ClientSession
       // share of the reservation so available stock stays truthful.
       inc.requested_count = -qty;
     }
-    await InventoryProductModel.updateOne({ _id: item.product_id }, { $inc: inc }, options);
+    // findOneAndUpdate rather than updateOne so the post-decrement count comes
+    // back with the write that caused it — see notifyStockOutIfEmptied.
+    const product = await InventoryProductModel.findOneAndUpdate(
+      { _id: item.product_id },
+      { $inc: inc },
+      { ...options, new: true }
+    );
+    if (product) await notifyStockOutIfEmptied(product, qty);
     if (order.pod_id) {
       await PodModel.updateOne(
         { _id: order.pod_id, 'product_requests.product_id': item.product_id },
@@ -326,6 +349,50 @@ interface CreateOrderInput {
   pickupVenueId: any;
   shippingCharge: number;
   session?: ClientSession;
+}
+
+/** The two states in which the buyer is holding the goods — SHIP ends at
+ * DELIVERED, PICKUP at PICKED_UP. */
+const DELIVERED_STATUSES = new Set<FulfilmentStatus>(['DELIVERED', 'PICKED_UP']);
+
+/**
+ * Ask every brand behind a delivered order for feedback, grouped by owner so a
+ * brand with two products on the same order hears once rather than twice.
+ */
+async function requestBrandFeedback(order: IProductOrder) {
+  const productIds = order.line_items.map((line) => line.product_id);
+  if (productIds.length === 0) return;
+  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+    .select('product_name listing_submitted_by_id')
+    .lean();
+  const productsByOwner = new Map<string, string[]>();
+  for (const product of products) {
+    const ownerId = String(product.listing_submitted_by_id ?? '');
+    if (!Types.ObjectId.isValid(ownerId)) continue;
+    const names = productsByOwner.get(ownerId) ?? [];
+    names.push(product.product_name);
+    productsByOwner.set(ownerId, names);
+  }
+  if (productsByOwner.size === 0) return;
+  // The phone fields are selected explicitly: the funnel reads the number off
+  // these documents, so a narrower projection skips every send silently.
+  const owners = await UserModel.find({ _id: { $in: [...productsByOwner.keys()] } })
+    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .lean();
+  const { mwebUrl } = await getUrlConfigs();
+  const feedbackUrl = `${mwebUrl.replace(/\/+$/, '')}/support/feedback`;
+  await whatsappService.sendEach(
+    owners.map((owner) => {
+      const name = `${owner.profile?.first_name ?? ''} ${owner.profile?.last_name ?? ''}`.trim();
+      return {
+        event: 'ECOMM_FEEDBACK',
+        entityId: String(order._id),
+        user: owner,
+        name,
+        params: [name, (productsByOwner.get(String(owner._id)) ?? []).join(', '), feedbackUrl],
+      };
+    })
+  );
 }
 
 /** Persist the order doc for one (pod, method, warehouse) group. */
@@ -487,9 +554,16 @@ export const productOrderService = {
   async advanceStatus(id: string, status: FulfilmentStatus, note = '') {
     const doc = await ProductOrderModel.findById(id);
     if (!doc) throw new GraphQLError('Order not found', { extensions: { code: 'NOT_FOUND' } });
+    const previous = doc.fulfilment_status;
     doc.fulfilment_status = status;
     doc.tracking_events.push({ status, code: 0, location: '', note, at: new Date() } as any);
     await doc.save();
+    // Only the crossing INTO delivery asks for feedback: this mutation writes
+    // the status unconditionally, so re-applying a delivered state would
+    // otherwise be a second billed message.
+    if (DELIVERED_STATUSES.has(status) && !DELIVERED_STATUSES.has(previous)) {
+      await requestBrandFeedback(doc);
+    }
     return toPub(doc);
   },
 

@@ -7,6 +7,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getFinanceSettings } from './finance.model';
 import {
   computePodSettlement,
@@ -246,9 +247,79 @@ export function releasePayout(doc: Pick<IPaymentRelease, 'approved_amount' | 'am
   return doc.approved_amount ?? doc.amount_requested;
 }
 
-// On approval, email the beneficiary their payout statement. When the release
-// carries a settlement breakdown (the host-completion flow), a payout PDF is
-// generated and attached with the reconciled lines. Best-effort.
+/** The WhatsApp scenario each kind of payout announces. */
+const WA_PAYOUT_EVENT: Record<PaymentReleaseKind, string> = {
+  HOST_PAYMENT: 'HOST_PAYMENT_SENT',
+  VENUE_BILLING: 'VENUE_PAYMENT_SENT',
+  CLUB_ADMIN: 'CLUB_ADMIN_PAYMENT_SENT',
+};
+
+/**
+ * The beneficiary's account, loaded for the phone number the WhatsApp funnel
+ * reads off it — the release itself carries only an email. Venue money is owed
+ * to the venue's owner user; host and club-admin money to `host_user_id`.
+ */
+async function beneficiaryUser(doc: IPaymentRelease) {
+  const fields = 'auth.phone communication.whatsapp';
+  if (doc.kind === 'VENUE_BILLING') {
+    const venue = doc.venue_id ? await VenueModel.findById(doc.venue_id).select('owner_user_id') : null;
+    if (!venue?.owner_user_id) return null;
+    return UserModel.findById(venue.owner_user_id).select(fields).lean<Record<string, any> | null>();
+  }
+  if (!doc.host_user_id) return null;
+  return UserModel.findById(doc.host_user_id).select(fields).lean<Record<string, any> | null>();
+}
+
+/**
+ * The template values, in the registry's order for this kind. The club-admin
+ * template asks for the club and the payment id where the host and venue ones
+ * ask for the pod's time, so the two shapes are built apart.
+ */
+async function payoutWaParams(doc: IPaymentRelease, payout: number, pod: any): Promise<string[]> {
+  const when = pod?.pod_date_time ? new Date(pod.pod_date_time) : null;
+  const date = when ? when.toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+  const time = when ? when.toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+  // No currency symbol: every payout template prints the rupee sign itself.
+  const amount = payout.toFixed(2);
+  if (doc.kind === 'CLUB_ADMIN') {
+    const { ClubModel } = await import('@modules/clubs/club/club.model');
+    const club = pod?.club_id ? await ClubModel.findById(pod.club_id).select('club_name') : null;
+    return [
+      doc.beneficiary_name,
+      doc.pod_title,
+      club?.club_name ?? '',
+      doc.pod_title,
+      doc.release_id,
+      date,
+      amount,
+    ];
+  }
+  return [doc.beneficiary_name, doc.pod_title, doc.pod_title, date, time, amount];
+}
+
+/**
+ * The same news as the statement email, on WhatsApp: the payout is out, for the
+ * amount {@link releasePayout} says was moved.
+ *
+ * The pod is read here because the release stores the pod's title but not its
+ * schedule, and the templates want the date and the time as separate values.
+ */
+async function notifyApprovalWhatsapp(doc: IPaymentRelease, payout: number) {
+  const pod = await PodModel.findById(doc.pod_id).select('pod_date_time club_id');
+  const user = await beneficiaryUser(doc);
+  await whatsappService.send({
+    event: WA_PAYOUT_EVENT[doc.kind],
+    entityId: String(doc._id),
+    user,
+    name: doc.beneficiary_name,
+    params: await payoutWaParams(doc, payout, pod),
+  });
+}
+
+// On approval, email the beneficiary their payout statement and tell them the
+// same on WhatsApp. When the release carries a settlement breakdown (the
+// host-completion flow), a payout PDF is generated and attached with the
+// reconciled lines. Best-effort.
 async function notifyApproval(doc: IPaymentRelease) {
   if (doc.status !== 'APPROVED') return;
   try {
@@ -316,6 +387,7 @@ async function notifyApproval(doc: IPaymentRelease) {
       },
       attachments,
     });
+    await notifyApprovalWhatsapp(doc, payout);
   } catch (error) {
     logs.server.warn('paymentRelease', 'notifyApproval', { error, msg: 'approval email failed' });
   }

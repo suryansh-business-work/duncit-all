@@ -214,6 +214,13 @@ async function bootstrap() {
     const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
     await giftcardService.syncIndexes();
   });
+  // Builds the WhatsApp send log's unique index. It IS the idempotency: without
+  // it every re-trigger of a domain event is a second billed message, and the
+  // index only lands on an already-deployed database through syncIndexes.
+  await safeSeed('waMessageLogIndexes', async () => {
+    const { WaMessageLogModel } = await import('@modules/platform/whatsapp/waMessageLog.model');
+    await WaMessageLogModel.syncIndexes();
+  });
   // Creates the gift card sales policy singleton (amount presets, validity) so
   // the buy page has amounts on day one.
   await safeSeed('giftCardSettings', async () => {

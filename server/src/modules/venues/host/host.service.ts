@@ -6,6 +6,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -196,6 +197,11 @@ async function assignApprovedHostRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** The host's own account, with only the fields a WhatsApp send reads: the
+ * number lives on the user, never on the host document. */
+const waRecipient = (userId: Types.ObjectId) =>
+  UserModel.findById(userId).select('auth.phone communication.whatsapp').lean();
+
 /** Strip a single role from a user (used on host hard-delete). No-op if the
  * user is gone or never held the role. */
 async function removeUserRole(userId: string, role: string) {
@@ -326,12 +332,24 @@ export const hostService = {
   async approve(id: string, notes?: string, tags?: string[]) {
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    // Re-approving an approved host is how an admin edits notes and tags, so it
+    // stays allowed — but the welcome only goes out on the transition. The
+    // message carries no entity, so nothing downstream can spot the duplicate.
+    const wasApproved = h.status === 'APPROVED';
     h.status = 'APPROVED';
     h.approved_at = new Date();
     h.reviewer_notes = notes ?? h.reviewer_notes;
     if (tags) h.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await h.save();
     await assignApprovedHostRole(h.user_id);
+    if (!wasApproved) {
+      await whatsappService.send({
+        event: 'HOST_ONBOARDING_APPROVED',
+        user: await waRecipient(h.user_id),
+        name: h.full_name,
+        params: [h.full_name, h.email],
+      });
+    }
     return toPub(h);
   },
   async reject(id: string, notes: string) {
@@ -411,6 +429,10 @@ export const hostService = {
   async setActive(hostId: string, active: boolean) {
     const h = await HostModel.findById(hostId);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    // Nothing changed, so nobody is told: an account message carries no entity
+    // for the WhatsApp duplicate index to key on, and pressing Deactivate twice
+    // would otherwise be two billed messages and two emails.
+    if (h.is_active === active) return toPub(h);
     h.is_active = active;
     await h.save();
 
@@ -441,6 +463,13 @@ export const hostService = {
         msg: `email failed for ${slug}`,
       });
     }
+
+    await whatsappService.send({
+      event: active ? 'HOST_ACCOUNT_REACTIVATED' : 'HOST_ACCOUNT_SUSPENDED',
+      user: await waRecipient(h.user_id),
+      name: h.full_name,
+      params: [h.full_name],
+    });
 
     return toPub(h);
   },

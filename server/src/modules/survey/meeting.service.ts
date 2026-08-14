@@ -8,6 +8,7 @@ import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { aiValidateMeetingReason } from '@modules/moderation/moderation.ai';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import {
   sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
@@ -116,17 +117,30 @@ async function pubJoined(doc: any) {
   }
 }
 
-/** Batch-resolve display name + email for the given user ids. */
-async function userMap(ids: string[]): Promise<Map<string, { name: string; email: string }>> {
+/**
+ * What a notification needs about the applicant: the display name and address
+ * the emails use, plus the account row itself — the WhatsApp funnel reads the
+ * number off `auth.phone` / `communication.whatsapp`, so those fields have to
+ * survive the projection or every send silently skips for "No WhatsApp number".
+ */
+interface MeetingRecipient {
+  name: string;
+  email: string;
+  user: Record<string, any>;
+}
+
+/** Batch-resolve display name, email and account for the given user ids. */
+async function userMap(ids: string[]): Promise<Map<string, MeetingRecipient>> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return new Map();
-  const users = await UserModel.find({ _id: { $in: unique } }).select('profile.first_name profile.last_name auth.email').lean();
+  const users = await UserModel.find({ _id: { $in: unique } }).select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp').lean();
   return new Map(
     users.map((u: any) => [
       String(u._id),
       {
         name: [u.profile?.first_name, u.profile?.last_name].filter(Boolean).join(' ') || u.auth?.email || 'User',
         email: u.auth?.email ?? '',
+        user: u,
       },
     ]),
   );
@@ -185,7 +199,65 @@ function slotLabelTz(value: string | null | undefined, offsetMin: number): strin
   return `${formatted} ${gmtLabel(offsetMin)}`;
 }
 
+/**
+ * The same instant as {@link slotLabelTz}, split in two: every onboarding
+ * WhatsApp template prints "Date: {{2}}" and "Time: {{3}}" as separate
+ * placeholders, so the combined label cannot fill them. A missing instant comes
+ * back blank — the funnel refuses a blank value, which beats billing for a
+ * message reading "Invalid Date".
+ */
+function slotPartsTz(value: string | null | undefined, offsetMin: number): { date: string; time: string } {
+  if (!value) return { date: '', time: '' };
+  const shifted = new Date(new Date(value).getTime() + offsetMin * 60_000);
+  return {
+    date: shifted.toLocaleString('en-IN', { dateStyle: 'medium', timeZone: 'UTC' }),
+    time: shifted.toLocaleString('en-IN', { timeStyle: 'short', timeZone: 'UTC' }),
+  };
+}
+
 const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
+
+interface MeetingWaEvents {
+  booked: string;
+  interview: string;
+  approved: string;
+  rejected: string;
+}
+
+/** The four WhatsApp scenarios each partner kind owns. Keyed by the meeting's
+ * own `kind` so a fifth partner type is one row here, not four more branches. */
+const MEETING_WA_EVENTS: Record<string, MeetingWaEvents> = {
+  HOST: {
+    booked: 'HOST_ONBOARDING_BOOKED',
+    interview: 'HOST_ONBOARDING_INTERVIEW',
+    approved: 'HOST_ONBOARDING_APPROVED',
+    // The template is approved, but its campaign `host_onboarding_rejection` was
+    // never created at AiSensy — the funnel logs the outcome against that name,
+    // which is exactly the gap the WhatsApp console is built to surface.
+    rejected: 'HOST_ONBOARDING_REJECTED',
+  },
+  VENUE: {
+    booked: 'VENUE_ONBOARDING_BOOKED',
+    interview: 'VENUE_ONBOARDING_INTERVIEW',
+    approved: 'VENUE_ONBOARDING_APPROVED',
+    rejected: 'VENUE_ONBOARDING_REJECTED',
+  },
+  ECOMM: {
+    booked: 'ECOMM_ONBOARDING_BOOKED',
+    interview: 'ECOMM_ONBOARDING_INTERVIEW',
+    approved: 'ECOMM_ONBOARDING_APPROVED',
+    rejected: 'ECOMM_ONBOARDING_REJECTED',
+  },
+  CLUB_ADMIN: {
+    booked: 'CLUB_ADMIN_ONBOARDING_BOOKED',
+    interview: 'CLUB_ADMIN_ONBOARDING_INTERVIEW',
+    approved: 'CLUB_ADMIN_ONBOARDING_APPROVED',
+    rejected: 'CLUB_ADMIN_ONBOARDING_REJECTED',
+  },
+};
+
+/** Host is the fallback kind, the same default MEETING_KIND_LABELS carries. */
+const waEventsFor = (kind: string): MeetingWaEvents => MEETING_WA_EVENTS[kind] ?? MEETING_WA_EVENTS.HOST;
 
 type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
 
@@ -225,18 +297,30 @@ async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
   const to = who?.email ?? '';
   const name = who?.name ?? 'there';
 
+  // Every scenario below is about this one meeting, so the funnel's
+  // (event, entity, number) index is what stops a repeated staff save re-sending.
+  const waEvents = waEventsFor(doc.kind);
+  const sendWa = (waEvent: string, params: readonly string[]) =>
+    whatsappService.send({ event: waEvent, entityId: String(doc._id), user: who?.user, name, params });
+
   if (event === 'scheduled') {
     const adminTo = await onboardingAdminEmails();
     if (adminTo.length > 0) {
       await sendMeetingScheduledAdminEmail({ to: adminTo.join(','), name, email: to, kind: kindLabel, slot, link, notes });
     }
     await sendMeetingScheduledEmail({ to, name, kind: kindLabel, slot, link, notes });
+    const when = slotPartsTz(iso(doc.scheduled_at ?? doc.requested_at), offset);
+    await sendWa(waEvents.interview, [name, when.date, when.time, link]);
   } else if (event === 'rescheduled' || event === 'updated') {
     await sendMeetingRescheduledEmail({ to, name, kind: kindLabel, slot, link, notes, change: event });
   } else if (event === 'approved') {
     await sendMeetingApprovedEmail({ to, name, kind: kindLabel });
+    // The template's second value is the partner-portal login address, which is
+    // the same address the approval email just went to.
+    await sendWa(waEvents.approved, [name, to]);
   } else {
     await sendMeetingRejectedEmail({ to, name, kind: kindLabel });
+    await sendWa(waEvents.rejected, [name, doc.feedback ?? '']);
   }
 }
 
@@ -424,17 +508,32 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
   try {
     const [names, av] = await Promise.all([userMap([String(doc.user_id)]), MeetingAvailabilityModel.findOne()]);
     const who = names.get(String(doc.user_id));
+    const offset = av?.timezone_offset_minutes ?? 330;
+    const at = iso(doc.scheduled_at ?? doc.requested_at);
     // Sent regardless — an applicant with no address becomes a FAILED log row
     // instead of a booking nobody was told about.
     const opts = {
       to: who?.email ?? '',
       name: who?.name ?? 'there',
       kind: MEETING_KIND_LABELS[doc.kind] ?? 'Host',
-      slot: slotLabelTz(iso(doc.scheduled_at ?? doc.requested_at), av?.timezone_offset_minutes ?? 330),
+      slot: slotLabelTz(at, offset),
       notes: doc.notes || '',
     };
-    if (kind === 'booked') await sendMeetingBookedEmail(opts);
-    else await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });
+    if (kind === 'booked') {
+      await sendMeetingBookedEmail(opts);
+      const when = slotPartsTz(at, offset);
+      // A reschedule supersedes the row and books a fresh one, so the new
+      // meeting id is a new entity and its confirmation is not a duplicate.
+      await whatsappService.send({
+        event: waEventsFor(doc.kind).booked,
+        entityId: String(doc._id),
+        user: who?.user,
+        name: opts.name,
+        params: [opts.name, when.date, when.time],
+      });
+    } else {
+      await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });
+    }
   } catch (err) {
     logs.server.error('meeting', 'notifyApplicant', { error: err, msg: 'applicant email failed', kind });
   }

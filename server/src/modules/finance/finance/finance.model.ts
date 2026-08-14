@@ -26,6 +26,16 @@ export interface IFinanceSettings extends Document {
   host_payout_mode: string;
   payout_day_of_week: number;
   payout_time: string;
+  /**
+   * Working days a refund takes to reach the customer, as quoted to them.
+   *
+   * It is a setting rather than a constant because it is a promise made in
+   * writing: every cancellation message says "credited within N working days",
+   * and the number depends on the gateway and the bank, not on us. The three
+   * WhatsApp cancellation templates read it as their last placeholder, and a
+   * blank there fails the whole send.
+   */
+  refund_processing_days: number;
   currency_symbol: string;
   invoice_prefix: string;
   invoice_counter: number;
@@ -140,6 +150,7 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     host_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     payout_day_of_week: { type: Number, default: 1, min: 0, max: 6 },
     payout_time: { type: String, default: '18:00' },
+    refund_processing_days: { type: Number, default: 7, min: 1, max: 60 },
     currency_symbol: { type: String, default: '₹' },
     invoice_prefix: { type: String, default: 'DUN' },
     invoice_counter: { type: Number, default: 0 },

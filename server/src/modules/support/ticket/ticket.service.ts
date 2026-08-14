@@ -10,6 +10,7 @@ import {
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { sendHtmlEmail } from '@services/email/email.service';
 import {
   buildTranscriptArtifact,
@@ -78,6 +79,28 @@ async function buildActor(userId: Types.ObjectId | string | null | undefined) {
     is_email_verified: !!u.auth?.is_email_verified,
     is_phone_verified: !!u.auth?.phone?.is_verified,
   };
+}
+
+/**
+ * WhatsApp the person who raised the ticket. Loaded apart from `buildActor`
+ * because a send prefers the saved WhatsApp number over the login phone and the
+ * actor projection carries neither whole. A website message may have no account
+ * behind it (`user_id` is null), and then there is nobody to reach.
+ */
+async function notifyTicketRaiser(event: string, doc: ITicket) {
+  if (!doc.user_id) return;
+  const user = await UserModel.findById(doc.user_id)
+    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .lean();
+  if (!user) return;
+  const name = `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim() || 'User';
+  await whatsappService.send({
+    event,
+    entityId: String(doc._id),
+    user,
+    name,
+    params: [name, ticketNo('ST', doc._id as Types.ObjectId), doc.subject],
+  });
 }
 
 async function toPub(doc: ITicket) {
@@ -195,6 +218,7 @@ export const ticketService = {
 
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:new', pub);
+    await notifyTicketRaiser('SUPPORT_TICKET_CREATED', doc);
     return pub;
   },
 
@@ -287,6 +311,8 @@ export const ticketService = {
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    // Only an agent opening the thread is news to the person who raised it.
+    if (isAgent) await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc);
     return pub;
   },
 
@@ -476,6 +502,8 @@ export const ticketService = {
     await doc.save();
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
+    // Clearing the assignee is nobody picking the ticket up.
+    if (assigneeId) await notifyTicketRaiser('SUPPORT_TICKET_IN_PROGRESS', doc);
     return pub;
   },
 

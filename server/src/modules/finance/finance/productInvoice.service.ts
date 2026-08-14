@@ -3,6 +3,7 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { generateProductInvoicePdf, type ProductInvoiceLine } from '@services/payout/product-invoice.pdf';
 import { nextInvoiceNumber } from './finance.model';
 import { logs } from '@observability/log';
@@ -84,7 +85,12 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
   const cur = fs.currency_symbol;
   for (const [sellerId, bucket] of bySeller) {
     try {
-      const seller = await UserModel.findById(sellerId).select('auth.email profile.first_name profile.last_name');
+      // The phone fields are selected because this seller now also gets a
+      // WhatsApp: the funnel reads the number off this document, so a narrower
+      // projection skips every send silently.
+      const seller = await UserModel.findById(sellerId).select(
+        'auth.email profile.first_name profile.last_name auth.phone communication.whatsapp'
+      );
       const email = seller?.auth?.email;
       if (!email) continue;
       const name = [seller?.profile?.first_name, seller?.profile?.last_name].filter(Boolean).join(' ').trim() || bucket.name;
@@ -92,10 +98,13 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
       const commission_total = round2(bucket.lines.reduce((s, l) => s + l.commission, 0));
       const net_total = round2(gross_total - commission_total);
       const invoice_no = await nextInvoiceNumber();
+      // One instant for both the PDF and the WhatsApp, so the seller cannot read
+      // two different invoice dates for the same payout.
+      const invoice_date = new Date();
       const pdf = await generateProductInvoicePdf({
         title: tmpl.label,
         invoice_no,
-        invoice_date: new Date(),
+        invoice_date,
         pod_title: pod.pod_title,
         seller_name: name,
         seller_email: email,
@@ -135,6 +144,20 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
             content: pdf,
             contentType: 'application/pdf',
           },
+        ],
+      });
+      await whatsappService.send({
+        event: 'ECOMM_PAYMENT_SENT',
+        entityId: String(pod._id),
+        user: seller,
+        name,
+        params: [
+          name,
+          bucket.lines.map((line) => line.name).join(', '),
+          invoice_no,
+          invoice_date.toLocaleString('en-IN', { dateStyle: 'medium' }),
+          // The money template prints the rupee sign itself.
+          net_total.toFixed(2),
         ],
       });
     } catch (e) {

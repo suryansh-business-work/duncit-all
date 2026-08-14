@@ -9,6 +9,7 @@ import type { ShellTool } from './AppsDrawer/tools';
 import { StaffChatPanel } from '../staff-chat';
 import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppSidebar } from './AppSidebar';
+import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
 
@@ -209,6 +210,10 @@ export function AppShell({
           )}
         </Box>
       </Box>
+      {/* Every console gets the Agent. It is fixed-positioned, so it sits
+          outside the flex layout above and covers nothing until opened; what
+          it will actually DO is decided by the caller's own roles, server-side. */}
+      <AgentLauncher />
     </Box>
   );
 }

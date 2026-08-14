@@ -13,6 +13,7 @@ import EmailsDashboardPage from './pages/emails-dashboard';
 import PackagesDocsPage from './pages/packages-docs';
 import TelemetryDashboardPage from './pages/telemetry-dashboard';
 import BugsPage from './pages/bugs-page';
+import ErrorLogsPage from './pages/error-logs-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
         <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
         <Route path="/telemetry/bugs" element={authed(<BugsPage />)} />
+        <Route path="/telemetry/error-logs" element={authed(<ErrorLogsPage />)} />
         <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
         {/* The old paths, kept working for bookmarks. */}
         <Route path="/bugs" element={<Navigate to="/telemetry/bugs" replace />} />

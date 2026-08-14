@@ -1570,6 +1570,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',
       current: 'current',
     },
+    /**
+     * The shared error module (@duncit/errors) — what a failed server
+     * operation says, and the report button beside it. mWeb + native twins.
+     */
+    issue: {
+      fallback: 'Something went wrong. Please try again.',
+      report: 'Report issue',
+      reporting: 'Reporting…',
+      reported: 'Reported — thank you.',
+    },
     // Duncit Coins — the loyalty balance shown in User mode only. Placeholders
     // are deliberately NOT named `count`: the translator overwrites that var
     // with its own plural counter, so `{coins}` is what actually renders.

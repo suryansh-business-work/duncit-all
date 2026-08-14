@@ -1,0 +1,76 @@
+---
+name: '@duncit/errors'
+summary: 'Parses any server-operation failure into one structured issue, and builds its telemetry log data and report-issue payload.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'packages/dialogs'
+---
+
+# @duncit/errors
+
+One parser for every GraphQL/server failure, shared by the portals, mWeb and
+the native app — structurally typed, so no surface drags Apollo in for it.
+
+## parseIssue(err, opts?)
+
+```ts
+import { parseIssue } from '@duncit/errors';
+
+try {
+  await pay();
+} catch (err) {
+  const issue = parseIssue(err, {
+    operation: 'createRazorpayOrder',
+    fallbackMessage: t('mweb.issue.fallback'),
+  });
+  // issue => {
+  //   kind: 'VALIDATION',            // NETWORK | AUTH | FORBIDDEN | VALIDATION |
+  //                                  // CONFLICT | NOT_FOUND | SERVER | UNKNOWN
+  //   code: 'CHECKOUT_NOT_ELIGIBLE', // the server's extensions.code, verbatim
+  //   message: 'Verify your email address before checking out.',
+  //   operation: 'createRazorpayOrder',
+  //   path: 'createRazorpayOrder',
+  //   offerReport: false,            // VALIDATION is the user's own input to fix
+  // }
+}
+```
+
+`fallbackMessage` is the caller's localized copy — the package ships no
+user-facing text (rule 38).
+
+## Feeding the Tech portal's Error Logs
+
+```ts
+import { ISSUE_LOG_COMPONENT, issueLogData } from '@duncit/errors';
+import { logs } from '@duncit/logs';
+
+logs.mWeb.error('checkout', ISSUE_LOG_COMPONENT, { error: err, ...issueLogData(issue) });
+```
+
+The extra keys (`kind`, `code`, `operation`, `gql_path`) land verbatim in
+`TelemetryLog.data`, which is exactly what Tech → Telemetry → **Error Logs**
+renders. Log with `ISSUE_LOG_COMPONENT` or the row will not appear there.
+
+## The Report issue button
+
+```ts
+import { ISSUE_REPORT_CATEGORY, buildIssueReportMessage } from '@duncit/errors';
+import { buildAppFeedbackInput } from '@duncit/slack';
+
+const input = buildAppFeedbackInput({
+  category: ISSUE_REPORT_CATEGORY,
+  message: buildIssueReportMessage(issue, { surface: 'mWeb', page: '/checkout' }),
+  platform: 'web',
+  source_screen: '/checkout',
+});
+// → submitAppFeedback mutation (identity is server-stamped; lands in Slack +
+//   the support feedback table)
+```
+
+Offer the button only when `issue.offerReport` is true, and only on
+server-side operations — a Zod refusal never needs reporting.

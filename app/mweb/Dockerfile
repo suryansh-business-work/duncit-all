@@ -57,6 +57,7 @@ COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/pod-product-picker/package.json ./packages/pod-product-picker/
 COPY packages/table/package.json ./packages/table/
+COPY packages/errors/package.json ./packages/errors/
 COPY packages/slack/package.json ./packages/slack/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/slots/package.json ./packages/slots/

@@ -47,6 +47,7 @@ export const appConfig = {
       children: [
         { label: 'Dashboard', to: '/telemetry/dashboard', icon: 'dashboard' },
         { label: 'Bugs', to: '/telemetry/bugs', icon: 'bug' },
+      { label: 'Error Logs', to: '/telemetry/error-logs', icon: 'report' },
         { label: 'Logs Settings', to: '/telemetry/logs-settings', icon: 'tune' },
       ],
     },

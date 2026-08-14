@@ -21,7 +21,7 @@ import {
 } from './queries';
 import { openRazorpayCheckout, type RazorpayOrderData, type RazorpaySignature } from './razorpayCheckout';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
-import { parseApiError } from '../../utils/parseApiError';
+import { IssueNotice, useServerIssue } from '../../components/issue-notice';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
@@ -64,6 +64,8 @@ export default function CheckoutPage() {
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
   // The coupon discounts the whole pod bill, so coins redeem against its result.
   const coins = useCoinRedemption(session, session.coupon?.ok ? session.coupon.final_total : amount);
+  // Server-operation failures, parsed + logged once by the shared error module.
+  const serverIssue = useServerIssue('/checkout');
   // What is actually charged, broken up the same way. Coins and coupons cut the
   // GROSS, and the server re-quotes on what is left, so the tax owed drops with
   // it — reusing the undiscounted breakup here would print a GST nobody pays.
@@ -142,7 +144,12 @@ export default function CheckoutPage() {
       }
       session.setError(t('mweb.checkout.errorNotConfigured'));
     } catch (submitError: any) {
-      session.setError(parseApiError(submitError));
+      // Parsed once, logged once: the structured issue feeds the Tech portal's
+      // Error Logs section and renders with a Report button below.
+      serverIssue.capture(
+        submitError,
+        finance?.razorpay_enabled ? 'createRazorpayOrder' : 'dummyCheckout'
+      );
     } finally {
       session.setSubmitting(false);
     }
@@ -188,6 +195,11 @@ export default function CheckoutPage() {
           <GatewayChip finance={session.finance} />
         </Stack>
         {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
+        {serverIssue.issue && (
+          <Box sx={{ mb: 2 }}>
+            <IssueNotice issue={serverIssue.issue} page="/checkout" onClose={serverIssue.clear} />
+          </Box>
+        )}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} />

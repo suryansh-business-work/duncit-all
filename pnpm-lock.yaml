@@ -51,6 +51,9 @@ importers:
       '@duncit/earn':
         specifier: workspace:*
         version: link:../../packages/earn
+      '@duncit/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons
@@ -896,6 +899,12 @@ importers:
       zod:
         specifier: ^3.24.1
         version: 3.25.76
+
+  packages/errors:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
 
   packages/fallback-icons:
     devDependencies:
@@ -4180,6 +4189,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms

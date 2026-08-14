@@ -1,4 +1,4 @@
-import { Image, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import {
   clampSomethingForYouTitle,
@@ -7,6 +7,7 @@ import {
   type SomethingForYouTarget,
 } from '@duncit/utils';
 
+import { AppImage } from '@/components/AppImage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSomethingForYou, type SomethingForYouCard } from '@/hooks/useSomethingForYou';
 
@@ -84,10 +85,11 @@ function SomethingForYouTile({
         overflow: 'hidden',
       }}
     >
-      <Image
+      <AppImage
         source={{ uri: item.image_url }}
         style={{ width: '100%', height: '100%' }}
         resizeMode="cover"
+        recyclingKey={item.id}
       />
 
       <Text

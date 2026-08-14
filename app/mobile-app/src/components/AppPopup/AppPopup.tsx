@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Image, Linking, useWindowDimensions } from 'react-native';
+import { Linking, useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AppImage } from '@/components/AppImage';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DismissAppPopupDocument } from '@/graphql/app-popup';
@@ -91,7 +92,7 @@ export function AppPopup() {
       gap={16}
       onPress={close}
     >
-      <Image
+      <AppImage
         testID="app-popup-image"
         source={{ uri: popup.image_url }}
         style={{ width: width * 0.86, height: height * 0.6, borderRadius: 16 }}

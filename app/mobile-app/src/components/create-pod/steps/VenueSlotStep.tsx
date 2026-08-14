@@ -1,9 +1,8 @@
-import { Controller, type Control } from 'react-hook-form';
-import { addMinutes, format } from 'date-fns';
+import { Controller } from 'react-hook-form';
+import { format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
-import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
@@ -12,13 +11,8 @@ import { SlotPicker } from '../SlotPicker';
 import { VirtualMeetingFields } from '../VirtualMeetingFields';
 import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
-import { MIN_POD_DURATION_MINUTES, parseDateTimeText } from '../create-pod.form';
-import type {
-  CreatePodForm,
-  CreatePodFormValues,
-  CreatePodSlot,
-  CreatePodVenue,
-} from '../create-pod.types';
+import { parseDateTimeText } from '../create-pod.form';
+import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 

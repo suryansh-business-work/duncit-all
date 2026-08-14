@@ -35,6 +35,8 @@ export const waAutomationTypeDefs = gql`
     template_category: String!
     "How many values the live template expects."
     template_params: Int!
+    "The header asset the CAMPAIGN carries. Non-empty means every send must supply one."
+    media_url: String!
     "Why this cannot send right now. Empty when it can."
     blocker: String!
   }

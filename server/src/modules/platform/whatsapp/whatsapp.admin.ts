@@ -48,7 +48,8 @@ function blockerFor(
   campaignName: string,
   campaign: AisensyCampaign | undefined,
   template: AisensyTemplate | undefined,
-  declaredParams: number
+  declaredParams: number,
+  cachedMediaUrl: string
 ): string {
   if (!campaign) return `No AiSensy campaign named "${campaignName}"`;
   if (campaign.status && campaign.status !== 'LIVE') return `Campaign is ${campaign.status}`;
@@ -57,6 +58,10 @@ function blockerFor(
   if (template.param_count !== declaredParams) {
     return `Template takes ${template.param_count} value(s), the code sends ${declaredParams}`;
   }
+  // The send path reads the asset off the SETTING row, which only reconcile
+  // fills — so a campaign that carries media while the row does not is a send
+  // that will come back "Media URL Missing" until somebody presses Reconcile.
+  if (campaign.media_url && !cachedMediaUrl) return 'Campaign needs its media — press Reconcile';
   return '';
 }
 
@@ -92,7 +97,7 @@ export const whatsappAdminService = {
   async scenarios() {
     const [live, settings] = await Promise.all([
       catalogue(),
-      WaEventSettingModel.find().select('event_key enabled template_category').lean(),
+      WaEventSettingModel.find().select('event_key enabled template_category media_url media_filename').lean(),
     ]);
     const byKey = new Map(settings.map((row) => [row.event_key, row]));
     const global = byKey.get(WA_GLOBAL_KEY);
@@ -115,7 +120,10 @@ export const whatsappAdminService = {
         template_status: template?.status ?? '',
         template_category: template?.category ?? '',
         template_params: template?.param_count ?? 0,
-        blocker: live.ok ? blockerFor(event.campaign, campaign, template, event.params.length) : '',
+        media_url: campaign?.media_url ?? '',
+        blocker: live.ok
+          ? blockerFor(event.campaign, campaign, template, event.params.length, byKey.get(event.key)?.media_url ?? '')
+          : '',
       };
     });
 
@@ -154,7 +162,17 @@ export const whatsappAdminService = {
       return {
         updateOne: {
           filter: { event_key: event.key },
-          update: { $set: { template_category: template?.category ?? '', updated_by: actorId(actor) } },
+          update: {
+            $set: {
+              template_category: template?.category ?? '',
+              // Cached from the CAMPAIGN, not the template: a media campaign
+              // rejects a send that omits its asset, and the template reports
+              // no header at all.
+              media_url: campaign?.media_url ?? '',
+              media_filename: campaign?.media_filename ?? '',
+              updated_by: actorId(actor),
+            },
+          },
           upsert: true,
         },
       };

@@ -22,6 +22,18 @@ export interface IWaEventSetting {
    * domain event.
    */
   template_category: string;
+  /**
+   * The header asset the campaign was built with, cached from the same
+   * reconcile.
+   *
+   * A media campaign REJECTS a send that omits it — `Media URL Missing (HTTP
+   * 400)` — and the requirement is invisible on the template, which reports no
+   * header at all. Caching it here means the send path can satisfy the campaign
+   * without a Project API call in front of every domain event, and a caller
+   * with a better asset (this pod's own image) can still override it.
+   */
+  media_url: string;
+  media_filename: string;
   updated_by: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
@@ -39,6 +51,8 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     event_key: { type: String, required: true, unique: true, trim: true },
     enabled: { type: Boolean, default: true },
     template_category: { type: String, default: '' },
+    media_url: { type: String, default: '' },
+    media_filename: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

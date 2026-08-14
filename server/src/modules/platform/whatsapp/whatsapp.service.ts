@@ -55,23 +55,33 @@ const failed = (reason: string): WaSendOutcome => ({ status: 'FAILED', reason, m
 const digits = (v: unknown) => String(v ?? '').replaceAll(/\D/g, '');
 const text = (v: unknown) => String(v ?? '').trim();
 
+interface Switches {
+  on: boolean;
+  reason: string;
+  category: string;
+  /** The header asset the campaign expects, cached by the console's reconcile. */
+  media: { url: string; filename: string } | null;
+}
+
 /** Both switches in one read: the collection holds a handful of rows. */
-async function switchesFor(eventKey: string): Promise<{ on: boolean; reason: string; category: string }> {
+async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
-    .select('event_key enabled template_category')
+    .select('event_key enabled template_category media_url media_filename')
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
   const own = rows.find((row) => row.event_key === eventKey);
+  const off = (reason: string): Switches => ({ on: false, reason, category: '', media: null });
   // An absent global row means nobody has turned automatic WhatsApp on yet.
-  if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) {
-    return { on: false, reason: 'Automatic WhatsApp is switched off', category: '' };
-  }
+  if (!(global?.enabled ?? WA_GLOBAL_DEFAULT_ENABLED)) return off('Automatic WhatsApp is switched off');
   // An absent scenario row means ON — a newly wired scenario works without
   // anybody having to create a row for it first.
-  if (own && !own.enabled) {
-    return { on: false, reason: 'This message is switched off', category: '' };
-  }
-  return { on: true, reason: '', category: own?.template_category ?? '' };
+  if (own && !own.enabled) return off('This message is switched off');
+  return {
+    on: true,
+    reason: '',
+    category: own?.template_category ?? '',
+    media: own?.media_url ? { url: own.media_url, filename: own.media_filename || 'attachment' } : null,
+  };
 }
 
 /**
@@ -152,7 +162,7 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
   const wrong = paramError(params, event);
   if (wrong) return record(event, input, destination, failed(wrong));
 
-  return dispatch(event, input, destination, params, switches.category);
+  return dispatch(event, input, destination, params, switches);
 }
 
 /** Claim the slot, send, then write what happened onto the same row. */
@@ -161,7 +171,7 @@ async function dispatch(
   input: WaSendInput,
   destination: string,
   params: string[],
-  templateCategory: string
+  switches: Switches
 ): Promise<WaSendOutcome> {
   const pricing = await getWaPricing();
   const claim = {
@@ -174,10 +184,15 @@ async function dispatch(
     destination,
     status: 'SENDING' as const,
     params,
-    template_category: templateCategory,
-    msg_rate: ratePerMessage(pricing, templateCategory || 'UTILITY'),
+    template_category: switches.category,
+    msg_rate: ratePerMessage(pricing, switches.category || 'UTILITY'),
     holds_slot: true,
   };
+
+  // A caller with a better asset — this pod's own image — wins over the one the
+  // campaign was built with. A media campaign rejects a send that carries
+  // neither, and the requirement is invisible on the template.
+  const media = input.media ?? switches.media ?? undefined;
 
   let row;
   try {
@@ -197,7 +212,7 @@ async function dispatch(
       destination,
       user_name: text(input.name) || 'there',
       template_params: params,
-      media: input.media ?? undefined,
+      media,
     });
     await WaMessageLogModel.updateOne(
       { _id: row._id },

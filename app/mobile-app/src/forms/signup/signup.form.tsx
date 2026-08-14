@@ -1,13 +1,16 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { PolicyAcceptanceField } from '@/components/policy-acceptance';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useSignupPolicies } from '@/hooks/usePolicies';
 import { useTranslation } from '@/hooks/useTranslation';
+import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { makeSignupSchema, signupDefaults, type SignupFormValues } from './signup.types';
 
 export interface SignupFormProps {
@@ -20,12 +23,21 @@ export interface SignupFormProps {
 export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
   const { t } = useTranslation();
   const { minSignupAge } = useAppSettings();
-  const schema = useMemo(() => makeSignupSchema(minSignupAge, t), [minSignupAge, t]);
-  const { control, handleSubmit } = useForm<SignupFormValues>({
+  const { policies, loaded } = useSignupPolicies();
+  const requiredPolicyIds = useMemo(() => policies.map((policy) => policy.id), [policies]);
+  const schema = useMemo(
+    () => makeSignupSchema(minSignupAge, t, requiredPolicyIds),
+    [minSignupAge, t, requiredPolicyIds],
+  );
+  const { control, handleSubmit, watch } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,
     resolver: zodResolver(schema),
     mode: 'onBlur',
   });
+
+  // The gate stays shut until the server has said what must be accepted: an
+  // empty list is vacuously accepted, which is only true once it has answered.
+  const policiesAccepted = loaded && allPoliciesAccepted(policies, watch('acceptedPolicyIds'));
 
   return (
     <YStack gap={16}>
@@ -82,6 +94,18 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         autoCapitalize="characters"
       />
 
+      <Controller
+        control={control}
+        name="acceptedPolicyIds"
+        render={({ field, fieldState }) => (
+          <PolicyAcceptanceField
+            acceptedIds={field.value}
+            onChange={field.onChange}
+            errorMessage={fieldState.error?.message}
+          />
+        )}
+      />
+
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="signup-error">
           {errorMessage}
@@ -92,8 +116,14 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         testID="signup-submit"
         label={t('mweb.signup.submit')}
         loading={loading}
+        disabled={!policiesAccepted}
         onPress={handleSubmit(onSubmit)}
       />
+      {policiesAccepted ? null : (
+        <Text testID="signup-policies-hint" fontSize={12.5} color="$muted" textAlign="center">
+          {t('policyAcceptance.mustAcceptHint')}
+        </Text>
+      )}
     </YStack>
   );
 }

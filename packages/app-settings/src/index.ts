@@ -59,6 +59,8 @@ export {
   nestCatalogue,
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
+  POLICY_ACCEPTANCE_BUNDLE,
+  policyAcceptanceMethodLabel,
   resolveLocale,
   SHELL_BUNDLE,
   SURFACE_BUNDLES,
@@ -69,6 +71,7 @@ export {
   type Locale,
   type MailCategoryCopy,
   type NestedCatalogue,
+  type PolicyMethodTranslate,
   type Translator,
   type WaCategoryCopy,
 } from '@duncit/i18n';

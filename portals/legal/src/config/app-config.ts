@@ -24,6 +24,7 @@ export const appConfig = {
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     { label: 'Documents', to: '/documents', icon: 'document' },
     { label: 'Policies', to: '/policies', icon: 'policy' },
+    { label: 'Policy Acceptance Logs', to: '/policy-acceptance-logs', icon: 'verified-user' },
     { label: 'Contracts', to: '/contracts', icon: 'handshake' },
     {
       label: 'Grievance',

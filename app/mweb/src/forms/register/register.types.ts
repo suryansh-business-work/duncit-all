@@ -20,6 +20,7 @@ export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 export function makeRegisterSchema(
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   t: Translate = fallbackT,
+  requiredPolicyIds: readonly string[] = [],
 ) {
   const dobString = z
     .string()
@@ -60,11 +61,27 @@ export function makeRegisterSchema(
           (v) => v === '' || REFERRAL_CODE.test(v.toUpperCase()),
           t('mweb.referral.validation.codePattern'),
         ),
+      /*
+        Every policy the person ticked in the acceptance dialog, and the reason
+        the signup button is dead until they have. It is a real validation rule
+        rather than a disabled prop so the form says WHY, in the reader's
+        language, the same way a missing name does. The list the rule checks
+        against is the live `signupPolicies` answer, which is also what the
+        server re-verifies before it creates anything.
+      */
+      acceptedPolicyIds: z.array(z.string()),
     })
     .refine((values) => values.password === values.confirmPassword, {
       message: t('mweb.auth.validation.passwordsMismatch'),
       path: ['confirmPassword'],
-    });
+    })
+    .refine(
+      (values) => {
+        const ticked = new Set(values.acceptedPolicyIds);
+        return requiredPolicyIds.every((id) => ticked.has(id));
+      },
+      { message: t('policyAcceptance.required'), path: ['acceptedPolicyIds'] },
+    );
 }
 
 export const registerSchema = makeRegisterSchema();
@@ -78,4 +95,5 @@ export const registerDefaults: RegisterFormValues = {
   confirmPassword: '',
   dob: '',
   referralCode: '',
+  acceptedPolicyIds: [],
 };

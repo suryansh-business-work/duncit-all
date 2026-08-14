@@ -120,6 +120,19 @@ export interface AisensyCampaign {
   status: string;
   template_name: string;
   type: string;
+  /**
+   * The header asset this campaign was configured with, if any.
+   *
+   * IT LIVES ON THE CAMPAIGN, NOT THE TEMPLATE. Every template this project
+   * holds reports an empty `header_format`, which reads as "no template here
+   * needs media" and is wrong: the media is attached when the campaign is built
+   * in the AiSensy console, and the v2 send endpoint then REQUIRES it on every
+   * message — a send without it comes back `Media URL Missing (HTTP 400)`.
+   * Reading it here is what lets a send supply what the campaign already
+   * expects.
+   */
+  media_url: string;
+  media_filename: string;
 }
 
 export interface AisensyTemplate {
@@ -311,6 +324,8 @@ export async function listCampaigns(): Promise<AisensyCampaign[]> {
     template_name:
       trimmed(row.message_payload?.template?.name) || str(row, 'templateName', 'template_name', 'template'),
     type: str(row, 'type', 'campaignType'),
+    media_url: trimmed(row.message_payload?.media?.url),
+    media_filename: trimmed(row.message_payload?.media?.filename),
   }));
 }
 

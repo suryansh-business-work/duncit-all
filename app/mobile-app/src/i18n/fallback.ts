@@ -5,6 +5,7 @@ import {
   MAIL_PREFERENCE_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
+  POLICY_ACCEPTANCE_BUNDLE,
   WHATSAPP_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -23,14 +24,16 @@ import {
  */
 // Same grievance and pod-product namespaces mWeb ships — one copy, two surfaces
 // (rule 27). `podProduct.*` is also what the MUI picker resolves in the admin
-// and Club Admin portals, so all four surfaces read the same sentences, and
+// and Club Admin portals, so all four surfaces read the same sentences,
 // `whatsappPreference.categories.*` is what the admin console names a scenario
-// row with.
+// row with, and `policyAcceptance.*` is the signup gate both apps must word
+// identically.
 export const NATIVE_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
+  ...POLICY_ACCEPTANCE_BUNDLE,
   ...WHATSAPP_BUNDLE,
 };
 

@@ -28,6 +28,10 @@ import type {
   DeleteMyAccountDTO,
 } from '@modules/access/auth/auth.validator';
 import type { UpdateMyProfileDTO, PetProfileDTO } from '@modules/access/profile/profile.validator';
+import type {
+  PolicyAcceptanceIntent,
+  PolicyAcceptanceMethod,
+} from '@modules/content/policyAcceptance/policyAcceptance.model';
 import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
 import { assertPortalLogin } from '@modules/portals';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
@@ -440,6 +444,41 @@ async function welcomeNewAccount(created: any, origin: string) {
     user: created,
     name: created.profile?.first_name,
     params: [created.profile?.first_name],
+  });
+}
+
+/**
+ * The policies a fresh signup ticked, written once the account is real.
+ *
+ * Beside {@link welcomeNewAccount} rather than inside it: the admin-create door
+ * goes through that helper too, and an account somebody typed into the admin
+ * form accepted nothing. It must also run AFTER the commit — signupWithGoogle
+ * creates its user inside `session.withTransaction`, and a row written in that
+ * session would survive a rollback, leaving acceptances for a user that never
+ * existed.
+ *
+ * Awaited and allowed to throw, unlike the welcome mail: a signup we could not
+ * record the acceptance for is precisely what this gate exists to prevent.
+ */
+async function recordSignupAcceptance(
+  created: any,
+  method: PolicyAcceptanceMethod,
+  acceptance?: PolicyAcceptanceIntent
+) {
+  if (!acceptance?.policy_ids?.length) return;
+  // Dynamic, like every other cross-module call in this file — the acceptance
+  // service reaches the email stack, and a static edge from here is how the
+  // import cycles in this module started last time.
+  const { policyAcceptanceService } = await import(
+    '@modules/content/policyAcceptance/policyAcceptance.service'
+  );
+  await policyAcceptanceService.recordSignupAcceptance({
+    user_id: String(created._id),
+    email: created.auth?.email ?? '',
+    name: created.profile?.first_name ?? '',
+    policy_ids: acceptance.policy_ids,
+    method,
+    surface: acceptance.surface,
   });
 }
 
@@ -951,7 +990,7 @@ export const userService = {
   // flat shape (toPublic) for a given doc.
   toPublic,
 
-  async register(input: RegisterDTO) {
+  async register(input: RegisterDTO, acceptance?: PolicyAcceptanceIntent) {
     if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
@@ -989,6 +1028,7 @@ export const userService = {
     }
 
     await welcomeNewAccount(created, 'register');
+    await recordSignupAcceptance(created, 'SIGNUP_FORM', acceptance);
     return authPayload(created);
   },
 
@@ -1221,7 +1261,7 @@ export const userService = {
     return connectedAccountsOf(fresh);
   },
 
-  async signupWithGoogle(input: GoogleSignupDTO) {
+  async signupWithGoogle(input: GoogleSignupDTO, acceptance?: PolicyAcceptanceIntent) {
     const info = await verifyGoogleIdToken(input.id_token);
     const email = info.email.toLowerCase();
     if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
@@ -1296,6 +1336,7 @@ export const userService = {
       });
     }
     await welcomeNewAccount(created, 'signupWithGoogle');
+    await recordSignupAcceptance(created, 'GOOGLE_SIGNUP', acceptance);
     await UserModel.updateOne(
       { _id: created._id },
       {

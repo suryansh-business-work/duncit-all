@@ -7,6 +7,10 @@ import {
   LinkGoogleAccountDocument,
   LoginWithGoogleDocument,
 } from '@/graphql/auth';
+// The enum is not re-exported through the generated index, so it is imported
+// from the module codegen writes it into — the surface is a server value, and
+// spelling it as a bare string would not survive a rename of the enum.
+import { PolicyAcceptanceSurface } from '@/generated/graphql/graphql';
 import { graphqlRequest } from './graphql.client';
 import { setAuthToken, clearAuthToken } from './auth-token';
 
@@ -18,6 +22,9 @@ export interface SignupValues {
   password: string;
   /** A friend's code, checked by the server BEFORE the account is created. */
   referralCode?: string;
+  /** Every policy ticked in the acceptance sheet. Re-verified by the server
+   * before the account exists, so a refusal leaves nothing behind. */
+  acceptedPolicyIds: string[];
 }
 
 export interface LoginValues {
@@ -57,6 +64,8 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       // Omitted rather than sent empty: the server treats a present-but-blank
       // code the same way, and an absent field says what happened more plainly.
       ...(referralCode ? { referral_code: referralCode } : {}),
+      accepted_policy_ids: values.acceptedPolicyIds,
+      accepted_policy_surface: PolicyAcceptanceSurface.App,
     },
   });
   await setAuthToken(data.register.token);
@@ -102,9 +111,24 @@ export async function resetPasswordWithOtp(values: ResetPasswordValues): Promise
   return data.resetPasswordWithOtp;
 }
 
-/** Token-only Google signup: account created server-side, land on survey. */
-export async function signupWithGoogle(idToken: string): Promise<AuthOutcome> {
-  const data = await graphqlRequest(SignupWithGoogleDocument, { input: { id_token: idToken } });
+/**
+ * Google signup: account created server-side, land on survey.
+ *
+ * The accepted policies ride the same input as the token, because this mutation
+ * is new-account-only — so the acceptance sheet runs BEFORE it is called and
+ * there is no post-signup step to bolt one onto.
+ */
+export async function signupWithGoogle(
+  idToken: string,
+  acceptedPolicyIds: string[],
+): Promise<AuthOutcome> {
+  const data = await graphqlRequest(SignupWithGoogleDocument, {
+    input: {
+      id_token: idToken,
+      accepted_policy_ids: acceptedPolicyIds,
+      accepted_policy_surface: PolicyAcceptanceSurface.App,
+    },
+  });
   await setAuthToken(data.signupWithGoogle.token);
   return {
     token: data.signupWithGoogle.token,

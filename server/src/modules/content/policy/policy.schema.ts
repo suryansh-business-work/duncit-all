@@ -9,6 +9,8 @@ export const policyTypeDefs = /* GraphQL */ `
     policy_type: String!
     content: String!
     is_active: Boolean!
+    "Whether accepting this is a condition of creating an account."
+    requires_signup_acceptance: Boolean!
     sort_order: Int!
     created_at: String!
     updated_at: String!
@@ -51,6 +53,8 @@ export const policyTypeDefs = /* GraphQL */ `
     policy_type: String
     content: String
     is_active: Boolean
+    "Omitted means true — every policy gates signup until Legal says otherwise."
+    requires_signup_acceptance: Boolean
     sort_order: Int
   }
 
@@ -60,6 +64,7 @@ export const policyTypeDefs = /* GraphQL */ `
     policy_type: String
     content: String
     is_active: Boolean
+    requires_signup_acceptance: Boolean
     sort_order: Int
   }
 

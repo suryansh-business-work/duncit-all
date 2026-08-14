@@ -56,6 +56,12 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   'publicTranslations',
   'publicRoles',
   'publicPolicies',
+  // Takes no arguments and reads no caller: the policies that gate signup are
+  // the same list for everybody, and the form asking for them is not signed in.
+  // Its viewer-dependent sibling `myPendingPolicies` is deliberately absent —
+  // a 60s stale answer there is exactly the window in which somebody accepts
+  // and the gate fires at them again.
+  'signupPolicies',
   'publicWebsiteContent',
   'publicWebsiteNav',
   'publicPodPlans',

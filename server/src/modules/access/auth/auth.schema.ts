@@ -22,6 +22,16 @@ export const authTypeDefs = gql`
     costing both sides their coins.
     """
     referral_code: String
+    """
+    Every policy the person ticked in the acceptance dialog.
+
+    Re-verified server-side against \`signupPolicies\` before the account is
+    created — the tick boxes shape the form, they cannot stop a hand-rolled
+    mutation. A list that does not cover the required set fails the signup.
+    """
+    accepted_policy_ids: [ID!]
+    "Which app they accepted in. Recorded on every acceptance row."
+    accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
   }
 
   input LoginInput {
@@ -61,6 +71,16 @@ export const authTypeDefs = gql`
     dob: String
     city: String
     zone: String
+    """
+    Every policy the person ticked in the acceptance dialog.
+
+    This mutation is new-account-only, so the SAME dialog runs after Google
+    returns its id_token and the mutation is only called once everything is
+    accepted — no second route, no post-signup screen. Re-verified here too.
+    """
+    accepted_policy_ids: [ID!]
+    "Which app they accepted in. Recorded on every acceptance row."
+    accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
   }
 
   "The Google account currently linked to a Duncit account."

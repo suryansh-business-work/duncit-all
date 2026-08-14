@@ -17,6 +17,13 @@ export interface IPolicy extends Document {
   policy_type: string;
   content: string; // HTML produced by the rich-text editor
   is_active: boolean;
+  /**
+   * Whether accepting this is a condition of creating an account.
+   *
+   * Defaults TRUE so every active policy gates signup from the day the gate
+   * ships; the flag exists so Legal can narrow the list later without a deploy.
+   */
+  requires_signup_acceptance: boolean;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -30,6 +37,7 @@ const policySchema = new Schema<IPolicy>(
     policy_type: { type: String, default: '', trim: true, index: true },
     content: { type: String, default: '' },
     is_active: { type: Boolean, default: true, index: true },
+    requires_signup_acceptance: { type: Boolean, default: true, index: true },
     sort_order: { type: Number, default: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

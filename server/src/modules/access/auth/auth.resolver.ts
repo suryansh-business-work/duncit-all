@@ -14,7 +14,26 @@ import {
 import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
 import { referralService } from '@modules/engagement/referral/referral.service';
+import { assertPoliciesAccepted } from '@modules/content/policyAcceptance/policyAcceptance.service';
+import type {
+  PolicyAcceptanceIntent,
+  PolicyAcceptanceSurface,
+} from '@modules/content/policyAcceptance/policyAcceptance.model';
 import type { GraphQLContext } from '@context';
+
+/** What a signup door carries besides the account itself. Never part of the
+ * validated DTO — the yup schemas strip unknown keys on purpose, so acceptance
+ * stays out of the user document it has no business being in (referral_code
+ * rides alongside for exactly the same reason). */
+interface SignupPolicyInput {
+  accepted_policy_ids?: string[] | null;
+  accepted_policy_surface?: PolicyAcceptanceSurface | null;
+}
+
+const acceptanceIntent = (input?: SignupPolicyInput | null): PolicyAcceptanceIntent => ({
+  policy_ids: input?.accepted_policy_ids ?? [],
+  surface: input?.accepted_policy_surface ?? 'UNKNOWN',
+});
 
 /** The signed-in user's id, or the standard UNAUTHENTICATED refusal. */
 async function requireUserId(ctx: GraphQLContext): Promise<string> {
@@ -34,12 +53,19 @@ export const authResolvers = {
     },
   },
   Mutation: {
-    register: async (_p: unknown, args: { input: { referral_code?: string | null } }) => {
+    register: async (
+      _p: unknown,
+      args: { input: SignupPolicyInput & { referral_code?: string | null } }
+    ) => {
       const data = await validate(registerSchema, args.input);
       // The age gate is admin-configured, so it lives here rather than in the
       // static yup schema — and it must be server-side: the client rule only
       // shapes the form, it cannot stop a hand-rolled mutation.
       await assertEligibleDob(data.dob);
+      // Same reasoning, same place: the tick boxes shape the form, they cannot
+      // stop a hand-rolled mutation. Checked BEFORE the account exists, so a
+      // refusal leaves nothing behind.
+      await assertPoliciesAccepted(args.input?.accepted_policy_ids);
 
       /*
         The referral code is checked BEFORE the account is created and linked
@@ -53,7 +79,7 @@ export const authResolvers = {
       */
       const code = (args.input?.referral_code ?? '').trim().toUpperCase();
       const referrerId = code ? await referralService.validateCode(code) : null;
-      const payload = await userService.register(data);
+      const payload = await userService.register(data, acceptanceIntent(args.input));
       if (referrerId) await referralService.link(referrerId, payload.user.user_id, code);
       return payload;
     },
@@ -130,10 +156,11 @@ export const authResolvers = {
     ) => {
       return userService.linkGoogleAccount(args.input?.id_token, args.input?.portal_key);
     },
-    signupWithGoogle: async (_p: unknown, args: { input: unknown }) => {
+    signupWithGoogle: async (_p: unknown, args: { input: SignupPolicyInput }) => {
       const data = await validate(googleSignupSchema, args.input);
       await assertEligibleDob(data.dob);
-      return userService.signupWithGoogle(data);
+      await assertPoliciesAccepted(args.input?.accepted_policy_ids);
+      return userService.signupWithGoogle(data, acceptanceIntent(args.input));
     },
     connectGoogleAccount: async (
       _p: unknown,

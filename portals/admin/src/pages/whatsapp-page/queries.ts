@@ -1,0 +1,113 @@
+import { gql } from '@apollo/client';
+
+/** One automatic WhatsApp message, joined against what AiSensy holds now. */
+export interface WaScenario {
+  event_key: string;
+  campaign: string;
+  audience: string;
+  category: string;
+  fires: string;
+  params: string[];
+  enabled: boolean;
+  can_disable: boolean;
+  campaign_status: string;
+  template_name: string;
+  template_status: string;
+  template_category: string;
+  template_params: number;
+  /** Why it cannot send right now; '' when it can. Composed by the server. */
+  blocker: string;
+}
+
+export interface WaScenarioBoard {
+  global_enabled: boolean;
+  catalogue_ok: boolean;
+  catalogue_error: string;
+  rows: WaScenario[];
+}
+
+export interface WaMessageLogRow {
+  id: string;
+  event_key: string;
+  campaign: string;
+  category: string;
+  audience: string;
+  destination: string;
+  status: string;
+  reason: string;
+  template_category: string;
+  msg_rate: number;
+  duration_ms: number;
+  created_at: string | null;
+}
+
+const SCENARIO_BOARD_FIELDS = `
+  global_enabled
+  catalogue_ok
+  catalogue_error
+  rows {
+    event_key
+    campaign
+    audience
+    category
+    fires
+    params
+    enabled
+    can_disable
+    campaign_status
+    template_name
+    template_status
+    template_category
+    template_params
+    blocker
+  }
+`;
+
+export const WHATSAPP_SCENARIOS = gql`
+  query WhatsappScenarios {
+    whatsappScenarios {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+/** Pass the literal key `__global__` to flip the kill switch. */
+export const SET_WHATSAPP_SCENARIO_ENABLED = gql`
+  mutation SetWhatsappScenarioEnabled($event_key: String!, $enabled: Boolean!) {
+    setWhatsappScenarioEnabled(event_key: $event_key, enabled: $enabled) {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+export const RECONCILE_WHATSAPP_SCENARIOS = gql`
+  mutation ReconcileWhatsappScenarios {
+    reconcileWhatsappScenarios {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+export const WHATSAPP_MESSAGE_LOGS = gql`
+  query WhatsappMessageLogs($query: TableQueryInput) {
+    whatsappMessageLogs(query: $query) {
+      rows {
+        id
+        event_key
+        campaign
+        category
+        audience
+        destination
+        status
+        reason
+        template_category
+        msg_rate
+        duration_ms
+        created_at
+      }
+      total
+      page
+      page_size
+    }
+  }
+`;

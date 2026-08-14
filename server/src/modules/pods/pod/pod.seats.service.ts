@@ -1,7 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import { PodModel } from './pod.model';
-import { normalizeSeats } from './pod.seats';
+import { normalizeSeats, podSeatsTaken } from './pod.seats';
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 
 /** A pod or user id, however the caller happens to be holding it. */
@@ -30,6 +34,75 @@ const NEEDED_SEATS = (seats: number) => ({
   $cond: [{ $in: ['$$uid', { $ifNull: ['$pod_attendees', []] }] }, seats - 1, seats],
 });
 
+const fullName = (user: any) =>
+  `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
+
+// WhatsApp templates print the day and the clock time as two separate
+// placeholders, the same split pod.service and ticket.service make.
+const dateOnly = (value?: Date | null) =>
+  value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+const timeOnly = (value?: Date | null) =>
+  value ? new Date(value).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+
+/**
+ * Tell the host their pod just sold its last spot.
+ *
+ * `gained` is how far THIS claim moved occupancy, so `taken - gained` is what
+ * the pod held a moment before it: the message goes out on the transition and
+ * only on the transition. Firing on "the pod is full" instead would send again
+ * for every later claim against a full pod, every restored backout and every
+ * replayed finalization — the news is that the last spot went, and that happens
+ * once.
+ *
+ * Not awaited by the claim: an AiSensy round trip inside the payment
+ * finalizer's transaction would hold it open for the length of an HTTP call,
+ * and the funnel's own (event, entity, destination) index is what keeps a
+ * retried transaction from sending twice.
+ */
+async function announcePodFilled(pod: any, gained: number): Promise<void> {
+  const capacity = pod.no_of_spots ?? 0;
+  // 0 spots is unlimited — there is no last spot to sell — and a claim that
+  // moved nothing cannot be the claim that took it.
+  if (capacity <= 0 || gained <= 0) return;
+  const taken = podSeatsTaken(pod);
+  if (taken < capacity || taken - gained >= capacity) return;
+
+  const [{ mwebUrl }, club] = await Promise.all([
+    getUrlConfigs(),
+    ClubModel.findById(pod.club_id).select('club_id club_name admin_user_ids').lean(),
+  ]);
+  // `auth.phone` and `communication.whatsapp` are what the funnel resolves a
+  // number from — a projection without them skips the send in silence.
+  const [host, clubAdmin] = await Promise.all([
+    UserModel.findById((pod.pod_hosts_id ?? [])[0])
+      .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+      .lean(),
+    UserModel.findById((club as any)?.admin_user_ids?.[0])
+      .select('profile.first_name profile.last_name')
+      .lean(),
+  ]);
+  const hostName = fullName(host) || 'there';
+  const clubSlug = (club as any)?.club_id ?? '';
+  await whatsappService.send({
+    event: 'HOST_POD_FULL',
+    // The pod itself: one "your pod is full" per pod, however many times the
+    // last spot changes hands.
+    entityId: String(pod._id),
+    user: host,
+    name: hostName,
+    params: [
+      hostName,
+      pod.pod_title,
+      dateOnly(pod.pod_date_time),
+      timeOnly(pod.pod_date_time),
+      `${mwebUrl.replace(/\/+$/, '')}/club/${clubSlug}/pod/${pod.pod_id}`,
+      // A blank value is recorded FAILED and never sent, so a club whose admin
+      // seat is empty is named by the club instead.
+      fullName(clubAdmin) || (club as any)?.club_name || 'Duncit',
+    ],
+  });
+}
+
 /**
  * Take `seats` on a pod for one person, or fail.
  *
@@ -51,6 +124,14 @@ export async function claimSeats(
 ) {
   const want = normalizeSeats(seats);
   const uid = new Types.ObjectId(userId.toString());
+  // Read BEFORE the claim, because afterwards the answer is gone: `$addToSet`
+  // leaves the buyer on the list either way, and whether THIS claim put them
+  // there is the difference between taking a seat and taking none. Safe as its
+  // own read — a pod is contended by other people arriving, never by this same
+  // buyer twice.
+  const alreadyListed = await PodModel.exists({ _id: podId, pod_attendees: uid }).session(
+    session ?? null
+  );
   const pod = await PodModel.findOneAndUpdate(
     {
       _id: podId,
@@ -84,6 +165,15 @@ export async function claimSeats(
   if (!pod) {
     throw new GraphQLError('Pod is full', { extensions: { code: 'POD_FULL' } });
   }
+  // Past the guard, so this caller is the one that won the seats — the racer
+  // that lost threw above and must not announce anything.
+  announcePodFilled(pod, alreadyListed ? want - 1 : want).catch((error) =>
+    logs.server.error('pods', 'announcePodFilled', {
+      error,
+      podId: podId.toString(),
+      userId: userId.toString(),
+    })
+  );
   return pod;
 }
 
@@ -127,6 +217,14 @@ export async function claimExtraSeats(podId: PodRef, userId: PodRef, count: numb
       extensions: { code: 'POD_FULL' },
     });
   }
+  // The identity list is untouched here, so the seats taken are exactly `want`.
+  announcePodFilled(pod, want).catch((error) =>
+    logs.server.error('pods', 'announcePodFilled', {
+      error,
+      podId: podId.toString(),
+      userId: userId.toString(),
+    })
+  );
   return pod;
 }
 

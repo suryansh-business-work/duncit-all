@@ -12,6 +12,7 @@ import { generateTicketWithInvoicePdf } from '@services/ticket/ticket-with-invoi
 import type { InvoiceData } from '@services/invoice/invoice.pdf';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { invoiceDataForPayment } from '@modules/finance/payment/payment.invoice';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -180,6 +181,72 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
 const dateLabel = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'Date pending';
 
+/** WhatsApp templates print the day and the clock time as two placeholders. */
+const dateOnly = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+const timeOnly = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+
+/** Where the pod happens, as a name. A virtual pod has no venue and names its
+ * meeting platform instead — same substitution the ticket email makes, and the
+ * value cannot be blank or the message is recorded FAILED and never sent. */
+const placeLabel = (t: ITicket) =>
+  t.snapshot?.pod_mode === 'VIRTUAL'
+    ? t.snapshot?.meeting_platform || 'Online'
+    : t.snapshot?.venue_name ?? '';
+
+/** The ticket holder's account — the snapshot carries no phone number, and
+ * without these two paths every send silently skips. */
+const ticketRecipient = (t: ITicket) =>
+  UserModel.findById(t.user_id).select(
+    'profile.first_name profile.last_name auth.phone communication.whatsapp'
+  );
+
+/** The pod's host, named. Never blank, for the same reason as placeLabel. */
+async function podHostName(podId: Types.ObjectId): Promise<string> {
+  const pod = await PodModel.findById(podId).select('pod_hosts_id').lean();
+  const host = await UserModel.findById((pod as any)?.pod_hosts_id?.[0])
+    .select('profile.first_name profile.last_name')
+    .lean();
+  const profile = (host as any)?.profile;
+  return `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() || 'A host';
+}
+
+/**
+ * The booking confirmation on WhatsApp, beside the ticket email.
+ *
+ * Best-effort like everything else hanging off a paid-for booking: the funnel
+ * itself never throws, but the account and host reads behind it can, and a
+ * seat that is already paid for must not be lost to a message we could not
+ * address.
+ */
+async function whatsappBookingConfirmed(t: ITicket, bookingUrl: string): Promise<void> {
+  try {
+    const [user, hostName] = await Promise.all([ticketRecipient(t), podHostName(t.pod_id)]);
+    await whatsappService.send({
+      event: 'USER_BOOKING_SUCCESSFUL',
+      entityId: String(t._id),
+      user,
+      name: t.snapshot?.user_name,
+      params: [
+        t.snapshot?.user_name,
+        t.snapshot?.pod_title,
+        t.snapshot?.pod_title,
+        dateOnly(t.snapshot?.pod_date_time),
+        timeOnly(t.snapshot?.pod_date_time),
+        bookingUrl,
+        hostName,
+      ],
+    });
+  } catch (err) {
+    logs.server.error('ticket.service', 'whatsappBookingConfirmed', {
+      error: err,
+      msg: 'booking WhatsApp failed',
+      ticket_code: t.ticket_code,
+    });
+  }
+}
+
 /**
  * The invoice that belongs on the back of this ticket, if there is one.
  *
@@ -264,6 +331,22 @@ async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
       link_url: `/pod/${String(ticket.pod_id)}`,
       scope: 'USER',
       target_user_ids: [String(ticket.user_id)],
+    });
+    const [user, { appUrl }] = await Promise.all([ticketRecipient(ticket), getUrlConfigs()]);
+    await whatsappService.send({
+      event: 'USER_POD_ATTENDANCE',
+      entityId: String(ticket._id),
+      user,
+      name: ticket.snapshot?.user_name,
+      params: [
+        ticket.snapshot?.user_name,
+        ticket.snapshot?.pod_title,
+        ticket.snapshot?.pod_title,
+        dateOnly(ticket.snapshot?.pod_date_time),
+        timeOnly(ticket.snapshot?.pod_date_time),
+        placeLabel(ticket),
+        appUrl,
+      ],
     });
   } catch (err) {
     logs.server.error('ticket.service', 'notifyAttendanceMarked', {
@@ -407,6 +490,7 @@ export const ticketService = {
         },
       ],
     });
+    await whatsappBookingConfirmed(t, bookingUrl);
   },
 
   async pdfBase64(ticketDocId: string, requesterId: string, isAdmin: boolean) {

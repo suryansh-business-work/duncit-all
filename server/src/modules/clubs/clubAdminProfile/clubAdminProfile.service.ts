@@ -5,6 +5,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 
@@ -37,6 +38,11 @@ const CLUB_ADMIN_TABLE_CONFIG: TableEntityConfig = {
 
 const oid = (value?: string | null) =>
   value && Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : null;
+
+/** The admin's own account, with only the fields a WhatsApp send reads: the
+ * number lives on the user, never on the onboarding record. */
+const waRecipient = (userId: Types.ObjectId) =>
+  UserModel.findById(userId).select('auth.phone communication.whatsapp').lean();
 
 /**
  * Category NAMES and assigned CLUBS for a page of rows.
@@ -231,8 +237,18 @@ export const clubAdminProfileService = {
   async setActive(id: string, is_active: boolean) {
     const doc = await ClubAdminProfileModel.findById(id);
     if (!doc) throw notFound();
+    // Nothing changed, so nobody is told: an account message carries no entity
+    // for the WhatsApp duplicate index to key on, and pressing Deactivate twice
+    // would otherwise be two billed messages.
+    if (doc.is_active === is_active) return one(doc);
     doc.is_active = is_active;
     await doc.save();
+    await whatsappService.send({
+      event: is_active ? 'CLUB_ADMIN_ACCOUNT_REACTIVATED' : 'CLUB_ADMIN_ACCOUNT_SUSPENDED',
+      user: await waRecipient(doc.user_id),
+      name: doc.full_name,
+      params: [doc.full_name],
+    });
     return one(doc);
   },
 

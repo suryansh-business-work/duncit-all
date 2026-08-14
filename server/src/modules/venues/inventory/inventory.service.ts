@@ -13,6 +13,8 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
+import { UserModel } from '@modules/access/user/user.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -734,6 +736,51 @@ async function assertDuncitWarehouse(pickupLocationId: IdLike) {
 const availableOf = (doc: { inventory_count?: number; requested_count?: number; reserved_count?: number }) =>
   Math.max(0, (doc.inventory_count ?? 0) - (doc.requested_count ?? 0) - (doc.reserved_count ?? 0));
 
+/** The slice of a product a WhatsApp to its owner reads. */
+export interface ProductWaSubject {
+  _id: unknown;
+  product_name: string;
+  brand_id?: Types.ObjectId | null;
+  brand_name?: string;
+  listing_submitted_by_id?: string | null;
+  listing_submitted_by_name?: string;
+}
+
+/**
+ * WhatsApp the listing's owner about their own product. The approval and both
+ * stock crossings name the same three things — recipient, product, brand — so
+ * they resolve them once here; the point-of-sale decrement that empties a
+ * product lives in productOrder.service and imports this rather than keeping a
+ * second answer to "who owns this listing".
+ */
+export async function sendProductOwnerWhatsApp(
+  product: ProductWaSubject,
+  event: string,
+  quantity: number
+) {
+  const ownerId = product.listing_submitted_by_id;
+  if (!ownerId || !Types.ObjectId.isValid(ownerId)) return;
+  // The phone fields are selected explicitly: the funnel reads the number off
+  // this document, so a narrower projection skips every send silently.
+  const owner = await UserModel.findById(ownerId)
+    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .lean();
+  if (!owner) return;
+  const name =
+    `${owner.profile?.first_name ?? ''} ${owner.profile?.last_name ?? ''}`.trim() ||
+    (product.listing_submitted_by_name ?? '');
+  const brand = product.brand_id
+    ? await EcommBrandModel.findById(product.brand_id).select('brand_name').lean()
+    : null;
+  await whatsappService.send({
+    event,
+    entityId: String(product._id),
+    user: owner,
+    name,
+    params: [name, product.product_name, brand?.brand_name || (product.brand_name ?? ''), String(quantity)],
+  });
+}
+
 /** Notify the listing owner once available stock crosses from above to at/below
  * the low-stock threshold (opt-in per product). Best-effort — a notify hiccup
  * never fails the stock update. */
@@ -757,6 +804,7 @@ async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: 
         product_id: String(doc._id),
       });
     });
+  await sendProductOwnerWhatsApp(doc, 'ECOMM_STOCK_LOW', afterAvailable);
 }
 
 export const inventoryService = {
@@ -1258,6 +1306,9 @@ export const inventoryService = {
           product_id: String(doc._id),
         });
       });
+    // Only an approval puts the product on the shelf; a decline is not a
+    // product added.
+    if (approved) await sendProductOwnerWhatsApp(doc, 'ECOMM_PRODUCT_ADDED', doc.inventory_count);
     return inventoryProductToPub(doc);
   },
 

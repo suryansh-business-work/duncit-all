@@ -11,6 +11,7 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -357,6 +358,19 @@ export const hostRequestService = {
       `Your request to host in ${catPath(h)} has been approved. You can now start hosting experiences in this category.`
     );
     await emailHost(h, 'host-request-approved', 'Your Duncit host request is approved 🎉');
+    // The account is loaded rather than reusing the request's contact_phone
+    // snapshot: the funnel reads the number off the user document, where a saved
+    // WhatsApp number wins over the login phone.
+    const hostUser = await UserModel.findById(String(h.host_user_id))
+      .select('auth.phone communication.whatsapp')
+      .lean();
+    await whatsappService.send({
+      event: 'HOST_CATEGORY_REQUESTED',
+      entityId: String(h._id),
+      user: hostUser,
+      name: h.contact_name,
+      params: [h.contact_name, catPath(h)],
+    });
     return toPub(h);
   },
 

@@ -5,6 +5,7 @@ import {
   MAIL_PREFERENCE_BUNDLE,
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
+  WHATSAPP_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/app-settings';
@@ -22,14 +23,16 @@ import {
  */
 // The grievance form renders here, in native AND on the website, so its copy
 // is its own namespace rather than a second copy inside mweb.*. The pod product
-// picker is the same story across mWeb, native and the two portals. The
-// namespaces are disjoint (`mweb`, `grievance`, `podProduct`), so a shallow
-// merge is the whole of it — no key can shadow another.
+// picker is the same story across mWeb, native and the two portals, and the
+// WhatsApp categories across mWeb, native and the admin console. The namespaces
+// are disjoint (`mweb`, `grievance`, `podProduct`, `whatsappPreference`), so a
+// shallow merge is the whole of it — no key can shadow another.
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
+  ...WHATSAPP_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

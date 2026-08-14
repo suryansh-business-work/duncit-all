@@ -1,3 +1,4 @@
+import { templateSegments } from '@duncit/communication';
 import type { StatusColorMap } from '@duncit/ui';
 import type { AisensyCampaign, AisensyTemplate, WaCampaignNameOption } from '../queries';
 
@@ -74,17 +75,44 @@ export interface BodySegment {
   variable: boolean;
 }
 
-const VARIABLE_PATTERN = /(\{\{\d+\}\})/;
-const VARIABLE_ONLY = /^\{\{\d+\}\}$/;
-
+/** The split itself comes from `@duncit/communication`, which is where the one
+ * `{{n}}` parser lives (rule 40) — this only adds the key a list needs. */
 export function bodySegments(body: string): BodySegment[] {
   const segments: BodySegment[] = [];
   let offset = 0;
-  for (const part of body.split(VARIABLE_PATTERN)) {
-    if (part) {
-      segments.push({ id: String(offset), text: part, variable: VARIABLE_ONLY.test(part) });
-    }
-    offset += part.length;
+  for (const segment of templateSegments(body)) {
+    segments.push({ id: String(offset), text: segment.text, variable: segment.placeholder > 0 });
+    offset += segment.text.length;
   }
   return segments;
+}
+
+/** Name plus language: the same template exists once per language, so the name
+ * alone is not a row. */
+export const templateRowId = (template: AisensyTemplate) =>
+  `${template.name}-${template.language}`;
+
+export interface ApprovedTemplateGroups {
+  /** Approved templates no campaign points at. A send addresses a CAMPAIGN,
+   * never a template, so these cannot go out at all until one exists — and
+   * nothing in AiSensy's own console says so. */
+  orphans: AisensyTemplate[];
+  /** Approved templates a campaign already sends. */
+  bound: AisensyTemplate[];
+}
+
+/** The approved half of the catalogue, split by whether anything can send it.
+ * The banner shows the orphans; the campaign picker offers them first. */
+export function approvedTemplateGroups(
+  templates: AisensyTemplate[],
+  campaigns: AisensyCampaign[]
+): ApprovedTemplateGroups {
+  const boundNames = new Set(campaigns.map((campaign) => campaign.template_name));
+  const groups: ApprovedTemplateGroups = { orphans: [], bound: [] };
+  for (const template of templates) {
+    if (statusKey(template.status) !== 'APPROVED') continue;
+    if (boundNames.has(template.name)) groups.bound.push(template);
+    else groups.orphans.push(template);
+  }
+  return groups;
 }

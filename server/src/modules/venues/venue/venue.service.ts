@@ -15,6 +15,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { sendEmail } from '@services/email/email.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -477,6 +478,11 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** The owner's own account, with only the fields a WhatsApp send reads: the
+ * number lives on the user, never on the venue document. */
+const waRecipient = (userId: Types.ObjectId) =>
+  UserModel.findById(userId).select('auth.phone communication.whatsapp').lean();
+
 /** Strip a single role from a user (used on hard-delete when they have no
  * remaining entity of that kind). No-op if the user is gone or never held it. */
 async function removeUserRole(userId: Types.ObjectId, role: string) {
@@ -749,12 +755,25 @@ export const venueService = {
   async approve(id: string, notes?: string, tags?: string[]) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+    // Re-approving an approved venue is how an admin edits notes and tags, so it
+    // stays allowed — but the "your venue is on Duncit" message only goes out on
+    // the transition. It carries no entity, so nothing downstream can spot the
+    // duplicate.
+    const wasApproved = v.status === 'APPROVED';
     v.status = 'APPROVED';
     v.approved_at = new Date();
     v.reviewer_notes = notes ?? v.reviewer_notes;
     if (tags) v.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await v.save();
     await assignApprovedVenueRole(v.owner_user_id);
+    if (!wasApproved) {
+      await whatsappService.send({
+        event: 'VENUE_NEW_REQUESTED',
+        user: await waRecipient(v.owner_user_id),
+        name: v.owner_name,
+        params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
+      });
+    }
     return toPub(v);
   },
   async reject(id: string, notes: string) {
@@ -880,6 +899,10 @@ export const venueService = {
   async setActive(venueId: string, active: boolean) {
     const v = await VenueModel.findById(venueId);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+    // Nothing changed, so nobody is told: an account message carries no entity
+    // for the WhatsApp duplicate index to key on, and pressing Deactivate twice
+    // would otherwise be two billed messages and two emails.
+    if (v.is_active === active) return toPub(v);
     v.is_active = active;
     await v.save();
 
@@ -907,6 +930,13 @@ export const venueService = {
         msg: 'venue status-change email failed',
       });
     }
+
+    await whatsappService.send({
+      event: active ? 'VENUE_ACCOUNT_REACTIVATED' : 'VENUE_ACCOUNT_SUSPENDED',
+      user: await waRecipient(v.owner_user_id),
+      name: v.owner_name,
+      params: [v.owner_name],
+    });
 
     return toPub(v);
   },

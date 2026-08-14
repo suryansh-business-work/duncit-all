@@ -14,7 +14,9 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/email.service';
+import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import {
   maxSeatsForBooking,
   normalizeSeats,
@@ -46,6 +48,12 @@ export const BOOKING_FORBIDDEN_MESSAGE = 'You are not authorized to view this bo
 const newToken = () => `ref_${crypto.randomBytes(8).toString('hex')}`;
 
 const iso = (v?: Date | null) => (v instanceof Date ? v.toISOString() : null);
+
+/** WhatsApp templates print the day and the clock time as two placeholders. */
+const dateOnly = (v?: Date | string | null) =>
+  v ? new Date(v).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+const timeOnly = (v?: Date | string | null) =>
+  v ? new Date(v).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
 
 /** The pod's own start time has passed — nothing about the seat can change now. */
 const podHasHappened = (pod: { pod_date_time?: Date | null }) =>
@@ -255,7 +263,11 @@ async function notifyUserInApp(userId: string, title: string, body: string) {
 async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutRequest | null) {
   try {
     const [user, settings] = await Promise.all([
-      UserModel.findById(member.user_id).select('profile.first_name profile.last_name auth.email'),
+      // The phone paths ride along for the WhatsApp send below — without them
+      // `destinationFor` reads nothing and every message silently skips.
+      UserModel.findById(member.user_id).select(
+        'profile.first_name profile.last_name auth.email auth.phone communication.whatsapp',
+      ),
       getFinanceSettings(),
     ]);
     const sym = settings.currency_symbol ?? '₹';
@@ -277,6 +289,26 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
       name: fullName(user) || 'there',
       pod_title: pod.pod_title ?? 'your pod',
       refund_line: refundLine,
+    });
+    const { appUrl } = await getUrlConfigs();
+    await whatsappService.send({
+      event: 'USER_REPLACEMENT_FOUND',
+      // The RELEASE, not the pod: a booking can give back seats twice and have
+      // each release filled separately, and keying on the pod would swallow the
+      // second notice.
+      entityId: request ? String(request._id) : null,
+      user,
+      name: fullName(user),
+      params: [
+        fullName(user) || 'there',
+        pod.pod_title,
+        dateOnly(pod.pod_date_time),
+        timeOnly(pod.pod_date_time),
+        // Bare — the template prints the rupee sign itself.
+        request?.refund_amount,
+        bookingLinkUrl(appUrl, String(member._id)),
+        settings.refund_processing_days,
+      ],
     });
   } catch (err) {
     logs.server.error('podMember', 'notifySpotFilled', { error: err, msg: '[backout] spot-filled notify failed' });
@@ -333,8 +365,11 @@ export async function markSpotFilled(pod: any, request: IBackoutRequest, replace
     request.replacement_user_id = new Types.ObjectId(replacementUserId);
     request.events.push({ status: 'SPOT_FILLED', backout_count: request.attempt_no, at: new Date() });
     await request.save();
+    // Only the TRANSITION is news. Outside this guard a re-run of the fill
+    // sweep told the same member their spot was filled all over again — free on
+    // email, a second billed message on WhatsApp.
+    if (member) await notifySpotFilled(pod, member, request);
   }
-  if (member) await notifySpotFilled(pod, member, request);
 }
 
 /**

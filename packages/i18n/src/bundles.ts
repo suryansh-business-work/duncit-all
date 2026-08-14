@@ -8,6 +8,7 @@ import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { SHELL_BUNDLE } from './bundles/shell';
 import { WEBSITE_BUNDLE } from './bundles/website';
+import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
 
 /**
  * The SHIPPED FALLBACK CATALOGUE — every user-facing key the client surfaces
@@ -40,6 +41,7 @@ export {
   POD_PRODUCT_BUNDLE,
   SHELL_BUNDLE,
   WEBSITE_BUNDLE,
+  WHATSAPP_BUNDLE,
 };
 
 /** Every client bundle, by the surface that ships it. */
@@ -53,6 +55,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   podProduct: POD_PRODUCT_BUNDLE,
   shell: SHELL_BUNDLE,
   website: WEBSITE_BUNDLE,
+  whatsapp: WHATSAPP_BUNDLE,
 };
 
 /**

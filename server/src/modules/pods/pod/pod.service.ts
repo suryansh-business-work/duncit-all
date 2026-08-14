@@ -18,6 +18,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { breakdownService, bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import {
   sendPodCancelledEmail,
@@ -378,20 +379,32 @@ const podWhenLabel = (doc: any) =>
     ? new Date(doc.pod_date_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     : '—';
 
+// WhatsApp templates print the date and the time as two separate placeholders,
+// so the combined label above cannot serve them.
+const podDateLabel = (doc: any) =>
+  doc.pod_date_time ? new Date(doc.pod_date_time).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+const podTimeLabel = (doc: any) =>
+  doc.pod_date_time ? new Date(doc.pod_date_time).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+
 /** Attendee users (excluding the acting host) with an email on file. */
 async function podAudience(doc: any, excludeUserId: string) {
   const ids = (doc.pod_attendees ?? [])
     .map(String)
     .filter((id: string) => id !== excludeUserId);
   if (ids.length === 0) return [];
+  // The phone fields are selected because this audience now also feeds WhatsApp,
+  // and `destinationFor` reads them off the document — without them it returns
+  // '' for every attendee and the whole fan-out silently skips.
   const users = await UserModel.find({ _id: { $in: ids } })
-    .select('profile.first_name profile.last_name auth.email')
+    .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
     .lean();
   return users
     .map((u: any) => ({
       user_id: String(u._id),
       email: u.auth?.email ?? '',
       name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'there',
+      /** The raw document, for `destinationFor`. */
+      user: u,
     }));
   // Attendees with no address are NOT filtered out. This audience is only ever
   // used to email, and dropping them here meant a cancelled pod left no trace
@@ -400,7 +413,33 @@ async function podAudience(doc: any, excludeUserId: string) {
 }
 
 /** Who cancelled a pod — doubles as the refund metadata tag and the audit source. */
-type PodCancelInitiator = 'HOST' | 'VENUE_OWNER';
+type PodCancelInitiator = 'HOST' | 'VENUE_OWNER' | 'ADMIN' | 'CLUB_ADMIN';
+
+/** Duncit's own side of a cancellation. A type guard rather than a comparison at
+ * the call site so `remove` can hand the source straight to the shared path. */
+const isDuncitCancel = (source: PodAuditSource): source is 'ADMIN' | 'CLUB_ADMIN' =>
+  source === 'ADMIN' || source === 'CLUB_ADMIN';
+
+/** The admin and club-admin deletes carry no reason field, and both the refund
+ * metadata and the cancellation email print one. */
+const DUNCIT_CANCEL_REASON = 'Cancelled by Duncit';
+
+/** The WhatsApp scenario each cancel path fires. Duncit and a club admin share
+ * one template — the attendee is told the platform cancelled it either way. */
+const WA_CANCEL_EVENT: Record<PodCancelInitiator, string> = {
+  HOST: 'USER_POD_CANCELLED_BY_HOST',
+  VENUE_OWNER: 'USER_POD_CANCELLED_BY_VENUE',
+  ADMIN: 'USER_POD_CANCELLED_BY_DUNCIT',
+  CLUB_ADMIN: 'USER_POD_CANCELLED_BY_DUNCIT',
+};
+
+/** The service method a cancellation's failures are filed under. */
+const CANCEL_LOG_COMPONENT: Record<PodCancelInitiator, string> = {
+  HOST: 'hostRemove',
+  VENUE_OWNER: 'venueCancelPod',
+  ADMIN: 'remove',
+  CLUB_ADMIN: 'remove',
+};
 
 /**
  * Soft-deletes a pod exactly once. The `deleted_at` flip is a CONDITIONAL write,
@@ -452,10 +491,13 @@ async function refundAndNotifyCancellation(
 ): Promise<number | null> {
   const when = podWhenLabel(doc);
   const podTitle = doc.pod_title;
-  const logComponent = initiatedBy === 'HOST' ? 'hostRemove' : 'venueCancelPod';
+  const logComponent = CANCEL_LOG_COMPONENT[initiatedBy];
 
   const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
-  const refundedByUser = new Map<string, any>();
+  // Keyed by payer and SUMMED: one person can hold several payments for a pod
+  // (a second seat, a re-try), every one of them is flipped to REFUNDED here,
+  // and keeping only the last document quoted them a fraction of their refund.
+  const refundedByUser = new Map<string, { total: number; currency_symbol: string }>();
   for (const payment of payments) {
     payment.status = 'REFUNDED';
     (payment as any).metadata = {
@@ -467,7 +509,12 @@ async function refundAndNotifyCancellation(
     };
     payment.markModified('metadata');
     await payment.save();
-    refundedByUser.set(String(payment.user_id), payment);
+    const payerId = String(payment.user_id);
+    const soFar = refundedByUser.get(payerId);
+    refundedByUser.set(payerId, {
+      total: (soFar?.total ?? 0) + (payment.total ?? 0),
+      currency_symbol: payment.currency_symbol,
+    });
   }
 
   const audience = await podAudience(doc, actorUserId);
@@ -484,9 +531,9 @@ async function refundAndNotifyCancellation(
   try {
     await Promise.allSettled([
       ...audience.map((user) => {
-        const payment = refundedByUser.get(user.user_id);
-        const refundLine = payment
-          ? `Your payment of ${payment.currency_symbol}${payment.total} will be refunded.`
+        const refund = refundedByUser.get(user.user_id);
+        const refundLine = refund
+          ? `Your payment of ${refund.currency_symbol}${refund.total} will be refunded.`
           : '';
         return sendPodCancelledEmail({
           to: user.email,
@@ -514,7 +561,80 @@ async function refundAndNotifyCancellation(
     });
   }
 
+  await whatsappPodCancellation(doc, initiatedBy, audience, refundedByUser);
+
   return payments.length;
+}
+
+/**
+ * The same cancellation over WhatsApp, one attendee at a time — AiSensy
+ * rate-limits, so a 40-attendee pod fanned out in parallel is 40 concurrent
+ * POSTs. The send never throws; every outcome lands in the WhatsApp log.
+ *
+ * The template quotes a refund and how long it takes, so the working-days
+ * promise comes from Finance Settings rather than a constant here.
+ */
+async function whatsappPodCancellation(
+  doc: any,
+  initiatedBy: PodCancelInitiator,
+  audience: Awaited<ReturnType<typeof podAudience>>,
+  refundedByUser: Map<string, { total: number; currency_symbol: string }>
+) {
+  const [{ mwebUrl }, financeSettings, clubSlugById] = await Promise.all([
+    getUrlConfigs(),
+    getFinanceSettings(),
+    loadClubSlugMap([doc]),
+  ]);
+  const path = podNotificationLink(doc, clubSlugById);
+  const podLink = path ? `${mwebUrl.replace(/\/+$/, '')}${path}` : '';
+  await whatsappService.sendEach(
+    audience.map((attendee) => ({
+      event: WA_CANCEL_EVENT[initiatedBy],
+      entityId: String(doc._id),
+      user: attendee.user,
+      name: attendee.name,
+      params: [
+        attendee.name,
+        doc.pod_title,
+        doc.pod_title,
+        podDateLabel(doc),
+        podTimeLabel(doc),
+        // An attendee who paid nothing is still owed the news; the template
+        // prints the rupee sign itself, so the figure carries no symbol.
+        String(refundedByUser.get(attendee.user_id)?.total ?? 0),
+        podLink,
+        String(financeSettings.refund_processing_days),
+      ],
+    }))
+  );
+}
+
+/** Tell the host their own cancellation went through, with what it cost the
+ * people who had booked. Fires beside the attendee fan-out, not inside it — the
+ * host is excluded from that audience. */
+async function whatsappHostCancellationRequested(doc: any, hostUserId: string) {
+  const host: any = await UserModel.findById(hostUserId)
+    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .lean();
+  const venue: any = doc.venue_id
+    ? await VenueModel.findById(doc.venue_id).select('venue_name').lean()
+    : null;
+  const hostName = `${host?.profile?.first_name ?? ''} ${host?.profile?.last_name ?? ''}`.trim() || 'there';
+  await whatsappService.send({
+    event: 'HOST_POD_CANCELLATION_REQUESTED',
+    entityId: String(doc._id),
+    user: host,
+    name: hostName,
+    params: [
+      hostName,
+      doc.pod_title,
+      doc.pod_title,
+      podDateLabel(doc),
+      podTimeLabel(doc),
+      venue?.venue_name ?? '',
+      String(podSeatsTaken(doc)),
+    ],
+  });
 }
 
 /**
@@ -572,8 +692,10 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       'venue_name owner_email owner_name owner_user_id'
     );
     if (!venue) return;
+    // The phone fields ride along because the same owner is messaged on
+    // WhatsApp below, and `destinationFor` reads them off this document.
     const owner = await UserModel.findById(venue.owner_user_id)
-      .select('profile.first_name profile.last_name auth.email')
+      .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
       .lean();
     // No early return on a missing address: the send logs it as FAILED, and a
     // venue nobody can reach about a slot request is worth seeing in the log.
@@ -597,6 +719,7 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
     // The page is auth-gated, so a mail scanner following the link cannot
     // decide anything — and the venue owner lands back on it after logging in.
     const decisionUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/requests/${String(slot._id)}`;
+    const reviewUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/requests`;
     await sendVenueSlotRequestEmail({
       to,
       owner_name: ownerName,
@@ -604,9 +727,23 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       pod_title: pod.pod_title,
       host_name: hostName,
       when,
-      review_url: `${partnersUrl.replace(/\/+$/, '')}/venues/requests`,
+      review_url: reviewUrl,
       approve_url: `${decisionUrl}?action=approve`,
       decline_url: `${decisionUrl}?action=decline`,
+    });
+    await whatsappService.send({
+      event: 'VENUE_SLOT_REQUESTED',
+      entityId: String(slot._id),
+      user: owner,
+      name: ownerName,
+      params: [
+        ownerName,
+        pod.pod_title,
+        new Date(slot.start_at).toLocaleString('en-IN', { dateStyle: 'medium' }),
+        new Date(slot.start_at).toLocaleString('en-IN', { timeStyle: 'short' }),
+        hostName,
+        reviewUrl,
+      ],
     });
   } catch (err) {
     logs.server.error('pod', 'emailVenueSlotRequested', {
@@ -1805,7 +1942,10 @@ export const podService = {
   async hostRemove(id: string, userId: string, reasonSubject: string, reasonNote?: string | null) {
     const doc = await findHostedPod(id, userId);
     const reason = buildDeleteReason(reasonSubject, reasonNote);
-    await refundAndNotifyCancellation(doc, userId, reason, 'HOST');
+    const refunded = await refundAndNotifyCancellation(doc, userId, reason, 'HOST');
+    // null means a concurrent cancel committed the delete first and has already
+    // told everyone, the host included.
+    if (refunded !== null) await whatsappHostCancellationRequested(doc, userId);
     return true;
   },
 
@@ -1884,6 +2024,19 @@ export const podService = {
   },
 
   async remove(id: string, audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }) {
+    // An admin or club-admin delete IS a cancellation, and this path used to run
+    // it in silence: no refund of the SUCCESS payments and not a word to the
+    // attendees, unlike the host and venue flows. It now goes through the same
+    // money-and-mail path. A pod that is already cancelled has nothing left to
+    // refund and falls through to the idempotent soft delete below.
+    if (audit && isDuncitCancel(audit.source)) {
+      const doc = await PodModel.findById(id);
+      if (doc) {
+        const reason = audit.note ?? DUNCIT_CANCEL_REASON;
+        await refundAndNotifyCancellation(doc, String(audit.actorUserId ?? ''), reason, audit.source);
+        return true;
+      }
+    }
     // Portals now list cancelled pods, so Delete can be pressed on one twice.
     // softDeletePod answers idempotently instead of a confusing 404 — the slot
     // and inventory releases already ran the first time — so this stays `true`

@@ -21,6 +21,9 @@ import { ticketService } from '@modules/pods/ticket/ticket.service';
 import { leaderboardService } from '@modules/engagement/leaderboard/leaderboard.service';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { productOrderService } from '@modules/commerce/productOrder/productOrder.service';
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
@@ -63,6 +66,7 @@ const STEP_ORDER: PaymentStepKey[] = [
   'RECEIPT_EMAIL',
   'GIFT_CARD_EMAIL',
   'SHIPMENT',
+  'PAYMENT_FAILED_NOTICE',
 ];
 
 /** The pod leg's steps — all skipped together on a payment with no pod. */
@@ -664,6 +668,106 @@ async function emailReceipt(ctx: DeferredContext): Promise<void> {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * The failure notice — the one step of a payment that did NOT book
+ * ------------------------------------------------------------------ */
+
+const fullName = (user: any) =>
+  `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
+
+// WhatsApp templates print the day and the clock time as two placeholders.
+const dateOnly = (value?: Date | null) =>
+  value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
+const timeOnly = (value?: Date | null) =>
+  value ? new Date(value).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+
+/** The buyer's message: their pod payment did not turn into a seat. */
+async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
+  if (!payment.pod_id) return { status: 'SKIPPED', detail: NO_POD_DETAIL };
+  const pod = await PodModel.findById(payment.pod_id).select(
+    'pod_id pod_title pod_date_time pod_hosts_id club_id'
+  );
+  if (!pod) return { status: 'SKIPPED', detail: 'The pod no longer exists' };
+  const [{ mwebUrl }, club, buyer, host] = await Promise.all([
+    getUrlConfigs(),
+    ClubModel.findById(pod.club_id).select('club_id').lean(),
+    // `auth.phone` and `communication.whatsapp` are the only two paths a number
+    // is resolved from — a projection without them skips the send in silence.
+    UserModel.findById(payment.user_id)
+      .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+      .lean(),
+    UserModel.findById((pod.pod_hosts_id ?? [])[0])
+      .select('profile.first_name profile.last_name')
+      .lean(),
+  ]);
+  const name = payment.user_name || fullName(buyer) || 'there';
+  const outcome = await whatsappService.send({
+    event: 'USER_PAYMENT_FAILED',
+    // The payment, not the pod: a buyer whose second attempt also fails is owed
+    // the news about that attempt too.
+    entityId: String(payment._id),
+    user: buyer,
+    name,
+    params: [
+      name,
+      pod.pod_title,
+      pod.pod_title,
+      dateOnly(pod.pod_date_time),
+      timeOnly(pod.pod_date_time),
+      `${mwebUrl.replace(/\/+$/, '')}/club/${(club as any)?.club_id ?? ''}/pod/${pod.pod_id}`,
+      fullName(host) || 'A host',
+      payment.payment_id,
+    ],
+  });
+  if (outcome.status === 'SENT') return { refs: [outcome.message_id] };
+  // A funnel FAILURE is worth another pass — the reconciler re-enters
+  // finalization. A SKIP (no number, switched off, opted out) is final.
+  if (outcome.status === 'FAILED') return { status: 'FAILED', detail: outcome.reason };
+  return { status: 'SKIPPED', detail: outcome.reason };
+}
+
+/**
+ * Tell the buyer, and record it on the payment like every other side effect.
+ *
+ * It lives in this file rather than at the checkout call site because this is
+ * the only place a payment is declared failed, and because `finalizePayment` is
+ * re-entered by `startPaymentReconciler`: a notice the funnel could not deliver
+ * is recorded FAILED here and simply tried again on the next pass, with the
+ * funnel's own (event, entity, destination) index making sure a retry cannot
+ * become a second message.
+ *
+ * Deliberately NOT in DEFERRED_STEP_KEYS, unlike the notification steps it sits
+ * beside in STEP_ORDER: those are seeded PENDING by a core that COMMITTED and
+ * are run by `runSideEffects`, which only ever claims a CORE_DONE payment. This
+ * one exists precisely because the core rolled back, so seeding it there would
+ * leave a step on every successful payment that nothing ever clears.
+ */
+async function notifyPaymentFailed(paymentDocId: string): Promise<void> {
+  const payment = await PaymentModel.findById(paymentDocId);
+  if (!payment) return;
+  const recorded = (payment.steps ?? []).map(toPlainStep);
+  if (isDone(recorded, 'PAYMENT_FAILED_NOTICE')) return;
+
+  let outcome: StepOutcome;
+  try {
+    outcome = await whatsappPaymentFailed(payment);
+  } catch (error) {
+    logs.server.error('payment', 'notifyPaymentFailed', { error, paymentDocId });
+    outcome = { status: 'FAILED', detail: messageOf(error) };
+  }
+  const steps = recordStep(
+    recorded,
+    'PAYMENT_FAILED_NOTICE',
+    outcome.status ?? 'DONE',
+    outcome.detail ?? '',
+    outcome.refs ?? []
+  );
+  // Scoped to the FAILED row this notice is about: a concurrent finalize that
+  // committed after the mark owns the step list, and its receipt must not be
+  // overwritten by a failure that no longer stands.
+  await PaymentModel.updateOne({ _id: paymentDocId, finalize_state: 'FAILED' }, { $set: { steps } });
+}
+
 /** The gateway label recorded at capture — see runCaptureLeg. */
 function capturedMethod(payment: IPayment): string {
   const captured = (payment.steps ?? []).find((s) => s.key === 'PAYMENT_CAPTURED');
@@ -700,6 +804,11 @@ export const paymentFinalizer = {
         });
         return;
       }
+      // Only now that the payment is on record as failed — a core that quietly
+      // committed anyway must never tell the buyer their booking did not happen.
+      await notifyPaymentFailed(paymentDocId).catch((err) =>
+        logs.server.error('payment', 'notifyPaymentFailed', { error: err, paymentDocId })
+      );
       throw error;
     }
   },

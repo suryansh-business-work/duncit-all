@@ -45,12 +45,27 @@ export async function defaultCampaign(): Promise<string> {
   return getRuntimeEnvValue('AISENSY_CAMPAIGN_NAME');
 }
 
+/**
+ * A header image or document for a media template.
+ *
+ * AiSensy fetches the URL itself at send time, so it must be reachable from the
+ * public internet — a signed or intranet URL is rejected, not retried. There is
+ * no upload endpoint: the asset is supplied per send, never at template
+ * creation.
+ */
+export interface CampaignMedia {
+  url: string;
+  filename: string;
+}
+
 export interface CampaignMessage {
   campaign_name: string;
   /** Country code + number, digits only — the shape AiSensy expects. */
   destination: string;
   user_name: string;
   template_params: string[];
+  /** Only for a template whose header is IMAGE, VIDEO or DOCUMENT. */
+  media?: CampaignMedia;
 }
 
 /** Human-readable reason out of an AiSensy error body. */
@@ -96,6 +111,11 @@ export function campaignPayload(message: CampaignMessage, key: string): Record<s
     userName: message.user_name,
     templateParams: message.template_params,
   };
+  // Omitted rather than sent empty: a `media` key with a blank url fails the
+  // whole send, while a text-header template with no key is simply fine.
+  if (message.media?.url) {
+    payload.media = { url: message.media.url, filename: message.media.filename };
+  }
   return payload;
 }
 

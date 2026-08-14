@@ -107,6 +107,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       liveChat: { title: 'Live chat' },
       accountHealth: { title: 'Account health' },
       mailPreference: { title: 'Mail preferences' },
+      whatsappPreference: { title: 'WhatsApp preferences' },
       signupSurvey: { title: 'Tell us about you' },
       signupWhatsapp: { title: 'WhatsApp updates' },
       signupReferral: { title: 'Referral code' },

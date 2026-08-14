@@ -86,6 +86,7 @@ export const appConfig = {
         { label: 'Something for you', to: '/something-for-you', icon: 'campaign' },
       ],
     },
+    { label: 'WhatsApp', to: '/whatsapp', icon: 'whatsapp' },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
     { label: 'Portal Access', to: '/portal-access', icon: 'lock' },
     {
@@ -158,6 +159,12 @@ export const appConfig = {
     { label: 'Partner FAQs', to: '/partners/faqs', section: 'Engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', to: '/something-for-you', section: 'Engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
+    {
+      label: 'WhatsApp',
+      to: '/whatsapp',
+      section: 'WhatsApp',
+      keywords: ['whatsapp', 'aisensy', 'automation', 'scenario', 'template', 'campaign', 'message log'],
+    },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
     {
       label: 'Portal Access',

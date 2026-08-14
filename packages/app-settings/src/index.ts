@@ -63,9 +63,12 @@ export {
   SHELL_BUNDLE,
   SURFACE_BUNDLES,
   WEBSITE_BUNDLE,
+  WHATSAPP_BUNDLE,
+  whatsappCategoryCopy,
   type FlatCatalogue,
   type Locale,
   type MailCategoryCopy,
   type NestedCatalogue,
   type Translator,
+  type WaCategoryCopy,
 } from '@duncit/i18n';

@@ -3331,6 +3331,9 @@ importers:
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../../packages/app-settings
+      '@duncit/communication':
+        specifier: workspace:*
+        version: link:../../packages/communication
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard

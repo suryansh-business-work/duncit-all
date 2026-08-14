@@ -19,7 +19,10 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 const DEFAULT_BASE_URL = 'https://apis.aisensy.com';
 const CAMPAIGNS_PATH = 'campaigns';
 const TEMPLATES_PATH = 'wa_template/';
-const LIST_LIMIT = 100;
+/** AiSensy's own per-page ceiling; asking for more returns 100 anyway. */
+const PAGE_SIZE = 100;
+/** A backstop, not a real bound — 20 pages is 2000 rows, far past any project. */
+const MAX_PAGES = 20;
 
 interface ProjectConfig {
   projectId: string;
@@ -62,7 +65,12 @@ const badProjectId = () =>
     { extensions: { code: 'BAD_REQUEST' } }
   );
 
-async function projectRequest(path: string, postBody?: Record<string, unknown>): Promise<unknown> {
+async function projectRequest(
+  path: string,
+  postBody?: Record<string, unknown>,
+  /** Only for verbs that carry no body — DELETE. A body always means POST. */
+  bodylessMethod?: 'DELETE'
+): Promise<unknown> {
   const config = await projectConfig();
   if (!config) throw notConfigured();
   if (!PROJECT_ID_RE.test(config.projectId)) throw badProjectId();
@@ -72,6 +80,7 @@ async function projectRequest(path: string, postBody?: Record<string, unknown>):
     'X-AiSensy-Project-API-Pwd': config.key,
   };
   const init: RequestInit = { headers };
+  if (bodylessMethod) init.method = bodylessMethod;
   if (postBody) {
     init.method = 'POST';
     headers['Content-Type'] = 'application/json';
@@ -114,6 +123,8 @@ export interface AisensyCampaign {
 }
 
 export interface AisensyTemplate {
+  /** AiSensy's own id — the only handle `deleteTemplate` accepts. */
+  id: string;
   name: string;
   status: string;
   category: string;
@@ -172,6 +183,116 @@ function buttonLabels(row: Record<string, any>): string[] {
   return buttons.map((button: any) => trimmed(button?.text)).filter(Boolean);
 }
 
+/**
+ * Every row across every page. AiSensy caps a page at {@link PAGE_SIZE} and
+ * offers no cursor, so a full list is a walk over `skip`.
+ *
+ * The walk ends on a short page. The identity guard is the other half of it:
+ * an endpoint that ignores `skip` answers every request with page one, which
+ * without the guard would spin to {@link MAX_PAGES} and return 2000 copies of
+ * the same 100 rows. Both halves matter — the project is at 68 campaigns and 71
+ * templates against a 100 ceiling, so this stops silently truncating the moment
+ * the missing scenarios get their campaigns.
+ */
+async function listAll(
+  page: (skip: number) => Promise<unknown>,
+  keyOf: (row: Record<string, any>) => string
+): Promise<Record<string, any>[]> {
+  const rows: Record<string, any>[] = [];
+  const seen = new Set<string>();
+  for (let index = 0; index < MAX_PAGES; index += 1) {
+    // Sequential on purpose: the next skip is only worth asking for once this
+    // page came back short-or-not, and AiSensy rate-limits the project API.
+    // eslint-disable-next-line no-await-in-loop
+    const batch = toArray(await page(index * PAGE_SIZE));
+    const fresh = batch.filter((row) => !seen.has(keyOf(row)));
+    for (const row of fresh) seen.add(keyOf(row));
+    rows.push(...fresh);
+    if (batch.length < PAGE_SIZE || fresh.length === 0) break;
+  }
+  return rows;
+}
+
+/**
+ * Submit a new WhatsApp template for approval.
+ *
+ * It comes back `PENDING` — Meta decides, not AiSensy, and not synchronously.
+ * The console re-reads {@link listTemplates} to learn the verdict, and a
+ * rejection carries `rejected_reason`.
+ *
+ * There is NO update endpoint for a template, so editing one means deleting it
+ * and submitting a new name. The UI is create-and-replace on purpose.
+ */
+export async function createTemplate(input: {
+  name: string;
+  category: string;
+  language: string;
+  /** TEXT for a plain template; IMAGE / VIDEO / FILE for a media header. */
+  type: string;
+  body: string;
+  /** The same body with sample values in place — Meta reviews against this. */
+  sample: string;
+  headerText?: string;
+  footerText?: string;
+}): Promise<{ name: string; status: string; reason: string }> {
+  const payload: Record<string, unknown> = {
+    // AiSensy's own grouping label; it is required and not shown to recipients.
+    label: input.name,
+    name: input.name,
+    category: input.category,
+    language: input.language,
+    type: input.type,
+    text: input.body,
+    sample_text: input.sample,
+  };
+  if (input.headerText) {
+    payload.header_text = input.headerText;
+    payload.header_type = 'TEXT';
+  }
+  // A media template declares its header through `type`; the asset itself is
+  // supplied per send as `media: {url, filename}`, never here.
+  if (input.type !== 'TEXT' && !input.headerText) payload.header_type = input.type;
+  if (input.footerText) payload.footer_text = input.footerText;
+
+  const row = (await projectRequest(TEMPLATES_PATH, payload)) as Record<string, any>;
+  return {
+    name: str(row, 'name', 'templateName') || input.name,
+    status: str(row, 'status') || 'PENDING',
+    reason: str(row, 'rejected_reason', 'rejectedReason'),
+  };
+}
+
+/**
+ * Bind an approved template to a campaign name.
+ *
+ * The campaign name is what the send transport posts, so this is the step that
+ * makes a template reachable at all — seven of our approved templates have no
+ * campaign and therefore cannot be sent by anything.
+ *
+ * AiSensy offers no update, stop or delete for campaigns, so a name chosen here
+ * is permanent from the API's side.
+ */
+export async function createCampaign(
+  templateName: string,
+  campaignName: string
+): Promise<{ name: string; status: string; template_name: string }> {
+  const row = (await projectRequest('campaign/api', {
+    template_name: templateName,
+    campaign_name: campaignName,
+  })) as Record<string, any>;
+  return {
+    name: str(row, 'name', 'campaignName') || campaignName,
+    status: str(row, 'status') || 'LIVE',
+    template_name: str(row, 'templateName', 'template_name') || templateName,
+  };
+}
+
+/** Remove a template. WhatsApp's own policy on re-using a deleted name applies. */
+export async function deleteTemplate(templateId: string): Promise<boolean> {
+  await projectRequest(`${TEMPLATES_PATH}${encodeURIComponent(templateId)}`, undefined, 'DELETE');
+  return true;
+}
+
 /** Highest {{n}} in the body — what "templateParams length" has to match. */
 function paramCount(body: string): number {
   const numbers = [...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1]));
@@ -180,12 +301,11 @@ function paramCount(body: string): number {
 
 /** The project's campaigns, as AiSensy has them right now. */
 export async function listCampaigns(): Promise<AisensyCampaign[]> {
-  const payload = await projectRequest(CAMPAIGNS_PATH, {
-    skip: 0,
-    limit: LIST_LIMIT,
-    campaignType: 'ALL',
-  });
-  return toArray(payload).map((row) => ({
+  const rows = await listAll(
+    (skip) => projectRequest(CAMPAIGNS_PATH, { skip, limit: PAGE_SIZE, campaignType: 'ALL' }),
+    (row) => str(row, '_id', 'id') || str(row, 'name', 'campaignName')
+  );
+  return rows.map((row) => ({
     name: str(row, 'name', 'campaignName'),
     status: str(row, 'status', 'state'),
     template_name:
@@ -196,14 +316,21 @@ export async function listCampaigns(): Promise<AisensyCampaign[]> {
 
 /** The project's WhatsApp message templates. */
 export async function listTemplates(): Promise<AisensyTemplate[]> {
-  const payload = await projectRequest(`${TEMPLATES_PATH}?limit=${LIST_LIMIT}`);
-  return toArray(payload).map((row) => {
+  const rows = await listAll(
+    (skip) => projectRequest(`${TEMPLATES_PATH}?limit=${PAGE_SIZE}&skip=${skip}`),
+    // The same template exists once per language, so the name alone is not a row.
+    (row) =>
+      str(row, '_id', 'id') ||
+      `${str(row, 'name', 'templateName', 'elementName')}:${str(row, 'language', 'languageCode', 'language_code')}`
+  );
+  return rows.map((row) => {
     const body = bodyText(row);
     // AiSensy declares the count itself; the regex is the fallback for rows
     // that predate the field.
     const declared = Number(row.total_parameters);
     const param_count = Number.isInteger(declared) && declared > 0 ? declared : paramCount(body);
     return {
+      id: str(row, '_id', 'id'),
       name: str(row, 'name', 'templateName', 'elementName'),
       status: str(row, 'status'),
       category: str(row, 'category'),

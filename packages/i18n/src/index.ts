@@ -19,12 +19,18 @@ export {
   SHELL_BUNDLE,
   SURFACE_BUNDLES,
   WEBSITE_BUNDLE,
+  WHATSAPP_BUNDLE,
 } from './bundles';
 export {
   mailCategoryCopy,
   type MailCategoryCopy,
   type MailCategoryTranslate,
 } from './mail-preference';
+export {
+  whatsappCategoryCopy,
+  type WaCategoryCopy,
+  type WaCategoryTranslate,
+} from './whatsapp';
 export {
   createTranslator,
   interpolate,

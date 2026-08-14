@@ -44,6 +44,43 @@ async function normalizeHostCategoryInput(input: any): Promise<Omit<IHostCategor
 /** Normalizes an admin-supplied category list: validates each triple, dedupes
  * by sub-category, and preserves the `request_no` of any triple the host
  * already held (so an admin edit never severs a category's HOSTREQ linkage). */
+/**
+ * What makes two host categories the same category.
+ *
+ * The full triple, not the sub alone: a host approved for a whole Super or a
+ * whole Category carries no sub id, and keying those on `sub` would collapse
+ * every one of them into a single entry.
+ */
+export function hostCategoryKey(c: {
+  super_category_id?: unknown;
+  category_id?: unknown;
+  sub_category_id?: unknown;
+}): string {
+  const id = (value: unknown) => (value ? String(value) : '');
+  return `${id(c.super_category_id)}|${id(c.category_id)}|${id(c.sub_category_id)}`;
+}
+
+/**
+ * The same category listed once, keeping the entry that arrived first.
+ *
+ * First wins because that is the one whose `request_no` records how the host
+ * actually earned the category; a later duplicate carries a second request for
+ * something they already held.
+ */
+export function dedupeHostCategories<T extends { super_category_id?: unknown; category_id?: unknown; sub_category_id?: unknown }>(
+  categories: readonly T[],
+): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const category of categories) {
+    const key = hostCategoryKey(category);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(category);
+  }
+  return out;
+}
+
 async function normalizeHostCategories(input: any[], existing: IHostCategory[]): Promise<IHostCategory[]> {
   const requestNoBySub = new Map<string, string>();
   for (const c of existing ?? []) {
@@ -137,7 +174,12 @@ const toPub = (h: IHost) => ({
   full_address: h.full_address ?? '',
   bank_account: toBankAccountPub(h.bank_account),
   tags: h.tags ?? [],
-  host_categories: (h.host_categories ?? []).map((c) => ({
+  // Deduped on the way OUT as well as on the way in. Two approval paths write
+  // this array and one of them used to key only on request_no, so hosts
+  // already carry repeats — and a repeat renders as a second identical chip in
+  // Create a Pod, on mWeb and native alike. Cleaning it here fixes every
+  // reader at once, and without a migration over live host documents.
+  host_categories: dedupeHostCategories(h.host_categories ?? []).map((c) => ({
     super_category_id: c.super_category_id ? String(c.super_category_id) : null,
     category_id: c.category_id ? String(c.category_id) : null,
     sub_category_id: c.sub_category_id ? String(c.sub_category_id) : null,
@@ -531,8 +573,10 @@ export const hostService = {
     // the NEW category appended (same semantics as addCategoryFromRequest), so
     // the seed runs before the early return.
     if (prefill.category) {
-      const subId = String(prefill.category.sub_category_id);
-      if (!(h.host_categories ?? []).some((c) => String(c.sub_category_id) === subId)) {
+      // Same identity rule as addCategoryFromRequest — one key, so the two
+      // approval routes cannot disagree about what "already held" means.
+      const key = hostCategoryKey(prefill.category);
+      if (!(h.host_categories ?? []).some((c) => hostCategoryKey(c) === key)) {
         try {
           const normalized = await normalizeHostCategoryInput(prefill.category);
           h.host_categories.push({ ...normalized, request_no: prefill.request_no ?? '' });
@@ -593,12 +637,23 @@ export const hostService = {
     }
   },
 
-  /** Append a category mapping to an approved host from an approved Host Request.
-   * Idempotent per request_no so a re-run won't duplicate the entry. */
+  /**
+   * Append a category mapping to an approved host from an approved Host Request.
+   *
+   * Idempotent on BOTH the request and the category itself. Keying on
+   * `request_no` alone was the bug: a host onboarded for Sports › Badminton
+   * through an approval meeting, who is then approved for that same category
+   * through a Host Request, arrives here with a request_no nothing matches —
+   * and gets a second, identical entry. A host holds a category once, however
+   * many routes said so.
+   */
   async addCategoryFromRequest(hostUserId: string, mapping: IHostCategory) {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(hostUserId) });
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
-    const exists = (h.host_categories ?? []).some((c) => c.request_no === mapping.request_no);
+    const key = hostCategoryKey(mapping);
+    const exists = (h.host_categories ?? []).some(
+      (c) => c.request_no === mapping.request_no || hostCategoryKey(c) === key,
+    );
     if (!exists) {
       h.host_categories.push({
         super_category_id: mapping.super_category_id ?? null,

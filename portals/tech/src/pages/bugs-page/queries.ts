@@ -73,6 +73,16 @@ export const BUGS_TABLE = gql`
   ${BUG_FIELDS}
 `;
 
+/** One bug by id — what the detail route loads from its own URL. */
+export const BUG_BY_ID = gql`
+  query Bug($id: ID!) {
+    bug(id: $id) {
+      ...BugFields
+    }
+  }
+  ${BUG_FIELDS}
+`;
+
 /** Every bug, unpaginated — the JSON export. */
 export const BUGS_EXPORT = gql`
   query BugsExport {

@@ -3,6 +3,7 @@ import { openAsBlob } from 'node:fs';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { outboundFetch } from '@utils/outboundFetch';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
@@ -139,7 +140,11 @@ async function postToImagekit(
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
   const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');
-  const res = await fetch(IMAGEKIT_UPLOAD_URL, {
+  // Through outboundFetch like every other outbound call: a handshake ImageKit
+  // drops is retried once (the connect never landed, so nothing uploaded
+  // twice), and what does fail says "ImageKit did not respond in time" rather
+  // than the bare "fetch failed" this used to hand back.
+  const res = await outboundFetch('ImageKit', IMAGEKIT_UPLOAD_URL, {
     method: 'POST',
     headers: { Authorization: auth },
     body: form as any,
@@ -415,6 +420,15 @@ const ALLOWED_REMOTE_MEDIA_HOSTS = [
  * This is used to "import" a Pexels stock image — the URL we hand back to
  * the client lives on our ImageKit CDN, not the third-party origin.
  */
+/** The stock-photo host as a person would name it — `images.pexels.com` is not it. */
+function remoteImageServiceName(hostname: string): string {
+  const host = hostname.toLowerCase();
+  if (host.includes('pexels')) return 'Pexels';
+  if (host.includes('unsplash')) return 'Unsplash';
+  if (host.includes('imagekit')) return 'ImageKit';
+  return 'The image host';
+}
+
 export async function importRemoteImage(opts: {
   remoteUrl: string;
   folder?: string;
@@ -440,11 +454,16 @@ export async function importRemoteImage(opts: {
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
-  const remote = await fetch(parsed.toString());
+  // Named, so a failure reads "Pexels did not respond in time" rather than the
+  // undici code for it. The allowlist above already fixed which hosts these
+  // can be, so the label is derived from the host rather than guessed.
+  const service = remoteImageServiceName(parsed.hostname);
+  const remote = await outboundFetch(service, parsed.toString());
   if (!remote.ok)
-    throw new GraphQLError(`Remote fetch failed: ${remote.status} ${remote.statusText}`, {
-      extensions: { code: 'UPSTREAM_ERROR' },
-    });
+    throw new GraphQLError(
+      `${service} could not send that image (${remote.status} ${remote.statusText}).`,
+      { extensions: { code: 'UPSTREAM_ERROR', reason: `${remote.status} ${remote.statusText}` } }
+    );
   const mime = remote.headers.get('content-type') || 'image/jpeg';
   if (!/^image\//i.test(mime))
     throw new GraphQLError(`Remote URL did not return an image (got ${mime})`, {
@@ -498,7 +517,7 @@ export async function pexelsSearch(opts: {
     ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/v1/curated?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await outboundFetch('Pexels', url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels search failed: ${json?.error || res.statusText}`, {
@@ -567,7 +586,7 @@ export async function pexelsSearchVideos(opts: {
     ? `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/videos/popular?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await outboundFetch('Pexels', url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {
@@ -646,11 +665,16 @@ export async function importRemoteMedia(opts: {
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
-  const remote = await fetch(parsed.toString());
+  // Named, so a failure reads "Pexels did not respond in time" rather than the
+  // undici code for it. The allowlist above already fixed which hosts these
+  // can be, so the label is derived from the host rather than guessed.
+  const service = remoteImageServiceName(parsed.hostname);
+  const remote = await outboundFetch(service, parsed.toString());
   if (!remote.ok)
-    throw new GraphQLError(`Remote fetch failed: ${remote.status} ${remote.statusText}`, {
-      extensions: { code: 'UPSTREAM_ERROR' },
-    });
+    throw new GraphQLError(
+      `${service} could not send that image (${remote.status} ${remote.statusText}).`,
+      { extensions: { code: 'UPSTREAM_ERROR', reason: `${remote.status} ${remote.statusText}` } }
+    );
   const mime = remote.headers.get('content-type') || 'application/octet-stream';
   const isImage = /^image\//i.test(mime);
   const isVideo = /^video\//i.test(mime);

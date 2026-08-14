@@ -53,7 +53,7 @@ export function useDeviceUpload({
   const [cropRect, setCropRect] = useState<CropRect | null>(null);
 
   const client = useApolloClient();
-  const settings = useUploadSettings(surface);
+  const settings = useUploadSettings(surface, { skip: !open });
   const cropKey = cropKeyOverride ?? settings?.default_crop_key ?? 'NO_CROP';
 
   useEffect(() => {

@@ -97,14 +97,21 @@ const toItem = (raw: any): MediaItem => ({
  * `logo` into it is a syntax error. What a person means is "name contains
  * this", so that is what gets built, with the quote escaped so a stray `"` is
  * a search for a quote rather than a broken query.
+ *
+ * Image-vs-other does NOT belong in here. `type` inside a searchQuery means
+ * `file` / `file-version` / `folder`, so `type = "image"` is valid syntax that
+ * matches nothing at all — no error, just an empty page. That silence is what
+ * made the console agent report "there are no images in the media library"
+ * while ImageKit held thousands. Kind is its own query parameter; see `list`.
  */
-function searchExpression(search?: string | null, fileType?: string | null): string | undefined {
-  const clauses: string[] = [];
+function searchExpression(search?: string | null): string | undefined {
   const term = search?.trim();
-  if (term) clauses.push(`name : "${term.replaceAll('"', '\\"')}"`);
-  if (fileType === 'image' || fileType === 'non-image') clauses.push(`type = "${fileType}"`);
-  return clauses.length > 0 ? clauses.join(' AND ') : undefined;
+  if (!term) return undefined;
+  return `name : "${term.replaceAll('"', '\\"')}"`;
 }
+
+/** ImageKit's own `fileType` values. Anything else means "do not filter". */
+const FILE_TYPES = new Set(['image', 'non-image']);
 
 export const mediaLibraryService = {
   /** A page of files, newest first unless asked otherwise. */
@@ -121,7 +128,9 @@ export const mediaLibraryService = {
     params.set('skip', String(Math.max(0, input.skip ?? 0)));
     params.set('sort', input.sort || 'DESC_CREATED');
     if (input.path) params.set('path', input.path);
-    const query = searchExpression(input.search, input.fileType);
+    // Its own parameter, not a searchQuery clause — see searchExpression.
+    if (input.fileType && FILE_TYPES.has(input.fileType)) params.set('fileType', input.fileType);
+    const query = searchExpression(input.search);
     if (query) params.set('searchQuery', query);
     const raw = await call<any[]>(`/files?${params.toString()}`);
     return (raw ?? []).map(toItem);

@@ -23,11 +23,6 @@ const ALL_VENUES = 'ALL';
 
 export default function VenuePodsPage() {
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
-  const tabs = useTabParam<VenuePodTab>({
-    items: TAB_ORDER.map((key) => ({ value: key, label: `${TAB_LABELS[key]} (${counts[key]})` })),
-    fallback: 'ALL',
-  });
-  const tab = tabs.value;
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -42,6 +37,16 @@ export default function VenuePodsPage() {
   const venues = venuesQuery.data?.myVenues ?? [];
   const rows: VenuePodRow[] = useMemo(() => podsQuery.data?.venuePods ?? [], [podsQuery.data]);
   const counts = useMemo(() => tabCounts(rows), [rows]);
+
+  // Declared after `counts` on purpose: useTabParam reads `items` during the
+  // call, so building the labels any earlier dereferences `counts` in its
+  // temporal dead zone and the whole page throws on first render.
+  const tabItems = useMemo(
+    () => TAB_ORDER.map((key) => ({ value: key, label: `${TAB_LABELS[key]} (${counts[key]})` })),
+    [counts],
+  );
+  const tabs = useTabParam<VenuePodTab>({ items: tabItems, fallback: 'ALL' });
+  const tab = tabs.value;
 
   // The table reads rows through a ref (fetchRows identity is pinned inside
   // DuncitTable), so a fresh server response must poke its refetch handle.

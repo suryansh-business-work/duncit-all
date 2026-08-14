@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { buildPodShareMessage } from '@duncit/utils';
+import { buildPodShareMessage, meetingPlatformName } from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { PodOccurrence } from '@/generated/graphql/graphql';
@@ -38,29 +38,19 @@ export function podPlaceLabel(pod: HomePod): string {
   return [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
 }
 
-// Product names, which are the same in every language — only "Online", the
-// stand-in for a platform we have no name for, is copy.
-const MEETING_PLATFORM_LABELS: Record<string, string> = {
-  GOOGLE_MEET: 'Google Meet',
-  ZOOM: 'Zoom',
-  MICROSOFT_TEAMS: 'Microsoft Teams',
-  TEAMS: 'Microsoft Teams',
-  SKYPE: 'Skype',
-  WEBEX: 'Webex',
-};
-
-/** Maps a meeting-platform enum (e.g. GOOGLE_MEET) to a human label. Falls back
- * to a title-cased value, never the raw SCREAMING_SNAKE enum. Mirrors mWeb. */
+/**
+ * Maps a meeting-platform code (e.g. GOOGLE_MEET) to a human label.
+ *
+ * The name table lives in @duncit/utils — it was duplicated here and in mWeb,
+ * and the create-pod dropdown would have made a third copy. What stays local is
+ * the only part that is copy rather than a product name.
+ */
 export function formatMeetingPlatform(value?: string | null, t: Translate = fallbackT): string {
-  if (!value || value === 'OTHER') return t('mweb.podDetails.online');
-  return (
-    MEETING_PLATFORM_LABELS[value] ??
-    value
-      .toLowerCase()
-      .split('_')
-      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ''))
-      .join(' ')
-  );
+  if (!value) return t('mweb.podDetails.online');
+  // An explicit "Other" is a choice the host made, so it is named as one — it
+  // used to render as "Online", which reads as "we do not know". mWeb twin.
+  if (value === 'OTHER') return t('mweb.createPod.meetingPlatformOther');
+  return meetingPlatformName(value);
 }
 
 /** "Virtual" / "Physical" from the pod mode. */

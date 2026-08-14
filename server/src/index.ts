@@ -14,6 +14,7 @@ import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/m
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
+import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
 import http from 'node:http';
@@ -24,7 +25,7 @@ import type { ApolloServerPlugin } from '@apollo/server';
 import { unwrapResolverError } from '@apollo/server/errors';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { describeFetchFailure } from '@utils/outboundFetch';
+import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
 import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
@@ -326,8 +327,10 @@ async function bootstrap() {
   // first: req.ip is only the real client because of it.
   app.use(requestIdentityMiddleware);
 
-  // Surface GraphQL errors (failed queries / INTERNAL_SERVER_ERROR) as ERROR
-  // logs. console.error is forwarded to SignOz by ./otel when telemetry is on.
+  // Surface GraphQL errors as logs. console.error is forwarded to SignOz by
+  // ./otel when telemetry is on. The LEVEL is not uniform: a refusal the caller
+  // has to fix (not signed in, no billing address, wrong portal) is a warn, and
+  // only a genuine server/gateway fault is an error — see graphqlErrorLevel.
   const graphqlErrorLogger: ApolloServerPlugin<GraphQLContext> = {
     async requestDidStart() {
       return {
@@ -336,7 +339,7 @@ async function bootstrap() {
             const code = (err.extensions?.code as string | undefined) ?? 'GRAPHQL_ERROR';
             // A bare "fetch failed" is undebuggable — log the undici cause too.
             const cause = describeFetchFailure(unwrapResolverError(err));
-            logs.server.error('graphql', ctx.operationName ?? 'anonymous', {
+            logs.server[graphqlErrorLevel(code)]('graphql', ctx.operationName ?? 'anonymous', {
               code,
               message: cause ? `${err.message} (${cause})` : err.message,
               path: err.path?.join('.'),
@@ -355,12 +358,18 @@ async function bootstrap() {
     // error.cause. Any resolver that lets one escape would hand clients those
     // two words — rewrite it with the actual reason instead.
     formatError(formatted, error) {
-      const detail = describeFetchFailure(unwrapResolverError(error));
+      const unwrapped = unwrapResolverError(error);
+      const detail = describeFetchFailure(unwrapped);
       if (!detail) return formatted;
+      // The reason in words for the person who pressed the button; the undici
+      // code kept in `reason` for the log and the Tech portal's Error Logs.
+      // `outboundFetch` already does this for calls that name their service —
+      // this catches the ones that still fetch bare.
+      const message = humanFetchMessage('That service', unwrapped) ?? `Upstream request failed (${detail})`;
       return {
         ...formatted,
-        message: `Upstream request failed (${detail})`,
-        extensions: { ...formatted.extensions, code: 'BAD_GATEWAY' },
+        message,
+        extensions: { ...formatted.extensions, code: 'BAD_GATEWAY', reason: detail },
       };
     },
     plugins: [

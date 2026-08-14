@@ -377,6 +377,10 @@ Three things to read off that output:
 | `cartBadgeLabel` | `(count: number) => string` | — | Capped badge text. |
 | `isCartFlowRoute` | `(route: string) => boolean` | — | True on cart / checkout / product-checkout, web path or native name. |
 | `CART_BADGE_MAX` | `99` | — | Cap before `99+`. |
+| `MEETING_PLATFORM_VALUES` | `['GOOGLE_MEET','ZOOM','TEAMS','OTHER']` | — | The codes stored in `Pod.meeting_platform`. |
+| `meetingPlatformOptions` | `(otherLabel: string) => {value,label}[]` | — | The Create-a-Pod dropdown. Only `OTHER` is copy; the rest are product names, identical in every language. |
+| `meetingPlatformName` | `(value: string) => string` | — | `GOOGLE_MEET` → `Google Meet`. Unknown values title-cased, never raw. Also decodes read-only legacy codes (`MICROSOFT_TEAMS`, `SKYPE`, `WEBEX`). |
+| `isMeetingPlatform` | `(value: unknown) => boolean` | — | Whether a stored value is one this build offers. Used by both create-pod zod schemas. |
 | `fileToDataUrl` | `(file: Blob) => Promise<string>` | — | Full `data:<mime>;base64,…` URL. |
 | `fileToBase64` | `(file: Blob) => Promise<string>` | — | Bare base64, prefix stripped. |
 | `base64ToBlob` / `downloadBlob` / `downloadBase64File` / `downloadTextFile` | see source | — | The browser download flow, once. |

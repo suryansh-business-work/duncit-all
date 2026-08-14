@@ -1,7 +1,13 @@
 import { useCallback, useState } from 'react';
 
 import { logs } from '@duncit/logs';
-import { ISSUE_LOG_COMPONENT, issueLogData, parseIssue, type ParsedIssue } from '@duncit/errors';
+import {
+  ISSUE_LOG_COMPONENT,
+  issueLogData,
+  issueLogLevel,
+  parseIssue,
+  type ParsedIssue,
+} from '@duncit/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /**
@@ -21,7 +27,12 @@ export function useServerIssue(page: string) {
         operation: operation ?? null,
         fallbackMessage: t('mweb.issue.fallback'),
       });
-      logs.mobileApp.error(page, ISSUE_LOG_COMPONENT, { error: err, ...issueLogData(parsed) });
+      // Level by who has to act: a refusal the person can fix is a warn, so it
+      // neither buries a real fault nor files a bug against a working screen.
+      logs.mobileApp[issueLogLevel(parsed)](page, ISSUE_LOG_COMPONENT, {
+        error: err,
+        ...issueLogData(parsed),
+      });
       setIssue(parsed);
       return parsed;
     },

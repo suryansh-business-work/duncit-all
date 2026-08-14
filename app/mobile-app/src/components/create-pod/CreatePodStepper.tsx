@@ -291,7 +291,7 @@ export function CreatePodStepper({
           on the page the host lands on. The header carries the step counter and
           is what lets the walkthrough explain the four-step journey. */}
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
-        <StepHeader step={step} />
+        <StepHeader step={step} podMode={podMode} />
       </TourAnchor>
       {steps[step]}
       {error ? (

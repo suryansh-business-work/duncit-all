@@ -18,8 +18,22 @@
       "WebFetch(*)",
       "Bash(./node_modules/.bin/vitest run *)",
       "Bash(mkdir -p C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/approvals-page)",
-      "Bash(cp C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.tsx C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.ts C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/approvals-page/)"
+      "Bash(cp C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.tsx C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.ts C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/approvals-page/)",
+      "Bash(cd \"c:/Users/Suryansh Srivastava/Desktop/Projects/duncit-all\" && rm -rf portals/tech/src/pages/aisensy && echo \"removed\" && ls portals/tech/src/pages | head -30)",
+      "Read(//c/Users/Suryansh Srivastava/.claude/projects/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/memory/**)",
+      "Bash(printf '%s\\\\n' \"- [Telemetry identity + public feeds]\\(telemetry-identity-and-feeds.md\\) — server-stamped user on every log/bug; per-level Logs tables; key-gated no-login JSON feeds; metadata.role_keys trap; async-route crash rule\")",
+      "Bash(cp \"C:/Users/SURYAN~1/AppData/Local/Temp/claude/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/de4857d1-5095-46c2-96a3-485723e91a40/scratchpad/ik-verify.ts\" scripts/__ik-verify.ts)",
+      "Bash(npx ts-node *)",
+      "Bash(rm -f scripts/__host-dupes.ts)",
+      "Bash(npx tsc *)",
+      "Bash(cd \"c:/Users/Suryansh Srivastava/Desktop/Projects/duncit-all\" && rm -f portals/tech/src/pages/bugs-page/BugDetailDialog.tsx && grep -rn \"BugDetailDialog\" --include=*.tsx --include=*.ts portals/tech/src | head)",
+      "Bash(cp \"C:/Users/SURYAN~1/AppData/Local/Temp/claude/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/d8f9730c-1764-4dea-92a3-1f30cc8e28af/scratchpad/check-templates.ts\" scripts/__check-templates.tmp.ts)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "c:\\Users\\Suryansh Srivastava\\Desktop\\Projects\\duncit-all\\portals\\tech\\src\\pages\\aisensy",
+      "C:\\Users\\Suryansh Srivastava\\Desktop\\Projects\\duncit-all\\server\\scripts",
+      "c:\\Users\\Suryansh Srivastava\\Desktop\\Projects\\duncit-all\\portals\\tech\\src\\pages\\bugs-page"
+    ]
   }
 }

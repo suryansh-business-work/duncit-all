@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.61.1",
+    "version": "1.61.8",
     "orientation": "portrait",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
@@ -100,12 +100,14 @@
           "android": {
             "minSdkVersion": 24,
             "useLegacyPackaging": true,
-            "enableProguardInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ],
       "./plugins/withNdkVersion",
+      "./plugins/withAndroidR8Optimization",
+      "./plugins/withAndroidLargeScreens",
       "expo-web-browser",
       "expo-video"
     ],

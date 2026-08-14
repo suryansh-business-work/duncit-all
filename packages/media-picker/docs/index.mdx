@@ -358,6 +358,10 @@ treats `null` as "no limits" will accept a file the server then rejects. Pass th
 `SingleImageUploadField` / `MediaPickerDialog` do it — they already read the settings for the
 `surface` you give them.
 
+The query needs a signed-in caller, so gate it on whatever opens your dialog:
+`useUploadSettings('MWEB', { skip: !open })`. A picker that sits mounted-but-closed for the whole
+session otherwise asks on every page load, and a signed-out visitor's ask is refused and logged.
+
 Crop presets come from the same row. Use `croppablePresets` to filter out the disabled ones and
 `presetAspect` for the aspect ratio — a preset with `width: 0, height: 0` means *No Crop* and must
 not be divided.

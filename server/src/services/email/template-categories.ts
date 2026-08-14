@@ -39,6 +39,8 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'admin-access-revoked',
     'interview-admin',
     'meeting-scheduled-admin',
+    'portal-access-approved',
+    'portal-access-denied',
   ],
 
   // Opt-out-able.
@@ -46,6 +48,12 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // Something changed on their account or booking.
   notification: [
+    'brand-activated',
+    'brand-deactivated',
+    'host-activated',
+    'host-deactivated',
+    'venue-activated',
+    'venue-deactivated',
     'host-request-acknowledged',
     'host-request-approved',
     'host-request-rejected',

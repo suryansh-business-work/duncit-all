@@ -1,7 +1,8 @@
 import { Controller } from 'react-hook-form';
 import { addMinutes } from 'date-fns';
-import { Stack, TextField, Typography } from '@mui/material';
+import { MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { meetingPlatformOptions } from '@duncit/utils';
 import { formatDurationBetween, useDateFormat } from '../../../utils/dateFormat';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -27,15 +28,34 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
   const minEndDateTime = startDateTime
     ? addMinutes(startDateTime, MIN_POD_DURATION_MINUTES)
     : new Date();
+  // Product names come from the shared list; only "Other" is copy.
+  const platformOptions = meetingPlatformOptions(t('mweb.createPod.meetingPlatformOther'));
 
   return (
     <Stack spacing={2}>
-      <TextField
-        label={t('mweb.createPod.meetingPlatform')}
-        fullWidth
-        {...register('meeting_platform')}
-        error={!!errors.meeting_platform}
-        helperText={errors.meeting_platform?.message ?? t('mweb.createPod.meetingPlatformHint')}
+      {/* A picked code, not typed text. The pod page only decodes the codes, so
+          a hand-typed "Google Meet" used to come back as "Google meet". */}
+      <Controller
+        control={control}
+        name="meeting_platform"
+        render={({ field }) => (
+          <TextField
+            select
+            label={requiredLabel(t('mweb.createPod.meetingPlatform'), true)}
+            fullWidth
+            value={field.value ?? ''}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            error={!!errors.meeting_platform}
+            helperText={errors.meeting_platform?.message ?? t('mweb.createPod.meetingPlatformHint')}
+          >
+            {platformOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
       />
       <TextField
         label={requiredLabel(t('mweb.createPod.meetingLink'), true)}

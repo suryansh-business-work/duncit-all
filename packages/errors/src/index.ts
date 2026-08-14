@@ -4,4 +4,5 @@ export {
   ISSUE_REPORT_CATEGORY,
   buildIssueReportMessage,
   issueLogData,
+  issueLogLevel,
 } from './report';

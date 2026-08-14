@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isMeetingPlatform } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
 import {
   POD_TYPE_VALUES,
@@ -40,6 +41,15 @@ function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx,
       ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: t('mweb.createPod.validation.slotRequired') });
     }
   } else if (values.pod_mode === 'VIRTUAL') {
+    // Picked from the shared list, not typed: the pod page decodes codes, so
+    // free text rendered back as "Google meet". Native twin.
+    if (!isMeetingPlatform(values.meeting_platform)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['meeting_platform'],
+        message: t('mweb.createPod.meetingPlatformRequired'),
+      });
+    }
     if (!values.meeting_url) {
       ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: t('mweb.createPod.validation.meetingUrlRequired') });
     } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
@@ -209,6 +219,26 @@ export const STEP_SUBTITLE_KEYS = [
   'mweb.createPod.step3Subtitle',
   'mweb.createPod.step4Subtitle',
 ];
+
+/**
+ * Step 3 is a different step for a virtual pod.
+ *
+ * The arrays stay flat and mode-blind because other readers (the Host
+ * Management draft cards) index them by step alone and have no pod mode to
+ * hand. The branch lives here, where the caller does have one — a virtual pod
+ * has no venue to pick, so "Venue & Slot" describes a screen it never shows.
+ */
+const VIRTUAL_STEP_INDEX = 2;
+
+export const stepTitleKey = (step: number, podMode?: string | null): string =>
+  step === VIRTUAL_STEP_INDEX && podMode === 'VIRTUAL'
+    ? 'mweb.createPod.step3TitleVirtual'
+    : STEP_TITLE_KEYS[step];
+
+export const stepSubtitleKey = (step: number, podMode?: string | null): string =>
+  step === VIRTUAL_STEP_INDEX && podMode === 'VIRTUAL'
+    ? 'mweb.createPod.step3SubtitleVirtual'
+    : STEP_SUBTITLE_KEYS[step];
 
 export const STEP_TITLES = STEP_TITLE_KEYS.map((key) => fallbackT(key));
 

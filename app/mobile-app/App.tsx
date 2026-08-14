@@ -13,6 +13,7 @@ import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useBranding } from '@/hooks/useBranding';
 import { useBrandFont } from '@/hooks/useBrandFont';
+import { useLargeScreenOrientation } from '@/hooks/useLargeScreenOrientation';
 import { setWebFavicon } from '@/services/web-favicon';
 import { cachedDuid, logClientInfo } from '@/services/device';
 import { OfflineBanner } from '@/components/OfflineBanner';
@@ -21,6 +22,7 @@ import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { AppPopup } from '@/components/AppPopup';
+import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
 import {
   initShortLinkAttribution,
@@ -126,6 +128,11 @@ export default function App() {
   // teardown.
   useEffect(() => initShortLinkAttribution(), []);
 
+  // Phones stay portrait; tablets and unfolded foldables rotate. The manifest
+  // no longer restricts orientation (Play flags it, Android 16 ignores it on
+  // large screens), so this is where the phone half of that rule now lives.
+  useLargeScreenOrientation();
+
   if (!ready) return null;
 
   return (
@@ -154,6 +161,9 @@ export default function App() {
                     the store prompt, not a campaign image over it. */}
                 <AppPopup />
                 <ForceUpdateGate />
+                {/* Global, like the two above: the back button is pressed from
+                    every screen, so the guard cannot live inside one. */}
+                <ExitConfirmGate />
               </YStack>
             </ErrorBoundary>
           </SafeAreaProvider>

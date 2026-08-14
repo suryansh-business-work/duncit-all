@@ -9,6 +9,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       languageSaved: 'Language updated',
       goBack: 'Go back',
     },
+    // Android hardware-back exit guard. Native-only copy in the shared bundle,
+    // like mweb.openInApp.* below: a browser tab cannot be exited, so mWeb has
+    // nothing to render here and rule 27 has no parity to keep.
+    exitConfirm: {
+      title: 'Leave Duncit?',
+      message: 'Pressing back again will close the app.',
+      confirm: 'Close app',
+      cancel: 'Stay',
+    },
     // Server-side meta tags (app/mweb/server) — the <title> and the OG/Twitter
     // card copy a crawler sees for every mWeb page. Entity pages (pod, club,
     // profile, post, venue, product) show the entity's own data; these are the
@@ -1323,7 +1332,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // the schedule is entered by hand.
       meetingPlatform: 'Meeting platform',
       // mWeb only — the native platform field carries no helper line.
-      meetingPlatformHint: 'e.g. Google Meet, Zoom',
+      meetingPlatformHint: 'Where attendees will join you',
+      // The one option that is copy rather than a product name. Google Meet,
+      // Zoom and Microsoft Teams are the same words in every language and are
+      // supplied by @duncit/utils, not from here.
+      meetingPlatformOther: 'Other (paste link manually)',
+      meetingPlatformRequired: 'Choose where the meeting happens',
+      // Step 3 reads differently for a virtual pod: there is no venue to pick,
+      // only when it happens and what people join with.
+      step3TitleVirtual: 'Meeting Time & Medium',
+      step3SubtitleVirtual: 'Set when the session runs and where attendees join you.',
       meetingLink: 'Meeting link',
       meetingLinkHint: 'Attendees join through this link',
       meetingNotes: 'Meeting notes',

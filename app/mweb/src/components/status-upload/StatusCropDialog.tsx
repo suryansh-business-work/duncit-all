@@ -21,7 +21,9 @@ interface Props {
  * keeps the picked file untouched.
  */
 export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly<Props>) {
-  const settings = useUploadSettings('MWEB');
+  // Mounted for the whole session by StatusUploadProvider — ask only once a
+  // file is actually waiting to be cropped, so a signed-out visit stays quiet.
+  const settings = useUploadSettings('MWEB', { skip: !file });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cropKey, setCropKey] = useState<string | null>(null);
   const [cropRect, setCropRect] = useState<CropRect | null>(null);

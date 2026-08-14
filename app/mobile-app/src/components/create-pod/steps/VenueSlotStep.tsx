@@ -1,24 +1,18 @@
-import { Controller, type Control } from 'react-hook-form';
-import { addMinutes, format } from 'date-fns';
+import { Controller } from 'react-hook-form';
+import { format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
-import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { formatDurationBetween } from '@/utils/date-format';
-import { DateTimeField } from '../DateTimeField';
 import { SlotPicker } from '../SlotPicker';
+import { VirtualMeetingFields } from '../VirtualMeetingFields';
 import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
-import { MIN_POD_DURATION_MINUTES, parseDateTimeText } from '../create-pod.form';
-import type {
-  CreatePodForm,
-  CreatePodFormValues,
-  CreatePodSlot,
-  CreatePodVenue,
-} from '../create-pod.types';
+import { parseDateTimeText } from '../create-pod.form';
+import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 
@@ -69,78 +63,6 @@ const venueMapQuery = (venue: CreatePodVenue | null): string => {
     .filter(Boolean)
     .join(', ');
 };
-
-/** Meeting details + schedule for a virtual pod — the venue/slot twin. */
-function VirtualMeetingFields({
-  control,
-  startDateTime,
-  duration,
-}: Readonly<{
-  control: Control<CreatePodFormValues>;
-  startDateTime: Date | null;
-  duration: string | null;
-}>) {
-  const { t } = useTranslation();
-  // The end picker only opens times after the start — the first 30 minutes
-  // are blocked too, since that is the minimum pod length.
-  const minEndDateTime = startDateTime ? addMinutes(startDateTime, MIN_POD_DURATION_MINUTES) : null;
-  return (
-    <YStack gap={14}>
-      <FormTextField
-        control={control}
-        name="meeting_platform"
-        label={t('mweb.createPod.meetingPlatform')}
-      />
-      <FormTextField
-        control={control}
-        name="meeting_url"
-        label={t('mweb.createPod.meetingLink')}
-        required
-        hint={t('mweb.createPod.meetingLinkHint')}
-      />
-      <FormTextField
-        control={control}
-        name="meeting_notes"
-        label={t('mweb.createPod.meetingNotes')}
-        multiline
-      />
-      <Controller
-        control={control}
-        name="pod_date_time_text"
-        render={({ field, fieldState }) => (
-          <DateTimeField
-            label={t('mweb.createPod.startDateTime')}
-            required
-            value={field.value}
-            onChange={field.onChange}
-            minDateTime={new Date()}
-            error={fieldState.error?.message}
-            testID="pod_date_time_text"
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="pod_end_date_time_text"
-        render={({ field, fieldState }) => (
-          <DateTimeField
-            label={t('mweb.createPod.endDateTime')}
-            value={field.value}
-            onChange={field.onChange}
-            minDateTime={minEndDateTime}
-            error={fieldState.error?.message}
-            testID="pod_end_date_time_text"
-          />
-        )}
-      />
-      {duration ? (
-        <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
-          {t('mweb.createPod.totalDuration', { vars: { duration } })}
-        </Text>
-      ) : null}
-    </YStack>
-  );
-}
 
 /** One bookable space — its capacity is the pod's No. of spots. `name` is the
  * space as the host reads it (the whole-venue pseudo-space is ours to word; a

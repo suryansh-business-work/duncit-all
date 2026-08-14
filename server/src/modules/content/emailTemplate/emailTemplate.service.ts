@@ -5,6 +5,7 @@ import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { EmailTemplateModel } from './emailTemplate.model';
+import { TEMPLATE_DEFAULTS, type TemplateDefault } from './emailTemplate.defaults';
 import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
 import { CATEGORY_NOTE_KEY } from '@modules/content/emailFragment/emailFragment.defaults';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from '@services/email/template-categories';
@@ -75,25 +76,45 @@ export function renderMjml(
  */
 const TEMPLATES_DIR = path.join(__dirname, '..', '..', '..', 'services', 'email', 'templates');
 
+/**
+ * The templates that ship as code rather than as a file on disk (rule 28).
+ * Checked BEFORE the disk, so a slug that exists in both is the catalogue's —
+ * nothing is in both today, and the code copy is the one under review.
+ */
+const CODE_DEFAULTS = new Map(TEMPLATE_DEFAULTS.map((tpl) => [tpl.slug, tpl]));
+
+/** The on-disk MJML for a slug, in the same shape the code catalogue uses. */
+function diskDefault(slug: string): TemplateDefault | null {
+  const filePath = path.join(TEMPLATES_DIR, `${slug}.mjml`);
+  if (!fs.existsSync(filePath)) return null;
+  return {
+    slug,
+    name: slug.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    description: '',
+    subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
+    mjml: fs.readFileSync(filePath, 'utf8'),
+  };
+}
+
 async function loadTemplate(slug: string) {
   const existing = await EmailTemplateModel.findOne({ slug });
   if (existing) return existing;
 
-  const filePath = path.join(TEMPLATES_DIR, `${slug}.mjml`);
-  if (!fs.existsSync(filePath)) return null;
-  const mjml = fs.readFileSync(filePath, 'utf8');
+  const seed = CODE_DEFAULTS.get(slug) ?? diskDefault(slug);
+  if (!seed) return null;
   const created = await EmailTemplateModel.create({
     template_id: crypto.randomUUID(),
     slug,
-    name: slug.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-    subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
-    mjml,
-    // The on-disk file is a BODY now — its header and footer live in the
-    // fragment. Without these two a fresh install would render every email
-    // with no logo and no footer at all.
+    name: seed.name,
+    description: seed.description,
+    subject: seed.subject,
+    mjml: seed.mjml,
+    // The seeded MJML is a BODY — its header and footer live in the fragment.
+    // Without these two a fresh install would render every email with no logo
+    // and no footer at all.
     fragment_key: TEMPLATE_CATEGORIES[slug] ?? null,
     footer_note: TEMPLATE_FOOTER_NOTES[slug] ?? '',
-    variables: detectVariables(mjml).map((key) => ({ key })),
+    variables: detectVariables(seed.mjml).map((key) => ({ key })),
   });
   return created;
 }
@@ -112,7 +133,12 @@ function withFooterNote(
 ): Record<string, string> {
   if (vars.footer_note) return vars;
   const own = (tpl.footer_note ?? '').trim();
-  if (own) return { ...vars, footer_note: own };
+  // Substituted here, not left to the caller's pass. `footer_note` is added to
+  // the map AFTER the `t:` keys, and applyVars walks the map once — so a note
+  // written as `{{t:email.policyAcceptance.footer}}` was injected into the
+  // footer only once every translation had already been replaced, and shipped
+  // to the reader as those literal braces.
+  if (own) return { ...vars, footer_note: applyVars(own, vars) };
   const key = CATEGORY_NOTE_KEY[tpl.fragment_key as keyof typeof CATEGORY_NOTE_KEY];
   return { ...vars, footer_note: (key && vars[`t:${key}`]) || '' };
 }
@@ -172,17 +198,24 @@ export const emailTemplateService = {
   },
 
   /**
-   * Import every on-disk MJML template into the DB so the DB-first render path
-   * never has to touch the filesystem in production. Idempotent: existing slugs
-   * are left untouched (so admin edits in the editor are never overwritten).
-   * Best-effort per file — one bad template must not block the rest.
+   * Import every shipped template into the DB so the DB-first render path never
+   * has to touch the filesystem in production. Idempotent: existing slugs are
+   * left untouched (so admin edits in the editor are never overwritten).
+   * Best-effort per template — one bad body must not block the rest.
+   *
+   * The code catalogue is seeded alongside the disk files rather than instead
+   * of them: the slugs in it were being SENT with no template to render, so
+   * waiting for a first send to import them is what produced a FAILED row and
+   * an email nobody received.
    */
   async seedDefaults(): Promise<void> {
-    if (!fs.existsSync(TEMPLATES_DIR)) return;
-    const slugs = fs
-      .readdirSync(TEMPLATES_DIR)
-      .filter((f) => f.endsWith('.mjml'))
-      .map((f) => f.replace(/\.mjml$/, ''));
+    const onDisk = fs.existsSync(TEMPLATES_DIR)
+      ? fs
+          .readdirSync(TEMPLATES_DIR)
+          .filter((f) => f.endsWith('.mjml'))
+          .map((f) => f.replace(/\.mjml$/, ''))
+      : [];
+    const slugs = new Set([...CODE_DEFAULTS.keys(), ...onDisk]);
     for (const slug of slugs) {
       await loadTemplate(slug).catch((err) => {
         logs.server.error('emailTemplate', 'seedDefaults', {

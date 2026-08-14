@@ -126,7 +126,8 @@ export async function pickSlots(count: number): Promise<AgentSlot[]> {
 }
 
 /**
- * Cover images, straight from the media library.
+ * Cover images, straight from the media library — which IS the ImageKit
+ * account, read with the private key (mediaLibrary.service.ts).
  *
  * Every pod must carry at least one image, and the server refuses one that
  * does not. These are files already uploaded to ImageKit rather than anything
@@ -141,7 +142,12 @@ export async function pickImages(count: number): Promise<string[]> {
   });
   const urls = files.map((file) => file.url).filter(Boolean);
   if (urls.length === 0) {
-    throw missing('There are no images in the media library, and every pod needs a cover image.');
+    // Naming ImageKit matters: "the media library" reads as somewhere else to
+    // look, and an operator told that has no way to know the two are the same
+    // place — or that uploading one file to it is the whole fix.
+    throw missing(
+      'There are no images in the ImageKit media library, and every pod needs a cover image. Upload one from any portal’s File Manager and ask again.',
+    );
   }
   return urls;
 }

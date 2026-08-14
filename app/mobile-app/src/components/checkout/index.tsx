@@ -1,4 +1,4 @@
-export { OrderSummary } from './OrderSummary';
+export { OrderSummary, type CheckoutDiscount } from './OrderSummary';
 export { ProductOrderSummary } from './ProductOrderSummary';
 export { SavedAddressPicker } from './SavedAddressPicker';
 export { VenueChargesSheet } from './VenueChargesSheet';

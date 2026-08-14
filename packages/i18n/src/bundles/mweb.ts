@@ -936,7 +936,22 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // mWeb only — it lists the tax as a component of the price above it.
       inclusiveOf: 'Inclusive of:',
       gst: 'GST ({pct}%)',
+      // Money taken OFF the bill, listed in the breakdown itself rather than
+      // only under the pay button — a total that ignores a discount the buyer
+      // can see applied above it reads as the discount having failed. The coin
+      // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
+      couponDiscount: 'Coupon {code}',
       totalPayable: 'Total payable',
+      // What an account must have before it can pay. The server refuses the
+      // payment without these, so the buyer is told BEFORE entering a card
+      // rather than being turned away at the end. Keys are looked up by
+      // requirement from CHECKOUT_REQUIREMENT_KEYS, so the names must match.
+      needTitle: 'Finish setting up your account',
+      needIntro: 'We need these before you can pay:',
+      needPhone: 'A phone number on your profile',
+      needEmailVerified: 'A verified email address',
+      needBillingAddress: 'A billing address',
+      needAction: 'Go to profile',
       // Venue charges are settled at the door and are NOT part of the online
       // payment, which is the one thing this copy has to make unmistakable.
       venueCharges: 'Venue Charges',
@@ -1554,6 +1569,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       meetingRescheduleHint:
         'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',
       current: 'current',
+    },
+    /**
+     * The shared error module (@duncit/errors) — what a failed server
+     * operation says, and the report button beside it. mWeb + native twins.
+     */
+    issue: {
+      fallback: 'Something went wrong. Please try again.',
+      report: 'Report issue',
+      reporting: 'Reporting…',
+      reported: 'Reported — thank you.',
     },
     // Duncit Coins — the loyalty balance shown in User mode only. Placeholders
     // are deliberately NOT named `count`: the translator overwrites that var

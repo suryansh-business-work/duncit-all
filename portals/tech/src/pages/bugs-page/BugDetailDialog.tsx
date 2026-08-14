@@ -7,11 +7,18 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  Paper,
   Stack,
   Typography,
 } from '@mui/material';
-import { STATUS_OPTIONS, statusColor, type BugRow, type BugStatus } from './queries';
+import { DetailBlock, DetailField as Field } from '../../components/DetailField';
+import { userLabel } from '../../components/telemetry-identity';
+import {
+  STATUS_OPTIONS,
+  affectedSummary,
+  statusColor,
+  type BugRow,
+  type BugStatus,
+} from './queries';
 import BugOccurrences from './BugOccurrences';
 
 interface Props {
@@ -21,28 +28,47 @@ interface Props {
   onStatus: (bug: BugRow, status: BugStatus) => void;
 }
 
-function Field({ label, value, mono }: Readonly<{ label: string; value: string; mono?: boolean }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ wordBreak: 'break-word', ...(mono ? { fontFamily: 'monospace', fontSize: 12 } : {}) }}
-      >
-        {value || '—'}
-      </Typography>
-    </Box>
-  );
-}
-
 /** `14/08/2026, 10:12:03 · by 66a1…` — when it was resolved and by whom. */
 const resolvedLine = (bug: BugRow) => {
   if (!bug.resolved_at) return '';
   const when = new Date(bug.resolved_at).toLocaleString();
   return bug.resolved_by ? `${when} · by ${bug.resolved_by}` : when;
 };
+
+/**
+ * Who this bug reaches, and the last person it reached.
+ *
+ * The count is what decides whether it is triaged tonight or on Monday; the
+ * named person is who can be asked what they were doing when it happened.
+ */
+function AffectedSection({ bug }: Readonly<{ bug: BugRow }>) {
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+      <Field label="Affected" value={affectedSummary(bug)} />
+      <Field label="Last user" value={userLabel(bug.last_user)} />
+      <Field label="Email" value={bug.last_user?.email ?? ''} />
+      <Field label="Phone" value={bug.last_user?.phone ?? ''} />
+      <Field label="Roles" value={bug.last_user?.roles?.join(', ') ?? ''} />
+      <Field label="User id" value={bug.last_user?.id ?? ''} mono />
+      <Field label="App version" value={bug.last_app_version ?? ''} />
+      <Field label="Last environment" value={bug.last_environment ?? ''} />
+      <Field
+        label="Device"
+        value={[bug.last_client?.device_model, bug.last_client?.device_os_version]
+          .filter(Boolean)
+          .join(' · ')}
+      />
+      <Field
+        label="Locale · timezone"
+        value={[bug.last_client?.locale, bug.last_client?.timezone].filter(Boolean).join(' · ')}
+      />
+      <Field label="Network" value={bug.last_client?.network ?? ''} />
+      <Field label="IP address" value={bug.last_ip ?? ''} />
+      <Field label="Device id" value={bug.last_duid ?? ''} mono />
+      <Field label="Session" value={bug.last_session_id ?? ''} mono />
+    </Box>
+  );
+}
 
 export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readonly<Props>) {
   if (!bug) return null;
@@ -93,24 +119,19 @@ export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readon
             </Stack>
           </Box>
 
+          <Divider />
+          <Box>
+            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+              Who it hits
+            </Typography>
+            <AffectedSection bug={bug} />
+          </Box>
+
+          {bug.last_user_agent ? (
+            <DetailBlock label="Latest user agent" value={bug.last_user_agent} />
+          ) : null}
           {bug.last_stack ? (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Latest stack trace
-              </Typography>
-              <Paper
-                variant="outlined"
-                sx={{ mt: 0.5, p: 1.5, maxHeight: 220, overflow: 'auto', bgcolor: 'action.hover' }}
-              >
-                <Typography
-                  component="pre"
-                  variant="caption"
-                  sx={{ m: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}
-                >
-                  {bug.last_stack}
-                </Typography>
-              </Paper>
-            </Box>
+            <DetailBlock label="Latest stack trace" value={bug.last_stack} />
           ) : null}
 
           <BugOccurrences bugId={bug.id} />

@@ -24,6 +24,7 @@ COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs ./packages/logs
 COPY packages/geo ./packages/geo
 COPY packages/regex ./packages/regex
+COPY packages/errors ./packages/errors
 COPY packages/slack ./packages/slack
 COPY packages/datetime ./packages/datetime
 COPY packages/fallback-icons ./packages/fallback-icons

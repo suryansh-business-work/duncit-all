@@ -9,6 +9,7 @@ import {
   CouponField,
   CouponTotal,
   OrderSummary,
+  type CheckoutDiscount,
   ProcessingOverlay,
   RazorpayWebView,
 } from '@/components/checkout';
@@ -25,11 +26,53 @@ import {
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
 import { useCoinRedemption } from '@/hooks/useCoinRedemption';
+import { useServerIssue } from '@/hooks/useServerIssue';
+import { IssueNotice } from '@/components/issue-notice/IssueNotice';
+import type { ParsedIssue } from '@duncit/errors';
 import { usePodTicket } from '@/hooks/usePodHistory';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { buildBreakup } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
+import type { Translator } from '@duncit/i18n';
+
+type CouponState = { ok?: boolean; code?: string | null; discount_amount?: number } | null;
+
+/** Which pay mutation the submit will call — named for the issue log. Module
+ * scope so its branch stays off the screen's own complexity budget (S3776). */
+const payOperationName = (razorpayEnabled: boolean) =>
+  razorpayEnabled ? 'createRazorpayOrder' : 'dummyCheckout';
+
+/** Renders nothing until there is an issue — module scope for the same reason. */
+function CheckoutIssue({ issue }: Readonly<{ issue: ParsedIssue | null }>) {
+  if (!issue) return null;
+  return <IssueNotice issue={issue} page="Checkout" />;
+}
+
+/**
+ * The deductions, in the order they are taken, for the summary card's own
+ * rows. Coins are 1:1 with the rupee, so the count applied IS the amount off.
+ * Module scope so the screen stays under its complexity budget. mWeb twin.
+ */
+function buildDiscounts(
+  coupon: CouponState,
+  coinsApplied: number,
+  t: Translator['t'],
+): CheckoutDiscount[] {
+  const rows: CheckoutDiscount[] = [];
+  const couponOff = coupon?.discount_amount ?? 0;
+  if (coupon?.ok && couponOff > 0) {
+    rows.push({
+      key: 'coupon',
+      label: t('mweb.checkout.couponDiscount', { vars: { code: coupon.code ?? '' } }),
+      amount: couponOff,
+    });
+  }
+  if (coinsApplied > 0) {
+    rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coinsApplied });
+  }
+  return rows;
+}
 
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
@@ -83,6 +126,14 @@ export function CheckoutScreen() {
   // The coupon discounts the whole pod bill, so coins redeem against its result.
   const payableAfterCoupon = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
   const coins = useCoinRedemption(payableAfterCoupon);
+  // What is actually charged, broken up the same way. Coins and coupons cut the
+  // GROSS, and the server re-quotes on what is left, so the tax owed drops with
+  // it — reusing the undiscounted breakup here would print a GST nobody pays.
+  const payBreakup = buildBreakup(coins.effectiveTotal, finance);
+  const discounts = buildDiscounts(coupon, coins.applied, t);
+  // Server-operation failures, parsed + logged once by the shared error module.
+  const serverIssue = useServerIssue('Checkout');
+  const payOperation = payOperationName(razorpayEnabled);
   const onDownloadTicket = podId ? () => downloadTicket(podId) : undefined;
   // Render the contact from the freshly-loaded profile (not just the form
   // prefill), with a spinner while it is still loading, so the card is robust.
@@ -150,7 +201,10 @@ export function CheckoutScreen() {
       }
       setError(t('mweb.checkout.errorNotConfigured'));
     } catch (e) {
-      setError(toErrorMessage(e, t('mweb.checkout.errorFailed')));
+      // Parsed once, logged once: the structured issue feeds the Tech portal's
+      // Error Logs section and renders with a Report button above the form.
+      serverIssue.capture(e, payOperation);
+      setError(null);
     } finally {
       setSubmitting(false);
     }
@@ -179,7 +233,9 @@ export function CheckoutScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <OrderSummary
           pod={pod}
-          breakup={breakup}
+          breakup={payBreakup ?? breakup}
+          grossTotal={breakup.total}
+          discounts={discounts}
           seats={seats}
           unitAmount={Number(pod?.pod_amount) || 0}
         />
@@ -200,6 +256,7 @@ export function CheckoutScreen() {
           effectiveTotal={coins.effectiveTotal}
           originalTotal={breakup.total}
         />
+        <CheckoutIssue issue={serverIssue.issue} />
         <CheckoutForm
           initialValues={initialValues}
           mainAddress={me?.address ?? null}

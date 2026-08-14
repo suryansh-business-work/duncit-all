@@ -2,7 +2,8 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { STATUS_OPTIONS, statusColor, type BugRow } from './queries';
+import { UserCell } from '../../components/telemetry-identity';
+import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
 
 const getBugRowId = (b: BugRow) => b.id;
 
@@ -21,6 +22,9 @@ const renderLastSeen = (b: BugRow) => (
     {new Date(b.last_seen_at).toLocaleString()}
   </Typography>
 );
+
+/** The account behind the latest occurrence, or that there wasn't one. */
+const renderLastUser = (b: BugRow) => <UserCell user={b.last_user} />;
 
 /** `P 12 · S 3` — only the environments the bug actually hit. */
 const envSummary = (b: BugRow) => {
@@ -82,6 +86,19 @@ export default function BugsTable({
       { field: 'source', headerName: 'Source', width: 140, filter: { type: 'text' } },
       { field: 'page', headerName: 'Page', flex: 1, minWidth: 150, filter: { type: 'text' } },
       { field: 'occurrence_count', headerName: 'Count', width: 90 },
+      {
+        field: 'affected_user_count',
+        headerName: 'Affected',
+        width: 140,
+        valueGetter: affectedSummary,
+      },
+      {
+        field: 'last_user',
+        headerName: 'Last user',
+        width: 170,
+        sortable: false,
+        cellRenderer: renderLastUser,
+      },
       {
         field: 'envs',
         headerName: 'Envs',

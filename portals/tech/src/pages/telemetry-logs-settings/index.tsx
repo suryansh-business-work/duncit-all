@@ -23,6 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { QueryGuard } from '@duncit/ui';
 import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
+import PublicApiKeyCard from './PublicApiKeyCard';
 
 const DEFAULTS: TelemetrySettingsForm = {
   signoz_enabled: true,
@@ -183,6 +184,7 @@ export default function TelemetryLogsSettingsPage() {
       <Card>
         <CardContent>{body}</CardContent>
       </Card>
+      <PublicApiKeyCard />
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

@@ -50,6 +50,18 @@ export async function getDuid(): Promise<string> {
 }
 
 /**
+ * The DUID if it has already been read, without waiting for the Keychain.
+ *
+ * For callers that cannot be async — the log transport builds its headers
+ * synchronously. The first GraphQL call of the launch fills the cache, so in
+ * practice everything after the opening moments carries the id; a log written
+ * before that simply goes without one, which beats holding up the log.
+ */
+export function cachedDuid(): string | null {
+  return duidCache;
+}
+
+/**
  * The handset model.
  *
  * `Platform.constants` is typed as an iOS/Android union and only the Android
@@ -61,6 +73,27 @@ function deviceModel(): string {
   const constants = Platform.constants as unknown as Record<string, unknown> | undefined;
   const model = constants?.Model ?? constants?.Brand ?? constants?.systemName;
   return typeof model === 'string' ? model : '';
+}
+
+/**
+ * The machine facts every log carries.
+ *
+ * A browser reads its own locale, screen and network; native cannot, so the
+ * app reports what it does know. Synchronous by necessity — the log funnel
+ * resolves this on every emit and cannot await the Keychain.
+ */
+export function logClientInfo(): {
+  app_version: string;
+  device_model: string;
+  device_os_version: string;
+  timezone: string;
+} {
+  return {
+    app_version: appVersion(),
+    device_model: deviceModel(),
+    device_os_version: String(Platform.Version ?? ''),
+    timezone: deviceTimezone(),
+  };
 }
 
 /** The device this session runs on — the native twin of `useDeviceInfo()`. */

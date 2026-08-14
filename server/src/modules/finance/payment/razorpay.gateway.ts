@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { outboundFetch } from '@utils/outboundFetch';
 
 /**
  * Razorpay gateway — thin REST wrapper. Credentials are owned by the Tech
@@ -44,7 +45,7 @@ export async function createRazorpayOrder(args: {
 }): Promise<{ id: string }> {
   const { keyId, keySecret } = await getRazorpayKeys();
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-  const res = await fetch(`${RAZORPAY_API}/orders`, {
+  const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/orders`, {
     method: 'POST',
     headers: { Authorization: auth, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -74,7 +75,7 @@ export async function fetchRazorpayOrderPayments(
 ): Promise<Array<{ id: string; status: string; amount: number }>> {
   const { keyId, keySecret } = await getRazorpayKeys();
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-  const res = await fetch(`${RAZORPAY_API}/orders/${orderId}/payments`, {
+  const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/orders/${orderId}/payments`, {
     headers: { Authorization: auth },
   });
   const json: any = await res.json().catch(() => ({}));

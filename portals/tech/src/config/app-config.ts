@@ -47,6 +47,9 @@ export const appConfig = {
       children: [
         { label: 'Dashboard', to: '/telemetry/dashboard', icon: 'dashboard' },
         { label: 'Bugs', to: '/telemetry/bugs', icon: 'bug' },
+        // Every persisted log, one table per level (Error / Warn / Info / Debug).
+        { label: 'Logs', to: '/telemetry/logs', icon: 'article' },
+        { label: 'Error Logs', to: '/telemetry/error-logs', icon: 'report' },
         { label: 'Logs Settings', to: '/telemetry/logs-settings', icon: 'tune' },
       ],
     },
@@ -70,7 +73,6 @@ export const appConfig = {
         { label: 'Settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },
-    { label: 'AiSensy', to: '/aisensy', icon: 'whatsapp' },
     { label: 'Package Documentation', to: '/package-docs', icon: 'menuBook' },
   ],
   modules: [],

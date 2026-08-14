@@ -4,7 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { CheckoutRequirementsCard } from '@/components/checkout/CheckoutRequirementsCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useCheckoutEligibility } from '@/hooks/useCheckoutEligibility';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CheckoutBillingSection } from './CheckoutBillingSection';
@@ -62,6 +64,11 @@ export function CheckoutForm({
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
   const { t } = useTranslation();
+  // The server refuses a payment from an account with no phone, no verified
+  // email or no billing address. Asking here means the buyer finds out before
+  // filling in a card rather than after. Every checkout screen submits through
+  // this form, so gating it covers pods, products and gift cards alike.
+  const eligibility = useCheckoutEligibility();
   // The schemas cannot call `t` at module scope, so they are built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(
@@ -115,10 +122,12 @@ export function CheckoutForm({
         </Text>
       ) : null}
 
+      <CheckoutRequirementsCard missing={eligibility.missing} />
       <PrimaryButton
         testID="checkout-submit"
         label={loading ? t('mweb.checkout.processing') : (payLabel ?? t('mweb.checkout.payNow'))}
         loading={loading}
+        disabled={eligibility.missing.length > 0}
         onPress={handleSubmit(onSubmit)}
       />
       <Text fontSize={11} color="$muted" textAlign="center">

@@ -1,0 +1,19 @@
+{
+  "name": "@duncit/errors",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared server-operation error toolkit — parses GraphQL/Apollo failures into one structured issue, builds the report-issue payload and the telemetry log data. Zero runtime deps so portals, mWeb and native can all consume it.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "files": ["src"],
+  "scripts": {
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/errors"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

@@ -51,6 +51,7 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/forms/package.json ./packages/forms/
+COPY packages/errors/package.json ./packages/errors/
 COPY packages/slack/package.json ./packages/slack/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/

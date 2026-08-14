@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import { logs, ingestRemoteLog } from './observability/log';
+import {
+  identityFromRequest,
+  requestIdentityMiddleware,
+} from './observability/requestIdentity';
 import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
@@ -17,8 +21,10 @@ import cors from 'cors';
 import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import type { ApolloServerPlugin } from '@apollo/server';
+import { unwrapResolverError } from '@apollo/server/errors';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { describeFetchFailure } from '@utils/outboundFetch';
 import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
@@ -31,6 +37,7 @@ import {
 import { rbacService } from '@modules/access/role/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
+import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -312,6 +319,13 @@ async function bootstrap() {
   // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
   app.set('trust proxy', 1);
 
+  // Carry the caller (verified account, address, user agent, device id) through
+  // the whole request, so every `logs.server.*` written while handling it is
+  // attributed without four hundred call sites having to pass it along.
+  // Mounted before every route, including /graphql — read `trust proxy` above
+  // first: req.ip is only the real client because of it.
+  app.use(requestIdentityMiddleware);
+
   // Surface GraphQL errors (failed queries / INTERNAL_SERVER_ERROR) as ERROR
   // logs. console.error is forwarded to SignOz by ./otel when telemetry is on.
   const graphqlErrorLogger: ApolloServerPlugin<GraphQLContext> = {
@@ -320,9 +334,11 @@ async function bootstrap() {
         async didEncounterErrors(ctx) {
           for (const err of ctx.errors) {
             const code = (err.extensions?.code as string | undefined) ?? 'GRAPHQL_ERROR';
+            // A bare "fetch failed" is undebuggable — log the undici cause too.
+            const cause = describeFetchFailure(unwrapResolverError(err));
             logs.server.error('graphql', ctx.operationName ?? 'anonymous', {
               code,
-              message: err.message,
+              message: cause ? `${err.message} (${cause})` : err.message,
               path: err.path?.join('.'),
             });
           }
@@ -334,6 +350,19 @@ async function bootstrap() {
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
+    // Node's fetch reports every outbound transport failure as the same bare
+    // "fetch failed" and hides the reason (DNS, refused, TLS, timeout) in
+    // error.cause. Any resolver that lets one escape would hand clients those
+    // two words — rewrite it with the actual reason instead.
+    formatError(formatted, error) {
+      const detail = describeFetchFailure(unwrapResolverError(error));
+      if (!detail) return formatted;
+      return {
+        ...formatted,
+        message: `Upstream request failed (${detail})`,
+        extensions: { ...formatted.extensions, code: 'BAD_GATEWAY' },
+      };
+    },
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       graphqlErrorLogger,
@@ -404,6 +433,11 @@ async function bootstrap() {
   // deploy/nginx/duncit.com for the apex carve-out this depends on.
   app.use('/r', buildShortLinkRouter());
 
+  // Read-only telemetry JSON feeds (Tech portal's "Copy GET API"). No login by
+  // design — the key in the query string is the whole gate, so treat a copied
+  // URL as the password it is. See telemetry.router.ts.
+  app.use('/telemetry', buildTelemetryFeedRouter());
+
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));
 
@@ -422,8 +456,11 @@ async function bootstrap() {
 
   // Structured log ingest for the frontend apps (@duncit/logs httpTransport).
   // Defensive + always 204; nginx adds CORS for server.duncit.com.
+  //
+  // The account, address and user agent come from `identityFromRequest`, never
+  // from the body — the route is public, so a body could name anyone.
   app.post('/logs', express.json({ limit: '256kb' }), (req, res) => {
-    ingestRemoteLog(req.body);
+    ingestRemoteLog(req.body, identityFromRequest(req));
     res.status(204).end();
   });
 

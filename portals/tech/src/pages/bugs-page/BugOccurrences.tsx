@@ -11,13 +11,8 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { BUG_OCCURRENCES, type BugOccurrence } from './queries';
-
-const ENV_COLOR: Record<string, 'error' | 'warning' | 'default'> = {
-  production: 'error',
-  staging: 'warning',
-  localhost: 'default',
-};
 
 function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -46,6 +41,19 @@ function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   );
 }
 
+/** `Priya Sharma · priya@… · +91… · v1.59.2 · Chrome on Android` — one line. */
+function occurrenceWho(occ: BugOccurrence): string {
+  const parts = [userLabel(occ.user)];
+  if (occ.user?.email && occ.user.email !== occ.user.name) parts.push(occ.user.email);
+  if (occ.user?.phone) parts.push(occ.user.phone);
+  if (occ.client?.app_version) parts.push(`v${occ.client.app_version}`);
+  const device = [occ.client?.device_model, occ.client?.device_os_version].filter(Boolean).join(' ');
+  if (device) parts.push(device);
+  if (occ.client?.network) parts.push(occ.client.network);
+  if (occ.ip) parts.push(occ.ip);
+  return parts.join(' · ');
+}
+
 function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
   return (
     <Accordion variant="outlined" disableGutters>
@@ -71,6 +79,9 @@ function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
               <strong>{occ.error.name}:</strong> {occ.error.message}
             </Typography>
           ) : null}
+          <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+            {occurrenceWho(occ)}
+          </Typography>
           {occ.url ? (
             <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
               {occ.url}

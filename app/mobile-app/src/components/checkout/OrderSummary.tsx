@@ -12,17 +12,26 @@ import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 
-function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
+/** One line of money taken off the bill — a coupon, redeemed coins. */
+export interface CheckoutDiscount {
+  key: string;
+  label: string;
+  amount: number;
+}
+
+function Row({
+  label,
+  value,
+  bold,
+  tone,
+}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string }>) {
+  const labelColor = tone ?? (bold ? '$color' : '$muted');
   return (
     <XStack justifyContent="space-between" alignItems="center">
-      <Text
-        fontSize={bold ? 15 : 13}
-        fontWeight={bold ? '700' : '600'}
-        color={bold ? '$color' : '$muted'}
-      >
+      <Text fontSize={bold ? 15 : 13} fontWeight={bold ? '700' : '600'} color={labelColor}>
         {label}
       </Text>
-      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color="$color">
+      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color={tone ?? '$color'}>
         {value}
       </Text>
     </XStack>
@@ -35,11 +44,23 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
 export function OrderSummary({
   pod,
   breakup,
+  grossTotal,
+  discounts = [],
   seats = 1,
   unitAmount = 0,
 }: Readonly<{
   pod: CheckoutPod;
+  /**
+   * The breakup of what is ACTUALLY charged. When coins or a coupon are
+   * applied the gross shrinks and the tax inside it shrinks with it — the
+   * server re-quotes on the discounted amount — so this has to be the
+   * discounted breakup or the GST row would describe money nobody pays.
+   */
   breakup: CheckoutBreakup;
+  /** The bill before any discount, for the line above the deductions. */
+  grossTotal?: number;
+  /** Deductions to list between the subtotal and the tax. */
+  discounts?: CheckoutDiscount[];
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
@@ -53,6 +74,10 @@ export function OrderSummary({
     seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
   const image = pod?.pod_images_and_videos?.find((m) => m.url)?.url;
   const fmt = (v: number) => formatMoney(breakup.currency, v);
+  // The bill before deductions. With nothing applied it is the payable, so the
+  // card renders exactly as it always did.
+  const gross = Number(grossTotal ?? breakup.total);
+  const showsGross = seats > 1 && unitAmount > 0;
   // Venue charges are paid at the venue — shown for transparency, never added to
   // the online "Total payable".
   const venueCharges = pod?.place_charges ?? [];
@@ -105,7 +130,7 @@ export function OrderSummary({
           </Text>
         </XStack>
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-        {seats > 1 && unitAmount > 0 ? (
+        {showsGross ? (
           <Row
             label={t('mweb.checkout.ticketMultiplier', {
               vars: { price: fmt(unitAmount), seats },
@@ -113,6 +138,20 @@ export function OrderSummary({
             value={fmt(unitAmount * seats)}
           />
         ) : null}
+        {/* Deductions need a number to come off. The multiplier line above is
+            that number when it is there; a single-seat bill has no such line,
+            so the gross is stated once before the discounts. */}
+        {discounts.length > 0 && !showsGross ? (
+          <Row label={t('mweb.checkout.ticketPrice')} value={fmt(gross)} />
+        ) : null}
+        {discounts.map((discount) => (
+          <Row
+            key={discount.key}
+            label={discount.label}
+            value={`− ${fmt(discount.amount)}`}
+            tone="$success"
+          />
+        ))}
         <Row label={t('mweb.checkout.subtotal')} value={fmt(breakup.subtotal)} />
         <Row
           label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}

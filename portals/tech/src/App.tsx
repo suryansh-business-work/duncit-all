@@ -13,6 +13,8 @@ import EmailsDashboardPage from './pages/emails-dashboard';
 import PackagesDocsPage from './pages/packages-docs';
 import TelemetryDashboardPage from './pages/telemetry-dashboard';
 import BugsPage from './pages/bugs-page';
+import TelemetryLogsPage from './pages/telemetry-logs-page';
+import ErrorLogsPage from './pages/error-logs-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
@@ -22,7 +24,6 @@ import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import MailAutomationPage from './pages/mail-automation';
-import AisensyPage from './pages/aisensy';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -52,6 +53,8 @@ export default function App() {
         <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
         <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
         <Route path="/telemetry/bugs" element={authed(<BugsPage />)} />
+        <Route path="/telemetry/logs" element={authed(<TelemetryLogsPage />)} />
+        <Route path="/telemetry/error-logs" element={authed(<ErrorLogsPage />)} />
         <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
         {/* The old paths, kept working for bookmarks. */}
         <Route path="/bugs" element={<Navigate to="/telemetry/bugs" replace />} />
@@ -78,7 +81,6 @@ export default function App() {
           element={authed(<AppBuildsPage key="ios" platform="IOS" />)}
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
-        <Route path="/aisensy" element={authed(<AisensyPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

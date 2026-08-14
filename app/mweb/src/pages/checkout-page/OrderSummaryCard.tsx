@@ -7,10 +7,27 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 
+/** One line of money taken off the bill — a coupon, redeemed coins. */
+export interface CheckoutDiscount {
+  key: string;
+  label: string;
+  amount: number;
+}
+
 interface Props {
   pod: any;
   stateTitle?: string;
+  /**
+   * The breakup of what is ACTUALLY charged. When coins or a coupon are
+   * applied the gross shrinks and the tax inside it shrinks with it — the
+   * server re-quotes on the discounted amount — so this has to be the
+   * discounted breakup or the GST row would describe money nobody pays.
+   */
   breakup: any;
+  /** The bill before any discount, for the ticket line above the deductions. */
+  grossTotal?: number;
+  /** Deductions to list between the ticket line and the tax. */
+  discounts?: CheckoutDiscount[];
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
@@ -21,6 +38,8 @@ export default function OrderSummaryCard({
   pod,
   stateTitle,
   breakup,
+  grossTotal,
+  discounts = [],
   seats = 1,
   unitAmount = 0,
 }: Readonly<Props>) {
@@ -35,9 +54,11 @@ export default function OrderSummaryCard({
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
-  // Pod checkout is membership only — the ticket price is the whole payable.
-  // Products are purchased separately through the standalone product checkout.
-  const ticketTotal = Number(breakup.total);
+  // Pod checkout is membership only — the ticket is the whole bill. Products
+  // are purchased separately through the standalone product checkout. This is
+  // the price BEFORE deductions, so the rows below have something to subtract
+  // from; with no discount it is the payable, exactly as it always was.
+  const ticketTotal = Number(grossTotal ?? breakup.total);
   // Venue charges are paid directly at the venue — shown for transparency but
   // NOT added to the online "Total payable".
   const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
@@ -73,6 +94,14 @@ export default function OrderSummaryCard({
             />
           )}
           <Row label={t('mweb.checkout.ticketPrice')} value={fmt(ticketTotal)} />
+          {discounts.map((discount) => (
+            <Row
+              key={discount.key}
+              label={discount.label}
+              value={`− ${fmt(discount.amount)}`}
+              tone="success.main"
+            />
+          ))}
           <Divider sx={{ my: 1 }} />
           <Typography variant="caption" color="text.secondary">{t('mweb.checkout.inclusiveOf')}</Typography>
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
@@ -99,11 +128,16 @@ export default function OrderSummaryCard({
   );
 }
 
-function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
+function Row({
+  label,
+  value,
+  bold,
+  tone,
+}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string }>) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 600}>{value}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500} sx={{ color: tone }}>{label}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 600} sx={{ color: tone }}>{value}</Typography>
     </Stack>
   );
 }

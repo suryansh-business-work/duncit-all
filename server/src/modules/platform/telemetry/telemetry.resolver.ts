@@ -52,6 +52,14 @@ export const telemetryResolvers = {
       requireRole(ctx, TELEMETRY_READ);
       return telemetryService.bugsExport();
     },
+    telemetryLogsExport: (
+      _p: unknown,
+      args: { level?: string | null; limit?: number | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, TELEMETRY_READ);
+      return telemetryService.logsExport(args.level, args.limit);
+    },
   },
   Mutation: {
     updateTelemetrySettings: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
@@ -83,6 +91,23 @@ export const telemetryResolvers = {
     ) => {
       const actor = requireRole(ctx, TELEMETRY_WRITE);
       return telemetryService.importBugs(args.bugs, actor);
+    },
+    importTelemetryLogs: (
+      _p: unknown,
+      args: { logs: Parameters<typeof telemetryService.importLogs>[0] },
+      ctx: GraphQLContext,
+    ) => {
+      const actor = requireRole(ctx, TELEMETRY_WRITE);
+      return telemetryService.importLogs(args.logs, actor);
+    },
+    /**
+     * Rotating the feed key is not a scoped mistake either: every copied URL
+     * — a monitor, a script, somebody's bookmark — dies the moment it lands.
+     * Same reasoning as deleteAllBugs, so the same single account holds it.
+     */
+    rotateTelemetryApiKey: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      const actor = requireRole(ctx, DELETE_ALL_ROLES);
+      return telemetryService.rotatePublicApiKey(actor);
     },
   },
 };

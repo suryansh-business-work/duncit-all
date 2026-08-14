@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { STATUS_OPTIONS, statusColor, type BugRow, type BugStatus } from './queries';
+import BugOccurrences from './BugOccurrences';
 
 interface Props {
   bug: BugRow | null;
@@ -20,18 +21,28 @@ interface Props {
   onStatus: (bug: BugRow, status: BugStatus) => void;
 }
 
-function Field({ label, value }: Readonly<{ label: string; value: string }>) {
+function Field({ label, value, mono }: Readonly<{ label: string; value: string; mono?: boolean }>) {
   return (
     <Box>
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+      <Typography
+        variant="body2"
+        sx={{ wordBreak: 'break-word', ...(mono ? { fontFamily: 'monospace', fontSize: 12 } : {}) }}
+      >
         {value || '—'}
       </Typography>
     </Box>
   );
 }
+
+/** `14/08/2026, 10:12:03 · by 66a1…` — when it was resolved and by whom. */
+const resolvedLine = (bug: BugRow) => {
+  if (!bug.resolved_at) return '';
+  const when = new Date(bug.resolved_at).toLocaleString();
+  return bug.resolved_by ? `${when} · by ${bug.resolved_by}` : when;
+};
 
 export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readonly<Props>) {
   if (!bug) return null;
@@ -40,6 +51,7 @@ export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readon
     ['Staging', bug.env_counts.staging],
     ['Production', bug.env_counts.production],
   ];
+  const appLine = [bug.app, bug.portal].filter(Boolean).join(' · ');
   return (
     <Dialog open={!!bug} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
@@ -58,14 +70,17 @@ export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readon
             <Field label="Source" value={bug.source} />
             <Field label="Page" value={bug.page} />
             <Field label="Platform" value={[bug.platform, bug.os].filter(Boolean).join(' · ')} />
-            <Field label="App" value={bug.app} />
+            <Field label="App" value={appLine} />
             <Field label="First seen" value={new Date(bug.first_seen_at).toLocaleString()} />
             <Field label="Last seen" value={new Date(bug.last_seen_at).toLocaleString()} />
             <Field label="Last URL" value={bug.last_url ?? ''} />
             <Field label="Last host" value={bug.last_host ?? ''} />
+            <Field label="Tracked since" value={new Date(bug.created_at).toLocaleString()} />
+            <Field label="Resolved" value={resolvedLine(bug)} />
           </Box>
 
           <Field label="Message" value={bug.message} />
+          <Field label="Fingerprint" value={bug.fingerprint} mono />
 
           <Box>
             <Typography variant="caption" color="text.secondary">
@@ -97,6 +112,8 @@ export default function BugDetailDialog({ bug, busy, onClose, onStatus }: Readon
               </Paper>
             </Box>
           ) : null}
+
+          <BugOccurrences bugId={bug.id} />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, flexWrap: 'wrap', gap: 1 }}>

@@ -42,6 +42,10 @@ export const appConfig = {
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
     { label: 'Short Links', to: '/short-links', icon: 'link' },
+    // A discount code is a promotion, so it belongs to whoever runs promotions.
+    // It sits beside Campaigns rather than inside one: a code is as likely to be
+    // handed out at an event or printed on a poster as it is to be emailed.
+    { label: 'Coupons', to: '/coupons', icon: 'percent' },
     {
       label: 'Ads',
       icon: 'campaign',

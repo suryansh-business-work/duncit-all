@@ -66,6 +66,19 @@ export const COUPONS_FOR_POD_TABLE = gql`
   ${COUPON_FIELDS}
 `;
 
+/** The pods a pod-scoped coupon can point at. Deliberately slim: the dialog
+ * needs an id and a title, not the whole pod document the admin pods page
+ * loads, and this query is what lets a portal without a pods page (Marketing)
+ * still create a pod-scoped code. */
+export const COUPON_PODS = gql`
+  query CouponPods {
+    pods {
+      id
+      pod_title
+    }
+  }
+`;
+
 export const CREATE_COUPON = gql`
   mutation CreateCoupon($input: CreateCouponInput!) {
     createCoupon(input: $input) {
@@ -89,6 +102,11 @@ export const DELETE_COUPON = gql`
     deleteCoupon(id: $id)
   }
 `;
+
+export interface CouponPodOption {
+  id: string;
+  title: string;
+}
 
 export interface CouponRow {
   id: string;

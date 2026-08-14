@@ -91,6 +91,32 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         },
       },
     },
+    /**
+     * The Agent — the console assistant that creates things when asked. Lives
+     * in the shell namespace because every portal renders the same launcher.
+     */
+    agent: {
+      title: 'Agent',
+      open: 'Open Agent',
+      close: 'Close',
+      subtitle: 'Tell me what to create and I will set it up.',
+      greeting:
+        'Ask me to create pods or clubs and I will pick the venue, the slot and the cover image for you.',
+      placeholder: 'e.g. create 10 badminton pods',
+      send: 'Send',
+      thinking: 'Working on it…',
+      restart: 'Start over',
+      answerError: 'Could not reach the agent. Please try again.',
+      notConfigured: 'Not ready yet — a tech admin needs to add the OpenAI key in the Tech portal.',
+      readOnly: 'You can ask the agent questions, but your role cannot create things yet.',
+      tryAsking: 'Try asking',
+      suggestion1: 'Create 5 pods',
+      suggestion2: 'Create 10 book club pods',
+      suggestion3: 'Create 3 clubs for photography',
+      resultsTitle: 'What was created',
+      failedLabel: 'Not created',
+      capNote: 'The agent creates up to 10 at a time. Ask again for more.',
+    },
     /** Word-for-word identical to `mweb.slots` — see the note there. */
     slots: {
       date: 'Date',

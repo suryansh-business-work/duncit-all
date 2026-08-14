@@ -17,6 +17,26 @@ export const TEMPLATE_STATUS_COLORS: StatusColorMap = {
 /** A blocker sentence is always a problem — the chip only ever has one colour. */
 export const BLOCKER_COLORS: StatusColorMap = { BLOCKED: 'error' };
 
+/**
+ * Which header asset a send would actually carry, in the send path's own order
+ * of preference: the admin's override beats the campaign's, and only a
+ * media-header template with neither is a problem.
+ */
+export type MediaState = 'CUSTOM' | 'CAMPAIGN' | 'MISSING' | 'NOT_NEEDED';
+
+export const mediaStateFor = (row: WaScenario): MediaState => {
+  if (row.override_media_url) return 'CUSTOM';
+  if (row.media_url) return 'CAMPAIGN';
+  return row.needs_media ? 'MISSING' : 'NOT_NEEDED';
+};
+
+/** MISSING is the only failing state — it is the `Media URL Missing` send. */
+export const MEDIA_STATE_COLORS: StatusColorMap = {
+  CUSTOM: 'info',
+  CAMPAIGN: 'success',
+  MISSING: 'error',
+};
+
 /** SKIPPED stays grey: nobody was billed and nothing went wrong. */
 export const LOG_STATUS_COLORS: StatusColorMap = {
   SENT: 'success',

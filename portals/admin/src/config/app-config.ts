@@ -64,11 +64,6 @@ export const appConfig = {
       ],
     },
     {
-      label: 'Marketing',
-      icon: 'marketing',
-      children: [{ label: 'Coupons', to: '/coupons', icon: 'percent' }],
-    },
-    {
       label: 'Catalog',
       icon: 'inventory',
       children: [
@@ -152,7 +147,6 @@ export const appConfig = {
       section: 'Membership',
       keywords: ['membership', 'notify', 'waitlist', 'news'],
     },
-    { label: 'Coupons', to: '/coupons', section: 'Marketing', keywords: ['discount', 'promo'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },
     { label: 'Locations', to: '/locations', section: 'Catalog' },
     { label: 'FAQs', to: '/faqs', section: 'Engagement' },

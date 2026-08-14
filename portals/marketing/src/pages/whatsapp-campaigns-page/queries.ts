@@ -161,6 +161,28 @@ export const WA_CAMPAIGN = gql`
   }
 `;
 
+/**
+ * The messages the platform sends on its own — the logs tab's automatic view.
+ * Same query the Admin console reads; the role gate covers both portals, so
+ * only the fields this view renders are asked for.
+ */
+export const WHATSAPP_MESSAGE_LOGS = gql`
+  query WhatsappMessageLogs($query: TableQueryInput) {
+    whatsappMessageLogs(query: $query) {
+      total
+      rows {
+        id
+        event_key
+        campaign
+        destination
+        status
+        reason
+        created_at
+      }
+    }
+  }
+`;
+
 /** Who the send reached and who it did not — the detail view's table. */
 export const WA_CAMPAIGN_RECIPIENTS = gql`
   query WaCampaignRecipients($campaign_id: ID!, $query: TableQueryInput) {
@@ -386,6 +408,18 @@ export interface AisensyCampaignDraft {
   name: string;
   status: string;
   template_name: string;
+}
+
+/** One automatic send attempt. `reason` is why it was skipped or how it
+ * failed — blank on a send that went out. */
+export interface WaMessageLogRow {
+  id: string;
+  event_key: string;
+  campaign: string;
+  destination: string;
+  status: string;
+  reason: string;
+  created_at: string | null;
 }
 
 export interface WaCampaignRecipientRow {

@@ -1,0 +1,82 @@
+---
+name: '@duncit/coupons'
+summary: 'The coupons console — server-paged table, create/edit dialog and Zod form schema — shared by the Marketing portal page and the per-pod offer codes section in Admin.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/marketing'
+  - 'portals/admin'
+exports:
+  - 'CouponsPage'
+  - 'CouponsTable'
+  - 'CouponFormDialog'
+  - 'couponFormSchema'
+  - 'couponFormDefaults'
+  - 'toCouponInput'
+  - 'COUPONS_TABLE'
+  - 'COUPONS_FOR_POD_TABLE'
+  - 'COUPON_PODS'
+  - 'CREATE_COUPON'
+  - 'UPDATE_COUPON'
+  - 'DELETE_COUPON'
+---
+
+# @duncit/coupons
+
+A coupon is a promotion, so the console that manages coupons lives in the
+**Marketing** portal — `marketing.duncit.com/coupons` renders `CouponsPage`
+whole, and that is the only place a global discount code is created.
+
+Admin keeps one coupon surface: the **Offer codes** section on a pod's detail
+page, which manages the codes of that one pod. It is the same table and the
+same dialog as the Marketing page, driven by `couponsForPodTable` instead of
+`couponsTable` and with the pod locked in the form. Two copies would be two
+answers to what a code means, which is exactly what rule 40 exists to stop.
+
+## The page
+
+```tsx
+import { CouponsPage } from '@duncit/coupons';
+
+<Route path="/coupons" element={authed(<CouponsPage />)} />;
+```
+
+`CouponsPage` is self-contained: it fetches its own rows (`couponsTable`), its
+own pod options (`COUPON_PODS` — deliberately slim, an id and a title, so a
+portal with no pods page can still scope a code to a pod), and owns the create /
+edit / delete flow through `@duncit/dialogs`.
+
+## The per-pod section
+
+Compose the pieces when the surface already has its own chrome:
+
+```tsx
+const fetchRows = useApolloTableFetch<CouponRow>(client, COUPONS_FOR_POD_TABLE, 'couponsForPodTable', {
+  extraVariables: { pod_id: podId },
+});
+
+<CouponsTable tableId="admin-pod-coupons" fetchRows={fetchRows} refetchRef={refetchRef} onEdit={…} onDelete={…} />
+<CouponFormDialog … lockedPod={{ id: podId, title: podTitle }} pods={[]} />
+```
+
+`lockedPod` disables the scope and pod fields and pins new codes to that pod;
+pass `null` when editing a global code from a pod page, so the dialog does not
+silently narrow a platform-wide coupon to one pod.
+
+## The form
+
+`couponFormSchema` is the Zod contract behind the dialog (React Hook Form +
+Zod, rule 30). It uppercases the code, enforces the 3–30 char `A–Z 0–9 - _`
+shape, holds the discount to 1–100%, and requires a pod when the scope is
+`POD`. `toCouponInput` maps validated values to `CreateCouponInput` /
+`UpdateCouponInput` — nulling `pod_id` for a global code and turning the date
+inputs into ISO strings.
+
+## Access
+
+Every coupon query and mutation is gated server-side on
+`SUPER_ADMIN`, `CITY_ADMIN`, `ZONAL_ADMIN`, `FINANCE_MANAGER` or
+`MARKETING_MANAGER` — the last of those is what lets the Marketing portal
+render this at all.

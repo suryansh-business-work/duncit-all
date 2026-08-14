@@ -1,5 +1,6 @@
-import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Typography } from '@mui/material';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { STATUS_OPTIONS, statusColor, type BugRow } from './queries';
 
@@ -21,18 +22,53 @@ const renderLastSeen = (b: BugRow) => (
   </Typography>
 );
 
+/** `P 12 · S 3` — only the environments the bug actually hit. */
+const envSummary = (b: BugRow) => {
+  const parts: string[] = [];
+  if (b.env_counts.production > 0) parts.push(`P ${b.env_counts.production}`);
+  if (b.env_counts.staging > 0) parts.push(`S ${b.env_counts.staging}`);
+  if (b.env_counts.localhost > 0) parts.push(`L ${b.env_counts.localhost}`);
+  return parts.length > 0 ? parts.join(' · ') : '—';
+};
+
 interface Props {
   fetchRows: TableFetch<BugRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onOpen: (b: BugRow) => void;
+  onDelete: (b: BugRow) => void;
+  /**
+   * @duncit/table's selection contract: `onChange` is handed the rows ticked on
+   * this page, and `clearRef` is filled with a "drop the ticks" fn. The whole
+   * selection cell is out of the row-click handler, so ticking a row never also
+   * opens the triage dialog.
+   */
+  selection: {
+    onChange: (rows: BugRow[]) => void;
+    clearRef: MutableRefObject<(() => void) | null>;
+  };
+  toolbarActions?: ReactNode;
 }
 
-export default function BugsTable({ fetchRows, refetchRef, onOpen }: Readonly<Props>) {
+export default function BugsTable({
+  fetchRows,
+  refetchRef,
+  onOpen,
+  onDelete,
+  selection,
+  toolbarActions,
+}: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<BugRow>[]>(() => {
     const renderActions = (b: BugRow) => (
-      <Button size="small" variant="outlined" onClick={() => onOpen(b)}>
-        Triage
-      </Button>
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        <Button size="small" variant="outlined" onClick={() => onOpen(b)}>
+          Triage
+        </Button>
+        <Tooltip title="Delete this bug">
+          <IconButton size="small" color="error" onClick={() => onDelete(b)}>
+            <DeleteOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Stack>
     );
     return [
       {
@@ -43,19 +79,40 @@ export default function BugsTable({ fetchRows, refetchRef, onOpen }: Readonly<Pr
         cellRenderer: renderStatus,
       },
       { field: 'title', headerName: 'Bug', flex: 1.6, minWidth: 240, cellRenderer: renderTitle },
-      { field: 'source', headerName: 'Source', width: 150, filter: { type: 'text' } },
-      { field: 'page', headerName: 'Page', flex: 1, minWidth: 160, filter: { type: 'text' } },
-      { field: 'occurrence_count', headerName: 'Count', width: 100 },
-      { field: 'last_seen_at', headerName: 'Last seen', width: 190, cellRenderer: renderLastSeen },
+      { field: 'source', headerName: 'Source', width: 140, filter: { type: 'text' } },
+      { field: 'page', headerName: 'Page', flex: 1, minWidth: 150, filter: { type: 'text' } },
+      { field: 'occurrence_count', headerName: 'Count', width: 90 },
+      {
+        field: 'envs',
+        headerName: 'Envs',
+        width: 120,
+        sortable: false,
+        valueGetter: envSummary,
+      },
+      {
+        field: 'platform',
+        headerName: 'Platform',
+        hide: true,
+        width: 120,
+        filter: { type: 'text' },
+      },
+      {
+        field: 'first_seen_at',
+        headerName: 'First seen',
+        hide: true,
+        width: 190,
+        valueGetter: (b) => new Date(b.first_seen_at).toLocaleString(),
+      },
+      { field: 'last_seen_at', headerName: 'Last seen', width: 180, cellRenderer: renderLastSeen },
       {
         field: 'actions',
         headerName: '',
-        width: 120,
+        width: 140,
         sortable: false,
         cellRenderer: renderActions,
       },
     ];
-  }, [onOpen]);
+  }, [onOpen, onDelete]);
 
   return (
     <DuncitTable<BugRow>
@@ -67,6 +124,9 @@ export default function BugsTable({ fetchRows, refetchRef, onOpen }: Readonly<Pr
       defaultSort={{ field: 'last_seen_at', dir: 'desc' }}
       searchPlaceholder="Search title, message, page or source"
       refetchRef={refetchRef}
+      onRowClick={onOpen}
+      selection={selection}
+      toolbarActions={toolbarActions}
     />
   );
 }

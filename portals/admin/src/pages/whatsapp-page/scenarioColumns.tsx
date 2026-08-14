@@ -1,5 +1,6 @@
 import type { DuncitColumn } from '@duncit/table';
 import { whatsappCategoryCopy } from '@duncit/app-settings';
+import { MediaCell } from './MediaCell';
 import {
   BlockerCell,
   CategoryCell,
@@ -8,7 +9,12 @@ import {
   ScenarioCell,
   ValuesCell,
 } from './scenarioCells';
-import { CAMPAIGN_STATUS_COLORS, TEMPLATE_STATUS_COLORS } from './helpers';
+import {
+  CAMPAIGN_STATUS_COLORS,
+  TEMPLATE_STATUS_COLORS,
+  mediaStateFor,
+  type MediaState,
+} from './helpers';
 import type { WaScenario } from './queries';
 
 interface ColumnDeps {
@@ -16,6 +22,8 @@ interface ColumnDeps {
   /** The row a write is in flight for, so only its switch goes inert. */
   busyKey: string | null;
   onToggle: (eventKey: string, enabled: boolean) => void;
+  /** Opens the header-asset dialog for one row. */
+  onSetMedia: (row: WaScenario) => void;
 }
 
 /**
@@ -28,12 +36,20 @@ export function getScenarioColumns({
   t,
   busyKey,
   onToggle,
+  onSetMedia,
 }: Readonly<ColumnDeps>): DuncitColumn<WaScenario>[] {
   const firesLabel = t('adminWhatsapp.firesLabel');
   const paramsLabel = t('adminWhatsapp.paramsLabel');
   const readyLabel = t('adminWhatsapp.blockerNone');
   const lockedTitle = t('adminWhatsapp.cannotDisable');
   const lockedHint = t('adminWhatsapp.cannotDisableHint');
+  const mediaStateLabels: Record<MediaState, string> = {
+    NOT_NEEDED: t('adminWhatsapp.mediaNotNeeded'),
+    MISSING: t('adminWhatsapp.mediaNone'),
+    CAMPAIGN: t('adminWhatsapp.mediaFromCampaign'),
+    CUSTOM: t('adminWhatsapp.mediaCustom'),
+  };
+  const setMediaLabel = t('adminWhatsapp.setMedia');
 
   return [
     {
@@ -100,6 +116,22 @@ export function getScenarioColumns({
       width: 110,
       cellRenderer: (row) => <ValuesCell row={row} paramsLabel={paramsLabel} />,
       valueGetter: (row) => `${row.params.length} / ${row.template_params}`,
+    },
+    {
+      // Sorts and searches by the STATE LABEL, not the url — "which rows are
+      // missing their asset" is the question this column answers.
+      field: 'override_media_url',
+      headerName: t('adminWhatsapp.colMedia'),
+      width: 150,
+      cellRenderer: (row) => (
+        <MediaCell
+          row={row}
+          stateLabels={mediaStateLabels}
+          setLabel={setMediaLabel}
+          onOpen={onSetMedia}
+        />
+      ),
+      valueGetter: (row) => mediaStateLabels[mediaStateFor(row)],
     },
     {
       field: 'blocker',

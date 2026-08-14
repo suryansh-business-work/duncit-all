@@ -32,6 +32,10 @@ const NO_E2E_SURFACE = new Map([
     '@duncit/communication',
     'zero-dep messaging contracts + template parser, no DOM — exercised end-to-end by the Marketing and Admin WhatsApp consoles',
   ],
+  [
+    '@duncit/coupons',
+    'library — the coupons console is rendered end-to-end by marketing /coupons and the admin pod detail Offer codes section',
+  ],
   ['@duncit/datetime', 'pure date/time helpers, no DOM'],
   ['@duncit/dialogs', 'library — rendered end-to-end by every portal'],
   [

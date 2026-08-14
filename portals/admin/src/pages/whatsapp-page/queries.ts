@@ -15,6 +15,13 @@ export interface WaScenario {
   template_status: string;
   template_category: string;
   template_params: number;
+  /** The header asset the CAMPAIGN carries — reconcile-owned, read from AiSensy. */
+  media_url: string;
+  /** The admin's own header asset. It wins over the campaign's; reconcile never touches it. */
+  override_media_url: string;
+  override_media_filename: string;
+  /** Whether the template's header is media every send must carry an asset for. */
+  needs_media: boolean;
   /** Why it cannot send right now; '' when it can. Composed by the server. */
   blocker: string;
 }
@@ -59,6 +66,10 @@ const SCENARIO_BOARD_FIELDS = `
     template_status
     template_category
     template_params
+    media_url
+    override_media_url
+    override_media_filename
+    needs_media
     blocker
   }
 `;
@@ -83,6 +94,15 @@ export const SET_WHATSAPP_SCENARIO_ENABLED = gql`
 export const RECONCILE_WHATSAPP_SCENARIOS = gql`
   mutation ReconcileWhatsappScenarios {
     reconcileWhatsappScenarios {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+/** An empty url clears the override. Reconcile never overwrites what this sets. */
+export const SET_WHATSAPP_SCENARIO_MEDIA = gql`
+  mutation SetWhatsappScenarioMedia($event_key: String!, $url: String!, $filename: String) {
+    setWhatsappScenarioMedia(event_key: $event_key, url: $url, filename: $filename) {
       ${SCENARIO_BOARD_FIELDS}
     }
   }

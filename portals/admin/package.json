@@ -24,6 +24,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
+    "@duncit/coupons": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",

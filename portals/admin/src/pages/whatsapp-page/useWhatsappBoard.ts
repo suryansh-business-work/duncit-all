@@ -6,6 +6,7 @@ import { parseApiError } from '@duncit/utils';
 import {
   RECONCILE_WHATSAPP_SCENARIOS,
   SET_WHATSAPP_SCENARIO_ENABLED,
+  SET_WHATSAPP_SCENARIO_MEDIA,
   WHATSAPP_SCENARIOS,
   type WaScenarioBoard,
 } from './queries';
@@ -32,6 +33,8 @@ export function useWhatsappBoard() {
   });
   const [setEnabled] = useMutation(SET_WHATSAPP_SCENARIO_ENABLED);
   const [reconcile] = useMutation(RECONCILE_WHATSAPP_SCENARIOS);
+  const [setMedia] = useMutation(SET_WHATSAPP_SCENARIO_MEDIA);
+  const [savingMedia, setSavingMedia] = useState(false);
 
   const board = written ?? data?.whatsappScenarios ?? null;
 
@@ -48,6 +51,26 @@ export function useWhatsappBoard() {
       }
     },
     [setEnabled, t]
+  );
+
+  /** Writes only the admin override (url '' clears it); true when it stuck, so
+   * the dialog knows to close rather than losing what was typed on a failure. */
+  const saveMedia = useCallback(
+    async (eventKey: string, url: string, filename: string) => {
+      setSavingMedia(true);
+      try {
+        const result = await setMedia({ variables: { event_key: eventKey, url, filename } });
+        setWritten(result.data?.setWhatsappScenarioMedia ?? null);
+        notify(t('adminWhatsapp.mediaSaved'), 'success');
+        return true;
+      } catch (err) {
+        notify(parseApiError(err, t('adminWhatsapp.mediaSaveFailed')), 'error');
+        return false;
+      } finally {
+        setSavingMedia(false);
+      }
+    },
+    [setMedia, t]
   );
 
   const runReconcile = useCallback(async () => {
@@ -69,7 +92,9 @@ export function useWhatsappBoard() {
     loadFailed: Boolean(error) && !board,
     busyKey,
     reconciling,
+    savingMedia,
     toggle,
+    saveMedia,
     runReconcile,
   };
 }

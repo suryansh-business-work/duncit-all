@@ -59,14 +59,15 @@ interface Switches {
   on: boolean;
   reason: string;
   category: string;
-  /** The header asset the campaign expects, cached by the console's reconcile. */
+  /** The header asset this scenario sends: the admin's override when one is
+   * set, else the asset cached off the campaign by the console's reconcile. */
   media: { url: string; filename: string } | null;
 }
 
 /** Both switches in one read: the collection holds a handful of rows. */
 async function switchesFor(eventKey: string): Promise<Switches> {
   const rows = await WaEventSettingModel.find({ event_key: { $in: [WA_GLOBAL_KEY, eventKey] } })
-    .select('event_key enabled template_category media_url media_filename')
+    .select('event_key enabled template_category media_url media_filename override_media_url override_media_filename')
     .lean();
   const global = rows.find((row) => row.event_key === WA_GLOBAL_KEY);
   const own = rows.find((row) => row.event_key === eventKey);
@@ -76,11 +77,17 @@ async function switchesFor(eventKey: string): Promise<Switches> {
   // An absent scenario row means ON — a newly wired scenario works without
   // anybody having to create a row for it first.
   if (own && !own.enabled) return off('This message is switched off');
+  // The admin's own asset beats the campaign cache: the override was set
+  // deliberately in the console, the cache is whatever reconcile last copied —
+  // and 0 of the live campaigns actually carry one. The filename travels with
+  // whichever url won, never mixed across the two pairs.
+  const mediaUrl = own?.override_media_url || own?.media_url || '';
+  const mediaFilename = own?.override_media_url ? own.override_media_filename : own?.media_filename;
   return {
     on: true,
     reason: '',
     category: own?.template_category ?? '',
-    media: own?.media_url ? { url: own.media_url, filename: own.media_filename || 'attachment' } : null,
+    media: mediaUrl ? { url: mediaUrl, filename: mediaFilename || 'attachment' } : null,
   };
 }
 
@@ -189,9 +196,9 @@ async function dispatch(
     holds_slot: true,
   };
 
-  // A caller with a better asset — this pod's own image — wins over the one the
-  // campaign was built with. A media campaign rejects a send that carries
-  // neither, and the requirement is invisible on the template.
+  // A caller with a better asset — this pod's own image — wins over the row's
+  // (caller > admin override > campaign cache). A media campaign rejects a send
+  // that carries none, and the requirement is invisible on the template.
   const media = input.media ?? switches.media ?? undefined;
 
   let row;

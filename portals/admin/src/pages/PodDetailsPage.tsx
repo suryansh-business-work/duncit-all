@@ -4,9 +4,10 @@ import PodCouponsSection from './pod-coupons/PodCouponsSection';
 /** Admin's pod detail — the shared view at ADMIN scope (its default).
  *
  * The view lives in @duncit/pod-details so Club Admin renders exactly the same
- * page for the pods of the club they administer (rule 40). Coupons stay here:
- * managing them is platform-wide (ADMIN_RW create/delete) and reaches into the
- * admin coupons page, so it is injected as the footer rather than widened. */
+ * page for the pods of the club they administer (rule 40). Offer codes stay
+ * here: the coupons console itself moved to the Marketing portal, but the codes
+ * of ONE pod belong on that pod, so the section is injected as the footer
+ * rather than widening the shared view. */
 export default function AdminPodDetailsPage() {
   return (
     <SharedPodDetails

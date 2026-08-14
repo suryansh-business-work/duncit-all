@@ -28,6 +28,10 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/breadcrumb', 'library — rendered end-to-end by the portal shell'],
   ['@duncit/category', 'library — rendered end-to-end by admin + mWeb'],
   ['@duncit/club-form', 'library — rendered end-to-end by admin + partners-app'],
+  [
+    '@duncit/communication',
+    'zero-dep messaging contracts + template parser, no DOM — exercised end-to-end by the Marketing and Admin WhatsApp consoles',
+  ],
   ['@duncit/datetime', 'pure date/time helpers, no DOM'],
   ['@duncit/dialogs', 'library — rendered end-to-end by every portal'],
   [

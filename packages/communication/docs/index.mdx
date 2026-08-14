@@ -6,11 +6,25 @@ zeroDeps: true
 frameworkFree: true
 coverageGate: true
 consumers:
+  - 'portals/marketing'
+  - 'portals/admin'
+  - 'portals/tech'
   - 'server (mirrored, see "Why the server does not import this")'
 exports:
   - 'createCommunication'
   - 'createWhatsAppChannel'
   - 'assertValidSendOptions'
+  - 'WA_EVENTS'
+  - 'WA_EVENT_BY_KEY'
+  - 'waEventArity'
+  - 'WA_REQUIRED_CATEGORIES'
+  - 'WA_OPTIONAL_CATEGORIES'
+  - 'isRequiredWaCategory'
+  - 'templateParamCount'
+  - 'templateSegments'
+  - 'templateParamError'
+  - 'renderTemplateBody'
+  - 'WA_TEMPLATE_CATEGORIES'
   - 'AiSensyProvider'
   - 'HttpTransport'
   - 'DEFAULT_RETRY'
@@ -412,6 +426,69 @@ createCommunication({ email: { provider: new SesProvider(config), from: '…' } 
 `PreparedEmail` arrives validated, rendered and normalised, so a provider is
 only ever a field-name translation. That is the same shape SendGrid, Postmark,
 Brevo and Mailgun would take.
+
+## Reading an AiSensy template
+
+`templateParamCount` answers the one question a send has to get right: how many
+values the body takes. It returns the **highest** `{{n}}`, not how many appear —
+a body that repeats `{{2}}` and skips `{{3}}` still needs a 3-long array,
+because AiSensy fills positionally.
+
+```ts
+import { templateParamCount, templateParamError, renderTemplateBody } from '@duncit/communication';
+
+const body = 'Hi {{1}}, your *{{2}}* Pod is cancelled.\n• Pod: {{2}}\n• Refund: ₹{{4}}';
+
+templateParamCount(body); // 4 — {{3}} is never written, but its slot still ships
+
+templateParamError(['Suryansh', 'Sunset Yoga', '', '299'], 4);
+// 'Value 3 is empty — WhatsApp renders a blank there.'
+
+renderTemplateBody(body, ['Suryansh', 'Sunset Yoga', '-', '299']);
+// 'Hi Suryansh, your *Sunset Yoga* Pod is cancelled.\n• Pod: Sunset Yoga\n• Refund: ₹299'
+```
+
+`templateSegments` is the same parse exposed as pieces, so a preview can render
+the filled values as styled spans instead of a flat string.
+
+## The message catalogue
+
+`WA_EVENTS` is every WhatsApp message Duncit sends on its own: the scenario key,
+the AiSensy campaign it posts to, who it is for, and one label per `{{n}}` in
+order.
+
+```ts
+import { WA_EVENT_BY_KEY, waEventArity, isRequiredWaCategory } from '@duncit/communication';
+
+WA_EVENT_BY_KEY.get('USER_POD_REMINDER')?.params;
+// ['Recipient name', 'Hours until pod', 'Pod', 'Date', 'Time', 'Pod Link', 'Host']
+
+waEventArity('USER_POD_REMINDER'); // 7
+isRequiredWaCategory('billing'); // true — a refund notice cannot be switched off
+isRequiredWaCategory('feedback'); // false
+```
+
+Two things this file deliberately is **not**:
+
+- **It is not the template.** Bodies, arity and approval state come live from
+  AiSensy's Project API. The registry only says which campaign a domain event
+  points at, so a template edited in the AiSensy console needs no release here.
+- **It is not copy.** The labels travel as data because the Admin console
+  renders 67 rows, and a key per row would have to be composed —
+  `t('admin.wa.' + key)` — which `scripts/verify-translation-keys.mjs` cannot
+  see. The screen's own chrome is localized normally.
+
+`params` carries labels, never values: those live in Mongo and can only be read
+server-side. What it pins is the **order and the count**, which is the half that
+silently rots — one placeholder inserted mid-body shifts every later value into
+the wrong sentence, and AiSensy bills for the message either way.
+
+`WA_REQUIRED_CATEGORIES` (`transactional`, `billing`, `account`) mirrors the
+split `mailPreference.categories.ts` already makes for email: a person can
+silence reminders, feedback and marketing, but not their ticket, their money, or
+being told their account changed. Note this is **our** consent axis, not Meta's:
+Meta calls 66 of the 71 templates `UTILITY`, which says how they are priced, not
+whether a human may switch them off.
 
 ## Why the server does not import this
 

@@ -82,15 +82,24 @@ export function fillParams(raw: string[], user: UserLike): FilledParams {
  * carry its country code is used as-is — prefixing the extension again would
  * produce 9191…; a short number with no extension has no country code to send
  * with, so that recipient is not reachable.
+ *
+ * The leading zero is a trunk prefix, not a country code. People type their
+ * number the way they dial it at home (0 98765 43210) while the extension
+ * dropdown already says +91, and `91` + `09876543210` dials a real but wrong
+ * 13-digit number that AiSensy accepts and bills for.
  */
 export function destinationFor(user: UserLike): string {
   const whatsapp = user.communication?.whatsapp;
   const source = digits(whatsapp?.number) ? whatsapp : user.auth?.phone;
-  const number = digits(source?.number);
+  const number = digits(source?.number).replace(/^0+/, '');
   const extension = digits(source?.extension);
   if (!number) return '';
+  // With no extension the only sendable number is one already long enough to
+  // carry its own country code. Written as its own branch because the length
+  // check below reads as if it compared against the extension, and
+  // `''.startsWith` is true for every string.
+  if (!extension) return number.length > 10 ? number : '';
   if (number.length > 10 && number.startsWith(extension)) return number;
-  if (!extension) return '';
   const full = `${extension}${number}`;
   return full.length >= 10 && full.length <= 15 ? full : '';
 }

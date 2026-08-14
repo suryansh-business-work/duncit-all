@@ -232,6 +232,20 @@ function payoutLabel(kind: PaymentReleaseKind): string {
   return 'Your Payout';
 }
 
+/**
+ * The money a release actually moves — ONE definition, because the same number
+ * is quoted to the beneficiary by {@link notifyApproval} and credited to their
+ * wallet by {@link applyApproval}.
+ *
+ * They used to compute it separately: the statement fell through
+ * `breakdown.payout_amount` and the wallet did not. A release with no
+ * `approved_amount` whose breakdown disagreed with the request therefore mailed
+ * a statement — and a PDF — for a number that was never credited.
+ */
+export function releasePayout(doc: Pick<IPaymentRelease, 'approved_amount' | 'amount_requested'>): number {
+  return doc.approved_amount ?? doc.amount_requested;
+}
+
 // On approval, email the beneficiary their payout statement. When the release
 // carries a settlement breakdown (the host-completion flow), a payout PDF is
 // generated and attached with the reconciled lines. Best-effort.
@@ -245,7 +259,7 @@ async function notifyApproval(doc: IPaymentRelease) {
     const isClubAdmin = doc.kind === 'CLUB_ADMIN';
     const tmpl = isHost ? fs.invoice_templates.host : fs.invoice_templates.venue;
     const b = doc.breakdown;
-    const payout = doc.approved_amount ?? b?.payout_amount ?? doc.amount_requested;
+    const payout = releasePayout(doc);
     const attachments = [];
     // The payout PDF renders HOST/VENUE statements; the club-admin cut ships as
     // a plain statement email (no PDF template for it).
@@ -372,7 +386,7 @@ async function applyApproval(doc: IPaymentRelease) {
       });
     }
   }
-  const payout = doc.approved_amount ?? doc.amount_requested;
+  const payout = releasePayout(doc);
   const { walletService } = await import('@modules/finance/wallet/wallet.service');
 
   if (doc.kind === 'VENUE_BILLING') {

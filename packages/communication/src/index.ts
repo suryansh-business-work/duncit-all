@@ -103,6 +103,32 @@ export type {
   WhatsAppSendOptions,
   WhatsAppSendResult,
 } from './types';
+// Reading an AiSensy template, and the catalogue of messages Duncit sends on
+// its own. Data and pure functions only — no transport, no credential.
+export {
+  WA_TEMPLATE_CATEGORIES,
+  templateParamCount,
+  templateParamError,
+  templateSegments,
+  renderTemplateBody,
+  type AisensyCampaign,
+  type AisensyTemplate,
+  type WaBodySegment,
+  type WaHeaderFormat,
+  type WaMediaRef,
+  type WaTemplateCategory,
+} from './wa-template';
+export {
+  WA_EVENTS,
+  WA_EVENT_BY_KEY,
+  WA_OPTIONAL_CATEGORIES,
+  WA_REQUIRED_CATEGORIES,
+  isRequiredWaCategory,
+  waEventArity,
+  type WaAudience,
+  type WaCategory,
+  type WaEvent,
+} from './wa-events';
 // The email channel, re-exported whole. `@duncit/communication/email` is not a
 // separate entry point on purpose — one import path, and the bundler drops what
 // an app does not reference.

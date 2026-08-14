@@ -57,6 +57,7 @@ describe('auth.service mutations', () => {
       dob: '1995-01-01',
       email: 'Riya@Duncit.com',
       password: 'StrongPass123',
+      acceptedPolicyIds: ['pol-1'],
     });
 
     expect(mockedRequest).toHaveBeenCalledTimes(1);
@@ -68,6 +69,8 @@ describe('auth.service mutations', () => {
         email: 'riya@duncit.com',
         password: 'StrongPass123',
         dob: '1995-01-01T00:00:00.000Z',
+        accepted_policy_ids: ['pol-1'],
+        accepted_policy_surface: 'APP',
       },
     });
     expect(mockedSetToken).toHaveBeenCalledWith('tok-1');
@@ -88,14 +91,20 @@ describe('auth.service mutations', () => {
     expect(result).toEqual({ token: 'tok-2', surveyCompleted: true });
   });
 
-  it('signupWithGoogle sends only the id_token and lands on the survey', async () => {
+  it('signupWithGoogle sends the id_token with the accepted policies', async () => {
     mockedRequest.mockResolvedValue({
       signupWithGoogle: { token: 'tok-3', user: { onboarding_survey_completed: false } },
     } as never);
 
-    const result = await signupWithGoogle('google-id-token');
+    const result = await signupWithGoogle('google-id-token', ['pol-1']);
 
-    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({ input: { id_token: 'google-id-token' } });
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
+      input: {
+        id_token: 'google-id-token',
+        accepted_policy_ids: ['pol-1'],
+        accepted_policy_surface: 'APP',
+      },
+    });
     expect(mockedSetToken).toHaveBeenCalledWith('tok-3');
     expect(result).toEqual({ token: 'tok-3', surveyCompleted: false });
   });

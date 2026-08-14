@@ -19,6 +19,7 @@ const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export function makeSignupSchema(
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   t: Translate = fallbackT,
+  requiredPolicyIds: readonly string[] = [],
 ) {
   return z
     .object({
@@ -56,6 +57,22 @@ export function makeSignupSchema(
           (v) => v === '' || REFERRAL_CODE.test(v.toUpperCase()),
           t('mweb.referral.validation.codePattern'),
         ),
+      /*
+        The policies ticked in the acceptance sheet, checked against the list
+        the server says gates signup rather than against a bare "I agree" flag —
+        a policy Legal added while this form was open is then genuinely missing
+        rather than covered by a tick made before it existed.
+
+        Like `assertEligibleDob`, the real gate is server-side: `register`
+        re-verifies this list before the account is created, because tick boxes
+        shape a form and cannot stop a hand-rolled mutation.
+      */
+      acceptedPolicyIds: z
+        .array(z.string())
+        .refine(
+          (ids) => requiredPolicyIds.every((id) => ids.includes(id)),
+          t('policyAcceptance.required'),
+        ),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: t('mweb.auth.validation.passwordsMismatch'),
@@ -74,4 +91,5 @@ export const signupDefaults: SignupFormValues = {
   password: '',
   confirmPassword: '',
   referralCode: '',
+  acceptedPolicyIds: [],
 };

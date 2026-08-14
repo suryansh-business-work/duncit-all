@@ -60,6 +60,19 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.grievance.detailsLabel": "What you told us",
   "email.grievance.officerLabel": "Grievance Officer",
   "email.grievance.footer": "Reply to this email if you have anything to add.",
+  // The signup policy-acceptance receipt (template: policy-acceptance,
+  // authored in Tech > Emails > Templates — rule 28, no local MJML).
+  "email.policyAcceptance.title": "Your policy acceptance",
+  "email.policyAcceptance.heading": "Thanks — that's on the record",
+  "email.policyAcceptance.intro":
+    "You accepted the policies below when you created your Duncit account.",
+  "email.policyAcceptance.listLabel": "What you accepted",
+  "email.policyAcceptance.revisit":
+    "You can read any of them again whenever you like — nothing here expires, and we will ask you again if one of them changes.",
+  "email.policyAcceptance.cta": "Read the policies",
+  "email.policyAcceptance.footer":
+    "You're receiving this because you accepted these policies when you created your Duncit account.",
+
   "email.unsubscribe.title": "Your email preferences were updated",
   "email.unsubscribe.heading": "We've updated what we send you",
   "email.unsubscribe.intro":

@@ -69,6 +69,7 @@ describe('RegisterForm — rendering', () => {
         confirmPassword: 'seedpass1',
         dob: '2000-01-01',
         referralCode: '',
+        acceptedPolicyIds: [],
       },
     });
     expect(field('^Name')).toHaveValue('Seed User');

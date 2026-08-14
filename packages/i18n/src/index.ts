@@ -16,6 +16,7 @@ export {
   MWEB_BUNDLE,
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
+  POLICY_ACCEPTANCE_BUNDLE,
   SHELL_BUNDLE,
   SURFACE_BUNDLES,
   WEBSITE_BUNDLE,
@@ -26,6 +27,10 @@ export {
   type MailCategoryCopy,
   type MailCategoryTranslate,
 } from './mail-preference';
+export {
+  policyAcceptanceMethodLabel,
+  type PolicyMethodTranslate,
+} from './policy-acceptance';
 export {
   whatsappCategoryCopy,
   type WaCategoryCopy,

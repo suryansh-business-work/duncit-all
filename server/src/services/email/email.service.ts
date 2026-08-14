@@ -550,6 +550,35 @@ export function sendWelcomeEmail(to: string, name: string) {
   });
 }
 
+/**
+ * Their receipt for the policies they accepted while creating the account.
+ *
+ * `legal`, not `transactional` — `legal` is in the REQUIRED set, so the opt-out
+ * gate can never reach it. A receipt a mail preference can silence is not a
+ * receipt, and this is the only copy the person holds of what they agreed to.
+ *
+ * `policies` is the accepted TITLES, which are API data rather than translated
+ * copy; every label around them is `{{t:email.policyAcceptance.*}}`.
+ */
+export function sendPolicyAcceptanceEmail(opts: {
+  to: string;
+  name: string;
+  policies: string;
+  policies_url: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit policy acceptance',
+    template: 'policy-acceptance',
+    category: 'legal',
+    vars: {
+      name: opts.name,
+      policies: opts.policies,
+      policies_url: opts.policies_url,
+    },
+  });
+}
+
 export function sendAdminCredentialsEmail(opts: {
   to: string;
   name: string;

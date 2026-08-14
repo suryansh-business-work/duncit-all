@@ -11,7 +11,13 @@ import AuthScreenFrame from '../components/AuthScreenFrame';
 import LegalLinks from '../components/LegalLinks';
 import { useTranslation } from '../i18n/useTranslation';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
+import { useGoogleSignup } from '../hooks/useGoogleSignup';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import {
+  ACCEPTANCE_SURFACE,
+  GoogleSignupPolicyGate,
+  useSignupPolicies,
+} from '../components/policy-acceptance';
 import { RegisterForm, registerDefaults, type RegisterFormValues } from '../forms/register';
 import { parseApiError } from '../utils/parseApiError';
 
@@ -31,19 +37,6 @@ const REGISTER = gql`
   }
 `;
 
-const SIGNUP_GOOGLE = gql`
-  mutation SignupWithGoogle($input: GoogleSignupInput!) {
-    signupWithGoogle(input: $input) {
-      token
-      user {
-        user_id
-        email
-        onboarding_survey_completed
-      }
-    }
-  }
-`;
-
 /** Split a single "Name" into first/last; surname may be empty. */
 function splitName(name: string): { first_name: string; last_name?: string } {
   const [first, ...rest] = name.trim().split(/\s+/).filter(Boolean);
@@ -54,8 +47,6 @@ function splitName(name: string): { first_name: string; last_name?: string } {
 export default function RegisterPage() {
   const { t } = useTranslation();
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
-  const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
-  const [gError, setGError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -69,6 +60,14 @@ export default function RegisterPage() {
   */
   const linkedCode = readReferralCode(globalThis.location.search) ?? '';
   const initialValues = { ...registerDefaults, referralCode: linkedCode };
+
+  /*
+    Both signup doors are gated by the same policies, so the list is fetched
+    once here and shared: the form reads it to build its validation rule, and
+    the Google gate reads it to know when the credential can be spent.
+  */
+  const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
+  const google = useGoogleSignup(linkedCode);
 
   const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
@@ -87,6 +86,8 @@ export default function RegisterPage() {
             password: values.password,
             dob: new Date(values.dob).toISOString(),
             ...(code ? { referral_code: code } : {}),
+            accepted_policy_ids: values.acceptedPolicyIds,
+            accepted_policy_surface: ACCEPTANCE_SURFACE,
           },
         },
       });
@@ -97,26 +98,6 @@ export default function RegisterPage() {
       }
     } catch (e) {
       setRegisterError(parseApiError(e));
-    }
-  };
-
-  /*
-    Google hands back a finished account with no form attached, so its referral
-    question has to be asked afterwards — on its own step, before the survey.
-    A link-borne code rides along so somebody who followed a friend's link and
-    then chose Google still arrives with the box filled in.
-  */
-  const handleGoogle = async (idToken: string) => {
-    setGError(null);
-    try {
-      const res = await signupGoogle({ variables: { input: { id_token: idToken } } });
-      const token = res.data?.signupWithGoogle?.token;
-      if (token) {
-        localStorage.setItem('token', token);
-        navigate('/signup-referral', { state: { code: linkedCode } });
-      }
-    } catch (e) {
-      setGError(parseApiError(e));
     }
   };
 
@@ -138,10 +119,22 @@ export default function RegisterPage() {
             </Typography>
           </Stack>
 
-          <GoogleSignInButton onCredential={handleGoogle} loading={gLoading} text="signup_with" />
-          {gError && (
+          <GoogleSignInButton
+            onCredential={google.start}
+            loading={google.loading}
+            text="signup_with"
+          />
+          <GoogleSignupPolicyGate
+            credential={google.credential}
+            policies={policies}
+            loading={policiesLoading}
+            failed={policiesFailed}
+            onAccepted={google.accept}
+            onCancelled={google.cancel}
+          />
+          {google.error && (
             <Alert severity="error" sx={{ width: '100%' }}>
-              {gError}
+              {google.error}
             </Alert>
           )}
           <Divider>{t('mweb.auth.orEmail')}</Divider>

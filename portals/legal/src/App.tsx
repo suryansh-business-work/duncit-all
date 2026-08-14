@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import DocumentsListPage from './pages/documents/DocumentsListPage';
 import DocumentDetailPage from './pages/documents/DocumentDetailPage';
 import PoliciesPage from './pages/policies/PoliciesPage';
+import PolicyAcceptanceLogsPage from './pages/policy-acceptance-logs-page';
 import ContractsPage from './pages/contracts/ContractsPage';
 import GrievanceTicketsPage from './pages/grievance/GrievanceTicketsPage';
 import GrievanceInfoPage from './pages/grievance/GrievanceInfoPage';
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/documents" element={authed(<DocumentsListPage />)} />
       <Route path="/documents/:id" element={authed(<DocumentDetailPage />)} />
       <Route path="/policies" element={authed(<PoliciesPage />)} />
+      <Route path="/policy-acceptance-logs" element={authed(<PolicyAcceptanceLogsPage />)} />
       <Route path="/contracts" element={authed(<ContractsPage />)} />
       <Route path="/grievance/tickets" element={authed(<GrievanceTicketsPage />)} />
       <Route path="/grievance/info" element={authed(<GrievanceInfoPage />)} />

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Link, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -15,6 +15,10 @@ import DobYearField from './DobYearField';
 import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
+import {
+  PolicyAcceptanceField,
+  useSignupPolicies,
+} from '../../components/policy-acceptance';
 
 interface Props {
   loading?: boolean;
@@ -48,7 +52,12 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const minAge = useMinSignupAge();
-  const schema = useMemo(() => makeRegisterSchema(minAge, t), [minAge, t]);
+  const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
+  const requiredPolicyIds = useMemo(() => policies.map((policy) => policy.id), [policies]);
+  const schema = useMemo(
+    () => makeRegisterSchema(minAge, t, requiredPolicyIds),
+    [minAge, t, requiredPolicyIds],
+  );
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
     resolver: zodResolver(schema),
@@ -136,6 +145,20 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           InputLabelProps={{ shrink: true }}
           InputProps={startIcon(<CardGiftcardOutlinedIcon fontSize="small" />)}
           inputProps={{ style: { textTransform: 'uppercase' } }}
+        />
+        <Controller
+          control={control}
+          name="acceptedPolicyIds"
+          render={({ field, fieldState }) => (
+            <PolicyAcceptanceField
+              accepted={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              policies={policies}
+              loading={policiesLoading}
+              failed={policiesFailed}
+            />
+          )}
         />
       </Stack>
       <Stack spacing={2} sx={{ mt: 2 }}>

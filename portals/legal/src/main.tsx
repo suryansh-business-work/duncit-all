@@ -1,6 +1,7 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { NotifyHost } from '@duncit/dialogs';
+import { flattenCatalogue, POLICY_ACCEPTANCE_BUNDLE } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
@@ -18,6 +19,11 @@ mountPortal({
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.legal,
+  // This portal's OWN namespace, layered over the shell's. The acceptance log
+  // reads back the same gate mWeb and the native app render at signup (rule
+  // 40), so one bundle serves all three — a policy called one thing at signup
+  // and another in the audit table is exactly what an auditor cannot have.
+  i18nFallback: flattenCatalogue(POLICY_ACCEPTANCE_BUNDLE),
   loadUser: createSessionUserLoader(apolloClient),
   extras: <NotifyHost />,
   children: <App />,

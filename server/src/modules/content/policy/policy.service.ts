@@ -10,7 +10,9 @@ import {
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-const toPub = (p: IPolicy) => ({
+/** Exported so the acceptance module can return the very same Policy shape
+ * rather than growing a second, drifting copy of it. */
+export const toPub = (p: IPolicy) => ({
   id: String(p._id),
   policy_no: p.policy_no ?? '',
   slug: p.slug,
@@ -18,6 +20,7 @@ const toPub = (p: IPolicy) => ({
   policy_type: p.policy_type || '',
   content: p.content || '',
   is_active: p.is_active,
+  requires_signup_acceptance: p.requires_signup_acceptance !== false,
   sort_order: p.sort_order,
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
@@ -55,6 +58,7 @@ const POLICY_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    requires_signup_acceptance: { type: 'boolean' },
     policy_no: { type: 'string' },
     slug: { type: 'string' },
     policy_type: { type: 'string' },
@@ -133,6 +137,20 @@ export const policyService = {
     return docs.map(toPub);
   },
 
+  /**
+   * The policies a new account must accept — the list the signup dialog and the
+   * "still outstanding" check are both built from.
+   *
+   * A retired policy stops gating signup the moment it is deactivated, which is
+   * why `is_active` is part of the question and not a separate one.
+   */
+  async signupRequired() {
+    return PolicyModel.find({ is_active: true, requires_signup_acceptance: true }).sort({
+      sort_order: 1,
+      title: 1,
+    });
+  },
+
   async getById(id: string) {
     const doc = await PolicyModel.findById(id);
     return doc ? toPub(doc) : null;
@@ -161,6 +179,7 @@ export const policyService = {
       policy_type: (input.policy_type ?? '').trim(),
       content: input.content ?? '',
       is_active: input.is_active ?? true,
+      requires_signup_acceptance: input.requires_signup_acceptance ?? true,
       sort_order: input.sort_order ?? 0,
     });
     return toPub(doc);
@@ -189,6 +208,9 @@ export const policyService = {
     if (input.policy_type !== undefined) doc.policy_type = String(input.policy_type ?? '').trim();
     if (input.content !== undefined) doc.content = input.content;
     if (input.is_active !== undefined) doc.is_active = !!input.is_active;
+    if (input.requires_signup_acceptance !== undefined) {
+      doc.requires_signup_acceptance = !!input.requires_signup_acceptance;
+    }
     if (input.sort_order !== undefined) doc.sort_order = Number(input.sort_order) || 0;
     await doc.save();
     return toPub(doc);

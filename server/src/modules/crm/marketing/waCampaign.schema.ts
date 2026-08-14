@@ -108,6 +108,10 @@ export const waCampaignTypeDefs = gql`
     "msg_rate × sent_count — what the messages that actually went out cost."
     cost: Float!
     template_params: [String!]!
+    "The header asset every message in this send carried. Null for a text template."
+    media: AisensyMedia
+    "What filled the CTA links, for a template whose button URL carries a {{n}}."
+    buttons: [AisensyButton!]!
     status: WaCampaignStatus!
     "When a scheduled send is due. Null for one that went out immediately."
     scheduled_at: String
@@ -137,6 +141,31 @@ export const waCampaignTypeDefs = gql`
     "The WhatsApp template this campaign sends."
     template_name: String!
     type: String!
+    """
+    The header asset this campaign was built with in the AiSensy console, if
+    any. It lives on the CAMPAIGN, never on the template, and every message the
+    campaign sends must carry it — a send without it is refused.
+    """
+    media_url: String!
+    media_filename: String!
+  }
+
+  "One interactive button under a template's message."
+  type AisensyTemplateButton {
+    "URL or PHONE_NUMBER."
+    type: String!
+    "The label WhatsApp draws on the button."
+    text: String!
+    "A URL button's link with its {{n}} intact; empty for every other kind."
+    url: String!
+    """
+    The {{n}} the link carries, or 0 when it is static. AiSensy numbers a
+    dynamic link after the body's own variables, so this is the parameter's
+    position on the template. Its value is sent under the send input's buttons
+    field, addressed by this button's position in cta_buttons — never as one
+    more template parameter.
+    """
+    url_param: Int!
   }
 
   "A WhatsApp message template as AiSensy has it."
@@ -151,14 +180,18 @@ export const waCampaignTypeDefs = gql`
     body: String!
     "How many variables the body expects — the number of params a send must fill."
     param_count: Int!
-    "The HEADER component's text — empty for a media header or no header."
+    "The HEADER text — empty for a media header or no header."
     header: String!
-    "TEXT, IMAGE, VIDEO or DOCUMENT — empty when the template has no header."
+    "TEXT, IMAGE, VIDEO or FILE — empty when the template has no header."
     header_format: String!
+    "Whether every message on this template must carry a header asset."
+    needs_media: Boolean!
     "The small grey line under the body, when the template has one."
     footer: String!
     "The button labels WhatsApp draws under the message, in order."
     buttons: [String!]!
+    "The interactive buttons in full — the only place a dynamic link shows up."
+    cta_buttons: [AisensyTemplateButton!]!
   }
 
   type WaTestSendResult {
@@ -175,6 +208,14 @@ export const waCampaignTypeDefs = gql`
     destination: String!
     user_name: String!
     template_params: [String!]!
+    """
+    The header asset. Left out, the one attached to the campaign in the AiSensy
+    console is used; a template that needs one and has neither is refused here
+    rather than at AiSensy.
+    """
+    media: AisensyMediaInput
+    "Values for the template's CTA buttons whose link carries a {{n}}."
+    buttons: [AisensyButtonInput!]
   }
 
   input WaCampaignNameInput {
@@ -196,6 +237,14 @@ export const waCampaignTypeDefs = gql`
     contacts: [WaManualContactInput!]
     "Ordered template variables — literal text, or {{first_name}} style tokens."
     template_params: [String!]!
+    """
+    The header asset every message in this send carries. Left out, the one
+    attached to the campaign in the AiSensy console is used; a template that
+    needs one and has neither is refused before a single message is spent.
+    """
+    media: AisensyMediaInput
+    "Values for the template's CTA buttons whose link carries a {{n}}."
+    buttons: [AisensyButtonInput!]
     "ISO time to send at. Absent, or already past, sends immediately."
     scheduled_at: String
   }

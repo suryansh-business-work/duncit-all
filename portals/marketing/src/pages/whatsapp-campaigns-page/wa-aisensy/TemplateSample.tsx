@@ -1,25 +1,20 @@
 import { Box, Stack, Typography } from '@mui/material';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ImageIcon from '@mui/icons-material/Image';
-import PlaceIcon from '@mui/icons-material/Place';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import type { AisensyTemplate } from '../queries';
-import { bodySegments } from './helpers';
+import type { WaMediaRef } from '@duncit/communication';
+import type { AisensyButtonInput, AisensyTemplate } from '../queries';
+import BubbleMedia, { mediaFormatOf } from './BubbleMedia';
+import { bodySegments, filledButtonUrl } from './helpers';
 
 /**
  * The template as the recipient's WhatsApp will draw it: an incoming bubble on
  * the chat wallpaper, with the header, footer and buttons WhatsApp adds around
- * the body. The {{n}} variables stay visible and highlighted — this is the
- * shape of the message, not a filled-in send.
+ * the body.
+ *
+ * With no send values it is the SHAPE of the message — the {{n}} variables stay
+ * visible and highlighted, which is what a catalogue row wants. A send form
+ * hands it the values, the asset and the link fills, and the same bubble becomes
+ * the message that is about to go out. One preview, because a second one is a
+ * second thing that can disagree with what actually arrives.
  */
-
-/** A media header has no text to show, only its kind. */
-const MEDIA_HEADERS = {
-  IMAGE: { Icon: ImageIcon, label: 'Image header' },
-  VIDEO: { Icon: VideocamIcon, label: 'Video header' },
-  DOCUMENT: { Icon: DescriptionIcon, label: 'Document header' },
-  LOCATION: { Icon: PlaceIcon, label: 'Location header' },
-} as const;
 
 /** WhatsApp's own colors — the sample is only recognisable in them. */
 const WALLPAPER = { light: '#EFE7DE', dark: '#0B141A' };
@@ -27,31 +22,10 @@ const BUBBLE = { light: '#FFFFFF', dark: '#202C33' };
 const BUTTON_INK = { light: '#027EB5', dark: '#53BDEB' };
 const DIVIDER = { light: '#E9EDEF', dark: '#2A3942' };
 
-function MediaHeader({ format }: Readonly<{ format: keyof typeof MEDIA_HEADERS }>) {
-  const { Icon, label } = MEDIA_HEADERS[format];
-  return (
-    <Stack
-      alignItems="center"
-      justifyContent="center"
-      spacing={0.5}
-      sx={{
-        height: 120,
-        mb: 0.75,
-        borderRadius: 1.5,
-        color: 'text.secondary',
-        bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#111B21' : '#F0F2F5'),
-      }}
-    >
-      <Icon fontSize="large" />
-      <Typography variant="caption">{label}</Typography>
-    </Stack>
-  );
-}
-
-function BubbleBody({ body }: Readonly<{ body: string }>) {
+function BubbleBody({ body, params }: Readonly<{ body: string; params?: string[] }>) {
   return (
     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-      {bodySegments(body).map((segment) => (
+      {bodySegments(body, params).map((segment) => (
         <Box
           key={segment.id}
           component="span"
@@ -73,11 +47,12 @@ function BubbleBody({ body }: Readonly<{ body: string }>) {
   );
 }
 
-function BubbleButton({ label }: Readonly<{ label: string }>) {
+function BubbleButton({ label, link }: Readonly<{ label: string; link: string }>) {
   return (
     <Box
       sx={{
         py: 1,
+        px: 1.25,
         textAlign: 'center',
         borderTop: '1px solid',
         borderColor: (theme) => DIVIDER[theme.palette.mode],
@@ -87,15 +62,40 @@ function BubbleButton({ label }: Readonly<{ label: string }>) {
       }}
     >
       {label}
+      {link && (
+        <Typography variant="caption" color="text.secondary" display="block" noWrap>
+          {link}
+        </Typography>
+      )}
     </Box>
   );
 }
 
-export default function TemplateSample({ template }: Readonly<{ template: AisensyTemplate }>) {
-  const mediaFormat =
-    template.header_format in MEDIA_HEADERS
-      ? (template.header_format as keyof typeof MEDIA_HEADERS)
-      : null;
+interface Props {
+  template: AisensyTemplate;
+  /** What the operator typed for each {{n}}; absent leaves the placeholders. */
+  params?: string[];
+  /** The header asset this send will carry, when one has been chosen. */
+  media?: WaMediaRef;
+  /** What fills each dynamic CTA link, by the button's position in cta_buttons. */
+  buttons?: AisensyButtonInput[];
+}
+
+export default function TemplateSample({ template, params, media, buttons }: Readonly<Props>) {
+  const mediaFormat = mediaFormatOf(template.header_format);
+
+  /** The link under a button, drawn only where there is a {{n}} to fill — that
+   * is the one an operator can get wrong. Matched on the label rather than on a
+   * position, because `template.buttons` also carries the quick replies. */
+  const linkFor = (label: string): string => {
+    const at = template.cta_buttons.findIndex(
+      (button) => button.text === label && button.url_param > 0
+    );
+    if (at < 0) return '';
+    const button = template.cta_buttons[at];
+    const value = buttons?.find((row) => row.index === at)?.value ?? '';
+    return filledButtonUrl(button.url, button.url_param, value);
+  };
 
   return (
     <Box
@@ -116,22 +116,24 @@ export default function TemplateSample({ template }: Readonly<{ template: Aisens
         }}
       >
         <Box sx={{ p: 1.25 }}>
-          {mediaFormat && <MediaHeader format={mediaFormat} />}
+          {mediaFormat && <BubbleMedia format={mediaFormat} media={media} />}
           {template.header && (
             <Typography variant="body2" fontWeight={800} sx={{ mb: 0.5 }}>
               {template.header}
             </Typography>
           )}
-          <BubbleBody body={template.body} />
+          <BubbleBody body={template.body} params={params} />
           {template.footer && (
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.75 }}>
               {template.footer}
             </Typography>
           )}
         </Box>
-        {template.buttons.map((label) => (
-          <BubbleButton key={label} label={label} />
-        ))}
+        <Stack>
+          {template.buttons.map((label) => (
+            <BubbleButton key={label} label={label} link={linkFor(label)} />
+          ))}
+        </Stack>
       </Box>
     </Box>
   );

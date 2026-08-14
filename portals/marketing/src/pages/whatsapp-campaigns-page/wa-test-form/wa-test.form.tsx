@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -12,8 +12,11 @@ import {
   Typography,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import ParamsField from '../wa-campaign-form/ParamsField';
-import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
+import { useTranslation } from '@duncit/app-settings';
+import TemplateInputs from '../wa-campaign-form/TemplateInputs';
+import { useTemplateFields } from '../wa-campaign-form/useTemplateFields';
+import TemplateSample from '../wa-aisensy/TemplateSample';
+import { campaignFor, templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import type { WaCampaignNameOption } from '../queries';
 import { emptyValues, toTestInput, waTestSchema, type WaTestInput, type WaTestValues } from './wa-test.types';
 
@@ -28,7 +31,7 @@ interface Props {
 }
 
 const PARAMS_HINT =
-  'Literal text only — a test has no recipient to resolve {{first_name}} against. Add exactly as many as the template expects.';
+  'Literal text only — a test has no recipient to resolve {{first_name}} against.';
 
 /**
  * Send one message to one number before pointing a template at an audience.
@@ -42,12 +45,15 @@ export default function WaTestForm({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => waTestSchema(t), [t]);
   const { options, campaigns, templates } = useCampaignOptions(names);
   // The campaign the test was started from wins; the first option is only the
   // fallback for a test opened without one.
   const startCampaign = campaignName || options[0]?.value || '';
   const {
     control,
+    getValues,
     handleSubmit,
     reset,
     setValue,
@@ -55,31 +61,32 @@ export default function WaTestForm({
     formState: { isValid },
   } = useForm<WaTestValues>({
     defaultValues: emptyValues(''),
-    resolver: zodResolver(waTestSchema),
+    resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
+  // See `useTemplateFields`: the reset is what the field layout follows, not
+  // `open`, whose render still carries the previous send's values.
+  const [resetCount, setResetCount] = useState(0);
   useEffect(() => {
-    if (open) reset(emptyValues(startCampaign));
+    if (!open) return;
+    reset(emptyValues(startCampaign));
+    setResetCount((count) => count + 1);
   }, [open, startCampaign, reset]);
 
-  // A test proves the template, so it carries exactly the params the template
-  // expects — the same rule the campaign form follows.
-  const template = templateFor(watch('wa_campaign_name'), campaigns, templates);
-  const paramCount = template?.param_count;
-  useEffect(() => {
-    if (paramCount === undefined) return;
-    setValue(
-      'template_params',
-      Array.from({ length: paramCount }, () => ({ value: '' })),
-      { shouldValidate: true }
-    );
-  }, [paramCount, setValue]);
+  const values = watch();
+  const campaign = campaignFor(values.wa_campaign_name, campaigns);
+  const template = templateFor(values.wa_campaign_name, campaigns, templates);
+  useTemplateFields({ resetCount, template, campaign, setValue, getValues });
 
-  const submit = handleSubmit(async (values) => {
-    const ok = await onSubmit(toTestInput(values));
+  const submit = handleSubmit(async (next) => {
+    const ok = await onSubmit(toTestInput(next));
     if (ok) onClose();
   });
+
+  const media = values.media_url
+    ? { url: values.media_url, filename: values.media_filename }
+    : undefined;
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -110,11 +117,6 @@ export default function WaTestForm({
               ))}
             </RhfTextField>
 
-            {template && (
-              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                {template.body}
-              </Typography>
-            )}
             <RhfTextField
               control={control}
               name="destination"
@@ -129,7 +131,22 @@ export default function WaTestForm({
               required
               hint="Name AiSensy records for this contact"
             />
-            <ParamsField control={control} hint={PARAMS_HINT} />
+
+            <TemplateInputs
+              control={control}
+              template={template}
+              campaign={campaign}
+              hint={PARAMS_HINT}
+            />
+
+            {template && (
+              <TemplateSample
+                template={template}
+                params={values.template_params.map((param) => param.value)}
+                media={media}
+                buttons={values.buttons}
+              />
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>

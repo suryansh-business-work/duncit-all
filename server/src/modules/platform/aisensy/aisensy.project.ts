@@ -135,6 +135,26 @@ export interface AisensyCampaign {
   media_filename: string;
 }
 
+/** One interactive button under the message — what AiSensy calls a
+ * `call_to_action` entry. */
+export interface AisensyTemplateButton {
+  /** URL or PHONE_NUMBER. */
+  type: string;
+  /** The label WhatsApp draws on the button. */
+  text: string;
+  /** A URL button's link with its {{n}} intact; empty for every other kind. */
+  url: string;
+  /**
+   * The {{n}} the link carries, or 0 when it is static.
+   *
+   * AiSensy numbers a dynamic link AFTER the body's own variables — a body with
+   * six variables gives the link {{7}} — so this is the parameter's position on
+   * the template, not the button's. Its value never travels in `templateParams`
+   * (see {@link CampaignButton} in aisensy.gateway).
+   */
+  url_param: number;
+}
+
 export interface AisensyTemplate {
   /** AiSensy's own id — the only handle `deleteTemplate` accepts. */
   id: string;
@@ -148,12 +168,16 @@ export interface AisensyTemplate {
   param_count: number;
   /** The HEADER component's text — empty for a media header or no header. */
   header: string;
-  /** TEXT, IMAGE, VIDEO, DOCUMENT — empty when the template has no header. */
+  /** TEXT, IMAGE, VIDEO, FILE — empty when the template has no header. */
   header_format: string;
+  /** Whether every message on this template must carry a header asset. */
+  needs_media: boolean;
   /** The small grey line under the body, when the template has one. */
   footer: string;
   /** The button labels WhatsApp draws under the message, in order. */
   buttons: string[];
+  /** The interactive buttons in full — the only place a dynamic link shows up. */
+  cta_buttons: AisensyTemplateButton[];
 }
 
 const str = (row: Record<string, any>, ...keys: string[]) => {
@@ -171,29 +195,110 @@ function componentOf(row: Record<string, any>, type: string): Record<string, any
   return components.find((c: any) => String(c?.type ?? '').toUpperCase() === type) ?? null;
 }
 
-/** The BODY component's text. AiSensy's Project API puts the full text
- * (body + button labels) in `text`. */
+const arrayOf = (value: unknown): any[] => (Array.isArray(value) ? value : []);
+
+/**
+ * The body without the buttons AiSensy appends to it.
+ *
+ * Its `text` is the body with EVERY button written after it as ` | [title,value]`
+ * — AiSensy's own example reads `hi | [call,918116856153] | [go to,https://a@b.com]`.
+ * Cut off one trailing pair at a time rather than by regex: a pattern that
+ * matches the whole run backtracks over long bodies (S8786).
+ */
+function withoutButtons(text: string): string {
+  let out = text.trimEnd();
+  while (out.endsWith(']')) {
+    const open = out.lastIndexOf('[');
+    if (open <= 0) break;
+    const before = out.slice(0, open).trimEnd();
+    if (!before.endsWith('|')) break;
+    out = before.slice(0, -1).trimEnd();
+  }
+  return out;
+}
+
+/**
+ * The BODY component's text.
+ *
+ * The Project API answers with no components at all, so this lands on `text`.
+ * The buttons are cut off it: left in, a preview shows the junk and
+ * {@link paramCount} counts a {{n}} that lives in a button's link rather than
+ * in the message.
+ */
 function bodyText(row: Record<string, any>): string {
-  const body = componentOf(row, 'BODY');
-  return trimmed(body?.text) || trimmed(row.body) || trimmed(row.text);
+  const body = trimmed(componentOf(row, 'BODY')?.text) || trimmed(row.body) || trimmed(row.text);
+  return withoutButtons(body);
 }
 
-/** The header, as WhatsApp draws it: a bold line, or a media placeholder whose
- * kind is all a preview can show — the media itself is chosen per send. */
+/** Header kinds whose asset has to travel with every message. AiSensy says FILE
+ * where Meta says DOCUMENT. */
+const MEDIA_FORMATS = new Set(['IMAGE', 'VIDEO', 'FILE', 'DOCUMENT']);
+
+/** Whether a template's header is an asset the send has to supply. */
+export const needsMedia = (headerFormat: string): boolean =>
+  MEDIA_FORMATS.has(headerFormat.toUpperCase());
+
+/**
+ * The header, as WhatsApp draws it: a bold line, or a media placeholder whose
+ * kind is all a preview can show — the media itself is chosen per send.
+ *
+ * The component branch is for a Meta-shaped row. The Project API is not one —
+ * its template model has no components at all — and carries the header kind in
+ * the TOP-LEVEL `type` (TEXT | IMAGE | VIDEO | FILE). Reading only the
+ * component is why every template used to report an empty `header_format`,
+ * which reads as "no template here needs media" and is how a media campaign
+ * reached AiSensy with nothing attached.
+ */
 function headerOf(row: Record<string, any>): { header: string; header_format: string } {
-  const header = componentOf(row, 'HEADER');
-  if (!header) return { header: '', header_format: '' };
-  return {
-    header: trimmed(header.text),
-    header_format: (trimmed(header.format) || 'TEXT').toUpperCase(),
-  };
+  const component = componentOf(row, 'HEADER');
+  if (component) {
+    return {
+      header: trimmed(component.text),
+      header_format: (trimmed(component.format) || 'TEXT').toUpperCase(),
+    };
+  }
+  const type = str(row, 'type', 'header_type', 'headerType').toUpperCase();
+  if (needsMedia(type)) return { header: '', header_format: type };
+  const header = str(row, 'header_text', 'headerText');
+  return { header, header_format: header ? 'TEXT' : '' };
 }
 
-/** The button labels, in the order WhatsApp stacks them under the message. */
-function buttonLabels(row: Record<string, any>): string[] {
-  const block = componentOf(row, 'BUTTONS');
-  const buttons = Array.isArray(block?.buttons) ? block.buttons : [];
-  return buttons.map((button: any) => trimmed(button?.text)).filter(Boolean);
+/** URL / PHONE_NUMBER as one word — AiSensy writes a phone button's type as
+ * "Phone Number" where Meta writes "PHONE_NUMBER". */
+const buttonType = (raw: unknown) => trimmed(raw).toUpperCase().replaceAll(' ', '_');
+
+/** The {{n}} a link carries, or 0 when it is static. */
+function urlParam(url: string): number {
+  const match = /\{\{(\d+)\}\}/.exec(url);
+  return match ? Number(match[1]) : 0;
+}
+
+/**
+ * The interactive buttons, in the order they sit on the template — which is the
+ * order AiSensy's send endpoint indexes them by.
+ *
+ * The Project API returns `call_to_action` ({type, button_title, button_value})
+ * rather than a BUTTONS component, so reading only the component left this
+ * permanently empty and nothing knew a template had a dynamic link at all.
+ */
+function ctaButtons(row: Record<string, any>): AisensyTemplateButton[] {
+  const fromComponent = arrayOf(componentOf(row, 'BUTTONS')?.buttons).map((button) => ({
+    type: button?.type,
+    text: button?.text,
+    url: button?.url,
+  }));
+  const fromProject = arrayOf(row.call_to_action).map((button) => ({
+    type: button?.type,
+    text: button?.button_title,
+    // `button_value` is the link on a URL button and the number on a phone one.
+    url: buttonType(button?.type) === 'URL' ? button?.button_value : '',
+  }));
+  return [...fromComponent, ...fromProject]
+    .map((button) => {
+      const url = trimmed(button.url);
+      return { type: buttonType(button.type), text: trimmed(button.text), url, url_param: urlParam(url) };
+    })
+    .filter((button) => button.text || button.url);
 }
 
 /**
@@ -340,10 +445,17 @@ export async function listTemplates(): Promise<AisensyTemplate[]> {
   );
   return rows.map((row) => {
     const body = bodyText(row);
-    // AiSensy declares the count itself; the regex is the fallback for rows
-    // that predate the field.
+    // The body's own {{n}} wins over AiSensy's declared `total_parameters`:
+    // that number counts the parameters in its `text`, and its `text` embeds
+    // the buttons — so on a template whose link carries a {{n}} the declared
+    // number is one more than `templateParams` may hold. The declared number is
+    // the fallback for a row whose body could not be read.
     const declared = Number(row.total_parameters);
-    const param_count = Number.isInteger(declared) && declared > 0 ? declared : paramCount(body);
+    const fromBody = paramCount(body);
+    const declaredCount = Number.isInteger(declared) && declared > 0 ? declared : 0;
+    const header = headerOf(row);
+    const cta_buttons = ctaButtons(row);
+    const quickReplies = arrayOf(row.quick_replies).map(trimmed).filter(Boolean);
     return {
       id: str(row, '_id', 'id'),
       name: str(row, 'name', 'templateName', 'elementName'),
@@ -351,10 +463,12 @@ export async function listTemplates(): Promise<AisensyTemplate[]> {
       category: str(row, 'category'),
       language: str(row, 'language', 'languageCode', 'language_code'),
       body,
-      param_count,
-      ...headerOf(row),
-      footer: trimmed(componentOf(row, 'FOOTER')?.text),
-      buttons: buttonLabels(row),
+      param_count: fromBody > 0 ? fromBody : declaredCount,
+      ...header,
+      needs_media: needsMedia(header.header_format),
+      footer: trimmed(componentOf(row, 'FOOTER')?.text) || trimmed(row.footerText),
+      buttons: [...cta_buttons.map((button) => button.text), ...quickReplies].filter(Boolean),
+      cta_buttons,
     };
   });
 }

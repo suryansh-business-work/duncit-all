@@ -1,72 +1,54 @@
 import type { ReactNode } from 'react';
 import { useFieldArray, type Control, type FieldValues, type Path } from 'react-hook-form';
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Stack, Typography } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-
-/** One template variable row. Hoisted so it isn't redefined each render (S6478). */
-function ParamRow<T extends FieldValues>({
-  control,
-  index,
-  onRemove,
-}: Readonly<{ control: Control<T>; index: number; onRemove: () => void }>) {
-  return (
-    <Stack direction="row" spacing={1} alignItems="flex-start">
-      <RhfTextField
-        control={control}
-        name={`template_params.${index}.value` as Path<T>}
-        label={`Param {{${index + 1}}}`}
-        size="small"
-        hint=" "
-      />
-      <Tooltip title="Remove parameter">
-        <IconButton aria-label={`Remove parameter ${index + 1}`} onClick={onRemove} sx={{ mt: 0.5 }}>
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-  );
-}
+import { useTranslation } from '@duncit/app-settings';
+import { paramContext } from '../wa-aisensy/helpers';
 
 interface Props<T extends FieldValues> {
   control: Control<T>;
+  /** The template body, so a row can show the sentence its value lands in. */
+  body: string;
   /** What these params mean here — a campaign resolves variables per recipient,
    * a test send does not, so the caption is the caller's to write. */
   hint: ReactNode;
 }
 
 /**
- * The template's variables, in the order WhatsApp fills them. Generic over the
- * form so the campaign and the test send share one row list instead of keeping
- * two that must be kept identical.
+ * The template's variables, in the order WhatsApp fills them.
+ *
+ * The rows are laid out from the template (see `useTemplateFields`) and there is
+ * deliberately no add or remove: the count is the template's, and letting it be
+ * edited by hand is how a send reached AiSensy with the wrong number of values.
+ * Generic over the form so the campaign and the test send share one row list.
  */
-export default function ParamsField<T extends FieldValues>({ control, hint }: Readonly<Props<T>>) {
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'template_params' as never,
-  });
+export default function ParamsField<T extends FieldValues>({
+  control,
+  body,
+  hint,
+}: Readonly<Props<T>>) {
+  const { t } = useTranslation();
+  const { fields } = useFieldArray({ control, name: 'template_params' as never });
+  if (fields.length === 0) return null;
 
   return (
     <Stack spacing={1}>
       <Typography variant="overline" color="text.secondary">
-        Template params
+        {t('marketingWhatsapp.paramsTitle')}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {hint}
       </Typography>
       {fields.map((field, index) => (
-        <ParamRow key={field.id} control={control} index={index} onRemove={() => remove(index)} />
-      ))}
-      <Box>
-        <Button
+        <RhfTextField
+          key={field.id}
+          control={control}
+          name={`template_params.${index}.value` as Path<T>}
+          label={t('marketingWhatsapp.paramLabel', { vars: { n: `{{${index + 1}}}` } })}
           size="small"
-          startIcon={<AddIcon />}
-          onClick={() => append({ value: '' } as never)}
-        >
-          Add parameter
-        </Button>
-      </Box>
+          hint={paramContext(body, index + 1) || undefined}
+        />
+      ))}
     </Stack>
   );
 }

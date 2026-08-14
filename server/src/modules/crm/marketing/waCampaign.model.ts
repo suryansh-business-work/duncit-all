@@ -33,6 +33,26 @@ const waManualContactSchema = new Schema(
   { _id: false }
 );
 
+/** The header asset a media template sends. AiSensy fetches the URL itself, so
+ * it is stored exactly as it was given — a link, never a file. */
+const waMediaSchema = new Schema(
+  {
+    url: { type: String, required: true, trim: true, maxlength: 2048 },
+    filename: { type: String, default: '', trim: true, maxlength: 255 },
+  },
+  { _id: false }
+);
+
+/** What filled one CTA button's dynamic link. The index is the button's
+ * position on the template, which is how AiSensy addresses it. */
+const waCampaignButtonSchema = new Schema(
+  {
+    index: { type: Number, required: true, min: 0 },
+    value: { type: String, required: true, trim: true, maxlength: 2048 },
+  },
+  { _id: false }
+);
+
 /**
  * One WhatsApp send to a Target Audience, through AiSensy.
  *
@@ -66,6 +86,13 @@ const waCampaignSchema = new Schema(
     /** Ordered template variables. Each is literal text or carries {{tokens}}
      * resolved per recipient (see waCampaign.service). */
     template_params: { type: [String], default: [] },
+    /** The header asset every message in this send carried, resolved once at
+     * send time. Frozen for the same reason msg_rate is: the asset attached to
+     * the campaign can be swapped in the AiSensy console, and a past send must
+     * keep saying what it actually carried. */
+    media: { type: waMediaSchema, default: null },
+    /** What filled the CTA link, frozen with the send for the same reason. */
+    buttons: { type: [waCampaignButtonSchema], default: [] },
     status: {
       type: String,
       enum: ['SCHEDULED', 'SENDING', 'SENT', 'FAILED', 'CANCELLED'],

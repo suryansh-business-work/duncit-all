@@ -33,6 +33,7 @@ export function SidebarUserContent({
   showPodPlans,
   showLeaderboard = false,
   showMembership = false,
+  showGiftCards = false,
   showTourGuide = false,
   onNavigate,
 }: Readonly<{
@@ -46,6 +47,8 @@ export function SidebarUserContent({
   showLeaderboard?: boolean;
   /** Server `membership` feature flag — the whole section hides without it. */
   showMembership?: boolean;
+  /** Server `gift_cards` feature flag — the whole section hides without it. */
+  showGiftCards?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
   onNavigate: (route: MenuRoute) => void;
@@ -74,6 +77,24 @@ export function SidebarUserContent({
       badge: t('mweb.membership.comingSoon'),
     },
   ];
+  // Buying and redeeming are two different errands — someone handed a code
+  // never passes through the buy page — so the section offers both doors.
+  const giftCardItems: ProfileTile[] = [
+    {
+      key: 'gift-cards-buy',
+      label: t('mweb.giftCards.sidebarBuyLabel'),
+      caption: t('mweb.giftCards.sidebarBuyCaption'),
+      icon: 'card-giftcard',
+      route: 'GiftCards',
+    },
+    {
+      key: 'gift-cards-redeem',
+      label: t('mweb.giftCards.sidebarRedeemLabel'),
+      caption: t('mweb.giftCards.sidebarRedeemCaption'),
+      icon: 'redeem',
+      route: 'GiftCardRedeem',
+    },
+  ];
   return (
     <YStack>
       <TourAnchor tour="profile" anchor="profile-details">
@@ -98,6 +119,13 @@ export function SidebarUserContent({
         <SidebarManageList
           title={t('mweb.membership.title')}
           items={membershipItems}
+          onNavigate={onNavigate}
+        />
+      ) : null}
+      {showGiftCards ? (
+        <SidebarManageList
+          title={t('mweb.giftCards.title')}
+          items={giftCardItems}
           onNavigate={onNavigate}
         />
       ) : null}

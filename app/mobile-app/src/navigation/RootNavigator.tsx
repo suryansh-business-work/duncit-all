@@ -22,6 +22,10 @@ import { CartScreen } from '@/screens/CartScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { MembershipScreen } from '@/screens/MembershipScreen';
+import { GiftCardsScreen } from '@/screens/GiftCardsScreen';
+import { GiftCardCheckoutScreen } from '@/screens/GiftCardCheckoutScreen';
+import { GiftCardRedeemScreen } from '@/screens/GiftCardRedeemScreen';
+import { GiftCardClaimScreen } from '@/screens/GiftCardClaimScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { ShopScreen } from '@/screens/ShopScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
@@ -197,6 +201,10 @@ export function RootNavigator() {
       <Stack.Screen name="AddressBook" component={AddressBookScreen} />
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Stack.Screen name="Membership" component={MembershipScreen} />
+      <Stack.Screen name="GiftCards" component={GiftCardsScreen} />
+      <Stack.Screen name="GiftCardCheckout" component={GiftCardCheckoutScreen} />
+      <Stack.Screen name="GiftCardRedeem" component={GiftCardRedeemScreen} />
+      <Stack.Screen name="GiftCardClaim" component={GiftCardClaimScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
   );

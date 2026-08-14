@@ -1,6 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { TabParamList } from '@/navigation/tabs';
+import type { GiftCardSelection } from '@/utils/gift-cards';
 
 /** The single React Navigation stack. Auth/Survey/App screens are gated by the
  * auth store, but they share one param list for typed navigation everywhere. */
@@ -90,6 +91,10 @@ export type RootStackParamList = {
   AddressBook: undefined;
   Leaderboard: undefined;
   Membership: undefined;
+  GiftCards: undefined;
+  GiftCardCheckout: { selection: GiftCardSelection };
+  GiftCardRedeem: undefined;
+  GiftCardClaim: { code: string };
   ProductDetail: { productId: string };
   HostsVenues: undefined;
   Venues: undefined;
@@ -128,6 +133,8 @@ export type MenuRoute = Exclude<
   | 'Checkout'
   | 'ProductCheckout'
   | 'ProductDetail'
+  | 'GiftCardCheckout'
+  | 'GiftCardClaim'
 >;
 
 declare global {

@@ -33,7 +33,12 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
               <ListItemIcon sx={{ minWidth: 36, color: 'text.secondary' }}>
                 {profileIcon(item.icon)}
               </ListItemIcon>
-              <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 700 }} />
+              <ListItemText
+                primary={item.label}
+                secondary={item.caption || undefined}
+                primaryTypographyProps={{ fontWeight: 700 }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
               {item.badge && <Chip size="small" color="warning" label={item.badge} sx={{ mr: 0.75 }} />}
               <ChevronRightIcon fontSize="small" color="disabled" />
             </ListItemButton>

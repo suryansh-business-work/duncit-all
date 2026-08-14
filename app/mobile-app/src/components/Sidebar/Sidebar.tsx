@@ -44,6 +44,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
   const showMembership = useFeatureFlag('membership');
+  const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
@@ -112,6 +113,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             showPodPlans={showPodPlans}
             showLeaderboard={showLeaderboard}
             showMembership={showMembership}
+            showGiftCards={showGiftCards}
             showTourGuide={showTourGuide}
             onNavigate={go}
           />

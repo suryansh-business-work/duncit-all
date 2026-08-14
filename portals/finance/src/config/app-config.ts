@@ -69,6 +69,15 @@ export const appConfig = {
         { label: 'Coin Settings', to: '/duncit-coin/settings', icon: 'tune' },
       ],
     },
+    {
+      label: 'Gift Cards',
+      icon: 'wallet',
+      children: [
+        { label: 'Dashboard', to: '/gift-cards/dashboard', icon: 'insights' },
+        { label: 'Cards', to: '/gift-cards/cards', icon: 'ticket' },
+        { label: 'Logs', to: '/gift-cards/logs', icon: 'receipt' },
+      ],
+    },
     { label: 'Referrals', to: '/referrals', icon: 'campaign' },
     { label: 'Payout Cycles', to: '/payouts', icon: 'calendar' },
     {

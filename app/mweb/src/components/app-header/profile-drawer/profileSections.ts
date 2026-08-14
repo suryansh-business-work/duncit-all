@@ -26,6 +26,8 @@ export type ProfileIconKey =
   | 'coin'
   | 'leaderboard'
   | 'membership'
+  | 'giftcards'
+  | 'giftcardRedeem'
   | 'host'
   | 'venue'
   | 'ecomm'

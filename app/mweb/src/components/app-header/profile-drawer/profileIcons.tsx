@@ -17,6 +17,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
+import RedeemIcon from '@mui/icons-material/Redeem';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ExploreIcon from '@mui/icons-material/Explore';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StoreIcon from '@mui/icons-material/Store';
@@ -45,6 +47,10 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   coin: <MonetizationOnIcon />,
   leaderboard: <EmojiEventsIcon />,
   membership: <CardMembershipIcon />,
+  // CardGiftcard is already the referral icon, so gift cards wear Redeem —
+  // the wrapped-present glyph — and redemption the coin-exchange glyph.
+  giftcards: <RedeemIcon />,
+  giftcardRedeem: <CurrencyExchangeIcon />,
   // The partner menus reuse the Earn cards' icon vocabulary, so a role reads
   // the same on the card that unlocked it and in its own drawer section.
   host: <DashboardIcon />,

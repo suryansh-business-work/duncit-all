@@ -26,6 +26,9 @@ import {
   CoinDashboardPage,
   CoinTransactionsPage,
   CoinSettingsPage,
+  GiftCardDashboardPage,
+  GiftCardCardsPage,
+  GiftCardLogsPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -61,6 +64,9 @@ export default function App() {
       <Route path="/duncit-coin/dashboard" element={authed(<CoinDashboardPage />)} />
       <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />
       <Route path="/duncit-coin/settings" element={authed(<CoinSettingsPage />)} />
+      <Route path="/gift-cards/dashboard" element={authed(<GiftCardDashboardPage />)} />
+      <Route path="/gift-cards/cards" element={authed(<GiftCardCardsPage />)} />
+      <Route path="/gift-cards/logs" element={authed(<GiftCardLogsPage />)} />
       <Route path="/payouts" element={authed(<PayoutCyclesPage />)} />
       <Route path="/calculators/pod-profit" element={authed(<PodProfitCalculatorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />

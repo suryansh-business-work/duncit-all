@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { describeFetchFailure } from '@utils/outboundFetch';
 import { OPENAI_TASKS, type OpenAiTaskKey } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import { openAiUsageService } from '@modules/ai/openaiUsage/openaiUsage.service';
 
@@ -186,7 +187,9 @@ export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResu
       body: buildBody(req, model),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'OpenAI request failed';
+    const detail = describeFetchFailure(err);
+    const fallback = err instanceof Error ? err.message : 'OpenAI request failed';
+    const message = detail ? `OpenAI is unreachable (${detail})` : fallback;
     record({ req, model, status: 'FAILED', httpStatus: 0, error: message, startedAt });
     return { ok: false, code: 'NETWORK', status: 0, message, model };
   }

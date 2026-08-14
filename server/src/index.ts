@@ -17,8 +17,10 @@ import cors from 'cors';
 import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import type { ApolloServerPlugin } from '@apollo/server';
+import { unwrapResolverError } from '@apollo/server/errors';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { describeFetchFailure } from '@utils/outboundFetch';
 import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
@@ -320,9 +322,11 @@ async function bootstrap() {
         async didEncounterErrors(ctx) {
           for (const err of ctx.errors) {
             const code = (err.extensions?.code as string | undefined) ?? 'GRAPHQL_ERROR';
+            // A bare "fetch failed" is undebuggable — log the undici cause too.
+            const cause = describeFetchFailure(unwrapResolverError(err));
             logs.server.error('graphql', ctx.operationName ?? 'anonymous', {
               code,
-              message: err.message,
+              message: cause ? `${err.message} (${cause})` : err.message,
               path: err.path?.join('.'),
             });
           }
@@ -334,6 +338,19 @@ async function bootstrap() {
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
+    // Node's fetch reports every outbound transport failure as the same bare
+    // "fetch failed" and hides the reason (DNS, refused, TLS, timeout) in
+    // error.cause. Any resolver that lets one escape would hand clients those
+    // two words — rewrite it with the actual reason instead.
+    formatError(formatted, error) {
+      const detail = describeFetchFailure(unwrapResolverError(error));
+      if (!detail) return formatted;
+      return {
+        ...formatted,
+        message: `Upstream request failed (${detail})`,
+        extensions: { ...formatted.extensions, code: 'BAD_GATEWAY' },
+      };
+    },
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       graphqlErrorLogger,

@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { logs } from '@duncit/logs';
+import { isStaleChunkError, reloadForStaleChunk } from './staleChunkReload';
 
 interface Props {
   children: ReactNode;
@@ -24,10 +25,17 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    logs.mWeb.error('ErrorBoundary', 'componentDidCatch', {
+    // A route chunk this document can no longer load means a deploy landed
+    // under an open tab. Reload once to pick up the new index.html instead of
+    // showing a crash screen for a site that is fine — and log it as a warn,
+    // because nothing is broken. A second one falls through to the error below.
+    const recovering = reloadForStaleChunk(error);
+    const level = isStaleChunkError(error) ? 'warn' : 'error';
+    logs.mWeb[level]('ErrorBoundary', 'componentDidCatch', {
       error,
       msg: 'ErrorBoundary caught an error',
       componentStack: info.componentStack,
+      recovering,
     });
   }
 

@@ -1,28 +1,21 @@
+import { meetingPlatformName } from '@duncit/utils';
 import { fallbackT, type Translate } from '../i18n/fallback';
 
-// Product names, which are the same in every language — only "Online", the
-// stand-in for a platform we have no name for, is copy.
-const LABELS: Record<string, string> = {
-  GOOGLE_MEET: 'Google Meet',
-  ZOOM: 'Zoom',
-  MICROSOFT_TEAMS: 'Microsoft Teams',
-  TEAMS: 'Microsoft Teams',
-  SKYPE: 'Skype',
-  WEBEX: 'Webex',
-};
-
-/** Maps a meeting-platform enum (e.g. GOOGLE_MEET) to a human label. Falls back
- * to a title-cased version of the value, never the raw SCREAMING_SNAKE enum.
- * `t` comes from the rendering screen so the label follows the reader's
- * language; the bundled English is the default for call sites without one. */
+/**
+ * Maps a meeting-platform code (e.g. GOOGLE_MEET) to a human label.
+ *
+ * The name table itself lives in `@duncit/utils` — it was duplicated here and
+ * in the native app, and the create-pod dropdown would have made a third copy.
+ * What stays local is the only part that is copy rather than a product name:
+ * the stand-in shown when a pod names no platform at all.
+ *
+ * `t` comes from the rendering screen so that stand-in follows the reader's
+ * language; the bundled English is the default for call sites without one.
+ */
 export const formatMeetingPlatform = (value?: string | null, t: Translate = fallbackT): string => {
-  if (!value || value === 'OTHER') return t('mweb.podDetails.online');
-  return (
-    LABELS[value] ??
-    value
-      .toLowerCase()
-      .split('_')
-      .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ''))
-      .join(' ')
-  );
+  if (!value) return t('mweb.podDetails.online');
+  // An explicit "Other" is a choice the host made, so it is named as one — it
+  // used to render as "Online", which reads as "we do not know".
+  if (value === 'OTHER') return t('mweb.createPod.meetingPlatformOther');
+  return meetingPlatformName(value);
 };

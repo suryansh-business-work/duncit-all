@@ -90,6 +90,37 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.portalAccess.openPortal": "Open the portal",
   "email.portalAccess.deniedTitle": "About your portal access request",
   "email.portalAccess.deniedBody": "An admin reviewed your request and didn't approve it this time. Reply to this email if you have questions.",
+  "email.portalAccess.portalLabel": "Portal",
+
+  // An account was switched off or back on (templates: brand/venue/host
+  // -activated and -deactivated). Six emails, one shape — only the noun and
+  // the two lines of copy change, so the labels and the closing lines are
+  // shared and the per-entity copy is not.
+  "email.accountStatus.brandLabel": "Brand",
+  "email.accountStatus.venueLabel": "Venue",
+  "email.accountStatus.hostLabel": "Host account",
+  "email.accountStatus.liveHelp":
+    "Nothing changed while it was paused — your listings, bookings and payouts are exactly as you left them.",
+  "email.accountStatus.pausedHelp":
+    "Nothing has been deleted. Reply to this email if you think this is a mistake, or if you want it switched back on.",
+  "email.brandActivated.title": "Your brand is live again",
+  "email.brandActivated.body":
+    "Your brand and its products are visible across Duncit again — shoppers can find your storefront, and hosts can add your products to their pods.",
+  "email.brandDeactivated.title": "Your brand has been deactivated",
+  "email.brandDeactivated.body":
+    "Your brand and its products are hidden from the Duncit marketplace for now, and no new products can be listed while it stays that way.",
+  "email.venueActivated.title": "Your venue is live again",
+  "email.venueActivated.body":
+    "Your venue is discoverable on Duncit again, and hosts can request your availability slots.",
+  "email.venueDeactivated.title": "Your venue has been deactivated",
+  "email.venueDeactivated.body":
+    "Your venue is hidden from Duncit for now — it will not appear in search, and hosts cannot request your slots.",
+  "email.hostActivated.title": "Your host account is live again",
+  "email.hostActivated.body":
+    "You can create and run pods on Duncit again, and your host profile is discoverable.",
+  "email.hostDeactivated.title": "Your host account has been deactivated",
+  "email.hostDeactivated.body":
+    "You cannot create new pods for now, and your host profile is hidden from Duncit.",
 
   // The opt-out line the footer of every opt-out-able category carries.
   "email.fragment.unsubscribe": "Don't want these emails?",

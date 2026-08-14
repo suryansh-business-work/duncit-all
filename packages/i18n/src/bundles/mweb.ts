@@ -1332,7 +1332,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // the schedule is entered by hand.
       meetingPlatform: 'Meeting platform',
       // mWeb only — the native platform field carries no helper line.
-      meetingPlatformHint: 'e.g. Google Meet, Zoom',
+      meetingPlatformHint: 'Where attendees will join you',
+      // The one option that is copy rather than a product name. Google Meet,
+      // Zoom and Microsoft Teams are the same words in every language and are
+      // supplied by @duncit/utils, not from here.
+      meetingPlatformOther: 'Other (paste link manually)',
+      meetingPlatformRequired: 'Choose where the meeting happens',
+      // Step 3 reads differently for a virtual pod: there is no venue to pick,
+      // only when it happens and what people join with.
+      step3TitleVirtual: 'Meeting Time & Medium',
+      step3SubtitleVirtual: 'Set when the session runs and where attendees join you.',
       meetingLink: 'Meeting link',
       meetingLinkHint: 'Attendees join through this link',
       meetingNotes: 'Meeting notes',

@@ -6,7 +6,8 @@ import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
   STEP_TITLE_KEYS,
-  STEP_SUBTITLE_KEYS,
+  stepTitleKey,
+  stepSubtitleKey,
   buildCreatePodInput,
   buildModerationInput,
   filterClubs,
@@ -281,8 +282,8 @@ export default function CreatePodStepper({
         <StepHero
           step={step}
           total={STEP_TITLE_KEYS.length}
-          title={t(STEP_TITLE_KEYS[step])}
-          subtitle={t(STEP_SUBTITLE_KEYS[step])}
+          title={t(stepTitleKey(step, podMode))}
+          subtitle={t(stepSubtitleKey(step, podMode))}
         />
       </Box>
       {steps[step]}

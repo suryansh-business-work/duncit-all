@@ -140,7 +140,11 @@ async function postToImagekit(
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
   const auth = 'Basic ' + Buffer.from(privateKey + ':').toString('base64');
-  const res = await fetch(IMAGEKIT_UPLOAD_URL, {
+  // Through outboundFetch like every other outbound call: a handshake ImageKit
+  // drops is retried once (the connect never landed, so nothing uploaded
+  // twice), and what does fail says "ImageKit did not respond in time" rather
+  // than the bare "fetch failed" this used to hand back.
+  const res = await outboundFetch('ImageKit', IMAGEKIT_UPLOAD_URL, {
     method: 'POST',
     headers: { Authorization: auth },
     body: form as any,
@@ -513,7 +517,7 @@ export async function pexelsSearch(opts: {
     ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/v1/curated?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await outboundFetch('Pexels', url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels search failed: ${json?.error || res.statusText}`, {
@@ -582,7 +586,7 @@ export async function pexelsSearchVideos(opts: {
     ? `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/videos/popular?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await outboundFetch('Pexels', url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {

@@ -88,24 +88,59 @@ export function humanFetchMessage(service: string, err: unknown): string | null 
 }
 
 /**
+ * Failures where the request provably never reached the far end: the socket was
+ * never opened, so nothing was delivered and nothing was acted on.
+ *
+ * That is what makes retrying these safe for a POST as well as a GET — an upload
+ * that never connected cannot have half-uploaded. Deliberately absent:
+ * ECONNRESET, socket errors and read timeouts, any of which can strike after the
+ * body went out, where a retry would mean doing the thing twice.
+ */
+const NEVER_DELIVERED_CODES = ['UND_ERR_CONNECT_TIMEOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'];
+
+/** One extra attempt. A third adds latency to an outage without curing it. */
+const MAX_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 300;
+
+/** Whether the connection was never established, so a retry repeats nothing. */
+function neverDelivered(err: unknown): boolean {
+  const detail = describeFetchFailure(err);
+  return !!detail && NEVER_DELIVERED_CODES.some((code) => detail.includes(code));
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
  * `fetch` that never fails as just "fetch failed".
  *
  * The thrown message is the human one; the undici detail rides along in
  * `extensions.reason` so a log or the Tech portal's Error Logs still has the
  * exact code without putting it in front of a person.
+ *
+ * A connect that never landed is tried once more. Third-party hosts (ImageKit,
+ * Pexels) drop the occasional handshake and undici gives up after 10s with
+ * UND_ERR_CONNECT_TIMEOUT — which reached the person as a failed import of a
+ * stock photo that would have worked a second later.
  */
 export async function outboundFetch(
   service: string,
   url: string,
   init?: RequestInit
 ): Promise<Response> {
-  try {
-    return await fetch(url, init);
-  } catch (err) {
-    const fallback = err instanceof Error ? err.message : String(err);
-    const detail = describeFetchFailure(err) ?? fallback;
-    throw new GraphQLError(humanFetchMessage(service, err) ?? `${service} is unreachable (${detail})`, {
-      extensions: { code: 'BAD_GATEWAY', service, reason: detail },
-    });
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      if (attempt === MAX_ATTEMPTS || !neverDelivered(err)) break;
+      await wait(RETRY_DELAY_MS);
+    }
   }
+  const fallback = lastError instanceof Error ? lastError.message : String(lastError);
+  const detail = describeFetchFailure(lastError) ?? fallback;
+  throw new GraphQLError(
+    humanFetchMessage(service, lastError) ?? `${service} is unreachable (${detail})`,
+    { extensions: { code: 'BAD_GATEWAY', service, reason: detail } }
+  );
 }

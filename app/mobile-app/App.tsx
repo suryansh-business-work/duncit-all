@@ -21,6 +21,7 @@ import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { AppPopup } from '@/components/AppPopup';
+import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
 import {
   initShortLinkAttribution,
@@ -154,6 +155,9 @@ export default function App() {
                     the store prompt, not a campaign image over it. */}
                 <AppPopup />
                 <ForceUpdateGate />
+                {/* Global, like the two above: the back button is pressed from
+                    every screen, so the guard cannot live inside one. */}
+                <ExitConfirmGate />
               </YStack>
             </ErrorBoundary>
           </SafeAreaProvider>

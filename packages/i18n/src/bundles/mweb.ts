@@ -9,6 +9,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       languageSaved: 'Language updated',
       goBack: 'Go back',
     },
+    // Android hardware-back exit guard. Native-only copy in the shared bundle,
+    // like mweb.openInApp.* below: a browser tab cannot be exited, so mWeb has
+    // nothing to render here and rule 27 has no parity to keep.
+    exitConfirm: {
+      title: 'Leave Duncit?',
+      message: 'Pressing back again will close the app.',
+      confirm: 'Close app',
+      cancel: 'Stay',
+    },
     // Server-side meta tags (app/mweb/server) — the <title> and the OG/Twitter
     // card copy a crawler sees for every mWeb page. Entity pages (pod, club,
     // profile, post, venue, product) show the entity's own data; these are the

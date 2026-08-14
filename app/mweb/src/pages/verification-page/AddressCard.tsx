@@ -33,7 +33,10 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
   const [form, setForm] = useState<AddressForm>(() => initialForm(item));
   const [busy, setBusy] = useState(false);
   const [submit] = useMutation(SUBMIT_ADDRESS_VERIFICATION);
-  const done = item.status === 'APPROVED';
+  // Approved is finished; under review is somebody else's turn. Editing the
+  // address mid-review means the admin approves one address having read
+  // another. The server refuses the submission either way.
+  const done = item.status === 'APPROVED' || item.status === 'PENDING';
 
   const set = (key: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));

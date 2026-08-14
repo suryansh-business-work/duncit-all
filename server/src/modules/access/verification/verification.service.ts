@@ -80,6 +80,50 @@ function validateDocumentUrl(url: string) {
   }
 }
 
+const underReview = () =>
+  new GraphQLError(
+    'This is already under review. You can submit again once it has been approved or rejected.',
+    { extensions: { code: 'VERIFICATION_UNDER_REVIEW' } }
+  );
+
+/** Mongo's duplicate-key error, which the unique (user_id, type) index raises. */
+const isDuplicateKey = (err: unknown) => (err as { code?: number } | null)?.code === 11000;
+
+/**
+ * Take the row for this submission, unless one is already being reviewed.
+ *
+ * A verification under review must not be replaceable: an admin looking at a
+ * document while the person swaps it underneath them approves something nobody
+ * saw. The consoles hide the form, but the block belongs here — mWeb, the app,
+ * the partner console and the API are four doors onto the same row, and a rule
+ * enforced in the UI is a rule enforced in none of them.
+ *
+ * The filter carries the condition rather than a read-then-write, because two
+ * submissions a moment apart would both pass a separate read. When it matches
+ * nothing there are two possibilities and the insert tells them apart: no row
+ * yet, which succeeds, or a PENDING row the filter skipped, whose unique index
+ * refuses the insert.
+ */
+async function claimForSubmit(
+  userId: string,
+  type: VerificationType,
+  set: Record<string, unknown>
+): Promise<UserVerificationDoc> {
+  const user_id = new Types.ObjectId(userId);
+  const updated = await UserVerificationModel.findOneAndUpdate(
+    { user_id, type, status: { $ne: 'PENDING' } },
+    { $set: set },
+    { new: true }
+  );
+  if (updated) return updated as UserVerificationDoc;
+  try {
+    return (await UserVerificationModel.create({ user_id, type, ...set })) as UserVerificationDoc;
+  } catch (err) {
+    if (isDuplicateKey(err)) throw underReview();
+    throw err;
+  }
+}
+
 export const verificationService = {
   // The full type list for a user. Missing rows are NOT_SUBMITTED; EMAIL derives
   // its terminal VERIFIED_BY_APP status from the login email's OTP verification.
@@ -119,45 +163,33 @@ export const verificationService = {
       });
     }
     validateDocumentUrl(documentUrl);
-    const doc = await UserVerificationModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId), type },
-      {
-        $set: {
-          status: 'PENDING',
-          document_url: documentUrl,
-          address: null,
-          reject_reason: null,
-          reviewed_by: null,
-          reviewed_at: null,
-        },
-      },
-      { new: true, upsert: true }
-    );
+    const doc = await claimForSubmit(userId, type, {
+      status: 'PENDING',
+      document_url: documentUrl,
+      address: null,
+      reject_reason: null,
+      reviewed_by: null,
+      reviewed_at: null,
+    });
     return toPub(type, doc);
   },
 
   async submitAddress(userId: string, input: AddressInput) {
-    const doc = await UserVerificationModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId), type: 'ADDRESS' },
-      {
-        $set: {
-          status: 'PENDING',
-          document_url: null,
-          address: {
-            line1: input.line1,
-            line2: input.line2 ?? null,
-            city: input.city,
-            state: input.state,
-            pincode: input.pincode,
-            country: input.country ?? null,
-          },
-          reject_reason: null,
-          reviewed_by: null,
-          reviewed_at: null,
-        },
+    const doc = await claimForSubmit(userId, 'ADDRESS', {
+      status: 'PENDING',
+      document_url: null,
+      address: {
+        line1: input.line1,
+        line2: input.line2 ?? null,
+        city: input.city,
+        state: input.state,
+        pincode: input.pincode,
+        country: input.country ?? null,
       },
-      { new: true, upsert: true }
-    );
+      reject_reason: null,
+      reviewed_by: null,
+      reviewed_at: null,
+    });
     return toPub('ADDRESS', doc);
   },
 

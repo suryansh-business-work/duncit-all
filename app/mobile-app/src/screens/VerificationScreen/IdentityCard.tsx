@@ -59,7 +59,10 @@ function PickButton({
 
 /** Identity verification — upload an ID document (image or PDF, 4 MB cap). */
 export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: Readonly<Props>) {
-  const done = item.status === 'APPROVED';
+  // Approved is finished; under review is somebody else's turn. Swapping the
+  // document mid-review means the admin approves one file having looked at
+  // another. The server refuses the submission either way. mWeb twin.
+  const done = item.status === 'APPROVED' || item.status === 'PENDING';
   return (
     <VerificationCard item={item}>
       {done ? null : (

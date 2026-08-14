@@ -16,22 +16,22 @@ import {
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { couponFormDefaults, couponFormSchema, toCouponInput, type CouponFormValues } from './coupon';
-import { CREATE_COUPON, UPDATE_COUPON, type CouponRow } from './queries';
+import { CREATE_COUPON, UPDATE_COUPON, type CouponPodOption, type CouponRow } from './queries';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
   initial?: CouponRow | null;
-  lockedPod?: { id: string; title: string } | null;
-  pods: { id: string; title: string }[];
+  lockedPod?: CouponPodOption | null;
+  pods: CouponPodOption[];
 }
 
 const toDateInput = (iso?: string | null) => (iso ? iso.slice(0, 10) : '');
 
 const buildDefaults = (
   initial?: CouponRow | null,
-  lockedPod?: { id: string; title: string } | null,
+  lockedPod?: CouponPodOption | null,
 ): CouponFormValues =>
   initial
     ? {

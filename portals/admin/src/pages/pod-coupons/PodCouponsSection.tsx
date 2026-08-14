@@ -5,9 +5,13 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import { SectionCard } from '@duncit/pod-details';
-import CouponsTable from '../coupons-page/CouponsTable';
-import CouponFormDialog from '../coupons-page/CouponFormDialog';
-import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
+import {
+  CouponsTable,
+  CouponFormDialog,
+  COUPONS_FOR_POD_TABLE,
+  DELETE_COUPON,
+  type CouponRow,
+} from '@duncit/coupons';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 
 interface Props {
@@ -16,7 +20,9 @@ interface Props {
 }
 
 /** Per-pod offer codes — server-paged list of global + pod-scoped coupons, with
- * create/edit/delete locked to this pod. Reuses the global coupons table + dialog. */
+ * create/edit/delete locked to this pod. The table and the dialog are the ones
+ * the Marketing portal's /coupons page renders, from @duncit/coupons (rule 40);
+ * only the pod filter and the locked pod are this page's own. */
 export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);

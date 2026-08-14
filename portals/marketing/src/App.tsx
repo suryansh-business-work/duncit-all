@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProfilePage, createAuthed } from '@duncit/shell';
 import { NotifyHost } from '@duncit/dialogs';
+import { CouponsPage } from '@duncit/coupons';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard-page/DashboardPage';
 import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
@@ -39,6 +40,7 @@ export default function App() {
           path="/campaigns/mail-preferences"
           element={authed(<MailPreferenceAnalyticsPage />)}
         />
+        <Route path="/coupons" element={authed(<CouponsPage />)} />
         <Route path="/short-links" element={authed(<ShortLinksPage />)} />
         <Route path="/short-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />

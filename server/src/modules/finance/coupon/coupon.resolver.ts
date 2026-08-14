@@ -5,7 +5,17 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
+/** MARKETING_MANAGER is here because the coupons console lives in the Marketing
+ * portal — a discount code is a promotion. The admin roles stay because Admin
+ * still manages the offer codes of a single pod from that pod's detail page,
+ * and Finance keeps read/write because a coupon is money off an order. */
+const ADMIN_RW = [
+  'SUPER_ADMIN',
+  'CITY_ADMIN',
+  'ZONAL_ADMIN',
+  'FINANCE_MANAGER',
+  'MARKETING_MANAGER',
+];
 
 export const couponResolvers = {
   Coupon: {

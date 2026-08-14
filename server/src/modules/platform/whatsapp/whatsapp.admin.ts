@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -49,7 +50,8 @@ function blockerFor(
   campaign: AisensyCampaign | undefined,
   template: AisensyTemplate | undefined,
   declaredParams: number,
-  cachedMediaUrl: string
+  cachedMediaUrl: string,
+  overrideMediaUrl: string
 ): string {
   if (!campaign) return `No AiSensy campaign named "${campaignName}"`;
   if (campaign.status && campaign.status !== 'LIVE') return `Campaign is ${campaign.status}`;
@@ -58,10 +60,19 @@ function blockerFor(
   if (template.param_count !== declaredParams) {
     return `Template takes ${template.param_count} value(s), the code sends ${declaredParams}`;
   }
-  // The send path reads the asset off the SETTING row, which only reconcile
-  // fills — so a campaign that carries media while the row does not is a send
-  // that will come back "Media URL Missing" until somebody presses Reconcile.
-  if (campaign.media_url && !cachedMediaUrl) return 'Campaign needs its media — press Reconcile';
+  // The send path reads the asset off the SETTING row — so a campaign that
+  // carries media while the row holds neither the cache nor an admin override
+  // is a send that will come back "Media URL Missing" until somebody presses
+  // Reconcile.
+  if (campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
+    return 'Campaign needs its media — press Reconcile';
+  }
+  // A media-header template with NO asset anywhere — not on the campaign (the
+  // API cannot attach one), not cached, not set by an admin — fails the same
+  // way, and Reconcile has nothing to fetch. Only an operator can fix this one.
+  if (template.needs_media && !campaign.media_url && !cachedMediaUrl && !overrideMediaUrl) {
+    return 'Template needs a header asset — set media on this row, or attach it to the campaign in the AiSensy console';
+  }
   return '';
 }
 
@@ -97,7 +108,9 @@ export const whatsappAdminService = {
   async scenarios() {
     const [live, settings] = await Promise.all([
       catalogue(),
-      WaEventSettingModel.find().select('event_key enabled template_category media_url media_filename').lean(),
+      WaEventSettingModel.find()
+        .select('event_key enabled template_category media_url media_filename override_media_url override_media_filename')
+        .lean(),
     ]);
     const byKey = new Map(settings.map((row) => [row.event_key, row]));
     const global = byKey.get(WA_GLOBAL_KEY);
@@ -105,6 +118,7 @@ export const whatsappAdminService = {
     const rows = WA_EVENTS.map((event) => {
       const campaign = live.campaigns.get(event.campaign);
       const template = campaign ? live.templates.get(campaign.template_name) : undefined;
+      const setting = byKey.get(event.key);
       return {
         event_key: event.key,
         campaign: event.campaign,
@@ -113,7 +127,7 @@ export const whatsappAdminService = {
         fires: event.fires,
         params: [...event.params],
         // Absent row means ON — a newly wired scenario works without setup.
-        enabled: byKey.get(event.key)?.enabled ?? true,
+        enabled: setting?.enabled ?? true,
         can_disable: !isRequiredWaCategory(event.category),
         campaign_status: campaign?.status ?? '',
         template_name: campaign?.template_name ?? '',
@@ -121,8 +135,18 @@ export const whatsappAdminService = {
         template_category: template?.category ?? '',
         template_params: template?.param_count ?? 0,
         media_url: campaign?.media_url ?? '',
+        override_media_url: setting?.override_media_url ?? '',
+        override_media_filename: setting?.override_media_filename ?? '',
+        needs_media: template?.needs_media ?? false,
         blocker: live.ok
-          ? blockerFor(event.campaign, campaign, template, event.params.length, byKey.get(event.key)?.media_url ?? '')
+          ? blockerFor(
+              event.campaign,
+              campaign,
+              template,
+              event.params.length,
+              setting?.media_url ?? '',
+              setting?.override_media_url ?? ''
+            )
           : '',
       };
     });
@@ -140,6 +164,39 @@ export const whatsappAdminService = {
     await WaEventSettingModel.updateOne(
       { event_key: eventKey },
       { $set: { enabled, updated_by: actorId(actor) } },
+      { upsert: true }
+    );
+    return this.scenarios();
+  },
+
+  /**
+   * Set or clear (empty url) the admin's own header asset for one scenario.
+   *
+   * It writes ONLY the override pair. The campaign cache (`media_url` /
+   * `media_filename`) belongs to reconcile, which overwrites it wholesale on
+   * every run — an admin asset stored there would be wiped by the next
+   * Reconcile, which is exactly the trap the override pair exists to close.
+   */
+  async setMedia(eventKey: string, url: string, filename: string, actor?: string | null) {
+    const mediaUrl = url.trim();
+    // AiSensy fetches the asset itself at send time, so anything but an
+    // absolute public link fails once per recipient — refuse it here rather
+    // than at the first send.
+    if (mediaUrl && !/^https?:\/\/\S+$/i.test(mediaUrl)) {
+      throw new GraphQLError('Media URL must be a full public link that starts with http:// or https://', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    await WaEventSettingModel.updateOne(
+      { event_key: eventKey },
+      {
+        $set: {
+          override_media_url: mediaUrl,
+          // A filename without a url is meaningless, so clearing clears both.
+          override_media_filename: mediaUrl ? filename.trim() : '',
+          updated_by: actorId(actor),
+        },
+      },
       { upsert: true }
     );
     return this.scenarios();
@@ -167,7 +224,9 @@ export const whatsappAdminService = {
               template_category: template?.category ?? '',
               // Cached from the CAMPAIGN, not the template: a media campaign
               // rejects a send that omits its asset, and the template reports
-              // no header at all.
+              // no header at all. The override pair is deliberately NOT here —
+              // it is admin-owned (`setMedia`), and writing the campaign's
+              // blank over it is how a custom asset would silently vanish.
               media_url: campaign?.media_url ?? '',
               media_filename: campaign?.media_filename ?? '',
               updated_by: actorId(actor),

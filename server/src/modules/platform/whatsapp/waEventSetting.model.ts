@@ -31,9 +31,23 @@ export interface IWaEventSetting {
    * header at all. Caching it here means the send path can satisfy the campaign
    * without a Project API call in front of every domain event, and a caller
    * with a better asset (this pod's own image) can still override it.
+   *
+   * RECONCILE-OWNED: every reconcile overwrites this pair wholesale with
+   * whatever the campaign holds — including blank. Nothing an admin types may
+   * ever land here, or the next Reconcile silently wipes it.
    */
   media_url: string;
   media_filename: string;
+  /**
+   * The header asset an ADMIN set for this scenario in the console.
+   *
+   * ADMIN-OWNED: written only by `setMedia`, NEVER touched by reconcile — the
+   * whole reason it is a second pair rather than a write into the cache above.
+   * The send path prefers it over the campaign cache; an empty url means no
+   * override.
+   */
+  override_media_url: string;
+  override_media_filename: string;
   updated_by: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
@@ -53,6 +67,8 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
     template_category: { type: String, default: '' },
     media_url: { type: String, default: '' },
     media_filename: { type: String, default: '' },
+    override_media_url: { type: String, default: '' },
+    override_media_filename: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

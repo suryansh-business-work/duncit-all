@@ -37,6 +37,11 @@ export const waAutomationTypeDefs = gql`
     template_params: Int!
     "The header asset the CAMPAIGN carries. Non-empty means every send must supply one."
     media_url: String!
+    "The admin's own header asset. It wins over the campaign's; reconcile never touches it."
+    override_media_url: String!
+    override_media_filename: String!
+    "Whether the template's header is an image, video or document every send must carry."
+    needs_media: Boolean!
     "Why this cannot send right now. Empty when it can."
     blocker: String!
   }
@@ -142,6 +147,8 @@ export const waAutomationTypeDefs = gql`
     setWhatsappScenarioEnabled(event_key: String!, enabled: Boolean!): WaScenarioBoard!
     "Re-read AiSensy and cache each template's category, which sets the rate."
     reconcileWhatsappScenarios: WaScenarioBoard!
+    "Set the admin's own header asset for one scenario; an empty url clears it. Reconcile never overwrites it."
+    setWhatsappScenarioMedia(event_key: String!, url: String!, filename: String): WaScenarioBoard!
     setMyWhatsappPreference(category: String!, enabled: Boolean!): WaPreference!
     setAllMyWhatsappPreferences(enabled: Boolean!): WaPreference!
     "Submit a new WhatsApp template straight to AiSensy. Nothing is stored here."

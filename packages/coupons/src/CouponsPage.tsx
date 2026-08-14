@@ -6,19 +6,18 @@ import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
-import { COUPONS_TABLE, DELETE_COUPON, type CouponRow } from './queries';
-import { PODS } from '../pods-page/queries';
+import { COUPON_PODS, COUPONS_TABLE, DELETE_COUPON, type CouponPodOption, type CouponRow } from './queries';
 
 export default function CouponsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const { data: podsData } = useQuery(PODS, { variables: { filter: {} }, fetchPolicy: 'cache-first' });
+  const { data: podsData } = useQuery(COUPON_PODS, { fetchPolicy: 'cache-first' });
   const [deleteCoupon] = useMutation(DELETE_COUPON);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();
 
-  const pods = useMemo(
+  const pods = useMemo<CouponPodOption[]>(
     () => (podsData?.pods ?? []).map((p: any) => ({ id: p.id, title: p.pod_title })),
     [podsData]
   );

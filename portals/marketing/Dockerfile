@@ -53,6 +53,7 @@ COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/forms/package.json ./packages/forms/
+COPY packages/coupons/package.json ./packages/coupons/
 COPY packages/location/package.json ./packages/location/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/

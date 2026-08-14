@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Stack } from '@mui/material';
 import { DuncitTable, clientTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import GlobalSwitchCard from './GlobalSwitchCard';
+import MediaDialog from './MediaDialog';
 import { getScenarioColumns } from './scenarioColumns';
 import { boardIsHealthy, GLOBAL_EVENT_KEY, scenarioSearchText } from './helpers';
 import { useWhatsappBoard } from './useWhatsappBoard';
@@ -18,12 +19,22 @@ const EMPTY_ROWS: WaScenario[] = [];
  */
 export default function ScenariosTab() {
   const { t } = useTranslation();
-  const { board, loading, loadFailed, busyKey, reconciling, toggle, runReconcile } =
+  const { board, loading, loadFailed, busyKey, reconciling, savingMedia, toggle, saveMedia, runReconcile } =
     useWhatsappBoard();
+  const [mediaFor, setMediaFor] = useState<WaScenario | null>(null);
+
+  // The dialog closes only once the write stuck — a failed save keeps what was
+  // typed on screen so it can be corrected rather than retyped.
+  const handleSaveMedia = useCallback(
+    async (eventKey: string, url: string, filename: string) => {
+      if (await saveMedia(eventKey, url, filename)) setMediaFor(null);
+    },
+    [saveMedia]
+  );
 
   const rows = board?.rows ?? EMPTY_ROWS;
   const columns = useMemo(
-    () => getScenarioColumns({ t, busyKey, onToggle: toggle }),
+    () => getScenarioColumns({ t, busyKey, onToggle: toggle, onSetMedia: setMediaFor }),
     [t, busyKey, toggle]
   );
   const fetchRows = useMemo(() => clientTableFetch(rows, scenarioSearchText), [rows]);
@@ -72,6 +83,13 @@ export default function ScenariosTab() {
         emptyText={t('adminWhatsapp.scenariosEmpty')}
         searchPlaceholder={t('adminWhatsapp.scenariosSearch')}
         refetchRef={refetchRef}
+      />
+
+      <MediaDialog
+        scenario={mediaFor}
+        saving={savingMedia}
+        onClose={() => setMediaFor(null)}
+        onSave={handleSaveMedia}
       />
     </Stack>
   );

@@ -127,6 +127,27 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     scenariosEmpty: 'No scenarios are registered yet.',
     catalogueUnreachable:
       'AiSensy could not be read, so campaign and template state is missing from the rows below. The switches still work.',
+    // The media column and its editor. A media-header template sends the
+    // admin's override when one is set, else the asset cached off the campaign
+    // at reconcile — the column names which of the two is in play, and the
+    // dialog writes only the override so a reconcile can never wipe it.
+    colMedia: 'Media',
+    mediaNotNeeded: 'Not needed',
+    mediaNone: 'No asset',
+    mediaFromCampaign: 'Campaign asset',
+    mediaCustom: 'Custom asset',
+    setMedia: 'Set media…',
+    clearMedia: 'Clear custom asset',
+    mediaDialogTitle: 'Set the header asset',
+    mediaDialogIntro:
+      'This asset is sent as the header of the message — the image, video or document above the text. AiSensy fetches the link itself when it sends, so it must be reachable from the public internet, not a link only you can open.',
+    mediaUrlLabel: 'Header media URL',
+    mediaUrlHelp: 'A full public link that starts with http:// or https://.',
+    mediaFilenameLabel: 'File name',
+    mediaFilenameHelp:
+      'Only a document shows its file name to the recipient. Leave it blank for an image or video.',
+    mediaSaved: 'Header asset saved.',
+    mediaSaveFailed: 'Could not save the header asset.',
     // The message log tab.
     logsSearch: 'Search scenario, campaign, number or reason',
     logsEmpty: 'No WhatsApp message has been attempted yet.',
@@ -230,5 +251,16 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     errorButtonValue: 'Fill this in, or the button opens a link with {{n}} still in it',
     templateUnknown:
       'AiSensy could not be read, so this send could not be built from its template. Add the Project API credentials in the Tech portal to see the values, header asset and links it needs.',
+    // The logs tab's automatic-messages view. Column headers and the four
+    // status labels reuse adminWhatsapp.logCol* / status* — this bundle serves
+    // both portals, and two copies of "Sent to" is the drift rule 40 stops.
+    autoLogs: {
+      toggleCampaigns: 'Campaign sends',
+      toggleAutomatic: 'Automatic messages',
+      title: 'Automatic messages',
+      hint: 'The messages the platform sends on its own — every attempt, with why it was skipped or how it failed.',
+      empty: 'No automatic message has been attempted yet.',
+      search: 'Search scenario, campaign, number or reason',
+    },
   },
 };

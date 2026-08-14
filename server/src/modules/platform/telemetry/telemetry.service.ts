@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
+import { isValidObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { telemetryRuntime } from '@observability/telemetryRuntime';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -116,6 +118,7 @@ const logPub = (d: ITelemetryLog) => ({
   url: d.url,
   host: d.host,
   error: mapError(d.error),
+  data_json: d.data ? JSON.stringify(d.data) : null,
   created_at: d.created_at.toISOString(),
 });
 
@@ -144,6 +147,7 @@ const bugPub = (d: IBug) => ({
   last_stack: d.last_stack,
   status: d.status,
   resolved_at: d.resolved_at ? d.resolved_at.toISOString() : null,
+  resolved_by: d.resolved_by ?? null,
   created_at: d.created_at.toISOString(),
 });
 
@@ -225,6 +229,45 @@ async function upsertBug(record: TelemetryRecordInput, source: string): Promise<
     { fingerprint, status: 'RESOLVED' },
     { $set: { status: 'OPEN', resolved_at: null, resolved_by: null } },
   );
+}
+
+/* ------------------------------- import -------------------------------- */
+
+/** One bug from an export file, matched on fingerprint when it lands. */
+export interface BugImportEntry {
+  fingerprint: string;
+  title: string;
+  error_name?: string | null;
+  message?: string | null;
+  page: string;
+  source: string;
+  app?: string | null;
+  portal?: string | null;
+  platform?: string | null;
+  os?: string | null;
+  occurrence_count?: number | null;
+  first_seen_at?: string | null;
+  last_seen_at?: string | null;
+  env_counts?: {
+    localhost?: number | null;
+    staging?: number | null;
+    production?: number | null;
+  } | null;
+  last_url?: string | null;
+  last_host?: string | null;
+  last_stack?: string | null;
+  status?: string | null;
+}
+
+function toDate(value: unknown, fallback: Date): Date {
+  if (typeof value !== 'string' || value === '') return fallback;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? fallback : d;
+}
+
+function toCount(value: unknown): number {
+  const n = Math.trunc(Number(value));
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 /* ------------------------- dashboard aggregation ----------------------- */
@@ -357,6 +400,104 @@ export const telemetryService = {
   async bug(id: string) {
     const doc = await BugModel.findById(id);
     return doc ? bugPub(doc) : null;
+  },
+
+  /**
+   * The recent persisted error logs behind one bug. Logs carry no fingerprint,
+   * so each candidate (same source + page, error level) is re-fingerprinted with
+   * the exact identity function `upsertBug` used — which also makes logs written
+   * before this query existed match.
+   */
+  async bugOccurrences(bugId: string, limit?: number | null) {
+    const bug = await BugModel.findById(bugId);
+    if (!bug)
+      throw new GraphQLError('Bug not found', { extensions: { code: 'NOT_FOUND' } });
+    const wanted = Math.min(50, Math.max(1, Math.trunc(Number(limit ?? 20)) || 20));
+    const candidates = await TelemetryLogModel.find({
+      level: 'error',
+      source: bug.source,
+      page: bug.page,
+    })
+      .sort({ created_at: -1 })
+      .limit(400);
+    const matches = candidates.filter((log) => {
+      const rawMsg = log.error?.message ?? log.component;
+      return fingerprintOf(log.source, log.page, normalizeMessage(rawMsg)) === bug.fingerprint;
+    });
+    return matches.slice(0, wanted).map(logPub);
+  },
+
+  /** Every bug, unpaginated — the JSON export. Retention keeps the set bounded. */
+  async bugsExport() {
+    const docs = await BugModel.find({}).sort({ last_seen_at: -1 });
+    return docs.map(bugPub);
+  },
+
+  async deleteBugs(ids: string[], actor: { id: string }): Promise<number> {
+    if (ids.length === 0) return 0;
+    const valid = ids.filter((id) => isValidObjectId(id));
+    logs.server.warn('telemetry', 'bugsDeleteMany', { userId: actor.id, requested: valid.length });
+    const res = await BugModel.deleteMany({ _id: { $in: valid } });
+    return res.deletedCount ?? 0;
+  },
+
+  /**
+   * Clear every bug. The warning is written before the delete and at `warn`,
+   * which the telemetry runtime persists — so the record of who emptied the
+   * collection lands in TelemetryLog and outlives the rows it is about.
+   */
+  async deleteAllBugs(actor: { id: string }): Promise<number> {
+    logs.server.warn('telemetry', 'bugsDeleteAll', { userId: actor.id });
+    const res = await BugModel.deleteMany({});
+    return res.deletedCount ?? 0;
+  },
+
+  /** Upsert bugs from an export file, matched on fingerprint (existing rows overwritten). */
+  async importBugs(entries: BugImportEntry[], actor: { id: string }) {
+    let created = 0;
+    let updated = 0;
+    const now = new Date();
+    for (const entry of entries) {
+      const fingerprint = entry.fingerprint.trim();
+      if (!fingerprint)
+        throw new GraphQLError('An imported bug has an empty fingerprint', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      const status = BUG_STATUSES.has(entry.status as BugStatus) ? entry.status : 'OPEN';
+      const res = await BugModel.updateOne(
+        { fingerprint },
+        {
+          $set: {
+            title: entry.title.slice(0, 300),
+            error_name: entry.error_name ?? 'Error',
+            message: (entry.message ?? '').slice(0, 500),
+            page: entry.page,
+            source: entry.source,
+            app: entry.app ?? entry.source.split(':')[0],
+            portal: entry.portal ?? undefined,
+            platform: entry.platform ?? 'unknown',
+            os: entry.os ?? undefined,
+            occurrence_count: Math.max(1, toCount(entry.occurrence_count)),
+            first_seen_at: toDate(entry.first_seen_at, now),
+            last_seen_at: toDate(entry.last_seen_at, now),
+            env_counts: {
+              localhost: toCount(entry.env_counts?.localhost),
+              staging: toCount(entry.env_counts?.staging),
+              production: toCount(entry.env_counts?.production),
+            },
+            last_url: entry.last_url ?? undefined,
+            last_host: entry.last_host ?? undefined,
+            last_stack: entry.last_stack ?? undefined,
+            status,
+          },
+        },
+        { upsert: true },
+      );
+      if (res.upsertedCount > 0) created += 1;
+      else updated += 1;
+    }
+    logs.server.warn('telemetry', 'bugsImport', { userId: actor.id, created, updated });
+    return { created, updated };
   },
 
   async updateBugStatus(id: string, status: string, userId: string) {

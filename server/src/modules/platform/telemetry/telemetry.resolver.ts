@@ -7,6 +7,13 @@ import { requireRole } from '@middleware/rbac';
 const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER'];
 const TELEMETRY_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
+/**
+ * Emptying the whole bug history is not a scoped mistake — nothing restores it.
+ * That is narrower than "can triage bugs", so it is held by the one account
+ * that answers for the platform (mirrors deleteAllEmailLogs).
+ */
+const DELETE_ALL_ROLES = ['SUPER_ADMIN'];
+
 export const telemetryResolvers = {
   Query: {
     telemetrySettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
@@ -33,6 +40,18 @@ export const telemetryResolvers = {
       requireRole(ctx, TELEMETRY_READ);
       return telemetryService.bug(args.id);
     },
+    bugOccurrences: (
+      _p: unknown,
+      args: { bug_id: string; limit?: number | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, TELEMETRY_READ);
+      return telemetryService.bugOccurrences(args.bug_id, args.limit);
+    },
+    bugsExport: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TELEMETRY_READ);
+      return telemetryService.bugsExport();
+    },
   },
   Mutation: {
     updateTelemetrySettings: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
@@ -48,6 +67,22 @@ export const telemetryResolvers = {
     ) => {
       const user = requireRole(ctx, TELEMETRY_WRITE);
       return telemetryService.updateBugStatus(args.bug_id, args.status, user.id);
+    },
+    deleteBugs: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
+      const actor = requireRole(ctx, TELEMETRY_WRITE);
+      return telemetryService.deleteBugs(args.ids, actor);
+    },
+    deleteAllBugs: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      const actor = requireRole(ctx, DELETE_ALL_ROLES);
+      return telemetryService.deleteAllBugs(actor);
+    },
+    importBugs: (
+      _p: unknown,
+      args: { bugs: Parameters<typeof telemetryService.importBugs>[0] },
+      ctx: GraphQLContext,
+    ) => {
+      const actor = requireRole(ctx, TELEMETRY_WRITE);
+      return telemetryService.importBugs(args.bugs, actor);
     },
   },
 };

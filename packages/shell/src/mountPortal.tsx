@@ -18,6 +18,7 @@ import { io } from 'socket.io-client';
 import { UserProvider, PortalModeGate, configureSessionSocket } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
+import { getOrCreateDuid } from '@duncit/user-core';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { loadGoogleClientId } from './lib/google-client-id';
@@ -63,10 +64,17 @@ export function mountPortal(opts: MountPortalOptions): void {
   // environment + url + host are auto-detected from the browser at each call.
   // `portal: config.key` stamps the portal identity on every log — including
   // shared/generic loggers — so the telemetry Bugs view can slice by portal.
-  configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), {
-    platform: 'web',
-    portal: config.key,
-  });
+  //
+  // The session token and device id ride along as headers, exactly as on a
+  // GraphQL call, so the server can attribute the log to the operator who was
+  // signed in. Identity is read from the verified token, never from the body.
+  configureLogs(
+    httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs'), {
+      getToken: () => localStorage.getItem(config.tokenKey),
+      getDeviceId: getOrCreateDuid,
+    }),
+    { platform: 'web', portal: config.key },
+  );
 
   // Short-link attribution: every portal is a *.duncit.com destination a
   // marketing link may point at, so the landing is reported at boot — before

@@ -14,6 +14,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useBranding } from '@/hooks/useBranding';
 import { useBrandFont } from '@/hooks/useBrandFont';
 import { setWebFavicon } from '@/services/web-favicon';
+import { cachedDuid, logClientInfo } from '@/services/device';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { NativeTourProvider } from '@/tours/NativeTourProvider';
@@ -53,19 +54,30 @@ loadWebFonts();
 // (localhost / staging.*.duncit.com / *.duncit.com) the app is pointed at.
 // `os` splits native logs into iOS / Android / native-web for the telemetry Bugs view.
 const DEVICE_OS = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
-configureLogs(httpTransport(`${appConfig.apiUrl}/logs`), {
-  platform: 'native',
-  os: DEVICE_OS,
-  environment: detectEnvironment(appConfig.apiUrl),
-  url: () => appConfig.apiUrl,
-  host: () => {
-    try {
-      return new URL(appConfig.apiUrl).host;
-    } catch {
-      return undefined;
-    }
+configureLogs(
+  // The token and device id ride along as headers, exactly as on a GraphQL
+  // call, so the server can attribute the log to the signed-in account. Both
+  // are read from memory rather than the Keychain: building headers cannot
+  // await, and a log written before the first read simply goes without them.
+  httpTransport(`${appConfig.apiUrl}/logs`, {
+    getToken: () => useAuthStore.getState().token,
+    getDeviceId: cachedDuid,
+  }),
+  {
+    platform: 'native',
+    os: DEVICE_OS,
+    environment: detectEnvironment(appConfig.apiUrl),
+    url: () => appConfig.apiUrl,
+    host: () => {
+      try {
+        return new URL(appConfig.apiUrl).host;
+      } catch {
+        return undefined;
+      }
+    },
+    client: logClientInfo,
   },
-});
+);
 
 /**
  * App root: Tamagui theming + SafeArea + React Navigation. The theme store and

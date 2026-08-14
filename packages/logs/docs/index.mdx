@@ -19,10 +19,13 @@ exports:
   - 'consoleTransport'
   - 'serializeError'
   - 'detectEnvironment'
+  - 'browserClientInfo'
+  - 'sessionId'
   - 'APPS'
   - 'PORTALS'
   - 'WEBSITES'
   - 'LogRecord'
+  - 'LogClient'
   - 'LogDetail'
 ---
 
@@ -200,9 +203,11 @@ build cannot pollute the production environment filter.
 | `createLogger` | `(app: string, portal?: string) => LevelFns` | — | A bound file/surface logger. |
 | `logs` | `{ server, mWeb, mobileApp, portal.<key>, website.<key> }` | — | Pre-bound loggers for every console. |
 | `serializeError` | `(err: unknown) => SerializedError \| undefined` | — | Flattens any thrown value. |
-| `httpTransport` | `(endpoint: string) => Transport` | — | Fire-and-forget `keepalive` POST. Never throws, never blocks. |
+| `httpTransport` | `(endpoint: string, opts?: HttpTransportOptions) => Transport` | — | Fire-and-forget `keepalive` POST. Never throws, never blocks. `opts.getToken` / `opts.getDeviceId` add the `Authorization` / `x-duid` headers the server reads identity from. |
 | `consoleTransport` | `Transport` | — | Default sink; mirrors to the console so logs are not lost before configuration. |
 | `detectEnvironment` | `(hostOrUrl?: string \| null) => Environment` | — | `localhost` / `staging` / `production`. |
+| `browserClientInfo` | `() => LogClient` | — | Locale, timezone, screen, viewport, network and referrer, read defensively. `{}` off the web. |
+| `sessionId` | `() => string` | — | One id per tab / app launch, held in `sessionStorage`. |
 | `APPS` | `readonly ['server','mWeb','mobileApp']` | — | App keys. |
 | `PORTALS` | 17 keys | — | `admin, crm, finance, tech, support, website-app, legal, ai, products, marketing, onboarding, hr, employee, ads-portal, partners-app, challenge-portal, developers-portal` |
 | `WEBSITES` | `readonly ['duncit','partners','ads','status','earnwith']` | — | Astro site keys. |
@@ -221,12 +226,26 @@ required positionally, `detail` is optional.
 | `environment` | `Environment \| (() => Environment)` | no | `detectEnvironment(host)` | Fixed value or a resolver. |
 | `url` | `() => string \| undefined` | no | `location.href` | Resolved per emit, so SPA navigation is reflected. |
 | `host` | `() => string \| undefined` | no | `location.hostname` | Resolved per emit. |
+| `client` | `() => LogClient \| undefined` | no | unset | Build/device facts a browser cannot read (app version, native model). Layered **over** `browserClientInfo()`, so a surface only names what it adds. |
+| `duid` | `() => string \| undefined` | no | unset | Duncit device id, the same value the surface sends the API as `x-duid`. |
 
 ### `LogRecord` — what a transport receives
 
 `app`, `portal?`, `platform`, `os?`, `environment`, `url?`, `host?`, `level`, `page`,
-`component`, `timestamp` (ISO-8601), `error?` (`{ name, message, stack? }`), `data?`. Every
-field is sent to SignOz as a filterable attribute.
+`component`, `timestamp` (ISO-8601), `error?` (`{ name, message, stack? }`), `data?`,
+`client?` (`LogClient`), `duid?`, `session_id`. Every field is sent to SignOz as a filterable
+attribute.
+
+There is deliberately **no `user`** on the record. Identity is stamped by the SERVER from the
+token the record is POSTed with (`server/src/observability/requestIdentity.ts`): a page can
+claim to be anyone, and a bug filed against the wrong person is worse than one filed against
+nobody. Pass `httpTransport`'s `getToken` and the account arrives with the log.
+
+### `LogClient` — what the machine looks like
+
+`app_version?`, `device_model?`, `device_os_version?`, `locale?`, `timezone?`, `screen?`,
+`viewport?`, `network?`, `referrer?`. The same stack trace means something different on a
+360px phone in Hindi on a 2g connection, and none of that is visible from the message.
 
 ## No live preview
 

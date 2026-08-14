@@ -21,6 +21,7 @@ import { captureShortLinkClick } from './lib/short-link-journey';
 import { installAttributionLinkDecorator } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
+import { getOrCreateDuid } from '@duncit/user-core';
 import { ColorModeProvider } from './ColorModeContext';
 import { AppLocaleProvider } from '@duncit/app-settings';
 import { MWEB_FALLBACK_FLAT } from './i18n/fallback';
@@ -89,9 +90,17 @@ configureSessionSocket(() => {
 
 // Ship structured, file-level logs to SignOz (via the server /logs ingest).
 // environment + url + host are auto-detected from the browser at each call.
-configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')), {
-  platform: 'web',
-});
+//
+// The token and device id ride along as headers, exactly as on a GraphQL call:
+// the server reads WHO from the verified token, never from the body, so a bug
+// arrives with the account behind it instead of just a stack trace.
+configureLogs(
+  httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs'), {
+    getToken: () => localStorage.getItem('token'),
+    getDeviceId: getOrCreateDuid,
+  }),
+  { platform: 'web', client: () => ({ app_version: __APP_VERSION__ }) },
+);
 
 // Read the short-link click id BEFORE anything else runs. RequireAuth rewrites
 // the URL to /login?redirect=… for signed-out visitors, and mounting waits up to

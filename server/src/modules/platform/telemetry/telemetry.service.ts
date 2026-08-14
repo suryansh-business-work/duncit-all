@@ -197,6 +197,8 @@ const bugPub = (d: IBug) => ({
   last_user_agent: d.last_user_agent ?? null,
   last_duid: d.last_duid ?? null,
   last_session_id: d.last_session_id ?? null,
+  last_ip: d.last_ip ?? null,
+  last_client: mapClient(d.last_client),
   affected_user_count: d.affected_user_count ?? 0,
   affected_user_ids: d.affected_user_ids ?? [],
   anonymous_count: d.anonymous_count ?? 0,
@@ -219,6 +221,7 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     'user.name',
     'user.email',
     'user_id',
+    'ip',
   ],
   sortFields: {
     created_at: 'created_at',
@@ -243,6 +246,7 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     user_email: { path: 'user.email', type: 'string' },
     duid: { type: 'string' },
     session_id: { type: 'string' },
+    ip: { type: 'string' },
     app_version: { path: 'client.app_version', type: 'string' },
     created_at: { type: 'date' },
   },
@@ -328,6 +332,8 @@ async function upsertBug(
         last_user_agent: record.user_agent,
         last_duid: record.duid,
         last_session_id: record.session_id,
+        last_ip: record.ip,
+        last_client: record.client,
         // Only when there IS one: an anonymous occurrence must not erase the
         // signed-in person the bug was last traced to.
         ...(user?.id ? { last_user: user } : {}),
@@ -438,6 +444,7 @@ export interface PublicLogFilters {
   source?: string | null;
   user_id?: string | null;
   session_id?: string | null;
+  ip?: string | null;
   since_hours?: number | null;
   limit?: number | null;
 }
@@ -450,8 +457,13 @@ export interface PublicBugFilters {
 
 /** A file the operator downloads: generous, but never the whole collection. */
 const MAX_EXPORT_ROWS = 20_000;
-/** A URL a script polls: small enough to serve fast, raisable per request. */
-const DEFAULT_FEED_ROWS = 200;
+/**
+ * Feed sizes. Logs default small — one level of `info` is six figures of rows
+ * and the URL is meant to be polled — while bugs default to the ceiling,
+ * because bugs are already rolled up and opening the copied URL is expected to
+ * show every one of them. Either can be raised or lowered with `?limit=`.
+ */
+const DEFAULT_LOG_FEED_ROWS = 200;
 const MAX_FEED_ROWS = 5_000;
 
 function clampExportLimit(value: unknown): number {
@@ -460,9 +472,9 @@ function clampExportLimit(value: unknown): number {
   return Math.min(MAX_EXPORT_ROWS, n);
 }
 
-function clampFeedLimit(value: unknown): number {
+function clampFeedLimit(value: unknown, fallback: number): number {
   const n = Math.trunc(Number(value));
-  if (!Number.isFinite(n) || n < 1) return DEFAULT_FEED_ROWS;
+  if (!Number.isFinite(n) || n < 1) return fallback;
   return Math.min(MAX_FEED_ROWS, n);
 }
 
@@ -576,6 +588,11 @@ export const telemetryService = {
     persisted_levels?: string[];
     retention_days?: number;
   }) {
+    // Read first: a singleton written before the JSON feeds existed carries no
+    // key, and getTelemetrySettings is what mints one. Without this, saving
+    // the form on an existing deployment returns a null `public_api_key` for a
+    // non-nullable field and the whole mutation fails.
+    await getTelemetrySettings();
     const update: Record<string, unknown> = {};
     if (input.signoz_enabled !== undefined) update.signoz_enabled = input.signoz_enabled;
     if (input.persisted_levels !== undefined)
@@ -732,25 +749,37 @@ export const telemetryService = {
    * a new row — a hand-written file still lands.
    */
   async importLogs(entries: TelemetryLogImportEntry[], actor: { id: string }) {
-    if (entries.length === 0) return { created: 0, skipped: 0 };
-    const ops = entries.map((entry) => {
-      const doc = logImportDoc(entry);
-      return {
-        updateOne: {
-          filter: { _id: doc._id },
-          update: { $setOnInsert: doc },
-          upsert: true,
-        },
-      };
+    if (entries.length === 0) return { created: 0, skipped: 0, expiring: 0 };
+    const docs = entries.map(logImportDoc);
+    // Two rows in one file under the same id would be two upserts of the same
+    // key in one unordered batch — a self-inflicted E11000 that fails rows
+    // around it. The file said the same row twice; write it once.
+    const byId = new Map(docs.map((doc) => [String(doc._id), doc]));
+    const ops = [...byId.values()].map((doc) => {
+      // The id goes in the FILTER, not the update: an upsert seeds the new
+      // document from its filter, and `_id` inside $setOnInsert is a write to
+      // an immutable field that Mongo can reject outright.
+      const { _id, ...rest } = doc;
+      return { updateOne: { filter: { _id }, update: { $setOnInsert: rest }, upsert: true } };
     });
     const res = await TelemetryLogModel.bulkWrite(ops, { ordered: false });
     const created = res.upsertedCount ?? 0;
+    // An imported row keeps the timestamp it was written with, so anything
+    // older than the retention window is deleted again by the next daily
+    // cleanup — and the hard 90-day TTL index takes the rest within the
+    // minute. Reporting the count is the honest answer: the alternative is an
+    // operator who restores a file, sees "imported", and finds it gone.
+    const cutoff = new Date(
+      Date.now() - clampRetention((await getTelemetrySettings()).retention_days) * DAY_MS,
+    );
+    const expiring = docs.filter((doc) => (doc.created_at as Date) < cutoff).length;
     logs.server.warn('telemetry', 'logsImport', {
       userId: actor.id,
       created,
       skipped: entries.length - created,
+      expiring,
     });
-    return { created, skipped: entries.length - created };
+    return { created, skipped: entries.length - created, expiring };
   },
 
   /**
@@ -783,6 +812,15 @@ export const telemetryService = {
     return expected.length === given.length && timingSafeEqual(expected, given);
   },
 
+  /** The row ceiling a feed request will actually apply — the route reports it. */
+  logFeedLimit(requested?: number | null): number {
+    return clampFeedLimit(requested, DEFAULT_LOG_FEED_ROWS);
+  },
+
+  bugFeedLimit(requested?: number | null): number {
+    return clampFeedLimit(requested, MAX_FEED_ROWS);
+  },
+
   /** The read-only log feed behind `GET /telemetry/logs.json`. */
   async publicLogsFeed(filters: PublicLogFilters) {
     const query: Record<string, unknown> = {};
@@ -791,11 +829,12 @@ export const telemetryService = {
     if (filters.source) query.source = filters.source;
     if (filters.user_id) query.user_id = filters.user_id;
     if (filters.session_id) query.session_id = filters.session_id;
+    if (filters.ip) query.ip = filters.ip;
     const hours = clampHours(filters.since_hours);
     if (hours) query.created_at = { $gte: new Date(Date.now() - hours * 60 * 60 * 1000) };
     const docs = await TelemetryLogModel.find(query)
       .sort({ created_at: -1 })
-      .limit(clampFeedLimit(filters.limit));
+      .limit(clampFeedLimit(filters.limit, DEFAULT_LOG_FEED_ROWS));
     return docs.map(logPub);
   },
 
@@ -806,7 +845,7 @@ export const telemetryService = {
     if (filters.source) query.source = filters.source;
     const docs = await BugModel.find(query)
       .sort({ last_seen_at: -1 })
-      .limit(clampFeedLimit(filters.limit));
+      .limit(clampFeedLimit(filters.limit, MAX_FEED_ROWS));
     return docs.map(bugPub);
   },
 

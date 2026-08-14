@@ -17,6 +17,7 @@
 import os from 'node:os';
 import { logs as logsApi, SeverityNumber, type Logger } from '@opentelemetry/api-logs';
 import { telemetryRuntime } from './telemetryRuntime';
+import { requestIdentity, type RequestIdentity } from './requestIdentity';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type Environment = 'localhost' | 'staging' | 'production';
@@ -29,7 +30,29 @@ interface SerializedError {
   stack?: string;
 }
 
-interface LogRecord {
+/** Who the record belongs to. Always server-resolved — never read from a body. */
+export interface LogUser {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  roles?: string[];
+}
+
+/** What the emitting surface knows about the machine it is running on. */
+export interface LogClient {
+  app_version?: string;
+  device_model?: string;
+  device_os_version?: string;
+  locale?: string;
+  timezone?: string;
+  screen?: string;
+  viewport?: string;
+  network?: string;
+  referrer?: string;
+}
+
+export interface LogRecord {
   app: string;
   portal?: string;
   platform: Platform;
@@ -42,6 +65,14 @@ interface LogRecord {
   component: string;
   error?: SerializedError;
   data?: Record<string, unknown>;
+  user?: LogUser;
+  client?: LogClient;
+  /** Duncit device id (`x-duid`) and the surface's per-tab / per-launch id. */
+  duid?: string;
+  session_id?: string;
+  /** Read off the request by the server, so neither can be spoofed by a body. */
+  ip?: string;
+  user_agent?: string;
 }
 
 /** Per-call detail bag: pass the thrown value as `error`/`err`; the rest is data. */
@@ -115,6 +146,44 @@ export function serializeError(err: unknown): SerializedError | undefined {
   }
 }
 
+/**
+ * Copy the set fields of a sub-object onto the attribute bag.
+ *
+ * `prefix` namespaces a nested object (`user.email`); passing '' keeps the
+ * top-level names SignOz dashboards already filter on (`portal`, `url`, `host`)
+ * — renaming those would silently empty every saved query built on them.
+ */
+function addFields(
+  attrs: Record<string, AttrValue>,
+  prefix: string,
+  source: object | undefined,
+): void {
+  if (!source) return;
+  for (const [key, value] of Object.entries(source)) {
+    if (value === undefined || value === null || value === '') continue;
+    attrs[prefix ? `${prefix}.${key}` : key] = Array.isArray(value)
+      ? value.join(',')
+      : (value as AttrValue);
+  }
+}
+
+/** The flattened error triple, as its own three attributes. */
+function addError(attrs: Record<string, AttrValue>, error: SerializedError | undefined): void {
+  if (!error) return;
+  attrs['error.name'] = error.name;
+  attrs['error.message'] = error.message;
+  if (error.stack) attrs['error.stack'] = error.stack;
+}
+
+/** The caller's own context bag, one `data.<key>` attribute per entry. */
+function addData(attrs: Record<string, AttrValue>, data: Record<string, unknown> | undefined): void {
+  if (!data || typeof data !== 'object') return;
+  for (const [key, value] of Object.entries(data)) {
+    attrs[`data.${key}`] =
+      value === null || typeof value === 'object' ? JSON.stringify(value) : (value as AttrValue);
+  }
+}
+
 function toAttributes(record: LogRecord): Record<string, AttrValue> {
   const attrs: Record<string, AttrValue> = {
     app: record.app,
@@ -123,23 +192,20 @@ function toAttributes(record: LogRecord): Record<string, AttrValue> {
     page: record.page,
     component: record.component,
   };
-  if (record.portal) attrs.portal = record.portal;
-  if (record.os) attrs.os = record.os;
-  if (record.url) attrs.url = record.url;
-  if (record.host) attrs.host = record.host;
-  if (record.error) {
-    attrs['error.name'] = record.error.name;
-    attrs['error.message'] = record.error.message;
-    if (record.error.stack) attrs['error.stack'] = record.error.stack;
-  }
-  if (record.data && typeof record.data === 'object') {
-    for (const [key, value] of Object.entries(record.data)) {
-      attrs[`data.${key}`] =
-        value === null || typeof value === 'object'
-          ? JSON.stringify(value)
-          : (value as AttrValue);
-    }
-  }
+  addFields(attrs, 'user', record.user);
+  addFields(attrs, 'client', record.client);
+  addFields(attrs, '', {
+    portal: record.portal,
+    os: record.os,
+    url: record.url,
+    host: record.host,
+    duid: record.duid,
+    session_id: record.session_id,
+    ip: record.ip,
+    user_agent: record.user_agent,
+  });
+  addError(attrs, record.error);
+  addData(attrs, record.data);
   return attrs;
 }
 
@@ -175,6 +241,9 @@ function levelFns(base: { app: string; portal?: string }) {
         error = serializeError(e ?? err);
         data = Object.keys(rest).length > 0 ? rest : undefined;
       }
+      // Whoever's request we are inside, when we are inside one. A scheduler or
+      // a boot-time log has no caller, and correctly reports none.
+      const caller: RequestIdentity = requestIdentity.current() ?? {};
       emitStructured({
         ...base,
         platform: 'server',
@@ -185,6 +254,10 @@ function levelFns(base: { app: string; portal?: string }) {
         component,
         error,
         data,
+        user: caller.user,
+        duid: caller.duid,
+        ip: caller.ip,
+        user_agent: caller.user_agent,
       });
     };
   return {
@@ -218,12 +291,48 @@ function parseRemoteError(value: SerializedError | undefined): SerializedError |
   };
 }
 
+/** Fields a browser reports about its own machine — strings, length-capped. */
+const CLIENT_KEYS: ReadonlyArray<keyof LogClient> = [
+  'app_version',
+  'device_model',
+  'device_os_version',
+  'locale',
+  'timezone',
+  'screen',
+  'viewport',
+  'network',
+  'referrer',
+];
+
+/**
+ * The machine description the surface sent. Unlike identity this is not
+ * verifiable and does not need to be — it describes the sender's own device,
+ * so the worst a lie costs is a wrong line in a bug report. Every value is
+ * still clamped to a bounded string so the log collection cannot be inflated.
+ */
+function parseRemoteClient(value: unknown): LogClient | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = value as Record<string, unknown>;
+  const out: LogClient = {};
+  for (const key of CLIENT_KEYS) {
+    const field = raw[key];
+    if (typeof field === 'string' && field !== '') out[key] = field.slice(0, 300);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /**
  * Ingest a structured log forwarded by a frontend (POST /logs). Fully defensive:
  * validates the shape, clamps enums, forwards the app/portal/platform/environment/
  * url/host/error/data the browser or native app already resolved. Never throws.
+ *
+ * `caller` is what the SERVER worked out about the request — the account from
+ * the verified JWT, the address from the proxy chain. The body's own `user` is
+ * ignored outright: this endpoint is public by design, so anything in it is a
+ * claim, and a bug filed against an account that did not hit it is worse than
+ * one filed against nobody.
  */
-export function ingestRemoteLog(raw: unknown): void {
+export function ingestRemoteLog(raw: unknown, caller: RequestIdentity = {}): void {
   if (!raw || typeof raw !== 'object') return;
   const r = raw as Partial<LogRecord>;
   if (typeof r.app !== 'string' || typeof r.page !== 'string' || typeof r.component !== 'string') return;
@@ -240,5 +349,12 @@ export function ingestRemoteLog(raw: unknown): void {
     component: r.component,
     error: parseRemoteError(r.error),
     data: r.data && typeof r.data === 'object' ? r.data : undefined,
+    user: caller.user,
+    client: parseRemoteClient(r.client),
+    // The header wins: it is the same value the surface authenticates with.
+    duid: caller.duid ?? optionalString(r.duid)?.slice(0, 100),
+    session_id: optionalString(r.session_id)?.slice(0, 100),
+    ip: caller.ip,
+    user_agent: caller.user_agent,
   });
 }

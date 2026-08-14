@@ -1,4 +1,4 @@
-import type { BugRow, BugStatus } from './queries';
+import type { BugRow, BugStatus, BugUser } from './queries';
 
 /**
  * Reading and writing the bugs backup file.
@@ -30,6 +30,15 @@ export interface BugExportEntry {
   last_url: string | null;
   last_host: string | null;
   last_stack: string | null;
+  last_user: BugUser | null;
+  last_environment: string | null;
+  last_app_version: string | null;
+  last_user_agent: string | null;
+  last_duid: string | null;
+  last_session_id: string | null;
+  affected_user_count: number;
+  affected_user_ids: string[];
+  anonymous_count: number;
   status: BugStatus;
 }
 
@@ -69,6 +78,25 @@ export function buildBugExport(bugs: BugRow[], exportedAt: string): BugExportFil
       last_url: bug.last_url,
       last_host: bug.last_host,
       last_stack: bug.last_stack,
+      // Field by field like everything else here: the row came off Apollo, and
+      // a passthrough would write `__typename` into the file.
+      last_user: bug.last_user
+        ? {
+            id: bug.last_user.id,
+            name: bug.last_user.name,
+            email: bug.last_user.email,
+            phone: bug.last_user.phone,
+            roles: bug.last_user.roles,
+          }
+        : null,
+      last_environment: bug.last_environment,
+      last_app_version: bug.last_app_version,
+      last_user_agent: bug.last_user_agent,
+      last_duid: bug.last_duid,
+      last_session_id: bug.last_session_id,
+      affected_user_count: bug.affected_user_count,
+      affected_user_ids: bug.affected_user_ids,
+      anonymous_count: bug.anonymous_count,
       status: bug.status,
     })),
   };
@@ -82,6 +110,77 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const asString = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+
+const asCount = (value: unknown, fallback = 0): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+/** The identity fields the server cannot invent. Everything else it defaults. */
+function hasIdentity(raw: unknown): raw is Record<string, unknown> {
+  return (
+    isRecord(raw) &&
+    typeof raw.fingerprint === 'string' &&
+    raw.fingerprint.trim() !== '' &&
+    typeof raw.title === 'string' &&
+    typeof raw.page === 'string' &&
+    typeof raw.source === 'string'
+  );
+}
+
+/** The account a file row named, or null when it named nobody usable. */
+function asUser(value: unknown): BugUser | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || value.id === '') return null;
+  const roles = Array.isArray(value.roles)
+    ? value.roles.filter((r): r is string => typeof r === 'string')
+    : [];
+  return {
+    id: value.id,
+    name: asString(value.name),
+    email: asString(value.email),
+    phone: asString(value.phone),
+    roles,
+  };
+}
+
+/** One validated file row as the entry the mutation takes. */
+function toBugEntry(raw: Record<string, unknown>): BugExportEntry {
+  const env = isRecord(raw.env_counts) ? raw.env_counts : {};
+  const source = String(raw.source);
+  return {
+    fingerprint: String(raw.fingerprint),
+    title: String(raw.title),
+    error_name: asString(raw.error_name) ?? 'Error',
+    message: asString(raw.message) ?? '',
+    page: String(raw.page),
+    source,
+    app: asString(raw.app) ?? source.split(':')[0],
+    portal: asString(raw.portal),
+    platform: asString(raw.platform) ?? 'unknown',
+    os: asString(raw.os),
+    occurrence_count: asCount(raw.occurrence_count, 1),
+    first_seen_at: asString(raw.first_seen_at) ?? '',
+    last_seen_at: asString(raw.last_seen_at) ?? '',
+    env_counts: {
+      localhost: asCount(env.localhost),
+      staging: asCount(env.staging),
+      production: asCount(env.production),
+    },
+    last_url: asString(raw.last_url),
+    last_host: asString(raw.last_host),
+    last_stack: asString(raw.last_stack),
+    last_user: asUser(raw.last_user),
+    last_environment: asString(raw.last_environment),
+    last_app_version: asString(raw.last_app_version),
+    last_user_agent: asString(raw.last_user_agent),
+    last_duid: asString(raw.last_duid),
+    last_session_id: asString(raw.last_session_id),
+    affected_user_count: asCount(raw.affected_user_count),
+    affected_user_ids: Array.isArray(raw.affected_user_ids)
+      ? raw.affected_user_ids.filter((id): id is string => typeof id === 'string')
+      : [],
+    anonymous_count: asCount(raw.anonymous_count),
+    status: raw.status === 'RESOLVED' || raw.status === 'IGNORED' ? raw.status : 'OPEN',
+  };
+}
 
 /**
  * A file the operator picked, turned into entries to send — or a reason it
@@ -100,49 +199,14 @@ export function parseBugImport(text: string): { bugs: BugExportEntry[] } | { err
   if (!isRecord(parsed) || !Array.isArray(parsed.bugs)) {
     return { error: 'That file is not a bugs export — it has no "bugs" list.' };
   }
-
-  const bugs: BugExportEntry[] = [];
-  for (const raw of parsed.bugs) {
-    if (
-      !isRecord(raw) ||
-      typeof raw.fingerprint !== 'string' ||
-      raw.fingerprint.trim() === '' ||
-      typeof raw.title !== 'string' ||
-      typeof raw.page !== 'string' ||
-      typeof raw.source !== 'string'
-    ) {
-      return {
-        error:
-          'One of the bugs is missing its fingerprint, title, page or source, so nothing was imported.',
-      };
-    }
-    const env = isRecord(raw.env_counts) ? raw.env_counts : {};
-    bugs.push({
-      fingerprint: raw.fingerprint,
-      title: raw.title,
-      error_name: asString(raw.error_name) ?? 'Error',
-      message: asString(raw.message) ?? '',
-      page: raw.page,
-      source: raw.source,
-      app: asString(raw.app) ?? raw.source.split(':')[0],
-      portal: asString(raw.portal),
-      platform: asString(raw.platform) ?? 'unknown',
-      os: asString(raw.os),
-      occurrence_count: typeof raw.occurrence_count === 'number' ? raw.occurrence_count : 1,
-      first_seen_at: asString(raw.first_seen_at) ?? '',
-      last_seen_at: asString(raw.last_seen_at) ?? '',
-      env_counts: {
-        localhost: typeof env.localhost === 'number' ? env.localhost : 0,
-        staging: typeof env.staging === 'number' ? env.staging : 0,
-        production: typeof env.production === 'number' ? env.production : 0,
-      },
-      last_url: asString(raw.last_url),
-      last_host: asString(raw.last_host),
-      last_stack: asString(raw.last_stack),
-      status: raw.status === 'RESOLVED' || raw.status === 'IGNORED' ? raw.status : 'OPEN',
-    });
+  if (!parsed.bugs.every(hasIdentity)) {
+    return {
+      error:
+        'One of the bugs is missing its fingerprint, title, page or source, so nothing was imported.',
+    };
   }
 
+  const bugs = parsed.bugs.map(toBugEntry);
   if (bugs.length === 0) return { error: 'That file has no bugs in it.' };
   return { bugs };
 }

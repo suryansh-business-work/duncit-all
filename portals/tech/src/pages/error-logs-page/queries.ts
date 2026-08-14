@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import { ISSUE_LOG_COMPONENT } from '@duncit/errors';
 import type { TableFilterValue } from '@duncit/table';
+import type { TelemetryUserRef } from '../../components/telemetry-identity';
 
 /**
  * The Error Logs section reads the same persisted telemetry rows as the rest
@@ -32,11 +33,33 @@ export const ERROR_LOGS_TABLE = gql`
           stack
         }
         data_json
+        user {
+          id
+          name
+          email
+          phone
+          roles
+        }
+        client {
+          app_version
+          device_model
+          device_os_version
+          locale
+          timezone
+          network
+        }
+        duid
+        session_id
+        ip
+        user_agent
         created_at
       }
     }
   }
 `;
+
+/** The one telemetry user shape, shared with Bugs and the Logs tables. */
+export type ErrorLogUser = TelemetryUserRef;
 
 export interface ErrorLogRow {
   id: string;
@@ -53,8 +76,22 @@ export interface ErrorLogRow {
   host: string | null;
   error: { name: string; message: string; stack: string | null } | null;
   data_json: string | null;
+  user: ErrorLogUser | null;
+  client: {
+    app_version: string | null;
+    device_model: string | null;
+    device_os_version: string | null;
+    locale: string | null;
+    timezone: string | null;
+    network: string | null;
+  } | null;
+  duid: string | null;
+  session_id: string | null;
+  ip: string | null;
+  user_agent: string | null;
   created_at: string;
 }
+
 
 /** The parsed-issue fields @duncit/errors ships inside the log's data blob. */
 export interface IssueData {
@@ -79,8 +116,3 @@ export const ERROR_MODULE_FILTER: readonly TableFilterValue[] = [
   { field: 'component', op: 'eq', value: ISSUE_LOG_COMPONENT },
 ];
 
-export const ENV_OPTIONS = [
-  { value: 'production', label: 'Production' },
-  { value: 'staging', label: 'Staging' },
-  { value: 'localhost', label: 'Localhost' },
-];

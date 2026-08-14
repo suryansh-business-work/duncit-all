@@ -1,50 +1,7 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
+import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
+import { userLabel } from '../../components/telemetry-identity';
 import { parseIssueData, type ErrorLogRow } from './queries';
-
-function Field({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-        {value || '—'}
-      </Typography>
-    </Box>
-  );
-}
-
-function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Paper
-        variant="outlined"
-        sx={{ mt: 0.5, p: 1.5, maxHeight: 220, overflow: 'auto', bgcolor: 'action.hover' }}
-      >
-        <Typography
-          component="pre"
-          variant="caption"
-          sx={{ m: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}
-        >
-          {value}
-        </Typography>
-      </Paper>
-    </Box>
-  );
-}
 
 /** Everything one captured server-operation failure knows about itself. */
 export default function ErrorLogDetailDialog({
@@ -69,6 +26,12 @@ export default function ErrorLogDetailDialog({
             <Field label="Operation" value={issue.operation ?? ''} />
             <Field label="GraphQL path" value={issue.gql_path ?? ''} />
             <Field label="URL" value={row.url ?? ''} />
+            <Field label="User" value={userLabel(row.user)} />
+            <Field label="Email" value={row.user?.email ?? ''} />
+            <Field label="Phone" value={row.user?.phone ?? ''} />
+            <Field label="App version" value={row.client?.app_version ?? ''} />
+            <Field label="IP address" value={row.ip ?? ''} />
+            <Field label="Session" value={row.session_id ?? ''} />
           </Box>
           <Field label="Message" value={row.error?.message ?? ''} />
           {row.error?.stack ? <Mono label="Stack trace" value={row.error.stack} /> : null}

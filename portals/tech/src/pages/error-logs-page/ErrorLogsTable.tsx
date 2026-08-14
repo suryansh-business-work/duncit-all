@@ -1,15 +1,10 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { ENV_OPTIONS, ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
+import { ENV_COLOR, ENV_OPTIONS, UserCell } from '../../components/telemetry-identity';
+import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
 
 const getRowId = (row: ErrorLogRow) => row.id;
-
-const ENV_COLOR: Record<string, 'error' | 'warning' | 'default'> = {
-  production: 'error',
-  staging: 'warning',
-  localhost: 'default',
-};
 
 const KIND_COLOR: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
   SERVER: 'error',
@@ -36,6 +31,8 @@ const renderMessage = (row: ErrorLogRow) => (
     {row.error?.message ?? '—'}
   </Typography>
 );
+
+const renderUser = (row: ErrorLogRow) => <UserCell user={row.user} />;
 
 const renderWhen = (row: ErrorLogRow) => (
   <Typography variant="body2" color="text.secondary">
@@ -83,6 +80,13 @@ export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readon
         width: 190,
         sortable: false,
         valueGetter: (row) => parseIssueData(row).operation ?? '—',
+      },
+      {
+        field: 'user',
+        headerName: 'User',
+        width: 165,
+        sortable: false,
+        cellRenderer: renderUser,
       },
       {
         field: 'message',

@@ -5,6 +5,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
+import CopyGetApiButton from '../../components/CopyGetApiButton';
 import { BUGS_EXPORT, IMPORT_BUGS, type BugRow } from './queries';
 import { buildBugExport, bugExportFilename, parseBugImport } from './bug-io';
 
@@ -96,6 +97,7 @@ export default function BugImportExport({ onImported }: Readonly<Props>) {
       >
         {importing ? 'Importing…' : 'Import'}
       </Button>
+      <CopyGetApiButton path="/telemetry/bugs.json" />
       <input
         ref={fileRef}
         type="file"

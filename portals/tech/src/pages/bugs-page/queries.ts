@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { TelemetryClientRef, TelemetryUserRef } from '../../components/telemetry-identity';
 
 /** Every field a bug carries — the table, the detail dialog and the export all read this. */
 const BUG_FIELDS = gql`
@@ -25,6 +26,33 @@ const BUG_FIELDS = gql`
     last_url
     last_host
     last_stack
+    last_user {
+      id
+      name
+      email
+      phone
+      roles
+    }
+    last_environment
+    last_app_version
+    last_user_agent
+    last_duid
+    last_session_id
+    last_ip
+    last_client {
+      app_version
+      device_model
+      device_os_version
+      locale
+      timezone
+      screen
+      viewport
+      network
+      referrer
+    }
+    affected_user_count
+    affected_user_ids
+    anonymous_count
     status
     resolved_at
     resolved_by
@@ -72,6 +100,25 @@ export const BUG_OCCURRENCES = gql`
         stack
       }
       data_json
+      user {
+        id
+        name
+        email
+        phone
+        roles
+      }
+      client {
+        app_version
+        device_model
+        device_os_version
+        locale
+        timezone
+        network
+      }
+      duid
+      session_id
+      ip
+      user_agent
       created_at
     }
   }
@@ -111,6 +158,9 @@ export const IMPORT_BUGS = gql`
 
 export type BugStatus = 'OPEN' | 'RESOLVED' | 'IGNORED';
 
+/** The one telemetry user shape, shared with Logs and Error Logs. */
+export type BugUser = TelemetryUserRef;
+
 export interface BugRow {
   id: string;
   fingerprint: string;
@@ -130,6 +180,17 @@ export interface BugRow {
   last_url: string | null;
   last_host: string | null;
   last_stack: string | null;
+  last_user: BugUser | null;
+  last_environment: string | null;
+  last_app_version: string | null;
+  last_user_agent: string | null;
+  last_duid: string | null;
+  last_session_id: string | null;
+  last_ip: string | null;
+  last_client: TelemetryClientRef | null;
+  affected_user_count: number;
+  affected_user_ids: string[];
+  anonymous_count: number;
   status: BugStatus;
   resolved_at: string | null;
   resolved_by: string | null;
@@ -146,7 +207,33 @@ export interface BugOccurrence {
   host: string | null;
   error: { name: string; message: string; stack: string | null } | null;
   data_json: string | null;
+  user: BugUser | null;
+  client: {
+    app_version: string | null;
+    device_model: string | null;
+    device_os_version: string | null;
+    locale: string | null;
+    timezone: string | null;
+    network: string | null;
+  } | null;
+  duid: string | null;
+  session_id: string | null;
+  ip: string | null;
+  user_agent: string | null;
   created_at: string;
+}
+
+/** `12 users · 3 signed out` — who a bug actually reaches. */
+export function affectedSummary(bug: {
+  affected_user_count: number;
+  anonymous_count: number;
+}): string {
+  const parts: string[] = [];
+  if (bug.affected_user_count > 0) {
+    parts.push(`${bug.affected_user_count} user${bug.affected_user_count === 1 ? '' : 's'}`);
+  }
+  if (bug.anonymous_count > 0) parts.push(`${bug.anonymous_count} signed out`);
+  return parts.length > 0 ? parts.join(' · ') : '—';
 }
 
 export const STATUS_OPTIONS: ReadonlyArray<{ value: BugStatus; label: string }> = [

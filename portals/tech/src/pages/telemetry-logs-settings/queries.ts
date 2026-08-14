@@ -6,6 +6,17 @@ export const TELEMETRY_SETTINGS = gql`
       signoz_enabled
       persisted_levels
       retention_days
+      public_api_key
+      updated_at
+    }
+  }
+`;
+
+/** Mints a new feed key. Every URL copied before it lands stops working. */
+export const ROTATE_TELEMETRY_API_KEY = gql`
+  mutation RotateTelemetryApiKey {
+    rotateTelemetryApiKey {
+      public_api_key
       updated_at
     }
   }
@@ -26,6 +37,7 @@ export interface TelemetrySettings {
   signoz_enabled: boolean;
   persisted_levels: string[];
   retention_days: number;
+  public_api_key: string;
   updated_at: string | null;
 }
 

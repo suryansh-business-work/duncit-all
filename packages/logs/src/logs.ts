@@ -1,9 +1,11 @@
 import { PORTALS, WEBSITES, detectEnvironment, type PortalKey, type WebsiteKey } from './config';
+import { browserClientInfo, compactClient, sessionId } from './client-info';
 import { consoleTransport } from './transport';
 import type {
   DeviceOS,
   Environment,
   LevelFns,
+  LogClient,
   LogDetail,
   LogLevel,
   LogRecord,
@@ -30,6 +32,14 @@ export interface LogContext {
   url?: () => string | undefined;
   /** Hostname. Defaults to location.hostname in browsers. */
   host?: () => string | undefined;
+  /**
+   * Build/device facts this surface knows that a browser cannot report on its
+   * own — app version, native device model. Layered OVER the auto-detected
+   * browser fields, so a surface only names what it adds.
+   */
+  client?: () => LogClient | undefined;
+  /** Duncit device id, the same value the surface sends the API as `x-duid`. */
+  duid?: () => string | undefined;
 }
 
 // One process-wide transport + context. Apps call configureLogs() once at
@@ -107,6 +117,29 @@ function currentEnvironment(host: string | undefined): Environment {
   return detectEnvironment(host);
 }
 
+/**
+ * What the machine looks like right now: the browser's own reading, with the
+ * app's contribution (version, native device) layered on top. Each half is
+ * compacted first so an absent field on either side never erases the other's.
+ */
+function currentClient(): LogClient | undefined {
+  const merged = { ...browserClientInfo(), ...compactClient(context.client?.() ?? {}) };
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+/** The thrown value and the rest of the detail bag, split apart. */
+function splitDetail(detail?: LogDetail): {
+  error?: SerializedError;
+  data?: Record<string, unknown>;
+} {
+  if (!detail) return {};
+  const { error: e, err, ...rest } = detail;
+  return {
+    error: serializeError(e ?? err),
+    data: Object.keys(rest).length > 0 ? rest : undefined,
+  };
+}
+
 function emit(
   base: Pick<LogRecord, 'app' | 'portal'>,
   level: LogLevel,
@@ -116,13 +149,7 @@ function emit(
 ): void {
   try {
     const host = currentHost();
-    let error: SerializedError | undefined;
-    let data: Record<string, unknown> | undefined;
-    if (detail) {
-      const { error: e, err, ...rest } = detail;
-      error = serializeError(e ?? err);
-      data = Object.keys(rest).length > 0 ? rest : undefined;
-    }
+    const { error, data } = splitDetail(detail);
     activeTransport({
       ...base,
       portal: base.portal ?? context.portal,
@@ -136,6 +163,9 @@ function emit(
       component,
       error,
       data,
+      client: currentClient(),
+      duid: context.duid?.(),
+      session_id: sessionId(),
       timestamp: new Date().toISOString(),
     });
   } catch {

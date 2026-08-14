@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -13,12 +13,14 @@ import {
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { RhfTextField } from '@duncit/forms';
+import { useTranslation } from '@duncit/app-settings';
 import TemplateSample from '../wa-aisensy/TemplateSample';
-import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
+import { campaignFor, templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
-import ParamsField from './ParamsField';
 import RecipientFields from './RecipientFields';
 import ScheduleField from './ScheduleField';
+import TemplateInputs from './TemplateInputs';
+import { useTemplateFields } from './useTemplateFields';
 import { useWaReach } from './useWaReach';
 import {
   emptyValues,
@@ -59,8 +61,11 @@ export default function WaCampaignForm({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const schema = useMemo(() => waCampaignSchema(t), [t]);
   const {
     control,
+    getValues,
     handleSubmit,
     reset,
     setValue,
@@ -68,34 +73,26 @@ export default function WaCampaignForm({
     formState: { isValid },
   } = useForm<WaCampaignValues>({
     defaultValues: emptyValues(),
-    resolver: zodResolver(waCampaignSchema),
+    resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
+  // Counted rather than watched: the fields below are laid out from the reset
+  // values, and on the render where `open` flips they have not landed yet.
+  const [resetCount, setResetCount] = useState(0);
   useEffect(() => {
-    if (open) reset(initial ?? emptyValues(campaignName));
+    if (!open) return;
+    reset(initial ?? emptyValues(campaignName));
+    setResetCount((count) => count + 1);
   }, [open, initial, campaignName, reset]);
 
   const values = watch();
   const reach = useWaReach(values);
   const { options: campaignOptions, campaigns, templates } = useCampaignOptions(names);
+  const campaign = campaignFor(values.wa_campaign_name, campaigns);
   const template = templateFor(values.wa_campaign_name, campaigns, templates);
 
-  // The template decides how many params a send must carry, so the rows follow
-  // it rather than the marketer counting {{n}} by hand. Only when AiSensy told
-  // us — otherwise the rows stay the marketer's to add.
-  const paramCount = template?.param_count;
-  const rowCount = values.template_params.length;
-  useEffect(() => {
-    // Already the right shape — a duplicated send arrives with its params
-    // filled, and re-laying them out would wipe what it came with.
-    if (paramCount === undefined || rowCount === paramCount) return;
-    setValue(
-      'template_params',
-      Array.from({ length: paramCount }, () => ({ value: '' })),
-      { shouldValidate: true }
-    );
-  }, [paramCount, rowCount, setValue]);
+  useTemplateFields({ resetCount, template, campaign, setValue, getValues });
 
   // The button says what pressing it does — schedule, or send right now.
   const scheduled = !!values.scheduled_at;
@@ -104,6 +101,9 @@ export default function WaCampaignForm({
   // The variable list is whatever the server supports — no copy of it here.
   const variableList = variables.map((variable) => `{{${variable.name}}}`).join(', ');
   const paramsHint = `Literal text, or a variable filled per recipient: ${variableList}. Somebody whose variable is empty is skipped rather than sent a blank.`;
+  const media = values.media_url
+    ? { url: values.media_url, filename: values.media_filename }
+    : undefined;
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -138,7 +138,21 @@ export default function WaCampaignForm({
               ))}
             </RhfTextField>
 
-            {template && <TemplateSample template={template} />}
+            <TemplateInputs
+              control={control}
+              template={template}
+              campaign={campaign}
+              hint={paramsHint}
+            />
+
+            {template && (
+              <TemplateSample
+                template={template}
+                params={values.template_params.map((param) => param.value)}
+                media={media}
+                buttons={values.buttons}
+              />
+            )}
 
             <RecipientFields
               control={control}
@@ -152,8 +166,6 @@ export default function WaCampaignForm({
                 {reachText(reach)}
               </Alert>
             )}
-
-            <ParamsField control={control} hint={paramsHint} />
 
             <ScheduleField control={control} />
           </Stack>

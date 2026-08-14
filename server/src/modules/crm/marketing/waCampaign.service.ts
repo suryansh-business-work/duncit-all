@@ -15,13 +15,8 @@ import {
   WA_CAMPAIGN_AUDIENCES,
   type WaCampaignAudience,
 } from './waCampaign.model';
-import {
-  getWaPricing,
-  ratePerMessage,
-  toTemplateCategory,
-  WaPricingModel,
-  type IWaPricing,
-} from './waPricing.model';
+import { getWaPricing, WaPricingModel, type IWaPricing } from './waPricing.model';
+import { resolveCampaign, sendExtras } from './waCampaign.template';
 import { waDashboard, type WaDashboardRange } from './waCampaign.dashboard';
 import { WaCampaignNameModel } from './waCampaignName.model';
 import {
@@ -80,6 +75,11 @@ const toPub = (doc: any) => ({
   msg_rate: Number(doc.msg_rate ?? 0),
   cost: costOf(doc),
   template_params: doc.template_params ?? [],
+  media: doc.media?.url ? { url: doc.media.url, filename: doc.media.filename ?? '' } : null,
+  buttons: (doc.buttons ?? []).map((button: any) => ({
+    index: button.index,
+    value: button.value,
+  })),
   status: doc.status,
   scheduled_at: iso(doc.scheduled_at),
   recipient_count: doc.recipient_count,
@@ -199,6 +199,11 @@ interface SendInput {
   /** MANUAL_NUMBERS — numbers typed in, which may belong to no account. */
   contacts?: (ManualContactInput | null)[] | null;
   template_params?: (string | null)[] | null;
+  /** The header asset, for a template whose header is IMAGE, VIDEO or FILE.
+   * Left out, the campaign's own asset is used. */
+  media?: { url?: string | null; filename?: string | null } | null;
+  /** Values for CTA buttons whose link carries a {{n}}, by button position. */
+  buttons?: ({ index?: number | null; value?: string | null } | null)[] | null;
   /** ISO time to send at. Absent, or already past, means send now. */
   scheduled_at?: string | null;
 }
@@ -250,37 +255,6 @@ function validateScope(input: SendInput) {
 }
 
 /**
- * The template this campaign sends, what a message on it costs, and whether
- * AiSensy has the campaign at all.
- *
- * Best effort on purpose: the Project API is a second credential the send
- * itself does not need, so a console that cannot read it still sends — the
- * campaign just records no category and no rate, and the saved name list is
- * left to vouch for the name.
- */
-async function resolveCampaign(waCampaignName: string) {
-  const pricing = await getWaPricing();
-  try {
-    const [campaigns, templates] = await Promise.all([listCampaigns(), listTemplates()]);
-    const campaign = campaigns.find((row) => row.name === waCampaignName);
-    const template = templates.find((row) => row.name === campaign?.template_name);
-    const category = toTemplateCategory(template?.category) ?? '';
-    return {
-      known: !!campaign,
-      template_name: template?.name ?? str(campaign?.template_name),
-      template_category: category,
-      msg_rate: ratePerMessage(pricing, category),
-    };
-  } catch (e) {
-    logs.server.warn('waCampaign', 'resolveCampaign', {
-      error: e,
-      wa_campaign_name: waCampaignName,
-    });
-    return { known: false, template_name: '', template_category: '', msg_rate: 0 };
-  }
-}
-
-/**
  * Validate what the portal sent.
  *
  * The campaign name has to be one somebody vouched for: either AiSensy itself
@@ -302,13 +276,22 @@ async function validateSendInput(input: SendInput) {
     throw badInput('Fill every template parameter before sending');
   }
   assertKnownTokens(templateParams);
-  const { known, ...pricing } = resolved;
   return {
     name,
     wa_campaign_name: waCampaignName,
     ...validateScope(input),
-    ...pricing,
+    template_name: resolved.template_name,
+    template_category: resolved.template_category,
+    msg_rate: resolved.msg_rate,
     template_params: templateParams,
+    // Checked against the live template, and frozen onto the document: the
+    // asset a campaign carries can be swapped in the AiSensy console, and a
+    // past send must keep saying what it actually sent.
+    ...sendExtras(resolved, {
+      template_params: templateParams,
+      media: input.media,
+      buttons: input.buttons,
+    }),
     scheduled_at: parseSchedule(input.scheduled_at),
   };
 }
@@ -358,6 +341,10 @@ async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRo
       destination: base.destination,
       user_name: base.name,
       template_params: params,
+      // Read from the document, not re-resolved: every message in one send
+      // carries what the send was created with.
+      media: doc.media,
+      buttons: doc.buttons,
     });
     return {
       ...base,
@@ -738,14 +725,22 @@ export const waCampaignService = {
   /**
    * One message to one number — the check a marketer makes before pointing a
    * template at an audience. Goes through the same send path as a campaign, so
-   * a template that passes here is the template a campaign will send.
+   * a template that passes here is the template a campaign will send: the same
+   * template checks run, and the campaign's own asset fills in the same way.
    */
-  testSend(input: any) {
+  async testSend(input: any) {
+    const templateParams = (input.template_params ?? []).map(str);
+    const resolved = await resolveCampaign(str(input.wa_campaign_name));
     return aisensyService.send({
       campaign_name: input.wa_campaign_name,
       destination: input.destination,
       user_name: input.user_name,
-      template_params: (input.template_params ?? []).map(str),
+      template_params: templateParams,
+      ...sendExtras(resolved, {
+        template_params: templateParams,
+        media: input.media,
+        buttons: input.buttons,
+      }),
     });
   },
 

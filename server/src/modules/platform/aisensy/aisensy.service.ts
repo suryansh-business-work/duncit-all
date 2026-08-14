@@ -1,6 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { defaultCampaign, isAisensyConfigured, sendCampaign } from './aisensy.gateway';
+import {
+  defaultCampaign,
+  isAisensyConfigured,
+  sendCampaign,
+  type CampaignButton,
+  type CampaignMedia,
+} from './aisensy.gateway';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
@@ -8,6 +14,22 @@ const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'B
 const DESTINATION_RE = /^\d{6,15}$/;
 
 const trimmed = (v: unknown): string => String(v ?? '').trim();
+
+/** The header asset, or nothing. A blank url is dropped rather than forwarded:
+ * an empty `media` key fails the whole send. */
+export function toMedia(raw: unknown): CampaignMedia | undefined {
+  const media = raw as { url?: unknown; filename?: unknown } | null | undefined;
+  const url = trimmed(media?.url);
+  return url ? { url, filename: trimmed(media?.filename) } : undefined;
+}
+
+/** The CTA link values, dropping any that carries nothing to fill with. */
+export function toButtons(raw: unknown): CampaignButton[] {
+  const rows = Array.isArray(raw) ? raw : [];
+  return rows
+    .map((button) => ({ index: Number(button?.index ?? 0) || 0, value: trimmed(button?.value) }))
+    .filter((button) => button.value);
+}
 
 export const aisensyService = {
   /** Whether a key is configured + the campaign name sends default to. */
@@ -39,6 +61,8 @@ export const aisensyService = {
       destination,
       user_name,
       template_params,
+      media: toMedia(input.media),
+      buttons: toButtons(input.buttons),
     });
     logs.server.info('aisensy', 'send', { campaign_name, submitted_message_id });
     return { ok: true, submitted_message_id, message: `Campaign "${campaign_name}" submitted` };

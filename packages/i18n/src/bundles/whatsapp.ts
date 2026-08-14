@@ -206,5 +206,29 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     errorNameFormat: 'Use lowercase letters, numbers and underscores only',
     errorTooLong: '{field} is too long',
     errorSamplePlaceholders: 'Replace every placeholder in the sample with a real example value',
+    // The send forms. Every field below is built from the template the chosen
+    // campaign points at, so the copy explains the RULE rather than the field —
+    // a template's own body text, button labels and values are AiSensy data and
+    // are correctly not keys.
+    paramsTitle: 'Template values',
+    paramLabel: 'Value {n}',
+    errorParamRequired: 'Fill this in — WhatsApp renders a blank where it goes',
+    mediaTitle: 'Header asset',
+    mediaUrlLabel: 'Header media URL',
+    mediaUrlHelp:
+      'AiSensy fetches this link itself when it sends, so it has to be reachable from the public internet. A link only you can open fails once per recipient.',
+    mediaFilenameLabel: 'File name',
+    mediaFilenameHelp: 'What WhatsApp shows on the document.',
+    mediaFromCampaign:
+      'Prefilled from the asset this campaign was built with in AiSensy. Replace it to send a different one.',
+    errorMediaRequired: 'This template sends a header image, video or document — add its public link',
+    errorMediaUrl: 'Use a full public link that starts with http:// or https://',
+    buttonsTitle: 'Button links',
+    buttonsHint:
+      'This template has a button whose link carries a {{n}}. What you type here replaces it.',
+    buttonLabel: 'Link value for “{text}”',
+    errorButtonValue: 'Fill this in, or the button opens a link with {{n}} still in it',
+    templateUnknown:
+      'AiSensy could not be read, so this send could not be built from its template. Add the Project API credentials in the Tech portal to see the values, header asset and links it needs.',
   },
 };

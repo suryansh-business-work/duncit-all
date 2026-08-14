@@ -1,4 +1,4 @@
-import { templateSegments } from '@duncit/communication';
+import { renderTemplateBody, templateSegments } from '@duncit/communication';
 import type { StatusColorMap } from '@duncit/ui';
 import type { AisensyCampaign, AisensyTemplate, WaCampaignNameOption } from '../queries';
 
@@ -75,16 +75,68 @@ export interface BodySegment {
   variable: boolean;
 }
 
-/** The split itself comes from `@duncit/communication`, which is where the one
- * `{{n}}` parser lives (rule 40) — this only adds the key a list needs. */
-export function bodySegments(body: string): BodySegment[] {
+/**
+ * The split itself comes from `@duncit/communication`, which is where the one
+ * `{{n}}` parser lives (rule 40) — this only adds the key a list needs.
+ *
+ * With `params`, each placeholder shows what the operator typed instead of its
+ * `{{n}}`, still highlighted so the filled parts stay tellable from the
+ * template's own words. A blank value keeps the placeholder visible rather than
+ * collapsing the sentence around a gap, and a `{{first_name}}` token is shown
+ * verbatim: the SERVER resolves those per recipient, so pretending to resolve
+ * one here would be inventing a name.
+ *
+ * The id stays the offset in the RAW body, so it is unique whatever is
+ * substituted in.
+ */
+export function bodySegments(body: string, params?: readonly string[]): BodySegment[] {
   const segments: BodySegment[] = [];
   let offset = 0;
   for (const segment of templateSegments(body)) {
-    segments.push({ id: String(offset), text: segment.text, variable: segment.placeholder > 0 });
+    const filled = segment.placeholder > 0 ? (params?.[segment.placeholder - 1] ?? '') : '';
+    segments.push({
+      id: String(offset),
+      text: filled || segment.text,
+      variable: segment.placeholder > 0,
+    });
     offset += segment.text.length;
   }
   return segments;
+}
+
+/** How much of the template's own wording a param row shows around its {{n}}. */
+const CONTEXT_CHARS = 36;
+
+const oneLine = (text: string) => text.replaceAll(/\s+/g, ' ');
+
+/**
+ * The template's own words around one `{{n}}`.
+ *
+ * A row labelled only "Value {{2}}" tells the operator nothing about what
+ * belongs in it; the sentence it lands in does.
+ */
+export function paramContext(body: string, placeholder: number): string {
+  const segments = templateSegments(body);
+  const at = segments.findIndex((segment) => segment.placeholder === placeholder);
+  if (at < 0) return '';
+  const before = oneLine(segments[at - 1]?.text ?? '').slice(-CONTEXT_CHARS);
+  const after = oneLine(segments[at + 1]?.text ?? '').slice(0, CONTEXT_CHARS);
+  return `…${before}${segments[at].text}${after}…`;
+}
+
+/**
+ * A CTA link as it will open, with the operator's value in place of its {{n}}.
+ *
+ * An empty value leaves the placeholder visible on purpose — a link that still
+ * reads `{{7}}` is the exact thing this field exists to stop, so it has to be
+ * legible rather than silently blanked.
+ */
+export function filledButtonUrl(url: string, param: number, value: string): string {
+  if (!value || param < 1) return url;
+  const params = Array.from({ length: param }, (_, index) =>
+    index === param - 1 ? value : `{{${index + 1}}}`
+  );
+  return renderTemplateBody(url, params);
 }
 
 /** Name plus language: the same template exists once per language, so the name

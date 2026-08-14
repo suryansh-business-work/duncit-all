@@ -58,6 +58,24 @@ export interface CampaignMedia {
   filename: string;
 }
 
+/**
+ * The value that fills a CTA button's dynamic link.
+ *
+ * It travels in its OWN top-level field and never in `templateParams`: AiSensy's
+ * published v2 examples put the body's variables in `templateParams` and a URL
+ * button's value only under `buttons`, and a `templateParams` of the wrong
+ * length is a documented hard rejection ("Template param count mismatch!").
+ * The wire shape is theirs verbatim —
+ * `{type:"button", sub_type:"url", index:"0", parameters:[{type:"text", text}]}`
+ * — including `index` as a STRING.
+ */
+export interface CampaignButton {
+  /** Where the button sits on the template, counting from zero. */
+  index: number;
+  /** What replaces the {{n}} in that button's link. */
+  value: string;
+}
+
 export interface CampaignMessage {
   campaign_name: string;
   /** Country code + number, digits only — the shape AiSensy expects. */
@@ -66,6 +84,8 @@ export interface CampaignMessage {
   template_params: string[];
   /** Only for a template whose header is IMAGE, VIDEO or DOCUMENT. */
   media?: CampaignMedia;
+  /** Only for a template whose CTA link carries a {{n}}. */
+  buttons?: CampaignButton[];
 }
 
 /** Human-readable reason out of an AiSensy error body. */
@@ -115,6 +135,18 @@ export function campaignPayload(message: CampaignMessage, key: string): Record<s
   // whole send, while a text-header template with no key is simply fine.
   if (message.media?.url) {
     payload.media = { url: message.media.url, filename: message.media.filename };
+  }
+  // Same rule, for the same reason: AiSensy does not document what it does with
+  // a `buttons` array for a template that has no dynamic link, so one is sent
+  // only when a value was actually given.
+  const buttons = (message.buttons ?? []).filter((button) => button.value);
+  if (buttons.length > 0) {
+    payload.buttons = buttons.map((button) => ({
+      type: 'button',
+      sub_type: 'url',
+      index: String(button.index),
+      parameters: [{ type: 'text', text: button.value }],
+    }));
   }
   return payload;
 }

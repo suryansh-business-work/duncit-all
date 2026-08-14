@@ -61,13 +61,26 @@ export function useCampaignOptions(names: WaCampaignNameOption[]) {
   return { options, live, campaigns, templates };
 }
 
+/**
+ * The campaign a send is addressed to, when the Project API answered.
+ *
+ * Worth having on its own because the header asset lives on the CAMPAIGN rather
+ * than on its template — a send form prefills from here.
+ */
+export function campaignFor(
+  campaignName: string,
+  campaigns: AisensyCampaign[]
+): AisensyCampaign | null {
+  return campaigns.find((item) => item.name === campaignName) ?? null;
+}
+
 /** The template a campaign sends, when both are known. */
 export function templateFor(
   campaignName: string,
   campaigns: AisensyCampaign[],
   templates: AisensyTemplate[]
 ): AisensyTemplate | null {
-  const campaign = campaigns.find((item) => item.name === campaignName);
+  const campaign = campaignFor(campaignName, campaigns);
   if (!campaign?.template_name) return null;
   return templates.find((template) => template.name === campaign.template_name) ?? null;
 }

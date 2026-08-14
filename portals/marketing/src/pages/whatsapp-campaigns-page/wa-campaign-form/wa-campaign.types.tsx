@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import type { WaCampaignRow } from '../queries';
+import type { Translator } from '@duncit/app-settings';
+import type { AisensyButtonInput, AisensyMediaInput, WaCampaignRow } from '../queries';
+import {
+  emptyTemplateFields,
+  refineTemplateFields,
+  templateFieldsShape,
+  toButtonInputs,
+  toMediaInput,
+} from './template-fields';
 
 /**
  * A WhatsApp send. The message body is not here — it lives in the approved
@@ -36,58 +44,60 @@ const manualContactSchema = z.object({
     .regex(/^\d{6,12}$/, 'Number is 6–12 digits, without the country code'),
 });
 
-export const waCampaignSchema = z
-  .object({
-    name: z
-      .string()
-      .trim()
-      .min(3, 'Give this campaign a name of at least 3 characters')
-      .max(120, 'Keep the name under 120 characters'),
-    wa_campaign_name: z.string().trim().min(1, 'Pick a WhatsApp campaign name'),
-    audience: z.enum(WA_AUDIENCES),
-    audience_list_id: z.string().trim(),
-    users: z.array(pickedUserSchema),
-    contacts: z.array(manualContactSchema),
-    template_params: z.array(
-      z.object({ value: z.string().trim().min(1, 'Fill this parameter or remove it') })
-    ),
-    /** ISO time to send at; empty sends as soon as it is submitted. */
-    scheduled_at: z.string(),
-  })
-  .superRefine((values, ctx) => {
-    if (values.audience === 'AUDIENCE_LIST' && !values.audience_list_id) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['audience_list_id'],
-        message: 'Pick the audience list to send to',
-      });
-    }
-    if (values.audience === 'SPECIFIC_USERS' && values.users.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['users'],
-        message: 'Pick at least one person to send to',
-      });
-    }
-    if (values.audience === 'MANUAL_NUMBERS' && values.contacts.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['contacts'],
-        message: 'Add at least one contact to send to',
-      });
-    }
-    // A time already gone would send immediately, which is not what picking a
-    // time means — say so rather than sending.
-    if (values.scheduled_at && new Date(values.scheduled_at).getTime() <= Date.now()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['scheduled_at'],
-        message: 'Pick a time in the future',
-      });
-    }
-  });
+/** Built from `t` because the template-driven fields carry shipped keys
+ * (rule 38), and a Zod message is where a form's copy reaches the reader. */
+export const waCampaignSchema = (t: Translator['t']) =>
+  z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(3, 'Give this campaign a name of at least 3 characters')
+        .max(120, 'Keep the name under 120 characters'),
+      wa_campaign_name: z.string().trim().min(1, 'Pick a WhatsApp campaign name'),
+      audience: z.enum(WA_AUDIENCES),
+      audience_list_id: z.string().trim(),
+      users: z.array(pickedUserSchema),
+      contacts: z.array(manualContactSchema),
+      ...templateFieldsShape(t),
+      /** ISO time to send at; empty sends as soon as it is submitted. */
+      scheduled_at: z.string(),
+    })
+    .superRefine((values, ctx) => {
+      refineTemplateFields(values, ctx, t);
+      if (values.audience === 'AUDIENCE_LIST' && !values.audience_list_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['audience_list_id'],
+          message: 'Pick the audience list to send to',
+        });
+      }
+      if (values.audience === 'SPECIFIC_USERS' && values.users.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['users'],
+          message: 'Pick at least one person to send to',
+        });
+      }
+      if (values.audience === 'MANUAL_NUMBERS' && values.contacts.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['contacts'],
+          message: 'Add at least one contact to send to',
+        });
+      }
+      // A time already gone would send immediately, which is not what picking a
+      // time means — say so rather than sending.
+      if (values.scheduled_at && new Date(values.scheduled_at).getTime() <= Date.now()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['scheduled_at'],
+          message: 'Pick a time in the future',
+        });
+      }
+    });
 
-export type WaCampaignValues = z.infer<typeof waCampaignSchema>;
+export type WaCampaignValues = z.infer<ReturnType<typeof waCampaignSchema>>;
 export type WaManualContactValue = z.infer<typeof manualContactSchema>;
 
 export interface SendWaCampaignInput {
@@ -98,11 +108,15 @@ export interface SendWaCampaignInput {
   user_ids: string[];
   contacts: WaManualContactValue[];
   template_params: string[];
+  /** Null means "use whatever the campaign was built with in AiSensy". */
+  media: AisensyMediaInput | null;
+  buttons: AisensyButtonInput[];
   scheduled_at: string | null;
 }
 
-/** No parameter rows to start with: how many a send needs is decided by the
- * WhatsApp template that was picked, so the marketer adds exactly those. */
+/** No template-driven rows to start with: how many a send needs is decided by
+ * the WhatsApp template that was picked, and `useTemplateFields` lays exactly
+ * those out once one is known. */
 export const emptyValues = (waCampaignName = ''): WaCampaignValues => ({
   name: '',
   wa_campaign_name: waCampaignName,
@@ -110,7 +124,7 @@ export const emptyValues = (waCampaignName = ''): WaCampaignValues => ({
   audience_list_id: '',
   users: [],
   contacts: [],
-  template_params: [],
+  ...emptyTemplateFields(),
   scheduled_at: '',
 });
 
@@ -119,10 +133,12 @@ const toAudience = (raw: string): WaAudience =>
 
 /** The form values that repeat a past send: same template, same recipients,
  * same params — never its schedule, which belonged to that run. Picked accounts
- * come back as ids without names; the chips fill in as the picker resolves. */
+ * come back as ids without names; the chips fill in as the picker resolves. The
+ * header asset and the link fills are not carried: they are laid out again from
+ * the template AiSensy holds NOW, which is the only shape a send can take. */
 export const valuesFromCampaign = (campaign: WaCampaignRow): WaCampaignValues => ({
+  ...emptyValues(campaign.wa_campaign_name),
   name: `${campaign.name} (copy)`,
-  wa_campaign_name: campaign.wa_campaign_name,
   audience: toAudience(campaign.audience),
   audience_list_id: campaign.audience_list_id ?? '',
   users: (campaign.user_ids ?? []).map((id) => ({ id, name: '' })),
@@ -132,7 +148,6 @@ export const valuesFromCampaign = (campaign: WaCampaignRow): WaCampaignValues =>
     number: contact.number,
   })),
   template_params: campaign.template_params.map((value) => ({ value })),
-  scheduled_at: '',
 });
 
 export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
@@ -143,5 +158,7 @@ export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
   user_ids: values.audience === 'SPECIFIC_USERS' ? values.users.map((user) => user.id) : [],
   contacts: values.audience === 'MANUAL_NUMBERS' ? values.contacts : [],
   template_params: values.template_params.map((param) => param.value.trim()),
+  media: toMediaInput(values),
+  buttons: toButtonInputs(values),
   scheduled_at: values.scheduled_at || null,
 });

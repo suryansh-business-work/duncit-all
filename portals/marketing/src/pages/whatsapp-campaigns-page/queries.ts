@@ -45,6 +45,8 @@ export const AISENSY_CATALOGUE = gql`
       status
       template_name
       type
+      media_url
+      media_filename
     }
     aisensyTemplates {
       id
@@ -56,8 +58,15 @@ export const AISENSY_CATALOGUE = gql`
       param_count
       header
       header_format
+      needs_media
       footer
       buttons
+      cta_buttons {
+        type
+        text
+        url
+        url_param
+      }
     }
   }
 `;
@@ -283,6 +292,32 @@ export interface AisensyCampaign {
   status: string;
   template_name: string;
   type: string;
+  /**
+   * The header asset this campaign was built with in the AiSensy console.
+   *
+   * It lives on the CAMPAIGN, never on the template, and the v2 send endpoint
+   * demands it on every message the campaign sends — which is why a send form
+   * prefills from here rather than asking for a URL that already exists.
+   */
+  media_url: string;
+  media_filename: string;
+}
+
+/** One interactive button under a template's message. */
+export interface AisensyTemplateButton {
+  /** URL or PHONE_NUMBER. */
+  type: string;
+  /** The label WhatsApp draws on the button. */
+  text: string;
+  /** A URL button's link with its {{n}} intact; empty for every other kind. */
+  url: string;
+  /**
+   * The {{n}} the link carries, or 0 when it is static. AiSensy numbers a
+   * dynamic link AFTER the body's own variables, so this is the parameter's
+   * position on the template — never the button's own position, which is what
+   * `AisensyButtonInput.index` carries.
+   */
+  url_param: number;
 }
 
 export interface AisensyTemplate {
@@ -298,8 +333,27 @@ export interface AisensyTemplate {
   header: string;
   /** TEXT, IMAGE, VIDEO, DOCUMENT — empty when there is no header. */
   header_format: string;
+  /** Whether every message on this template must carry a header asset. */
+  needs_media: boolean;
   footer: string;
   buttons: string[];
+  /** The interactive buttons in full — the only place a dynamic link shows up. */
+  cta_buttons: AisensyTemplateButton[];
+}
+
+/** The header asset one send carries. AiSensy fetches the URL itself, so it has
+ * to be reachable from the public internet. */
+export interface AisensyMediaInput {
+  url: string;
+  filename: string;
+}
+
+/** What fills one CTA button's dynamic link. It travels in its own field and
+ * never as one more template parameter. */
+export interface AisensyButtonInput {
+  /** The button's position in the template's `cta_buttons`, counting from zero. */
+  index: number;
+  value: string;
 }
 
 /** What Meta reviews. `header_text` and `footer_text` are left off entirely

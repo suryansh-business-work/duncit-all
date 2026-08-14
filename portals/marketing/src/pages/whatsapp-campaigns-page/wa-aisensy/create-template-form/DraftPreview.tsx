@@ -32,9 +32,11 @@ export default function DraftPreview({ values }: Readonly<{ values: CreateTempla
     // A text header wins: a header line typed against a media type is still the
     // line the reader will see above the message.
     header_format: values.header_text ? 'TEXT' : mediaFormat,
+    needs_media: !values.header_text && !!mediaFormat,
     footer: values.footer_text,
     // Buttons are added in AiSensy after approval, never at submission.
     buttons: [],
+    cta_buttons: [],
   };
 
   return <TemplateSample template={template} />;

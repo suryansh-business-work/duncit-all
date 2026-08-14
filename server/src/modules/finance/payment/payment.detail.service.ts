@@ -52,6 +52,7 @@ const STEP_LABELS: Record<PaymentStepKey, string> = {
   RECEIPT_EMAIL: 'Receipt e-mailed',
   GIFT_CARD_EMAIL: 'Gift card e-mailed',
   SHIPMENT: 'Shipment booked',
+  PAYMENT_FAILED_NOTICE: 'Buyer told the payment failed',
 };
 
 const STEP_ORDER = Object.keys(STEP_LABELS) as PaymentStepKey[];

@@ -27,7 +27,10 @@ export type PaymentStepKey =
   | 'INVOICE_PDF'
   | 'RECEIPT_EMAIL'
   | 'GIFT_CARD_EMAIL'
-  | 'SHIPMENT';
+  | 'SHIPMENT'
+  /** The one step that belongs to a payment that did NOT book: the buyer being
+   * told so. Everything above it runs only when the money landed a booking. */
+  | 'PAYMENT_FAILED_NOTICE';
 
 export type PaymentStepStatus = 'PENDING' | 'DONE' | 'SKIPPED' | 'FAILED';
 

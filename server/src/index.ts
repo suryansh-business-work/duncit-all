@@ -8,6 +8,7 @@ import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
@@ -275,6 +276,12 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+
+  // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
+  // nudge to complete a finished pod, an unanswered slot request, a released
+  // seat nobody took, and the four feedback asks once a pod has ended. Runs on
+  // a single replica only; see the note at the top of whatsapp.scheduler.ts.
+  startWhatsappScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

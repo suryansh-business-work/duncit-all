@@ -30,7 +30,10 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
   const [busy, setBusy] = useState(false);
   const [uploadDoc] = useMutation(UPLOAD_DOCUMENT);
   const [submit] = useMutation(SUBMIT_VERIFICATION);
-  const done = item.status === 'APPROVED';
+  // Approved is finished; under review is somebody else's turn. Swapping the
+  // document mid-review means the admin approves one file having looked at
+  // another. The server refuses the submission either way.
+  const done = item.status === 'APPROVED' || item.status === 'PENDING';
 
   const onFile = async (file: File) => {
     if (file.size > MAX_DOC_BYTES) {

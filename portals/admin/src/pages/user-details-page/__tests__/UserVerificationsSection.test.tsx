@@ -157,13 +157,16 @@ describe('UserVerificationsSection — row rendering', () => {
     );
   });
 
-  it('offers review controls for identity and address, but not for email', async () => {
+  it('offers review controls only while a row is still awaiting a decision', async () => {
+    // identity() is PENDING; address() is already APPROVED; email() is the
+    // app's own verification and was never ours to decide.
     __setTableRows([identity(), address(), email()]);
     renderWithProviders(<UserVerificationsSection userId={USER_ID} />);
 
     await waitFor(() => expect(row('Identity')).toBeInTheDocument());
     expect(within(row('Identity')).getByRole('button', { name: 'Approve' })).toBeInTheDocument();
-    expect(within(row('Address')).getByRole('button', { name: 'Reject' })).toBeInTheDocument();
+    expect(within(row('Address')).queryByRole('button', { name: 'Reject' })).toBeNull();
+    expect(within(row('Address')).getByText('No review needed')).toBeInTheDocument();
     expect(within(row('Email')).queryByRole('button', { name: 'Approve' })).toBeNull();
     expect(within(row('Email')).getByText('No review needed')).toBeInTheDocument();
   });
@@ -197,7 +200,8 @@ describe('UserVerificationsSection — reviewing', () => {
 
   it('sends the typed reject reason with a rejection', async () => {
     const onReview = vi.fn();
-    __setTableRows([address()]);
+    // Awaiting a decision — a settled row offers nothing to click.
+    __setTableRows([address({ status: 'PENDING' })]);
     renderWithProviders(<UserVerificationsSection userId={USER_ID} />, {
       mocks: [
         reviewMock(

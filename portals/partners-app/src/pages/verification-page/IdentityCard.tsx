@@ -20,7 +20,11 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
   const [busy, setBusy] = useState(false);
   const { upload } = useImagekitBase64Upload();
   const [submit] = useMutation(SUBMIT_VERIFICATION);
-  const done = item.status === 'APPROVED';
+  // Approved is finished; under review is somebody else's turn. Replacing the
+  // document mid-review means the admin approves one file having looked at
+  // another, so the picker is gone until there is a verdict. The server
+  // refuses the same submission either way.
+  const locked = item.status === 'APPROVED' || item.status === 'PENDING';
 
   const onFile = async (file: File) => {
     if (file.size > MAX_DOC_BYTES) {
@@ -47,7 +51,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
 
   return (
     <VerificationCardShell item={item}>
-      {!done && (
+      {!locked && (
         <>
           <input
             ref={inputRef}

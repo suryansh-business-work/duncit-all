@@ -94,18 +94,23 @@ interface ReviewCellProps {
   onAct: (type: VerificationType, status: ReviewStatus, reason: string) => void;
 }
 
+const NoReview = () => (
+  <Typography variant="caption" color="text.secondary" component="span">
+    No review needed
+  </Typography>
+);
+
 /** Per-row Approve/Reject controls with a local reject-reason input. State lives
  * in the cell so typing never rebuilds the parent table's column defs. */
 export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
   const [reason, setReason] = useState('');
   const reviewable = item.type === 'IDENTITY' || item.type === 'ADDRESS';
-  if (!reviewable) {
-    return (
-      <Typography variant="caption" color="text.secondary" component="span">
-        No review needed
-      </Typography>
-    );
-  }
+  // EMAIL is verified by the app, so it was never ours to decide.
+  if (!reviewable) return <NoReview />;
+  // Already decided. Leaving Approve and Reject on a settled row invites a
+  // second verdict on a document that has already been judged, and silently
+  // rewrites who reviewed it and when — so the row goes quiet once it is done.
+  if (item.status === 'APPROVED' || item.status === 'REJECTED') return <NoReview />;
   return (
     <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" component="span">
       <TextField

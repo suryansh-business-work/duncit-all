@@ -40,7 +40,10 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
     resolver: zodResolver(addressSchema),
     defaultValues: prefill(item.address),
   });
-  const done = item.status === 'APPROVED';
+  // Approved is finished; under review is somebody else's turn. Editing the
+  // address mid-review means the admin approves one address having read
+  // another. The server refuses the submission either way. mWeb twin.
+  const done = item.status === 'APPROVED' || item.status === 'PENDING';
 
   const submit = handleSubmit((values) => onSubmit(buildAddressInput(values)));
 

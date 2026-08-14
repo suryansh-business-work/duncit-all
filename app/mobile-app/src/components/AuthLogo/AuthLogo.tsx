@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Image, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { Spinner, YStack } from 'tamagui';
 import { resolveIconSource } from '@duncit/fallback-icons';
 
+import { AppImage } from '@/components/AppImage';
 import { useBranding } from '@/hooks/useBranding';
 import { FALLBACK_ICONS } from '@/assets/fallback-icons';
 
@@ -49,16 +50,14 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   // can't overflow and clip on a narrow phone.
   const width = Math.min(size * aspect, size * 4, windowWidth - 48);
   return (
-    <Image
+    <AppImage
       testID={isFallback ? 'auth-logo-fallback' : 'auth-logo-image'}
       source={isFallback ? FALLBACK_ICONS.logo : { uri: source as string }}
       resizeMode="contain"
-      role="img"
-      aria-label={name}
+      accessibilityLabel={name}
       onError={() => setFailed(true)}
-      onLoad={(e) => {
-        const src = e.nativeEvent.source;
-        if (src?.width && src?.height) setAspect(src.width / src.height);
+      onLoad={(src) => {
+        if (src.width && src.height) setAspect(src.width / src.height);
       }}
       style={{ height: size, width }}
     />

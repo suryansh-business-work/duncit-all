@@ -27,7 +27,10 @@
       "Bash(rm -f scripts/__host-dupes.ts)",
       "Bash(npx tsc *)",
       "Bash(cd \"c:/Users/Suryansh Srivastava/Desktop/Projects/duncit-all\" && rm -f portals/tech/src/pages/bugs-page/BugDetailDialog.tsx && grep -rn \"BugDetailDialog\" --include=*.tsx --include=*.ts portals/tech/src | head)",
-      "Bash(cp \"C:/Users/SURYAN~1/AppData/Local/Temp/claude/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/d8f9730c-1764-4dea-92a3-1f30cc8e28af/scratchpad/check-templates.ts\" scripts/__check-templates.tmp.ts)"
+      "Bash(cp \"C:/Users/SURYAN~1/AppData/Local/Temp/claude/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/d8f9730c-1764-4dea-92a3-1f30cc8e28af/scratchpad/check-templates.ts\" scripts/__check-templates.tmp.ts)",
+      "Bash(npx expo *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(rm -f expo-cfg-err.txt)"
     ],
     "deny": [],
     "additionalDirectories": [

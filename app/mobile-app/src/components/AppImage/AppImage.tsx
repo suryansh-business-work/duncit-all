@@ -12,6 +12,13 @@ export interface AppImageProps {
   recyclingKey?: string;
   testID?: string;
   accessibilityLabel?: string;
+  /** The remote image could not be loaded — how a caller switches to its
+   * bundled fallback icon (rule 39). A URL that 404s never arrives empty, so
+   * this is the only signal that distinguishes broken from blank. */
+  onError?: () => void;
+  /** The decoded image's intrinsic pixel size, once known — for callers that
+   * size a box from the art's own aspect ratio. */
+  onLoad?: (size: { width: number; height: number }) => void;
 }
 
 const CACHE_POLICY = 'memory-disk';
@@ -31,6 +38,8 @@ export function AppImage({
   recyclingKey,
   testID,
   accessibilityLabel,
+  onError,
+  onLoad,
 }: Readonly<AppImageProps>) {
   return (
     <Image
@@ -42,6 +51,10 @@ export function AppImage({
       recyclingKey={recyclingKey}
       cachePolicy={CACHE_POLICY}
       transition={TRANSITION_MS}
+      onError={onError ? () => onError() : undefined}
+      onLoad={
+        onLoad ? (e) => onLoad({ width: e.source.width, height: e.source.height }) : undefined
+      }
     />
   );
 }

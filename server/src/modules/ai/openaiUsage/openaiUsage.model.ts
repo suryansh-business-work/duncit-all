@@ -37,6 +37,15 @@ export interface IOpenAiUsageLog {
   task_label: string;
   /** Owning area, e.g. `Moderation` — what the dashboard groups spend by. */
   module: string;
+  /**
+   * The In App Prompts this call was built from, e.g. `['moderation.pod',
+   * 'moderation.pod.user']`. Stamped at call time because it cannot be recovered
+   * later: a task can be served by more than one prompt (`crm.lead_parse` runs
+   * either the single- or the bulk-lead parser), so the task key alone does not
+   * identify which prompt spent the money. Empty on a call whose system turn came
+   * from somewhere other than the library (a bespoke CRM calling script).
+   */
+  prompt_keys: string[];
   /** Free-form context for this one call (entity name, template key, lead id …). */
   detail: string;
   model: string;
@@ -69,6 +78,7 @@ const openAiUsageLogSchema = new Schema<IOpenAiUsageLog>(
     task: { type: String, required: true, index: true },
     task_label: { type: String, default: '' },
     module: { type: String, default: '', index: true },
+    prompt_keys: { type: [String], default: [], index: true },
     detail: { type: String, default: '' },
     model: { type: String, default: '', index: true },
     status: { type: String, required: true, index: true },
@@ -88,6 +98,9 @@ const openAiUsageLogSchema = new Schema<IOpenAiUsageLog>(
 );
 
 openAiUsageLogSchema.index({ created_at: -1 });
+// The In App Prompts page reads one prompt's calls newest-first; the multikey
+// field alone would still scan every row of that prompt to sort them.
+openAiUsageLogSchema.index({ prompt_keys: 1, created_at: -1 });
 openAiUsageLogSchema.index({ created_at: 1 }, { expireAfterSeconds: RETENTION_SECONDS });
 
 export const OpenAiUsageLogModel = model<IOpenAiUsageLog>(

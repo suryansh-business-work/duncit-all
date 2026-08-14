@@ -116,6 +116,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
       AddressBook: 'address-book',
       Leaderboard: 'leaderboard',
       Membership: 'membership',
+      // Gift cards, using mWeb's paths — the claim link mailed with every card
+      // is an mWeb URL, so it must open the app on the card, not NotFound.
+      GiftCards: 'gift-cards',
+      GiftCardCheckout: 'gift-cards/checkout',
+      GiftCardRedeem: 'gift-cards/redeem',
+      GiftCardClaim: 'gift-card/:code',
       // The shop, using mWeb's paths. These screens have existed all along but
       // were missing from this map, so a shared /shop or /product link opened
       // the app on NotFound — the one outcome worse than staying in the browser.

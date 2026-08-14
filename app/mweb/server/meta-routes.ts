@@ -110,6 +110,11 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/duncit-coin', titleKey: 'mweb.meta.coin.title' },
   { pattern: '/leaderboard', titleKey: 'mweb.meta.leaderboard.title' },
   { pattern: '/membership', titleKey: 'mweb.meta.membership.title', descriptionKey: 'mweb.meta.membership.description' },
+  { pattern: '/gift-cards', titleKey: 'mweb.meta.giftCards.title', descriptionKey: 'mweb.meta.giftCards.description' },
+  { pattern: '/gift-cards/checkout', titleKey: 'mweb.meta.giftCardsCheckout.title' },
+  { pattern: '/gift-cards/redeem', titleKey: 'mweb.meta.giftCardRedeem.title', descriptionKey: 'mweb.meta.giftCardRedeem.description' },
+  // Static on purpose — the claim page must never leak card data to crawlers.
+  { pattern: '/gift-card/:code', titleKey: 'mweb.meta.giftCardClaim.title', descriptionKey: 'mweb.meta.giftCardClaim.description' },
   { pattern: '/pod-plans', titleKey: 'mweb.meta.podPlans.title' },
   { pattern: '/pod-history', titleKey: 'mweb.meta.podHistory.title' },
   { pattern: '/pod-history/:membershipId', titleKey: 'mweb.meta.podHistory.title' },

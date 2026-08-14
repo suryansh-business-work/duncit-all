@@ -54,6 +54,7 @@ export default function MenuPanel({
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
   const showMembership = useFeatureFlag('membership');
+  const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
@@ -96,6 +97,7 @@ export default function MenuPanel({
           showPodPlans={showPodPlans}
           showLeaderboard={showLeaderboard}
           showMembership={showMembership}
+          showGiftCards={showGiftCards}
           showTourGuide={showTourGuide}
           onNavigate={go}
         />

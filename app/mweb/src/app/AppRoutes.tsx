@@ -43,6 +43,10 @@ const ReferralPage = lazy(() => import('../pages/referral-page'));
 const DuncitCoinPage = lazy(() => import('../pages/duncit-coin-page'));
 const LeaderboardPage = lazy(() => import('../pages/leaderboard-page'));
 const MembershipPage = lazy(() => import('../pages/membership-page'));
+const GiftCardsPage = lazy(() => import('../pages/gift-cards-page'));
+const GiftCardCheckoutPage = lazy(() => import('../pages/gift-card-checkout-page'));
+const GiftCardRedeemPage = lazy(() => import('../pages/gift-card-redeem-page'));
+const GiftCardClaimPage = lazy(() => import('../pages/gift-card-claim-page'));
 const PodPlansPage = lazy(() => import('../pages/PodPlansPage'));
 const PodHistoryPage = lazy(() => import('../pages/PodHistoryPage'));
 const PodHistoryDetailsPage = lazy(() => import('../pages/PodHistoryDetailsPage'));
@@ -176,6 +180,12 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/duncit-coin" element={withAuth(<DuncitCoinPage />)} />
         <Route path="/leaderboard" element={withAuth(<LeaderboardPage />)} />
         <Route path="/membership" element={withAuth(<MembershipPage />)} />
+        <Route path="/gift-cards" element={withAuth(<GiftCardsPage />)} />
+        <Route path="/gift-cards/checkout" element={withAuth(<GiftCardCheckoutPage />)} />
+        <Route path="/gift-cards/redeem" element={withAuth(<GiftCardRedeemPage />)} />
+        {/* The shared claim link — singular, like /club/:clubSlug. Auth-gated,
+            so an unread link parks in `?redirect` and opens after sign-in. */}
+        <Route path="/gift-card/:code" element={withAuth(<GiftCardClaimPage />)} />
         <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
         <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
         <Route path="/pod-history/:membershipId" element={withAuth(<PodHistoryDetailsPage />)} />

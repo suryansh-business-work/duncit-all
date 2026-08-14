@@ -22,6 +22,8 @@ interface UserModeContentProps {
   showLeaderboard?: boolean;
   /** Server `membership` feature flag — the whole section hides without it. */
   showMembership?: boolean;
+  /** Server `gift_cards` feature flag — the whole section hides without it. */
+  showGiftCards?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
   onNavigate: (to: string) => void;
@@ -30,7 +32,7 @@ interface UserModeContentProps {
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card, the Manage Account list and — once switched
  * into a partner mode — that role's own menu, ending in Withdrawal. */
-export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
+export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   const percent = profileCompletion(me ?? {});
   const partnerMenus = buildPartnerMenus(roles, mode);
@@ -49,6 +51,22 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       badge: t('mweb.membership.comingSoon'),
     },
   ];
+  const giftCardItems: ProfileTile[] = [
+    {
+      key: 'giftcards-buy',
+      label: t('mweb.giftCards.sidebarBuyLabel'),
+      caption: t('mweb.giftCards.sidebarBuyCaption'),
+      icon: 'giftcards',
+      to: '/gift-cards',
+    },
+    {
+      key: 'giftcards-redeem',
+      label: t('mweb.giftCards.sidebarRedeemLabel'),
+      caption: t('mweb.giftCards.sidebarRedeemCaption'),
+      icon: 'giftcardRedeem',
+      to: '/gift-cards/redeem',
+    },
+  ];
   return (
     <>
       <Box data-tour="profile-details">
@@ -65,6 +83,9 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       )}
       {showMembership && (
         <ManageAccountList title={t('mweb.membership.title')} items={membershipItems} onNavigate={onNavigate} />
+      )}
+      {showGiftCards && (
+        <ManageAccountList title={t('mweb.giftCards.title')} items={giftCardItems} onNavigate={onNavigate} />
       )}
       <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans, showTourGuide)} onNavigate={onNavigate} />
       {partnerMenus.map((menu) => (

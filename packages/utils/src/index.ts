@@ -99,6 +99,12 @@ export {
   type UnconfirmedOutcome,
 } from './payment-confirm';
 export {
+  CHECKOUT_REQUIREMENT_KEYS,
+  missingCheckoutRequirements,
+  type CheckoutEligibilityInput,
+  type CheckoutRequirement,
+} from './checkout-eligibility';
+export {
   POD_FEEDBACK_ASPECTS,
   POD_FEEDBACK_ASPECT_KEY,
   POD_FEEDBACK_ASPECT_LABEL,

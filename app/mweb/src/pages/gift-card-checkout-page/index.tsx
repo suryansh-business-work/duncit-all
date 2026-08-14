@@ -7,6 +7,7 @@ import GatewayChip from '../checkout-page/GatewayChip';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
+import { CheckoutRequirementsCard, useCheckoutEligibility } from '../../components/checkout-gate';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardVisual from '../gift-cards-page/GiftCardVisual';
 import type { GiftCardSelection } from '../gift-cards-page/queries';
@@ -59,6 +60,8 @@ export default function GiftCardCheckoutPage() {
     ? selection.recipient_name || selection.recipient_email
     : t('mweb.giftCards.checkoutSelf');
   const me = payment.me;
+  // Same three account facts the server checks before it will take money.
+  const eligibility = useCheckoutEligibility();
   const contactName = [me?.first_name, me?.last_name].filter(Boolean).join(' ').trim();
   const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
 
@@ -122,10 +125,16 @@ export default function GiftCardCheckoutPage() {
             {payment.error}
           </Alert>
         )}
+        <CheckoutRequirementsCard missing={eligibility.missing} />
         <Button
           variant="contained"
           size="large"
-          disabled={payment.submitting || payment.financeLoading || !me?.email}
+          disabled={
+            payment.submitting ||
+            payment.financeLoading ||
+            !me?.email ||
+            eligibility.missing.length > 0
+          }
           onClick={() => payment.pay(selection)}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >

@@ -17,6 +17,7 @@ import CoinRedeemField from './CoinRedeemField';
 import type { CoinRedemption } from './useCoinRedemption';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
+import { CheckoutRequirementsCard, useCheckoutEligibility } from '../../components/checkout-gate';
 
 interface Props {
   control: Control<CheckoutForm>;
@@ -71,6 +72,11 @@ export default function PaymentDetailsCard({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const discounted = effectiveTotal < total;
+  // The server refuses a payment from an account with no phone, no verified
+  // email or no billing address. Asking here means the buyer finds out before
+  // filling in a card rather than after.
+  const eligibility = useCheckoutEligibility();
+  const blocked = eligibility.missing.length > 0;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const fieldSx = {
@@ -134,12 +140,13 @@ export default function PaymentDetailsCard({
               })}
             </Typography>
           )}
+          <CheckoutRequirementsCard missing={eligibility.missing} />
           <Button
             variant="contained"
             size="large"
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={onSubmit}
-            disabled={submitting || total <= 0}
+            disabled={submitting || total <= 0 || blocked}
             sx={{ minHeight: 48, borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
             {submitting

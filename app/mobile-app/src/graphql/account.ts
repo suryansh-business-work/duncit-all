@@ -29,6 +29,11 @@ export const MobileMeDocument = gql(`
       selected_location_id
       is_email_verified
       is_phone_verified
+      # Checkout refuses an account with no billing address, and this document
+      # is already loaded app-wide — so the gate costs no extra request.
+      address {
+        line1
+      }
       onboarding_survey_completed
       created_at
       updated_at

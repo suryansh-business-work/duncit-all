@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { paymentService, computeQuote } from './payment.service';
 import { paymentDetailService } from './payment.detail.service';
+import { assertCheckoutEligible } from './checkout-eligibility';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
@@ -92,13 +93,26 @@ export const paymentResolvers = {
     },
   },
   Mutation: {
+    /*
+      Every mutation below that STARTS a payment asserts the account is ready to
+      pay first — a phone number to reach, a verified email for the receipt and
+      a billing address for the invoice. It is repeated per mutation rather than
+      hidden in a wrapper so that adding a seventh way to pay without the gate
+      is a visible omission in this file.
+
+      verifyRazorpayPayment is deliberately NOT gated: by then the buyer's money
+      has already moved, and refusing to record it would take the payment and
+      lose the booking.
+    */
     dummyCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(dummyCheckoutSchema, args.input);
       return paymentService.dummyCheckout(input, u.id);
     },
     createRazorpayOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(razorpayOrderSchema, args.input);
       return paymentService.createRazorpayCheckout(input, u.id);
     },
@@ -113,21 +127,25 @@ export const paymentResolvers = {
     },
     dummyProductCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(dummyProductCheckoutSchema, args.input);
       return paymentService.dummyProductCheckout(input, u.id);
     },
     createRazorpayProductOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(productCheckoutSchema, args.input);
       return paymentService.createRazorpayProductCheckout(input, u.id);
     },
     dummyGiftCardCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(dummyGiftCardCheckoutSchema, args.input);
       return paymentService.dummyGiftCardCheckout(input, u.id);
     },
     createRazorpayGiftCardOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
+      await assertCheckoutEligible(u.id);
       const input = await validate(giftCardCheckoutSchema, args.input);
       return paymentService.createRazorpayGiftCardCheckout(input, u.id);
     },

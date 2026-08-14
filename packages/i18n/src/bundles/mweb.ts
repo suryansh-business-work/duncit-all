@@ -942,6 +942,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
       couponDiscount: 'Coupon {code}',
       totalPayable: 'Total payable',
+      // What an account must have before it can pay. The server refuses the
+      // payment without these, so the buyer is told BEFORE entering a card
+      // rather than being turned away at the end. Keys are looked up by
+      // requirement from CHECKOUT_REQUIREMENT_KEYS, so the names must match.
+      needTitle: 'Finish setting up your account',
+      needIntro: 'We need these before you can pay:',
+      needPhone: 'A phone number on your profile',
+      needEmailVerified: 'A verified email address',
+      needBillingAddress: 'A billing address',
+      needAction: 'Go to profile',
       // Venue charges are settled at the door and are NOT part of the online
       // payment, which is the one thing this copy has to make unmistakable.
       venueCharges: 'Venue Charges',

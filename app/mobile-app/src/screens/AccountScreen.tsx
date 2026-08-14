@@ -14,6 +14,7 @@ import {
   MailPreferenceCard,
   PrivacyToggleCard,
   SecuritySection,
+  WhatsAppPreferenceCard,
 } from '@/components/account';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -95,6 +96,7 @@ export function AccountScreen() {
         <YStack height={1} backgroundColor="$borderColor" />
         <LanguageSection />
         <MailPreferenceCard onPress={() => navigation.navigate('MailPreference')} />
+        <WhatsAppPreferenceCard onPress={() => navigation.navigate('WhatsAppPreference')} />
         <ConnectedAccountsSection />
         <SecuritySection />
       </ScrollView>

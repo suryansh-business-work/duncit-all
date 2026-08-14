@@ -47,6 +47,7 @@ export const AISENSY_CATALOGUE = gql`
       type
     }
     aisensyTemplates {
+      id
       name
       status
       category
@@ -212,6 +213,38 @@ export const DELETE_WA_CAMPAIGN = gql`
   }
 `;
 
+/**
+ * The three writes that go straight to AiSensy — nothing they touch is stored
+ * here. AiSensy has no update endpoint for a template or a campaign, which is
+ * why there is no update mutation to import: replacing a template means
+ * deleting it and submitting a new name.
+ */
+export const CREATE_AISENSY_TEMPLATE = gql`
+  mutation CreateAisensyTemplate($input: CreateAisensyTemplateInput!) {
+    createAisensyTemplate(input: $input) {
+      name
+      status
+      reason
+    }
+  }
+`;
+
+export const CREATE_AISENSY_CAMPAIGN = gql`
+  mutation CreateAisensyCampaign($input: CreateAisensyCampaignInput!) {
+    createAisensyCampaign(input: $input) {
+      name
+      status
+      template_name
+    }
+  }
+`;
+
+export const DELETE_AISENSY_TEMPLATE = gql`
+  mutation DeleteAisensyTemplate($template_id: ID!) {
+    deleteAisensyTemplate(template_id: $template_id)
+  }
+`;
+
 export const CREATE_WA_CAMPAIGN_NAME = gql`
   mutation CreateWaCampaignName($input: WaCampaignNameInput!) {
     createWaCampaignName(input: $input) {
@@ -253,6 +286,8 @@ export interface AisensyCampaign {
 }
 
 export interface AisensyTemplate {
+  /** AiSensy's own id — the only handle `deleteAisensyTemplate` accepts. */
+  id: string;
   name: string;
   status: string;
   category: string;
@@ -265,6 +300,38 @@ export interface AisensyTemplate {
   header_format: string;
   footer: string;
   buttons: string[];
+}
+
+/** What Meta reviews. `header_text` and `footer_text` are left off entirely
+ * when blank — AiSensy reads an empty string as "add an empty header". */
+export interface CreateAisensyTemplateInput {
+  name: string;
+  category: string;
+  language: string;
+  type: string;
+  body: string;
+  sample: string;
+  header_text?: string;
+  footer_text?: string;
+}
+
+export interface CreateAisensyCampaignInput {
+  template_name: string;
+  campaign_name: string;
+}
+
+/** Meta decides asynchronously, so `status` comes back PENDING and `reason` is
+ * whatever AiSensy said about it — data, shown verbatim. */
+export interface AisensyTemplateDraft {
+  name: string;
+  status: string;
+  reason: string;
+}
+
+export interface AisensyCampaignDraft {
+  name: string;
+  status: string;
+  template_name: string;
 }
 
 export interface WaCampaignRecipientRow {

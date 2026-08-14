@@ -135,6 +135,10 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/account/health', titleKey: 'mweb.meta.accountHealth.title' },
   { pattern: '/account/mail-preference', titleKey: 'mweb.meta.mailPreference.title' },
   { pattern: '/unsubscribe', titleKey: 'mweb.meta.mailPreference.title' },
+  {
+    pattern: '/account/whatsapp-preference',
+    titleKey: 'mweb.meta.whatsappPreference.title',
+  },
   { pattern: '/signup-survey', titleKey: 'mweb.meta.signupSurvey.title' },
   { pattern: '/signup-whatsapp', titleKey: 'mweb.meta.signupWhatsapp.title' },
   { pattern: '/signup-referral', titleKey: 'mweb.meta.signupReferral.title' },

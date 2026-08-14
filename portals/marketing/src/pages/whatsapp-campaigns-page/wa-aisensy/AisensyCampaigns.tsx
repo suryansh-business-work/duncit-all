@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Stack, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Button, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import type { AisensyTemplate, WaCampaignNameOption } from '../queries';
 import AisensySection from './AisensySection';
 import CampaignRowActions from './CampaignRowActions';
 import AisensyDetailDialog, { type AisensyFact } from './AisensyDetailDialog';
+import TemplatesWithoutCampaign from './TemplatesWithoutCampaign';
+import { CreateCampaignForm } from './create-campaign-form';
 import { templateFor, useAisensyCatalogue } from './useAisensyCatalogue';
+import { useAisensyDrafts } from './useAisensyDrafts';
 import {
   AISENSY_CAMPAIGN_STATUS_COLORS,
+  approvedTemplateGroups,
   campaignRows,
   campaignSearchText,
   paramsLabel,
@@ -62,13 +68,24 @@ interface Props {
 /** The campaigns that can be sent, and where a send begins: you send the
  * campaign you are looking at, not one picked again from a dropdown. */
 export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Props>) {
-  const { configured, campaigns, templates, loading, error } = useAisensyCatalogue();
+  const { t } = useTranslation();
+  const { configured, campaigns, templates, loading, error, refetch } = useAisensyCatalogue();
   const [openName, setOpenName] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+
+  const onChanged = useCallback(() => {
+    refetch().catch(() => undefined);
+  }, [refetch]);
+  const drafts = useAisensyDrafts(onChanged);
 
   // AiSensy's own list wins wherever it answered; the saved names carry the tab
   // when it did not, so a missing Project credential cannot stop a send.
   const live = configured && !error && campaigns.length > 0;
   const rows = useMemo(() => campaignRows(campaigns, names, live), [campaigns, names, live]);
+  const groups = useMemo(
+    () => approvedTemplateGroups(templates, campaigns),
+    [templates, campaigns]
+  );
 
   const columns = useMemo<DuncitColumn<CampaignRow>[]>(
     () => [
@@ -117,10 +134,17 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" color="text.secondary">
-        Campaigns as AiSensy has them right now. A send only works against one whose status is
-        Live. Open a row to see the message it sends, or use Send to point it at people.
-      </Typography>
+      <Stack direction="row" alignItems="flex-start" spacing={2}>
+        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, minWidth: 0 }}>
+          Campaigns as AiSensy has them right now. A send only works against one whose status is
+          Live. Open a row to see the message it sends, or use Send to point it at people.
+        </Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setFormOpen(true)}>
+          {t('marketingWhatsapp.createCampaign')}
+        </Button>
+      </Stack>
+
+      <TemplatesWithoutCampaign templates={groups.orphans} onCreate={() => setFormOpen(true)} />
 
       {live ? (
         <AisensySection
@@ -152,6 +176,15 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
         template={template}
         missingNote={missingNoteFor(selected)}
         onClose={() => setOpenName(null)}
+      />
+
+      <CreateCampaignForm
+        open={formOpen}
+        busy={drafts.creatingCampaign}
+        orphans={groups.orphans}
+        bound={groups.bound}
+        onClose={() => setFormOpen(false)}
+        onSubmit={drafts.submitCampaign}
       />
     </Stack>
   );

@@ -22,7 +22,7 @@ interface CatalogueData {
  * shows, not a reason to render nothing.
  */
 export function useAisensyCatalogue() {
-  const { data, loading, error } = useQuery<CatalogueData>(AISENSY_CATALOGUE, {
+  const { data, loading, error, refetch } = useQuery<CatalogueData>(AISENSY_CATALOGUE, {
     fetchPolicy: 'cache-and-network',
     errorPolicy: 'all',
   });
@@ -34,6 +34,9 @@ export function useAisensyCatalogue() {
     templates: data?.aisensyTemplates ?? [],
     loading,
     error,
+    // One query, one cache entry: a submit from either section re-reads for
+    // both, so a new template cannot exist on one tab and not the other.
+    refetch,
   };
 }
 

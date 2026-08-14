@@ -24,6 +24,8 @@ export type RootStackParamList = {
   AccountHealth: undefined;
   /** Profile → Mail Preference, the twin of mWeb's /account/mail-preference. */
   MailPreference: undefined;
+  /** Profile → WhatsApp Preference, mWeb's /account/whatsapp-preference. */
+  WhatsAppPreference: undefined;
   Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;

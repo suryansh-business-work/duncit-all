@@ -141,6 +141,8 @@ export const waCampaignTypeDefs = gql`
 
   "A WhatsApp message template as AiSensy has it."
   type AisensyTemplate {
+    "AiSensy's own id — the only handle deleteAisensyTemplate accepts."
+    id: ID!
     name: String!
     status: String!
     category: String!

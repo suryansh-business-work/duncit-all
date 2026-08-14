@@ -75,6 +75,7 @@ const GrievancePage = lazy(() =>
   import('../pages/support-hub').then((m) => ({ default: m.GrievancePage })),
 );
 const MailPreferencePage = lazy(() => import('../pages/mail-preference-page'));
+const WhatsAppPreferencePage = lazy(() => import('../pages/whatsapp-preference-page'));
 const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
@@ -213,6 +214,10 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
             clicking it is reading their inbox, and the signature in the link is
             what proves whose preferences these are. */}
         <Route path="/unsubscribe" element={<MailPreferencePage fromLink />} />
+        <Route
+          path="/account/whatsapp-preference"
+          element={withAuth(<WhatsAppPreferencePage />)}
+        />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />

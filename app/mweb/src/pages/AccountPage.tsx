@@ -27,6 +27,7 @@ import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
 import MailPreferenceCard from './account-page/MailPreferenceCard';
+import WhatsAppPreferenceCard from './account-page/WhatsAppPreferenceCard';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -180,6 +181,7 @@ export default function AccountPage() {
 
       <LanguageSection />
       <MailPreferenceCard />
+      <WhatsAppPreferenceCard />
       <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog

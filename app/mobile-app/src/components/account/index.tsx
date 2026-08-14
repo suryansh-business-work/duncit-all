@@ -12,5 +12,6 @@ export { DeleteAccountDialog } from './DeleteAccountDialog';
 export { SecuritySheet } from './SecuritySheet';
 export { LanguageSection } from './LanguageSection';
 export { MailPreferenceCard } from './MailPreferenceCard';
+export { WhatsAppPreferenceCard } from './WhatsAppPreferenceCard';
 export { ConnectedAccountsSection } from './ConnectedAccountsSection';
 export { ConnectedAccountRow } from './ConnectedAccountRow';

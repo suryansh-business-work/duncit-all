@@ -959,7 +959,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       needIntro: 'We need these before you can pay:',
       needPhone: 'A phone number on your profile',
       needEmailVerified: 'A verified email address',
-      needBillingAddress: 'A billing address',
       needAction: 'Go to profile',
       // Venue charges are settled at the door and are NOT part of the online
       // payment, which is the one thing this copy has to make unmistakable.

@@ -167,6 +167,7 @@ const pub = (doc: IAppBuild) => ({
   triggered_by: doc.triggered_by ?? '',
   app_env: doc.app_env ?? 'PRODUCTION',
   requested_artifacts: doc.requested_artifacts ?? [],
+  submit_to_play_store: doc.submit_to_play_store ?? false,
   stage: doc.stage ?? '',
   stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at?.toISOString() ?? '' })),
   slack_channel: doc.slack_channel,
@@ -385,6 +386,26 @@ function requestedArtifacts(platform: AppBuildPlatform, asked: unknown): AppBuil
   }
   if (chosen.length === 0) throw badInput('Pick at least one artifact to build');
   return chosen;
+}
+
+/** Validate the stricter release shape before dispatching anything to GitHub. */
+function playStoreSubmission(
+  requested: unknown,
+  platform: AppBuildPlatform,
+  appEnv: AppBuildEnv,
+  artifacts: AppBuildArtifactKind[]
+): boolean {
+  if (requested !== true) return false;
+  if (platform !== 'ANDROID') {
+    throw badInput('Only Android AAB builds can be submitted to Google Play.');
+  }
+  if (appEnv !== 'PRODUCTION') {
+    throw badInput('Google Play submission requires a production build.');
+  }
+  if (!artifacts.includes('AAB')) {
+    throw badInput('Google Play submission requires the AAB artifact.');
+  }
+  return true;
 }
 
 /**
@@ -638,6 +659,12 @@ export const appBuildService = {
     const platform: AppBuildPlatform = input.platform;
     const appEnv: AppBuildEnv = input.app_env;
     const artifacts = requestedArtifacts(platform, input.artifacts);
+    const submitToPlayStore = playStoreSubmission(
+      input.submit_to_play_store,
+      platform,
+      appEnv,
+      artifacts
+    );
     const ref = optionalStr(input.ref) || DEFAULT_REF[appEnv];
     const cfg = await requireGithubRepoConfig();
 
@@ -652,6 +679,7 @@ export const appBuildService = {
       triggered_by: user.email ?? user.id,
       app_env: appEnv,
       requested_artifacts: artifacts,
+      submit_to_play_store: submitToPlayStore,
       branch: ref,
       stage: 'Waiting for a runner',
       stages: [{ name: 'Queued', at: new Date() }],
@@ -672,7 +700,10 @@ export const appBuildService = {
       // choice to make. The dispatch API refuses any input a workflow does not
       // declare — 422 "Unexpected inputs provided" — so sending it to iOS
       // anyway would fail every iOS build before it started.
-      if (platform === 'ANDROID') inputs.artifacts = artifacts.join(',');
+      if (platform === 'ANDROID') {
+        inputs.artifacts = artifacts.join(',');
+        inputs.submit_to_play_store = String(submitToPlayStore);
+      }
       await dispatchWorkflow(cfg, WORKFLOW_FILE[platform], ref, inputs);
     } catch (err) {
       // The build never started, so its row must not survive to look queued
@@ -688,6 +719,7 @@ export const appBuildService = {
       app_env: appEnv,
       ref,
       artifacts: artifacts.join(','),
+      submit_to_play_store: submitToPlayStore,
       triggered_by: build.triggered_by,
     });
     return { build: pub(build), actions_url: workflowRunsUrl(cfg, WORKFLOW_FILE[platform], ref) };

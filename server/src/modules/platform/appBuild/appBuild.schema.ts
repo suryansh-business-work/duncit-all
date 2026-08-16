@@ -152,6 +152,8 @@ export const appBuildTypeDefs = gql`
     An APK that was requested and never appeared is a gap you can see.
     """
     requested_artifacts: [AppBuildArtifactKind!]!
+    "Whether this build was requested for Google Play internal testing."
+    submit_to_play_store: Boolean!
     "What the runner is doing now. Empty once the build is over."
     stage: String!
     "Every stage this run has entered, in order."
@@ -297,6 +299,8 @@ export const appBuildTypeDefs = gql`
     bundle task entirely.
     """
     artifacts: [AppBuildArtifactKind!]!
+    "Submit an Android AAB to Google Play internal testing after it builds."
+    submit_to_play_store: Boolean = false
     "Branch or tag to build. Defaults to main for PRODUCTION, staging for STAGING."
     ref: String
   }

@@ -122,6 +122,8 @@ export interface IAppBuild extends Document {
    * visible gap rather than an absence.
    */
   requested_artifacts: AppBuildArtifactKind[];
+  /** Whether the Android AAB should go to Google Play internal testing. */
+  submit_to_play_store: boolean;
   /** The stage the runner is in now — the headline while it is still running. */
   stage: string;
   /** Every stage it has entered, in order. */
@@ -201,6 +203,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     triggered_by: { type: String, default: '' },
     app_env: { type: String, enum: ['PRODUCTION', 'STAGING'], default: 'PRODUCTION', index: true },
     requested_artifacts: { type: [String], default: [] },
+    submit_to_play_store: { type: Boolean, default: false },
     stage: { type: String, default: '' },
     stages: { type: [appBuildStageSchema], default: [] },
     slack_channel: { type: String, default: null },

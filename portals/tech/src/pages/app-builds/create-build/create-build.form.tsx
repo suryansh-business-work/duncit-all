@@ -82,22 +82,26 @@ function ArtifactField({ control, kinds, label }: Readonly<ArtifactFieldProps>) 
 export default function CreateBuildForm({ platform, config, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const kinds = PLATFORM_ARTIFACTS[platform];
-  const { control, handleSubmit, watch, setValue } = useForm<CreateBuildValues>({
+  const { control, getValues, handleSubmit, watch, setValue } = useForm<CreateBuildValues>({
     defaultValues: {
       app_env: 'PRODUCTION',
       artifacts: kinds,
+      submit_to_play_store: false,
       ref: config.production_ref,
     },
     resolver: zodResolver(
       createBuildSchema({
         refFormat: t('tech.appBuilds.refFormat'),
         artifactsRequired: t('tech.appBuilds.artifactsRequired'),
+        playStoreRequiresAab: t('tech.appBuilds.playStoreRequiresAab'),
+        playStoreRequiresProduction: t('tech.appBuilds.playStoreRequiresProduction'),
       })
     ),
     mode: 'all',
   });
 
   const appEnv = watch('app_env');
+  const submitToPlayStore = watch('submit_to_play_store');
   // Follow the env until the operator types their own branch, then stop —
   // silently replacing a hand-typed ref because the env changed would build
   // something they did not ask for.
@@ -116,7 +120,9 @@ export default function CreateBuildForm({ platform, config, onSubmit }: Readonly
           render={({ field }) => (
             <TextField {...field} select label={t('tech.appBuilds.envLabel')} fullWidth>
               <MenuItem value="PRODUCTION">{t('tech.appBuilds.envProduction')}</MenuItem>
-              <MenuItem value="STAGING">{t('tech.appBuilds.envStaging')}</MenuItem>
+              <MenuItem value="STAGING" disabled={submitToPlayStore}>
+                {t('tech.appBuilds.envStaging')}
+              </MenuItem>
             </TextField>
           )}
         />
@@ -132,6 +138,37 @@ export default function CreateBuildForm({ platform, config, onSubmit }: Readonly
 
         {kinds.length > 1 && (
           <ArtifactField control={control} kinds={kinds} label={t('tech.appBuilds.artifactsLabel')} />
+        )}
+
+        {platform === 'ANDROID' && (
+          <Controller
+            control={control}
+            name="submit_to_play_store"
+            render={({ field }) => (
+              <FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(event) => {
+                        field.onChange(event.target.checked);
+                        if (!event.target.checked) return;
+                        setValue('app_env', 'PRODUCTION', { shouldValidate: true });
+                        const selected = getValues('artifacts');
+                        setValue(
+                          'artifacts',
+                          kinds.filter((kind) => kind === 'AAB' || selected.includes(kind)),
+                          { shouldValidate: true }
+                        );
+                      }}
+                    />
+                  }
+                  label={t('tech.appBuilds.playStoreLabel')}
+                />
+                <FormHelperText>{t('tech.appBuilds.playStoreHint')}</FormHelperText>
+              </FormControl>
+            )}
+          />
         )}
 
         <Controller

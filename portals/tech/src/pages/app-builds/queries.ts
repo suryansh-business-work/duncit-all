@@ -57,6 +57,7 @@ export interface AppBuildRow {
   triggered_by: string;
   app_env: AppBuildEnv;
   requested_artifacts: AppBuildArtifactKind[];
+  submit_to_play_store: boolean;
   /** What the runner is doing now. Empty once the build is over. */
   stage: string;
   stages: AppBuildStage[];
@@ -119,6 +120,7 @@ export const APP_BUILDS_TABLE = gql`
         triggered_by
         app_env
         requested_artifacts
+        submit_to_play_store
         stage
         stages {
           name

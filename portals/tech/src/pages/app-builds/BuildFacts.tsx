@@ -47,6 +47,9 @@ export default function BuildFacts({ build }: Readonly<{ build: AppBuildRow }>) 
       {requested.length > 0 && (
         <Fact label={t('tech.appBuilds.colRequested')} value={requested.join(', ')} />
       )}
+      {build.submit_to_play_store && (
+        <Fact label={t('tech.appBuilds.playStoreLabel')} value={t('tech.appBuilds.playStoreInternal')} />
+      )}
       <Fact label={t('tech.appBuilds.colSize')} value={sizeLabel(build)} />
       <Fact label={t('tech.appBuilds.colDuration')} value={durationLabel(build)} />
       <Fact label={t('tech.appBuilds.colBranch')} value={build.branch || '—'} />

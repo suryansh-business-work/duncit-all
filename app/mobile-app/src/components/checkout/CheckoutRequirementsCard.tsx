@@ -20,7 +20,7 @@ export function CheckoutRequirementsCard({
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   // Straight to the email step when that is the only thing left; otherwise the
-  // profile, where all three are edited.
+  // profile, where both account requirements are edited.
   const onlyEmail = missing.length === 1 && missing[0] === 'EMAIL_VERIFIED';
   const params = onlyEmail ? { verifyEmail: true } : undefined;
   if (missing.length === 0) return null;

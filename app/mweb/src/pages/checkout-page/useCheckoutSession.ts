@@ -45,8 +45,7 @@ interface Args {
   couponPodId: string | null;
   /** Side effect run just before the success screen (e.g. clear the cart pod). */
   onBeforeSuccess?: (payment: any) => void;
-  /** Delivery flows (product checkout) need a billing/delivery address; the pod
-   * membership checkout does not and validates the email only. */
+  /** Whether to use the delivery-flavoured schema; both schemas require billing. */
   requireAddress?: boolean;
 }
 

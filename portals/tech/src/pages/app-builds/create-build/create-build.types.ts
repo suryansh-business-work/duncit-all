@@ -11,6 +11,8 @@ const REF_RE = /^(?!\/|\.)(?!.*\.\.)[\w./-]+(?<![/.])$/;
 export interface CreateBuildMessages {
   refFormat: string;
   artifactsRequired: string;
+  playStoreRequiresAab: string;
+  playStoreRequiresProduction: string;
 }
 
 export const createBuildSchema = (messages: CreateBuildMessages) =>
@@ -21,7 +23,24 @@ export const createBuildSchema = (messages: CreateBuildMessages) =>
     artifacts: z
       .array(z.enum(['APK', 'AAB', 'IPA']))
       .min(1, messages.artifactsRequired),
+    submit_to_play_store: z.boolean(),
     ref: z.string().trim().regex(REF_RE, messages.refFormat),
+  }).superRefine((values, ctx) => {
+    if (!values.submit_to_play_store) return;
+    if (!values.artifacts.includes('AAB')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['artifacts'],
+        message: messages.playStoreRequiresAab,
+      });
+    }
+    if (values.app_env !== 'PRODUCTION') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['app_env'],
+        message: messages.playStoreRequiresProduction,
+      });
+    }
   });
 
 export type CreateBuildValues = z.infer<ReturnType<typeof createBuildSchema>>;

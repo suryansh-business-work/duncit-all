@@ -5,6 +5,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
 import {
   CheckoutSuccess,
+  AlreadyBookedDialog,
   CoinRedeemField,
   CouponField,
   CouponTotal,
@@ -100,6 +101,7 @@ export function CheckoutScreen() {
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<NonNullable<CheckoutPayment> | null>(null);
   const [order, setOrder] = useState<RazorpayOrder | null>(null);
+  const [alreadyBookedOpen, setAlreadyBookedOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
@@ -203,7 +205,11 @@ export function CheckoutScreen() {
     } catch (e) {
       // Parsed once, logged once: the structured issue feeds the Tech portal's
       // Error Logs section and renders with a Report button above the form.
-      serverIssue.capture(e, payOperation);
+      const issue = serverIssue.capture(e, payOperation);
+      if (issue.code === 'ALREADY_BOOKED') {
+        serverIssue.clear();
+        setAlreadyBookedOpen(true);
+      }
       setError(null);
     } finally {
       setSubmitting(false);
@@ -306,6 +312,14 @@ export function CheckoutScreen() {
         onRetry={() => {
           paymentFailure.dismiss();
           setError('');
+        }}
+      />
+      <AlreadyBookedDialog
+        open={alreadyBookedOpen}
+        onClose={() => setAlreadyBookedOpen(false)}
+        onHistory={() => {
+          setAlreadyBookedOpen(false);
+          navigation.navigate('PodHistory');
         }}
       />
       <ProcessingOverlay open={submitting} message={confirmingMessage} />

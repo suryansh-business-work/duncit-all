@@ -38,9 +38,7 @@ export interface CheckoutFormProps {
    * scrolled away. mWeb's button has said this all along (rule 27).
    */
   payLabel?: string;
-  /** Deliveries (product checkout) need a billing/delivery address; the pod
-   * membership checkout validates the email only and never blocks on a
-   * half-filled profile. */
+  /** Show required markers on the invoice-address fields. */
   addressRequired?: boolean;
   /** Notified with the live delivery pincode — the product checkout uses it to
    * fetch a live shipping quote. Omitted by the pod (membership) checkout. */
@@ -58,14 +56,14 @@ export function CheckoutForm({
   errorMessage,
   dummyMode = true,
   payLabel,
-  addressRequired = false,
+  addressRequired = true,
   onPincodeChange,
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
   const { t } = useTranslation();
-  // The server refuses a payment from an account with no phone, no verified
-  // email or no billing address. Asking here means the buyer finds out before
+  // The server refuses a payment from an account with no phone or no verified
+  // email. Asking here means the buyer finds out before
   // filling in a card rather than after. Every checkout screen submits through
   // this form, so gating it covers pods, products and gift cards alike.
   const eligibility = useCheckoutEligibility();

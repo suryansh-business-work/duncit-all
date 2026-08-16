@@ -959,7 +959,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       needIntro: 'We need these before you can pay:',
       needPhone: 'A phone number on your profile',
       needEmailVerified: 'A verified email address',
-      needBillingAddress: 'A billing address',
       needAction: 'Go to profile',
       // Venue charges are settled at the door and are NOT part of the online
       // payment, which is the one thing this copy has to make unmistakable.
@@ -1080,6 +1079,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       goHome: 'Go home',
       viewBookings: 'View bookings',
       myBookings: 'My bookings',
+      alreadyBookedTitle: 'Pod already booked',
+      alreadyBookedMessage:
+        'You have already booked this pod. You can find your booking in Pod History.',
+      alreadyBookedStay: 'Stay here',
+      alreadyBookedHistory: 'Go to Pod History',
       // mWeb only — its confirmation returns to the profile, not the bookings
       // list, so the label names where it actually goes.
       myProfile: 'My Profile',

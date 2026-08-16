@@ -6,8 +6,8 @@
 # The build recipe mirrors app/mobile-app/Dockerfile.android step for step
 # (npm ci → codegen → expo prebuild → SDK 35 + NDK 27 → gradlew assembleRelease),
 # just directly on the runner where actions/cache can persist Gradle between runs.
-# The APK is signed with the debug keystore prebuild emits — the same internal-
-# distribution artifact local builds ship today (store builds stay on EAS).
+# Release artifacts are signed with the Google Play upload key held in encrypted
+# repository secrets. The private keystore exists only on the ephemeral runner.
 #
 # TWO DIFFERENT SERVERS are in play on a dispatched build and confusing them is
 # the easy mistake: `app_env` chooses what the BUILT APP talks to, and is baked
@@ -15,11 +15,14 @@
 # is always the portal that started it. A staging-pointed build triggered from
 # production is therefore listed in production.
 #
-# Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
-# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. Add DUNCIT_RELEASE_TOKEN_STAGING
-# as well to let the staging portal start builds — each server signs its own
-# tokens, so production's is not valid there. ImageKit/Slack credentials stay in
-# the Tech portal env entries.
+# Secrets: ANDROID_UPLOAD_KEYSTORE_BASE64, ANDROID_UPLOAD_STORE_PASSWORD,
+# ANDROID_UPLOAD_KEY_ALIAS and ANDROID_UPLOAD_KEY_PASSWORD sign both artifacts.
+# EXPO_TOKEN submits an opted-in AAB through EAS to Play's internal testing
+# track. DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD reports them. Add
+# DUNCIT_RELEASE_TOKEN_STAGING as well to let the staging portal start builds —
+# each server signs its own tokens, so production's is not valid there.
+# ImageKit/Slack credentials stay in the Tech portal env entries.
 name: Android Build
 
 on:
@@ -38,6 +41,10 @@ on:
         description: What to build — APK, AAB, or APK,AAB for both
         type: string
         default: APK,AAB
+      submit_to_play_store:
+        description: Submit the AAB to Google Play internal testing after it builds
+        type: boolean
+        default: false
       dispatch_id:
         description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
         type: string
@@ -109,7 +116,14 @@ jobs:
           fetch-depth: 0
 
       - name: Record build start
-        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+        run: |
+          NOW=$(date +%s)
+          {
+            echo "BUILD_STARTED_AT=$NOW"
+            # Seconds since 2020 are monotonic, Play-safe (< 2.1bn), and avoid
+            # the versionCode=1 that Expo prebuild otherwise writes every run.
+            echo "ANDROID_VERSION_CODE=$((NOW - 1577836800))"
+          } >> "$GITHUB_ENV"
 
       - name: Normalise the artifact list
         # Both readers below match on exact commas (",APK,"), so "APK, AAB" —
@@ -118,6 +132,27 @@ jobs:
         # each use, and the write lands on every following step.
         run: |
           echo "WANTED_ARTIFACTS=$(echo "$WANTED_ARTIFACTS" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')" >> "$GITHUB_ENV"
+
+      - name: Validate Play Store request
+        if: inputs.submit_to_play_store
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ "${{ inputs.app_env }}" != "production" ]; then
+            echo "::error::Play Store submission requires a production build"
+            exit 1
+          fi
+          case ",$WANTED_ARTIFACTS," in
+            *,AAB,*) ;;
+            *)
+              echo "::error::Play Store submission requires the AAB artifact"
+              exit 1
+              ;;
+          esac
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN is missing"
+            exit 1
+          fi
 
       - uses: actions/setup-node@v5
         with:
@@ -196,6 +231,42 @@ jobs:
       - name: Generate the native android project
         # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Configure Google Play upload signing
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          for name in ANDROID_UPLOAD_KEYSTORE_BASE64 ANDROID_UPLOAD_STORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required Android signing secret $name is missing"
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_UPLOAD_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat <<'GRADLE' >> android/app/build.gradle
+
+          android {
+              defaultConfig {
+                  versionCode System.getenv('ANDROID_VERSION_CODE').toInteger()
+              }
+              signingConfigs {
+                  upload {
+                      storeFile file('upload-keystore.jks')
+                      storePassword System.getenv('ANDROID_UPLOAD_STORE_PASSWORD')
+                      keyAlias System.getenv('ANDROID_UPLOAD_KEY_ALIAS')
+                      keyPassword System.getenv('ANDROID_UPLOAD_KEY_PASSWORD')
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.upload
+                  }
+              }
+          }
+          GRADLE
 
       - name: 'Stage: android sdk'
         uses: ./.github/actions/build-stage
@@ -292,6 +363,10 @@ jobs:
         # share the compile, so building them separately would pay for it twice
         # and could disagree. assembleRelease -> the APK people sideload;
         # bundleRelease -> the AAB Play requires.
+        env:
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         working-directory: app/mobile-app/android
         run: |
           TASKS=""
@@ -305,6 +380,31 @@ jobs:
           # Unquoted on purpose: $TASKS is a list of gradle tasks, not one word.
           # shellcheck disable=SC2086
           ./gradlew $TASKS --no-daemon --stacktrace
+
+      - name: 'Stage: Play Store submission'
+        if: inputs.submit_to_play_store
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Submitting the AAB to Google Play internal testing
+          platform: ANDROID
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
+
+      - name: Submit AAB to Google Play internal testing
+        if: inputs.submit_to_play_store
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: >-
+          npx --yes eas-cli@22.0.0 submit
+          --platform android
+          --profile internal
+          --path android/app/build/outputs/bundle/release/app-release.aab
+          --non-interactive
+          --wait
 
       - name: 'Stage: name the artifacts'
         uses: ./.github/actions/build-stage
@@ -371,6 +471,10 @@ jobs:
           GIT_BEFORE: ${{ github.event.before }}
           RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
+
+      - name: Remove the upload keystore from the runner
+        if: always()
+        run: rm -f android/app/upload-keystore.jks
 
       - name: Record the failure
         # Only when nothing was produced (ARTIFACT_PATHS is set right after the

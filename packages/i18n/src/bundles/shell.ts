@@ -798,6 +798,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         'The app will talk to the staging server and the staging database. This is compiled in and cannot be changed after installing, so do not hand this build to a real user.',
       artifactsLabel: 'What to build',
       artifactsRequired: 'Pick at least one artifact to build.',
+      playStoreLabel: 'Submit AAB to Google Play',
+      playStoreHint:
+        'After signing, submit this release to the Google Play internal testing track. This does not publish it to production.',
+      playStoreRequiresAab: 'Google Play submission requires the AAB artifact.',
+      playStoreRequiresProduction: 'Google Play submission requires a production build.',
+      playStoreInternal: 'Google Play internal testing',
       refLabel: 'Branch',
       refHint: 'The branch to build from. It must already contain the build workflow.',
       refFormat: 'That is not a valid branch or tag name.',

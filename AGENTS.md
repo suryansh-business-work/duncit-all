@@ -1,0 +1,367 @@
+TEMPARALLY PAUSE ON TEST CASES ABHI TEST CASES KE WAJAH SE KOI ACTION FAILED NAHI HONA CAHIYE ABHI KOI NAYE TEST CASE NAHI LIKHANA HAI AAGAR KUCH FAIL BHI HO RAHA HAI TO PLEASE IGNORE BELOW LIKHE HUE SABHI TEST KO IGNORE KARO saara focus feature development and all par and local test run nahi karana hai during dev no e2e, no integration no unit
+
+# Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+## Tech Stack:
+mWeb & Portals: MUI (Material UI)
+Native Apps: Tamagui
+Website: Astro (Highest Priority)
+
+## Forms & Validation:
+React Hook Form + Zod for form handling and validation.
+
+Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+1. Think Before Coding
+Don't assume. Don't hide confusion. Surface tradeoffs.
+
+Before implementing:
+
+State your assumptions explicitly. If uncertain, ask.
+If multiple interpretations exist, present them - don't pick silently.
+If a simpler approach exists, say so. Push back when warranted.
+If something is unclear, stop. Name what's confusing. Ask.
+2. Simplicity First
+Minimum code that solves the problem. Nothing speculative.
+
+No features beyond what was asked.
+No abstractions for single-use code.
+No "flexibility" or "configurability" that wasn't requested.
+No error handling for impossible scenarios.
+If you write 200 lines and it could be 50, rewrite it.
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+3. Surgical Changes
+Touch only what you must. Clean up only your own mess.
+
+When editing existing code:
+
+Don't "improve" adjacent code, comments, or formatting.
+Don't refactor things that aren't broken.
+Match existing style, even if you'd do it differently.
+If you notice unrelated dead code, mention it - don't delete it.
+When your changes create orphans:
+
+Remove imports/variables/functions that YOUR changes made unused.
+Don't remove pre-existing dead code unless asked.
+The test: Every changed line should trace directly to the user's request.
+
+4. Goal-Driven Execution
+Define success criteria. Loop until verified.
+
+Transform tasks into verifiable goals:
+
+"Add validation" → "Write tests for invalid inputs, then make them pass"
+"Fix the bug" → "Write a test that reproduces it, then make it pass"
+"Refactor X" → "Ensure tests pass before and after"
+For multi-step tasks, state a brief plan:
+
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+These guidelines are working if: fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+# Follow beloe as well these strict coding guidelines for the project
+
+1. File Size Limit:
+   - No file should exceed 200 lines of code for tsx file
+   - If logic grows, split into smaller reusable modules/components.
+
+2. Dynamic Data:
+   - Do NOT hardcode static data.
+   - All data must come from APIs, configs, environment variables, or dynamic sources.
+   - Use constants only for reusable configuration, not business data.
+
+3. Form Validation:
+   - Use YUP for all form validations.
+   - Ensure proper schema-based validation.
+   - Cover:
+     - Required fields
+     - Type validation (string, number, email, etc.)
+     - Min/Max constraints
+     - Custom validation where needed
+
+4. Code Quality:
+   - Write clean, modular, and reusable code.
+   - Use proper naming conventions.
+   - Avoid duplication (DRY principle).
+
+5. Error Handling:
+   - Handle all API and validation errors properly.
+   - Show meaningful error messages to users.
+
+6. Scalability:
+   - Keep components small and maintainable.
+   - Follow separation of concerns.
+
+7. Best Practices:
+   - Use async/await for API calls.
+   - Use environment variables for configs.
+   - Maintain consistent folder structure.
+
+8. Check linting, build, and formatting, then push the code. Ensure that all GitHub CI checks are green and that everything is up and running:
+<https://duncit.com>
+<https://server.duncit.com/>
+<https://admin.duncit.com/>
+<https://mweb.duncit.com/>
+<https://partners.duncit.com/>
+<https://partners-app.duncit.com/>
+<https://ads.duncit.com/>
+<https://crm.duncit.com/>
+<https://finance.duncit.com/>
+<https://tech.duncit.com/>
+<https://support.duncit.com/>
+<https://website.duncit.com/>
+<https://legal.duncit.com/>
+<https://ai.duncit.com/>
+<https://products.duncit.com/>
+<https://marketing.duncit.com/>
+
+9. Any .tsx file should not exceed 200 lines. If a file grows beyond 200 lines, create a folder with the same component name and refactor it into multiple smaller components/modules inside that folder using an index-based structure. Ensure the refactor introduces no breaking changes and preserves all existing functionality, imports, exports, and behavior.
+
+10. Before creating any form, first create a dedicated folder with the form name. Inside it, keep these 4 files: (form-name).form.tsx for the form implementation using React hook form + Zod with proper hints, validations, and error handling, (form-name).form.cy.tsx for Cypress test cases covering validations and user flows, (form-name).types.tsx for codegen-based shared/common types, and index.tsx to export all required components, types, and utilities from a single entry point. this should be follow in mWeb and Admin both. strictlly use MUI only no HTML Componentss for date and time use MUIX Core date and time. this is for Mobile app and mWeb and Portal migrate from Formik & Yup to React hook form + Zod
+
+11. For Date and time use Data FNS and make sure it should be sync based on setting in admin panel. For date and time input use MUIX Core date and time pickers. Always ensure that the date and time are displayed in the user's local timezone and format, which can be configured in the admin panel. Avoid hardcoding any date or time formats; instead, use dynamic formatting based on user settings.
+
+12. No Alert box, Confirm box and Prompt box html/JS Code Use MUI Confirmation/ Alert Only
+
+13. Use GraphQL and GraphQL Code Generator for all API interactions. Ensure that all queries and mutations are properly typed and that the generated code is used throughout the project for type safety and consistency.
+
+14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (<https://duncit.com>, <https://server.duncit.com/>, <https://admin.duncit.com/>, <https://mweb.duncit.com/>, <https://partners.duncit.com/>, <https://partners-app.duncit.com/>, <https://ads.duncit.com/>, <https://crm.duncit.com/>, <https://finance.duncit.com/>, <https://tech.duncit.com/>, <https://support.duncit.com/>, <https://website.duncit.com/>, <https://legal.duncit.com/>, <https://ai.duncit.com/>, <https://products.duncit.com/>, <https://marketing.duncit.com/>).
+
+15. Performance, Security, Accessbility, SEO, Best Practices, Code Quality, Scalability, and Maintainability should be the top priority while writing code. Always follow industry best practices and guidelines to ensure that the codebase remains robust, secure, and maintainable in the long run. Regularly review and refactor code to improve performance, enhance security, and ensure accessibility compliance.
+
+16. Don't overengineer: Simple beats complex
+17. No fallbacks: One correct path, no alternatives
+18. Separation of concerns: Each function should have a single responsibility
+19. Proper Error Handling and Logging: Always handle errors gracefully and log them appropriately for debugging and monitoring purposes.
+20. Consistent Code Style: Follow a consistent code style and formatting guidelines to improve readability and maintainability across the codebase.
+21. Regular Code Reviews: Conduct regular code reviews to ensure code quality, share knowledge, and maintain coding standards across the team.
+22. Write Tests: Ensure that all new features and critical code paths are covered by unit tests, integration tests, and end-to-end tests to maintain code quality and prevent regressions.
+23. Documentation: Document your code, especially complex logic and public APIs, to improve maintainability and help other developers understand the codebase quickly.
+24. Use TypeScript: Leverage TypeScript for type safety and improved developer experience. Ensure that all code is properly typed and that type definitions are maintained and updated as needed.
+25. All test-related files under the __tests__ directory and organize them into separate e2e and unit-tests folders. All existing tests should be moved into their respective folders accordingly.
+
+26. Code-quality rules (SonarQube clean-code). Write code that does NOT trip these — they are enforced by SonarQube on every push.
+
+26a. React / TSX —
+
+- Mark component props read-only: type the props parameter as `Readonly<Props>` (or `({ a, b }: Readonly<{ a: string }>)` for inline types). (S6759)
+- Never use an array index as a React `key`; use a stable unique id from the item. Always provide a `key` for elements rendered in an array/`.map`. (S6479, S6477)
+- Do not define a component inside another component; hoist it to module scope and pass data via props. (S6478)
+- Only use ARIA attributes valid for the element's role (e.g. `aria-selected` needs role `tab`/`option`, not `button`). (S6811)
+- Remove unused PropTypes and unused imports. (S6767, S1128)
+
+26b. Conditionals & expressions —
+
+- No nested ternaries: extract the inner ternary into a named `const` or an `if/else` above the expression. (S3358)
+- No negated condition with an `else`: write `if (x) { B } else { A }` instead of `if (!x) { A } else { B }`. (S7735)
+- Prefer optional chaining `a?.b?.c` over `a && a.b && a.b.c` (only when operands are object-nullables, not 0/""/false). (S6582)
+- Prefer nullish coalescing: `a ?? b` instead of `a != null ? a : b` or `a ? a : b`. (S6606, S6644)
+- Add `{ }` braces around multi-line `if`/`for` bodies — never rely on a single unbraced statement. (S2681)
+- A conditional whose branches return the same value is a bug — make the branches differ or remove the condition. (S3923)
+
+26c. Functions & complexity —
+
+- Keep Cognitive Complexity ≤ 15: extract cohesive blocks into well-named helpers and use early-return guard clauses. (S3776)
+- Do not nest functions more than 4 levels deep; extract inner functions to a higher scope. (S2004)
+
+26d. Strings, numbers, modules (Node/TS) —
+
+- Import Node builtins with the `node:` protocol: `from 'node:crypto'`, `require('node:fs')`. (S7772)
+- Use `Number.parseInt` / `Number.parseFloat`, not the bare globals. (S7773)
+- Use `str.startsWith(x)` / `str.endsWith(x)` instead of `indexOf(x) === 0` / `slice`/`lastIndexOf` checks. (S6557)
+- Use `String.raw` for strings full of backslashes; never nest template literals (hoist the inner template to a const). (S7780, S4624)
+- Use `replaceAll` only when a global replace is intended (`replace('x', y)` replaces only the first match). (S7781)
+- Pass `String` directly to `.map(String)` instead of `x => String(x)`. (S7770)
+- Prefer `globalThis` over `window` for truly-global access (keep `window` only for DOM-only APIs). (S7764)
+- Batch `Array#push`: `a.push(x, y)` instead of consecutive `a.push(x); a.push(y);`. (S7778)
+- Use a hoisted `Set` + `.has()` instead of `array.includes()` for membership lookups on constant lists. (S7776)
+- Do not stringify objects that fall back to `[object Object]` — stringify a field or `JSON.stringify`. (S6551)
+- `arr.sort()` mutates: use `arr.toSorted()` when you only need a sorted copy in an expression. A `sort` used purely for in-place mutation inside an arrow must be a statement body (`(l) => { l.sort(); }`), not an expression body. (S4043)
+- For a single (non-global) match use `re.exec(str)`, not `str.match(re)`. (S6594)
+- Prefer `String#codePointAt()` over `charCodeAt()` (handle the `number | undefined` result, e.g. `?? 0`). Only swap when full code points are intended (binary `atob` bytes are 0–255, so it's safe). (S7758)
+- Don't spread a useless empty object: `{ ...(obj || {}) }` → `{ ...obj }` (spreading `null`/`undefined`/primitives in an object literal is already a no-op). (S7744)
+- In ESM modules / `.mjs` scripts, prefer top-level `await` over a `main().then().catch().finally()` chain — wrap in `try/catch/finally` to keep the same error handling. (S7785)
+
+26e. Types & fire-and-forget —
+
+- Do not leave a useless `void` operator: a fire-and-forget promise must use `promise().catch((e) => log(e))` (never silently drop errors); `void 0` → `undefined`. (S3735)
+- Remove type assertions (`as X`, non-null `!`) that don't change the type. (S4325)
+- Mark class members that are never reassigned as `readonly`. (S2933)
+- Extract a repeated union into a `type X = A | B` alias. (S4323)
+
+26f. Security (NEVER hard-code) —
+
+- No hard-coded passwords / secrets / credentials in source — read them from environment variables / config (`process.env`). This includes test credentials. (S2068)
+
+26g. Refactoring to cut Cognitive Complexity (S3776) — keep behavior AND coverage identical —
+
+- Prefer extracting a cohesive JSX block into a __hoisted, module-scope sub-component__ (e.g. a card/button/list) or a long branch into a named helper with early-return guards. Never define the component inside the parent (S6478). Mark every extracted prop type `Readonly<…>` (S6759).
+- A deeply-nested ternary chain (`a ? : b ? : c ? : d`) costs more than the same logic as a sub-component using `if`/early-returns — pull the leaf branches out, or move a single inline `?:` into a top-level `const` so it sits at nesting 0.
+- For a flagged value used in a JSX prop (e.g. `onDownloadTicket={podId ? … : undefined}`), hoist it to a `const` above the `return` — that drops its nesting increment without changing behavior.
+- DO NOT duplicate a shared conditional value (like `const ink = mine ? '$onPrimary' : '$color'`) into multiple conditionally-rendered children: in a 100%-coverage package (duncit-mobile-app, threshold 100/100/100/100) that creates a new branch that only executes in the child's render path, so a test that exercises the value on only one side leaves it uncovered. Compute it __once in the parent__ and pass it as a prop (extract the repeated union into a `type` alias, S4323).
+- After any mobile-app refactor run `npm run typecheck`, `npm run lint` (zero-warning gate, `lint:fix` auto-formats prettier) AND `npm run test:coverage` — a green typecheck is not enough; the branch threshold catches coverage regressions from extracted components.
+
+27.Most important point mWeb and Mobile App need to be absolute identical
+28. Do Not create mjml File in Local inside tech portal there is the option of /email-templates Usi se sabhi maintain karana hai
+29. Use MUI for mWeb & Portal components and for Native Web and Native App use Tamagui components
+30. Is mWeb, Native App, Portal, Native web use React Hooks Form and Zod
+31. No UTF Icons For Native Icons use @expo/vector-icons and mWeb & Portals me @mui/icons-material Icon ka use karo
+32. Branching & deployment flow (ENFORCED): NEVER push directly to `main`/`master` — a husky pre-push hook blocks it (emergency bypass: ALLOW_MAIN_PUSH=1). All changes go feature-branch -> `staging` branch first. Pushing `staging` deploys the full replica stack to https://staging.<sub>.duncit.com (same VPS, /opt/duncit-staging, host ports = production + 100, images tagged :staging with staging URLs baked in, separate Mongo database `duncit-staging`). After verifying on staging, open a PR `staging` -> `main`; merging deploys production. PR base for feature work is `staging`, not `main`.
+33. App versioning (ENFORCED): a single app version lives in app/mobile-app/app.json (expo.version) mirrored to app/mobile-app/package.json + app/mweb/package.json (keep all three equal). The husky pre-commit hook asks major/minor/patch on EVERY commit (no skip; interactive via /dev/tty, else $VERSION_BUMP env, else patch) and runs scripts/bump-version.mjs to bump all three. The deploy workflow passes app.json's version as APP_VERSION into server.env; the server upserts it into the DB (branding.app_latest_version) on boot, exposed via the public `appVersionInfo { latest_version android_store_url ios_store_url }` query. The mobile app force-update gate blocks (Play Store) when its baked-in version < DB latest_version. Version is shown on both login screens + both sidebars. pre-commit no longer runs typecheck/tests (CI does). CAVEAT: since the DB version bumps every push but the Play Store build publishes separately, only bump toward a release you will actually publish, or the gate can block users before the new build is live.
+34. No Duplicate Code Deep think on the same use common module generic jo multiple place me use ho sake, Create Common Utils, Common Packages, Shared File etc
+35. SonarQube Coding Standards — write clean the first time
+
+36. When writing or editing TS/TSX/JS/CSS in this repo, follow these. They map to the
+Sonar rules that keep failing here (rule id in brackets). **Get them right up front — there is no eslint autofix to save you.**
+
+### Globals, imports & modern APIs
+- Use `globalThis`, never `window`/`self`/`global`, for universal globals (`setTimeout`, `fetch`, `structuredClone`, `crypto`). Keep `window.document` / `window.location` / DOM-only APIs as-is. [S7764]
+- Node/NestJS builtins import with the `node:` protocol: `import fs from 'node:fs'`, `'node:path'`, `'node:crypto'`. (Not in Vite/Metro-bundled client code.) [S7772]
+- `Number.parseInt` / `Number.parseFloat` (keep the radix), not the bare globals. **Do NOT** swap `isNaN`→`Number.isNaN` — different behavior. [S7773]
+- `Date.now()` not `new Date().getTime()`. `Object.hasOwn(o, k)` not `hasOwnProperty.call`. [S7719, S6653]
+
+### Types & assertions (strict mode)
+- No redundant `as T` casts or trailing `!` when the type already fits — let inference work. [S4325]
+- Never put `any` in a union (`string | any` → just `any` or, better, a real type). [S6571]
+- Optional members: `foo?: string`, not `foo?: string | undefined`. [S4623]
+- Repeated unions → a named `type` alias. [S4323]
+
+### Control flow & readability
+- **No nested ternaries** — this is the #1 issue (236×). Extract to a variable, `if/else`, early return, or a lookup map. In JSX, compute above `return`. [S3358]
+- No negated condition when there's an `else` — lead with the positive case: `if (ok) {…} else {…}`. [S7735]
+- Optional chaining `a?.b` over `a && a.b` (but check for meaningful falsy `0/''/false` first). [S6582]
+- No nested template literals — extract the inner one to a variable. [S4624]
+- `else if (x)` not `else { if (x) {…} }`. Use `<=` not `!(a > b)`. [S6660, S1940]
+
+### Strings & regex
+- Regex shorthands: `\d` `\D` `\w` `\s`, not `[0-9]` etc. [S6353]
+- `String.raw`\`C:\dir\` for literals with backslashes (paths, regex sources). [S7780]
+- `str.replaceAll(...)` not `str.replace(/g/)`. `codePointAt()` not `charCodeAt()`. [S7781, S7758]
+
+### React / TSX
+- **Stable `key` props** on every list item — use `item.id`, never the array index; never omit it. [S6477, S6479]
+- Don't define a component inside another component — hoist to module scope, pass data via props. [S6478]
+- Context `value` object → wrap in `useMemo` so it doesn't change every render. [S6481]
+- Destructure `useState` symmetrically: `const [count, setCount] = useState(0)`. Mark props read-only: `Readonly<Props>`. [S6754, S6759]
+
+### Complexity — keep functions small
+- Cognitive complexity ≤ 15: extract cohesive blocks into named helpers, use early-return guard clauses, avoid deep nesting (functions ≤ 4 levels deep). [S3776, S2004]
+
+### Correctness & safety (highest priority)
+- **Never use the `void` operator.** For a floating promise use `await` or `.catch(err => …)` — don't hide it. [S3735]
+- `Array.prototype.sort()` **always takes a comparator**: `(a,b) => a-b` for numbers, `(a,b) => a.localeCompare(b)` for strings. Use `toSorted()` if the source must not mutate. [S2871]
+- **No hardcoded secrets or IPs** — passwords, tokens, IP addresses come from env/config, never literals. [S2068, S1313]
+- Every test needs a real assertion (`expect(...)`); for async use `await expect(fn()).rejects.toThrow()`. [S2699]
+- Don't stringify raw objects (`` `${obj}` `` → `[object Object]`) — use `JSON.stringify` or a specific field. [S6551]
+- Don't leave both branches of an `if`/ternary identical, dead assignments, empty functions, or commented-out code blocks. [S3923, S1854, S1186, S125]
+
+### Accessibility (web portals only)
+- Clickable elements = real `<button>`/`<a>`. If you must use a `<div>`, add `role`, `tabIndex={0}`, and an `onKeyDown` (Enter/Space) alongside `onClick`. [S1082, S6848]
+- Every form control has an associated `<label>` with text. Don't disable zoom (`user-scalable=no`). Ensure ≥4.5:1 text contrast. [S6853, S7926, S7924]
+
+### Before you finish
+- Typecheck the workspace you touched (`pnpm --filter <name> exec tsc -b --noEmit`, or `tsc --noEmit -p tsconfig.json` for server) and run its tests. Don't introduce a new Sonar issue to fix an old one.
+- `portals/crm/open-wa-server/**` is vendored third-party — don't apply these standards there.
+
+
+37. Use @duncit/table jaha jaha bhi Portal me table use kar rahe ho
+
+38. Localization (ENFORCED) — **NO HARDCODED USER-FACING TEXT.** Before you write any
+string a user can read — in `.tsx`, `.ts`, `.json`, or an `.mjml` email template — it must
+already exist as a Localization entry AND in that surface's local fallback bundle.
+
+**The order is: entry first, then code.** Never ship the literal and "localize it later".
+
+- **Where entries live:** Admin Panel → **Localization** → *Locales* (the languages /
+  country locales) and *Translations* (the key/value entries). Keys are namespaced
+  page-wise and portal-wise, e.g. `mweb.shop.emptyState`, `admin.settings.timeSourceHint`.
+- **The parser/runtime is one common package** — never add `i18next`, `react-intl` or any
+  other i18n dependency to a workspace, and never write a second `t()`.
+  (`portals/crm/open-wa-server/**` is vendored third-party and exempt — do not extend its
+  i18next.)
+- **Every surface ships a LOCAL FALLBACK bundle** with the SAME key structure as the server
+  data, so a screen renders correctly offline and before the API responds. The fallback is
+  not optional — a key missing from it is a build failure, exactly like a missing fallback
+  icon (rule 39).
+- **The client copy itself lives in `packages/i18n/src/bundles.ts`** — mWeb + native share
+  `MWEB_BUNDLE` (rule 27 forbids them drifting), the portals share `SHELL_BUNDLE`, the
+  Astro sites share `WEBSITE_BUNDLE`. Each surface re-exports the slice it renders, so its
+  copy is still compiled into that build. A portal adds its OWN namespace by passing
+  `i18nFallback` to `mountPortal`, which layers over the shell's. The SERVER keeps its own
+  bundle (`server/src/services/email/email-i18n.ts`) because it has no `@duncit/*` deps,
+  and reports it through `serverTranslationSeed`.
+- **Adding a key: put it in the bundle, then press "Import app keys"** in Admin >
+  Localization > Translations — that seeds every shipped key (client bundles + the server's
+  email keys) against the default locale without overwriting existing translations. Then
+  use it in code.
+- **Email templates** read localized copy as `{{t:<key>}}`; `sendEmail` resolves the
+  recipient's language from their `profile.locale` by address, so no call site passes it.
+- **Applies to every surface:** each portal, mWeb, the native app, the Astro websites and
+  the MJML email templates. The websites use the same package, the same admin data and the
+  same UI — do not build a website-only localization.
+- **Per-user language** lives on `profile.locale` (already on the user document) and is
+  changed from the profile/account section of native, mWeb and the portal shell.
+- When you add a key: add it to the server entries, add it to the surface's fallback
+  bundle, then use it. Adding a raw string instead is a review rejection.
+
+39. Fallback icons (ENFORCED) — every project ships `src/fallback-icons/` (native:
+`assets/fallback-icons/`) containing a local copy of **every** name exported by
+`@duncit/fallback-icons`. The **17 MUI portals share ONE bundle** at
+`packages/shell/src/fallback-icons/`, because every portal renders its chrome through
+the shell — 17 copies of the same bytes is 17 chances to drift (rule 34). Each portal
+still ships them: Vite compiles the assets into that portal's build. Rendering goes
+through `resolveIconSource(url, bundled, failed)`, and anything showing a remote icon
+must pass `failed` from an `onError` handler — a URL that 404s at request time never
+arrives empty, so a blank-check alone silently renders a broken image. Server-hosted branding icons can be blank, deleted or offline;
+the bundled copy is what renders then. Two compile-time gates enforce this and neither is
+optional: `node scripts/verify-fallback-icons.mjs <dir>` is chained inside each project's
+`build` script (NOT `prebuild` — pnpm ≥8 does not run pre/post scripts), and the manifest
+is typed `FallbackIconManifest<T>` so a missing NAME fails `tsc`. Assets live under `src/`
+(or native `assets/`), never `public/` — Vite copies `public/` blind and never verifies it.
+Do not rely on the bundler alone: a static import only fails Rollup/Metro if that module is
+reachable from an entry, so an unimported manifest silently passes.
+
+40. Code duplication (ENFORCED) — **anything used in more than TWO places lives in a
+shared `@duncit/*` package, not a third copy.** This is rule 34 made operational:
+
+- **Before writing ANY helper, hook, constant map, regex, schema or component: check
+  the package docs first** — `pnpm docs` (http://localhost:2500), or read
+  `packages/<name>/docs/index.mdx` directly. Every package documents its real
+  exports with sample data and worked examples. If it exists, IMPORT it; writing a
+  local copy of an existing export is a review rejection.
+- **Where things belong** (the map, so nobody invents a new home):
+  validation patterns → `@duncit/regex` · Zod rules/patterns + RHF fields →
+  `@duncit/forms` · money/format/download/pod-economics → `@duncit/utils` ·
+  dates/clock → `@duncit/datetime` (admin-configured format via
+  `@duncit/app-settings`) · portal chrome/boot/session → `@duncit/shell` · tables →
+  `@duncit/table` · tab strips → `@duncit/tabs` · dialogs/confirm →
+  `@duncit/dialogs` · status chips/small UI →
+  `@duncit/ui` · GraphQL types/enums → `@duncit/gql-types` · logging →
+  `@duncit/logs` · localization → `@duncit/i18n`.
+- **Never render MUI's `<Tabs>`/`<Tab>` directly.** Every tab strip in mWeb and
+  the portals is `<DuncitTabs items={…} />` from `@duncit/tabs` — built from an
+  items array rather than hardcoded children, with its selection in the URL via
+  `useTabParam` (`?selectedtab=`). A raw `<Tabs>` loses the open tab on reload,
+  and a `<Tab>` written without a `value` puts a bare index in the URL.
+- **The mWeb ↔ native pair (rule 27) shares LOGIC, never UI**: pure derivations,
+  filters, state machines and constants go in a framework-free package both apps
+  import; the MUI and Tamagui components stay separate and thin. A file whose
+  header comment names its "twin" in the other app is the exact failure mode this
+  rule exists to stop.
+- **Extending beats creating**: prefer adding to an existing package over a new
+  one. A new package needs: its own 100% coverage thresholds in vitest/jest
+  config, a `docs/index.mdx` (the docs build in CI validates it), an `e2e` script
+  (the e2e audit fails without it), and — if the native app or a Docker-built
+  surface consumes it — the matching `COPY` lines in the affected Dockerfiles
+  (both mobile Dockerfiles for native; the failure only shows in deploy, never
+  locally).
+- **Server is the boundary**: `server/src` imports zero `@duncit/*` packages by
+  design. Server-side duplication consolidates into `server/src/utils/*` or the
+  owning module — never into a package the Docker image would need.
+- The audit that measured all of this (55 clusters, ~19k duplicated lines, the
+  live bugs drift caused) is `docs/duplication-audit.md` — read it before
+  proposing a new shared package; it likely already names the right home.

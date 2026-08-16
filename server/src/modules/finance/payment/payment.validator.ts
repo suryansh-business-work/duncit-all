@@ -21,9 +21,8 @@ const optionalPhoneNumber = yup
   })
   .optional();
 
-// Structured billing address entered at checkout (may differ from the main
-// address). Every part is optional here — the pod membership checkout has
-// nothing to deliver, so it accepts whatever the buyer has on file.
+// Base structured billing shape. Optional fields live here; the mandatory
+// invoice fields are added by checkoutBillingSchema below.
 export const optionalCheckoutBillingSchema = yup.object({
   email: yup.string().trim().email('Enter a valid billing email').max(254).optional(),
   gstin: yup
@@ -45,14 +44,21 @@ export const optionalCheckoutBillingSchema = yup.object({
   country: yup.string().trim().max(80).default('India'),
 });
 
-// Deliveries need a real address: line1/city/state/pincode are the minimum for
-// a shipment and for a valid tax invoice.
+// Every payment needs a real invoice address; deliveries reuse it for shipping.
 export const checkoutBillingSchema = optionalCheckoutBillingSchema.shape({
   line1: yup.string().trim().min(3, 'Address line 1 is required').max(200).required('Address line 1 is required'),
   city: yup.string().trim().min(1, 'City is required').max(120).required('City is required'),
   state: yup.string().trim().min(1, 'State is required').max(120).required('State is required'),
   pincode: yup.string().trim().matches(/^\d{4,10}$/, 'Enter a valid pincode').required('Pincode is required'),
 });
+
+/** Structured billing is preferred; legacy one-line billing remains accepted
+ * for older clients during the rollout. Every payment still needs one. */
+const hasBillingAddress = (value: {
+  billing?: { line1?: string | null } | null;
+  billing_address?: string | null;
+} | null | undefined) =>
+  !!(value?.billing?.line1?.trim() || (value?.billing_address?.trim().length ?? 0) >= 8);
 
 /**
  * Seats and coins are LENIENT on purpose, but they must be DECLARED.
@@ -82,7 +88,7 @@ export const dummyCheckoutSchema = yup.object({
   contact_phone_number: optionalPhoneNumber,
   // Structured billing is preferred; the legacy free-text field stays accepted
   // (optional) so older clients keep working during the rollout.
-  billing: optionalCheckoutBillingSchema.optional().default(undefined),
+  billing: checkoutBillingSchema.optional().default(undefined),
   billing_address: yup.string().trim().max(500).optional(),
   checkout_url: yup
     .string()
@@ -100,7 +106,7 @@ export const dummyCheckoutSchema = yup.object({
   selected_products: yup.array().optional().default(undefined),
   fulfilment_method: yup.string().oneOf(['SHIP', 'PICKUP']).default('PICKUP'),
   shipping_address: yup.object().nullable().default(null),
-});
+}).test('has-billing', 'A billing address is required', hasBillingAddress);
 
 export type DummyCheckoutDTO = yup.InferType<typeof dummyCheckoutSchema>;
 
@@ -186,7 +192,7 @@ export const dummyGiftCardCheckoutSchema = yup.object({
   contact_phone: yup.string().trim().max(32).optional(),
   contact_phone_extension: optionalPhoneExtension,
   contact_phone_number: optionalPhoneNumber,
-  billing: optionalCheckoutBillingSchema.optional().default(undefined),
+  billing: checkoutBillingSchema.optional().default(undefined),
   billing_address: yup.string().trim().max(500).optional(),
   checkout_url: yup
     .string()
@@ -198,7 +204,7 @@ export const dummyGiftCardCheckoutSchema = yup.object({
       try { new URL(val); return true; } catch { return false; }
     }),
   simulate_failure: yup.boolean().default(false),
-});
+}).test('has-billing', 'A billing address is required', hasBillingAddress);
 
 /** Live Razorpay gift card order — same fields, no simulate_failure. */
 export const giftCardCheckoutSchema = dummyGiftCardCheckoutSchema.omit(['simulate_failure']);

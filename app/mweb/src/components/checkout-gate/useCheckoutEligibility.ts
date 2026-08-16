@@ -27,7 +27,6 @@ export function useCheckoutEligibility(): CheckoutEligibility {
     ? missingCheckoutRequirements({
         phoneNumber: me.phone_number,
         isEmailVerified: me.is_email_verified,
-        addressLine1: me.address?.line1,
       })
     : [];
   return { missing, loading: loading && !me, ready: !!me && missing.length === 0 };

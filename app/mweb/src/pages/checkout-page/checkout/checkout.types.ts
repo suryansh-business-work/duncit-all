@@ -72,8 +72,7 @@ function makeCheckoutObject(t: Translate) {
 
 type CheckoutObjectValues = z.infer<ReturnType<typeof makeCheckoutObject>>;
 
-/** Address parts are only demanded by the flows that ship something, and only
- * when the buyer is not reusing their saved main address. */
+/** Address parts required when the buyer is not reusing their saved main address. */
 function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.same_as_main) return;
   if (values.line1.trim().length < 3) {
@@ -128,11 +127,13 @@ function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementC
 }
 
 /**
- * Pod membership checkout: nothing is delivered, so email is the only hard
- * requirement — an empty profile must never block the booking.
+ * Pod checkout requires billing details for its invoice.
  */
 export function makeCheckoutSchema(t: Translate = fallbackT) {
-  return makeCheckoutObject(t).superRefine((values, ctx) => addOptionalFieldIssues(values, ctx, t));
+  return makeCheckoutObject(t).superRefine((values, ctx) => {
+    addAddressIssues(values, ctx, t);
+    addOptionalFieldIssues(values, ctx, t);
+  });
 }
 
 /**

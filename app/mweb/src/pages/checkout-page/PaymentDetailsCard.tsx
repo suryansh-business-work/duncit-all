@@ -41,8 +41,7 @@ interface Props {
   onApplyCoupon: (code?: string) => void;
   onRemoveCoupon: () => void;
   coins: CoinRedemption;
-  /** Products are delivered, so their checkout demands an address; the pod
-   * membership checkout keeps it optional and never blocks on it. */
+  /** Show required markers on the invoice-address fields. */
   addressRequired?: boolean;
 }
 
@@ -68,12 +67,12 @@ export default function PaymentDetailsCard({
   onApplyCoupon,
   onRemoveCoupon,
   coins,
-  addressRequired = false,
+  addressRequired = true,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const discounted = effectiveTotal < total;
-  // The server refuses a payment from an account with no phone, no verified
-  // email or no billing address. Asking here means the buyer finds out before
+  // The server refuses a payment from an account with no phone or no verified
+  // email. Asking here means the buyer finds out before
   // filling in a card rather than after.
   const eligibility = useCheckoutEligibility();
   const blocked = eligibility.missing.length > 0;

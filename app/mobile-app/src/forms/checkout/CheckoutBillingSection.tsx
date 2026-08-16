@@ -70,7 +70,7 @@ interface BillingBodyProps {
   control: Control<CheckoutFormValues>;
   mainAddress: CheckoutMainAddress | null;
   sameAsMain: boolean;
-  /** Deliveries need the address; the pod membership checkout does not. */
+  /** Show required markers on invoice-address fields. */
   addressRequired: boolean;
 }
 
@@ -107,7 +107,12 @@ function BillingAddress({
   }
   return (
     <YStack gap={12}>
-      <AddressFields control={control} names={ADDRESS_NAMES} />
+      <AddressFields
+        control={control}
+        names={ADDRESS_NAMES}
+        required={addressRequired}
+        pincodeHint={t('mweb.checkout.pincodeHint')}
+      />
       <FormCheckbox
         control={control}
         name="save_as_main"

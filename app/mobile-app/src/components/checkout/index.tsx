@@ -6,6 +6,7 @@ export { CheckoutSuccess } from './CheckoutSuccess';
 export { ConfirmationPodCard } from './ConfirmationPodCard';
 export { ProcessingOverlay } from './ProcessingOverlay';
 export { RazorpayWebView } from './RazorpayWebView';
+export { AlreadyBookedDialog } from './AlreadyBookedDialog';
 export { CouponField } from './CouponField';
 export { CouponTotal } from './CouponTotal';
 export { CoinRedeemField } from './CoinRedeemField';

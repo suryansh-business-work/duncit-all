@@ -15,8 +15,8 @@ const PHONE_NUMBER_RE = /^\d{6,15}$/;
  * Checkout contact + billing contract — RN twin of mWeb's checkout schemas.
  * Email is the ONLY mandatory contact field: the contact block is read-only
  * here (edited from the profile), so requiring a phone the buyer never filled
- * in would dead-end the payment. The billing address is validated only by the
- * delivery flow, and only when it is not "same as my main address". Payment-
+ * in would dead-end the payment. The billing address is mandatory unless the
+ * buyer selects their saved main address. Payment-
  * method selection is handled by Razorpay's own sheet.
  *
  * The messages are copy, so they come from the shared catalogue (rule 38): the
@@ -61,8 +61,7 @@ function makeCheckoutObject(t: Translate) {
 
 type CheckoutObjectValues = z.infer<ReturnType<typeof makeCheckoutObject>>;
 
-/** Address parts, demanded only by flows that ship something and only when the
- * buyer is not reusing their saved main address. */
+/** Address parts required when the buyer is not reusing their saved main address. */
 function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.same_as_main) return;
   if (values.line1.length < 3) {
@@ -114,10 +113,12 @@ function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementC
   }
 }
 
-/** Pod membership checkout: nothing is delivered, so email is the only hard
- * requirement — an incomplete profile must never block the booking. */
+/** Pod checkout requires billing details for its invoice. */
 export function makeCheckoutSchema(t: Translate = fallbackT) {
-  return makeCheckoutObject(t).superRefine((values, ctx) => addOptionalFieldIssues(values, ctx, t));
+  return makeCheckoutObject(t).superRefine((values, ctx) => {
+    addAddressIssues(values, ctx, t);
+    addOptionalFieldIssues(values, ctx, t);
+  });
 }
 
 /** Product checkout: the order is physically delivered, so the address stays

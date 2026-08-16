@@ -48,6 +48,10 @@ interface ApiErrorShape {
   message?: unknown;
   graphQLErrors?: GqlErrorShape[] | null;
   networkError?: { message?: unknown } | null;
+  /** Native's ApiError carries GraphQL extensions directly. */
+  extensions?: { code?: unknown } | null;
+  code?: unknown;
+  path?: unknown;
 }
 
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
@@ -59,6 +63,7 @@ const KIND_BY_CODE: Record<string, IssueKind> = {
   BAD_USER_INPUT: 'VALIDATION',
   CHECKOUT_NOT_ELIGIBLE: 'VALIDATION',
   VERIFICATION_UNDER_REVIEW: 'VALIDATION',
+  ALREADY_BOOKED: 'CONFLICT',
   CONFLICT: 'CONFLICT',
   NOT_FOUND: 'NOT_FOUND',
   CONFIG_ERROR: 'SERVER',
@@ -94,6 +99,25 @@ export function parseIssue(
       kind,
       code,
       message: text(gql.message) || fallback,
+      operation,
+      path,
+      offerReport: kind !== 'VALIDATION',
+    };
+  }
+
+  // graphql-request is normalised into the native ApiError shape, where the
+  // first GraphQL error's extensions live directly on the thrown error. Keep
+  // its code intact so native screens can take the same action as mWeb.
+  const directCode = text(shaped.extensions?.code) || text(shaped.code) || null;
+  if (directCode) {
+    const kind: IssueKind = KIND_BY_CODE[directCode] || 'SERVER';
+    const path = Array.isArray(shaped.path)
+      ? shaped.path.map(String).join('.')
+      : text(shaped.path) || null;
+    return {
+      kind,
+      code: directCode,
+      message: text(shaped.message) || fallback,
       operation,
       path,
       offerReport: kind !== 'VALIDATION',

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, IconButton, Skeleton, Stack, Typography } from '@mui/material';
@@ -25,6 +25,7 @@ import { IssueNotice, useServerIssue } from '../../components/issue-notice';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
+import AlreadyBookedDialog from './AlreadyBookedDialog';
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
@@ -44,6 +45,7 @@ export default function CheckoutPage() {
   });
   const [doCheckout] = useMutation(DUMMY_CHECKOUT);
   const [doRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
+  const [alreadyBookedOpen, setAlreadyBookedOpen] = useState(false);
 
   const session = useCheckoutSession({ couponPodId: checkoutPodId || null });
 
@@ -146,10 +148,14 @@ export default function CheckoutPage() {
     } catch (submitError: any) {
       // Parsed once, logged once: the structured issue feeds the Tech portal's
       // Error Logs section and renders with a Report button below.
-      serverIssue.capture(
+      const issue = serverIssue.capture(
         submitError,
         finance?.razorpay_enabled ? 'createRazorpayOrder' : 'dummyCheckout'
       );
+      if (issue.code === 'ALREADY_BOOKED') {
+        serverIssue.clear();
+        setAlreadyBookedOpen(true);
+      }
     } finally {
       session.setSubmitting(false);
     }
@@ -238,6 +244,11 @@ export default function CheckoutPage() {
           payment.dismiss();
           session.setError(null);
         }}
+      />
+      <AlreadyBookedDialog
+        open={alreadyBookedOpen}
+        onClose={() => setAlreadyBookedOpen(false)}
+        onHistory={() => navigate('/pod-history')}
       />
       <ProcessingBackdrop open={session.submitting} message={session.confirmingMessage} />
     </Box>

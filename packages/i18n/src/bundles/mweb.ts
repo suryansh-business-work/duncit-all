@@ -1080,6 +1080,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       goHome: 'Go home',
       viewBookings: 'View bookings',
       myBookings: 'My bookings',
+      alreadyBookedTitle: 'Pod already booked',
+      alreadyBookedMessage:
+        'You have already booked this pod. You can find your booking in Pod History.',
+      alreadyBookedStay: 'Stay here',
+      alreadyBookedHistory: 'Go to Pod History',
       // mWeb only — its confirmation returns to the profile, not the bookings
       // list, so the label names where it actually goes.
       myProfile: 'My Profile',

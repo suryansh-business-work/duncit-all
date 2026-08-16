@@ -13,7 +13,6 @@ import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useBranding } from '@/hooks/useBranding';
 import { useBrandFont } from '@/hooks/useBrandFont';
-import { useLargeScreenOrientation } from '@/hooks/useLargeScreenOrientation';
 import { setWebFavicon } from '@/services/web-favicon';
 import { cachedDuid, logClientInfo } from '@/services/device';
 import { OfflineBanner } from '@/components/OfflineBanner';
@@ -127,11 +126,6 @@ export default function App() {
   // received while running. The subscription outlives renders; unsubscribed on
   // teardown.
   useEffect(() => initShortLinkAttribution(), []);
-
-  // Phones stay portrait; tablets and unfolded foldables rotate. The manifest
-  // no longer restricts orientation (Play flags it, Android 16 ignores it on
-  // large screens), so this is where the phone half of that rule now lives.
-  useLargeScreenOrientation();
 
   if (!ready) return null;
 

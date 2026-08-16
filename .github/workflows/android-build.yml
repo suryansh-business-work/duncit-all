@@ -232,6 +232,36 @@ jobs:
         # android/ is gitignored (CNG) — regenerated from app.json + config plugins.
         run: npx expo prebuild --platform android --no-install --clean
 
+      - name: Validate release-safe Android configuration
+        # The first attempt at satisfying Play's R8 recommendation switched to
+        # proguard-android-optimize.txt and the resulting app never left its
+        # splash screen. Keep the last-known-good R8 rules until the Expo/RN AGP
+        # toolchain is upgraded and that optimizer can be runtime-tested.
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          APP_GRADLE=android/app/build.gradle
+          GRADLE_PROPERTIES=android/gradle.properties
+
+          if grep -q 'android:screenOrientation=' "$MANIFEST"; then
+            echo "::error::MainActivity must not restrict orientation"
+            exit 1
+          fi
+          grep -q 'android:resizeableActivity="true"' "$MANIFEST" || {
+            echo "::error::MainActivity must remain resizeable"
+            exit 1
+          }
+          grep -q 'proguard-android.txt' "$APP_GRADLE" || {
+            echo "::error::The release-safe Android ProGuard baseline changed"
+            exit 1
+          }
+          if grep -q 'proguard-android-optimize.txt' "$APP_GRADLE"; then
+            echo "::error::Aggressive R8 optimization was re-enabled without runtime qualification"
+            exit 1
+          fi
+          grep -q '^android.enableMinifyInReleaseBuilds=true$' "$GRADLE_PROPERTIES" || exit 1
+          grep -q '^android.enableShrinkResourcesInReleaseBuilds=true$' "$GRADLE_PROPERTIES" || exit 1
+          grep -q '^edgeToEdgeEnabled=true$' "$GRADLE_PROPERTIES" || exit 1
+
       - name: Configure Google Play upload signing
         env:
           ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}

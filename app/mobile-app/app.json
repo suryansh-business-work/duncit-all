@@ -2,8 +2,8 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.61.11",
-    "orientation": "portrait",
+    "version": "1.61.12",
+    "orientation": "default",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/duncit-logo.png",
@@ -106,7 +106,6 @@
         }
       ],
       "./plugins/withNdkVersion",
-      "./plugins/withAndroidR8Optimization",
       "./plugins/withAndroidLargeScreens",
       "expo-web-browser",
       "expo-video"

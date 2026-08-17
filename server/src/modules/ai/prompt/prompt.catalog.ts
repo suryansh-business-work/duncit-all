@@ -202,6 +202,15 @@ export const SYSTEM_PROMPTS: readonly SystemPromptDef[] = [
     ].join('\n'),
   },
   {
+    key: 'generate.rich_text',
+    name: 'Rich text improver',
+    description: 'Improves portal-authored rich text without changing its facts.',
+    category: GENERATION,
+    variables: [],
+    content:
+      'Return strict JSON only with shape { "html": string }. Improve clarity, grammar, structure, and readability while preserving every fact, name, number, link, and intent. Return only safe semantic HTML using p, h2, h3, strong, em, u, s, ul, ol, li, blockquote, br, and a tags. Never add scripts, styles, event handlers, embeds, images, or unsupported tags.',
+  },
+  {
     key: 'crm.lead_chat',
     name: 'CRM lead assistant',
     description: 'Answers an agent’s questions about one lead, grounded in its CRM data.',

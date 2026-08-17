@@ -1,23 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Divider,
-  Paper,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogContentText, DialogTitle, Divider, Paper, Snackbar, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -27,16 +12,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import { BackHeader } from '@duncit/ui';
 import { downloadTextFile } from '@duncit/utils';
-import {
-  CLONE_LEGAL_DOCUMENT,
-  DELETE_LEGAL_DOCUMENT,
-  LEGAL_DOCUMENT,
-  UPDATE_LEGAL_DOCUMENT,
-  type LegalDocumentDetail,
-} from '../../graphql/documents';
-import DocumentTypeSelect from '../../components/DocumentTypeSelect';
-import RichTextEditor, { htmlToText, toPrintableHtml } from '../../components/RichTextEditor';
+import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
+import { CLONE_LEGAL_DOCUMENT, DELETE_LEGAL_DOCUMENT, LEGAL_DOCUMENT,
+  UPDATE_LEGAL_DOCUMENT, type LegalDocumentDetail } from '../../graphql/documents';
+import { toPrintableHtml } from '../../lib/printableHtml';
 import { copyToClipboard, printHtml, safeFileName } from '../../lib/docActions';
+import { DocumentEditor } from './DocumentDetailPage/DocumentEditor';
 
 export default function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -114,23 +95,19 @@ export default function DocumentDetailPage() {
     }
     if (editing) {
       return (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Stack spacing={2}>
-            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
-            <DocumentTypeSelect value={docType} onChange={setDocType} required />
-            <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth multiline minRows={2} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">Content</Typography>
-              <RichTextEditor value={content} onChange={setContent} minHeight={260} />
-            </Box>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button onClick={() => setEditing(false)}>Cancel</Button>
-              <Button variant="contained" disabled={saving || !name.trim() || !docType.trim()} onClick={save}>
-                Save
-              </Button>
-            </Stack>
-          </Stack>
-        </Paper>
+        <DocumentEditor
+          content={content}
+          description={description}
+          docType={docType}
+          name={name}
+          saving={saving}
+          onCancel={() => setEditing(false)}
+          onContentChange={setContent}
+          onDescriptionChange={setDescription}
+          onDocTypeChange={setDocType}
+          onNameChange={setName}
+          onSave={save}
+        />
       );
     }
     return (
@@ -145,7 +122,7 @@ export default function DocumentDetailPage() {
 
         <Paper variant="outlined" sx={{ p: 2 }}>
           {doc.content ? (
-            <Box sx={{ '& p': { mt: 0 } }} dangerouslySetInnerHTML={{ __html: doc.content }} />
+            <DuncitRichTextInput value={doc.content} onChange={() => undefined} readOnly bare />
           ) : (
             <Typography variant="body2" color="text.secondary">No content yet.</Typography>
           )}

@@ -46,6 +46,7 @@ COPY packages/location/package.json ./packages/location/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/rich-text/package.json ./packages/rich-text/
 COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/dashboard/package.json ./packages/dashboard/
 COPY packages/ui/package.json ./packages/ui/

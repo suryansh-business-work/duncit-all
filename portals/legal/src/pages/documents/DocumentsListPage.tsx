@@ -15,13 +15,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import { PageHeader } from '@duncit/ui';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import {
   CREATE_LEGAL_DOCUMENT,
   LEGAL_DOCUMENTS_TABLE,
   type LegalDocumentListItem,
 } from '../../graphql/documents';
 import DocumentTypeSelect from '../../components/DocumentTypeSelect';
-import RichTextEditor from '../../components/RichTextEditor';
 import DocumentsTable from './DocumentsTable';
 import EditDocumentDialog from './EditDocumentDialog';
 import SignContractDialog from './SignContractDialog';
@@ -113,7 +113,7 @@ export default function DocumentsListPage() {
               <Typography variant="caption" color="text.secondary">
                 Content
               </Typography>
-              <RichTextEditor value={content} onChange={setContent} placeholder="Write the document…" minHeight={220} />
+              <DuncitRichTextInput value={content} onChange={setContent} minHeight={220} aiContext="legal document" />
             </Box>
           </Stack>
         </DialogContent>

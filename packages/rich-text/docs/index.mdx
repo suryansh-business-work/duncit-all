@@ -1,0 +1,104 @@
+---
+name: '@duncit/rich-text'
+summary: 'The one responsive MUI/Tiptap rich-text input used by Duncit portals, with accessible formatting, safe links and built-in AI improvement.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/support'
+  - 'portals/legal'
+  - 'portals/crm'
+exports:
+  - 'DuncitRichTextInput'
+  - 'htmlToText'
+  - 'normalizedEditorHtml'
+  - 'IMPROVE_RICH_TEXT'
+---
+
+## Why this exists
+
+Support and Legal each carried a separate ReactQuill wrapper, while CRM carried a larger
+Tiptap editor. Their toolbars, dark-theme colours, mobile wrapping, link behaviour and
+plain-text conversion had already drifted. This package is the only editable rich-text
+surface: fixes now reach every consumer together.
+
+The editor uses MUI chrome and icons, so the toolbar remains legible in light and dark themes
+and wraps on narrow screens. Link entry is a MUI dialog rather than `prompt()`. Every editable
+instance includes the same localized **Improve with AI** action below the content. Read-only
+instances omit both toolbar and AI action.
+
+## Use it
+
+```tsx
+import { DuncitRichTextInput } from '@duncit/rich-text';
+
+<DuncitRichTextInput
+  value={bodyHtml}
+  onChange={(html) => setBodyHtml(html)}
+  aiContext="support ticket reply"
+  minHeight={140}
+/>;
+```
+
+When an API stores HTML and plain text together, consume both values from the one callback:
+
+```tsx
+<DuncitRichTextInput
+  value={body.html}
+  onChange={(html, text) => setBody({ html, text })}
+  aiContext="CRM activity note"
+/>
+```
+
+For saved content:
+
+```tsx
+<DuncitRichTextInput value={messageHtml} onChange={() => undefined} readOnly bare />
+```
+
+## Behaviour
+
+- Bold, italic, underline, strike, heading, lists, quote, safe links, clear formatting,
+  undo and redo are available through labelled MUI icon buttons.
+- The toolbar wraps instead of overflowing on mobile.
+- Placeholder and editor text use theme colours, including dark mode.
+- Empty Tiptap HTML (`<p></p>`) is normalized to `''`.
+- AI output is loaded back through Tiptap before `onChange`, so unsupported HTML is discarded
+  by the editor schema.
+- AI errors stay inside the component as localized MUI feedback; the caller does not need a
+  second error state.
+
+## API
+
+| Prop          | Type                   | Default            | Meaning                                |
+| ------------- | ---------------------- | ------------------ | -------------------------------------- |
+| `value`       | `string`               | required           | Controlled HTML value.                 |
+| `onChange`    | `(html, text) => void` | required           | Normalized HTML plus plain text.       |
+| `placeholder` | `string`               | localized fallback | Optional surface-specific placeholder. |
+| `ariaLabel`   | `string`               | localized fallback | Accessible editor label.               |
+| `minHeight`   | `number`               | `160`              | Editable content height in pixels.     |
+| `compact`     | `boolean`              | `false`            | Reduces toolbar spacing.               |
+| `disabled`    | `boolean`              | `false`            | Locks editing and hides AI.            |
+| `readOnly`    | `boolean`              | `false`            | Content-only rendering.                |
+| `bare`        | `boolean`              | `false`            | Removes outer border/background.       |
+| `aiContext`   | `string`               | omitted            | Short task context for the AI rewrite. |
+
+`htmlToText(html)` extracts the plain-text companion used by search, previews and API payloads.
+
+## Dependencies and GraphQL
+
+Tiptap extensions are runtime dependencies owned here, not repeated by consumers. MUI,
+Apollo, GraphQL and React are peers so portal providers and themes are never duplicated.
+Localization comes from the existing `@duncit/app-settings` runtime and `shell.richText.*`
+fallback entries.
+
+The AI action calls `aiImproveRichText`. The server gates it to the roles that own current
+rich-text surfaces, meters it as `ai.rich_text`, and reads its system instruction from the AI
+Prompt Library. Operators can therefore tune the rewrite without redeploying a portal.
+
+## Coverage gate
+
+`vitest.config.ts` declares the required 100/100/100/100 package threshold. Test creation and
+execution are temporarily paused by the repository development instruction; the gate remains
+declared so it cannot be forgotten when tests resume.

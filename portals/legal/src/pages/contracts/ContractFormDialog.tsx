@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import RichTextEditor from '../../components/RichTextEditor';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import { CONTRACT_STATUS_OPTIONS, type ContractStatus } from '../../graphql/contracts';
 
 export interface ContractFormState {
@@ -151,11 +151,12 @@ export default function ContractFormDialog({
             <Typography variant="caption" color="text.secondary">
               Contract
             </Typography>
-            <RichTextEditor
+            <DuncitRichTextInput
               value={form.content}
-              onChange={(v) => onChange({ content: v })}
+              onChange={(value) => onChange({ content: value })}
               minHeight={220}
               readOnly={readOnly}
+              aiContext="legal contract"
             />
           </Box>
         </Stack>

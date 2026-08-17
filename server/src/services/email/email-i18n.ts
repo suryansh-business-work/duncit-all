@@ -83,20 +83,19 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.unsubscribe.mistake":
     "Didn't do this? Open the link above and switch anything back on. Emails already on their way may still arrive.",
 
-  // Jump-to-Portal access decisions (templates: portal-access-approved/-denied,
+  // Jump-to-Portal access decisions (templates: portal-access-approved/-declined,
   // authored in Tech > Emails > Templates — rule 28, no local MJML).
   "email.portalAccess.approvedTitle": "Your portal access is live",
   "email.portalAccess.approvedBody": "An admin approved your request. Sign in with your existing Duncit account to get started.",
   "email.portalAccess.openPortal": "Open the portal",
-  "email.portalAccess.deniedTitle": "About your portal access request",
-  "email.portalAccess.deniedBody": "An admin reviewed your request and didn't approve it this time. Reply to this email if you have questions.",
+  "email.portalAccess.declinedTitle": "About your portal access request",
+  "email.portalAccess.declinedBody": "An admin reviewed your request and didn't approve it this time. Reply to this email if you have questions.",
   "email.portalAccess.portalLabel": "Portal",
 
-  // An account was switched off or back on (templates: brand/venue/host
-  // -activated and -deactivated). Six emails, one shape — only the noun and
-  // the two lines of copy change, so the labels and the closing lines are
-  // shared and the per-entity copy is not.
+  // An account or listing was switched off or back on. These emails share one
+  // shape; only the noun and the two lines of copy change.
   "email.accountStatus.brandLabel": "Brand",
+  "email.accountStatus.productLabel": "Product",
   "email.accountStatus.venueLabel": "Venue",
   "email.accountStatus.hostLabel": "Host account",
   "email.accountStatus.liveHelp":
@@ -109,6 +108,9 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.brandDeactivated.title": "Your brand has been deactivated",
   "email.brandDeactivated.body":
     "Your brand and its products are hidden from the Duncit marketplace for now, and no new products can be listed while it stays that way.",
+  "email.productDeactivated.title": "Your product has been deactivated",
+  "email.productDeactivated.body":
+    "Your product is temporarily hidden from the Duncit marketplace and pod product picker. Existing orders are not affected.",
   "email.venueActivated.title": "Your venue is live again",
   "email.venueActivated.body":
     "Your venue is discoverable on Duncit again, and hosts can request your availability slots.",

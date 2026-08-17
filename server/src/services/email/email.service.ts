@@ -653,8 +653,8 @@ export function sendPortalAccessApprovedEmail(opts: {
 }
 
 /** A Jump-to-Portal access request was declined by an admin.
- * Template lives in Tech > Emails > Templates (slug: portal-access-denied). */
-export function sendPortalAccessDeniedEmail(opts: {
+ * Template lives in Tech > Emails > Templates (slug: portal-access-declined). */
+export function sendPortalAccessDeclinedEmail(opts: {
   to: string;
   name: string;
   portal_name: string;
@@ -662,7 +662,7 @@ export function sendPortalAccessDeniedEmail(opts: {
   return sendEmail({
     to: opts.to,
     subject: `Your Duncit ${opts.portal_name} portal access request`,
-    template: 'portal-access-denied',
+    template: 'portal-access-declined',
     category: 'internal',
     vars: { name: opts.name, portal_name: opts.portal_name },
   });

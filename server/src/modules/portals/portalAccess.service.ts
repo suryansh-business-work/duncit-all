@@ -8,7 +8,7 @@ import { PORTAL_GATE_EXEMPT_KEYS, PORTAL_ROLE_REQUIREMENTS } from './portal.cons
 import { hasPortalAccess } from './portal.gate';
 import {
   sendPortalAccessApprovedEmail,
-  sendPortalAccessDeniedEmail,
+  sendPortalAccessDeclinedEmail,
 } from '@services/email/email.service';
 import { logs } from '@observability/log';
 
@@ -149,7 +149,7 @@ export const portalAccessService = {
           })
         );
       } else {
-        sendPortalAccessDeniedEmail({ to, name, portal_name: portalName }).catch((e) =>
+        sendPortalAccessDeclinedEmail({ to, name, portal_name: portalName }).catch((e) =>
           logs.server.error('portals', 'portalAccess.applyDecision', {
             error: e,
             msg: 'Portal access denied email failed',

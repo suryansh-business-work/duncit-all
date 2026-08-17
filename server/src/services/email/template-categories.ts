@@ -40,7 +40,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'interview-admin',
     'meeting-scheduled-admin',
     'portal-access-approved',
-    'portal-access-denied',
+    'portal-access-declined',
   ],
 
   // Opt-out-able.
@@ -52,6 +52,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'brand-deactivated',
     'host-activated',
     'host-deactivated',
+    'product-deactivated',
     'venue-activated',
     'venue-deactivated',
     'host-request-acknowledged',

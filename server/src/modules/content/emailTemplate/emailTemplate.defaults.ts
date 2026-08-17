@@ -95,10 +95,9 @@ function note(helpKey: string): string {
 }
 
 /**
- * Brand, venue and host each send the same email twice — once when an admin
- * switches the account off and once when it comes back. Six templates, one
- * shape: the entity's label and the two lines of copy are all that differ,
- * and writing them out six times would be six places to fix a colour.
+ * Account and listing status emails share one shape. The entity's label and
+ * the two lines of copy are all that differ, so keeping the layout here avoids
+ * several copies of the same MJML and colour rules.
  */
 function statusTemplate(input: {
   slug: string;
@@ -152,6 +151,17 @@ const STATUS_TEMPLATES: TemplateDefault[] = [
     labelKey: 'email.accountStatus.brandLabel',
     nameVar: 'contact_person',
     valueVar: 'brand_name',
+    tone: PAUSED,
+  }),
+  statusTemplate({
+    slug: 'product-deactivated',
+    name: 'Product Deactivated',
+    description: 'The product owner, when their product is temporarily hidden from the marketplace.',
+    subject: '{{product_name}} has been deactivated',
+    copyKey: 'email.productDeactivated',
+    labelKey: 'email.accountStatus.productLabel',
+    nameVar: 'name',
+    valueVar: 'product_name',
     tone: PAUSED,
   }),
   statusTemplate({
@@ -223,15 +233,15 @@ const PORTAL_ACCESS_APPROVED: TemplateDefault = {
 };
 
 /** No link and no button: there is nothing for them to open. */
-const PORTAL_ACCESS_DENIED: TemplateDefault = {
-  slug: 'portal-access-denied',
-  name: 'Portal Access Denied',
+const PORTAL_ACCESS_DECLINED: TemplateDefault = {
+  slug: 'portal-access-declined',
+  name: 'Portal Access Declined',
   description: 'The requester, when an admin declines their Jump-to-Portal request.',
   subject: 'Your Duncit {{portal_name}} portal access request',
   mjml: shell(
-    'email.portalAccess.deniedTitle',
+    'email.portalAccess.declinedTitle',
     [
-      intro('email.portalAccess.deniedTitle', 'email.portalAccess.deniedBody', 'name'),
+      intro('email.portalAccess.declinedTitle', 'email.portalAccess.declinedBody', 'name'),
       callout(PAUSED, 'email.portalAccess.portalLabel', 'portal_name'),
     ].join('\n')
   ),
@@ -264,7 +274,7 @@ const POLICY_ACCEPTANCE: TemplateDefault = {
 
 export const TEMPLATE_DEFAULTS: TemplateDefault[] = [
   PORTAL_ACCESS_APPROVED,
-  PORTAL_ACCESS_DENIED,
+  PORTAL_ACCESS_DECLINED,
   POLICY_ACCEPTANCE,
   ...STATUS_TEMPLATES,
 ];

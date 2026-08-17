@@ -28,48 +28,67 @@ export function buildRazorpayHtml(order: RazorpayOrder): string {
     prefill: { email: order.prefill_email, contact: order.prefill_contact },
     theme: { color: '#ff4f73' },
   };
+  const serializedOptions = JSON.stringify(options).replaceAll('<', '\\u003c');
   // The failure is posted WITH what Razorpay said, and posted ONCE. Razorpay
   // fires `payment.failed` and then `ondismiss` as the sheet closes, so
   // reporting both overwrote the real reason with "the buyer closed it" —
   // which is how a gateway timeout came to be shown as a cancellation.
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
 <body style="margin:0;background:#0b0b0f">
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
   var sent = false;
+  var sdkTimer = globalThis.setTimeout(function () { fail({ code: 'SDK_LOAD_FAILED' }); }, 15000);
   var post = function (m) { if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(m)); };
   var fail = function (error) { if (sent) return; sent = true; post({ type: 'failed', error: error || null }); };
-  var options = ${JSON.stringify(options)};
+  var options = ${serializedOptions};
   options.handler = function (r) { sent = true; post({ type: 'success', razorpay_order_id: r.razorpay_order_id, razorpay_payment_id: r.razorpay_payment_id, razorpay_signature: r.razorpay_signature }); };
   options.modal = { ondismiss: function () { fail(null); } };
-  try { var rzp = new Razorpay(options); rzp.on('payment.failed', function (r) { fail(r && r.error); }); rzp.open(); }
-  catch (e) { fail({ description: String(e) }); }
-</script></body></html>`;
+  function openCheckout() {
+    globalThis.clearTimeout(sdkTimer);
+    if (sent) return;
+    try {
+      var RazorpayConstructor = globalThis.Razorpay;
+      if (typeof RazorpayConstructor !== 'function') { fail({ code: 'SDK_LOAD_FAILED' }); return; }
+      var rzp = new RazorpayConstructor(options);
+      rzp.on('payment.failed', function (r) { fail(r && r.error); });
+      rzp.open();
+    } catch (e) { fail({ description: String(e) }); }
+  }
+  function handleSdkLoadError() { globalThis.clearTimeout(sdkTimer); fail({ code: 'SDK_LOAD_FAILED' }); }
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" onload="openCheckout()" onerror="handleSdkLoadError()"></script>
+</body></html>`;
 }
 
 /** Full-screen modal hosting the Razorpay checkout WebView. */
 export function RazorpayWebView({ order, open, onSuccess, onFailure }: Readonly<Props>) {
   const onMessage = (event: WebViewMessageEvent) => {
-    let data: { type?: string; error?: RazorpayErrorLike | null } & Partial<RazorpaySignature>;
+    let parsed: unknown;
     try {
-      data = JSON.parse(event.nativeEvent.data);
+      parsed = JSON.parse(event.nativeEvent.data);
     } catch {
       return;
     }
+
+    if (!parsed || typeof parsed !== 'object') return;
+    const data = parsed as Record<string, unknown>;
     if (
       data.type === 'success' &&
-      data.razorpay_order_id &&
-      data.razorpay_payment_id &&
-      data.razorpay_signature
+      typeof data.razorpay_order_id === 'string' &&
+      typeof data.razorpay_payment_id === 'string' &&
+      typeof data.razorpay_signature === 'string'
     ) {
       onSuccess({
         razorpay_order_id: data.razorpay_order_id,
         razorpay_payment_id: data.razorpay_payment_id,
         razorpay_signature: data.razorpay_signature,
       });
-    } else {
-      onFailure(data.error ?? null);
+      return;
     }
+
+    if (data.type !== 'failed' && data.type !== 'dismiss') return;
+    const error = data.error;
+    onFailure(error && typeof error === 'object' ? (error as RazorpayErrorLike) : null);
   };
 
   return (

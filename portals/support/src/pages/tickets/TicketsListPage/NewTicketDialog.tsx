@@ -13,8 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import { CREATE_TICKET, type TicketCategory } from '../../../graphql/tickets';
-import RichTextEditor, { htmlToText } from '../../../components/RichTextEditor';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
+import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
 
 const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
@@ -75,7 +75,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
             <Typography variant="caption" color="text.secondary">
               Description
             </Typography>
-            <RichTextEditor value={bodyHtml} onChange={setBodyHtml} placeholder="Describe the issue…" />
+            <DuncitRichTextInput value={bodyHtml} onChange={setBodyHtml} aiContext="support ticket description" />
           </Box>
           <AttachmentUploadField
             value={attachments}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stack, TextField } from '@mui/material';
-import RichTextField from '../../forms/fields/RichTextField';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 import EmailContentSwitch, { type EmailContentType } from './EmailContentSwitch';
 import TemplateBodyPicker, { type TemplateBody } from './TemplateBodyPicker';
@@ -63,7 +63,7 @@ export default function EmailComposeFields({ entity, leadName, leadEmail, variab
         <TextField size="small" label="Message" value={text} onChange={(e) => setText(e.target.value)} fullWidth multiline minRows={4} />
       )}
       {type === 'rich' && (
-        <RichTextField value={richHtml} onChange={({ html }) => setRichHtml(html)} placeholder="Write your email…" />
+        <DuncitRichTextInput value={richHtml} onChange={(html) => setRichHtml(html)} aiContext="CRM lead email" />
       )}
     </Stack>
   );

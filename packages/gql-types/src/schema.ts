@@ -331,6 +331,11 @@ export type AiPromptFilter = {
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AiRichTextImproveInput = {
+  context?: InputMaybe<Scalars['String']['input']>;
+  html: Scalars['String']['input'];
+};
+
 /** An API campaign as AiSensy has it — read through the Project API, not stored here. */
 export type AisensyCampaign = {
   __typename?: 'AisensyCampaign';
@@ -6690,6 +6695,8 @@ export type Mutation = {
    * Returns JSON with { zones: [{ zone_name, pincode }] }.
    */
   aiFillLocationAreas: Scalars['String']['output'];
+  /** Improves authored portal rich text while preserving its facts and HTML structure. */
+  aiImproveRichText: Scalars['String']['output'];
   aiParseCrmLead: Scalars['String']['output'];
   /** Extract multiple leads from text — returns JSON { records: [...] }. */
   aiParseCrmLeads: Scalars['String']['output'];
@@ -7832,6 +7839,10 @@ export type MutationAiFillDummyDataArgs = {
 
 export type MutationAiFillLocationAreasArgs = {
   input: AiLocationAreasInput;
+};
+
+export type MutationAiImproveRichTextArgs = {
+  input: AiRichTextImproveInput;
 };
 
 

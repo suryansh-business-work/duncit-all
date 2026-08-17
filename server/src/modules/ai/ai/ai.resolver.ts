@@ -12,6 +12,15 @@ import { requireRole } from '@middleware/rbac';
 
 type Entity = 'CLUB' | 'POD' | 'INVENTORY_PRODUCT';
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
+const RICH_TEXT_ROLES = [
+  'SUPER_ADMIN',
+  'SUPPORT_MANAGER',
+  'SUPPORT_USER',
+  'LEGAL_MANAGER',
+  'CRM_MANAGER',
+];
+const UNSAFE_RICH_TEXT =
+  /<(?:script|style|iframe|object|embed)\b|\son\w+\s*=|\shref\s*=\s*["']?\s*(?:javascript|data|vbscript):/i;
 
 const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }> = {
   CLUB: {
@@ -263,6 +272,11 @@ interface AiMjmlTemplateInput {
   current_mjml?: string | null;
 }
 
+interface AiRichTextImproveInput {
+  html: string;
+  context?: string | null;
+}
+
 async function generateProductDescription(input: DescribeProductInput): Promise<string> {
   const context = [
     `Product name: ${input.product_name}`,
@@ -451,6 +465,42 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
   return mjml;
 }
 
+function improvedHtml(content: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw openAiInvalidJsonError();
+  }
+  const value = (parsed as { html?: unknown } | null)?.html;
+  const html = typeof value === 'string' ? value.trim() : '';
+  if (!html || html.length > 20_000 || UNSAFE_RICH_TEXT.test(html)) throw openAiInvalidJsonError();
+  return html;
+}
+
+async function improveRichText(input: AiRichTextImproveInput): Promise<string> {
+  const html = input.html.trim();
+  if (!html || html.length > 20_000) {
+    throw new GraphQLError('Rich text must contain between 1 and 20,000 characters', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const context = (input.context ?? '').trim().slice(0, 200);
+  const contextLine = context ? `Context: ${context}\n\n` : '';
+  const res = await openaiChat({
+    task: 'ai.rich_text',
+    detail: context || 'rich text',
+    temperature: 0.3,
+    json: true,
+    messages: [
+      { role: 'system', content: await getSystemPrompt('generate.rich_text') },
+      { role: 'user', content: `${contextLine}Improve this HTML:\n${html}` },
+    ],
+  });
+  if (!res.ok) throw openAiGraphQLError(res);
+  return improvedHtml(res.content);
+}
+
 export const aiResolvers = {
   Mutation: {
     aiFillDummyData: async (
@@ -482,6 +532,14 @@ export const aiResolvers = {
       // CRM managers compose MJML email templates from the CRM portal too.
       requireRole(ctx, [...ADMIN_ROLES, 'CRM_MANAGER']);
       return createOrUpdateMjml(args.input);
+    },
+    aiImproveRichText: async (
+      _: unknown,
+      args: { input: AiRichTextImproveInput },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, RICH_TEXT_ROLES);
+      return improveRichText(args.input);
     },
   },
 };

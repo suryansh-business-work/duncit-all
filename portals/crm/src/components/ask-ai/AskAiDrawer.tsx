@@ -15,7 +15,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import { tokens } from '@duncit/theme';
-import RichTextField from '../../forms/fields/RichTextField';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import { parseApiError } from '@duncit/utils';
 
 const HEADER_HEIGHT = tokens.size.headerHeight;
@@ -118,7 +118,7 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
                   </Box>
                 ) : (
                   <Box sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                    <RichTextField value={m.content} onChange={() => {}} readOnly bare />
+                    <DuncitRichTextInput value={m.content} onChange={() => undefined} readOnly bare />
                   </Box>
                 )}
               </Box>

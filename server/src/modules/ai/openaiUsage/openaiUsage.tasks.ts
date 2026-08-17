@@ -24,6 +24,7 @@ export const OPENAI_TASKS = {
   'ai.location_areas': { label: 'City zones fill', module: 'Admin Tools' },
   'ai.admin_chat': { label: 'Admin assistant chat', module: 'Admin Tools' },
   'ai.email_mjml': { label: 'Email template MJML', module: 'Admin Tools' },
+  'ai.rich_text': { label: 'Rich text improvement', module: 'Portal Tools' },
   'moderation.pod': { label: 'Pod moderation scan', module: 'Moderation' },
   'moderation.product': { label: 'Product moderation scan', module: 'Moderation' },
   'moderation.meeting_reason': { label: 'Meeting reason check', module: 'Moderation' },

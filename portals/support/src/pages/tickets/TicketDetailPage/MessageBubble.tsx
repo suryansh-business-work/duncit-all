@@ -1,6 +1,7 @@
-import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Chip, Paper, Stack, Typography } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { TicketMessage } from '../../../graphql/tickets';
 import AttachmentList from '../../../components/AttachmentList';
 
@@ -57,7 +58,7 @@ export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Pr
             ))}
         </Stack>
         {msg.body_html ? (
-          <Box sx={{ '& p': { m: 0 }, fontSize: 14 }} dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+          <DuncitRichTextInput value={msg.body_html} onChange={() => undefined} readOnly bare />
         ) : (
           <Typography variant="body2">{msg.body_text}</Typography>
         )}

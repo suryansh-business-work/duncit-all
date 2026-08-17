@@ -3,13 +3,13 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import { BackHeader, StatusChip } from '@duncit/ui';
+import { htmlToText } from '@duncit/rich-text';
 import {
   MARK_TICKET_READ,
   REPLY_TO_TICKET,
   TICKET,
   type Ticket,
 } from '../../../graphql/tickets';
-import { htmlToText } from '../../../components/RichTextEditor';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
 import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
 import TicketHeader from './TicketHeader';

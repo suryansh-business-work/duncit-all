@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import RichTextEditor from '../../components/RichTextEditor';
+import { DuncitRichTextInput } from '@duncit/rich-text';
 import PolicyTypeSelect from '../../components/PolicyTypeSelect';
 
 export interface PolicyFormState {
@@ -96,7 +96,12 @@ export default function PolicyFormDialog({
           </Stack>
           <Box>
             <Typography variant="caption" color="text.secondary">Content</Typography>
-            <RichTextEditor value={form.content} onChange={(v) => onChange({ content: v })} minHeight={260} />
+            <DuncitRichTextInput
+              value={form.content}
+              onChange={(value) => onChange({ content: value })}
+              minHeight={260}
+              aiContext="legal policy"
+            />
           </Box>
         </Stack>
       </DialogContent>

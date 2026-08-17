@@ -1,0 +1,49 @@
+{
+  "name": "@duncit/rich-text",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The shared responsive MUI rich-text input for Duncit portals, with safe links and one-click AI improvement.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/gql-types": "workspace:*",
+    "@tiptap/extension-link": "3.23.6",
+    "@tiptap/extension-placeholder": "3.23.6",
+    "@tiptap/extension-underline": "3.23.6",
+    "@tiptap/pm": "3.23.6",
+    "@tiptap/react": "3.23.6",
+    "@tiptap/starter-kit": "3.23.6"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "graphql": ">=16",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.10.4",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "graphql": "^16.8.1",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/rich-text"
+  }
+}

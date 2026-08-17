@@ -27,6 +27,11 @@ export const aiTypeDefs = gql`
     current_mjml: String
   }
 
+  input AiRichTextImproveInput {
+    html: String!
+    context: String
+  }
+
   extend type Mutation {
     """
     Generates dummy data for a Club / Pod / Inventory Product form using OpenAI.
@@ -56,5 +61,10 @@ export const aiTypeDefs = gql`
     Creates or updates MJML source from an admin prompt. Returns MJML only.
     """
     aiCreateOrUpdateMjml(input: AiMjmlTemplateInput!): String!
+
+    """
+    Improves authored portal rich text while preserving its facts and HTML structure.
+    """
+    aiImproveRichText(input: AiRichTextImproveInput!): String!
   }
 `;

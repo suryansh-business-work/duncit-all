@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Alert, Box, Button, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import RichTextEditor, { htmlToText } from '../../../components/RichTextEditor';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { ConfirmDialog } from '@duncit/dialogs';
+import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
 import type { TicketStatus } from '../../../graphql/tickets';
 
 interface Props {
@@ -73,7 +73,7 @@ export default function TicketComposerArea({
 
   return (
     <Box>
-      <RichTextEditor value={bodyHtml} onChange={onBodyHtml} placeholder="Write a reply…" minHeight={110} />
+      <DuncitRichTextInput value={bodyHtml} onChange={onBodyHtml} minHeight={140} compact aiContext="support ticket reply" />
       <Stack direction="row" alignItems="flex-end" justifyContent="space-between" sx={{ mt: 1 }} spacing={1}>
         <AttachmentUploadField
           value={attachments}

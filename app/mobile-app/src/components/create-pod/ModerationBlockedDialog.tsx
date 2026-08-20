@@ -1,9 +1,7 @@
-import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -23,113 +21,85 @@ interface Props {
 }
 
 /** Shown when the AI + rules preflight blocks publishing: lists what to fix and
- * links each issue to the step it lives on (tap → jump there). */
+ * links each issue to the step it lives on (tap → jump there).
+ *
+ * On {@link DuncitDialog} because the preflight can flag many violations at
+ * once: with no cap and no scroller, the Close button was pushed off the bottom
+ * and the dialog could only be dismissed with the hardware back button. */
 export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonly<Props>) {
-  const { danger, primary } = useThemeColors();
+  const { primary } = useThemeColors();
   const { t } = useTranslation();
   const close = t('mweb.auth.close');
-  return (
-    <Modal
-      visible={violations.length > 0}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+
+  const footer = (
+    <XStack
+      testID="moderation-blocked-close"
+      role="button"
+      aria-label={close}
+      onPress={onClose}
+      height={46}
+      borderRadius={12}
+      alignItems="center"
+      justifyContent="center"
+      borderWidth={1}
+      borderColor="$borderColor"
+      pressStyle={{ opacity: 0.7 }}
     >
-      <ModalThemeScope>
-        <YStack
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          testID="moderation-blocked-dialog"
-        >
-          <YStack
-            testID="moderation-blocked-backdrop"
-            role="button"
-            aria-label={close}
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            width="88%"
-            maxWidth={440}
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
-            gap={12}
-          >
-            <SafeAreaView edges={[]}>
-              <XStack alignItems="center" gap={8} paddingBottom={2}>
-                <MaterialIcons name="gpp-maybe" size={20} color={danger} />
-                <Text fontSize={17} fontWeight="700" color="$color">
-                  {t('mweb.createPod.moderationTitle')}
-                </Text>
-              </XStack>
-              <Text fontSize={12.5} color="$muted">
-                {t('mweb.createPod.moderationDescription')}
+      <Text fontSize={14} fontWeight="600" color="$color">
+        {close}
+      </Text>
+    </XStack>
+  );
+
+  return (
+    <DuncitDialog
+      open={violations.length > 0}
+      onClose={onClose}
+      testID="moderation-blocked-dialog"
+      variant="center"
+      title={t('mweb.createPod.moderationTitle')}
+      subtitle={t('mweb.createPod.moderationDescription')}
+      closeLabel={close}
+      showCloseButton={false}
+      footer={footer}
+    >
+      <YStack gap={10}>
+        {violations.map((violation) => {
+          const fixIn = t('mweb.createPod.moderationFixIn', {
+            vars: { step: violation.stepTitle },
+          });
+          return (
+            <YStack
+              key={violation.id}
+              gap={6}
+              backgroundColor="$surface"
+              borderRadius={12}
+              padding={12}
+              borderWidth={1}
+              borderColor="$borderColor"
+            >
+              <Text fontSize={12.5} fontWeight="700" color="$color">
+                {violation.message}
               </Text>
-              <YStack gap={10} paddingTop={2}>
-                {violations.map((violation) => {
-                  const fixIn = t('mweb.createPod.moderationFixIn', {
-                    vars: { step: violation.stepTitle },
-                  });
-                  return (
-                    <YStack
-                      key={violation.id}
-                      gap={6}
-                      backgroundColor="$surface"
-                      borderRadius={12}
-                      padding={12}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                    >
-                      <Text fontSize={12.5} fontWeight="700" color="$color">
-                        {violation.message}
-                      </Text>
-                      <XStack
-                        testID={`moderation-fix-${violation.id}`}
-                        role="button"
-                        aria-label={fixIn}
-                        onPress={() => onJump(violation.stepIndex)}
-                        alignSelf="flex-start"
-                        alignItems="center"
-                        gap={4}
-                        pressStyle={{ opacity: 0.7 }}
-                      >
-                        <MaterialIcons name="arrow-forward" size={14} color={primary} />
-                        <Text fontSize={12} fontWeight="600" color="$primary">
-                          {fixIn}
-                        </Text>
-                      </XStack>
-                    </YStack>
-                  );
-                })}
-              </YStack>
               <XStack
-                testID="moderation-blocked-close"
+                testID={`moderation-fix-${violation.id}`}
                 role="button"
-                aria-label={close}
-                onPress={onClose}
-                height={46}
-                borderRadius={12}
+                aria-label={fixIn}
+                onPress={() => onJump(violation.stepIndex)}
+                alignSelf="flex-start"
                 alignItems="center"
-                justifyContent="center"
-                borderWidth={1}
-                borderColor="$borderColor"
+                gap={4}
                 pressStyle={{ opacity: 0.7 }}
               >
-                <Text fontSize={14} fontWeight="600" color="$color">
-                  {close}
+                <MaterialIcons name="arrow-forward" size={14} color={primary} />
+                <Text fontSize={12} fontWeight="600" color="$primary">
+                  {fixIn}
                 </Text>
               </XStack>
-            </SafeAreaView>
-          </YStack>
-        </YStack>
-      </ModalThemeScope>
-    </Modal>
+            </YStack>
+          );
+        })}
+      </YStack>
+    </DuncitDialog>
   );
 }

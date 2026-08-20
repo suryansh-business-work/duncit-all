@@ -1,5 +1,6 @@
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -70,7 +71,7 @@ export function RescheduleDialog({
               padding={16}
               gap={10}
             >
-              <SafeAreaView edges={[]}>
+              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
                 <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={8}>
                   Reschedule your onboarding meeting
                 </Text>

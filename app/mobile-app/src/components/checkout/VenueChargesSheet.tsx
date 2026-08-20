@@ -1,10 +1,6 @@
-import { Modal } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { DuncitDialog } from '@/components/DuncitDialog';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 
@@ -24,7 +20,11 @@ interface Props {
 
 /** Info sheet explaining the venue-side charges shown on checkout. These are
  * paid directly at the venue and are NOT part of the online payable amount, so
- * this purely explains + itemises them. */
+ * this purely explains + itemises them.
+ *
+ * On {@link DuncitDialog} because `charges` is server-driven: the card had no
+ * height cap and no scroller, so a venue with many line items pushed the total
+ * and the closing note off the screen. */
 export function VenueChargesSheet({
   open,
   charges,
@@ -33,99 +33,53 @@ export function VenueChargesSheet({
   testID = 'venue-charges-sheet',
 }: Readonly<Props>) {
   const total = charges.reduce((sum, charge) => sum + charge.amount, 0);
-  const { muted } = useThemeColors();
   const { t } = useTranslation();
-  const closeLabel = t('mweb.checkout.close');
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID={testID}>
-          <YStack
-            testID={`${testID}-backdrop`}
-            role="button"
-            aria-label={closeLabel}
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            width="86%"
-            maxWidth={420}
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={20}
-            gap={10}
+    <DuncitDialog
+      open={open}
+      onClose={onClose}
+      testID={testID}
+      variant="center"
+      title={t('mweb.checkout.venueCharges')}
+      subtitle={t('mweb.checkout.venueChargesIntro')}
+      closeLabel={t('mweb.checkout.close')}
+    >
+      <YStack gap={8}>
+        {charges.map((charge) => (
+          <XStack
+            key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
+            justifyContent="space-between"
+            gap={12}
           >
-            <SafeAreaView edges={[]}>
-              <XStack alignItems="center" justifyContent="space-between">
-                <XStack alignItems="center" gap={8}>
-                  <MaterialIcons name="storefront" size={18} color="#ff4f73" />
-                  <Text fontSize={17} fontWeight="700" color="$color">
-                    {t('mweb.checkout.venueCharges')}
-                  </Text>
-                </XStack>
-                <XStack
-                  testID={`${testID}-close`}
-                  role="button"
-                  aria-label={closeLabel}
-                  onPress={onClose}
-                  width={32}
-                  height={32}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={16}
-                  pressStyle={{ opacity: 0.6 }}
-                >
-                  <MaterialIcons name="close" size={20} color={muted} />
-                </XStack>
-              </XStack>
-              <Text fontSize={13.5} color="$muted" paddingTop={6}>
-                {t('mweb.checkout.venueChargesIntro')}
+            <YStack flex={1}>
+              <Text fontSize={13} fontWeight="700" color="$color">
+                {charge.label}
               </Text>
-              <YStack paddingTop={12} gap={8}>
-                {charges.map((charge) => (
-                  <XStack
-                    key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
-                    justifyContent="space-between"
-                    gap={12}
-                  >
-                    <YStack flex={1}>
-                      <Text fontSize={13} fontWeight="700" color="$color">
-                        {charge.label}
-                      </Text>
-                      {charge.note ? (
-                        <Text fontSize={11.5} color="$muted">
-                          {charge.note}
-                        </Text>
-                      ) : null}
-                    </YStack>
-                    <Text fontSize={13} fontWeight="600" color="$color">
-                      {formatMoney(currency, charge.amount)}
-                    </Text>
-                  </XStack>
-                ))}
-                <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
-                <XStack justifyContent="space-between">
-                  <Text fontSize={13} fontWeight="700" color="$color">
-                    {t('mweb.checkout.venueChargesTotal')}
-                  </Text>
-                  <Text fontSize={13} fontWeight="700" color="$color">
-                    {formatMoney(currency, total)}
-                  </Text>
-                </XStack>
-              </YStack>
-              <Text fontSize={11.5} color="$muted" paddingTop={12}>
-                {t('mweb.checkout.venueChargesNote')}
-              </Text>
-            </SafeAreaView>
-          </YStack>
-        </YStack>
-      </ModalThemeScope>
-    </Modal>
+              {charge.note ? (
+                <Text fontSize={11.5} color="$muted">
+                  {charge.note}
+                </Text>
+              ) : null}
+            </YStack>
+            <Text fontSize={13} fontWeight="600" color="$color">
+              {formatMoney(currency, charge.amount)}
+            </Text>
+          </XStack>
+        ))}
+        <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
+        <XStack justifyContent="space-between">
+          <Text fontSize={13} fontWeight="700" color="$color">
+            {t('mweb.checkout.venueChargesTotal')}
+          </Text>
+          <Text fontSize={13} fontWeight="700" color="$color">
+            {formatMoney(currency, total)}
+          </Text>
+        </XStack>
+        <Text fontSize={11.5} color="$muted" paddingTop={12}>
+          {t('mweb.checkout.venueChargesNote')}
+        </Text>
+      </YStack>
+    </DuncitDialog>
   );
 }

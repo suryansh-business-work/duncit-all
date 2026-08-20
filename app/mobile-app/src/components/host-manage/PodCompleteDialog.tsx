@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -93,7 +94,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
               borderRadius={20}
               padding={18}
             >
-              <SafeAreaView edges={[]}>
+              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
                 <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={10}>
                   Complete pod
                 </Text>

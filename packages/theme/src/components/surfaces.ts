@@ -34,7 +34,38 @@ export const card = (c: ThemeCtx): Components<Theme>['MuiCard'] => ({
 });
 
 export const dialog = (c: ThemeCtx): Components<Theme>['MuiDialog'] => ({
-  styleOverrides: { paper: { borderRadius: c.t.radius.lg, backgroundImage: c.surfaceGradient } },
+  styleOverrides: {
+    paper: { borderRadius: c.t.radius.lg, backgroundImage: c.surfaceGradient },
+    // `paper` is composed AFTER MUI's own `paperFullScreen`, so without this a
+    // fullScreen dialog keeps rounded corners against the backdrop — and since
+    // the paper also carries `overflowY: auto`, its content is clipped at them.
+    paperFullScreen: { borderRadius: 0 },
+  },
+});
+
+/**
+ * Every dropdown, capped.
+ *
+ * MUI caps a Menu at `calc(100% - 96px)` where 100% is the LARGE viewport — a
+ * Menu is a portalled Popover on document.body, so it can never be clipped by
+ * the dialog that opened it, and on a narrow window a long option list runs
+ * across the whole screen. Below the `sm` breakpoint MenuItem also has a hard
+ * `minHeight: 48`, so the cap engages even later there. `dvh` tracks a mobile
+ * browser's collapsible toolbar; 336px is ~7 rows, which reads as a list rather
+ * than a takeover.
+ *
+ * Kept word-for-word in sync with app/mweb/src/theme.ts — mWeb does not consume
+ * this package (it has its own theme), so the two carry the same rule twice.
+ */
+export const menu = (): Components<Theme>['MuiMenu'] => ({
+  styleOverrides: { paper: { maxHeight: 'min(calc(100% - 96px), 45dvh, 336px)' } },
+});
+
+/** The Autocomplete popup is a Popper, so the Menu cap above misses it. MUI's
+ * own `40vh` is the large viewport and does not shrink for the keyboard — and
+ * an Autocomplete always has focus. */
+export const autocomplete = (): Components<Theme>['MuiAutocomplete'] => ({
+  styleOverrides: { listbox: { maxHeight: 'min(40dvh, 320px)' } },
 });
 
 export const divider = (c: ThemeCtx): Components<Theme>['MuiDivider'] => ({

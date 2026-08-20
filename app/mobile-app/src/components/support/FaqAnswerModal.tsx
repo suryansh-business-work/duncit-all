@@ -1,5 +1,6 @@
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -39,7 +40,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
             borderTopRightRadius={22}
             maxHeight="84%"
           >
-            <SafeAreaView edges={['bottom']}>
+            <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               {faq ? (
                 <ScrollView contentContainerStyle={{ padding: 20 }}>
                   <XStack alignItems="flex-start" justifyContent="space-between" gap={12}>

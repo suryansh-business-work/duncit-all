@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
@@ -120,7 +121,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
               borderTopRightRadius={22}
               maxHeight="70%"
             >
-              <SafeAreaView edges={['bottom']}>
+              <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <Text padding={16} fontSize={16} fontWeight="700" color="$color">
                   {t('mweb.checkout.deliverToSaved')}
                 </Text>

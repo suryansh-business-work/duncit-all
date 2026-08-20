@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -106,7 +107,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
               borderTopLeftRadius={20}
               borderTopRightRadius={20}
             >
-              <SafeAreaView edges={['bottom']}>
+              <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack alignItems="center" justifyContent="space-between" padding={16}>
                   <Text fontSize={18} fontWeight="700" color="$color">
                     Share a pod idea

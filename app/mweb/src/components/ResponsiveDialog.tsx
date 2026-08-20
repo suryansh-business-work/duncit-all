@@ -23,7 +23,7 @@ interface Props {
   bottomSheetOnly?: boolean;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
   fullWidth?: boolean;
-  /** Bottom-sheet height (mobile only) — defaults to auto/85vh max. */
+  /** Bottom-sheet height (mobile only) — defaults to auto/85dvh max. */
   sheetMaxHeight?: string;
   actions?: ReactNode;
   paperSx?: SxProps<Theme>;
@@ -49,7 +49,7 @@ export default function ResponsiveDialog({
   bottomSheetOnly,
   maxWidth = 'sm',
   fullWidth = true,
-  sheetMaxHeight = '85vh',
+  sheetMaxHeight = '85dvh',
   actions,
   paperSx,
   contentSx,

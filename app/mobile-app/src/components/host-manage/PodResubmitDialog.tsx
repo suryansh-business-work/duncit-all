@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
@@ -108,7 +109,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               borderRadius={20}
               padding={18}
             >
-              <SafeAreaView edges={[]}>
+              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
                 <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={6}>
                   Edit & resubmit pod
                 </Text>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -83,7 +84,7 @@ export function PolicyAcceptanceSheet({
             borderTopRightRadius={22}
             maxHeight="86%"
           >
-            <SafeAreaView edges={['bottom']}>
+            <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" gap={8} paddingHorizontal={16} paddingVertical={14}>
                 <Text flex={1} fontSize={17} fontWeight="700" color="$color" numberOfLines={2}>
                   {reading?.title ?? t('policyAcceptance.dialogTitle')}

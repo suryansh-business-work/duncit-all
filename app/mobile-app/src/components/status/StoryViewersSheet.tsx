@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -51,7 +52,7 @@ export function StoryViewersSheet({
             borderTopRightRadius={20}
             maxHeight="70%"
           >
-            <SafeAreaView edges={['bottom']}>
+            <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="visibility" size={20} color={color} />

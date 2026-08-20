@@ -53,7 +53,6 @@ export default defineConfig({
         'src/components/AppSidebar.tsx',
         'src/components/AppBreadcrumbs.tsx',
         'src/components/AuthSplitLayout.tsx',
-        'src/components/GoogleSignInButton.tsx',
         'src/components/DateField.tsx',
         'src/pages/LoginPage.tsx',
         'src/pages/DashboardPage.tsx',

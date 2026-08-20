@@ -26,7 +26,23 @@ export function EmailTranscriptModal({
   const [email, setEmail] = useState('');
   if (!open) return null;
   return (
-    <Backdrop testID="support-email-modal">
+    <Backdrop
+      testID="support-email-modal"
+      footer={
+        <XStack gap={8} justifyContent="flex-end">
+          <ModalButton testID="email-close" label={done ? 'Done' : 'Cancel'} onPress={onClose} />
+          {done ? null : (
+            <ModalButton
+              testID="email-send"
+              label={busy ? 'Sending…' : 'Send'}
+              primary
+              disabled={busy || !email.trim()}
+              onPress={() => onSend(email)}
+            />
+          )}
+        </XStack>
+      }
+    >
       <Text fontSize={16} fontWeight="700" color="$color">
         Email this chat
       </Text>
@@ -55,18 +71,6 @@ export function EmailTranscriptModal({
           {error}
         </Text>
       ) : null}
-      <XStack gap={8} justifyContent="flex-end">
-        <ModalButton testID="email-close" label={done ? 'Done' : 'Cancel'} onPress={onClose} />
-        {done ? null : (
-          <ModalButton
-            testID="email-send"
-            label={busy ? 'Sending…' : 'Send'}
-            primary
-            disabled={busy || !email.trim()}
-            onPress={() => onSend(email)}
-          />
-        )}
-      </XStack>
     </Backdrop>
   );
 }

@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { renderWithProviders } from '../testkit';
 import { aiMjmlMock } from '../mocks';
 
@@ -43,25 +42,6 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
     </div>
   ),
 }));
-
-const glogin = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
-vi.mock('@react-oauth/google', () => ({
-  GoogleLogin: (props: Record<string, any>) => {
-    glogin.props = props;
-    return (
-      <div>
-        <span>{`google-theme-${props.theme}`}</span>
-        <button type="button" onClick={() => props.onSuccess({ credential: googleMock.credential })}>
-          google-success
-        </button>
-        <button type="button" onClick={() => props.onError()}>
-          google-error
-        </button>
-      </div>
-    );
-  },
-}));
-const googleMock = vi.hoisted(() => ({ credential: 'cred-abc' as string | undefined }));
 
 vi.mock('@duncit/media-picker', () => ({
   default: ({
@@ -123,18 +103,14 @@ vi.mock('@duncit/shell', async (importOriginal) => {
 });
 
 import DateTimeField from '../../src/components/DateTimeField';
-import GoogleSignInButton from '../../src/components/GoogleSignInButton';
-import { setGoogleClientId } from '@duncit/shell';
 import MediaPickerField from '../../src/components/MediaPickerField';
 import MjmlAiButton from '../../src/components/MjmlAiButton';
 import AppShell from '../../src/components/AppShell';
 import { getToken, setToken, clearToken } from '../../src/lib/session';
 
 afterEach(() => {
-  setGoogleClientId('');
   vi.clearAllMocks();
   clearToken();
-  googleMock.credential = 'cred-abc';
   userCtxMock.value = { user: null, loading: false, logout: vi.fn() };
 });
 
@@ -166,63 +142,6 @@ describe('DateTimeField', () => {
     fireEvent.click(screen.getByText('clear-Schedule'));
     expect(onChange).toHaveBeenLastCalledWith('');
     expect(screen.getByText('pick one')).toBeInTheDocument();
-  });
-});
-
-// ===========================================================================
-describe('GoogleSignInButton', () => {
-  it('shows a not-configured tile when no client id is set', () => {
-    renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} />);
-    expect(screen.getByText(/not configured/i)).toBeInTheDocument();
-  });
-
-  it('renders the Google button and forwards the credential', () => {
-    setGoogleClientId('real-client-id');
-    const onCredential = vi.fn();
-    renderWithProviders(<GoogleSignInButton onCredential={onCredential} text="continue_with" />);
-    fireEvent.click(screen.getByText('google-success'));
-    expect(onCredential).toHaveBeenCalledWith('cred-abc');
-    // onError is a no-op but must be exercised.
-    fireEvent.click(screen.getByText('google-error'));
-    // the host width is measured (clientWidth 800 clamped to the 400 max).
-    expect(glogin.props.width).toBe(400);
-  });
-
-  it('does not forward when the response has no credential', () => {
-    setGoogleClientId('real-client-id');
-    googleMock.credential = undefined;
-    const onCredential = vi.fn();
-    renderWithProviders(<GoogleSignInButton onCredential={onCredential} />);
-    fireEvent.click(screen.getByText('google-success'));
-    expect(onCredential).not.toHaveBeenCalled();
-  });
-
-  it('shows the loading overlay and recomputes width on resize', () => {
-    setGoogleClientId('real-client-id');
-    const { container } = renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} loading />);
-    expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
-    fireEvent(window, new Event('resize'));
-  });
-
-  // Both light and dark are exercised so v8 credits both sides of the `isDark`
-  // ternaries (Google theme + loading-overlay background).
-  it('switches the Google theme and overlay background with the MUI color mode', () => {
-    setGoogleClientId('real-client-id');
-    const renderMode = (mode: 'light' | 'dark') =>
-      render(
-        <ThemeProvider theme={createTheme({ palette: { mode } })}>
-          <GoogleSignInButton onCredential={vi.fn()} loading />
-        </ThemeProvider>,
-      );
-
-    const light = renderMode('light');
-    expect(screen.getByText('google-theme-outline')).toBeInTheDocument();
-    expect(light.container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
-    light.unmount();
-
-    const dark = renderMode('dark');
-    expect(screen.getByText('google-theme-filled_black')).toBeInTheDocument();
-    expect(dark.container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
   });
 });
 

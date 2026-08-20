@@ -58,8 +58,8 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
 
-// jsdom reports zero dimensions; give every element a nominal size so the
-// GoogleSignInButton width-measurement branch and MUI layout code run.
+// jsdom reports zero dimensions; give every element a nominal size so
+// width-measurement branches and MUI layout code run.
 const DIMENSIONS: Record<string, number> = {
   offsetWidth: 800,
   offsetHeight: 600,

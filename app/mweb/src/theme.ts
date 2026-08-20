@@ -354,15 +354,43 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiSnackbarContent: { styleOverrides: { root: { borderRadius: RADIUS.input } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT } } },
+    MuiDialog: {
+      styleOverrides: {
+        paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT },
+        // `paper` is composed AFTER MUI's own `paperFullScreen`, so without this
+        // every fullScreen dialog keeps 20px corners against the backdrop — and
+        // since the paper also carries `overflowY: auto`, content is clipped at
+        // those corners.
+        paperFullScreen: { borderRadius: 0 },
+      },
+    },
     MuiMenu: {
       styleOverrides: {
         paper: {
           borderRadius: RADIUS.input,
           border: `1px solid ${BORDER}`,
           boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
+    /**
+     * Every dropdown in the app, capped.
+     *
+     * MUI's own cap is `calc(100% - 96px)` where 100% is the LARGE viewport (the
+     * Menu is a portalled Popover on document.body, so it can never be clipped by
+     * the dialog it was opened from). Below the `sm` breakpoint MenuItem also has
+     * a hard `minHeight: 48` — and mWeb is entirely below `sm`. So a 15-option
+     * select is 15x48+16 = 736px against a 748px cap on a 390x844 phone: the cap
+     * never engages, and the list runs under the browser toolbar and straight
+     * across whatever dialog opened it. `dvh` tracks the collapsible toolbar;
+     * 336px is 7 rows, which reads as a list rather than a takeover.
+     */
+          maxHeight: 'min(calc(100% - 96px), 45dvh, 336px)',
         },
       },
+    },
+    // The Autocomplete popup is a Popper, not a Menu, so the cap above misses
+    // it. MUI's default is `40vh` — the LARGE viewport, which also does not
+    // shrink when the keyboard opens, and an Autocomplete always has focus.
+    MuiAutocomplete: {
+      styleOverrides: { listbox: { maxHeight: 'min(40dvh, 320px)' } },
     },
     MuiTab: {
       styleOverrides: {

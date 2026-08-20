@@ -1,6 +1,7 @@
 import { Modal, ScrollView } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -206,7 +207,7 @@ export function AttendeesDialog({
             borderRadius={20}
             padding={14}
           >
-            <SafeAreaView edges={[]}>
+            <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
                 <Text fontSize={16} fontWeight="700" color="$color">
                   {t('mweb.podDetails.attendeesCount', { vars: { count: people.length } })}

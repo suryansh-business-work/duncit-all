@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
@@ -119,7 +120,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
               borderRadius={20}
               padding={18}
             >
-              <SafeAreaView edges={[]}>
+              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
                 <Text fontSize={17} fontWeight="700" color="$color">
                   Cancel pod
                 </Text>

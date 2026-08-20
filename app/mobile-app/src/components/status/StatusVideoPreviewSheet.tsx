@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Modal } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { VideoTrim } from '@/services/video-compression';
 
@@ -24,6 +24,9 @@ interface Props {
 }
 
 const TRIM_STEP_SECONDS = 1;
+/** Tallest the preview may be, and the share of the window it gives up first. */
+const PREVIEW_MAX_HEIGHT = 300;
+const PREVIEW_HEIGHT_RATIO = 0.38;
 
 const fmt = (seconds: number) => {
   const s = Math.max(0, Math.round(seconds));
@@ -67,6 +70,7 @@ function PreviewBody({
   onConfirm,
 }: Readonly<Props & { video: PendingStoryVideo }>) {
   const { onPrimary } = useThemeColors();
+  const { height: windowHeight } = useWindowDimensions();
   const [start, setStart] = useState(0);
   const player = useVideoPlayer(video.uri, (p) => {
     p.loop = true;
@@ -77,6 +81,14 @@ function PreviewBody({
   const needsTrim = video.durationSeconds > MAX_STORY_VIDEO_SECONDS;
   const maxStart = Math.max(0, video.durationSeconds - MAX_STORY_VIDEO_SECONDS);
   const windowEnd = Math.min(video.durationSeconds, start + MAX_STORY_VIDEO_SECONDS);
+  // A hard 300 plus the title, the stepper and the button row is ~490px of
+  // unshrinkable content — taller than an iPhone SE and taller than ANY phone
+  // in landscape, which is what made "Trim & Post" unreachable. The preview is
+  // the part that can afford to give way.
+  const previewHeight = Math.min(
+    PREVIEW_MAX_HEIGHT,
+    Math.round(windowHeight * PREVIEW_HEIGHT_RATIO),
+  );
 
   const seekTo = (value: number) => {
     const clamped = Math.min(maxStart, Math.max(0, value));
@@ -85,89 +97,98 @@ function PreviewBody({
   };
   const confirm = () => onConfirm(needsTrim ? { start, duration: MAX_STORY_VIDEO_SECONDS } : null);
 
-  return (
-    <YStack
-      width="92%"
-      maxWidth={420}
-      backgroundColor="$background"
-      borderRadius={20}
-      padding={16}
-      gap={12}
-    >
-      <Text fontSize={17} fontWeight="700" color="$color">
-        Preview your video story
-      </Text>
-      <YStack height={300} borderRadius={14} overflow="hidden" backgroundColor="#000000">
-        <VideoView
-          testID="story-video-preview"
-          player={player}
-          style={{ width: '100%', height: '100%' }}
-          contentFit="contain"
-        />
-      </YStack>
-      {needsTrim ? (
-        <YStack gap={8}>
-          <Text fontSize={13} fontWeight="700" color="$muted">
-            Videos can be up to {MAX_STORY_VIDEO_SECONDS} seconds long. Pick the{' '}
-            {MAX_STORY_VIDEO_SECONDS}s you want to post.
-          </Text>
-          <XStack alignItems="center" justifyContent="center" gap={14}>
-            <StepButton
-              testID="story-trim-earlier"
-              icon="chevron-left"
-              disabled={start <= 0}
-              onPress={() => seekTo(start - TRIM_STEP_SECONDS)}
-            />
-            <Text fontSize={13.5} fontWeight="700" color="$color" testID="story-trim-window">
-              {fmt(start)} – {fmt(windowEnd)} of {fmt(video.durationSeconds)}
-            </Text>
-            <StepButton
-              testID="story-trim-later"
-              icon="chevron-right"
-              disabled={start >= maxStart}
-              onPress={() => seekTo(start + TRIM_STEP_SECONDS)}
-            />
-          </XStack>
-        </YStack>
-      ) : null}
-      <XStack gap={12}>
-        <XStack
-          testID="story-video-cancel"
-          role="button"
-          aria-label="Cancel"
-          onPress={onCancel}
-          flex={1}
-          height={46}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text fontSize={14} fontWeight="600" color="$color">
-            Cancel
-          </Text>
-        </XStack>
-        <XStack
-          testID="story-video-post"
-          role="button"
-          aria-label={needsTrim ? 'Trim and post' : 'Post story'}
-          onPress={confirm}
-          flex={1}
-          height={46}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={12}
-          backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            {needsTrim ? 'Trim & Post' : 'Post story'}
-          </Text>
-        </XStack>
+  const footer = (
+    <XStack gap={12}>
+      <XStack
+        testID="story-video-cancel"
+        role="button"
+        aria-label="Cancel"
+        onPress={onCancel}
+        flex={1}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$borderColor"
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="600" color="$color">
+          Cancel
+        </Text>
       </XStack>
-    </YStack>
+      <XStack
+        testID="story-video-post"
+        role="button"
+        aria-label={needsTrim ? 'Trim and post' : 'Post story'}
+        onPress={confirm}
+        flex={1}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        backgroundColor="$primary"
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          {needsTrim ? 'Trim & Post' : 'Post story'}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+
+  return (
+    <DuncitDialog
+      open
+      onClose={onCancel}
+      testID="story-video-sheet"
+      variant="center"
+      title="Preview your video story"
+      closeLabel="Close"
+      showCloseButton={false}
+      footer={footer}
+    >
+      <YStack gap={12}>
+        <YStack
+          height={previewHeight}
+          borderRadius={14}
+          overflow="hidden"
+          backgroundColor="#000000"
+        >
+          <VideoView
+            testID="story-video-preview"
+            player={player}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="contain"
+          />
+        </YStack>
+        {needsTrim ? (
+          <YStack gap={8}>
+            <Text fontSize={13} fontWeight="700" color="$muted">
+              Videos can be up to {MAX_STORY_VIDEO_SECONDS} seconds long. Pick the{' '}
+              {MAX_STORY_VIDEO_SECONDS}s you want to post.
+            </Text>
+            <XStack alignItems="center" justifyContent="center" gap={14}>
+              <StepButton
+                testID="story-trim-earlier"
+                icon="chevron-left"
+                disabled={start <= 0}
+                onPress={() => seekTo(start - TRIM_STEP_SECONDS)}
+              />
+              <Text fontSize={13.5} fontWeight="700" color="$color" testID="story-trim-window">
+                {fmt(start)} – {fmt(windowEnd)} of {fmt(video.durationSeconds)}
+              </Text>
+              <StepButton
+                testID="story-trim-later"
+                icon="chevron-right"
+                disabled={start >= maxStart}
+                onPress={() => seekTo(start + TRIM_STEP_SECONDS)}
+              />
+            </XStack>
+          </YStack>
+        ) : null}
+      </YStack>
+    </DuncitDialog>
   );
 }
 
@@ -175,24 +196,8 @@ function PreviewBody({
  * must pick a 15s window (stepper seek; the server cuts the video during the
  * FFmpeg pass) before they can post. Mirrors mWeb's StatusVideoPreviewDialog. */
 export function StatusVideoPreviewSheet({ video, onCancel, onConfirm }: Readonly<Props>) {
-  return (
-    <Modal visible={video !== null} transparent animationType="fade" onRequestClose={onCancel}>
-      <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="story-video-sheet">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={onCancel}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.6)"
-          />
-          {video ? <PreviewBody video={video} onCancel={onCancel} onConfirm={onConfirm} /> : null}
-        </YStack>
-      </ModalThemeScope>
-    </Modal>
-  );
+  // The body owns the player, so it is mounted only while there is a video —
+  // which is also what gates the dialog.
+  if (!video) return null;
+  return <PreviewBody video={video} onCancel={onCancel} onConfirm={onConfirm} />;
 }

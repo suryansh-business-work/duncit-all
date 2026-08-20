@@ -1,3 +1,7 @@
+> **Measured 2026-07-28.** For current status and findings since, see
+> [docs/duplication-backlog.md](duplication-backlog.md) — as of 2026-08-20 none
+> of the packages proposed below have been built.
+
 ## Summary
 
 - **~55 confirmed duplication clusters** survived adversarial verification, spanning ~19,000 duplicated lines. Roughly 40% of that is test/build/infra scaffolding (Dockerfiles, vitest configs, testkits, CI jobs) rather than product code.

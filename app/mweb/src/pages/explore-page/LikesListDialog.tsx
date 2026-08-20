@@ -5,6 +5,7 @@ import {
   Avatar,
   CircularProgress,
   Dialog,
+  DialogContent,
   DialogTitle,
   IconButton,
   List,
@@ -81,7 +82,11 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
           <CloseIcon />
         </IconButton>
       </Stack>
-      {body}
+      {/* The LIST is the scroll area, not the paper — otherwise "Liked by" and
+          its close button scroll away with it on a popular pod. */}
+      <DialogContent dividers sx={{ p: 0 }}>
+        {body}
+      </DialogContent>
     </Dialog>
   );
 }

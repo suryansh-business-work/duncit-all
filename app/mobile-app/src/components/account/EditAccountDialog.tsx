@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -88,7 +89,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
               borderTopLeftRadius={20}
               borderTopRightRadius={20}
             >
-              <SafeAreaView edges={['bottom']}>
+              <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack
                   alignItems="center"
                   justifyContent="space-between"
@@ -112,7 +113,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                     <MaterialIcons name="close" size={20} color={color} />
                   </XStack>
                 </XStack>
-                <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 560 }}>
+                <ScrollView keyboardShouldPersistTaps="handled" style={SHEET_SAFE_AREA}>
                   <YStack paddingHorizontal={16} paddingBottom={16}>
                     <AccountEditForm
                       me={me}

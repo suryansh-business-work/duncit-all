@@ -1,7 +1,7 @@
 import type { Components, Theme } from '@mui/material/styles';
 import type { ThemeCtx } from '../types';
 import { cssBaseline } from './cssBaseline';
-import { appBar, paper, card, dialog, divider } from './surfaces';
+import { appBar, paper, card, dialog, divider, menu, autocomplete } from './surfaces';
 import { button, iconButton } from './buttons';
 import { textField, select, formLabel, formHelperText, outlinedInput } from './inputs';
 import { chip } from './chip';
@@ -21,6 +21,8 @@ export function buildComponents(c: ThemeCtx, extend?: ComponentExtend): Componen
     MuiPaper: paper(c),
     MuiCard: card(c),
     MuiDialog: dialog(c),
+    MuiMenu: menu(),
+    MuiAutocomplete: autocomplete(),
     MuiDivider: divider(c),
     MuiButton: button(c),
     MuiIconButton: iconButton(c),

@@ -70,7 +70,14 @@ export function SupportFeedbackModal({
   const existing = feedbackOption(rating);
   if (existing && !done) {
     return (
-      <Backdrop testID="support-feedback-modal">
+      <Backdrop
+        testID="support-feedback-modal"
+        footer={
+          <XStack justifyContent="flex-end">
+            <ModalButton testID="feedback-close" label="Close" primary onPress={onClose} />
+          </XStack>
+        }
+      >
         <Text fontSize={16} fontWeight="700" color="$color">
           Your feedback
         </Text>
@@ -82,28 +89,43 @@ export function SupportFeedbackModal({
             {feedbackComment}
           </Text>
         ) : null}
-        <XStack justifyContent="flex-end">
-          <ModalButton testID="feedback-close" label="Close" primary onPress={onClose} />
-        </XStack>
       </Backdrop>
     );
   }
 
   if (done) {
     return (
-      <Backdrop testID="support-feedback-modal">
+      <Backdrop
+        testID="support-feedback-modal"
+        footer={
+          <XStack justifyContent="flex-end">
+            <ModalButton testID="feedback-done" label="Done" primary onPress={onClose} />
+          </XStack>
+        }
+      >
         <Text testID="feedback-thanks" fontSize={14} color="$color">
           {THANK_YOU}
         </Text>
-        <XStack justifyContent="flex-end">
-          <ModalButton testID="feedback-done" label="Done" primary onPress={onClose} />
-        </XStack>
       </Backdrop>
     );
   }
 
   return (
-    <Backdrop testID="support-feedback-modal">
+    <Backdrop
+      testID="support-feedback-modal"
+      footer={
+        <XStack gap={8} justifyContent="flex-end">
+          <ModalButton testID="feedback-skip" label="Skip" onPress={onClose} />
+          <ModalButton
+            testID="feedback-submit"
+            label={busy ? 'Sending…' : 'Submit'}
+            primary
+            disabled={!picked || busy}
+            onPress={() => onSubmit(picked, comment)}
+          />
+        </XStack>
+      }
+    >
       <Text fontSize={16} fontWeight="700" color="$color">
         How did we do?
       </Text>
@@ -126,16 +148,6 @@ export function SupportFeedbackModal({
           {error}
         </Text>
       ) : null}
-      <XStack gap={8} justifyContent="flex-end">
-        <ModalButton testID="feedback-skip" label="Skip" onPress={onClose} />
-        <ModalButton
-          testID="feedback-submit"
-          label={busy ? 'Sending…' : 'Submit'}
-          primary
-          disabled={!picked || busy}
-          onPress={() => onSubmit(picked, comment)}
-        />
-      </XStack>
     </Backdrop>
   );
 }

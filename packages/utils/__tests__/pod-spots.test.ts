@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
+  attendeeSeatCount,
   payableSpots,
   payingAttendees,
   spotsBounds,
@@ -113,5 +114,24 @@ describe('spotsBounds', () => {
 
   it('floors fractional input', () => {
     expect(spotsBounds({ minPax: 4.7, venueCapacity: 30.9 })).toEqual({ min: 4, max: 30, slidable: true });
+  });
+});
+
+
+describe('attendeeSeatCount', () => {
+  // The bug this exists for: a party of three is ONE row, so a heading counting
+  // rows told five people they were seven.
+  it('counts the seats a booking holds, not the row it renders as', () => {
+    expect(attendeeSeatCount([{ seats: 1 }, { seats: 3 }, { seats: 1 }])).toBe(5);
+  });
+
+  it('treats a row with no seats as a booking for one', () => {
+    expect(attendeeSeatCount([{}, { seats: null }, { seats: 0 }])).toBe(3);
+  });
+
+  it('is zero for an empty or missing list', () => {
+    expect(attendeeSeatCount([])).toBe(0);
+    expect(attendeeSeatCount(null)).toBe(0);
+    expect(attendeeSeatCount(undefined)).toBe(0);
   });
 });

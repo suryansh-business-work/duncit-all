@@ -355,6 +355,7 @@ Three things to read off that output:
 | --- | --- | --- |
 | `payableSpots` | `(totalSpots: number) => number` | `total − 1`; never negative. |
 | `payingAttendees` | `(attendeeIds, hostIds) => number` | Attendees minus hosts; both args accept `null`/`undefined`. |
+| `attendeeSeatCount` | `(people: { seats?: number }[]) => number` | Seats a rendered attendee list holds — a booking for three is one row, so counting rows under-reports it. `seats` absent or `0` counts as one. |
 | `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
 | `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. |
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |

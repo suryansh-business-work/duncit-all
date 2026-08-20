@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { Text, XStack, YStack } from 'tamagui';
+import { attendeeSeatCount } from '@duncit/utils';
 
 import {
   AttendeesDialog,
@@ -125,7 +126,7 @@ export function AttendeesSection({
   const { t } = useTranslation();
   // Seats, not faces: one person can be bringing three more, and the number
   // beside "of N spots" has to mean the same thing the capacity does.
-  const going = seatsTaken ?? people.reduce((sum, person) => sum + (person.seats ?? 1), 0);
+  const going = seatsTaken ?? attendeeSeatCount(people);
   const pct = spots > 0 ? Math.min(100, Math.round((going / spots) * 100)) : 0;
   const previews = people.slice(0, MAX_AVATAR_PREVIEW);
   const extra = going - previews.length;
@@ -211,6 +212,7 @@ export function AttendeesSection({
         open={open}
         people={people}
         spotFills={fillRows}
+        seatCount={going}
         spotFilledTitle={t('mweb.podDetails.spotFilled')}
         onClose={() => setOpen(false)}
         onOpenProfile={(userId) => {

@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { attendeeSeatCount } from '@duncit/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -58,6 +59,13 @@ interface Props {
   open: boolean;
   people: AttendeePerson[];
   spotFills?: SpotFillRow[];
+  /**
+   * Seats the list holds, resolved by the section that owns the pod. The
+   * heading counts PEOPLE COMING, not rows: a booking for three is one row
+   * carrying a "+2 other members" label. Absent (the club members list) the
+   * rows are the count.
+   */
+  seatCount?: number;
   onClose: () => void;
 }
 
@@ -68,10 +76,12 @@ export default function PodAttendeesDialog({
   open,
   people,
   spotFills = [],
+  seatCount,
   onClose,
 }: Readonly<Props>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const count = seatCount ?? attendeeSeatCount(people);
 
   const openProfile = (userId: string) => {
     onClose();
@@ -82,7 +92,7 @@ export default function PodAttendeesDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
         <Typography component="span" sx={{ flex: 1, fontWeight: 700 }}>
-          {t('mweb.podDetails.attendeesCount', { vars: { count: people.length } })}
+          {t('mweb.podDetails.attendeesCount', { vars: { count } })}
         </Typography>
         <IconButton
           size="small"

@@ -19,6 +19,21 @@ export const podTypeDefs = /* GraphQL */ `
     VIRTUAL
   }
 
+  """
+  Where a pod sits in its life, DERIVED rather than stored: cancelled is
+  soft-deleted, completed is finance-settled or past its end, ongoing has
+  started and not ended, and everything else is upcoming. Named PodLifecycle
+  because VenuePodBucket already means the same four values scoped to one
+  venue — one name for two types would be folded into one by the schema
+  builder.
+  """
+  enum PodLifecycle {
+    UPCOMING
+    ONGOING
+    COMPLETED
+    CANCELLED
+  }
+
   "Venue's decision on the pod's slot request — PENDING pods are offline until APPROVED."
   enum PodVenueApproval {
     NONE
@@ -337,8 +352,16 @@ export const podTypeDefs = /* GraphQL */ `
 
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
-    "include_deleted also lists cancelled pods — honored for admin reviewers only."
-    podsTable(query: TableQueryInput, include_deleted: Boolean): PodTablePage!
+    """
+    include_deleted also lists cancelled pods — honored for admin reviewers only.
+    lifecycle narrows the page to one derived bucket; asking for CANCELLED is
+    itself the opt-in to soft-deleted rows, again for reviewers only.
+    """
+    podsTable(
+      query: TableQueryInput
+      include_deleted: Boolean
+      lifecycle: PodLifecycle
+    ): PodTablePage!
     myHostPods(from: String, to: String): [Pod!]!
     "Table page over the caller's own hosted pods (myHostPods rows)."
     myHostPodsTable(query: TableQueryInput): PodTablePage!

@@ -93,6 +93,7 @@ export const POD_DETAILS = gql`
       backout_attempts_max
       backout_deduction_pct
       backout_refund_amount
+      backout_refund_coins
       backout_refund_per_seat
       released_seats_pending
       membership {

@@ -132,6 +132,16 @@ export default function BackoutRefundTable({
         valueGetter: (row) => money(sym, Number(row.payment_amount ?? 0)),
       },
       {
+        // Hidden by default: most backouts spend no coins, so an always-on
+        // column of zeroes would push the ones that matter off the screen.
+        field: 'coins_refunded',
+        headerName: 'Coins back',
+        sortable: false,
+        hide: true,
+        width: 110,
+        valueGetter: (row) => Math.max(0, Math.floor(Number(row.coins_refunded) || 0)),
+      },
+      {
         field: 'refund_status',
         headerName: 'Refund status',
         sortable: false,

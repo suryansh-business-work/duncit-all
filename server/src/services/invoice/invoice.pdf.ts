@@ -32,6 +32,12 @@ export interface InvoiceData {
   total: number;
   payment_id: string;
   payment_method: string;
+  // Duncit Coins on this order. Both halves print: what the buyer spent comes
+  // OFF the total (it is why Total Paid is lower than the line items), and what
+  // they earned is a reward the invoice is the natural record of. Optional so
+  // callers that predate coins keep working; zero prints nothing.
+  coins_redeemed?: number;
+  coins_earned?: number;
   // Dynamic branding pulled from Finance → Invoice Management. All optional so
   // older callers keep working; the generator renders only what is provided.
   invoice_label?: string;
@@ -217,6 +223,18 @@ export function drawInvoice(
       doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
       y += 8;
       totalsRow('Total Paid', fmt(data.total), true);
+
+      // ---- Duncit Coins ----
+      // Below the paid total on purpose: coins are not money the tax lines
+      // describe. The redeemed row explains a total smaller than the items, and
+      // the earned row records a reward that otherwise lives only in the app.
+      const coinsSpent = Math.max(0, Math.floor(Number(data.coins_redeemed) || 0));
+      const coinsEarned = Math.max(0, Math.floor(Number(data.coins_earned) || 0));
+      if (coinsSpent > 0 || coinsEarned > 0) {
+        y += 2;
+        if (coinsSpent > 0) totalsRow('Duncit Coins used', `- ${coinsSpent}`);
+        if (coinsEarned > 0) totalsRow('Duncit Coins earned', `+ ${coinsEarned}`);
+      }
 
       // ---- Footer ----
       y += 18;

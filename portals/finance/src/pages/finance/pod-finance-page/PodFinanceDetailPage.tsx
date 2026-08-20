@@ -28,6 +28,15 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
             {breakdown.bookings_count} bookings · Customer paid {money(sym, breakdown.collected_total)}
             {breakdown.completed_at ? ` · Completed ${new Date(breakdown.completed_at).toLocaleString()}` : ''}
           </Typography>
+          {/* Coins cut the gross before GST, so "Customer paid" above is lower
+              than the tickets' face value by exactly the redeemed figure.
+              Saying so is what stops the gap reading as missing money. */}
+          {(breakdown.coins_redeemed_total > 0 || breakdown.coins_earned_total > 0) && (
+            <Typography variant="body2" color="text.secondary">
+              Duncit Coins · {breakdown.coins_redeemed_total} spent on these bookings (already off
+              the collected total) · {breakdown.coins_earned_total} earned back by buyers
+            </Typography>
+          )}
         </Box>
       </Stack>
 

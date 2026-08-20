@@ -9,6 +9,7 @@ import {
   dateColumn,
   type DuncitColumn,
   type TableFetch,
+  type TableFilterValue,
 } from '@duncit/table';
 import type { ClubRow } from './queries';
 
@@ -16,6 +17,8 @@ interface Props {
   fetchRows: TableFetch<ClubRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   catName: (id: string) => string;
+  /** Toolbar's Super Category filter; '' means every super category. */
+  superCategoryId: string;
   toolbarActions?: ReactNode;
   onEdit: (c: ClubRow) => void;
   onRemove: (c: ClubRow) => void;
@@ -61,6 +64,7 @@ export default function ClubsTable({
   fetchRows,
   refetchRef,
   catName,
+  superCategoryId,
   toolbarActions,
   onEdit,
   onRemove,
@@ -129,6 +133,14 @@ export default function ClubsTable({
     ];
   }, [catName, onEdit, onRemove]);
 
+  // Pinned page filter rather than a column one: it belongs to the toolbar, so
+  // it never shows as a removable chip and a change resets to page 1.
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () =>
+      superCategoryId ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }] : [],
+    [superCategoryId],
+  );
+
   return (
     <DuncitTable<ClubRow>
       tableId="admin-clubs"
@@ -140,6 +152,7 @@ export default function ClubsTable({
       emptyText={'No clubs yet. Click "New Club" to create the first one.'}
       defaultSort={{ field: 'club_name', dir: 'asc' }}
       searchPlaceholder="Search name, ID or locality"
+      externalFilters={externalFilters}
       refetchRef={refetchRef}
     />
   );

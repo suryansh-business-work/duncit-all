@@ -26,6 +26,8 @@ export interface BackoutConfirmDialogProps {
   mySeats?: number;
   /** Backouts deduction % applied to the refund estimate. */
   deductionPct?: number;
+  /** Coins returned if the WHOLE booking is released, after the same deduction. */
+  refundCoins?: number;
 }
 
 /** Backout confirmation sheet — spec copy + refund preview, and the live
@@ -40,6 +42,7 @@ export function BackoutConfirmDialog({
   refundPerSeat = null,
   mySeats = 1,
   deductionPct = 0,
+  refundCoins = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
   const { t } = useTranslation();
@@ -61,6 +64,10 @@ export function BackoutConfirmDialog({
       : refundAmount;
   const estimateKey =
     releasing === 1 ? 'mweb.podDetails.refundEstimateOne' : 'mweb.podDetails.refundEstimateMany';
+  // Coins scale with the seats given up, exactly as the cash estimate does.
+  // Both stay estimates until the request is written — the server freezes the
+  // authoritative pair onto it and that is what the ledger later credits.
+  const coinsBack = held > 0 ? Math.floor((refundCoins * releasing) / held) : 0;
   const estimateLine = t(estimateKey, {
     vars: { amount: `₹${estimate}`, count: releasing, pct: deductionPct },
   });
@@ -134,6 +141,13 @@ export function BackoutConfirmDialog({
                     {estimateLine}
                   </Text>
                 )}
+                {coinsBack > 0 ? (
+                  <Text testID="backout-refund-coins" fontSize={13} fontWeight="700" color="$color">
+                    {t('mweb.coin.refundCoinsEstimate', {
+                      vars: { coins: coinsBack, pct: deductionPct },
+                    })}
+                  </Text>
+                ) : null}
               </YStack>
 
               <ScrollView

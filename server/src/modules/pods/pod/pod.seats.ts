@@ -33,13 +33,27 @@ export function podSeatsAvailable(pod: SeatCountable): number {
   return Math.max(spots - podSeatsTaken(pod), 0);
 }
 
-/** How many seats one booking may take: what is free, capped for sanity. */
-export const MAX_SEATS_PER_BOOKING = 10;
+/**
+ * Seats one booking may take on a pod that declares no capacity of its own
+ * (`no_of_spots` 0 = unlimited). There is nothing to derive an answer from
+ * there, so the picker gets a small finite range rather than an endless one.
+ */
+export const UNLIMITED_POD_MAX_SEATS = 10;
 
+/**
+ * How many seats one booking may take: everything still free.
+ *
+ * This used to be clamped to 10 on every pod. A booking is ONE membership and
+ * topping up an existing one is refused outright, so that ceiling meant a pod
+ * with 11 seats left could not be taken in full by anybody — there was no
+ * second booking available to make up the difference. The pod's own remaining
+ * capacity is the only real limit, and `podSeatsAvailable` already excludes the
+ * host's own seat.
+ */
 export function maxSeatsForBooking(pod: SeatCountable): number {
   const spots = pod.no_of_spots ?? 0;
-  if (spots <= 0) return MAX_SEATS_PER_BOOKING;
-  return Math.min(podSeatsAvailable(pod), MAX_SEATS_PER_BOOKING);
+  if (spots <= 0) return UNLIMITED_POD_MAX_SEATS;
+  return podSeatsAvailable(pod);
 }
 
 /** Normalise a client-supplied seat count to a whole number ≥ 1. */

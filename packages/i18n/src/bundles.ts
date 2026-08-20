@@ -1,4 +1,5 @@
 import { flattenCatalogue, type NestedCatalogue } from './catalogue';
+import { ADMIN_BUNDLE } from './bundles/admin';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
@@ -33,6 +34,7 @@ import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
  * the copy is compiled into that build and available offline.
  */
 export {
+  ADMIN_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
@@ -48,6 +50,7 @@ export {
 
 /** Every client bundle, by the surface that ships it. */
 export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
+  admin: ADMIN_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,

@@ -15,6 +15,7 @@ import SavedAddressPicker from '../checkout-page/SavedAddressPicker';
 import ProductDetailDialog from '../pod-details-page/ProductDetailDialog';
 import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
 import { useCoinRedemption } from '../checkout-page/useCoinRedemption';
+import { coinCheckoutSummary } from '@duncit/utils';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
 import { PaymentFailureDialog, usePaymentFailure } from '../../components/payment-failure';
@@ -56,6 +57,14 @@ export default function ProductCheckoutPage() {
   // then redeem against that bill.
   const payableAfterCoupon = session.coupon?.ok ? session.coupon.final_total + shippingTotal : amount;
   const coins = useCoinRedemption(session, payableAfterCoupon);
+  // A shop order earns at its OWN rate — a physical product carries a cost of
+  // goods a pod seat does not, so the two rates are configured separately.
+  const coinSummary = coinCheckoutSummary({
+    balance: session.coinBalance,
+    applied: coins.applied,
+    payable: coins.effectiveTotal,
+    earnPct: session.coinShopEarnPct,
+  });
 
   // What an agent needs if a payment times out and a ticket has to be opened.
   const payment = usePaymentFailure(() => ({
@@ -119,6 +128,7 @@ export default function ProductCheckoutPage() {
             shippingLoading={shippingLoading}
             pincodeValid={pincodeValid}
             onInfo={setInfoProductId}
+            coins={coinSummary}
           />
           <PaymentDetailsCard
             control={session.control}

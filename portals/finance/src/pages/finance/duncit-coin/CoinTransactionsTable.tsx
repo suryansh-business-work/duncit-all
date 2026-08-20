@@ -30,6 +30,24 @@ const TYPE_OPTIONS = [
   { value: 'DEBIT', label: 'Redeemed' },
 ];
 
+/**
+ * WHY the coins moved, which the CREDIT/DEBIT type alone cannot say: a backout
+ * refund and a purchase reward are both credits, and reading a returned
+ * redemption as "Earned" overstates what the platform gave away.
+ */
+const SOURCE_OPTIONS = [
+  { value: 'PAYMENT_EARN', label: 'Purchase reward' },
+  { value: 'PAYMENT_REDEEM', label: 'Spent at checkout' },
+  { value: 'PAYMENT_REFUND', label: 'Backout refund' },
+  { value: 'REFERRAL_EARN', label: 'Referral (referrer)' },
+  { value: 'REFERRAL_SIGNUP', label: 'Referral (new member)' },
+  { value: 'GIFT_CARD_REDEEM', label: 'Gift card' },
+  { value: 'ADMIN_GRANT', label: 'Admin grant' },
+  { value: 'ADMIN_DEDUCT', label: 'Admin deduction' },
+];
+
+const SOURCE_LABEL = new Map(SOURCE_OPTIONS.map((option) => [option.value, option.label]));
+
 const isCredit = (row: CoinTxnRow) => row.type === 'CREDIT';
 
 const renderType = (row: CoinTxnRow) => (
@@ -121,6 +139,13 @@ const buildColumns = (
     filter: { type: 'select', options: TYPE_OPTIONS },
     cellRenderer: renderType,
     valueGetter: (row) => row.type,
+  },
+  {
+    field: 'source',
+    headerName: 'Source',
+    minWidth: 170,
+    filter: { type: 'select', options: SOURCE_OPTIONS },
+    valueGetter: (row) => SOURCE_LABEL.get(row.source) ?? row.source,
   },
   {
     field: 'amount',

@@ -162,6 +162,13 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
                     label={t('mweb.podHistory.refundChip', { vars: { status: refundText } })}
                   />
                 )}
+                {gate.coinsRefunded > 0 && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`${t('mweb.coin.refundCoins')}: ${gate.coinsRefunded}`}
+                  />
+                )}
                 {(item.seats ?? 1) > 1 && (
                   <Chip
                     size="small"

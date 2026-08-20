@@ -162,6 +162,12 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
                     tone="muted"
                   />
                 ) : null}
+                {gate.coinsRefunded > 0 ? (
+                  <Chip
+                    label={`${t('mweb.coin.refundCoins')}: ${gate.coinsRefunded}`}
+                    tone="muted"
+                  />
+                ) : null}
               </XStack>
               <Text fontSize={16} fontWeight="700" color="$color">
                 {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}

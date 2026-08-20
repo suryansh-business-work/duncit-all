@@ -52,6 +52,13 @@ export interface IBackoutRequest extends Document {
   payment_amount: number | null;
   deduction_pct: number;
   refund_amount: number | null;
+  /** Duncit Coins this release's share of the booking was paid with, BEFORE the
+   * deduction — the coin twin of `payment_amount`. */
+  coins_paid: number;
+  /** Coins actually handed back, after the same Backouts deduction the cash
+   * refund takes. Stored rather than derived so the number the member was shown
+   * is the number the ledger later credits, even if the rate changes meanwhile. */
+  coins_refunded: number;
   /** Set once Finance processes the refund — one refund per request. */
   refund_processed_at: Date | null;
   events: IBackoutEvent[];
@@ -85,6 +92,8 @@ const backoutRequestSchema = new Schema<IBackoutRequest>(
     payment_amount: { type: Number, default: null },
     deduction_pct: { type: Number, default: 0 },
     refund_amount: { type: Number, default: null },
+    coins_paid: { type: Number, default: 0, min: 0 },
+    coins_refunded: { type: Number, default: 0, min: 0 },
     refund_processed_at: { type: Date, default: null },
     events: { type: [backoutEventSchema], default: [] },
   },

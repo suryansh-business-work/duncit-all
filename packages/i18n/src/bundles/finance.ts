@@ -30,6 +30,11 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       colFee: 'Fee',
       colGst: 'GST',
       colTotal: 'Total',
+      // Both halves of the coin movement a payment caused. Hidden columns by
+      // default — most orders spend no coins — but they are what makes a total
+      // smaller than its line items explainable.
+      colCoinsUsed: 'Coins used',
+      colCoinsEarned: 'Coins earned',
       colStatus: 'Status',
       colIds: 'IDs',
       colPaidAt: 'Paid at',

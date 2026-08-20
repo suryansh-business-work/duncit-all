@@ -292,6 +292,10 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     applyCoupon,
     removeCoupon,
     coinBalance: coinData?.myCoinBalance?.balance ?? 0,
+    // The live earn rates, so a checkout can preview what the purchase pays
+    // back. Pod tickets and shop orders earn at separately configured rates.
+    coinEarnPct: coinData?.myCoinBalance?.earn_pct ?? 0,
+    coinShopEarnPct: coinData?.myCoinBalance?.shop_earn_pct ?? 0,
     coinsApplied,
     setCoinsApplied,
     removeCoins,

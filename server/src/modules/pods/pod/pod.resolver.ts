@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
+import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
 import { coHostService } from './coHost.service';
 import { clubService } from '@modules/clubs/club/club.service';
@@ -244,14 +245,18 @@ export const podResolvers = {
       podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
     podsTable: async (
       _p: unknown,
-      args: { query?: any; include_deleted?: boolean | null },
+      args: { query?: any; include_deleted?: boolean | null; lifecycle?: PodLifecycle | null },
       ctx: GraphQLContext
     ) => {
       const canReview = canReviewPendingPods(ctx);
       return podService.table(args.query, {
         includePendingApproval: canReview,
         // Cancelled pods stay editable, so reviewers must be able to find them.
-        includeDeleted: args.include_deleted === true && canReview,
+        // Filtering TO the cancelled bucket is that same request spelled out, so
+        // it carries the same opt-in rather than quietly returning nothing.
+        includeDeleted:
+          canReview && (args.include_deleted === true || args.lifecycle === 'CANCELLED'),
+        lifecycle: args.lifecycle ?? null,
       });
     },
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {

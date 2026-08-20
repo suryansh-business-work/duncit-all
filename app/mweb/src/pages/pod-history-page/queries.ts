@@ -29,6 +29,7 @@ export const MY_POD_MEMBERSHIPS = gql`
           seats
           seats_before
           refund_amount
+          coins_refunded
           refund_status
           deduction_pct
           refund_processed_at

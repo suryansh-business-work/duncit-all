@@ -11,12 +11,16 @@ import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import type { ProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
+import type { CoinCheckoutSummary } from '@duncit/utils';
+import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 
 type QuoteLine = NonNullable<ProductShippingQuote>['lines'][number];
 
 interface Props {
   lines: CartLine[];
   breakup: CheckoutBreakup;
+  /** Coins spent, left and earned on this bill. Absent hides the coin block. */
+  coins?: CoinCheckoutSummary | null;
   subtotal: number;
   quote: ProductShippingQuote | null;
   shippingLoading: boolean;
@@ -178,6 +182,7 @@ export function ProductOrderSummary({
   shippingLoading,
   pincodeValid,
   onInfo,
+  coins = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = (value: number) => formatMoney(breakup.currency, value);
@@ -234,6 +239,7 @@ export function ProductOrderSummary({
       />
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
       <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+      <CoinSummaryRows coins={coins} />
     </YStack>
   );
 }

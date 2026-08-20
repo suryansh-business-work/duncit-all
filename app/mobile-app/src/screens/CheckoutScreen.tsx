@@ -27,6 +27,8 @@ import {
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
 import { useCoinRedemption } from '@/hooks/useCoinRedemption';
+import { coinCheckoutSummary } from '@duncit/utils';
+import { useCoinBalance } from '@/hooks/useCoins';
 import { useServerIssue } from '@/hooks/useServerIssue';
 import { IssueNotice } from '@/components/issue-notice/IssueNotice';
 import type { ParsedIssue } from '@duncit/errors';
@@ -132,6 +134,16 @@ export function CheckoutScreen() {
   // GROSS, and the server re-quotes on what is left, so the tax owed drops with
   // it — reusing the undiscounted breakup here would print a GST nobody pays.
   const payBreakup = buildBreakup(coins.effectiveTotal, finance);
+  // Earned on what is ACTUALLY charged — the server credits on the total after
+  // coins are spent, so previewing off the gross would promise coins that never
+  // arrive. A pod ticket earns at the pod rate.
+  const { balance: coinBalance } = useCoinBalance();
+  const coinSummary = coinCheckoutSummary({
+    balance: coins.balance,
+    applied: coins.applied,
+    payable: coins.effectiveTotal,
+    earnPct: coinBalance?.earn_pct ?? 0,
+  });
   const discounts = buildDiscounts(coupon, coins.applied, t);
   // Server-operation failures, parsed + logged once by the shared error module.
   const serverIssue = useServerIssue('Checkout');
@@ -244,6 +256,7 @@ export function CheckoutScreen() {
           discounts={discounts}
           seats={seats}
           unitAmount={Number(pod?.pod_amount) || 0}
+          coins={coinSummary}
         />
         <CouponField
           code={couponCode}

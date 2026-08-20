@@ -14,6 +14,7 @@ import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
+import type { PodLifecycleFilter } from './podLifecycle';
 import QuickEditPodDialog from './QuickEditPodDialog';
 import usePodEditor from './usePodEditor';
 import usePodPageData from './usePodPageData';
@@ -32,6 +33,9 @@ export default function PodsPage() {
   const [trailPod, setTrailPod] = useState<PodRow | null>(null);
   // Cancelled pods stay editable, so they must be findable — off by default.
   const [showCancelled, setShowCancelled] = useState(false);
+  // Upcoming / Ongoing / Completed / Cancelled. Derived from the pod's dates
+  // server-side, so it is a query argument rather than a table column filter.
+  const [lifecycle, setLifecycle] = useState<PodLifecycleFilter>('');
   const picker = useMediaPickerBridge();
   const releaseRequest = usePodReleaseRequest({
     refetch: async () => refetchRef.current?.(),
@@ -69,20 +73,22 @@ export default function PodsPage() {
     'podsTable',
     {
       extraFilters: clubFilter ? [{ field: 'club_id', op: 'eq', value: clubFilter }] : undefined,
-      extraVariables: { include_deleted: showCancelled },
+      // Asking for CANCELLED opts into soft-deleted rows on its own, so the
+      // switch and the select never have to be set together.
+      extraVariables: { include_deleted: showCancelled, lifecycle: lifecycle || null },
     },
-    [clubFilter, showCancelled],
+    [clubFilter, showCancelled, lifecycle],
   );
 
-  // The club select and the cancelled toggle live outside the table, so a
-  // change to either must trigger a reload.
-  const prevScopeRef = useRef(`${clubFilter}|${showCancelled}`);
+  // The club select, the status select and the cancelled toggle all live
+  // outside the table, so a change to any of them must trigger a reload.
+  const prevScopeRef = useRef(`${clubFilter}|${showCancelled}|${lifecycle}`);
   useEffect(() => {
-    const scope = `${clubFilter}|${showCancelled}`;
+    const scope = `${clubFilter}|${showCancelled}|${lifecycle}`;
     if (prevScopeRef.current === scope) return;
     prevScopeRef.current = scope;
     refetchRef.current?.();
-  }, [clubFilter, showCancelled]);
+  }, [clubFilter, showCancelled, lifecycle]);
 
   return (
     <Stack spacing={3}>
@@ -90,6 +96,8 @@ export default function PodsPage() {
         clubs={lookups.clubs}
         clubFilter={clubFilter}
         setClubFilter={(v) => (v ? setParams({ club_id: v }) : setParams({}))}
+        lifecycle={lifecycle}
+        setLifecycle={setLifecycle}
       />
 
       <PodsTable

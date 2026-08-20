@@ -131,6 +131,11 @@ export async function invoiceDataForPayment(
     total: doc.total,
     payment_id: doc.payment_id,
     payment_method: options.paymentMethod,
+    // Both halves of the coin movement this order caused. Read off the payment
+    // rather than recomputed: the rate can change after the fact, and an
+    // invoice must keep saying what actually happened.
+    coins_redeemed: doc.coins_redeemed ?? 0,
+    coins_earned: doc.coins_earned ?? 0,
     invoice_label: fs.invoice_label,
     invoice_support_email: fs.invoice_support_email,
     invoice_support_phone: fs.invoice_support_phone,

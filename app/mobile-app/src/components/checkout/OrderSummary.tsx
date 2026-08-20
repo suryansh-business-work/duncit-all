@@ -8,6 +8,8 @@ import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
+import type { CoinCheckoutSummary } from '@duncit/utils';
+import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
@@ -48,6 +50,7 @@ export function OrderSummary({
   discounts = [],
   seats = 1,
   unitAmount = 0,
+  coins = null,
 }: Readonly<{
   pod: CheckoutPod;
   /**
@@ -65,6 +68,8 @@ export function OrderSummary({
   seats?: number;
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
   unitAmount?: number;
+  /** Coins spent, left and earned on this bill. Absent hides the coin block. */
+  coins?: CoinCheckoutSummary | null;
 }>) {
   const { onPrimary, muted } = useThemeColors();
   const { t } = useTranslation();
@@ -159,6 +164,7 @@ export function OrderSummary({
         />
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
         <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+        <CoinSummaryRows coins={coins} />
         {venueCharges.length > 0 ? (
           <YStack
             testID="venue-charges-row"

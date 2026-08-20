@@ -29,9 +29,11 @@ export interface DialogMetrics {
 }
 
 /** Never let a dialog collapse to nothing on a tiny window. */
-const MIN_HEIGHT = 180;
+export const MIN_HEIGHT = 180;
 /** A centred card stops growing here, so it does not stretch on a tablet. */
-const CARD_MAX_WIDTH = 460;
+export const CARD_MAX_WIDTH = 460;
+/** The default share of the usable height a dialog may occupy. */
+export const DEFAULT_MAX_HEIGHT_RATIO = 0.88;
 
 /**
  * How tall a dialog may be, right now.

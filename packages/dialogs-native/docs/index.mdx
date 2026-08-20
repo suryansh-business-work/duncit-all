@@ -1,0 +1,117 @@
+---
+name: '@duncit/dialogs-native'
+summary: 'The sizing contract behind the native app one dialog — how tall a sheet may be right now, and how far the keyboard must lift it.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mobile-app'
+exports:
+  - 'dialogMetrics'
+  - 'keyboardLift'
+  - 'MIN_HEIGHT'
+  - 'CARD_MAX_WIDTH'
+  - 'DEFAULT_MAX_HEIGHT_RATIO'
+  - 'DuncitDialogVariant'
+  - 'DialogMetrics'
+  - 'DialogMetricsInput'
+---
+
+The MUI twin of this package is [`@duncit/dialogs`](/packages/dialogs), which
+serves mWeb and the portals. This one holds the rules the **native** dialog is
+sized by.
+
+## Why the rules and the view are separate
+
+The native app is a standalone npm project, not a pnpm workspace member. Metro
+resolves a linked package's peer imports by walking up from `packages/<name>/`,
+which finds nothing in the Docker build — so a package the app consumes must not
+import `react`, `react-native` or `tamagui`. That is why the Tamagui view,
+`DuncitDialog`, stays in `app/mobile-app/src/components/DuncitDialog/` and
+imports its arithmetic from here.
+
+It is the same split `@duncit/slots` uses: framework-free logic at the root, the
+rendering layer where its framework already lives.
+
+## `dialogMetrics(input)`
+
+Answers *how tall may this dialog be, right now*. Every input moves
+independently, which is why the answer is derived rather than written down: the
+window changes on rotation and in split-screen, the top inset differs per
+device, and the keyboard opens and closes under the user. A fixed pixel
+`maxHeight` — which is what most of the app's modals used to carry — is correct
+on exactly one device, in one orientation, with the keyboard shut.
+
+```ts
+import { dialogMetrics } from '@duncit/dialogs-native';
+
+const metrics = dialogMetrics({
+  variant: 'sheet',      // bottom-anchored; 'center' for a confirmation card
+  windowHeight: 900,     // useWindowDimensions(), so rotation re-measures
+  windowWidth: 400,
+  topInset: 40,          // useSafeAreaInsets().top
+  keyboardInset: 0,      // useKeyboardInset()
+  maxHeightRatio: 0.88,
+});
+
+metrics.maxHeight;    // 757 — the cap; the body scrolls inside it
+metrics.bottomLift;   // 0   — how far to lift the whole stack
+metrics.cardWidth;    // '100%' for a sheet, '88%' for a centred card
+metrics.cardMaxWidth; // the window width for a sheet, 460 for a card
+```
+
+With a 320pt keyboard open, the same call returns `maxHeight: 475` and
+`bottomLift: 320`. **Both** matter: the keyboard is subtracted from the
+available height as well as lifting the dialog, because lifting alone pushes a
+tall sheet's header off the top of the screen instead of shrinking its scroll
+area.
+
+### The floors
+
+`MIN_HEIGHT` (180) stops a dialog collapsing to nothing when a keyboard all but
+fills a short window. `CARD_MAX_WIDTH` (460) stops a centred card stretching
+across a tablet. `maxHeightRatio` is clamped to `0.2 … 1`, so a caller cannot
+ask for a dialog that is unusable or taller than the screen.
+
+## `keyboardLift(keyboardHeight, bottomInset)`
+
+The subtraction is load-bearing and not self-evident. Every caller sits inside a
+`SafeAreaView` (or equivalent padding) that has **already** reserved
+`bottomInset`, so lifting by the raw keyboard height reserves that strip twice
+and leaves a nav-bar-sized gap under the keyboard.
+
+```ts
+keyboardLift(320, 24); // 296 — not 320
+keyboardLift(0, 24);   // 0   — keyboard shut
+keyboardLift(10, 24);  // 0   — never negative
+```
+
+It exists instead of RN's `KeyboardAvoidingView` because Expo SDK 54 runs
+Android edge-to-edge, which makes `softwareKeyboardLayoutMode: "resize"` a
+no-op: the window keeps its full height and the keyboard is drawn over it, so a
+bottom-anchored input has to move itself.
+
+## Rendering it
+
+The app's `DuncitDialog` is the only consumer, and the only dialog native
+surfaces should render:
+
+```tsx
+import { DuncitDialog } from '@/components/DuncitDialog';
+
+<DuncitDialog
+  open={open}
+  onClose={close}
+  testID="pod-cancel"
+  title={t('pod.cancel.title')}
+  closeLabel={t('common.close')}
+  variant="center"
+  footer={<CancelActions onConfirm={confirm} />}
+>
+  <Text>{t('pod.cancel.body')}</Text>
+</DuncitDialog>
+```
+
+The body always scrolls; the header and footer never do; the footer reserves the
+gesture-bar strip so a CTA is never under it.

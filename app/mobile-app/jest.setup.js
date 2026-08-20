@@ -39,14 +39,6 @@ jest.mock('expo-location', () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
-// expo-screen-orientation is a native module; resolve the lock so the
-// large-screen rotation rule runs without the native runtime. Specs assert on
-// which lock was requested.
-jest.mock('expo-screen-orientation', () => ({
-  lockAsync: jest.fn().mockResolvedValue(undefined),
-  OrientationLock: { DEFAULT: 0, PORTRAIT_UP: 3 },
-}));
-
 // expo-document-picker is a native module; default to "cancelled" so the support
 // chat document attach is a no-op unless a spec overrides it.
 jest.mock('expo-document-picker', () => ({

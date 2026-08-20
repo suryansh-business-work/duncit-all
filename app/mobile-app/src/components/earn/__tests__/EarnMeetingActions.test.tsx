@@ -150,7 +150,7 @@ describe('EarnMeetingActions', () => {
     fireEvent.press(screen.getByTestId('reschedule-backdrop'));
     expect(screen.queryByTestId('reschedule-dialog')).toBeNull();
     fireEvent.press(screen.getByTestId('cancel-VENUE'));
-    fireEvent.press(screen.getByTestId('cancel-backdrop'));
+    fireEvent.press(screen.getByTestId('cancel-dialog-backdrop'));
     expect(screen.queryByTestId('cancel-dialog')).toBeNull();
   });
 

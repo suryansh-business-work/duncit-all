@@ -704,7 +704,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       resetFilters: 'Reset filters',
       applyFilters: 'Apply filters',
       closeFilters: 'Close filters',
-      closeSort: 'Close sort',
       done: 'Done',
       close: 'Close',
       sortDateNewest: 'Date · Newest first',

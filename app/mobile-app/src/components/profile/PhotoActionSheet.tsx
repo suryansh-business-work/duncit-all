@@ -1,9 +1,7 @@
-import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
@@ -47,8 +45,14 @@ interface Props {
   onClose: () => void;
 }
 
-/** Instagram-style profile-photo menu (item 9): View / Change / Remove. The
- * Remove row only appears when a photo exists. */
+/**
+ * Instagram-style profile-photo menu: View / Change / Remove. The Remove row
+ * only appears when a photo exists.
+ *
+ * Chrome-less by design — a grabber instead of a title bar — which
+ * {@link DuncitDialog} supports by omitting `title`. The rows scroll if a future
+ * one does not fit; previously they simply ran off a capless sheet.
+ */
 export function PhotoActionSheet({
   open,
   hasPhoto,
@@ -60,65 +64,40 @@ export function PhotoActionSheet({
   const { color, danger } = useThemeColors();
 
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="photo-action-sheet">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
-            paddingHorizontal={18}
-            paddingTop={10}
-          >
-            <SafeAreaView edges={['bottom']}>
-              <YStack
-                alignSelf="center"
-                width={44}
-                height={5}
-                borderRadius={999}
-                backgroundColor="$borderColor"
-                marginBottom={8}
-              />
-              {hasPhoto ? (
-                <ActionRow
-                  icon="visibility"
-                  label="View photo"
-                  color={color}
-                  testID="photo-action-view"
-                  onPress={onView}
-                />
-              ) : null}
-              <ActionRow
-                icon="photo-camera"
-                label="Change photo"
-                color={color}
-                testID="photo-action-change"
-                onPress={onChange}
-              />
-              {hasPhoto ? (
-                <ActionRow
-                  icon="delete-outline"
-                  label="Remove photo"
-                  color={danger}
-                  testID="photo-action-remove"
-                  onPress={onRemove}
-                />
-              ) : null}
-            </SafeAreaView>
-          </YStack>
-        </YStack>
-      </ModalThemeScope>
-    </Modal>
+    <DuncitDialog open={open} onClose={onClose} testID="photo-action-sheet" closeLabel="Close">
+      <YStack
+        alignSelf="center"
+        width={44}
+        height={5}
+        borderRadius={999}
+        backgroundColor="$borderColor"
+        marginBottom={8}
+      />
+      {hasPhoto ? (
+        <ActionRow
+          icon="visibility"
+          label="View photo"
+          color={color}
+          testID="photo-action-view"
+          onPress={onView}
+        />
+      ) : null}
+      <ActionRow
+        icon="photo-camera"
+        label="Change photo"
+        color={color}
+        testID="photo-action-change"
+        onPress={onChange}
+      />
+      {hasPhoto ? (
+        <ActionRow
+          icon="delete-outline"
+          label="Remove photo"
+          color={danger}
+          testID="photo-action-remove"
+          onPress={onRemove}
+        />
+      ) : null}
+    </DuncitDialog>
   );
 }

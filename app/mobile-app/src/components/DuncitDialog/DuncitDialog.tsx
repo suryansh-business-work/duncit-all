@@ -5,7 +5,7 @@ import { YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { DialogHeader } from '@/components/DuncitDialog/DialogHeader';
-import { dialogMetrics, type DuncitDialogVariant } from '@/components/DuncitDialog/dialog-metrics';
+import { dialogMetrics, type DuncitDialogVariant } from '@duncit/dialogs-native';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 
 export interface DuncitDialogProps {

@@ -4,7 +4,6 @@ import { autoPodEvent, autoPodFail, autoPodService, autoPodToPub } from './autoP
 import { autoPodNotify } from './autoPod.notify';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService, ensureOwnedVenue } from '@modules/venues/venueSlot/venueSlot.service';
 import { assertActiveHost, podService } from '@modules/pods/pod/pod.service';
@@ -246,6 +245,7 @@ export async function materializeAutoPod(
 
   try {
     const pod = await createPodFromAutoPod(locked, venueClaim, hostClaim, clubClaim);
+    if (!pod) autoPodFail('INTERNAL_SERVER_ERROR', 'The pod could not be created');
     const live = await AutoPodModel.findOneAndUpdate(
       { _id: locked._id, stage: 'MATERIALIZING' },
       {

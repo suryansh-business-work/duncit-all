@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Stack, Typography } from '@mui/material';
-import { format } from 'date-fns';
 import { actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import { PriorityChip, StatusChip } from '../StatusChips';
 import { formatDate } from '@duncit/app-settings';

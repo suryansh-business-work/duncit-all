@@ -49,8 +49,7 @@ import DynamicValuesView from '../../components/DynamicValuesView';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import { venueVariableValues } from '../../config/leadVariables';
-import { formatDateTime } from '@duncit/app-settings';
-import { formatDate as adminDate } from '@duncit/app-settings';
+import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 

@@ -3,7 +3,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, YStack } from 'tamagui';
-import { mwebAttendanceLabels, splitAttendance, type PodAttendanceRow } from '@duncit/utils';
+import { mwebAttendanceLabels, splitAttendance } from '@duncit/utils';
 
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { StackScreen } from '@/components/StackScreen';

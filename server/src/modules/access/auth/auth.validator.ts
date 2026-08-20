@@ -1,11 +1,23 @@
 import * as yup from 'yup';
-import { phoneRegex, extRegex } from '@modules/access/user/user.validator';
+import { phoneRegex, extRegex, personNameRegex } from '@modules/access/user/user.validator';
 
 export const registerSchema = yup.object({
-  first_name: yup.string().min(1).max(60).required(),
+  // Names are shape-checked, not just length-checked: the single "Name" box is
+  // split on whitespace, so anything the client let through became a surname.
+  first_name: yup
+    .string()
+    .min(1)
+    .max(60)
+    .matches(personNameRegex, { message: 'Invalid first name' })
+    .required(),
   // last_name is optional: the simplified signup collects a single "Name" that
   // may be a single word, so the surname can be empty.
-  last_name: yup.string().min(1).max(60).optional(),
+  last_name: yup
+    .string()
+    .min(1)
+    .max(60)
+    .matches(personNameRegex, { message: 'Invalid last name', excludeEmptyString: true })
+    .optional(),
   email: yup.string().email().required(),
   // Phone is no longer collected at signup; it is gathered later (profile).
   phone_number: yup

@@ -10,6 +10,7 @@ import {
   isEmail,
   isGstin,
   isIfsc,
+  isPersonName,
   isOtp,
   isPhoneIntl,
   isPhoneNumber,
@@ -17,6 +18,7 @@ import {
   isPincodeLoose,
   isUpiId,
   OTP_6,
+  PERSON_NAME,
   PHONE_INTL,
   PHONE_INTL_PLUS,
   PHONE_NUMBER,
@@ -261,6 +263,27 @@ describe('GSTIN', () => {
   });
 });
 
+describe('PERSON_NAME', () => {
+  it.each(["Jane Doe", "O'Brien", 'O’Brien', 'Anne Marie St. John', 'Rao'])(
+    'accepts the human name %s',
+    (name) => {
+      expect(PERSON_NAME.test(name)).toBe(true);
+    },
+  );
+
+  it.each(['Doe123', 'Doe_1', 'Doe 😀', 'Doe@', 'Doe-Smith', '  Doe', '1Doe', ''])(
+    'rejects %s',
+    (name) => {
+      expect(PERSON_NAME.test(name)).toBe(false);
+    },
+  );
+
+  it('rejects a name longer than 80 characters', () => {
+    expect(PERSON_NAME.test('A'.repeat(80))).toBe(true);
+    expect(PERSON_NAME.test('A'.repeat(81))).toBe(false);
+  });
+});
+
 describe('validators', () => {
   it('isPhoneNumber matches PHONE_NUMBER', () => {
     expect(isPhoneNumber('1234567890')).toBe(true);
@@ -305,6 +328,11 @@ describe('validators', () => {
   it('isBankAccountNumber matches BANK_ACCOUNT_NUMBER', () => {
     expect(isBankAccountNumber('123456')).toBe(true);
     expect(isBankAccountNumber('12345')).toBe(false);
+  });
+
+  it('isPersonName matches PERSON_NAME', () => {
+    expect(isPersonName('Jane Doe')).toBe(true);
+    expect(isPersonName('Jane Doe 2')).toBe(false);
   });
 
   it('isGstin uses the STRICT pattern, not the loose one', () => {

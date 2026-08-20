@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
-import { REFERRAL_CODE } from '@duncit/regex';
+import { PERSON_NAME, REFERRAL_CODE } from '@duncit/regex';
 
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
@@ -27,7 +27,8 @@ export function makeSignupSchema(
         .string()
         .trim()
         .min(2, t('mweb.signup.validation.nameMin'))
-        .max(80, t('mweb.signup.validation.nameTooLong')),
+        .max(80, t('mweb.signup.validation.nameTooLong'))
+        .regex(PERSON_NAME, t('mweb.signup.validation.namePattern')),
       dob: z
         .string()
         .trim()

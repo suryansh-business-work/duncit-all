@@ -36,6 +36,28 @@ const PHONE_INTL_PLUS = /^\+?\d{6,15}$/;
 const PINCODE_LOOSE = /^\d{4,10}$/;
 
 // ---------------------------------------------------------------------------
+// Person names.
+// ---------------------------------------------------------------------------
+
+/**
+ * A human name: letters, spaces, apostrophes and periods, starting with a
+ * letter. Digits, underscores, emoji and every other symbol are rejected.
+ *
+ * Signup collects ONE "Name" box and splits it on whitespace into first_name
+ * and last_name, so the surname is only ever as clean as this pattern makes the
+ * whole string — the native form had no character rule at all, which is how
+ * surnames like `Doe_123 😀` were reaching the database.
+ *
+ * Both the straight apostrophe and the typographic one are allowed: an iOS
+ * keyboard silently substitutes `’` for `'`, so accepting only the ASCII form
+ * rejects O’Brien on the exact surface most likely to type it.
+ *
+ * Bounded at 80 characters so it stays linear; each form still states its own
+ * min/max, and the server caps first_name and last_name at 60 apiece.
+ */
+const PERSON_NAME = /^[A-Za-z][A-Za-z .'’]{0,79}$/;
+
+// ---------------------------------------------------------------------------
 // Payout / tax identifiers.
 // ---------------------------------------------------------------------------
 
@@ -84,6 +106,7 @@ module.exports = {
   UPI_ID,
   BANK_ACCOUNT_NUMBER,
   GSTIN,
+  PERSON_NAME,
   REFERRAL_CODE,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -95,5 +118,6 @@ module.exports = {
   isUpiId: (v) => UPI_ID.test(v),
   isBankAccountNumber: (v) => BANK_ACCOUNT_NUMBER.test(v),
   isGstin: (v) => GSTIN.test(v),
+  isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
 };

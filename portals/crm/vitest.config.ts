@@ -49,7 +49,6 @@ export default defineConfig({
         // and window.google globals — covered by the cypress e2e flows that
         // boot a real browser with those stubs in place.
         'src/components/AppShell.tsx',
-        'src/components/GoogleSignInButton.tsx',
         'src/components/ContactComposeDialog.tsx',
         'src/components/FillWithAiDialog.tsx',
         'src/components/ExcelImportDialog.tsx',

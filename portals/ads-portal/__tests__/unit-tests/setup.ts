@@ -58,7 +58,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 
 // jsdom reports zero dimensions; give every element a nominal size so
-// width-measuring effects (GoogleSignInButton) exercise their real branch.
+// width-measuring effects and MUI layout code exercise their real branch.
 const DIMENSIONS: Record<string, number> = {
   offsetWidth: 800,
   offsetHeight: 600,

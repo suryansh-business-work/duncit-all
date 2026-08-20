@@ -32,7 +32,7 @@ so **the backlog below is additive to that document, not a replacement for it.**
 
 | Audit proposal | Status | Measured today |
 |---|---|---|
-| §1 extend `@duncit/shell` — portal boot | ❌ open | see §2.1 — larger than the audit's estimate |
+| §1 extend `@duncit/shell` — portal boot | ✅ closed | Not as proposed — see §2.1. Most of it was already extracted; the rest was dead code, now deleted |
 | §2 extend `@duncit/utils` — framework-free logic | ❌ open | — |
 | §3 **NEW** `@duncit/pod-filters` | ❌ open | all 4 file pairs still present |
 | §4 **NEW** `@duncit/test-kit` | ❌ open | 13 × `testkit.tsx`, 6 × `table-mock.tsx` |
@@ -51,32 +51,49 @@ so **the backlog below is additive to that document, not a replacement for it.**
 
 ## 2. New findings since the audit
 
-### 2.1 Portal boot is ~4,580 LOC, not ~2,800
+### 2.1 Portal boot: mostly already solved, and one pile of dead code
 
-The audit counted five files. There are eight, and three of them were never
-listed. Counts are **byte-identical** copies out of total copies:
+A byte-identical file count makes this cluster look far worse than it is.
+Reading the files changes the conclusion completely, in two different
+directions.
 
-| File | Byte-identical | Lines | Duplicated LOC | In audit? |
-|---|---|---|---|---|
-| `src/components/GoogleSignInButton.tsx` | 14 / 18 | 95 | 1,710 | yes |
-| `src/main.tsx` | — / 19 | 39 | 741 | yes |
-| `src/components/AppShell.tsx` | 14 / 17 | 37 | 629 | yes |
-| `src/pages/LoginPage.tsx` | **15** / 18 | 27 | 486 | **no** |
-| `src/config/url-configs.ts` | — / 18 | 22 | 396 | yes |
-| `src/theme.ts` | **14** / 18 | 13 | 234 | **no** |
-| `src/lib/session.ts` | **13** / 17 | 12 | 204 | **no** |
-| `src/apollo.ts` | 16 / 18 | 10 | 180 | yes |
-| `src/components/MediaPickerDialog.tsx` | **5** | — | — | **no** (audit named the *Field*, not the Dialog) |
+**Most of it is already extracted.** `apollo.ts` (5 lines), `lib/session.ts`
+(12), `theme.ts` (5), `pages/LoginPage.tsx` (10) and `components/AppShell.tsx`
+(37) are **thin adapters that already import from `@duncit/shell`**. Each one
+binds the shared implementation to that portal's own `appConfig` — the token
+key, the required roles, the accent, the nav. They are byte-identical only
+because the binding is uniform; there is no logic left in them to share. The
+audit's own "Do NOT extract" section makes exactly this argument about the
+socket boilerplate ("once you subtract the token source, the URL source… ~10
+lines remain"), and it applies here too. **Leave them.**
 
-`LoginPage.tsx` being byte-identical in 15 portals is the single safest
-extraction in the repository.
+**The rest was dead.** `GoogleSignInButton.tsx` — 17 copies, 95 lines each, in
+three drifted variants — was imported by **nothing** in any portal's `src/`.
+Neither `@duncit/shell` nor `@duncit/user-context` renders it: the portal login
+flow is `PortalLoginPage` → `LoginScreen`, whose "extra content" slot holds
+`OtpLoginPanel`, not a Google button. The copies were leftovers from before the
+login page was consolidated, kept alive only by their own tests.
 
-Every portal already depends on `@duncit/shell`, so this whole block costs **no
-new dependency and no Dockerfile change**. The audit's two behaviour warnings
-still apply: porting mWeb's mutation-retry guard into the shell changes mutation
-behaviour in every portal at once (a **bug fix**, not a refactor), and
-`url-configs` must preserve `import.meta.env.VITE_* || fallback` precedence
-byte-for-byte or staging silently points at production.
+Deleted in this change: 17 components + 12 orphaned test files ≈ **1,615 LOC**,
+with zero production references. `app/mweb`'s copy is **kept** — it is live
+(`LoginCard`, `RegisterPage`, `ConnectedAccountsSection`), it resolves the
+client id from mWeb's own `runtimeConfig` rather than the shell, and mWeb does
+not (and should not) depend on `@duncit/shell`, which is portal chrome.
+
+> If portal Google sign-in is *wanted*, that is a feature decision, not a
+> refactor — wire it into `PortalLoginPage`'s extra slot once, in the shell.
+> Three of the seventeen copies had independently discovered that the v8
+> coverage provider mis-instruments a `boolean ? literal : literal` ternary and
+> rewritten it as an `if`; that fix is worth carrying over if it is ever
+> rebuilt.
+
+Still genuinely open in this area:
+
+| File | Byte-identical | Note |
+|---|---|---|
+| `src/main.tsx` | — / 19 | Near-copies; real per-portal wiring |
+| `src/config/url-configs.ts` | — / 18 | Near-copies. `appUrl` has **zero** readers repo-wide and is wrong in at least one portal (hr advertises ads-portal's host) — delete the field rather than share it |
+| `src/components/MediaPickerDialog.tsx` | **5** | Not in the audit, which named the *Field*. Genuine, small |
 
 ### 2.2 Five new mWeb ↔ native twins, all built after the audit
 
@@ -190,9 +207,10 @@ Consequences for anything below that targets the native app:
 
 | Target | What moves | LOC | Notes |
 |---|---|---|---|
-| extend `@duncit/shell` | `LoginPage`, `GoogleSignInButton`, `AppShell`, `theme.ts`, `session.ts`, `apollo.ts`, `url-configs`, `main.tsx` | ~4,580 | No package.json, lockfile or Docker change — every portal already depends on shell |
+| ~~extend `@duncit/shell` (portal boot)~~ | — | — | **Done / withdrawn.** See §2.1: the adapters are irreducible wiring and `GoogleSignInButton` was dead code, now deleted |
 | `server/src/utils/serialize.ts` + `errors.ts` | 24 `iso`, 14 `round2`, 9 competing error helpers | ~300 | The variants have genuinely different null/NaN behaviour — pick semantics deliberately |
 | `server/src/utils/singleton.ts` | `getOrCreateSingleton` | ~40 | Closes a check-then-act race against a `unique` index |
+| delete `urlConfigs.appUrl` | dead field in 18 files | ~18 | Zero readers repo-wide; wrong value in at least one portal |
 
 ### Tier 2 — new packages
 
@@ -217,8 +235,9 @@ Consequences for anything below that targets the native app:
 
 ## 5. Suggested order
 
-1. **`@duncit/shell` portal boot.** Largest win, zero new dependencies, and it
-   carries the mutation-retry fix for all 17 portals with it.
+1. ~~`@duncit/shell` portal boot.~~ **Resolved** — see §2.1. Deleting beat
+   extracting, which is worth remembering before trusting the next
+   byte-identical count: *read the files before sizing the win.*
 2. **Server `serialize.ts` / `errors.ts` / `singleton.ts`.** No package — server
    imports zero `@duncit/*` by design.
 3. **`@duncit/form-schemas`.** Zod is zero-dep; kills 14 twin pairs.

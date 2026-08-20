@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
+import { keyboardLift } from '@duncit/dialogs-native';
 
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 
@@ -22,25 +23,11 @@ import { useBottomInset } from '@/hooks/useBottomNavSpace';
  * floating keyboard.
  */
 /**
- * The lift itself, as a pure function — deliberately NOT inlined into the hook.
- *
- * The subtraction is load-bearing and not self-evident: every caller of
- * {@link useKeyboardInset} sits inside a `SafeAreaView` (or padding) that has
- * already reserved `bottomInset`, so lifting by the raw keyboard height would
- * lift by that strip twice and leave a nav-bar-sized gap under the keyboard on
- * every composer in the app. Keeping it named and separate means a future
- * "simplification" has to delete a documented function rather than quietly
- * shorten an expression — and it can be covered directly once the repo's test
- * pause lifts.
- *
- * @param keyboardHeight Frame height reported by the keyboard event, measured
- *   from the bottom of the screen (so it already spans the navigation bar).
- * @param bottomInset The bottom safe-area inset an ancestor already applied.
+ * The lift itself now lives in `@duncit/dialogs-native`, where it is covered
+ * directly rather than only through this hook. Re-exported so the existing call
+ * sites and tests keep their import path.
  */
-export function keyboardLift(keyboardHeight: number, bottomInset: number): number {
-  if (keyboardHeight <= 0) return 0;
-  return Math.max(0, keyboardHeight - bottomInset);
-}
+export { keyboardLift };
 
 export function useKeyboardInset(): number {
   const bottomInset = useBottomInset();

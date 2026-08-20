@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.62.6",
+  "version": "1.63.0",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -48,6 +48,7 @@
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
     "@duncit/datetime": "file:../../packages/datetime",
+    "@duncit/dialogs-native": "file:../../packages/dialogs-native",
     "@duncit/errors": "file:../../packages/errors",
     "@duncit/fallback-icons": "file:../../packages/fallback-icons",
     "@duncit/geo": "file:../../packages/geo",

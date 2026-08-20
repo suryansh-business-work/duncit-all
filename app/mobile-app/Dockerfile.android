@@ -40,6 +40,7 @@ COPY packages/regex       ./packages/regex
 COPY packages/errors      ./packages/errors
 COPY packages/slack       ./packages/slack
 COPY packages/datetime ./packages/datetime
+COPY packages/dialogs-native ./packages/dialogs-native
 COPY packages/fallback-icons ./packages/fallback-icons
 COPY packages/i18n ./packages/i18n
 COPY packages/user-core ./packages/user-core

@@ -71,6 +71,7 @@ jobs:
   coverage-workspaces:
     name: Coverage — workspaces
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
@@ -85,9 +86,24 @@ jobs:
       # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
       # in, which does not happen here. The lcov is written either way, and the
       # quality gate — not a local threshold — is what judges us.
+      #
+      # Run GROUP BY GROUP rather than as one recursive command. A single
+      # workspace that hangs used to take every other group down with it and
+      # the artifact was then never written, so Sonar saw 0% for everything but
+      # the mobile app. Each group is time-boxed and cannot veto the others.
       - name: Run coverage
         continue-on-error: true
-        run: pnpm -r --if-present --no-bail test:coverage
+        run: |
+          set +e
+          # Quoted: bash would otherwise expand the globs itself and pnpm would
+          # never see the workspace patterns it is meant to filter on.
+          for group in "./packages/**" "./portals/**" "./website/**" "./app/mweb" "./server"; do
+            echo "::group::coverage $group"
+            timeout 25m pnpm --filter "$group" --if-present --no-bail test:coverage
+            echo "  -> exit $? for $group"
+            echo "::endgroup::"
+          done
+          exit 0
       - name: Collect lcov
         run: |
           mkdir -p lcov-out
@@ -96,12 +112,16 @@ jobs:
               dest="lcov-out/$(dirname "${f#./}" | tr '/' '_').info"
               cp "$f" "$dest"
             done
+          echo "collected $(ls -1 lcov-out | wc -l) report(s):"
           ls -la lcov-out
       - uses: actions/upload-artifact@v6
         with:
           name: lcov-workspaces
           path: lcov-out
-          if-no-files-found: error
+          # warn, not error: a partial set of reports is still worth scanning,
+          # and the analyze job verifies the count and fails loudly if it is
+          # short. Failing HERE only threw the partial results away.
+          if-no-files-found: warn
 
   coverage-mobile:
     name: Coverage — mobile app
@@ -206,6 +226,27 @@ jobs:
           paths=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | sed 's|^\./||' | sort | paste -sd, -)
           echo "Reports handed to the scanner: $paths"
           echo "SONAR_LCOV_PATHS=$paths" >> "$GITHUB_ENV"
+
+      # The scan used to publish 5.4% coverage without a single warning: the
+      # workspace lcov artifact was missing, every workspace but the mobile app
+      # reported exactly 0.0%, and nothing in the pipeline said so. A silently
+      # coverage-less scan is worse than a failed one, because the quality gate
+      # then reports a number that describes the pipeline rather than the code.
+      #
+      # The floor is deliberately well under the ~40 reports a healthy run
+      # produces: this is a smoke alarm for "the artifact went missing", not a
+      # coverage threshold. The gate itself judges the percentage.
+      - name: Verify coverage reached the scanner
+        if: ${{ !inputs.skip_coverage }}
+        run: |
+          count=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | wc -l)
+          echo "lcov reports available to the scanner: $count"
+          if [ "$count" -lt 20 ]; then
+            echo "::error::Only $count lcov report(s) reached the scanner (expected 20+)."
+            echo "::error::The coverage jobs did not deliver their artifacts, so this"
+            echo "::error::scan would report a coverage figure for the pipeline, not the code."
+            exit 1
+          fi
 
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
       # single biggest saving on a repeat scan of the same branch.

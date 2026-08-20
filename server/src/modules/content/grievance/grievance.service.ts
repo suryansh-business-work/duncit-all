@@ -18,7 +18,12 @@ function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
 }
 
+// RFC 5321 caps an address at 254 characters. The bound is checked BEFORE the
+// pattern because the pattern backtracks quadratically on a long non-matching
+// string, and this runs on unauthenticated grievance-form input.
+const MAX_EMAIL_LENGTH = 254;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const isEmail = (value: string) => value.length <= MAX_EMAIL_LENGTH && EMAIL_RE.test(value);
 // Digits, with the punctuation people actually type. Length is checked on the
 // digits alone so "+91 98765 43210" and "9876543210" are both accepted.
 const PHONE_ALLOWED_RE = /^[\d\s+()-]+$/;
@@ -111,7 +116,7 @@ function cleanSubmission(input: SubmitInput) {
   if (!name) fail('BAD_USER_INPUT', 'Name is required');
   if (name.length > 120) fail('BAD_USER_INPUT', 'Name is too long');
   if (!email) fail('BAD_USER_INPUT', 'Email is required');
-  if (!EMAIL_RE.test(email)) fail('BAD_USER_INPUT', 'Enter a valid email address');
+  if (!isEmail(email)) fail('BAD_USER_INPUT', 'Enter a valid email address');
   if (!phone) fail('BAD_USER_INPUT', 'Phone is required');
   if (!PHONE_ALLOWED_RE.test(phone)) fail('BAD_USER_INPUT', 'Enter a valid phone number');
   const digits = phone.replace(/\D/g, '');
@@ -244,7 +249,7 @@ export const grievanceService = {
 
     if (!name) fail('BAD_USER_INPUT', 'Name is required');
     if (!email) fail('BAD_USER_INPUT', 'Email is required');
-    if (!EMAIL_RE.test(email)) fail('BAD_USER_INPUT', 'Enter a valid email address');
+    if (!isEmail(email)) fail('BAD_USER_INPUT', 'Enter a valid email address');
     if (!phone) fail('BAD_USER_INPUT', 'Phone is required');
     if (!PHONE_ALLOWED_RE.test(phone)) fail('BAD_USER_INPUT', 'Enter a valid phone number');
     if (address.length > 500) fail('BAD_USER_INPUT', 'Address is too long');

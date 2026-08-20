@@ -210,10 +210,49 @@ const TEMPLATE_FIELDS = [
   'place_charges',
 ] as const;
 
+/**
+ * The club a Club Admin is opening an Auto Pod FOR. A pod inherits its Super +
+ * Sub from its club, so a club without a category could never materialize — it
+ * is refused here rather than at the last enrolment.
+ */
+async function loadOpeningClub(clubId: string) {
+  if (!Types.ObjectId.isValid(clubId)) autoPodFail('BAD_USER_INPUT', 'Invalid club_id');
+  const club: any = await ClubModel.findById(clubId)
+    .select('club_name category_id is_active')
+    .lean();
+  if (!club || club.is_active === false) {
+    autoPodFail('BAD_USER_INPUT', 'That club is not active');
+  }
+  if (!club.category_id) {
+    autoPodFail('BAD_USER_INPUT', 'Set a category on this club before opening an Auto Pod');
+  }
+  return club;
+}
+
 export const autoPodService = {
-  async create(actorUserId: string, input: any) {
-    const { superCategoryId, minPax } = await resolveCategoryPair(input.sub_category_id);
+  /**
+   * `clubId` set means a Club Admin opened this for their own club: that club is
+   * enrolled at creation, so only a venue and a host are still needed, and the
+   * category is taken from the club rather than from the input — the marketplace
+   * can no longer hand the pod to a different club.
+   */
+  async create(actorUserId: string, input: any, clubId?: string | null) {
+    const club = clubId ? await loadOpeningClub(clubId) : null;
+    const subCategoryId = club ? String(club.category_id) : input.sub_category_id;
+    const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
     await validateTemplate(input, minPax);
+
+    const clubClaim = club
+      ? {
+          club_id: club._id,
+          club_name: club.club_name ?? '',
+          user_id: new Types.ObjectId(actorUserId),
+          claimed_at: new Date(),
+        }
+      : null;
+    const openedNote = club
+      ? 'Auto Pod opened for venues — already claimed by its club'
+      : 'Auto Pod opened for venues';
 
     const doc = await AutoPodModel.create({
       stage: 'OPEN',
@@ -225,7 +264,7 @@ export const autoPodService = {
       pod_images_and_videos: input.pod_images_and_videos ?? [],
       reel_url: input.reel_url ?? null,
       super_category_id: new Types.ObjectId(superCategoryId),
-      sub_category_id: new Types.ObjectId(input.sub_category_id),
+      sub_category_id: new Types.ObjectId(subCategoryId),
       pod_type: 'PAID',
       pod_amount: input.pod_amount,
       no_of_spots: input.no_of_spots,
@@ -234,7 +273,13 @@ export const autoPodService = {
       available_perks: input.available_perks ?? [],
       payment_terms: input.payment_terms ?? null,
       place_charges: input.place_charges ?? [],
-      events: [autoPodEvent('CREATE', actorUserId, '', 'Auto Pod opened for venues')],
+      club_claim: clubClaim,
+      events: [
+        autoPodEvent('CREATE', actorUserId, '', openedNote),
+        ...(club
+          ? [autoPodEvent('CLUB_ENROLL', actorUserId, club.club_name ?? '', 'Opened by its club admin')]
+          : []),
+      ],
     });
 
     autoPodNotify.opened(doc).catch((error) =>
@@ -257,7 +302,10 @@ export const autoPodService = {
         'A venue has already accepted this Auto Pod — cancel it instead of editing it'
       );
     }
-    const subCategoryId = input.sub_category_id ?? String(doc.sub_category_id);
+    // A club that already enrolled did so on this category — the live pod would
+    // otherwise be created under a club whose own category no longer matches.
+    const locked = doc.club_claim ? String(doc.sub_category_id) : null;
+    const subCategoryId = locked ?? input.sub_category_id ?? String(doc.sub_category_id);
     const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
     const merged: any = { ...autoPodToPub(doc), ...input };
     await validateTemplate(merged, minPax);

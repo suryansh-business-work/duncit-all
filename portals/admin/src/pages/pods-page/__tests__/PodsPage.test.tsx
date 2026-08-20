@@ -50,8 +50,14 @@ vi.mock('@duncit/table', () => ({
 vi.mock('@duncit/app-settings', () => ({
   useFeatureFlag: (key: string) => {
     harness.featureFlagKeys.push(key);
+    // `auto_pods` off, so New Pod opens the ordinary editor without first asking
+    // which kind — the chooser has its own coverage in @duncit/auto-pods.
+    if (key === 'auto_pods') return false;
     return harness.productsFlag;
   },
+  useTranslation: () => ({
+    t: (key: string) => (key === 'shell.podKind.newPodCta' ? 'New Pod' : key),
+  }),
 }));
 
 vi.mock('@duncit/pod-form', () => ({

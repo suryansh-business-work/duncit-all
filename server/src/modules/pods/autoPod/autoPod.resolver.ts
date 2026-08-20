@@ -10,6 +10,7 @@ import {
 } from './autoPod.claims';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
 import { Types } from 'mongoose';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
@@ -97,9 +98,22 @@ export const autoPodResolvers = {
   },
 
   Mutation: {
-    createAutoPod: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      const user = requireRole(ctx, ADMIN_WRITE);
-      return autoPodService.create(user.id, args.input);
+    // Two openers, one write. Without `club_id` this is the marketplace offer
+    // only a Duncit admin may post. With it, the caller is opening the offer for
+    // a club they administer — membership of that club is the authorisation,
+    // exactly as it is for `clubClaimAutoPod`.
+    createAutoPod: async (
+      _p: unknown,
+      args: { input: any; club_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      if (!args.club_id) {
+        const admin = requireRole(ctx, ADMIN_WRITE);
+        return autoPodService.create(admin.id, args.input);
+      }
+      const actor = requireAuth(ctx);
+      await clubAdminService.assertClubAdmin(actor, args.club_id);
+      return autoPodService.create(actor.id, args.input, args.club_id);
     },
 
     updateAutoPod: (

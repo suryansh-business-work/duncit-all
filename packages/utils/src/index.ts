@@ -280,8 +280,10 @@ export {
 export {
   mwebAutoPodLabels,
   shellAutoPodLabels,
+  shellPodKindLabels,
   type AutoPodLabels,
   type AutoPodTranslate,
+  type PodKindLabels,
 } from './auto-pod-copy';
 export {
   groupMembershipBenefits,

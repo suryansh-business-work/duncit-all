@@ -6,6 +6,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import {
   Box,
   Button,
+  ButtonBase,
   Chip,
   CircularProgress,
   Divider,
@@ -14,7 +15,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import MomentLightbox from '../components/moments/MomentLightbox';
 import VenueMapPreview from '../components/VenueMapPreview';
+import { useTranslation } from '../i18n/useTranslation';
 import VenuePodsSection from './venues-page/VenuePodsSection';
 
 const PUBLIC_VENUES = gql`
@@ -70,7 +73,9 @@ export default function VenueDetailsPage() {
   const { venueId } = useParams();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(PUBLIC_VENUES);
+  const { t } = useTranslation();
   const [snack, setSnack] = useState('');
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null);
 
   const venue = useMemo(
     () => data?.publicVenues?.find((item: any) => item.id === venueId),
@@ -117,7 +122,14 @@ export default function VenueDetailsPage() {
 
       <Box sx={{ borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         {images[0] ? (
-          <Box component="img" src={images[0] as string} alt={venue.venue_name} sx={{ width: '100%', height: { xs: 260, sm: 360 }, objectFit: 'cover', display: 'block' }} />
+          <ButtonBase
+            onClick={() => setZoomIndex(0)}
+            focusRipple
+            aria-label={t('mweb.podDetails.viewImage')}
+            sx={{ display: 'block', width: '100%' }}
+          >
+            <Box component="img" src={images[0] as string} alt={venue.venue_name} sx={{ width: '100%', height: { xs: 260, sm: 360 }, objectFit: 'cover', display: 'block' }} />
+          </ButtonBase>
         ) : (
           <Box sx={{ minHeight: 220, display: 'grid', placeItems: 'center', px: 3, bgcolor: 'action.hover' }}>
             <Typography variant="h4" fontWeight={600} textAlign="center">{venue.venue_name}</Typography>
@@ -159,12 +171,27 @@ export default function VenueDetailsPage() {
         <Stack spacing={1}>
           <Typography variant="h6" fontWeight={700}>Images</Typography>
           <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' } }}>
-            {images.slice(1).map((url) => (
-              <Box key={url as string} component="img" src={url as string} alt={venue.venue_name} sx={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 1 }} />
+            {images.slice(1).map((url, tileIndex) => (
+              <ButtonBase
+                key={url as string}
+                onClick={() => setZoomIndex(tileIndex + 1)}
+                focusRipple
+                aria-label={t('mweb.podDetails.viewImage')}
+                sx={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '16px', overflow: 'hidden' }}
+              >
+                <Box component="img" src={url as string} alt={venue.venue_name} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </ButtonBase>
             ))}
           </Box>
         </Stack>
       ) : null}
+
+      <MomentLightbox
+        moments={images.map((url) => ({ url: url as string }))}
+        index={zoomIndex}
+        onClose={() => setZoomIndex(null)}
+        onIndexChange={setZoomIndex}
+      />
 
       <Snackbar open={!!snack} autoHideDuration={2200} message={snack} onClose={() => setSnack('')} />
     </Stack>

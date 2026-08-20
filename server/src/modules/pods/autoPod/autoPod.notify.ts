@@ -99,9 +99,11 @@ export const autoPodNotify = {
   /** A venue enrolled: hosts and club admins can now act, in parallel. */
   async venueEnrolled(doc: IAutoPod) {
     const when = whenLabel(doc.venue_claim?.pod_date_time);
+    // A club admin who opened this FOR their club is already enrolled, so there
+    // is nothing left for any club admin to claim — only hosts are still needed.
     const [hosts, clubAdmins] = await Promise.all([
       hostIdsForSubCategory(doc.sub_category_id),
-      clubAdminIdsForSubCategory(doc.sub_category_id),
+      doc.club_claim ? [] : clubAdminIdsForSubCategory(doc.sub_category_id),
     ]);
     await Promise.all([
       push(

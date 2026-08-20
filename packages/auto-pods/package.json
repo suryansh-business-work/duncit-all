@@ -20,18 +20,23 @@
   },
   "dependencies": {
     "@duncit/datetime": "workspace:*",
+    "@duncit/forms": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@hookform/resolvers": ">=3",
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "react-hook-form": ">=7",
+    "zod": ">=3"
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@hookform/resolvers": "^3.9.1",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
     "@testing-library/dom": "^10.4.0",
@@ -44,7 +49,9 @@
     "jsdom": "^25.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.0",
     "typescript": "^5.4.5",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "zod": "^3.24.1"
   }
 }

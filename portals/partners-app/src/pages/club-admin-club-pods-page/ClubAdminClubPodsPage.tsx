@@ -4,7 +4,7 @@ import { buildSlotLabels } from '@duncit/slots';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -133,7 +133,7 @@ export default function ClubAdminClubPodsPage() {
             venueName={venueName}
             emptyText="This club has no pods yet. Create the first one."
             toolbarActions={
-              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>New Pod</Button>
+              <CreatePodLauncher clubId={clubId} club={club ?? null} onNormal={editor.openCreate} />
             }
             renderActions={renderActions}
             renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}

@@ -38,6 +38,7 @@ import { BasicsStep } from './steps/BasicsStep';
 import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
 import { PricingStep } from './steps/PricingStep';
+import { AiMonitorOverlay } from './AiMonitorOverlay';
 import { StepHeader } from './StepHeader';
 import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -335,6 +336,9 @@ export function CreatePodStepper({
           </YStack>
         </TourAnchor>
       </XStack>
+      {/* The wait between pressing Create Pod and an answer IS the AI reading
+          the pod, so it is named rather than left as a nameless spinner. */}
+      <AiMonitorOverlay open={busy} />
       <ModerationBlockedDialog
         violations={blocked}
         onJump={jumpToStep}

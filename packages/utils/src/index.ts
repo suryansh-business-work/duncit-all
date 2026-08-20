@@ -157,6 +157,7 @@ export {
   coinsForSpend,
   type CoinCheckoutSummary,
 } from './coin-checkout';
+export { AI_MONITOR_GRADIENT, AI_MONITOR_GRADIENT_CSS } from './ai-monitor';
 export {
   MIN_GATEWAY_CHARGE,
   applyBillDiscounts,

@@ -1,5 +1,6 @@
 import { ButtonBase } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { AI_MONITOR_GRADIENT_CSS } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
@@ -24,7 +25,7 @@ export default function AiMonitorChip({ onClick }: Readonly<Props>) {
         fontWeight: 700,
         fontSize: 11,
         lineHeight: 1,
-        background: 'linear-gradient(120deg, #7C3AED, #EC4899, #F59E0B)',
+        background: AI_MONITOR_GRADIENT_CSS,
         boxShadow: 1,
       }}
     >

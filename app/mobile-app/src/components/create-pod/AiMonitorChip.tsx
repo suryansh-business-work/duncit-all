@@ -2,6 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
+import { AI_MONITOR_GRADIENT } from '@duncit/utils';
+
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -24,7 +26,7 @@ export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readon
       overflow="hidden"
     >
       <LinearGradient
-        colors={['#7C3AED', '#EC4899', '#F59E0B']}
+        colors={AI_MONITOR_GRADIENT}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{

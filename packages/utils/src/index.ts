@@ -158,6 +158,15 @@ export {
   type CoinCheckoutSummary,
 } from './coin-checkout';
 export {
+  MIN_GATEWAY_CHARGE,
+  applyBillDiscounts,
+  clampPayable,
+  maxRedeemableCoins,
+  round2,
+  type BillDiscount,
+  type DiscountedBill,
+} from './checkout-bill';
+export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,

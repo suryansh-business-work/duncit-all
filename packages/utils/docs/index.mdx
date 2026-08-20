@@ -349,6 +349,28 @@ Three things to read off that output:
 | `FormatMoneyOptions.compact` | `boolean` | `false` | `₹1.2L` notation at \|value\| ≥ 1,00,000. |
 | `formatStatementMoney` | `(value: number, symbol: string) => string` | — | The one `₹X,XXX.XX` format both Step-4 surfaces render. |
 
+### Checkout bill — `checkout-bill`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `round2` | `(n: number) => number` | The finance engine's single-round rule; non-numbers become `0`. |
+| `clampPayable` | `(amount: number) => number` | What is left to charge: rounded, never below zero. |
+| `applyBillDiscounts` | `(gross: number, discounts: BillDiscount[]) => DiscountedBill` | Takes the deductions off in order, stopping at zero. |
+| `maxRedeemableCoins` | `(balance: number, payableAfterCoupon: number) => number` | Whole coins the bill can absorb — balance, bill and gateway minimum. |
+| `MIN_GATEWAY_CHARGE` | `1` | Smallest amount Razorpay accepts; server twin of the same constant. |
+
+A coupon and Duncit Coins cut the same gross and neither may cut past zero. `applyBillDiscounts`
+caps each line at what was still owed when its turn came, so the printed rows always reconcile
+to `payable` and the leftover discount is simply dropped — never refunded, never carried:
+
+```ts
+applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
+// { discounts: [{ key: 'coupon', label: 'WELCOME', amount: 399 }], discountTotal: 399, payable: 0 }
+
+maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
+clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
+```
+
 ### Pod economics
 
 | Export | Signature | Meaning |

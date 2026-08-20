@@ -122,7 +122,13 @@ async function evaluate(
     if (used >= coupon.per_user_limit) return fail('You have already used this coupon');
   }
 
-  const discount_amount = round2((original * coupon.discount_pct) / 100);
+  // A coupon comes off in WHOLE rupees, rounded DOWN. Paise are the reason a
+  // ₹399 ticket at 10% used to leave ₹359.10 — a bill Duncit Coins (whole
+  // rupees, always) can never clear, so the buyer was left holding a 10-paise
+  // remainder the gateway would not even accept. Flooring keeps the deduction
+  // at or under the stated percentage, so nobody is ever over-credited, and it
+  // keeps a whole-rupee price whole all the way to the total payable.
+  const discount_amount = Math.floor(round2((original * coupon.discount_pct) / 100));
   const final_total = round2(Math.max(0, original - discount_amount));
   return {
     ok: true,

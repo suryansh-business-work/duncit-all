@@ -1,4 +1,10 @@
-const round2 = (n: number) => Math.round(n * 100) / 100;
+import { round2 } from '@duncit/utils';
+
+/** Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is
+ * the whole payable AFTER any coupon — clamped by the balance, by the bill and
+ * by the gateway's minimum charge. One shared rule with native and the server
+ * (rule 40); re-exported here so the page's existing imports keep working. */
+export { maxRedeemableCoins } from '@duncit/utils';
 
 /** Split a gross GST-inclusive total into the finance-engine breakup: GST is
  * extracted inclusive (gross × g/(100+g)); the taxable value is the net; the
@@ -22,10 +28,3 @@ export function buildBreakup(amount: number, settings: any) {
 }
 
 export const formatMoney = (currency: string, value: number) => `${currency}${Number(value).toFixed(2)}`;
-
-/** Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is
- * the whole payable AFTER any coupon, capped by the balance and floored to a
- * whole coin (redeem_coins is an Int). Never negative. The server clamps again,
- * so this only keeps the on-screen preview honest. */
-export const maxRedeemableCoins = (balance: number, payableAfterCoupon: number) =>
-  Math.max(0, Math.min(Math.floor(Number(balance) || 0), Math.floor(Number(payableAfterCoupon) || 0)));

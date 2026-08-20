@@ -56,6 +56,20 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       retry: 'Try again',
     },
 
+    /** The two-box question every "New Pod" button asks before it opens a form. */
+    podKind: {
+      newPodCta: 'New Pod',
+      title: 'What kind of pod?',
+      subtitle: 'This decides who fills in the venue, the host and the club.',
+      normalTitle: 'Normal Pod',
+      normalDesc:
+        'You pick the club, the venue slot and the host yourself, and the pod is scheduled the moment you save it.',
+      autoTitle: 'Auto Pod',
+      autoDesc:
+        'You write the pod only. A venue accepts it with one of its own slots, a host assigns themselves and a club claims it — then it goes live by itself.',
+      dismiss: 'Cancel',
+    },
+
     richText: {
       editorLabel: 'Rich text editor',
       placeholder: 'Start writing…',
@@ -728,6 +742,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       fieldPaymentTerms: 'Payment terms',
       noVenueHostHint:
         'You do not pick a venue, a host or a club — the first of each to enrol takes it.',
+      clubHint:
+        'You do not pick a venue or a host — the first of each to enrol takes it. This Auto Pod is already claimed for {club}, so no other club can take it.',
+      clubCategoryHint: "Taken from the club — an Auto Pod's category is always its club's.",
+      clubCategoryMissing:
+        'This club has no category yet. Set one under Edit Club Details before opening an Auto Pod.',
       save: 'Save',
       saving: 'Saving…',
       created: 'Auto Pod opened for venues.',

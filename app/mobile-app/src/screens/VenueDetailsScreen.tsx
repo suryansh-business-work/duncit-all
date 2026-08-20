@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { StackScreen } from '@/components/StackScreen';
+import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { useVenueDetails, type PublicVenue } from '@/hooks/useHostsVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 
 function addressLine(venue: PublicVenue): string {
@@ -63,8 +67,10 @@ function ChipsGroup({ title, items }: Readonly<{ title: string; items?: string[]
 function VenueDetailsContent({
   venue,
   gallery,
-}: Readonly<{ venue: PublicVenue; gallery: (string | null | undefined)[] }>) {
+}: Readonly<{ venue: PublicVenue; gallery: string[] }>) {
   const { onPrimary, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   return (
     <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
       <YStack
@@ -76,11 +82,20 @@ function VenueDetailsContent({
         justifyContent="center"
       >
         {gallery[0] ? (
-          <AppImage
-            source={{ uri: gallery[0] }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
+          <XStack
+            testID="venue-cover-image"
+            role="button"
+            aria-label={t('mweb.podDetails.viewImage')}
+            onPress={() => setViewerIndex(0)}
+            width="100%"
+            height="100%"
+          >
+            <AppImage
+              source={{ uri: gallery[0] }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </XStack>
         ) : (
           <MaterialIcons name="storefront" size={44} color={onPrimary} />
         )}
@@ -119,24 +134,9 @@ function VenueDetailsContent({
       <ChipsGroup title="Facilities" items={venue.facilities} />
       <ChipsGroup title="Venue Security" items={venue.security} />
 
-      {gallery.length > 1 ? (
-        <YStack gap={8}>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            Images
-          </Text>
-          <XStack flexWrap="wrap" gap={8}>
-            {gallery.slice(1).map((url) => (
-              <AppImage
-                key={url as string}
-                testID="venue-gallery-image"
-                source={{ uri: url as string }}
-                style={{ width: '31%', aspectRatio: 4 / 3, borderRadius: 10 }}
-                resizeMode="cover"
-              />
-            ))}
-          </XStack>
-        </YStack>
-      ) : null}
+      <VenueImagesGrid images={gallery} onOpen={setViewerIndex} />
+
+      <ImageViewerModal images={gallery} index={viewerIndex} onClose={() => setViewerIndex(null)} />
     </ScrollView>
   );
 }
@@ -147,7 +147,13 @@ export function VenueDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'VenueDetails'>>();
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
-  const gallery = venue ? [venue.cover_image_url, ...(venue.gallery ?? [])].filter(Boolean) : [];
+  const gallery: string[] = venue
+    ? Array.from(
+        new Set(
+          [venue.cover_image_url, ...(venue.gallery ?? [])].filter((url): url is string => !!url),
+        ),
+      )
+    : [];
   const body =
     error || !venue ? (
       <Text testID="venue-details-missing" padding={24} color="$muted">

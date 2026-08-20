@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { makeNativeParityPodConfig, useMediaPickerBridge, type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
@@ -14,6 +13,7 @@ import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
+import CreatePodLauncher from './CreatePodLauncher';
 import type { PodLifecycleFilter } from './podLifecycle';
 import QuickEditPodDialog from './QuickEditPodDialog';
 import usePodEditor from './usePodEditor';
@@ -116,9 +116,7 @@ export default function PodsPage() {
               label="Include cancelled"
               slotProps={{ typography: { variant: 'body2' } }}
             />
-            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>
-              New Pod
-            </Button>
+            <CreatePodLauncher onNormal={editor.openCreate} />
           </>
         }
         clubName={lookups.clubName}

@@ -156,7 +156,13 @@ export const autoPodTypeDefs = gql`
   }
 
   extend type Mutation {
-    createAutoPod(input: CreateAutoPodInput!): AutoPod!
+    """
+    Opens an Auto Pod for the marketplace. A Duncit admin opens one for every
+    club to compete for; a Club Admin passes club_id to open one FOR their own
+    club, which enrols that club at creation (so only a venue and a host are
+    still needed) and fixes the category to the club's own.
+    """
+    createAutoPod(input: CreateAutoPodInput!, club_id: ID): AutoPod!
     updateAutoPod(auto_pod_doc_id: ID!, input: UpdateAutoPodInput!): AutoPod!
     cancelAutoPod(auto_pod_doc_id: ID!, reason: String): AutoPod!
     "Venue enrols: accepts the offer and commits one of its own slots."

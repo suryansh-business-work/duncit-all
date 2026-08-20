@@ -172,3 +172,35 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     retry: t('shell.autoPods.retry'),
   };
 }
+
+/**
+ * The "Normal Pod or Auto Pod?" question every portal's New Pod button asks.
+ *
+ * Same literal-key rule as the labels above: `verify-translation-keys.mjs` greps
+ * source for the exact `t('…')` string, so each one is written out in full.
+ */
+export interface PodKindLabels {
+  /** The button that asks the question. */
+  newPodCta: string;
+  title: string;
+  subtitle: string;
+  normalTitle: string;
+  normalDesc: string;
+  autoTitle: string;
+  autoDesc: string;
+  dismiss: string;
+}
+
+/** The MUI portals (`shell.podKind.*`). */
+export function shellPodKindLabels(t: AutoPodTranslate): PodKindLabels {
+  return {
+    newPodCta: t('shell.podKind.newPodCta'),
+    title: t('shell.podKind.title'),
+    subtitle: t('shell.podKind.subtitle'),
+    normalTitle: t('shell.podKind.normalTitle'),
+    normalDesc: t('shell.podKind.normalDesc'),
+    autoTitle: t('shell.podKind.autoTitle'),
+    autoDesc: t('shell.podKind.autoDesc'),
+    dismiss: t('shell.podKind.dismiss'),
+  };
+}

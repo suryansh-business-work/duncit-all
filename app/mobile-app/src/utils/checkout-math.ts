@@ -1,3 +1,5 @@
+import { round2 } from '@duncit/utils';
+
 export interface FinanceSettings {
   platform_fee_pct: number;
   gst_pct: number;
@@ -17,8 +19,15 @@ export interface CheckoutBreakup {
   gstPct: number;
 }
 
-/** Money rounding to 2dp — the finance engine's single-round rule. */
-export const round2 = (n: number) => Math.round(n * 100) / 100;
+/** Money rounding to 2dp — the finance engine's single-round rule. One copy,
+ * shared with mWeb and the bill math (rule 40). */
+export { round2 };
+
+/** Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is
+ * the whole payable AFTER any coupon — clamped by the balance, by the bill and
+ * by the gateway's minimum charge. One shared rule with mWeb and the server
+ * (rule 40); re-exported here so the screen's existing imports keep working. */
+export { maxRedeemableCoins } from '@duncit/utils';
 
 /** GST extracted from a GST-inclusive total (total × g/(100+g)) — the finance
  * engine's inclusive extraction, single-round. */
@@ -50,19 +59,6 @@ export function buildBreakup(
     feePct: settings.platform_fee_pct,
     gstPct: settings.gst_pct,
   };
-}
-
-/**
- * Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is the
- * whole payable AFTER any coupon, capped by the balance and floored to a whole
- * coin (redeem_coins is an Int). Never negative. The server clamps again, so
- * this only keeps the on-screen preview honest. mWeb's maxRedeemableCoins.
- */
-export function maxRedeemableCoins(balance: number, payableAfterCoupon: number): number {
-  return Math.max(
-    0,
-    Math.min(Math.floor(Number(balance) || 0), Math.floor(Number(payableAfterCoupon) || 0)),
-  );
 }
 
 /** "<currency><value.2dp>" money label — mWeb's formatMoney. */

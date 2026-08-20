@@ -27,7 +27,7 @@ import {
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
 import { useCoinRedemption } from '@/hooks/useCoinRedemption';
-import { coinCheckoutSummary } from '@duncit/utils';
+import { applyBillDiscounts, coinCheckoutSummary } from '@duncit/utils';
 import { useCoinBalance } from '@/hooks/useCoins';
 import { useServerIssue } from '@/hooks/useServerIssue';
 import { IssueNotice } from '@/components/issue-notice/IssueNotice';
@@ -56,8 +56,13 @@ function CheckoutIssue({ issue }: Readonly<{ issue: ParsedIssue | null }>) {
  * The deductions, in the order they are taken, for the summary card's own
  * rows. Coins are 1:1 with the rupee, so the count applied IS the amount off.
  * Module scope so the screen stays under its complexity budget. mWeb twin.
+ *
+ * They are taken off the gross and stopped at zero, so a coupon (or a coupon
+ * plus coins) worth more than the ticket prints only what it actually paid
+ * for: the excess is dropped, never refunded and never a negative total.
  */
 function buildDiscounts(
+  gross: number,
   coupon: CouponState,
   coinsApplied: number,
   t: Translator['t'],
@@ -74,7 +79,7 @@ function buildDiscounts(
   if (coinsApplied > 0) {
     rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coinsApplied });
   }
-  return rows;
+  return applyBillDiscounts(gross, rows).discounts;
 }
 
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
@@ -144,7 +149,7 @@ export function CheckoutScreen() {
     payable: coins.effectiveTotal,
     earnPct: coinBalance?.earn_pct ?? 0,
   });
-  const discounts = buildDiscounts(coupon, coins.applied, t);
+  const discounts = buildDiscounts(amount, coupon, coins.applied, t);
   // Server-operation failures, parsed + logged once by the shared error module.
   const serverIssue = useServerIssue('Checkout');
   const payOperation = payOperationName(razorpayEnabled);

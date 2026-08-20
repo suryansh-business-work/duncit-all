@@ -448,6 +448,9 @@ importers:
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
       '@duncit/ui':
         specifier: workspace:*
         version: link:../ui
@@ -458,6 +461,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@hookform/resolvers':
+        specifier: ^3.9.1
+        version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
       '@mui/icons-material':
         specifier: ^5.15.18
         version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
@@ -494,12 +500,18 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.54.0
+        version: 7.77.0(react@18.3.1)
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
 
   packages/availability-calendar:
     devDependencies:

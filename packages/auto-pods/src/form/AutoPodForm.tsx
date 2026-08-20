@@ -1,18 +1,25 @@
 /**
- * The Auto Pod template form.
+ * The Auto Pod template form, shared by every console that can open one.
  *
  * Deliberately NOT `@duncit/pod-form`: that package's Zod schema hard-requires a
  * club, a venue, a host and a venue slot, and an Auto Pod has none of them when
- * it is written — the marketplace supplies all four later. Only its shared
- * `OCCURRENCES` option list is reused (in AutoPodFields), so the occurrence
- * wording cannot drift from the ordinary pod form.
+ * it is written — the marketplace supplies them later. Its `OCCURRENCES` list is
+ * passed IN rather than imported, so the occurrence wording cannot drift from
+ * the ordinary pod form without this package taking on its whole dependency
+ * tree; the category field is injected for the same reason (see auto-pod.types).
  */
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, type ReactNode } from 'react';
+import { useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
-import AutoPodFields from './AutoPodFields';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Stack from '@mui/material/Stack';
+import AutoPodFields, { type AutoPodOccurrence } from './AutoPodFields';
 import { parseHashtags, parseMediaLines, type AutoPodFormValues } from './auto-pod.types';
 
 /** Mirrors the server's own template checks so a bad template never round-trips. */
@@ -62,7 +69,7 @@ export const toAutoPodInput = (values: AutoPodFormValues) => {
   };
 };
 
-interface Props {
+export interface AutoPodFormProps {
   open: boolean;
   initialValues: AutoPodFormValues;
   saving: boolean;
@@ -70,6 +77,11 @@ interface Props {
   t: (key: string) => string;
   /** "Cancel" for the dialog's dismiss button, from shellAutoPodLabels. */
   dismissLabel: string;
+  occurrences: readonly AutoPodOccurrence[];
+  /** The surface's own category field — it needs the form's control. */
+  renderCategory: (control: Control<AutoPodFormValues>) => ReactNode;
+  /** What this author does NOT pick, in their own words. */
+  hint: string;
   onClose: () => void;
   onSubmit: (values: AutoPodFormValues) => Promise<void>;
 }
@@ -81,9 +93,12 @@ export default function AutoPodForm({
   error,
   t,
   dismissLabel,
+  occurrences,
+  renderCategory,
+  hint,
   onClose,
   onSubmit,
-}: Readonly<Props>) {
+}: Readonly<AutoPodFormProps>) {
   const { control, handleSubmit, reset } = useForm<AutoPodFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(autoPodSchema),
@@ -101,7 +116,13 @@ export default function AutoPodForm({
       <DialogTitle>{t('admin.autoPods.formTitle')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
-          <AutoPodFields control={control} t={t} />
+          <AutoPodFields
+            control={control}
+            t={t}
+            occurrences={occurrences}
+            categoryField={renderCategory(control)}
+            hint={hint}
+          />
           {error ? <Alert severity="error">{error}</Alert> : null}
         </Stack>
       </DialogContent>

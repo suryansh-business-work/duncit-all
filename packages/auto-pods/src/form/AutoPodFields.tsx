@@ -1,13 +1,26 @@
+import type { ReactNode } from 'react';
 import type { Control } from 'react-hook-form';
-import { Alert, MenuItem, Stack } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
 import { RhfTextField } from '@duncit/forms';
-import { RhfAdminCategory } from '@duncit/category';
-import { OCCURRENCES } from '@duncit/pod-form';
 import type { AutoPodFormValues } from './auto-pod.types';
 
-interface AutoPodFieldsProps {
+/** One occurrence choice — the caller passes `OCCURRENCES` from `@duncit/pod-form`
+ * so the wording can never drift from the ordinary pod form. */
+export interface AutoPodOccurrence {
+  value: string;
+  label: string;
+}
+
+export interface AutoPodFieldsProps {
   control: Control<AutoPodFormValues>;
   t: (key: string) => string;
+  occurrences: readonly AutoPodOccurrence[];
+  /** What replaces the category picker — the Admin cascade, or a club's fixed one. */
+  categoryField: ReactNode;
+  /** The line above the fields explaining what the author does NOT pick. */
+  hint: string;
 }
 
 /**
@@ -15,21 +28,18 @@ interface AutoPodFieldsProps {
  * file grows past the 200-line ceiling (CLAUDE.md rule 9) and so the dialog
  * reads as chrome + actions only.
  */
-export default function AutoPodFields({ control, t }: Readonly<AutoPodFieldsProps>) {
+export default function AutoPodFields({
+  control,
+  t,
+  occurrences,
+  categoryField,
+  hint,
+}: Readonly<AutoPodFieldsProps>) {
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
-      <Alert severity="info">{t('admin.autoPods.noVenueHostHint')}</Alert>
+      <Alert severity="info">{hint}</Alert>
       <RhfTextField control={control} name="pod_title" label={t('admin.autoPods.fieldTitle')} required />
-      <RhfAdminCategory
-        control={control}
-        name="category"
-        fields={['super', 'sub']}
-        required
-        labels={{
-          super: t('admin.autoPods.fieldSuperCategory'),
-          sub: t('admin.autoPods.fieldSubCategory'),
-        }}
-      />
+      {categoryField}
       <RhfTextField
         control={control}
         name="pod_description"
@@ -78,7 +88,7 @@ export default function AutoPodFields({ control, t }: Readonly<AutoPodFieldsProp
         label={t('admin.autoPods.fieldOccurrence')}
         select
       >
-        {OCCURRENCES.map((option) => (
+        {occurrences.map((option) => (
           <MenuItem key={option.value} value={option.value}>
             {option.label}
           </MenuItem>

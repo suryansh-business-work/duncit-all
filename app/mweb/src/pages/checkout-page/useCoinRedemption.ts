@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { maxRedeemableCoins } from './checkoutMath';
+import { clampPayable, maxRedeemableCoins } from '@duncit/utils';
 import type { CheckoutSession } from './useCheckoutSession';
 
 /** What the gold redeem field renders and what the pay handler bills. */
@@ -38,7 +38,9 @@ export function useCoinRedemption(session: CheckoutSession, payableAfterCoupon: 
     balance: coinBalance,
     applied,
     max,
-    effectiveTotal: Math.max(0, payableAfterCoupon - applied),
+    // Rounded and floored at zero: coins can never cut a bill past ₹0, and the
+    // subtraction must not leak float residue (₹359.10 − 359) onto the screen.
+    effectiveTotal: clampPayable(payableAfterCoupon - applied),
     onApply: () => setCoinsApplied(max),
     onRemove: removeCoins,
   };

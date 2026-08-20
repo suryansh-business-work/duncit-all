@@ -25,7 +25,7 @@ import { IssueNotice, useServerIssue } from '../../components/issue-notice';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
-import { coinCheckoutSummary } from '@duncit/utils';
+import { applyBillDiscounts, coinCheckoutSummary } from '@duncit/utils';
 import AlreadyBookedDialog from './AlreadyBookedDialog';
 
 export default function CheckoutPage() {
@@ -92,6 +92,9 @@ export default function CheckoutPage() {
     [session.coinBalance, session.coinEarnPct, coins.applied, coins.effectiveTotal],
   );
 
+  // Taken off the gross in order and stopped at zero, so a coupon (or a coupon
+  // plus coins) worth more than the ticket prints only what it actually paid
+  // for: the excess is dropped, never refunded and never a negative total.
   const discounts = useMemo(() => {
     const rows: CheckoutDiscount[] = [];
     if (session.coupon?.ok && session.coupon.discount_amount > 0) {
@@ -104,8 +107,8 @@ export default function CheckoutPage() {
     if (coins.applied > 0) {
       rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coins.applied });
     }
-    return rows;
-  }, [session.coupon, coins.applied, t]);
+    return applyBillDiscounts(amount, rows).discounts;
+  }, [session.coupon, coins.applied, amount, t]);
   // What an agent needs if a payment times out and a ticket has to be opened.
   const payment = usePaymentFailure(() => ({
     description: pod?.pod_title ? `Pod: ${pod.pod_title}` : 'Pod checkout',

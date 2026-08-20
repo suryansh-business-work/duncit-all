@@ -155,3 +155,17 @@ export const CLUB_ADMIN_DELETE_POD = gql`
     clubAdminDeletePod(pod_doc_id: $pod_doc_id)
   }
 `;
+
+/**
+ * A Club Admin opens an Auto Pod FOR this club: `club_id` enrols the club at
+ * creation, so the offer only ever waits on a venue and a host, and the server
+ * fixes the category to the club's own.
+ */
+export const CLUB_ADMIN_CREATE_AUTO_POD = gql`
+  mutation ClubAdminCreateAutoPod($input: CreateAutoPodInput!, $club_id: ID) {
+    createAutoPod(input: $input, club_id: $club_id) {
+      id
+      auto_pod_no
+    }
+  }
+`;

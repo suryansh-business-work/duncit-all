@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { autoPodSchema, toAutoPodInput } from './auto-pod.form';
-import { emptyAutoPodForm, parseHashtags, parseMediaLines, type AutoPodFormValues } from './auto-pod.types';
+import {
+  autoPodSchema,
+  emptyAutoPodForm,
+  parseHashtags,
+  parseMediaLines,
+  toAutoPodInput,
+  type AutoPodFormValues,
+} from '@duncit/auto-pods';
 
 const base: AutoPodFormValues = {
   ...emptyAutoPodForm,

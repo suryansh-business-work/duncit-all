@@ -13,7 +13,8 @@ import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
-import { STUDIO_HOME_PATH, STUDIO_LABEL, resolveMode } from '../../studio-mode';
+import { useAutoPodCounts } from '../../hooks/useAutoPodCounts';
+import { STUDIO_LABEL, resolveMode, studioSwitchPath } from '../../studio-mode';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -59,6 +60,9 @@ export default function AppHeader({
   const superCats = data?.superCategories ?? [];
   const locations = data?.locations ?? [];
   const superCategoryValue = selectedSuperCategory || superCats[0]?.slug || '';
+  // Mounted with the header — the whole point of the counts is that the role
+  // switch never waits on a network round trip to decide where to land.
+  const autoPods = useAutoPodCounts(me?.roles ?? []);
 
   // Persist an explicit location choice so it sticks across sessions/devices.
   // The auto-default below does NOT persist — only a real user pick does.
@@ -131,7 +135,10 @@ export default function AppHeader({
             label={STUDIO_LABEL[effectiveStudio]}
             color="primary"
             size="small"
-            onClick={() => setStudioSwitchOpen(true)}
+            onClick={() => {
+              autoPods.reload();
+              setStudioSwitchOpen(true);
+            }}
             sx={{ fontWeight: 700, borderRadius: 999 }}
           />
         ) : (
@@ -196,8 +203,9 @@ export default function AppHeader({
               onSelect={(next) => {
                 setStudioMode(next);
                 setStudioSwitchOpen(false);
-                // Jump straight to the selected role's dashboard (B3-2).
-                navigate(STUDIO_HOME_PATH[next]);
+                // Jump straight to the selected role's dashboard (B3-2) — or to
+                // its Auto Pod queue when one is waiting on that role.
+                navigate(studioSwitchPath(next, autoPods.counts));
               }}
             />
           </>

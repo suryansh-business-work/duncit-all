@@ -76,6 +76,9 @@ import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { VenueSlotRequestsScreen } from '@/screens/VenueSlotRequestsScreen';
+import { VenueAutoPodsScreen } from '@/screens/VenueAutoPodsScreen';
+import { HostAutoPodsScreen } from '@/screens/HostAutoPodsScreen';
+import { ClubAutoPodsScreen } from '@/screens/ClubAutoPodsScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
 import { MenuScreen } from '@/screens/MenuScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
@@ -161,6 +164,9 @@ export function RootNavigator() {
       <Stack.Screen name="VenueManage" component={VenueManageScreen} />
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
       <Stack.Screen name="VenueSlotRequests" component={VenueSlotRequestsScreen} />
+      <Stack.Screen name="VenueAutoPods" component={VenueAutoPodsScreen} />
+      <Stack.Screen name="HostAutoPods" component={HostAutoPodsScreen} />
+      <Stack.Screen name="ClubAutoPods" component={ClubAutoPodsScreen} />
       <Stack.Screen name="Earn" component={EarnScreen} />
       <Stack.Screen name="ListProduct" component={ListProductScreen} />
       <Stack.Screen name="BeClubAdmin" component={BeClubAdminScreen} />

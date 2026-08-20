@@ -1,0 +1,114 @@
+---
+name: '@duncit/auto-pods'
+summary: 'The MUI Auto Pod queue every role-facing surface renders — the three-enrolment card (Venue / Host / Club Admin) plus the accept, assign and claim dialogs.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'AutoPodTicks'
+  - 'AutoPodCard'
+  - 'AutoPodQueue'
+  - 'VenueAcceptDialog'
+  - 'HostClaimDialog'
+  - 'ClubClaimDialog'
+  - 'VENUE_AUTO_PODS'
+  - 'HOST_AUTO_PODS'
+  - 'CLUB_ADMIN_AUTO_PODS'
+  - 'AUTO_POD_ACTION_COUNTS'
+  - 'VENUE_ACCEPT_AUTO_POD'
+  - 'HOST_ASSIGN_AUTO_POD'
+  - 'CLUB_CLAIM_AUTO_POD'
+  - 'MY_VENUES_FOR_AUTO_POD'
+  - 'VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD'
+  - 'MY_ADMIN_CLUBS_FOR_AUTO_POD'
+---
+
+# @duncit/auto-pods
+
+An **Auto Pod** is a pod an admin writes without picking a venue, a host or a
+club — the marketplace completes it. A venue accepts the offer and commits one
+of its slots, then a host assigns themselves and a club admin claims it for
+their club. The moment all three have enrolled it becomes an ordinary pod.
+
+This package is the MUI half of that: mWeb, the Partners portal and the Admin
+console all render these components. The native app deliberately does **not**
+import it — it keeps Tamagui twins over the same `@duncit/utils` logic (rule 40:
+share the logic, never the UI).
+
+## The three enrolments
+
+Every card carries `AutoPodTicks`: **Venue Enroll**, **Host Enroll**, **Club
+Admin Enroll**, always in that order and always all three. Each is amber and
+outlined while that partner has yet to enrol, and turns green and filled the
+moment they do — so the state of an offer reads at a glance.
+
+The derivation itself is `autoPodTicks()` in `@duncit/utils`, so the Tamagui
+twin draws exactly the same three ticks from exactly the same rule.
+
+```tsx
+import { AutoPodTicks } from '@duncit/auto-pods';
+import { mwebAutoPodLabels } from '@duncit/utils';
+
+<AutoPodTicks row={row} labels={mwebAutoPodLabels(t)} />;
+```
+
+## A role's queue
+
+`AutoPodQueue` renders a whole role page: what still needs this partner, then
+what they already enrolled in, using `splitAutoPods()` to divide them. The
+caller supplies the button, because only the action differs per role.
+
+```tsx
+import { AutoPodQueue, HOST_AUTO_PODS } from '@duncit/auto-pods';
+import { mwebAutoPodLabels } from '@duncit/utils';
+
+const { data, loading, error, refetch } = useQuery(HOST_AUTO_PODS);
+
+<AutoPodQueue
+  role="host"
+  rows={data?.hostAutoPods ?? []}
+  labels={mwebAutoPodLabels(t)}
+  loading={loading}
+  error={!!error}
+  onRetry={() => refetch()}
+  formatWhen={(iso) => formatDateTime(iso)}
+  formatMoney={(n) => money(n)}
+  renderAction={(row) => (
+    <Button fullWidth variant="contained" onClick={() => setClaiming(row)}>
+      {labels.assignMyselfCta}
+    </Button>
+  )}
+/>;
+```
+
+## The three dialogs
+
+| Dialog | Role | What it collects |
+| --- | --- | --- |
+| `VenueAcceptDialog` | Venue | Which venue, and which of its free slots |
+| `HostClaimDialog` | Host | Nothing — confirms, and shows projected earnings |
+| `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
+
+Accepting and picking a slot are **one** action: an acceptance with no date
+would leave hosts and club admins nothing to enrol against. The slot is booked
+the instant the accept succeeds and stays booked until the pod exists, so no
+ordinary pod can take it in between.
+
+## Races
+
+Every enrolment is a single conditional write on the server, so simultaneous
+claims have exactly one winner. The loser gets a `CONFLICT`, which each dialog
+surfaces as `labels.claimedElsewhere` and the page clears by refetching — the
+card simply leaves that queue.
+
+## Copy
+
+Labels come from `mwebAutoPodLabels(t)` (mWeb + native, `mweb.autoPods.*`) or
+`shellAutoPodLabels(t)` (the MUI portals, `shell.autoPods.*`), both in
+`@duncit/utils`. The two namespaces carry word-for-word identical values; they
+cannot collapse into one because the server stores a row per key path.

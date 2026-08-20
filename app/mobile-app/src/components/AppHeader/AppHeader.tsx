@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
@@ -12,9 +12,10 @@ import { useBranding } from '@/hooks/useBranding';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { TourAnchor } from '@/tours/TourAnchor';
-import { STUDIO_HOME_ROUTE, STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
+import { STUDIO_LABEL, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 
 import { HeaderGreeting } from './HeaderGreeting';
 import { QuickAction } from './QuickAction';
@@ -38,6 +39,19 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const effectiveStudio = resolveMode(studioMode, roles);
   const [switchOpen, setSwitchOpen] = useState(false);
   const showBrowseActions = !minimal && effectiveStudio === 'USER';
+  const autoPodCounts = useAutoPodCountsStore((s) => s.data);
+  const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
+
+  // Primed on mount and re-read when the dialog opens, so the switch itself
+  // never waits on the network to decide where to land.
+  useEffect(() => {
+    fetchAutoPodCounts().catch(() => undefined);
+  }, [fetchAutoPodCounts]);
+
+  const openSwitch = () => {
+    fetchAutoPodCounts(true).catch(() => undefined);
+    setSwitchOpen(true);
+  };
 
   return (
     <XStack
@@ -54,7 +68,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             testID="header-studio-badge"
             role="button"
             aria-label="Switch role"
-            onPress={() => setSwitchOpen(true)}
+            onPress={openSwitch}
             alignItems="center"
             gap={4}
             paddingHorizontal={10}
@@ -126,8 +140,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         onSelect={(next) => {
           setStudioMode(next);
           setSwitchOpen(false);
-          // Jump straight to the selected role's dashboard (B3-2).
-          navigation.navigate(STUDIO_HOME_ROUTE[next]);
+          // Jump straight to the selected role's dashboard (B3-2) — or to its
+          // Auto Pod queue when offers are waiting on that role.
+          navigation.navigate(studioSwitchRoute(next, autoPodCounts));
         }}
       />
     </XStack>

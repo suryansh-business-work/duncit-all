@@ -83,6 +83,11 @@ export const linking: LinkingOptions<RootStackParamList> = {
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',
       VenueEarnings: 'venues/earnings',
+      // Auto Pods, on mWeb's exact paths — the server's enrolment
+      // notifications carry these three URLs verbatim.
+      VenueAutoPods: 'venues/auto-pods',
+      HostAutoPods: 'host/auto-pods',
+      ClubAutoPods: 'clubs/auto-pods',
       ProductsManage: 'products/manage',
       ClubManage: 'clubs/manage',
       BeClubAdmin: 'be-club-admin',

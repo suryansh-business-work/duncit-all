@@ -233,6 +233,15 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
   },
 ];
 
+/** The Auto Pods row each partner menu gains while the `auto_pods` flag is on.
+ * Only the three enrolling roles have a queue, so ECOMM has no entry. The label
+ * is passed in already translated — this module holds no copy. */
+const AUTO_POD_TILES: Partial<Record<StudioMode, Omit<ProfileTile, 'label'>>> = {
+  VENUE: { key: 'venue-auto-pods', caption: '', icon: 'auto-awesome', route: 'VenueAutoPods' },
+  HOST: { key: 'host-auto-pods', caption: '', icon: 'auto-awesome', route: 'HostAutoPods' },
+  CLUB: { key: 'club-auto-pods', caption: '', icon: 'auto-awesome', route: 'ClubAutoPods' },
+};
+
 /**
  * The partner section for the studio mode the user is currently switched into,
  * ending in Withdrawal. Returns a list (never more than one entry) so the caller
@@ -242,11 +251,23 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
  * consumer sidebar, and a partner sees exactly the one menu they switched to
  * rather than every menu they qualify for. The role is still checked because a
  * revoked role must not keep a persisted mode alive.
+ *
+ * `autoPodLabel` opts the mode's Auto Pods row in: the caller passes the
+ * translated label when the `auto_pods` flag is on, and nothing when it is off.
  */
-export function buildPartnerMenus(roles: readonly string[], mode: StudioMode): PartnerMenu[] {
+export function buildPartnerMenus(
+  roles: readonly string[],
+  mode: StudioMode,
+  autoPodLabel?: string,
+): PartnerMenu[] {
   const active = PARTNER_MENUS.find((menu) => menu.mode === mode && roles.includes(menu.role));
   if (!active) return [];
-  return [{ key: active.key, title: active.title, items: [...active.items, WITHDRAWAL_TILE] }];
+  const items = [...active.items];
+  const autoPods = AUTO_POD_TILES[mode];
+  if (autoPodLabel && autoPods) {
+    items.push({ ...autoPods, label: autoPodLabel });
+  }
+  return [{ key: active.key, title: active.title, items: [...items, WITHDRAWAL_TILE] }];
 }
 
 /** The "Shop" grouped list — the e-commerce destinations, a section that sits

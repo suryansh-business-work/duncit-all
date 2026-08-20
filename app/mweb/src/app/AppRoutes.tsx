@@ -102,6 +102,9 @@ const ClubStudioPage = lazy(() => import('../pages/club-studio'));
 const ChatsPage = lazy(() => import('../pages/ChatsPage'));
 const ChatRoomPage = lazy(() => import('../pages/ChatRoomPage'));
 const MenuPage = lazy(() => import('../pages/menu-page'));
+const VenueAutoPodsPage = lazy(() => import('../pages/venue-auto-pods-page'));
+const HostAutoPodsPage = lazy(() => import('../pages/host-auto-pods-page'));
+const ClubAutoPodsPage = lazy(() => import('../pages/club-auto-pods-page'));
 
 interface Props {
   superCategory: string;
@@ -179,6 +182,11 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit
             under the `/club/:clubSlug` pattern and shadow a real club slug. */}
         <Route path="/clubs/manage" element={withAuth(<ClubStudioPage />)} />
+        {/* Auto Pods — one queue per enrolment. Reached through the flag-gated
+            drawer row, and `/clubs/...` for the same reason Club Studio is. */}
+        <Route path="/venues/auto-pods" element={withAuth(<VenueAutoPodsPage />)} />
+        <Route path="/host/auto-pods" element={withAuth(<HostAutoPodsPage />)} />
+        <Route path="/clubs/auto-pods" element={withAuth(<ClubAutoPodsPage />)} />
         <Route path="/faqs" element={withAuth(<FaqsPage />)} />
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />

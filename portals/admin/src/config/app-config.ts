@@ -9,6 +9,14 @@
  */
 import { parseEnvRoles, type AppConfig } from '@duncit/shell';
 
+/**
+ * Auto Pods ship behind the `auto_pods` feature flag. The nav child and the
+ * search entry are filtered out of the chrome by `AppShell` while the flag is
+ * off, and the route redirects — one path, named once, so the three cannot
+ * disagree.
+ */
+export const AUTO_PODS_PATH = '/auto-pods';
+
 export const appConfig = {
   key: 'admin',
   name: 'Admin',
@@ -48,6 +56,7 @@ export const appConfig = {
       children: [
         { label: 'Dashboard', to: '/pods/dashboard', icon: 'insights' },
         { label: 'All Pods', to: '/pods', icon: 'calendar' },
+        { label: 'Auto Pods', to: AUTO_PODS_PATH, icon: 'handshake' },
         { label: 'Pod Ideas', to: '/pod-ideas', icon: 'insights' },
         { label: 'Pod Plans', to: '/pod-plans', icon: 'description' },
         { label: 'Event Tickets', to: '/event-tickets', icon: 'ticket' },
@@ -130,6 +139,12 @@ export const appConfig = {
       keywords: ['stats', 'overview', 'ratings', 'occupancy', 'revenue'],
     },
     { label: 'All Pods', to: '/pods', section: 'Pods', keywords: ['events', 'sessions'] },
+    {
+      label: 'Auto Pods',
+      to: AUTO_PODS_PATH,
+      section: 'Pods',
+      keywords: ['auto', 'enrol', 'enroll', 'marketplace', 'venue', 'host', 'club admin', 'offer'],
+    },
     { label: 'Pod Ideas', to: '/pod-ideas', section: 'Pods' },
     { label: 'Pod Plans', to: '/pod-plans', section: 'Pods' },
     { label: 'Event Tickets', to: '/event-tickets', section: 'Pods', keywords: ['qr', 'check-in'] },

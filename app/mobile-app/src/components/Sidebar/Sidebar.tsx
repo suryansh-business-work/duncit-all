@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,8 +15,9 @@ import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
+import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { STUDIO_HOME_ROUTE, STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
+import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
@@ -46,6 +47,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const showMembership = useFeatureFlag('membership');
   const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
+  const showAutoPods = useFeatureFlag('auto_pods');
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   const effectiveMode = resolveMode(studioMode, roles);
@@ -55,6 +57,19 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const toggleTheme = useThemeStore((s) => s.toggle);
 
   const [switchOpen, setSwitchOpen] = useState(false);
+  const autoPodCounts = useAutoPodCountsStore((s) => s.data);
+  const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
+
+  // Primed on mount and re-read when the dialog opens, so the switch itself
+  // never waits on the network to decide where to land.
+  useEffect(() => {
+    fetchAutoPodCounts().catch(() => undefined);
+  }, [fetchAutoPodCounts]);
+
+  const openSwitch = () => {
+    fetchAutoPodCounts(true).catch(() => undefined);
+    setSwitchOpen(true);
+  };
 
   // MenuRoute is a union of param-less screens; RN v7's distributive `navigate`
   // overload can't accept a union arg directly, so reshape the method to a
@@ -115,6 +130,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             showMembership={showMembership}
             showGiftCards={showGiftCards}
             showTourGuide={showTourGuide}
+            showAutoPods={showAutoPods}
             onNavigate={go}
           />
 
@@ -123,7 +139,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               testID="sidebar-switch-role"
               role="button"
               aria-label="Switch role"
-              onPress={() => setSwitchOpen(true)}
+              onPress={openSwitch}
               marginHorizontal={8}
               marginTop={4}
               marginBottom={15}
@@ -199,8 +215,9 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           setStudioMode(next);
           setSwitchOpen(false);
           onClose();
-          // Jump straight to the selected role's dashboard (B3-2).
-          navigation.navigate(STUDIO_HOME_ROUTE[next]);
+          // Jump straight to the selected role's dashboard (B3-2) — or to its
+          // Auto Pod queue when offers are waiting on that role.
+          navigation.navigate(studioSwitchRoute(next, autoPodCounts));
         }}
       />
     </YStack>

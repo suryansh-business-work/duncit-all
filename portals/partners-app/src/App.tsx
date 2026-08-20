@@ -10,9 +10,11 @@ import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage'
 import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
+import VenueAutoPodsPage from './pages/venue-auto-pods-page/VenueAutoPodsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import HostPodsPage from './pages/host-pods-page/HostPodsPage';
+import HostAutoPodsPage from './pages/host-auto-pods-page/HostAutoPodsPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
@@ -29,6 +31,7 @@ import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminCl
 import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
 import ClubAdminPodDetailsPage from './pages/club-admin-pod-details-page/ClubAdminPodDetailsPage';
 import ClubAdminPodMonitoringPage from './pages/club-admin-monitoring-page/ClubAdminPodMonitoringPage';
+import ClubAdminAutoPodsPage from './pages/club-admin-auto-pods-page/ClubAdminAutoPodsPage';
 import VerificationPage from './pages/verification-page/VerificationPage';
 import EarnPage from './pages/earn-page/EarnPage';
 import AppShell from './components/AppShell';
@@ -52,10 +55,12 @@ export default function App() {
       {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
+      <Route path="/venues/auto-pods" element={authed(<VenueAutoPodsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
       <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />
       <Route path="/host/pods" element={authed(<HostPodsPage />)} />
+      <Route path="/host/auto-pods" element={authed(<HostAutoPodsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
@@ -72,6 +77,7 @@ export default function App() {
       <Route path="/club-admin/clubs" element={authed(<ClubAdminClubsPage />)} />
       <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
       <Route path="/club-admin/monitoring" element={authed(<ClubAdminPodMonitoringPage />)} />
+      <Route path="/club-admin/auto-pods" element={authed(<ClubAdminAutoPodsPage />)} />
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
       <Route path="/club-admin/clubs/:clubId/pods/:id" element={authed(<ClubAdminPodDetailsPage />)} />
       <Route path="/wallet" element={authed(<WalletPage />)} />

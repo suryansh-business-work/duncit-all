@@ -32,7 +32,8 @@ export type ProfileIconKey =
   | 'venue'
   | 'ecomm'
   | 'insights'
-  | 'calendar';
+  | 'calendar'
+  | 'autopods';
 
 export interface ProfileTile {
   key: string;
@@ -176,12 +177,20 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
  * rather than every menu they qualify for. The role is still checked because a
  * revoked role must not keep a persisted mode alive.
  */
-export function buildPartnerMenus(roles: readonly string[], mode: StudioMode): PartnerMenu[] {
+export function buildPartnerMenus(
+  roles: readonly string[],
+  mode: StudioMode,
+  autoPods?: ProfileTile | null
+): PartnerMenu[] {
   const active = PARTNER_MENUS.find((menu) => menu.mode === mode && roles.includes(menu.role));
   if (!active) return [];
-  return [
-    { key: active.key, title: active.title, items: [...active.items, WITHDRAWAL_TILE] },
-  ];
+  const items = [...active.items];
+  // Auto Pods sits above Withdrawal: it is work waiting on the partner, and the
+  // caller only passes it when the `auto_pods` flag is on for a role that has a
+  // queue. Its label arrives translated — this module holds no copy (rule 38).
+  if (autoPods) items.push(autoPods);
+  items.push(WITHDRAWAL_TILE);
+  return [{ key: active.key, title: active.title, items }];
 }
 
 /** The "Shop" grouped list — the e-commerce destinations, a section that sits

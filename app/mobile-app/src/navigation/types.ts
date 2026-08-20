@@ -47,6 +47,12 @@ export type RootStackParamList = {
   VenueManage: undefined;
   VenueEarnings: undefined;
   VenueSlotRequests: undefined;
+  /** Auto Pods a venue may accept — the FIRST of the three enrolments. */
+  VenueAutoPods: undefined;
+  /** Auto Pods waiting for a host, once a venue has dated them. */
+  HostAutoPods: undefined;
+  /** Auto Pods waiting for a club admin to attach them to one of their clubs. */
+  ClubAutoPods: undefined;
   Earn: undefined;
   ListProduct: undefined;
   BeClubAdmin: undefined;

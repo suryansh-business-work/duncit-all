@@ -23,6 +23,7 @@
     "@apollo/client": "^3.10.4",
     "@duncit/ad-request-form": "workspace:*",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/auto-pods": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",

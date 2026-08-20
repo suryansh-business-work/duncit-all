@@ -12,7 +12,9 @@ const StudioModeContext = createContext<StudioModeContextValue>({
 });
 
 const STORAGE_KEY = 'mweb_studio_mode';
-const VALID = new Set<StudioMode>(['USER', 'HOST', 'VENUE', 'ECOMM']);
+// Every mode in StudioMode belongs here: one left out is silently dropped on
+// reload, which used to land a Club Admin back in User mode after a refresh.
+const VALID = new Set<StudioMode>(['USER', 'HOST', 'VENUE', 'ECOMM', 'CLUB']);
 
 export function StudioModeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [mode, setMode] = useState<StudioMode>(() => {

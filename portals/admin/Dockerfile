@@ -49,6 +49,7 @@ COPY packages/slots/package.json ./packages/slots/
 COPY packages/club-form/package.json ./packages/club-form/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
+COPY packages/auto-pods/package.json ./packages/auto-pods/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/dashboard/package.json ./packages/dashboard/

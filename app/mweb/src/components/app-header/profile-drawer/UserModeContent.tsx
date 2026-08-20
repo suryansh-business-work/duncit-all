@@ -8,9 +8,18 @@ import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
 import { buildManageItems, buildPartnerMenus, SHOP_ITEMS, type ProfileTile } from './profileSections';
-import type { StudioMode } from '../../../studio-mode';
+import { AUTO_POD_PATH, type StudioMode } from '../../../studio-mode';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 import { useTranslation } from '../../../i18n/useTranslation';
+
+/** The Auto Pods row reads as that role's own queue, so it borrows the page
+ * title. Written out as literals — a composed key is invisible to the shipped-
+ * key check (rule 38). Modes with no queue are absent. */
+const AUTO_POD_TITLE_KEY: Partial<Record<StudioMode, string>> = {
+  VENUE: 'mweb.autoPods.venueTitle',
+  HOST: 'mweb.autoPods.hostTitle',
+  CLUB: 'mweb.autoPods.clubTitle',
+};
 
 interface UserModeContentProps {
   me: any;
@@ -26,16 +35,31 @@ interface UserModeContentProps {
   showGiftCards?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
+  /** Server `auto_pods` feature flag — hides the partner Auto Pods row. */
+  showAutoPods?: boolean;
   onNavigate: (to: string) => void;
+}
+
+/** The partner menu's Auto Pods row, or null when the flag is off or the mode
+ * has no queue (USER, ECOMM). */
+function autoPodsTile(
+  mode: StudioMode,
+  enabled: boolean,
+  translate: (key: string) => string
+): ProfileTile | null {
+  const to = AUTO_POD_PATH[mode];
+  const titleKey = AUTO_POD_TITLE_KEY[mode];
+  if (!enabled || !to || !titleKey) return null;
+  return { key: 'auto-pods', label: translate(titleKey), caption: '', icon: 'autopods', to };
 }
 
 /** The profile layout every mode shares: identity, incomplete nudge,
  * quick-action grid, referral card, the Manage Account list and — once switched
  * into a partner mode — that role's own menu, ending in Withdrawal. */
-export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, onNavigate }: Readonly<UserModeContentProps>) {
+export default function UserModeContent({ me, roles, mode, showPodPlans, showLeaderboard = false, showMembership = false, showGiftCards = false, showTourGuide = false, showAutoPods = false, onNavigate }: Readonly<UserModeContentProps>) {
   const { t } = useTranslation();
   const percent = profileCompletion(me ?? {});
-  const partnerMenus = buildPartnerMenus(roles, mode);
+  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t));
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

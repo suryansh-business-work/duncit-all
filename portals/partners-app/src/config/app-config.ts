@@ -81,6 +81,28 @@ const CLUB_ADMIN_NAV: AppNavItem = {
 const WALLET_NAV: AppNavItem = { label: 'Wallet', to: '/wallet', icon: 'wallet' };
 const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER']);
 
+const AUTO_PODS_LABEL = 'Auto Pods';
+const AUTO_PODS_ICON = 'handshake';
+
+/**
+ * Adds a partner section's Auto Pods entry, directly AFTER its Dashboard child.
+ *
+ * Never first: `landingPath()` returns the first entry of the user's nav, so a
+ * first-position insert would silently move where `/` sends that role.
+ */
+function withAutoPods(group: AppNavItem, enabled: boolean, to: string): AppNavItem {
+  if (!enabled) return group;
+  const children = group.children ?? [];
+  return {
+    ...group,
+    children: [
+      ...children.slice(0, 1),
+      { label: AUTO_PODS_LABEL, to, icon: AUTO_PODS_ICON },
+      ...children.slice(1),
+    ],
+  };
+}
+
 /**
  * The Host section, like every other partner area, is a group rather than a
  * single link.
@@ -89,19 +111,23 @@ const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAG
  * holds the role has nothing to apply for, and leaving the application in the
  * sidebar invites them to re-submit a profile that is already approved.
  */
-function hostNav(isHost: boolean): AppNavItem {
+function hostNav(isHost: boolean, autoPods: boolean): AppNavItem {
   const apply: AppNavItem[] = isHost
     ? []
     : [{ label: 'Become a Host', to: '/become-host', icon: 'work' }];
-  return {
-    label: 'Host',
-    icon: 'work',
-    children: [
-      { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
-      ...apply,
-      { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
-    ],
-  };
+  return withAutoPods(
+    {
+      label: 'Host',
+      icon: 'work',
+      children: [
+        { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
+        ...apply,
+        { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
+      ],
+    },
+    autoPods,
+    '/host/auto-pods',
+  );
 }
 
 /** Sidebar nav for the signed-in user — appends Club Admin tools when entitled
@@ -121,16 +147,32 @@ export function landingPath(roles?: readonly string[] | null): string {
   return first?.to ?? first?.children?.[0]?.to ?? '/faqs';
 }
 
-export function buildNav(roles?: readonly string[] | null): AppNavItem[] {
+export interface BuildNavOptions {
+  /** The `auto_pods` feature flag. Off by default, so the three Auto Pod
+   * entries stay hidden until an admin turns the feature on. */
+  autoPods?: boolean;
+}
+
+export function buildNav(
+  roles?: readonly string[] | null,
+  options?: Readonly<BuildNavOptions>,
+): AppNavItem[] {
+  const autoPods = options?.autoPods === true;
   const isClubAdmin = roles?.includes('CLUB_ADMIN') ?? false;
   const isEarner = roles?.some((role) => EARNING_ROLES.has(role)) ?? false;
   const isHost = roles?.includes('HOST') ?? false;
-  const nav = appConfig.nav.map((item) => (item.label === 'Host' ? hostNav(isHost) : item));
+  const nav = appConfig.nav.map((item) => {
+    if (item.label === 'Host') return hostNav(isHost, autoPods);
+    if (item.label === 'Venues') return withAutoPods(item, autoPods, '/venues/auto-pods');
+    return item;
+  });
   const helpIndex = () => {
     const index = nav.findIndex((item) => item.to === '/faqs');
     return index === -1 ? nav.length : index;
   };
-  if (isClubAdmin) nav.splice(helpIndex(), 0, CLUB_ADMIN_NAV);
+  if (isClubAdmin) {
+    nav.splice(helpIndex(), 0, withAutoPods(CLUB_ADMIN_NAV, autoPods, '/club-admin/auto-pods'));
+  }
   if (isEarner) nav.splice(helpIndex(), 0, WALLET_NAV);
   return nav;
 }

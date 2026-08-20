@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { attendeeSeatCount } from '@duncit/utils';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -49,6 +50,13 @@ interface Props {
   people: AttendeePerson[];
   spotFills?: SpotFillRow[];
   spotFilledTitle?: string;
+  /**
+   * Seats the list holds, resolved by the section that owns the pod. The
+   * heading counts PEOPLE COMING, not rows: a booking for three is one row
+   * carrying a "+2 other members" label. Absent (a club members list) the
+   * rows are the count.
+   */
+  seatCount?: number;
   onClose: () => void;
   onOpenProfile: (userId: string) => void;
 }
@@ -179,11 +187,13 @@ export function AttendeesDialog({
   people,
   spotFills = [],
   spotFilledTitle = '',
+  seatCount,
   onClose,
   onOpenProfile,
 }: Readonly<Props>) {
   const { color: ink } = useThemeColors();
   const { t } = useTranslation();
+  const count = seatCount ?? attendeeSeatCount(people);
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -210,7 +220,7 @@ export function AttendeesDialog({
             <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
                 <Text fontSize={16} fontWeight="700" color="$color">
-                  {t('mweb.podDetails.attendeesCount', { vars: { count: people.length } })}
+                  {t('mweb.podDetails.attendeesCount', { vars: { count } })}
                 </Text>
                 <XStack
                   testID="attendees-dialog-close"

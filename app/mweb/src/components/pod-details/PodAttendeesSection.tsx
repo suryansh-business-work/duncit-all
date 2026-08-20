@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Avatar, AvatarGroup, ButtonBase, Stack, Typography } from '@mui/material';
 import PodAttendeesDialog, { type AttendeePerson, type SpotFillRow } from './PodAttendeesDialog';
+import { attendeeSeatCount } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Attendee {
@@ -97,7 +98,7 @@ export default function PodAttendeesSection({
   const fillRows = useMemo(() => buildSpotFillRows(spotFills, t), [spotFills, t]);
   // Seats, not faces: one person can be bringing three more, and the number
   // beside "of N spots" has to mean the same thing the capacity does.
-  const count = seatsTaken ?? people.reduce((sum, person) => sum + (person.seats ?? 1), 0);
+  const count = seatsTaken ?? attendeeSeatCount(people);
   const withTotal = expired ? 'mweb.podDetails.attendeesAttended' : 'mweb.podDetails.attendeesGoing';
   const withoutTotal = expired
     ? 'mweb.podDetails.attendeesAttendedNoTotal'
@@ -176,6 +177,7 @@ export default function PodAttendeesSection({
         open={open}
         people={people}
         spotFills={fillRows}
+        seatCount={count}
         onClose={() => setOpen(false)}
       />
     </Stack>

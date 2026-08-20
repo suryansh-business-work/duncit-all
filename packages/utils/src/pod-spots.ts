@@ -129,3 +129,22 @@ export function seatOptions(seatsAvailable: number, max = MAX_SEATS_PER_BOOKING)
   const top = Math.max(1, Math.min(Math.floor(seatsAvailable) || 0, max));
   return Array.from({ length: top }, (_, index) => index + 1);
 }
+
+/**
+ * Seats a rendered attendee list holds.
+ *
+ * A booking for four is ONE row — the rest of the party rides along as a
+ * "+3 other members" label rather than three more faces — so a heading titled
+ * with the row count under-reports that booking by three. This is the same
+ * off-by-N `podSeatsTaken` fixes on the pod, applied to the list a screen
+ * actually draws. A row with no `seats` is a booking for one, which is what
+ * every booking was before multi-seat.
+ */
+export function attendeeSeatCount(
+  people: readonly { seats?: number | null }[] | null | undefined,
+): number {
+  return (people ?? []).reduce((sum, person) => {
+    const seats = Math.floor(Number(person.seats));
+    return sum + (seats > 0 ? seats : 1);
+  }, 0);
+}

@@ -19,7 +19,7 @@ interface DetailRowProps {
 
 /** One contact line — only rendered when the attendee has the field on file. */
 function DetailRow({ icon, value, tint, href }: Readonly<DetailRowProps>) {
-  const open = href ? () => void Linking.openURL(href).catch(() => undefined) : undefined;
+  const open = href ? () => { Linking.openURL(href).catch(() => undefined); } : undefined;
   return (
     <XStack
       alignItems="flex-start"

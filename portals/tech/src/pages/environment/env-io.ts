@@ -80,7 +80,7 @@ function toPairs(config: unknown): Array<{ key: string; value: string }> {
   const pairs: Array<{ key: string; value: string }> = [];
   for (const [key, value] of Object.entries(config)) {
     if (value === null || value === undefined) continue;
-    pairs.push({ key, value: String(value) });
+    pairs.push({ key, value: typeof value === 'object' ? JSON.stringify(value) : String(value) });
   }
   return pairs;
 }

@@ -48,11 +48,11 @@ export function useComposerSuggestions({ mentionNames, draft, onDraft }: Options
   /** Whichever of the two is under the caret, or nothing. */
   const read = useCallback((value: string, caret: number) => {
     const mention = mentionQuery(value, caret);
-    if (mention !== null) {
-      setQuery({ kind: 'MENTION', term: mention });
-    } else {
+    if (mention === null) {
       const emoji = emojiQuery(value, caret);
       setQuery(emoji === null ? null : { kind: 'EMOJI', term: emoji });
+    } else {
+      setQuery({ kind: 'MENTION', term: mention });
     }
     setActive(0);
   }, []);

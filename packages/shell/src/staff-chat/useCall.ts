@@ -337,7 +337,7 @@ export function useCall(
       // The browser's own "Stop sharing" bar ends the track without telling us,
       // so the camera has to come back from the track, not only from our button.
       track.onended = () => {
-        void sender.replaceTrack(cameraTrack.current ?? null);
+        sender.replaceTrack(cameraTrack.current ?? null).catch(() => undefined);
         screenStream.current = null;
         setSharing(false);
       };

@@ -317,7 +317,7 @@ export function CheckoutScreen() {
           // Close the sheet, then say what actually happened — every failure
           // used to be reported as the buyer's own cancellation.
           setOrder(null);
-          void paymentFailure.report(error);
+          paymentFailure.report(error).catch(() => undefined);
         }}
       />
       <PaymentFailureDialog

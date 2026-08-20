@@ -125,7 +125,7 @@ export function layoutsEqual(
   const byId = new Map(b.map((item) => [item.id, item]));
   return a.every((item) => {
     const other = byId.get(item.id);
-    if (!other || other.x !== item.x || other.y !== item.y || other.w !== item.w) return false;
+    if (other?.x !== item.x || other.y !== item.y || other.w !== item.w) return false;
     return other.h === item.h || !!ignoreHeightFor?.has(item.id);
   });
 }

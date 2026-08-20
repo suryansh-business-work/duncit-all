@@ -148,7 +148,7 @@ export default function SignaturePad({
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => onChange(String(reader.result ?? ''), 'UPLOAD');
+    reader.onload = () => onChange(typeof reader.result === 'string' ? reader.result : '', 'UPLOAD');
     reader.onerror = () => setError('That image could not be read.');
     reader.readAsDataURL(file);
   };
@@ -235,7 +235,7 @@ export default function SignaturePad({
       {tab === 'UPLOAD' && (
         <Stack spacing={1} alignItems="flex-start">
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            Choose image
+            Choose image{' '}
             <input
               hidden
               type="file"

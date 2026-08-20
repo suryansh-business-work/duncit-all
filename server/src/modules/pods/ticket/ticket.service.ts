@@ -272,7 +272,7 @@ async function invoiceForTicket(t: ITicket): Promise<InvoiceData | null> {
           status: 'SUCCESS',
           invoice_no: { $ne: null },
         }).sort({ paid_at: -1, created_at: -1 });
-    if (!payment || payment.status !== 'SUCCESS' || !payment.invoice_no) return null;
+    if (payment?.status !== 'SUCCESS' || !payment.invoice_no) return null;
     return await invoiceDataForPayment(payment, {
       paymentMethod: payment.gateway || 'Gateway',
       currencySymbol: payment.currency_symbol,

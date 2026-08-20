@@ -28,7 +28,7 @@ export function buildRazorpayHtml(order: RazorpayOrder): string {
     prefill: { email: order.prefill_email, contact: order.prefill_contact },
     theme: { color: '#ff4f73' },
   };
-  const serializedOptions = JSON.stringify(options).replaceAll('<', '\\u003c');
+  const serializedOptions = JSON.stringify(options).replaceAll('<', String.raw`\u003c`);
   // The failure is posted WITH what Razorpay said, and posted ONCE. Razorpay
   // fires `payment.failed` and then `ondismiss` as the sheet closes, so
   // reporting both overwrote the real reason with "the buyer closed it" —

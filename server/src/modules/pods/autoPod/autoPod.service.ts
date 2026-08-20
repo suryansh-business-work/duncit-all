@@ -146,7 +146,7 @@ export async function resolveCategoryPair(subCategoryId: string) {
   const sub: any = await CategoryModel.findById(subCategoryId)
     .select('name level parent_id min_pax')
     .lean();
-  if (!sub || sub.level !== 'SUB') {
+  if (sub?.level !== 'SUB') {
     autoPodFail('BAD_USER_INPUT', 'Select a valid sub-category');
   }
   const middle: any = sub.parent_id

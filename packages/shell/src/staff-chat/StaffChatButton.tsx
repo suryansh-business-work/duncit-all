@@ -31,7 +31,7 @@ export function StaffChatButton({
   // is what the socket is for. The beep lives in the hook, and skips anything
   // you wrote yourself.
   const onMessage = useCallback(() => {
-    void refetch();
+    refetch().catch(() => undefined);
   }, [refetch]);
 
   useStaffSocket({
@@ -44,7 +44,7 @@ export function StaffChatButton({
 
   // Closing the panel is when things were read, so the badge is re-read then.
   useEffect(() => {
-    if (!open) void refetch();
+    if (!open) refetch().catch(() => undefined);
   }, [open, refetch]);
 
   const unread = data?.staffUnreadCount ?? 0;

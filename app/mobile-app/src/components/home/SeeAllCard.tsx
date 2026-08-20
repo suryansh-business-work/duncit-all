@@ -50,11 +50,11 @@ export function SeeAllCard({ count, width = 200, height = 230, onPress, testID }
       <Text fontSize={14} fontWeight="700" color="$color">
         {t('mweb.home.seeAll')}
       </Text>
-      {count !== undefined ? (
+      {count !== undefined && (
         <Text fontSize={11} fontWeight="700" color="$muted">
           {t('mweb.home.morePods', { count })}
         </Text>
-      ) : null}
+      )}
     </YStack>
   );
 }

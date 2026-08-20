@@ -66,8 +66,8 @@ export default function AutoPodsPage() {
         await cancelMutation({ variables: { auto_pod_doc_id: row.id, reason } });
         notifySuccess(t('admin.autoPods.cancelled'));
         refetch();
-      } catch (caught) {
-        notifyError(parseApiError(caught));
+      } catch (error_) {
+        notifyError(parseApiError(error_));
       }
     },
     [cancelMutation, confirm, labels.dismiss, refetch, setCancelReason, t]

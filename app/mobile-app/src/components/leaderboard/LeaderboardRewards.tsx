@@ -30,11 +30,11 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardRewardShape }>) {
         <Text fontSize={13} fontWeight="700" color="$color">
           {reward.title}
         </Text>
-        {reward.description !== '' ? (
+        {reward.description !== '' && (
           <Text fontSize={11} color="$muted">
             {reward.description}
           </Text>
-        ) : null}
+        )}
       </YStack>
     </XStack>
   );

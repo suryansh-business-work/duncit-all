@@ -57,8 +57,8 @@ export default function ManualLogsTab({
       setSummary('');
       setBody(EMPTY_BODY);
       closeComposer();
-    } catch (caught) {
-      setError(parseApiError(caught));
+    } catch (error_) {
+      setError(parseApiError(error_));
     }
   };
   return (
@@ -107,7 +107,7 @@ export default function ManualLogsTab({
           onCancel={closeComposer}
           onErrorClose={() => setError(null)}
           onSubmit={() => {
-            submit().catch((caught) => setError(parseApiError(caught)));
+            submit().catch((error_) => setError(parseApiError(error_)));
           }}
           onSummaryChange={setSummary}
         />

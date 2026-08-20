@@ -19,7 +19,7 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 
 const uriArg = process.argv.indexOf('--uri');
-const URI = uriArg !== -1 ? process.argv[uriArg + 1] : 'mongodb://127.0.0.1:27017/duncit-local';
+const URI = uriArg === -1 ? 'mongodb://127.0.0.1:27017/duncit-local' : process.argv[uriArg + 1];
 const COUNT = 25;
 
 const isLocal = (uri: string) =>

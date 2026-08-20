@@ -25,7 +25,21 @@ export function ReopenReasonModal({
   const [reason, setReason] = useState('');
   if (!open) return null;
   return (
-    <Backdrop testID="reopen-reason-modal">
+    <Backdrop
+      testID="reopen-reason-modal"
+      footer={
+        <XStack gap={8} justifyContent="flex-end">
+          <ModalButton testID="reopen-cancel" label="Cancel" onPress={onClose} />
+          <ModalButton
+            testID="reopen-submit"
+            label={busy ? 'Re-opening…' : 'Re-open'}
+            primary
+            disabled={busy}
+            onPress={() => onSubmit(reason.trim())}
+          />
+        </XStack>
+      }
+    >
       <Text fontSize={16} fontWeight="700" color="$color">
         Re-open this conversation
       </Text>
@@ -55,16 +69,6 @@ export function ReopenReasonModal({
           {error}
         </Text>
       ) : null}
-      <XStack gap={8} justifyContent="flex-end">
-        <ModalButton testID="reopen-cancel" label="Cancel" onPress={onClose} />
-        <ModalButton
-          testID="reopen-submit"
-          label={busy ? 'Re-opening…' : 'Re-open'}
-          primary
-          disabled={busy}
-          onPress={() => onSubmit(reason.trim())}
-        />
-      </XStack>
     </Backdrop>
   );
 }

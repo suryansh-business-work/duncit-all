@@ -137,7 +137,7 @@ export default function HostsTable({
       { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (h) => h.status },
       { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
       { field: 'commission', headerName: 'Commission', sortable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
-      dateColumn<HostRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125, formatDate: (d) => d.toLocaleDateString() }),
+      dateColumn<HostRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
       { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
     ];

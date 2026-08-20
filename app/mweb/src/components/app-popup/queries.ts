@@ -1,6 +1,8 @@
 import { gql } from '@apollo/client';
 
-export type AppPopupClientPlatform = 'IOS' | 'ANDROID' | 'WEB';
+// The union itself lives in @duncit/utils, next to the user-agent rule that
+// produces it, so mWeb and the native web build cannot drift apart on it.
+export type { AppPopupClientPlatform } from '@duncit/utils';
 
 /** What the app-open popup needs to render. The server decides eligibility. */
 export interface ActiveAppPopup {

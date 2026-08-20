@@ -8,6 +8,7 @@ import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 import CoinSummaryRows from './CoinSummaryRows';
 import type { CoinCheckoutSummary } from '@duncit/utils';
+import { formatDateTime } from '../../utils/dateFormat';
 
 /** One line of money taken off the bill — a coupon, redeemed coins. */
 export interface CheckoutDiscount {
@@ -56,7 +57,7 @@ export default function OrderSummaryCard({
     seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
   const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || t('mweb.checkout.podBooking');
-  const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
+  const when = formatDateTime(pod?.pod_date_time);
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
   // Pod checkout is membership only — the ticket is the whole bill. Products

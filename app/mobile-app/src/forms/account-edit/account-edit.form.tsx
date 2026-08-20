@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { AddressFields } from '@/forms/components/AddressFields';
 import type { AccountMe } from '@/hooks/useAccount';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { ContactFields } from './ContactFields';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
@@ -53,9 +54,10 @@ export function AccountEditForm({
   // The joining age is admin-configured, so the schema is built from it.
   const { minSignupAge } = useAppSettings();
   const storedDob = toDobInput(me?.dob);
+  const { datePlaceholder } = useDateFormat();
   const schema = useMemo(
-    () => makeAccountEditSchema(minSignupAge, storedDob),
-    [minSignupAge, storedDob],
+    () => makeAccountEditSchema(minSignupAge, storedDob, datePlaceholder),
+    [minSignupAge, storedDob, datePlaceholder],
   );
   const {
     control,

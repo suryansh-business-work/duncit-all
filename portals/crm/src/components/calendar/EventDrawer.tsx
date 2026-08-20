@@ -17,6 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { format } from 'date-fns';
 import type { CalEvent } from './useCalendarEvents';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   event: CalEvent | null;
@@ -57,7 +58,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
           <Stack spacing={1.5} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
             <Typography variant="h6" fontWeight={700}>{event.title}</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label={format(event.date, 'dd MMM yyyy, p')} />
+              <Chip size="small" label={formatDateTime(event.date)} />
               <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity] ?? event.entity} />
               {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : 'Pending'} />}
             </Stack>

@@ -13,6 +13,7 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { formatTime } from '@duncit/app-settings';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -33,9 +34,6 @@ interface Props {
 const pageLabel = (event: ActivityEvent) => event.title || event.path || 'Untitled page';
 const eventLabel = (event: ActivityEvent) => event.target_label || event.target_text || pageLabel(event);
 
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
 
 function actionColor(action: string): 'success' | 'info' | 'warning' | 'default' {
   if (action === 'CLICK') return 'success';

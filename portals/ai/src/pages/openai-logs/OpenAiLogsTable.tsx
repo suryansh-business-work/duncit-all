@@ -89,7 +89,6 @@ export default function OpenAiLogsTable({
         field: 'created_at',
         headerName: 'When',
         width: 165,
-        formatDate: (d) => d.toLocaleString(),
       }),
       {
         field: 'status',

@@ -15,6 +15,7 @@ import {
   Switch,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import CouponDateField from './CouponDateField';
 import { couponFormDefaults, couponFormSchema, toCouponInput, type CouponFormValues } from './coupon';
 import { CREATE_COUPON, UPDATE_COUPON, type CouponPodOption, type CouponRow } from './queries';
 
@@ -118,22 +119,8 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
             )}
           </Stack>
           <Stack direction="row" spacing={2}>
-            <RhfTextField
-              control={control}
-              name="valid_from"
-              type="date"
-              label="Valid from"
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-            <RhfTextField
-              control={control}
-              name="valid_until"
-              type="date"
-              label="Valid until"
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
+            <CouponDateField control={control} name="valid_from" label="Valid from" />
+            <CouponDateField control={control} name="valid_until" label="Valid until" />
           </Stack>
           <Stack direction="row" spacing={2}>
             <RhfTextField control={control} name="max_uses" type="number" label="Max total uses" size="small" />

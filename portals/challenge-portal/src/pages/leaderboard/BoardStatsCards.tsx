@@ -4,6 +4,7 @@ import { useTranslation } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
 import { ADMIN_LEADERBOARD_STATS, type LeaderboardCategoryStats } from './queries';
 import { CATEGORY_LABEL_KEYS, type TranslateFn } from './labels';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** The three stat lines every card renders, in display order. */
 const STAT_LINES = [
@@ -30,7 +31,7 @@ function StatCard({ stat, t }: Readonly<StatCardProps>) {
               {t(line.labelKey)}
             </Typography>
             <Typography variant="body2" fontWeight={700}>
-              {stat[line.field].toLocaleString()}
+              {formatDateTime(stat[line.field])}
             </Typography>
           </Stack>
         ))}

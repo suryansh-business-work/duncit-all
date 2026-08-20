@@ -14,6 +14,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForwardIos';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { Slot, TIME_OPTIONS, buildMonth, isPastDay, isSameDay, slotKey } from './slotHelpers';
+import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
 interface InterviewCalendarProps {
   anchor: Date;
@@ -123,11 +124,7 @@ export default function InterviewCalendar({
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
               Pick time slots on{' '}
-              {selectedDate.toLocaleDateString(undefined, {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
+              {formatDate(selectedDate)}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {TIME_OPTIONS.map((t) => {
@@ -163,13 +160,7 @@ export default function InterviewCalendar({
               {slotList.map((s) => (
                 <Chip
                   key={s.start.toISOString()}
-                  label={`${s.start.toLocaleDateString(undefined, {
-                    day: '2-digit',
-                    month: 'short',
-                  })} · ${s.start.toLocaleTimeString(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}`}
+                  label={formatDateTime(s.start)}
                   onDelete={() => onRemoveSlot(s)}
                   color="primary"
                   variant="outlined"

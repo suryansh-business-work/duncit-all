@@ -1,6 +1,7 @@
 import { Box, Card, Grid, LinearProgress, Stack, Typography, useTheme } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import type { HostInsights } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const WIDTH = 640;
 const HEIGHT = 180;
@@ -21,7 +22,7 @@ function monthLabel(bucket: string): string {
   const [year, month] = bucket.split('-');
   const date = new Date(Number(year), Number(month) - 1, 1);
   if (Number.isNaN(date.getTime())) return bucket;
-  return date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+  return formatDate(date);
 }
 
 /** Where each month's point sits on the earnings polyline. */

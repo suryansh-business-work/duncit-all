@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
+import ContractDateField from './ContractDateField';
 import { CONTRACT_STATUS_OPTIONS, type ContractStatus } from '../../graphql/contracts';
 
 export interface ContractFormState {
@@ -117,23 +118,17 @@ export default function ContractFormDialog({
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
+            <ContractDateField
               label="Effective from"
-              type="date"
               value={form.effective_from}
-              onChange={(e) => onChange({ effective_from: e.target.value })}
-              InputLabelProps={{ shrink: true }}
+              onChange={(effective_from) => onChange({ effective_from })}
               disabled={readOnly}
-              fullWidth
             />
-            <TextField
+            <ContractDateField
               label="Effective to"
-              type="date"
               value={form.effective_to}
-              onChange={(e) => onChange({ effective_to: e.target.value })}
-              InputLabelProps={{ shrink: true }}
+              onChange={(effective_to) => onChange({ effective_to })}
               disabled={readOnly}
-              fullWidth
             />
           </Stack>
 

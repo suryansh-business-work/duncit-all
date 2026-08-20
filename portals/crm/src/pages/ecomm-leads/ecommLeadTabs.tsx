@@ -18,18 +18,15 @@ import ExternalLink from '../../components/ExternalLink';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
+import { formatDateTime } from '@duncit/app-settings';
+import { formatDate as adminDate } from '@duncit/app-settings';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
-  const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
+  const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
   return (
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5}>
       <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0 }}>
@@ -77,8 +74,8 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
             <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
             <LeadDetailRow label="Follow-up" value={followUpLabel} />
             <Divider sx={{ my: 1 }} />
-            <LeadDetailRow label="Created" value={lead.created_at ? new Date(lead.created_at).toLocaleString() : '—'} />
-            <LeadDetailRow label="Updated" value={lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '—'} />
+            <LeadDetailRow label="Created" value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
+            <LeadDetailRow label="Updated" value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
             {lead.notes && (
               <>
                 <Divider sx={{ my: 1 }} />

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { USER_CLICKSTREAM } from './queries';
 import ActivityJourneyChart from './ActivityJourneyChart';
+import { formatTime } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -84,7 +85,7 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <Chip size="small" color="success" label={event.event_type} />
               <Typography variant="caption" color="text.secondary">
-                {new Date(event.occurred_at).toLocaleTimeString()}
+                {formatTime(event.occurred_at)}
               </Typography>
               {event.super_category_slug && <Chip size="small" variant="outlined" label={event.super_category_slug} />}
             </Stack>

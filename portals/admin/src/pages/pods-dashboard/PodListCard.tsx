@@ -2,6 +2,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Card, CardContent, Chip, Link, Rating, Stack, Typography } from '@mui/material';
 import { format, parseISO } from 'date-fns';
 import type { DashboardPod } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   title: string;
@@ -12,7 +13,7 @@ interface Props {
   showRating?: boolean;
 }
 
-const when = (iso: string | null) => (iso ? format(parseISO(iso), 'd MMM, h:mm a') : '—');
+const when = (iso: string | null) => formatDateTime(iso) || '—';
 
 /**
  * A short list of pods with the one number that list is about — its rating, or

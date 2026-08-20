@@ -7,6 +7,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { UPDATE_VENUE_HOLIDAYS } from '../queries';
+import { formatDay } from '@duncit/app-settings';
 
 interface Props {
   venueId: string | null;
@@ -91,7 +92,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
             <Chip
               key={date}
               icon={<EventBusyIcon />}
-              label={format(new Date(`${date}T00:00:00`), 'EEE, d MMM yyyy')}
+              label={formatDay(date)}
               color="error"
               variant="outlined"
               disabled={disabled}

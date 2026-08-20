@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** Club-scoped AI-monitored pod activity (the server pins visibility to the
  * clubs the caller administers; SUPER_ADMIN sees everything). */
@@ -118,6 +119,5 @@ export const SOURCE_OPTIONS = (Object.keys(SOURCE_LABELS) as PodAuditSource[]).m
 
 export const fmtWhen = (iso?: string | null) => {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  return formatDateTime(iso) || '—';
 };

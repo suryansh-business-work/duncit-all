@@ -1,6 +1,7 @@
 import { Chip } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ReferralRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<ReferralRow>;
@@ -10,7 +11,7 @@ const getReferralRowId = (r: ReferralRow) => r.id;
 
 const referrerValue = (r: ReferralRow) => r.referrer_name || r.referrer_user_id;
 const referredValue = (r: ReferralRow) => r.referred_name || r.referred_user_id;
-const whenValue = (r: ReferralRow) => new Date(r.created_at).toLocaleString();
+const whenValue = (r: ReferralRow) => formatDateTime(r.created_at);
 
 const renderCode = (r: ReferralRow) => <Chip size="small" label={r.code} sx={{ fontWeight: 800 }} />;
 

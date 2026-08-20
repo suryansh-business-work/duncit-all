@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import AddSlotForm from './AddSlotForm';
 import SlotList from './SlotList';
 import type { NewSlotInput, VenueSlotRow, VenueSpace } from '../types';
+import { formatDate } from '@duncit/datetime';
 
 interface Props {
   open: boolean;
@@ -46,7 +47,7 @@ export default function DayDrawer({
               Availability
             </Typography>
             <Typography variant="h6" fontWeight={900}>
-              {date ? format(date, 'EEEE, dd MMM yyyy') : ''}
+              {date ? formatDate(date) : ''}
             </Typography>
           </Box>
           <IconButton size="small" onClick={onClose} aria-label="Close">

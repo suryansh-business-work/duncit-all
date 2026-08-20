@@ -144,7 +144,6 @@ export default function ClubAdminsTable({
         field: 'joined_at',
         headerName: 'Date Joined',
         width: 135,
-        formatDate: (d) => d.toLocaleDateString(),
       }),
       {
         field: 'commission_pct',

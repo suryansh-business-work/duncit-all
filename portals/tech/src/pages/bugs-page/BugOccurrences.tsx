@@ -13,6 +13,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { BUG_OCCURRENCES, type BugOccurrence } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -61,7 +62,7 @@ function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
         <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <Chip size="small" label={occ.environment} color={ENV_COLOR[occ.environment] ?? 'default'} />
           <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
-            {new Date(occ.created_at).toLocaleString()}
+            {formatDateTime(occ.created_at)}
           </Typography>
           <Typography variant="body2" color="text.secondary" noWrap title={occ.component}>
             {occ.component}

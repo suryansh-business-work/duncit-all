@@ -15,6 +15,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
 import AdjustHealthDialog from './AdjustHealthDialog';
 import type { AdminHealthScore } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const BAND_COLOR: Record<AdminHealthScore['band'], 'error' | 'warning' | 'success'> = {
   RED: 'error',
@@ -96,7 +97,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography variant="body2">{a.remark}</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {a.created_by_name} · {format(new Date(a.created_at), 'dd MMM yyyy, hh:mm a')}
+                            {a.created_by_name} · {formatDateTime(a.created_at)}
                           </Typography>
                         </Box>
                       </Stack>

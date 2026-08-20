@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   comments: any[];
@@ -37,7 +38,7 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
                   {c.author?.full_name ?? 'Member'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {new Date(c.created_at).toLocaleString()}
+                  {formatDateTime(c.created_at)}
                 </Typography>
               </Stack>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>

@@ -18,6 +18,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useDraftRetentionDays } from '../utils/dateFormat';
 import { STEP_TITLES } from './create-pod-page/create-pod';
+import { formatDateTime } from '../utils/dateFormat';
 
 const MY_POD_DRAFTS = gql`
   query MyPodDrafts {
@@ -31,9 +32,7 @@ const DELETE_POD_DRAFT = gql`
 `;
 
 function formatWhen(value?: string | null) {
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+  return formatDateTime(value);
 }
 
 /** Resumable Create Pod drafts for the signed-in host. */

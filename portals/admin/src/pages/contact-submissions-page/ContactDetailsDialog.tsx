@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Submission {
   id: string;
@@ -48,7 +49,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
             From <b>{submission.name}</b> ({submission.email}) ·{' '}
-            {new Date(submission.created_at).toLocaleString()}
+            {formatDateTime(submission.created_at)}
           </Typography>
           <Typography sx={{ whiteSpace: 'pre-wrap' }}>{submission.message}</Typography>
           {submission.attachments && submission.attachments.length > 0 && (

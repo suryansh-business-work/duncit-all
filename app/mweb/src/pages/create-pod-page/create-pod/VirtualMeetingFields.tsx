@@ -3,7 +3,7 @@ import { addMinutes } from 'date-fns';
 import { MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { meetingPlatformOptions } from '@duncit/utils';
-import { formatDurationBetween, useDateFormat } from '../../../utils/dateFormat';
+import { formatDurationBetween } from '../../../utils/dateFormat';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
@@ -18,9 +18,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
     watch,
     formState: { errors },
   } = form;
-  const { dateFormat, timeFormat } = useDateFormat();
   const { t } = useTranslation();
-  const dateTimeFormat = `${dateFormat} ${timeFormat}`;
   const startDateTime = watch('pod_date_time');
   const duration = formatDurationBetween(startDateTime, watch('pod_end_date_time'));
   // The end picker only opens times after the start — the first 30 minutes are
@@ -74,7 +72,6 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
               label={requiredLabel(t('mweb.createPod.startDateTime'), true)}
               value={field.value}
               onChange={field.onChange}
-              format={dateTimeFormat}
               minDateTime={new Date()}
               slotProps={{
                 textField: {
@@ -94,7 +91,6 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
               label={t('mweb.createPod.endDateTime')}
               value={field.value}
               onChange={field.onChange}
-              format={dateTimeFormat}
               minDateTime={minEndDateTime}
               slotProps={{
                 textField: {

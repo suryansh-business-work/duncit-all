@@ -13,6 +13,7 @@ import {
 import { DetailBlock, DetailField } from '../../components/DetailField';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { type TelemetryLogRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** Everything one persisted log knows about itself, in four readable groups. */
 interface Props {
@@ -95,7 +96,7 @@ export default function LogDetailDialog({ row, onClose }: Readonly<Props>) {
             <Box
               sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}
             >
-              <DetailField label="When" value={new Date(row.created_at).toLocaleString()} />
+              <DetailField label="When" value={formatDateTime(row.created_at)} />
               <DetailField label="Source" value={row.source} />
               <DetailField
                 label="App"

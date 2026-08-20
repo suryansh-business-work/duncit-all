@@ -17,6 +17,7 @@ import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
 import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import AuthLogo from '../../components/AuthLogo';
+import { formatDateTime } from '../../utils/dateFormat';
 
 type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'thanks';
 
@@ -151,7 +152,7 @@ export default function SurveyGatePage() {
   else subtitle = 'Pick a slot that works for you.';
 
   const slotLabel = bookedSlot
-    ? new Date(bookedSlot).toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' })
+    ? formatDateTime(bookedSlot)
     : '';
 
   return (

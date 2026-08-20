@@ -2,6 +2,7 @@ import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { InfoRow } from '@duncit/ui';
 import type { InvoiceSettingsForm } from './types';
+import { formatDate } from '@duncit/app-settings';
 
 const ACCENT = '#ff4f73';
 // GST-inclusive sample matching the settlement engine: the customer pays 1000
@@ -35,7 +36,7 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
           <Box sx={{ textAlign: 'right' }}>
             <Typography variant="caption" color="text.secondary">Invoice No</Typography>
             <Typography fontWeight={800}>{value.invoice_prefix || 'DUN'}/2526/000123</Typography>
-            <Typography variant="caption" color="text.secondary" display="block">Date: {new Date().toLocaleDateString('en-IN')}</Typography>
+            <Typography variant="caption" color="text.secondary" display="block">Date: {formatDate(new Date())}</Typography>
           </Box>
         </Stack>
 

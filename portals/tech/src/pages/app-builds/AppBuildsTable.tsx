@@ -63,7 +63,6 @@ export default function AppBuildsTable({
         // dateColumn defaults to hidden (built for audit tables); this one IS
         // the table's primary timestamp and its default sort.
         hide: false,
-        formatDate: (d) => d.toLocaleString(),
       }),
       {
         field: 'status',

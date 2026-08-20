@@ -7,6 +7,7 @@ import {
   type TableFilterValue,
 } from '@duncit/table';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const getVenueRowId = (v: VenueRow) => v.id;
 
@@ -55,7 +56,7 @@ const renderActive = (v: VenueRow) => (
 );
 
 const createdValue = (v: VenueRow) =>
-  v.created_at ? new Date(v.created_at).toLocaleDateString() : '—';
+  v.created_at ? formatDate(v.created_at) : '—';
 
 /** Read-only admin venues list — approvals/edits stay in the Onboarding portal. */
 export default function VenuesTable({

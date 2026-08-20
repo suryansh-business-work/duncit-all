@@ -152,7 +152,7 @@ export default function EcommBrandsTable({
         cellRenderer: renderCommission,
         valueGetter: (b) => commissionLabel(b.product_commission_pct),
       },
-      dateColumn<EcommBrandRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125, formatDate: (d) => d.toLocaleDateString() }),
+      dateColumn<EcommBrandRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
       { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 160, cellRenderer: renderActions },
     ];

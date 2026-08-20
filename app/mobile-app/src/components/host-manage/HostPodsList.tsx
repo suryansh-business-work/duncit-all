@@ -4,11 +4,12 @@ import { HostPodRow } from '@/components/host-manage/HostPodRow';
 import type { HostPod } from '@/hooks/useHostPods';
 import { podTypeLabel } from '@/utils/pod-format';
 import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
+import { formatDateTime } from '@/utils/date-format';
 
 function formatWhen(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+  return formatDateTime(date) || '—';
 }
 
 interface Props {

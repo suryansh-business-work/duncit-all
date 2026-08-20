@@ -1,10 +1,17 @@
 import { z } from 'zod';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
+import {
+  DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  FALLBACK_DATE_FORMAT,
+  isEligibleDob,
+  patternPlaceholder,
+} from '@duncit/datetime';
 import { PERSON_NAME, REFERRAL_CODE } from '@duncit/regex';
 
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+/** Used only by the module-level schema built before settings land. */
+const FALLBACK_DATE_PLACEHOLDER = patternPlaceholder(FALLBACK_DATE_FORMAT);
 
 /**
  * Simplified signup contract: Name, Date of Birth, Email, Password, Confirm
@@ -20,6 +27,8 @@ export function makeSignupSchema(
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   t: Translate = fallbackT,
   requiredPolicyIds: readonly string[] = [],
+  /** How the date box asks to be typed, from the admin's date pattern. */
+  datePlaceholder: string = FALLBACK_DATE_PLACEHOLDER,
 ) {
   return z
     .object({
@@ -33,7 +42,10 @@ export function makeSignupSchema(
         .string()
         .trim()
         .min(1, t('mweb.signup.validation.dobRequired'))
-        .refine((v) => DOB_PATTERN.test(v), t('mweb.signup.validation.dobFormat'))
+        .refine(
+          (v) => DOB_PATTERN.test(v),
+          t('mweb.signup.validation.dobFormat', { vars: { format: datePlaceholder } }),
+        )
         .refine(
           (v) => isEligibleDob(v, minAge),
           t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),

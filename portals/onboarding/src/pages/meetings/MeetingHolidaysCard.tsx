@@ -25,12 +25,13 @@ import {
   type HolidayType,
   type MeetingHoliday,
 } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const TYPE_OPTIONS = Object.keys(HOLIDAY_TYPE_LABELS) as HolidayType[];
 
 const prettyDate = (ymd: string) => {
   const d = new Date(`${ymd}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? ymd : format(d, 'EEE, d MMM yyyy');
+  return formatDate(d) || ymd;
 };
 
 /** Holidays / leave days — block bookable slots and show on the onboarding calendar. */

@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { format } from 'date-fns';
-import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
+import { PUBLIC_APP_SETTINGS, unsupportedPickerTokens } from '@duncit/app-settings';
 
 const APP_SETTINGS_FORMATS = gql`
   query AppSettingsFormats {
@@ -75,6 +75,16 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
     }
   }, [dateFmt, timeFmt]);
 
+  // These two patterns are also what every date/time PICKER reads and writes,
+  // and a picker field can only edit tokens it can split into sections — hand
+  // it 'PPP' and it throws while rendering. The apps fall back rather than
+  // crash, but silently: an admin who saved an unusable pattern would see the
+  // default everywhere and have no idea why. So it is said here, at the point
+  // of choosing, and saving is blocked.
+  const badDateTokens = unsupportedPickerTokens(dateFmt);
+  const badTimeTokens = unsupportedPickerTokens(timeFmt);
+  const unusable = badDateTokens.length > 0 || badTimeTokens.length > 0;
+
   const dirty =
     !!data?.appSettings &&
     (data.appSettings.date_format !== dateFmt ||
@@ -107,14 +117,16 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
           <Box>
             <Typography variant="subtitle1">Display formats</Typography>
             <Typography variant="body2" color="text.secondary">
-              Global date &amp; time format used across the admin panel and member apps.
+              The one date &amp; time format every surface reads and writes — this panel, the
+              portals, mWeb and the app, in what is displayed and in every date box that is
+              typed into.
             </Typography>
           </Box>
           <Button
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={submit}
-            disabled={busy || !dirty || loading}
+            disabled={busy || !dirty || loading || unusable}
           >
             {busy ? 'Saving…' : 'Save'}
           </Button>
@@ -172,6 +184,14 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
             />
           </Stack>
           <Alert severity="info">Preview: <strong>{preview}</strong></Alert>
+          {unusable && (
+            <Alert severity="warning">
+              The date and time pickers cannot edit{' '}
+              <strong>{[...badDateTokens, ...badTimeTokens].join(', ')}</strong>. Every screen
+              where a date is typed uses these same patterns, so pick tokens from the presets
+              (d, dd, M, MM, MMM, MMMM, yyyy, EEE, HH, hh, mm, ss, a).
+            </Alert>
+          )}
           {err && <Alert severity="error">{err}</Alert>}
         </Stack>
       </CardContent>

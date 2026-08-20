@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import 'react-quill/dist/quill.snow.css';
 import PolicyPdfButton from './PolicyPdfButton';
+import { formatDate } from '../utils/dateFormat';
 
 const POLICY_BY_SLUG = gql`
   query PolicyBySlug($slug: String!) {
@@ -110,7 +111,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
           color="text.secondary"
           sx={{ mt: 4, display: 'block', textAlign: 'right' }}
         >
-          Last updated {new Date(policy.updated_at).toLocaleDateString()}
+          Last updated {formatDate(policy.updated_at)}
         </Typography>
       )}
       {loading && (

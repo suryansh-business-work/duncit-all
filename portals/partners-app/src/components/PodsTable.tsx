@@ -3,6 +3,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { AttendanceChip } from '@duncit/ui';
+import { formatDate, formatDateTime } from '@duncit/app-settings';
 
 /** Minimal row shape shared by the partner + club-admin pods tables. */
 export interface PodRowBase {
@@ -63,7 +64,7 @@ const renderStatus = (pod: PodRowBase) => (
 );
 
 const dateValue = (pod: PodRowBase) =>
-  pod.pod_date_time ? format(new Date(pod.pod_date_time), 'dd MMM yyyy, h:mm a') : 'Not scheduled';
+  formatDateTime(pod.pod_date_time) || 'Not scheduled';
 
 const attendeesValue = (pod: PodRowBase) => pod.pod_attendees?.length ?? 0;
 
@@ -148,7 +149,7 @@ export default function PodsTable<T extends PodRowBase>({
         filter: { type: 'date' },
         hide: true,
         width: 140,
-        valueGetter: (pod) => (pod.completed_at ? format(new Date(pod.completed_at), 'dd MMM yyyy') : '—'),
+        valueGetter: (pod) => formatDate(pod.completed_at) || '—',
       },
     ];
     if (renderMonitor) {

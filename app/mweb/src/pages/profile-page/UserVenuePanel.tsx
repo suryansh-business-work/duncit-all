@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link as RouterLink } from 'react-router-dom';
+import { formatDate } from '../../utils/dateFormat';
 
 const MY_VENUE = gql`
   query ProfileMyVenue {
@@ -71,7 +72,7 @@ export default function UserVenuePanel() {
       </Stack>
       {(venue.approved_at || venue.submitted_at) && (
         <Typography variant="caption" color="text.secondary">
-          {venue.approved_at ? `Approved ${new Date(venue.approved_at).toLocaleDateString()}` : `Submitted ${new Date(venue.submitted_at).toLocaleDateString()}`}
+          {venue.approved_at ? `Approved ${formatDate(venue.approved_at)}` : `Submitted ${formatDate(venue.submitted_at)}`}
         </Typography>
       )}
       {venue.reviewer_notes && <Alert severity="info">{venue.reviewer_notes}</Alert>}

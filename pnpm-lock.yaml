@@ -391,6 +391,12 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: ^10.4.0
         version: 10.4.1
@@ -514,6 +520,10 @@ importers:
         version: 3.25.76
 
   packages/availability-calendar:
+    dependencies:
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../datetime
     devDependencies:
       '@mui/icons-material':
         specifier: ^5.15.18
@@ -753,6 +763,9 @@ importers:
 
   packages/coupons:
     dependencies:
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../datetime
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../dialogs
@@ -775,6 +788,9 @@ importers:
       '@mui/material':
         specifier: ^5.15.18
         version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.28
@@ -1791,6 +1807,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/table:
+    dependencies:
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../datetime
     devDependencies:
       '@mui/icons-material':
         specifier: ^5.15.18
@@ -2124,6 +2144,9 @@ importers:
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../../packages/datetime
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
@@ -2323,6 +2346,9 @@ importers:
       '@duncit/ad-request-form':
         specifier: workspace:*
         version: link:../../packages/ad-request-form
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../../packages/app-settings
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
@@ -2456,6 +2482,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../../packages/app-settings
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
@@ -2722,9 +2751,15 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../../packages/app-settings
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../../packages/datetime
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
@@ -3396,6 +3431,9 @@ importers:
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../../packages/datetime
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
@@ -4329,6 +4367,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../../packages/app-settings
       '@duncit/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard

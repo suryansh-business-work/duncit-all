@@ -7,6 +7,7 @@ import {
   type SlotRequestRow,
   ALL_VENUES,
 } from '@/hooks/useVenueSlotRequests';
+import { formatDate, formatDateTime, formatTime } from '@/utils/date-format';
 
 /**
  * Slot Requests — the RN twin of mWeb's venue-slot-requests-page.
@@ -15,13 +16,7 @@ import {
  * is approved, so a request sitting unread is a pod that cannot sell a seat.
  */
 
-const fmtDay = (d: Date) =>
-  d.toLocaleDateString(undefined, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+const fmtDay = (d: Date) => formatDate(d);
 
 /** Same reading as mWeb's slotWindow: both dates when the booking spans days,
  * and "Whole day" instead of times for whole-day bookings. The end instant is
@@ -30,7 +25,7 @@ const fmtWindow = (row: SlotRequestRow) => {
   const start = new Date(row.start_at);
   const end = new Date(row.end_at);
   if (Number.isNaN(start.getTime())) return '—';
-  const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const time = (d: Date) => formatTime(d);
   const multiDay = start.toDateString() !== new Date(end.getTime() - 1).toDateString();
   if (row.whole_day) {
     return multiDay
@@ -45,7 +40,7 @@ const fmtWindow = (row: SlotRequestRow) => {
 
 const fmtRequested = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  return formatDateTime(d) || '—';
 };
 
 const fmtPrice = (price: number) => (price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Free');

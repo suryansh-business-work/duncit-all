@@ -20,6 +20,7 @@ import {
   type MediaScanLog,
   type UploadSettings,
 } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: MediaScanLog) => row.id;
 
@@ -53,7 +54,7 @@ export default function AiMonitoringAccordion({ settings, saving, onSave }: Read
         headerName: 'When',
         width: 170,
         filter: { type: 'date' },
-        valueGetter: (row) => new Date(row.created_at).toLocaleString(),
+        valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'file_name',

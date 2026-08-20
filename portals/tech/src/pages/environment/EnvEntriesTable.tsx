@@ -10,12 +10,13 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 function LastTested({ entry }: Readonly<{ entry: EnvEntry }>) {
   if (entry.last_test_ok == null || !entry.last_tested_at) {
     return <Tooltip title="Not tested yet"><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
   }
-  const when = new Date(entry.last_tested_at).toLocaleString();
+  const when = formatDateTime(entry.last_tested_at);
   return entry.last_test_ok ? (
     <Tooltip title={`Passed · ${when}`}><CheckCircleIcon fontSize="small" color="success" /></Tooltip>
   ) : (
@@ -45,7 +46,7 @@ const statusValue = (e: EnvEntry) =>
 const renderLastTested = (e: EnvEntry) => <LastTested entry={e} />;
 const lastTestedValue = (e: EnvEntry) => {
   if (e.last_test_ok == null || !e.last_tested_at) return 'Never';
-  const when = new Date(e.last_tested_at).toLocaleString();
+  const when = formatDateTime(e.last_tested_at);
   return e.last_test_ok ? `Passed · ${when}` : `Failed · ${when}`;
 };
 

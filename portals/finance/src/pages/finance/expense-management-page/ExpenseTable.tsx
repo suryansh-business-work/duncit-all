@@ -2,13 +2,13 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, Link, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, labelize } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({ value: c, label: labelize(c) }));
 const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: labelize(m) }));
 
 const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN');
+  return formatDate(iso) || '—';
 };
 
 const getExpenseRowId = (e: any) => e.id;

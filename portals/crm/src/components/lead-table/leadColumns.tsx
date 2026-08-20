@@ -3,6 +3,7 @@ import { Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import { PriorityChip, StatusChip } from '../StatusChips';
+import { formatDate } from '@duncit/app-settings';
 
 /** Fields shared by host / venue / ecomm lead rows that the table touches. */
 export interface CrmLeadRowBase {
@@ -62,7 +63,7 @@ const fieldText = (row: object, key: string): string => {
 const fmtDate = (value?: string | null): string => {
   if (!value) return '—';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
+  return formatDate(date) || '—';
 };
 
 const renderStatus = (row: CrmLeadRowBase) => <StatusChip value={row.lead_status} />;
@@ -71,7 +72,7 @@ const superCategoryName = (row: CrmLeadRowBase) => row.super_category?.name ?? '
 const followUpValue = (row: CrmLeadRowBase) => fmtDate(row.next_follow_up_date);
 /** NaN-guarded `dd MMM yyyy` formatter for the shared date column. */
 const fmtDateObj = (date: Date): string =>
-  Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
+  formatDate(date) || '—';
 
 export interface LeadColumnOptions<T extends CrmLeadRowBase> {
   entity: CrmLeadEntity;

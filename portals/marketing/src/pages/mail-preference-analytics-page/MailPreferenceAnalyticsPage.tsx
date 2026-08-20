@@ -18,6 +18,7 @@ import {
   type MailPreferenceAnalytics,
   type MailPreferenceLogRow,
 } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** The windows an opt-out report is actually read over. */
 const RANGES = [7, 30, 90, 365];
@@ -59,7 +60,7 @@ export default function MailPreferenceAnalyticsPage() {
     [t, categories],
   );
 
-  const count = (value: number | undefined) => (value ?? 0).toLocaleString();
+  const count = (value: number | undefined) => formatDateTime((value ?? 0));
 
   const kpi = (id: string, x: number, content: DashboardWidget['content']): DashboardWidget => ({
     id,

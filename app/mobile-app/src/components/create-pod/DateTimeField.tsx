@@ -6,7 +6,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { useAppSettings } from '@/hooks/useAppSettings';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { parseDateTimeText } from './create-pod.form';
@@ -24,9 +24,11 @@ interface Props {
 }
 
 /**
- * Tamagui date+time field — type `YYYY-MM-DD HH:mm` directly or open the
- * calendar/time sheet. The picked value is echoed below in the admin-panel
- * display format (rule 11), mirroring mWeb's MUI X DateTimePicker.
+ * Tamagui date+time field — type the schedule directly or open the calendar/time
+ * sheet. Both halves speak the admin-panel date and time patterns (rule 11),
+ * mirroring what mWeb's MUI X DateTimePicker asks for on the same step; the
+ * echo below normalises what was typed, so "5 jan 2026 7:00 pm" confirms back
+ * as "05 Jan 2026 07:00 PM".
  */
 export function DateTimeField({
   label,
@@ -39,7 +41,7 @@ export function DateTimeField({
 }: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
   const { t } = useTranslation();
-  const { dateFormat, timeFormat } = useAppSettings();
+  const fmt = useDateFormat();
   const [open, setOpen] = useState(false);
   const closeSheet = () => setOpen(false);
   const parsed = parseDateTimeText(value);
@@ -58,7 +60,9 @@ export function DateTimeField({
           borderColor={error ? '$danger' : '$borderColor'}
           value={value}
           onChangeText={onChange}
-          placeholder={t('mweb.createPod.dateTimePlaceholder')}
+          placeholder={t('mweb.createPod.dateTimePlaceholder', {
+            vars: { format: fmt.dateTimePlaceholder },
+          })}
           aria-label={label}
         />
         <XStack
@@ -81,7 +85,7 @@ export function DateTimeField({
       </XStack>
       {parsed ? (
         <Text testID={`${testID}-formatted`} fontSize={12} color="$muted">
-          {format(parsed, `${dateFormat} ${timeFormat}`)}
+          {format(parsed, fmt.dateTimeInputFormat)}
         </Text>
       ) : null}
       {error ? (
@@ -120,7 +124,7 @@ export function DateTimeField({
                   minDateTime={minDateTime}
                   muted={muted}
                   onDone={(picked) => {
-                    onChange(format(picked, 'yyyy-MM-dd HH:mm'));
+                    onChange(format(picked, fmt.dateTimeInputFormat));
                     setOpen(false);
                   }}
                 />

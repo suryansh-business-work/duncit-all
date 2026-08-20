@@ -16,6 +16,7 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
 const MY_HOST = gql`
   query ProfileMyHost {
@@ -84,7 +85,7 @@ function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
               </ListItemAvatar>
               <ListItemText
                 primary={p.pod_title}
-                secondary={p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : undefined}
+                secondary={formatDateTime(p.pod_date_time) || undefined}
               />
             </ListItemButton>
           );
@@ -165,7 +166,7 @@ export default function UserHostPanel() {
       </Stack>
       {(host.approved_at || host.submitted_at) && (
         <Typography variant="caption" color="text.secondary">
-          {host.approved_at ? `Approved ${new Date(host.approved_at).toLocaleDateString()}` : `Submitted ${new Date(host.submitted_at).toLocaleDateString()}`}
+          {host.approved_at ? `Approved ${formatDate(host.approved_at)}` : `Submitted ${formatDate(host.submitted_at)}`}
         </Typography>
       )}
       {host.reviewer_notes && <Alert severity="info">{host.reviewer_notes}</Alert>}

@@ -15,6 +15,7 @@ import {
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MediaPickerField from '../../components/MediaPickerField';
 import { STATUS_META, type EditForm } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   user: any;
@@ -34,8 +35,8 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
     { label: 'Zone', value: user.zone || empty },
     { label: 'Assigned City', value: user.assigned_city || empty },
     { label: 'Assigned Zones', value: (user.assigned_zones ?? []).join(', ') || empty },
-    { label: 'Created', value: user.created_at ? new Date(user.created_at).toLocaleString() : empty },
-    { label: 'Updated', value: user.updated_at ? new Date(user.updated_at).toLocaleString() : empty },
+    { label: 'Created', value: user.created_at ? formatDateTime(user.created_at) : empty },
+    { label: 'Updated', value: user.updated_at ? formatDateTime(user.updated_at) : empty },
   ];
 
   return (

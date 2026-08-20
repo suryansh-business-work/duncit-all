@@ -1,5 +1,4 @@
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { useDateFormat } from '@duncit/app-settings';
 
 interface Props {
   label: string;
@@ -30,7 +29,6 @@ export default function DateTimeField({
   minDateTime,
   disabled,
 }: Readonly<Props>) {
-  const { dateFormat, timeFormat } = useDateFormat();
   const dateValue = value ? new Date(value) : null;
   const valid = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue : null;
 
@@ -39,7 +37,6 @@ export default function DateTimeField({
       label={label}
       value={valid}
       onChange={(d) => onChange(d ? d.toISOString() : '')}
-      format={`${dateFormat} ${timeFormat}`}
       minDateTime={minDateTime ?? undefined}
       disabled={disabled}
       slotProps={{

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { QueryGuard } from '@duncit/ui';
+import { formatDateTime } from '@duncit/app-settings';
 
 const APP_SETTINGS = gql`
   query AppSettingsExpiry {
@@ -149,7 +150,7 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
         {opError && <Alert severity="error">{opError}</Alert>}
         {data?.appSettings?.updated_at && (
           <Typography variant="caption" color="text.secondary">
-            Last updated {new Date(data.appSettings.updated_at).toLocaleString()}
+            Last updated {formatDateTime(data.appSettings.updated_at)}
           </Typography>
         )}
       </Stack>

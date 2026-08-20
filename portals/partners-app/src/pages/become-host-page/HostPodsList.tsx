@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatINR, payingAttendees } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 function podStatusLabel(pod: PartnerPodRow) {
   if (pod.completed_at) return 'Completed';
@@ -16,7 +17,7 @@ function podStatusColor(pod: PartnerPodRow): 'success' | 'info' | 'default' {
 }
 
 function formatDate(value?: string | null) {
-  return value ? format(new Date(value), 'dd MMM yyyy, h:mm a') : 'Not scheduled';
+  return formatDateTime(value) || 'Not scheduled';
 }
 
 const getPodRowId = (pod: PartnerPodRow) => pod.id;

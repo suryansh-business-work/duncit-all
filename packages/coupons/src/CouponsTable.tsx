@@ -10,6 +10,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { CouponRow } from './queries';
+import { formatDate } from '@duncit/datetime';
 
 interface Props {
   tableId: string;
@@ -25,8 +26,7 @@ const SCOPE_OPTIONS = [
   { value: 'POD', label: 'Pod' },
 ];
 
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+const fmtDate = (iso?: string | null) => formatDate(iso) || '—';
 
 const getCouponRowId = (c: CouponRow) => c.id;
 
@@ -56,8 +56,7 @@ const usedValue = (c: CouponRow) => {
   return `${c.used_count}${cap}`;
 };
 
-const localeDate = (d: Date) =>
-  d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' });
+const localeDate = (d: Date) => formatDate(d);
 
 /** Shared server-paged coupons table — used by /coupons (couponsTable) and the
  * pod details Offer codes section (couponsForPodTable). */

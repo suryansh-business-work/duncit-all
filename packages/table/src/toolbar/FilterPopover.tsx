@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import type { DuncitColumn, TableFilterValue } from '../types';
 import { FilterControl } from './filterControls';
 import {
@@ -25,8 +23,8 @@ interface FilterPopoverProps<T> {
 
 /**
  * One labelled control per filterable column; edits a local draft that only lands in the
- * query on Apply. Ships its own LocalizationProvider (date-fns v2) so portals need no
- * app-level provider for the date pickers.
+ * query on Apply. Date controls read and write the admin's configured pattern,
+ * inherited from the surface-level DuncitLocalizationProvider.
  */
 export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
   const { open, anchorEl, onClose, columns, filters, setFilters } = props;
@@ -59,26 +57,24 @@ export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
     >
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <Stack spacing={2} sx={{ p: 2, minWidth: 280, maxWidth: 400 }}>
-          {filterable.map((column) => (
-            <FilterControl
-              key={column.field}
-              column={column}
-              draft={drafts[column.field] ?? emptyDraft()}
-              onChange={(patch) => updateDraft(column.field, patch)}
-            />
-          ))}
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button size="small" onClick={handleClearAll}>
-              Clear all
-            </Button>
-            <Button size="small" variant="contained" onClick={handleApply}>
-              Apply
-            </Button>
-          </Stack>
+      <Stack spacing={2} sx={{ p: 2, minWidth: 280, maxWidth: 400 }}>
+        {filterable.map((column) => (
+          <FilterControl
+            key={column.field}
+            column={column}
+            draft={drafts[column.field] ?? emptyDraft()}
+            onChange={(patch) => updateDraft(column.field, patch)}
+          />
+        ))}
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Button size="small" onClick={handleClearAll}>
+            Clear all
+          </Button>
+          <Button size="small" variant="contained" onClick={handleApply}>
+            Apply
+          </Button>
         </Stack>
-      </LocalizationProvider>
+      </Stack>
     </Popover>
   );
 }

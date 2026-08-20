@@ -5,11 +5,12 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { format } from 'date-fns';
 import StatusVisual, { TranscriptWave } from './statusVisuals';
 import type { CommunicationLogItem } from '../../api/comms.gql';
+import { formatDateTime } from '@duncit/app-settings';
 
 const fmt = (value?: string | null) => {
   if (!value) return '—';
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? '—' : format(d, 'dd MMM yyyy, hh:mm a');
+  return formatDateTime(d) || '—';
 };
 
 const STATUS_COLOUR: Record<string, 'success' | 'error' | 'warning' | 'info' | 'default'> = {

@@ -1,4 +1,5 @@
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface StockMovement {
   id: string;
@@ -49,7 +50,7 @@ export default function StockMovementTimeline({ movements, loading }: Readonly<S
               {m.quantity > 0 ? `+${m.quantity}` : m.quantity} • Balance after: {m.balance_after}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {new Date(m.created_at).toLocaleString()} · {m.user_name || 'system'}
+              {formatDateTime(m.created_at)} · {m.user_name || 'system'}
               {m.reason ? ` · ${m.reason}` : ''}
             </Typography>
           </Box>

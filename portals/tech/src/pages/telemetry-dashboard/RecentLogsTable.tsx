@@ -3,6 +3,7 @@ import { useApolloClient } from '@apollo/client';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { TELEMETRY_LOGS_TABLE, levelColor, type LogRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getLogRowId = (l: LogRow) => l.id;
 
@@ -22,7 +23,7 @@ const renderLevel = (l: LogRow) => (
 
 const renderWhen = (l: LogRow) => (
   <Typography variant="body2" color="text.secondary">
-    {new Date(l.created_at).toLocaleString()}
+    {formatDateTime(l.created_at)}
   </Typography>
 );
 

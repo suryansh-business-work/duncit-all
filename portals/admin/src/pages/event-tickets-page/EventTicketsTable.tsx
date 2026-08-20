@@ -5,6 +5,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EventTicketRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<EventTicketRow>;
@@ -26,7 +27,7 @@ const STATUS_OPTIONS = [
 ];
 
 const fmt = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  iso ? formatDateTime(iso) : '—';
 
 const getTicketRowId = (t: EventTicketRow) => t.id;
 

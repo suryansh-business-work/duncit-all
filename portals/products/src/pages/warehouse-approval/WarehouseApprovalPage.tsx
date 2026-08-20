@@ -19,6 +19,7 @@ import {
   WAREHOUSE_APPROVAL_REQUESTS,
   type WarehouseApprovalRow,
 } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'DENIED', 'ALL'];
 const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
@@ -29,8 +30,7 @@ const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
 
 const fmtDate = (iso: string | null) => {
   if (!iso) return '';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
+  return formatDateTime(iso) || '';
 };
 
 /** Products portal: partner warehouses awaiting approval before they can be used

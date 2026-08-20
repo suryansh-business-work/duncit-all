@@ -7,7 +7,7 @@ import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 
 export default function MeetingSection() {
-  const { meetingPlatforms, onGenerateMeetingLink, dateTimeFormat } = usePodFormData();
+  const { meetingPlatforms, onGenerateMeetingLink } = usePodFormData();
   const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -44,8 +44,8 @@ export default function MeetingSection() {
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required format={dateTimeFormat} />
-        <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} format={dateTimeFormat} />
+        <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required />
+        <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {meetingPlatforms ? (

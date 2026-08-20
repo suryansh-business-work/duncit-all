@@ -1,5 +1,6 @@
 import { Avatar, Box, IconButton, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { formatDateTime } from '../../../utils/dateFormat';
 
 interface PostCommentListProps {
   post: any;
@@ -31,7 +32,7 @@ export default function PostCommentList({
               {post.caption}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {new Date(post.created_at).toLocaleString()}
+              {formatDateTime(post.created_at)}
             </Typography>
           </Box>
         </Stack>
@@ -65,7 +66,7 @@ export default function PostCommentList({
                     {c.text}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(c.created_at).toLocaleString()}
+                    {formatDateTime(c.created_at)}
                   </Typography>
                 </Box>
                 {canRemove && (

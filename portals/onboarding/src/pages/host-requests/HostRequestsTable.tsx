@@ -4,6 +4,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import HostRequestRowActions from './HostRequestRowActions';
 import { STATUS_OPTIONS, type HostRequest } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',
@@ -33,7 +34,7 @@ const renderRequestNo = (r: HostRequest) => (
 
 const hostNameValue = (r: HostRequest) => r.host_name || '—';
 
-const requestedOnValue = (r: HostRequest) => new Date(r.created_at).toLocaleString();
+const requestedOnValue = (r: HostRequest) => formatDateTime(r.created_at);
 
 const renderStatus = (r: HostRequest) => (
   <StatusChip status={r.status} colorMap={STATUS_COLORS} />

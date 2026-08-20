@@ -19,6 +19,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import { isPodActive, podStatus, podStatusChip } from '../utils/podStatus';
+import { formatDateTime } from '../utils/dateFormat';
 
 type ChatPodFilter = 'ALL' | 'UPCOMING' | 'PREVIOUS';
 
@@ -173,7 +174,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                       </Typography>
                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap display="block">
                         {p.pod_date_time
-                          ? new Date(p.pod_date_time).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+                          ? formatDateTime(p.pod_date_time)
                           : 'Pod chat'}
                       </Typography>
                       <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>

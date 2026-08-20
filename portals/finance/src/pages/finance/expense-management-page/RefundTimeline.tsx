@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { formatDate } from '@duncit/app-settings';
 
 interface Props {
   expense: any;
@@ -20,8 +21,7 @@ interface Props {
 }
 
 const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN');
+  return formatDate(iso) || '—';
 };
 
 function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string; label: string; amount: number; onRemove?: () => void }>) {

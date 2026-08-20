@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { formatDate } from '../../utils/dateFormat';
 
 export const POD_IDEAS = gql`
   query PodIdeas($filter: PodIdeaFilterInput) {
@@ -126,5 +127,5 @@ export const formatRelative = (iso: string) => {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString();
+  return formatDate(iso);
 };

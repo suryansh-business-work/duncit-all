@@ -7,10 +7,10 @@ import Typography from '@mui/material/Typography';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { format as formatWithDateFns } from 'date-fns';
+import { ambientDateFormat } from '@duncit/datetime';
 import type { DuncitColumn } from './types';
 
 export const EM_DASH = '—';
-export const DEFAULT_DATE_FORMAT = 'd MMM yyyy';
 
 type RowLabel<T> = string | ((row: T) => string);
 type ActionColor =
@@ -28,10 +28,19 @@ function resolveLabel<T>(label: RowLabel<T> | undefined, row: T, fallback: strin
   return label ?? fallback;
 }
 
-/** date-fns formatted date string with the shared em-dash empty fallback. */
+/**
+ * A date cell in the admin's configured pattern, with the shared em-dash empty
+ * fallback.
+ *
+ * The pattern is read at CALL time rather than baked into a column definition:
+ * a value getter runs per repaint, so a grid built before the settings landed
+ * still ends up rendering them. It used to default to a hardcoded 'd MMM yyyy',
+ * which is how a table column and the detail page it opened could show the same
+ * date two different ways.
+ */
 export function formatDateCell(
   iso: string | null | undefined,
-  dateFormat: string = DEFAULT_DATE_FORMAT,
+  dateFormat: string = ambientDateFormat(),
 ): string {
   return iso ? formatWithDateFns(new Date(iso), dateFormat) : EM_DASH;
 }
@@ -45,7 +54,8 @@ export interface DateColumnOptions<T> {
   minWidth?: number;
   sortable?: boolean;
   filterable?: boolean; // default true -> { type: 'date' }
-  format?: string; // date-fns pattern, default 'd MMM yyyy'
+  /** date-fns pattern; defaults to the admin's configured date format. */
+  format?: string;
   /** Full custom formatter (e.g. toLocaleDateString); wins over `format`. */
   formatDate?: (date: Date) => string;
   /** Reads the ISO string off the row; defaults to `row[field]`. */
@@ -63,16 +73,17 @@ export function dateColumn<T>(options: DateColumnOptions<T> = {}): DuncitColumn<
     minWidth,
     sortable,
     filterable = true,
-    format = DEFAULT_DATE_FORMAT,
+    format,
     formatDate,
     getDate,
   } = options;
   const readIso =
     getDate ?? ((row: T) => (row as Record<string, unknown>)[field] as string | null | undefined);
+  // Resolved inside the getter, not at column-build time — see formatDateCell.
   const toText = (iso: string | null | undefined): string => {
     if (!iso) return EM_DASH;
     if (formatDate) return formatDate(new Date(iso));
-    return formatDateCell(iso, format);
+    return formatDateCell(iso, format ?? ambientDateFormat());
   };
   return {
     field,

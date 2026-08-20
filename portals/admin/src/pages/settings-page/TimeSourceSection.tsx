@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
+import LocalDateTimeField from '../../components/LocalDateTimeField';
 import { TIME_ZONES, SOURCE_OPTIONS, toLocalInput, useClockPreview } from './time-source';
 
 const APP_SETTINGS_CLOCK = gql`
@@ -162,13 +163,10 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
           </Typography>
 
           {source === 'CUSTOM' && (
-            <TextField
+            <LocalDateTimeField
               label="Custom time"
-              type="datetime-local"
               value={customTime}
-              onChange={(e) => setCustomTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              onChange={setCustomTime}
               helperText="Saving sets the clock here; it then runs forward from this instant."
             />
           )}

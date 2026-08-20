@@ -11,6 +11,7 @@ import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import { podUrl } from '../../utils/seoUrls';
 import { podSeatsTaken } from '@duncit/utils';
+import { formatDateTime } from '../../utils/dateFormat';
 
 interface HomeFeaturedPodsProps {
   pods: any[];
@@ -30,14 +31,7 @@ interface HomeFeaturedPodsProps {
 }
 
 function formatPodDate(value?: string | null) {
-  if (!value) return '—';
-  return new Date(value).toLocaleString(undefined, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  return formatDateTime(value) || '—';
 }
 
 export default function HomeFeaturedPods({

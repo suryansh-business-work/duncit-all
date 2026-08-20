@@ -1,7 +1,5 @@
 import { Controller, type Control } from 'react-hook-form';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parseISO, subYears } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import type { AccountEditValues } from './account-edit.types';
@@ -24,30 +22,28 @@ export default function DobDateField({
       control={control}
       name="dob"
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Date of birth"
-            openTo="year"
-            views={['year', 'month', 'day']}
-            value={field.value ? parseISO(field.value) : null}
-            minDate={minDate}
-            maxDate={maxDate}
-            onChange={(d) =>
-              field.onChange(d && !Number.isNaN(d.getTime()) ? format(d, 'yyyy-MM-dd') : '')
-            }
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                onBlur: field.onBlur,
-                InputLabelProps: { shrink: true },
-                error: !!fieldState.error,
-                helperText:
-                  fieldState.error?.message ?? `Must be at least ${minAge} years old`,
-              },
-            }}
-          />
-        </LocalizationProvider>
+        <DatePicker
+          label="Date of birth"
+          openTo="year"
+          views={['year', 'month', 'day']}
+          value={field.value ? parseISO(field.value) : null}
+          minDate={minDate}
+          maxDate={maxDate}
+          onChange={(d) =>
+            field.onChange(d && !Number.isNaN(d.getTime()) ? format(d, 'yyyy-MM-dd') : '')
+          }
+          slotProps={{
+            textField: {
+              size: 'small',
+              fullWidth: true,
+              onBlur: field.onBlur,
+              InputLabelProps: { shrink: true },
+              error: !!fieldState.error,
+              helperText:
+                fieldState.error?.message ?? `Must be at least ${minAge} years old`,
+            },
+          }}
+        />
       )}
     />
   );

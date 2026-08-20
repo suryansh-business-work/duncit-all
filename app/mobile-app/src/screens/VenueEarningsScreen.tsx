@@ -4,6 +4,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import { StackScreen } from '@/components/StackScreen';
 import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles';
 import { useVenueEarnings, type VenuePayout } from '@/hooks/useVenueEarnings';
+import { formatDate } from '@/utils/date-format';
 
 const STATUS_BG: Record<string, string> = {
   PENDING: semantic.warning,
@@ -13,7 +14,7 @@ const STATUS_BG: Record<string, string> = {
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return formatDate(d) || '—';
 };
 
 type Breakdown = NonNullable<VenuePayout['breakdown']>;

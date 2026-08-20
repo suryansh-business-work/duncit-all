@@ -145,7 +145,7 @@ export default function DocumentDetailPage() {
                     {v.updated_by_name || 'Unknown'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {format(new Date(v.created_at), 'd MMM yyyy, HH:mm')}
+                    {formatDateTime(v.created_at)}
                   </Typography>
                 </Stack>
               ))}
@@ -198,3 +198,4 @@ export default function DocumentDetailPage() {
     </Stack>
   );
 }
+import { formatDateTime } from '@duncit/app-settings';

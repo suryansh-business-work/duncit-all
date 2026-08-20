@@ -5,8 +5,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider, gql } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
 import {
@@ -23,7 +21,7 @@ import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
 import { ColorModeProvider } from './ColorModeContext';
-import { AppLocaleProvider } from '@duncit/app-settings';
+import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-settings';
 import { MWEB_FALLBACK_FLAT } from './i18n/fallback';
 import { StudioModeProvider } from './StudioModeContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -123,13 +121,13 @@ function mount() {
             <AppLocaleProvider fallback={MWEB_FALLBACK_FLAT}>
             <ColorModeProvider>
               <StudioModeProvider>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DuncitLocalizationProvider timeZoneAware>
                   <GoogleOAuthProvider clientId={getGoogleClientId()}>
                     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                       <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
                     </BrowserRouter>
                   </GoogleOAuthProvider>
-                </LocalizationProvider>
+                </DuncitLocalizationProvider>
               </StudioModeProvider>
             </ColorModeProvider>
             </AppLocaleProvider>

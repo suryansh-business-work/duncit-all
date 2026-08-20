@@ -17,6 +17,7 @@ import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { MY_WALLET } from './queries';
 import { WithdrawForm } from './withdraw';
+import { formatDate } from '../../utils/dateFormat';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -31,7 +32,7 @@ const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return formatDate(d) || '—';
 };
 
 export default function WalletPage() {

@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip } from '@mui/material';
 import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SurveyRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 // The list is already scoped to a single kind, so the scope label omits it.
 const scopeLabel = (r: SurveyRow) =>
@@ -23,7 +24,7 @@ const renderActiveChip = (r: SurveyRow) => (
 );
 
 const updatedValue = (r: SurveyRow) =>
-  r.updated_at ? new Date(r.updated_at).toLocaleString() : '—';
+  r.updated_at ? formatDateTime(r.updated_at) : '—';
 
 export default function SurveysTable({ fetchRows, refetchRef, onOpen, onDelete }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<SurveyRow>[]>(() => {

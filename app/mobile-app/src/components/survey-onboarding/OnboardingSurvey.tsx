@@ -19,6 +19,7 @@ import { CategoryPhase } from './CategoryPhase';
 import { CategorySummaryBanner } from './CategorySummaryBanner';
 import { SurveyPhase } from './SurveyPhase';
 import { MeetingPhase } from './MeetingPhase';
+import { formatDateTime } from '@/utils/date-format';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -42,10 +43,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
     if (!flow.bookedSlot) {
       return <PlaceholderScreen title={title} subtitle={subtitle} icon={icon} />;
     }
-    const slotLabel = new Date(flow.bookedSlot).toLocaleString(undefined, {
-      dateStyle: 'full',
-      timeStyle: 'short',
-    });
+    const slotLabel = formatDateTime(flow.bookedSlot);
     return (
       <YStack flex={1} testID="onboarding-thanks">
         <AppBackground />

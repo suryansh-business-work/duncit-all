@@ -4,6 +4,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { CRM_DYNAMIC_FIELDS } from '../api/crm.gql';
 import type { CrmDynamicField } from '../api/crm.types';
 import { LeadDetailRow } from './LeadDetailCard';
+import { formatDate as adminDate } from '@duncit/app-settings';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
@@ -24,10 +25,8 @@ const fmt = (field: CrmDynamicField, raw: unknown): string => {
   if (raw === null || raw === undefined || raw === '') return '—';
   if (field.kind === 'boolean') return raw ? 'Yes' : 'No';
   if (field.kind === 'date') {
-    const d = new Date(toText(raw));
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-    }
+    const shown = adminDate(toText(raw));
+    if (shown) return shown;
   }
   if (field.kind === 'select') {
     // Map stored option value(s) back to their human label(s). Handles both

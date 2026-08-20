@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { formatDate } from '@duncit/app-settings';
 
 export const PARTNERS_TABLE = gql`
   query PartnersTable($query: TableQueryInput) {
@@ -63,7 +64,7 @@ const renderPartner = (row: PartnerRow) => (
 );
 
 const joinedValue = (row: PartnerRow) =>
-  row.created_at ? new Date(row.created_at).toLocaleDateString() : '—';
+  row.created_at ? formatDate(row.created_at) : '—';
 
 const getRowId = (row: PartnerRow) => row.user_id;
 

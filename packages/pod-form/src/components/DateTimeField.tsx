@@ -8,12 +8,10 @@ interface Props {
   label: string;
   minDateTime: Date;
   required?: boolean;
-  /** Optional MUI X display format (e.g. synced to admin app settings). */
-  format?: string;
 }
 
 /** MUI X `DateTimePicker` bound to a `Date | null` RHF field. */
-export default function DateTimeField({ control, name, label, minDateTime, required, format }: Readonly<Props>) {
+export default function DateTimeField({ control, name, label, minDateTime, required }: Readonly<Props>) {
   return (
     <Controller
       control={control}
@@ -24,7 +22,6 @@ export default function DateTimeField({ control, name, label, minDateTime, requi
           value={field.value}
           onChange={(date) => field.onChange(date)}
           minDateTime={minDateTime}
-          format={format}
           slotProps={{
             textField: {
               fullWidth: true,

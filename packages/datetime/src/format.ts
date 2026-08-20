@@ -2,6 +2,7 @@ import { format as fmtFn, parseISO } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { createClock, type Clock, type ClockInput } from './clock';
+import { formatIsoDay, parseInPattern, patternPlaceholder, toIsoDay } from './day-input';
 
 /**
  * Admin-configurable display formatting (project rule 11): every rendered date
@@ -69,6 +70,28 @@ export interface DateFormatter {
   dayKey: (input: DateInput) => string;
   /** Format with an explicit pattern (escape hatch for one-off displays). */
   formatPattern: (input: DateInput, pattern: string) => string;
+  /**
+   * The pattern a date+time is TYPED in — the two configured patterns joined by
+   * a plain space. `formatDateTime` reads better in a sentence with its
+   * interpunct, but that is not a character anyone types.
+   */
+  dateTimeInputFormat: string;
+  /** Typing hint for the date pattern, e.g. 'DD MMM YYYY'. */
+  datePlaceholder: string;
+  /** Typing hint for date + time, e.g. 'DD MMM YYYY hh:mm AM'. */
+  dateTimePlaceholder: string;
+  /** Read back text typed in the date pattern; null when incomplete/unreal. */
+  parseDate: (text: string) => Date | null;
+  /** Read back text typed in the date+time pattern; null when unparseable. */
+  parseDateTime: (text: string) => Date | null;
+  /** A picked Date as its LOCAL 'yyyy-MM-dd' calendar day. */
+  toIsoDay: (date: Date) => string;
+  /**
+   * Render a stored 'yyyy-MM-dd' calendar day in the configured pattern. Unlike
+   * `formatDate` this never converts zones — a birthday is a calendar position,
+   * and reading it through a zone moves it a day for anyone behind UTC.
+   */
+  formatDay: (value: string) => string;
 }
 
 const DAY_MS = 86_400_000;
@@ -111,6 +134,10 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
     return formatPattern(input, dateFormat);
   };
 
+  // What a user TYPES is one pattern with a plain space — the interpunct in the
+  // display form reads well in a sentence but is a character nobody types.
+  const dateTimeInput = `${dateFormat} ${timeFormat}`;
+
   return {
     dateFormat,
     timeFormat,
@@ -123,5 +150,12 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
     dayLabel,
     dayKey,
     formatPattern,
+    dateTimeInputFormat: dateTimeInput,
+    datePlaceholder: patternPlaceholder(dateFormat),
+    dateTimePlaceholder: patternPlaceholder(dateTimeInput),
+    parseDate: (text) => parseInPattern(text, dateFormat),
+    parseDateTime: (text) => parseInPattern(text, dateTimeInput),
+    toIsoDay,
+    formatDay: (value) => formatIsoDay(value, dateFormat),
   };
 }

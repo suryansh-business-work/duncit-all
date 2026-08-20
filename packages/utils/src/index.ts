@@ -304,3 +304,23 @@ export {
   type MembershipBenefitValue,
   type MembershipCellKind,
 } from './membership';
+export {
+  APP_POPUP_DEFAULT_ASPECT,
+  APP_POPUP_DISMISSED_KEY,
+  APP_POPUP_DISMISSED_MAX,
+  APP_POPUP_HEIGHT_FRACTION,
+  APP_POPUP_MAX_WIDTH,
+  APP_POPUP_VIEWPORT_GUTTER,
+  appPopupAspect,
+  appPopupImageSize,
+  appPopupLimits,
+  detectClientPlatform,
+  isPopupDismissed,
+  parseDismissedPopupIds,
+  readDismissedPopupIds,
+  rememberDismissedPopup,
+  withDismissedPopupId,
+  type AppPopupClientPlatform,
+  type AppPopupSize,
+  type AppPopupStorage,
+} from './app-popup';

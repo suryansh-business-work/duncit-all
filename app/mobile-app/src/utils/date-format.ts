@@ -20,6 +20,18 @@ export function formatDateTime(input: DateInput): string {
   return appFormatter().formatDateTime(input);
 }
 
+/** Time label in the admin's format + zone, e.g. "06:30 PM". Empty when
+ * unparseable. Mirrors mWeb's `formatTime` (rule 27). */
+export function formatTime(input: DateInput): string {
+  return appFormatter().formatTime(input);
+}
+
+/** A stored 'yyyy-MM-dd' calendar day in the admin's date format — never
+ * shifted by a time zone, because a calendar day is not an instant. */
+export function formatDay(value: string): string {
+  return appFormatter().formatDay(value);
+}
+
 /** "X remaining" until a status auto-expires; null when unknown/expired —
  * mirrors mWeb's statusRemainingLabel so both viewers read identically.
  * Defaults to the APPLICATION clock, so a custom admin time moves it too. */

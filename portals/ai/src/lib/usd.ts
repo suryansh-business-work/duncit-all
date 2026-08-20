@@ -1,4 +1,5 @@
 import { formatMoney } from '@duncit/utils';
+import { formatDateTime } from '@duncit/app-settings';
 
 /**
  * OpenAI bills in USD, and the amounts on these pages span six orders of
@@ -17,4 +18,4 @@ export function usd(value: number): string {
 }
 
 /** Token counts are read as magnitudes, not exact figures — group them. */
-export const tokens = (value: number): string => Number(value || 0).toLocaleString();
+export const tokens = (value: number): string => formatDateTime(Number(value || 0));

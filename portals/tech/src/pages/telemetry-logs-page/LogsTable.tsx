@@ -8,12 +8,13 @@ import {
 } from '@duncit/table';
 import { ENV_COLOR, ENV_OPTIONS, UserCell } from '../../components/telemetry-identity';
 import { type TelemetryLevel, type TelemetryLogRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: TelemetryLogRow) => row.id;
 
 const renderWhen = (row: TelemetryLogRow) => (
   <Typography variant="body2" color="text.secondary">
-    {new Date(row.created_at).toLocaleString()}
+    {formatDateTime(row.created_at)}
   </Typography>
 );
 

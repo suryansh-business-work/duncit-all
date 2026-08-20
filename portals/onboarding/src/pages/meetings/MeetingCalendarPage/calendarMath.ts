@@ -10,6 +10,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import type { MeetingAvailability } from '../queries';
+import { formatDate } from '@duncit/app-settings';
 
 export type CalendarView = 'day' | 'week' | 'month';
 
@@ -31,7 +32,7 @@ export function stepCursor(view: CalendarView, cursor: Date, dir: 1 | -1): Date 
 
 /** Heading label for the visible range. */
 export function rangeLabel(view: CalendarView, cursor: Date): string {
-  if (view === 'day') return format(cursor, 'EEEE, d MMM yyyy');
+  if (view === 'day') return formatDate(cursor);
   if (view === 'month') return format(cursor, 'MMMM yyyy');
   const week = viewDays('week', cursor);
   return `${format(week[0], 'd MMM')} – ${format(week[6], 'd MMM yyyy')}`;

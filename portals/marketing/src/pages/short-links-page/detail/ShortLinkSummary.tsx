@@ -3,6 +3,7 @@ import { EM_DASH } from '@duncit/table';
 import { InfoRow } from '@duncit/ui';
 import CopyableUrl from '../CopyableUrl';
 import type { ShortLinkRow, ShortLinkStats } from '../queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   link: ShortLinkRow;

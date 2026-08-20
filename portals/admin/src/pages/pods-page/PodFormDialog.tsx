@@ -107,7 +107,6 @@ export default function PodFormDialog({
       onGenerateMeetingLink={generateMeetingLink}
       onPickImage={onPickImage}
       onPickVideo={onPickVideo}
-      dateTimeFormat={`${fmt.dateFormat} ${fmt.timeFormat}`}
       dateFormatter={fmt}
       slotLabels={slotLabels}
       onSubmit={onSubmit}

@@ -272,8 +272,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       confirmPasswordPlaceholder: 'Re-enter password',
       // mWeb only — MUI X's picker carries a helper line, the native field does not.
       dobHint: 'You must be at least {years} years old',
-      // Native only — its date of birth is typed as well as picked.
-      dobPlaceholder: 'YYYY-MM-DD',
+      // Native only — its date of birth is typed as well as picked. The shape
+      // comes from the admin's configured date pattern, never a literal.
+      dobPlaceholder: '{format}',
       dobPick: 'Pick date of birth',
       submit: 'Create account',
       // mWeb only — the native button swaps its label for a spinner.
@@ -291,7 +292,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         confirmRequired: 'Please confirm your password',
         dobRequired: 'Date of birth is required',
         dobInvalid: 'Enter a valid date of birth',
-        dobFormat: 'Use the format YYYY-MM-DD',
+        dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
       },
     },
@@ -1365,7 +1366,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       totalDuration: 'Total duration: {duration}',
       // Native only — mWeb schedules with MUI X's picker, which supplies its own
       // placeholder, calendar labels and confirm button.
-      dateTimePlaceholder: 'YYYY-MM-DD HH:mm',
+      dateTimePlaceholder: '{format}',
       pickDateTime: 'Pick {label}',
       dayAria: 'Day {day}',
       timeHeading: 'TIME',
@@ -1503,7 +1504,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         endAfterStart: 'End must be after start',
         endMinDuration: 'End must be at least 30 minutes after the start',
         // Native only — its schedule is typed as text and must parse first.
-        dateTimeFormat: 'Use YYYY-MM-DD HH:mm',
+        dateTimeFormat: 'Use the format {format}',
         // mWeb only — its pod type can be cleared, native's is always one of two.
         podTypeRequired: 'Select a pod type',
         podTypeInvalid: 'Select Free or Paid',

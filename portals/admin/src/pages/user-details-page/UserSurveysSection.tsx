@@ -1,5 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { formatDateTime } from '@duncit/app-settings';
 
 const USER_SURVEYS = gql`
   query AdminUserSurveys($user_id: ID!) {
@@ -14,7 +15,7 @@ const USER_SURVEYS = gql`
 interface SurveyItem { qid: string; label: string; type: string; answer: string }
 interface UserSurvey { kind: 'VENUE' | 'HOST'; submitted_at?: string | null; items: SurveyItem[] }
 
-const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '');
+const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '');
 
 /** Read-only view of a user's venue/host onboarding survey answers. */
 export default function UserSurveysSection({ userId }: Readonly<{ userId: string }>) {

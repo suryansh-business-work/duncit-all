@@ -1,4 +1,5 @@
 import { Avatar, Box, Paper, Stack, Typography } from '@mui/material';
+import { formatTime } from '../../utils/dateFormat';
 
 interface MessageBubbleProps {
   message: any;
@@ -66,10 +67,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           messageContent
         )}
         <Typography variant="caption" sx={{ opacity: 0.58, display: 'block', mt: 0.5, fontWeight: 700 }}>
-          {new Date(m.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {formatTime(m.createdAt)}
         </Typography>
         {m.reactions?.length > 0 && (
           <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>

@@ -8,9 +8,10 @@ import {
   MAIL_AUTOMATION_THREADS,
   type MailAutomationThread,
 } from '../../graphql/mail-automation';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: MailAutomationThread) => row.id;
-const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '');
+const when = (iso: string | null) => (iso ? formatDateTime(iso) : '');
 
 /**
  * What the mailbox has actually done.

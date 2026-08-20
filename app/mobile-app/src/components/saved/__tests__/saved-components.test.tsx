@@ -126,7 +126,7 @@ describe('SavedSortSheet', () => {
         onSelect={jest.fn()}
       />,
     );
-    expect(screen.queryByTestId('saved-sort-sheet')).toBeNull();
+    expect(screen.queryByTestId('saved-sort')).toBeNull();
   });
 
   it('selects a sort (closing the sheet) and closes from the X button', () => {

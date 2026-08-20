@@ -385,6 +385,7 @@ export function PodDetailsScreen() {
           refundPerSeat={membershipState?.backout_refund_per_seat ?? null}
           mySeats={membershipState?.my_seats ?? 1}
           deductionPct={membershipState?.backout_deduction_pct ?? 0}
+          refundCoins={membershipState?.backout_refund_coins ?? 0}
           onViewTerms={() => {
             setBackoutOpen(false);
             navigation.navigate('Policy', { slug: 'backout-terms' });

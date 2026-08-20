@@ -10,3 +10,4 @@ export { AlreadyBookedDialog } from './AlreadyBookedDialog';
 export { CouponField } from './CouponField';
 export { CouponTotal } from './CouponTotal';
 export { CoinRedeemField } from './CoinRedeemField';
+export { CoinSummaryRows } from './CoinSummaryRows';

@@ -42,6 +42,17 @@ export const podMemberTypeDefs = /* GraphQL */ `
     seats_before: Int!
     refund_amount: Float
     """
+    Duncit Coins this release's share of the booking was paid with, before the
+    deduction — the coin twin of payment_amount.
+    """
+    coins_paid: Float!
+    """
+    Coins handed back, after the SAME Backouts deduction the cash refund takes
+    (Finance > Default Deductions). Credited to the balance at the moment the
+    cash refund is processed, never before.
+    """
+    coins_refunded: Float!
+    """
     What Finance shows for THIS request. The booking's own refund_status is not
     it: the server never writes that one for a partial backout, so a member paid
     back for one of three seats was reading "not started".
@@ -167,6 +178,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     """
     backout_refund_per_seat: Float
     """
+    Coins the caller would get back if they released everything they hold —
+    their share of what the booking was paid in coins, less the same Backouts
+    deduction. 0 when the booking spent no coins.
+    """
+    backout_refund_coins: Float!
+    """
     Seats the caller has already released and is still waiting to have filled.
     A partial release leaves the member JOINED, so this is the only signal that
     a Keep My Spot is available to them.
@@ -229,6 +246,17 @@ export const podMemberTypeDefs = /* GraphQL */ `
     deduction_pct: Float!
     "Estimated refund after deduction (null for free bookings)."
     refund_amount: Float
+    """
+    Duncit Coins this release's share of the booking was paid with, before the
+    deduction — the coin twin of payment_amount.
+    """
+    coins_paid: Float!
+    """
+    Coins handed back, after the SAME Backouts deduction the cash refund takes
+    (Finance > Default Deductions). Credited to the balance at the moment the
+    cash refund is processed, never before.
+    """
+    coins_refunded: Float!
     "Set once Finance processed the refund (one refund per request)."
     refund_processed_at: String
     "Immutable, chronological Backout lifecycle timeline."

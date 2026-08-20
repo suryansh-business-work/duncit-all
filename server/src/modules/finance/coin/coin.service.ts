@@ -31,6 +31,33 @@ export function coinsForSpend(spendAmount: number, earnPct: number): number {
   return Math.floor((spend * pct) / 100);
 }
 
+/**
+ * Coins handed back when a booking is backed out.
+ *
+ * The coin half of the cash refund, and it is deliberately the SAME shape:
+ * prorated by the seats actually released over the seats the payment covered,
+ * then less the Backouts deduction from Finance > Default Deductions — the one
+ * percentage that governs what a backout costs, whether it is paid in money or
+ * in coins.
+ *
+ * Floors to a whole coin: 1 coin = 1 rupee of value, so half a coin is half a
+ * rupee nobody can spend, and rounding UP would pay back more than was taken.
+ */
+export function coinsForBackoutRefund(opts: {
+  coinsPaid: number;
+  releaseSeats: number;
+  paidSeats: number;
+  deductionPct: number;
+}): number {
+  const paid = Math.floor(Number(opts.coinsPaid) || 0);
+  const release = Math.max(0, Number(opts.releaseSeats) || 0);
+  const covered = Math.max(1, Number(opts.paidSeats) || 1);
+  if (paid <= 0 || release <= 0) return 0;
+  const pct = Math.max(0, Math.min(100, Number(opts.deductionPct) || 0));
+  const share = (paid * Math.min(release, covered)) / covered;
+  return Math.floor(share - (share * pct) / 100);
+}
+
 const balancePub = (
   doc: ICoinBalance | null,
   rates: { pod: number; shop: number }
@@ -314,6 +341,74 @@ export const coinService = {
       throw e;
     }
     return true;
+  },
+
+  /**
+   * Gives back the coins a backed-out booking was paid with.
+   *
+   * The coin half of the cash refund, and it follows the cash exactly: the
+   * caller has already taken its share of the seats released and the Backouts
+   * deduction off the top (`coinsRefundedForBackout`), so this only moves what
+   * it is handed. Balance only — `lifetime_earned` is untouched, because
+   * returning coins somebody already had is not earning them again.
+   *
+   * Idempotent on the BACKOUT, not the payment: a partial release leaves the
+   * booking alive and refundable, so one payment can reach here more than once
+   * and each release must pay back its own seats. A retry of the SAME release
+   * collides on the unique index and is swallowed as the success it is.
+   *
+   * @returns the coins actually credited (0 when there is nothing to give back
+   * or this backout was already refunded).
+   */
+  async refundForBackout(opts: {
+    userId: string;
+    backoutId: string;
+    paymentId: string | null;
+    coins: number;
+    reason: string;
+    session?: ClientSession;
+  }): Promise<number> {
+    const value = Math.floor(Number(opts.coins) || 0);
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.backoutId || value <= 0) return 0;
+
+    const session = opts.session;
+    const userId = new Types.ObjectId(opts.userId);
+    const balance = await CoinBalanceModel.findOneAndUpdate(
+      { user_id: userId },
+      { $inc: { balance: value } },
+      { new: true, upsert: true, session }
+    );
+    try {
+      await CoinTransactionModel.create(
+        [
+          {
+            user_id: userId,
+            type: 'CREDIT',
+            amount: value,
+            balance_after: balance.balance,
+            source: 'PAYMENT_REFUND',
+            reason: opts.reason,
+            payment_id: opts.paymentId,
+            backout_id: opts.backoutId,
+            earn_pct: 0,
+            spend_amount: 0,
+          },
+        ],
+        { session }
+      );
+    } catch (e) {
+      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+        // This backout was already refunded — take back what the retry added.
+        await CoinBalanceModel.updateOne(
+          { user_id: userId },
+          { $inc: { balance: -value } },
+          { session }
+        );
+        return 0;
+      }
+      throw e;
+    }
+    return value;
   },
 
   /**

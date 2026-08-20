@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
-import { PUBLIC_FINANCE_SETTINGS } from '../queries';
+import { POD_COIN_TOTALS, PUBLIC_FINANCE_SETTINGS } from '../queries';
 
 interface BreakdownLine {
   key: string;
@@ -64,6 +64,17 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
     PUBLIC_FINANCE_SETTINGS,
     { fetchPolicy: 'cache-first' },
   );
+  // Read live rather than from the frozen snapshot: coins were never part of
+  // the settlement record, and back-filling one would rewrite money history.
+  // They explain the COLLECTED figure at the top of the waterfall — the pod
+  // banked less than the tickets' face value because coins cut the gross.
+  const coins = useQuery<{
+    podFinanceBreakdown: { coins_redeemed_total: number; coins_earned_total: number };
+  }>(POD_COIN_TOTALS, {
+    variables: { podId: request?.pod_id },
+    skip: !request?.pod_id,
+    fetchPolicy: 'cache-first',
+  });
   const breakdown = request?.breakdown;
   if (!breakdown) return null;
 
@@ -85,6 +96,21 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
           </Stack>
         ))}
       </Stack>
+      {coinsNote(coins.data?.podFinanceBreakdown)}
     </Box>
+  );
+}
+
+/** One line naming both halves of the pod's coin movement, or nothing when the
+ * pod never saw a coin — two zeroes under a settlement say less than silence. */
+function coinsNote(totals?: { coins_redeemed_total: number; coins_earned_total: number }) {
+  const spent = Math.max(0, Math.floor(Number(totals?.coins_redeemed_total) || 0));
+  const earned = Math.max(0, Math.floor(Number(totals?.coins_earned_total) || 0));
+  if (spent === 0 && earned === 0) return null;
+  return (
+    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+      Duncit Coins on this pod: {spent} spent by buyers (already deducted from Customer collected)
+      · {earned} earned back.
+    </Typography>
   );
 }

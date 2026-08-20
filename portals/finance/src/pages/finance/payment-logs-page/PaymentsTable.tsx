@@ -118,6 +118,22 @@ export default function PaymentsTable({
       { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
       { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
       {
+        field: 'coins_redeemed',
+        headerName: t('finance.payment.colCoinsUsed'),
+        width: 110,
+        hide: true,
+        sortable: false,
+        valueGetter: (p) => Math.max(0, Math.floor(Number(p.coins_redeemed) || 0)),
+      },
+      {
+        field: 'coins_earned',
+        headerName: t('finance.payment.colCoinsEarned'),
+        width: 120,
+        hide: true,
+        sortable: false,
+        valueGetter: (p) => Math.max(0, Math.floor(Number(p.coins_earned) || 0)),
+      },
+      {
         field: 'total',
         headerName: t('finance.payment.colTotal'),
         width: 100,

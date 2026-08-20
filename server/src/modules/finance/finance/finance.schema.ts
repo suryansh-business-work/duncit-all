@@ -253,6 +253,15 @@ export const financeTypeDefs = /* GraphQL */ `
     frozen: Boolean!
     bookings_count: Int!
     collected_total: Float!
+    """
+    Duncit Coins spent across this pod's successful bookings. Cash the pod never
+    collected: coins cut the gross before GST, so collected_total is lower by
+    this much than the tickets' face value. Stating it is what makes the gap
+    explainable instead of looking like missing money.
+    """
+    coins_redeemed_total: Float!
+    "Coins this pod's bookings paid back to buyers as reward."
+    coins_earned_total: Float!
     currency_symbol: String!
     has_venue: Boolean!
     completed_at: String

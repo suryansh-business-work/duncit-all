@@ -281,6 +281,7 @@ export default function PodDetailsPage() {
         mySeats={data?.podMembershipState?.my_seats ?? 1}
         currency={priceCurrency}
         deductionPct={data?.podMembershipState?.backout_deduction_pct ?? 0}
+        refundCoins={data?.podMembershipState?.backout_refund_coins ?? 0}
         onConfirm={actions.onConfirmBackout}
       />
       <KeepSpotDialog

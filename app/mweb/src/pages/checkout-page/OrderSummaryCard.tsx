@@ -6,6 +6,8 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
+import CoinSummaryRows from './CoinSummaryRows';
+import type { CoinCheckoutSummary } from '@duncit/utils';
 
 /** One line of money taken off the bill — a coupon, redeemed coins. */
 export interface CheckoutDiscount {
@@ -32,6 +34,8 @@ interface Props {
   seats?: number;
   /** Price of ONE seat, so the multiplied total below can be reconciled. */
   unitAmount?: number;
+  /** Coins spent, left and earned on this bill. Absent hides the coin block. */
+  coins?: CoinCheckoutSummary | null;
 }
 
 export default function OrderSummaryCard({
@@ -42,6 +46,7 @@ export default function OrderSummaryCard({
   discounts = [],
   seats = 1,
   unitAmount = 0,
+  coins = null,
 }: Readonly<Props>) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -107,6 +112,7 @@ export default function OrderSummaryCard({
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+          <CoinSummaryRows coins={coins} />
           {venueCharges.length > 0 && (
             <Box sx={{ mt: 1, p: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>

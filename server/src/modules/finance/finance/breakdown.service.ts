@@ -49,6 +49,10 @@ export interface PodFinanceBreakdownView {
   frozen: boolean;
   bookings_count: number;
   collected_total: number;
+  /** Coins spent across this pod's bookings — cash the pod never collected. */
+  coins_redeemed_total: number;
+  /** Coins those bookings paid back to buyers as reward. */
+  coins_earned_total: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;
@@ -191,6 +195,18 @@ export const breakdownService = {
     const fs = await getFinanceSettings();
     const collected = await collectedForPod(pod._id);
     const bookings = await PaymentModel.countDocuments({ pod_id: pod._id, status: 'SUCCESS' });
+    // Coins on the SAME set of payments `collectedForPod` counts, so the two
+    // figures always describe one population of bookings.
+    const [coinTotals] = await PaymentModel.aggregate<{ redeemed: number; earned: number }>([
+      { $match: { pod_id: pod._id, status: 'SUCCESS' } },
+      {
+        $group: {
+          _id: null,
+          redeemed: { $sum: { $ifNull: ['$coins_redeemed', 0] } },
+          earned: { $sum: { $ifNull: ['$coins_earned', 0] } },
+        },
+      },
+    ]);
 
     const hostRelease = await PaymentReleaseModel.findOne({
       pod_id: pod._id,
@@ -227,6 +243,8 @@ export const breakdownService = {
     return {
       pod_id: String(pod._id),
       pod_title: pod.pod_title,
+      coins_redeemed_total: coinTotals?.redeemed ?? 0,
+      coins_earned_total: coinTotals?.earned ?? 0,
       settlement_status: settlementStatus,
       frozen,
       bookings_count: bookings,

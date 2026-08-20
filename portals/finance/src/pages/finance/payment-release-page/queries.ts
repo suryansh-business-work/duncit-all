@@ -151,3 +151,15 @@ export interface PaymentReleaseRow {
   notes: string | null;
   requested_at: string;
 }
+/** The pod's coin movement, for the release review's explanatory line. Live
+ * rather than from the frozen settlement snapshot: coins were never part of
+ * that record and back-filling one would rewrite money history. */
+export const POD_COIN_TOTALS = gql`
+  query PodCoinTotals($podId: ID!) {
+    podFinanceBreakdown(pod_id: $podId) {
+      pod_id
+      coins_redeemed_total
+      coins_earned_total
+    }
+  }
+`;

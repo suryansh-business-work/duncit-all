@@ -596,8 +596,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       bookPod: 'Book pod',
       entry: 'Entry',
       price: 'Price',
-      // The seat picker. mWeb is a labelled select, native a stepper.
-      seats: 'Seats',
+      // The seat picker — a stepper on both surfaces, so it names the group
+      // rather than a field, and the two buttons.
       numberOfSeats: 'Number of seats',
       oneSeatFewer: 'One seat fewer',
       oneSeatMore: 'One seat more',
@@ -1709,6 +1709,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       checkoutRemove: 'Remove',
       checkoutApplied: '{coins} coins applied',
       checkoutNone: 'You have no Duncit Coins to redeem yet.',
+      // The three coin facts every bill states, in the breakdown itself rather
+      // than only on the gold row: what this purchase spends, what is left
+      // after it, and what it pays back. The earn line is a PREVIEW at the
+      // current rate — the server grants on the amount actually charged.
+      checkoutUsed: 'Coins used',
+      checkoutRemaining: 'Coins remaining',
+      checkoutEarning: 'Coins you will earn',
+      // Coins move the other way on a backout: the booking paid with them, so
+      // giving the seat up gives them back — less the SAME deduction the cash
+      // refund takes, which is why the percentage is named in the line.
+      refundCoins: 'Coins refunded',
+      refundCoinsEstimate: '+{coins} Duncit Coins back, after the same {pct}% deduction.',
     },
     // The Leaderboard — five boards (Users, Hosts, Club Admins, Venues,
     // Brands), each ranking a different way of showing up for the platform.

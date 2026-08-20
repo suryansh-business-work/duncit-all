@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
-import { seatOptions } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,24 +15,25 @@ interface Props {
 
 /**
  * How many seats this booking takes, shown beside the Book/Join button — the
- * Tamagui twin of mWeb's SeatPicker (rule 27). A stepper rather than a dropdown
- * because the range is small and a bottom bar has no room for a menu.
+ * Tamagui twin of mWeb's SeatPicker (rule 27). A stepper rather than a menu:
+ * the ceiling is whatever the pod has free, a booking may take every remaining
+ * seat, and a virtual pod can be sized in the thousands — so nothing here
+ * enumerates the seats below the ceiling.
  *
  * Hidden when only one seat is left: a picker with a single option is furniture.
  */
 export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
   const { t } = useTranslation();
-  const options = seatOptions(maxSeats);
-  const top = options.length;
-  const seats = top > 0 ? Math.min(Math.max(value, 1), top) : value;
+  const top = Math.max(0, Math.floor(maxSeats) || 0);
+  const seats = Math.min(Math.max(value, 1), Math.max(top, 1));
   // Clamping only what is DISPLAYED left the parent holding the larger number,
   // so a stepper showing 3 could submit 5 and the pod would reject the booking
   // after the buyer had filled in the whole checkout form. Tell the parent.
   useEffect(() => {
     if (seats !== value) onChange(seats);
   }, [seats, value, onChange]);
-  if (options.length <= 1) return null;
+  if (top <= 1) return null;
 
   const step = (next: number) => {
     if (disabled) return;
@@ -43,6 +43,8 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
   return (
     <XStack
       testID="pod-seat-picker"
+      role="group"
+      aria-label={t('mweb.podDetails.numberOfSeats')}
       alignItems="center"
       height={48}
       borderRadius={999}

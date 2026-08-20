@@ -10,8 +10,12 @@ import { formatMoney } from '../checkout-page/checkoutMath';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { Translate } from '../../i18n/fallback';
 import type { ProductShippingQuote, ProductShippingQuoteLine } from '../checkout-page/queries';
+import CoinSummaryRows from '../checkout-page/CoinSummaryRows';
+import type { CoinCheckoutSummary } from '@duncit/utils';
 
 interface Props {
+  /** Coins spent, left and earned on this bill. Absent hides the coin block. */
+  coins?: CoinCheckoutSummary | null;
   lines: CartLine[];
   breakup: any;
   subtotal: number;
@@ -147,7 +151,7 @@ function DeliveryRows({
  * line list (each with an info button), products subtotal, per-warehouse
  * delivery (ShipRocket) and the payable total. No pod title / "Event ticket"
  * line — pods and products are separate entities and never share a payment. */
-export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo }: Readonly<Props>) {
+export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo, coins = null }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -183,6 +187,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+          <CoinSummaryRows coins={coins} />
         </Stack>
       </CardContent>
     </Card>

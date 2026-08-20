@@ -28,6 +28,8 @@ import {
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
 import { useCoinRedemption } from '@/hooks/useCoinRedemption';
+import { coinCheckoutSummary } from '@duncit/utils';
+import { useCoinBalance } from '@/hooks/useCoins';
 import { useProductCheckout, type ProductPayment } from '@/hooks/useProductCheckout';
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -163,6 +165,15 @@ export function ProductCheckoutScreen() {
   // then redeem against that bill.
   const discountedPay = coupon?.ok ? round2(coupon.final_total + shippingTotal) : null;
   const coins = useCoinRedemption(discountedPay ?? breakup?.total ?? amount);
+  // A shop order earns at its OWN rate — a physical product carries a cost of
+  // goods a pod seat does not, so the two rates are configured separately.
+  const { balance: coinBalance } = useCoinBalance();
+  const coinSummary = coinCheckoutSummary({
+    balance: coins.balance,
+    applied: coins.applied,
+    payable: coins.effectiveTotal,
+    earnPct: coinBalance?.shop_earn_pct ?? 0,
+  });
   const payContext = {
     items,
     couponCode: appliedCode,
@@ -275,6 +286,7 @@ export function ProductCheckoutScreen() {
           shippingLoading={shippingLoading}
           pincodeValid={pincodeValid}
           onInfo={setInfoProductId}
+          coins={coinSummary}
         />
         <CouponField
           code={couponCode}

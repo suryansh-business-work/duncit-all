@@ -25,6 +25,7 @@ import { IssueNotice, useServerIssue } from '../../components/issue-notice';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useCheckoutSession } from './useCheckoutSession';
 import { useCoinRedemption } from './useCoinRedemption';
+import { coinCheckoutSummary } from '@duncit/utils';
 import AlreadyBookedDialog from './AlreadyBookedDialog';
 
 export default function CheckoutPage() {
@@ -77,6 +78,20 @@ export default function CheckoutPage() {
   );
   // The deductions, in the order they are taken. Coins are 1:1 with the rupee,
   // so the count applied IS the amount off.
+  // Earned on what is ACTUALLY charged — the server credits on the total after
+  // coins are spent, so previewing off the gross would promise coins that never
+  // arrive.
+  const coinSummary = useMemo(
+    () =>
+      coinCheckoutSummary({
+        balance: session.coinBalance,
+        applied: coins.applied,
+        payable: coins.effectiveTotal,
+        earnPct: session.coinEarnPct,
+      }),
+    [session.coinBalance, session.coinEarnPct, coins.applied, coins.effectiveTotal],
+  );
+
   const discounts = useMemo(() => {
     const rows: CheckoutDiscount[] = [];
     if (session.coupon?.ok && session.coupon.discount_amount > 0) {
@@ -208,7 +223,7 @@ export default function CheckoutPage() {
         )}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} />
+          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={payBreakup ?? breakup} grossTotal={breakup.total} discounts={discounts} seats={seats} unitAmount={unitAmount} coins={coinSummary} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}

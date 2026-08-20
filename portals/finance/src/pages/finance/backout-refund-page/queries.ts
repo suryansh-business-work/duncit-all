@@ -25,6 +25,8 @@ const BACKOUT_REFUND_ROW_FIELDS = gql`
     payment_status
     deduction_pct
     refund_amount
+    coins_paid
+    coins_refunded
     refund_processed_at
     created_at
     pod {
@@ -100,6 +102,8 @@ export const BACKOUT_REFUND_DETAIL = gql`
       payment_status
       deduction_pct
       refund_amount
+      coins_paid
+      coins_refunded
       refund_processed_at
       events {
         status
@@ -121,6 +125,7 @@ export const BACKOUT_REFUND_DETAIL = gql`
           seats
           seats_before
           refund_amount
+          coins_refunded
           refund_status
           deduction_pct
           refund_processed_at
@@ -246,6 +251,8 @@ export interface BackoutRefundRequest {
   refund_status: RefundStatus;
   payment_id: string | null;
   payment_amount: number | null;
+  coins_paid: number;
+  coins_refunded: number;
   payment_currency: string | null;
   payment_status: string | null;
   deduction_pct: number;
@@ -328,10 +335,29 @@ export function buildRefundBreakup(
   const pct = Math.max(0, Math.min(100, Number(row.deduction_pct ?? fallbackDeductionPct) || 0));
   const deduction = Math.round(amount * pct) / 100; // amount × pct%, 2dp
   const net = row.refund_amount ?? Math.max(0, amount - deduction);
-  return [
+  const lines: BreakupLine[] = [
     { key: 'paid', label: 'Amount paid', value: money(symbol, amount) },
     { key: 'backout-status', label: 'Backout status', value: BACKOUT_STATUS_LABELS[row.backout_status] },
     { key: 'deduction', label: `Backout deduction (${pct}%)`, value: `- ${money(symbol, deduction)}` },
     { key: 'refund', label: 'Refund payable', value: money(symbol, net), bold: true },
   ];
+  // The coin half of the same refund. Only shown when the booking actually
+  // spent coins — every other backout would carry two zero rows that say
+  // nothing. Same percentage as the cash above it, floored to a whole coin,
+  // which is why the deducted figure is derived from the two stored numbers
+  // rather than recomputed from the rate.
+  const coinsPaid = Math.max(0, Math.floor(Number(row.coins_paid) || 0));
+  if (coinsPaid > 0) {
+    const coinsBack = Math.max(0, Math.floor(Number(row.coins_refunded) || 0));
+    lines.push(
+      { key: 'coins-paid', label: 'Duncit Coins used', value: String(coinsPaid) },
+      {
+        key: 'coins-deduction',
+        label: `Coin deduction (${pct}%)`,
+        value: `- ${coinsPaid - coinsBack}`,
+      },
+      { key: 'coins-refund', label: 'Coins refundable', value: String(coinsBack), bold: true },
+    );
+  }
+  return lines;
 }

@@ -75,6 +75,9 @@ export interface PodBackoutRequestInput {
   seats: number;
   seats_before: number;
   refund_amount?: number | null;
+  /** Duncit Coins this request gives back, after the Backouts deduction. The
+   * coin half of refund_amount; 0 on a booking that spent no coins. */
+  coins_refunded?: number | null;
   /** What Finance shows for this request. Absent on rows from before it existed. */
   refund_status?: PodRefundStatus | null;
   refund_processed_at?: string | null;
@@ -414,6 +417,9 @@ export function podRefundState(input: PodParticipationInput): PodRefundStatus {
 export function podParticipationActions(input: PodParticipationInput): {
   canBackout: boolean;
   showRefundState: boolean;
+  /** Coins coming back across EVERY release on this booking. A booking can be
+   * given up in parts, so one number per request would under-report it. */
+  coinsRefunded: number;
   /** What to show when a refund IS in play — never the booking's stale copy. */
   refundStatus: PodRefundStatus;
   /** "Visited" once the pod has happened; "Joined" while it is still ahead. */
@@ -423,8 +429,13 @@ export function podParticipationActions(input: PodParticipationInput): {
   const podPast = isPodPast(input.podDateTime, now);
   const cancelled = Boolean(input.cancelledBy);
   const refundStatus = podRefundState(input);
+  const coinsRefunded = (input.backouts ?? []).reduce(
+    (sum, request) => sum + Math.max(0, Math.floor(Number(request.coins_refunded) || 0)),
+    0,
+  );
   return {
     canBackout: !podPast && !cancelled,
+    coinsRefunded,
     // "Not started" is not a refund state worth a control: it is what a booking
     // says when nobody ever asked for one, which is most of them.
     showRefundState: refundStatus !== 'NONE',

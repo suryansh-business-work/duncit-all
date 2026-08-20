@@ -22,6 +22,8 @@ export interface PaymentRow {
   subtotal: number;
   platform_fee_amount: number;
   gst_amount: number;
+  coins_redeemed?: number | null;
+  coins_earned?: number | null;
   total: number;
   currency_symbol: string;
   status: string;
@@ -43,6 +45,8 @@ const PAYMENT_ROW_FIELDS = gql`
     subtotal
     platform_fee_amount
     gst_amount
+    coins_redeemed
+    coins_earned
     total
     currency_symbol
     status

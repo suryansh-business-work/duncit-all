@@ -28,6 +28,8 @@ export const POD_FINANCE_BREAKDOWN = gql`
       frozen
       bookings_count
       collected_total
+      coins_redeemed_total
+      coins_earned_total
       currency_symbol
       has_venue
       completed_at
@@ -92,6 +94,8 @@ export interface PodFinanceBreakdown {
   frozen: boolean;
   bookings_count: number;
   collected_total: number;
+  coins_redeemed_total: number;
+  coins_earned_total: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;

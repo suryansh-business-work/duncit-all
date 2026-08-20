@@ -155,12 +155,15 @@ export default function DefaultDeductionsPage() {
           />
         </DeductionCard>
 
-        <DeductionCard title="Backouts" subtitle="Kept from a member's refund when they back out of a paid pod.">
+        <DeductionCard
+          title="Backouts"
+          subtitle="Kept from a member's refund when they back out of a paid pod — from the money AND from the Duncit Coins."
+        >
           <DeductionSlider
             label="Backout payment deduction charges (0-100%)"
             value={form.default_backout_deduction_pct}
             onChange={set('default_backout_deduction_pct')}
-            hint="Percentage kept from a member's refund when they back out of a paid pod. 0% = full refund. Applied by the refund flow (shipping later)."
+            hint="Percentage kept from a member's refund when they back out of a paid pod. 0% = full refund. This one number governs BOTH halves of the refund: the cash and the Duncit Coins the booking was paid with, which come back to the member's balance less this same percentage (rounded down to a whole coin). A partial backout refunds only the released seats' share of each. Both figures are frozen onto the request when it is raised, so changing this later never rewrites what someone was already promised."
           />
         </DeductionCard>
 

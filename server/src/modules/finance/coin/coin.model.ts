@@ -2,6 +2,8 @@ import { Schema, model, Types, type Document } from 'mongoose';
 
 export type CoinTxnType = 'CREDIT' | 'DEBIT';
 /**
+ * PAYMENT_REFUND returns the coins a cancelled booking was paid with, less the
+ * Backouts deduction — the coin half of the cash refund.
  * REFERRAL_EARN pays the referrer, REFERRAL_SIGNUP pays the person they brought.
  * ADMIN_GRANT / ADMIN_DEDUCT are the manual, user-specific adjustments made from
  * Finance > Duncit Coin > Settings — the only rows a human types the amount for,
@@ -10,6 +12,7 @@ export type CoinTxnType = 'CREDIT' | 'DEBIT';
 export type CoinTxnSource =
   | 'PAYMENT_EARN'
   | 'PAYMENT_REDEEM'
+  | 'PAYMENT_REFUND'
   | 'REFERRAL_EARN'
   | 'REFERRAL_SIGNUP'
   | 'GIFT_CARD_REDEEM'
@@ -44,6 +47,10 @@ export interface ICoinTransaction extends Document {
   /** The referral that earned this row. The same job as payment_id, for the
    * other way coins are earned — one referral pays its referrer once. */
   referral_id: string | null;
+  /** The backout request this refund paid back. ONE payment can be backed out
+   * several times — a partial release leaves the booking alive and refundable —
+   * so the payment alone cannot key a refund row the way it keys an earn. */
+  backout_id: string | null;
   /** The gift card whose value became these coins. The same job as payment_id,
    * for the third way coins arrive — one card converts exactly once. */
   gift_card_id: string | null;
@@ -79,6 +86,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
       enum: [
         'PAYMENT_EARN',
         'PAYMENT_REDEEM',
+        'PAYMENT_REFUND',
         'REFERRAL_EARN',
         'REFERRAL_SIGNUP',
         'GIFT_CARD_REDEEM',
@@ -90,6 +98,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     reason: { type: String, default: '', trim: true, maxlength: 300 },
     payment_id: { type: String, default: null },
     referral_id: { type: String, default: null },
+    backout_id: { type: String, default: null },
     gift_card_id: { type: String, default: null },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     earn_pct: { type: Number, default: 0 },
@@ -111,8 +120,16 @@ coinTxnSchema.index({ created_at: -1 });
 // E11000 and the service swallows it. Keyed on source as well as payment, since
 // one payment legitimately writes both a REDEEM and an EARN row. Partial,
 // because rows without a payment_id are exempt.
+// `backout_id` joined the key when refunds arrived. EARN and REDEEM rows leave
+// it null, so (payment, EARN, null) is still one row per payment — the original
+// guarantee, unchanged. A PAYMENT_REFUND row carries the backout that caused it,
+// because ONE payment can be refunded SEVERAL times: a partial release leaves
+// the booking alive and refundable, so keying refunds on the payment alone would
+// have let the first release through and silently swallowed every one after it
+// as a duplicate. This replaces the older two-field index, which only lands via
+// syncIndexes() at boot (`coinIndexes` in index.ts).
 coinTxnSchema.index(
-  { payment_id: 1, source: 1 },
+  { payment_id: 1, source: 1, backout_id: 1 },
   { unique: true, partialFilterExpression: { payment_id: { $type: 'string' } } }
 );
 

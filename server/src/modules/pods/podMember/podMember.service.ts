@@ -10,6 +10,7 @@ import {
 } from './backoutRequest.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { coinService, coinsForBackoutRefund } from '@modules/finance/coin/coin.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { UserModel } from '@modules/access/user/user.model';
@@ -464,6 +465,8 @@ const toBackoutRefund = (
   payment_status: payment ? payment.status : null,
   deduction_pct: request.deduction_pct ?? 0,
   refund_amount: request.refund_amount ?? null,
+  coins_paid: request.coins_paid ?? 0,
+  coins_refunded: request.coins_refunded ?? 0,
   refund_processed_at: iso(request.refund_processed_at),
   events: (request.events ?? []).map((e) => ({
     status: e.status,
@@ -557,10 +560,12 @@ async function hydrateBackoutRequests(requests: IBackoutRequest[]) {
 async function previewRefund(
   membership: IPodMember | null,
   pct: number
-): Promise<{ perSeat: number | null; total: number | null }> {
-  const none = { perSeat: null, total: null };
+): Promise<{ perSeat: number | null; total: number | null; coins: number }> {
+  const none = { perSeat: null, total: null, coins: 0 };
   if (!membership?.payment_id) return none;
-  const payment = await PaymentModel.findById(membership.payment_id).select('total metadata');
+  const payment = await PaymentModel.findById(membership.payment_id).select(
+    'total metadata coins_redeemed'
+  );
   if (!payment) return none;
   const paidSeats = normalizeSeats((payment.metadata as any)?.seats ?? membership.seats ?? 1);
   const held = normalizeSeats(membership.seats ?? 1);
@@ -572,6 +577,15 @@ async function previewRefund(
   return {
     perSeat: refundAfterDeduction(perSeatPaid, pct),
     total: refundAfterDeduction(round2(perSeatPaid * held), pct),
+    // Coins the member would get back for the seats they hold, under the same
+    // deduction the cash takes — so Pod Details can state both halves of the
+    // refund before anyone commits to it.
+    coins: coinsForBackoutRefund({
+      coinsPaid: payment.coins_redeemed ?? 0,
+      releaseSeats: held,
+      paidSeats,
+      deductionPct: pct,
+    }),
   };
 }
 
@@ -638,6 +652,7 @@ export const podMemberService = {
       backout_deduction_pct: deductionPct,
       backout_refund_amount: refundAmount,
       backout_refund_per_seat: refund.perSeat,
+      backout_refund_coins: refund.coins,
       released_seats_pending: openRequests.reduce((sum, r) => sum + normalizeSeats(r.seats ?? 1), 0),
     };
   },
@@ -861,6 +876,19 @@ export const podMemberService = {
     const attemptNo = attemptsUsed + 1;
     const now = new Date();
     const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);
+    // The coin half of the same refund: this release's share of the coins the
+    // booking was paid with, less the same Backouts deduction. Frozen onto the
+    // request beside refund_amount so a later rate change cannot rewrite what
+    // the member was promised.
+    const coinsPaidShare = payment
+      ? Math.floor(((payment.coins_redeemed ?? 0) * Math.min(release, paidSeats)) / paidSeats)
+      : 0;
+    const coinsRefund = coinsForBackoutRefund({
+      coinsPaid: payment?.coins_redeemed ?? 0,
+      releaseSeats: release,
+      paidSeats,
+      deductionPct,
+    });
     const request = await BackoutRequestModel.create({
       backout_no: await nextBackoutNo(),
       pod_id: pod._id,
@@ -874,6 +902,8 @@ export const podMemberService = {
       payment_amount: paymentAmount,
       deduction_pct: deductionPct,
       refund_amount: refundAmount,
+      coins_paid: coinsPaidShare,
+      coins_refunded: coinsRefund,
       events: [{ status: 'IN_PROCESS', backout_count: attemptNo, at: now }],
     });
 
@@ -1398,6 +1428,22 @@ export const podMemberService = {
     await payment.save();
     request.refund_processed_at = new Date();
     await request.save();
+
+    // The coin half of the refund lands at the SAME moment the cash does, so a
+    // member never sees one arrive without the other. Keyed on the backout, not
+    // the payment: a booking released in parts reaches here once per release,
+    // and each one pays back its own seats. The guard above (refund_processed_at)
+    // already makes this run once per request; the ledger's unique index is the
+    // second line of defence if two calls race it.
+    if ((request.coins_refunded ?? 0) > 0) {
+      await coinService.refundForBackout({
+        userId: String(request.user_id),
+        backoutId: String(request._id),
+        paymentId: payment.payment_id,
+        coins: request.coins_refunded,
+        reason: `Backout ${request.backout_no}`,
+      });
+    }
     const member = await PodMemberModel.findById(request.member_id);
     // A partially-refunded member is still going, so their membership-level
     // refund state must not read as settled.

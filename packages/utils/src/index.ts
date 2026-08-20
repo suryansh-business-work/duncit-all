@@ -153,12 +153,15 @@ export {
   type PodProductSort,
 } from './pod-product-picker';
 export {
+  coinCheckoutSummary,
+  coinsForSpend,
+  type CoinCheckoutSummary,
+} from './coin-checkout';
+export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
-  MAX_SEATS_PER_BOOKING,
   attendeeSeatCount,
   payableSpots,
-  seatOptions,
   payingAttendees,
   podSeatsTaken,
   podSpotsLeft,

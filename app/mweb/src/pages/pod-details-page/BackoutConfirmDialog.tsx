@@ -32,6 +32,8 @@ interface Props {
   currency?: string;
   /** Backouts deduction % applied to the refund estimate. */
   deductionPct?: number;
+  /** Coins returned if the WHOLE booking is released, after the same deduction. */
+  refundCoins?: number;
 }
 
 const money = (n: number) => Math.round(n * 100) / 100;
@@ -52,6 +54,7 @@ export default function BackoutConfirmDialog({
   mySeats = 1,
   currency = '₹',
   deductionPct = 0,
+  refundCoins = 0,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const held = Math.max(1, Math.floor(mySeats) || 1);
@@ -74,6 +77,10 @@ export default function BackoutConfirmDialog({
   const keptHint = partial ? partialHint : t('mweb.podDetails.releasingAll');
   const estimateKey =
     releasing === 1 ? 'mweb.podDetails.refundEstimateOne' : 'mweb.podDetails.refundEstimateMany';
+  // Coins scale with the seats given up, exactly as the cash estimate does.
+  // Both are estimates until the request is written — the server freezes the
+  // authoritative pair onto it and that is what the ledger later credits.
+  const coinsBack = held > 0 ? Math.floor((refundCoins * releasing) / held) : 0;
   const estimateLine = t(estimateKey, {
     vars: { amount: `${currency}${estimate}`, count: releasing, pct: deductionPct },
   });
@@ -107,6 +114,13 @@ export default function BackoutConfirmDialog({
         {estimate != null && (
           <Alert severity="info" sx={{ mb: 2 }}>
             {estimateLine}
+            {coinsBack > 0 && (
+              <Box component="span" sx={{ display: 'block', mt: 0.5, fontWeight: 700 }}>
+                {t('mweb.coin.refundCoinsEstimate', {
+                  vars: { coins: coinsBack, pct: deductionPct },
+                })}
+              </Box>
+            )}
           </Alert>
         )}
         <Box sx={{ maxHeight: 280, overflowY: 'auto', pr: 1 }}>

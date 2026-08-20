@@ -2,6 +2,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { Alert, Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
+import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodSettlementAttendee } from '../types';
 
 const money = (symbol: string, amount: number) => `${symbol}${Number(amount || 0).toFixed(2)}`;
@@ -9,12 +10,11 @@ const money = (symbol: string, amount: number) => `${symbol}${Number(amount || 0
 interface RowProps {
   row: PodSettlementAttendee;
   symbol: string;
-  /** Present only on a not-yet-marked row. */
-  onScan?: () => void;
 }
 
-/** One booking: who, how many seats, what it paid, and its scan action. */
-function RosterRow({ row, symbol, onScan }: Readonly<RowProps>) {
+/** One booking: who, how many seats and what it paid. Read-only — marking
+ * lives on the attendance page now, and this list is the payout's evidence. */
+function RosterRow({ row, symbol }: Readonly<RowProps>) {
   const seatsText = row.seats === 1 ? '1 seat' : `${row.seats} seats`;
   return (
     <Stack
@@ -43,16 +43,6 @@ function RosterRow({ row, symbol, onScan }: Readonly<RowProps>) {
           {seatsText} · {money(symbol, row.amount)}
         </Typography>
       </Box>
-      {onScan && (
-        <Button
-          size="small"
-          startIcon={<QrCodeScannerIcon />}
-          onClick={onScan}
-          sx={{ fontWeight: 700 }}
-        >
-          Scan
-        </Button>
-      )}
     </Stack>
   );
 }
@@ -83,6 +73,7 @@ export default function AttendanceRoster({
   symbol,
   onScan,
 }: Readonly<Props>) {
+  const { labels } = useHostPodActionsConfig();
   const attended = attendees.filter((a) => a.attended);
   const pending = attendees.filter((a) => !a.attended);
 
@@ -122,9 +113,20 @@ export default function AttendanceRoster({
           </Typography>
           <Stack spacing={0.75}>
             {pending.map((row) => (
-              <RosterRow key={row.membership_id} row={row} symbol={symbol} onScan={onScan} />
+              <RosterRow key={row.membership_id} row={row} symbol={symbol} />
             ))}
           </Stack>
+          {/* ONE button, not one per row. Twelve unmarked bookings used to
+              render twelve identical Scan buttons that all opened the same
+              camera — and the native twin never had them at all (rule 27). */}
+          <Button
+            fullWidth
+            startIcon={<QrCodeScannerIcon />}
+            onClick={onScan}
+            sx={{ fontWeight: 800, borderRadius: 999 }}
+          >
+            {labels.attendanceScanCta}
+          </Button>
         </>
       )}
 

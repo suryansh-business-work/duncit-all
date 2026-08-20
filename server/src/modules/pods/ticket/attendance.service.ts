@@ -249,7 +249,15 @@ export const attendanceService = {
     }>,
     actor: Readonly<{ id: string; roles: string[] }>
   ) {
-    const { pod } = await resolveViewer(input.pod_doc_id, actor);
+    const { pod, viewer } = await resolveViewer(input.pod_doc_id, actor);
+    // HOST only. A Club Admin's mark never asks for a code, so letting them
+    // raise one would be a way to text a member from a screen that has no
+    // reason to — the narrower door is the correct one.
+    if (viewer !== 'HOST') {
+      throw new GraphQLError('Only the pod host verifies an attendee here', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
     if (attendanceLock(pod) !== 'OPEN') {
       throw badInput('Attendance is closed for this pod');
     }

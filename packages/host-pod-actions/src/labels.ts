@@ -27,6 +27,8 @@ export interface HostPodActionLabels {
    * owns the navigation and a console without that route simply omits it.
    */
   seeAttendance: string;
+  /** The completion dialog's single scanner button, under the roster. */
+  attendanceScanCta: string;
   /** The rating link in the pod's action menu. */
   feedbackLink: string;
   shareLink: string;
@@ -63,6 +65,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('mweb.podClubAdmin.menuItem'),
     seeAttendance: t('mweb.attendance.menuItem'),
+    attendanceScanCta: t('mweb.attendance.scanCta'),
     feedbackLink: t('mweb.podFeedback.feedbackLink'),
     shareLink: t('mweb.podFeedback.shareLink'),
     copyLink: t('mweb.podFeedback.copyLink'),
@@ -97,6 +100,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('shell.podClubAdmin.menuItem'),
     seeAttendance: t('shell.attendance.menuItem'),
+    attendanceScanCta: t('shell.attendance.scanCta'),
     feedbackLink: t('shell.podFeedback.feedbackLink'),
     shareLink: t('shell.podFeedback.shareLink'),
     copyLink: t('shell.podFeedback.copyLink'),

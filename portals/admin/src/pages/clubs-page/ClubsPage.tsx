@@ -43,6 +43,9 @@ export default function ClubsPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Page-level filter: pinned outside the table so it survives the table's own
+  // column filters and resets paging when it changes.
+  const [superCategoryId, setSuperCategoryId] = useState('');
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerFolder, setPickerFolder] = useState('/clubs');
@@ -135,11 +138,15 @@ export default function ClubsPage() {
 
   return (
     <Stack spacing={3}>
-      <ClubsToolbar />
+      <ClubsToolbar
+        superCategoryId={superCategoryId}
+        onSuperCategoryChange={setSuperCategoryId}
+      />
 
       <ClubsTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
+        superCategoryId={superCategoryId}
         catName={catName}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>

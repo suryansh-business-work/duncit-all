@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { POD_LIVE_TAIL_MS } from '@modules/pods/pod/pod.lifecycle';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { PaymentReleaseModel, type IPaymentRelease } from './paymentRelease.model';
@@ -61,11 +62,6 @@ export interface EarningsSummary {
   pods_completed: number;
   this_month_earnings: number;
 }
-
-// When a pod has no explicit end time, treat it as live for this long after
-// start (mirrors the client's podStatus tail so the donut lines up with the
-// per-pod status shown elsewhere).
-const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
 
 export interface HostStatusCounts {
   upcoming: number;

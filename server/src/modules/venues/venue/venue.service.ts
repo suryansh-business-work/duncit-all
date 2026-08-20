@@ -284,6 +284,9 @@ const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     venue_type: { type: 'string' },
+    // The venue's own Super Category ("For You" / "For Your Pet"), which lives
+    // on the embedded classification rather than at the root — hence the path.
+    super_category_id: { path: 'venue_category.super_category_id', type: 'string' },
     city: { type: 'string' },
     locality: { type: 'string' },
     location_id: { type: 'string' },

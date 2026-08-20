@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useApolloTableFetch } from '@duncit/table';
+import SuperCategoryFilter from '../../components/SuperCategoryFilter';
 import { VENUES_TABLE, type VenueRow } from './queries';
 import VenuesTable from './VenuesTable';
 
@@ -11,23 +12,39 @@ import VenuesTable from './VenuesTable';
 export default function VenuesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
+  // Page-level filter, pinned outside the table so it survives the table's own
+  // column filters and resets paging when it changes.
+  const [superCategoryId, setSuperCategoryId] = useState('');
 
   const fetchRows = useApolloTableFetch<VenueRow>(client, VENUES_TABLE, 'venuesTable');
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <StorefrontIcon color="primary" />
-        <Box>
-          <Typography variant="h5" fontWeight={700}>
-            Venues
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Every registered venue. Approvals and edits are managed in the Onboarding portal.
-          </Typography>
-        </Box>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        sx={{ mb: 3 }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <StorefrontIcon color="primary" />
+          <Box>
+            <Typography variant="h5" fontWeight={700}>
+              Venues
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Every registered venue. Approvals and edits are managed in the Onboarding portal.
+            </Typography>
+          </Box>
+        </Stack>
+        <SuperCategoryFilter value={superCategoryId} onChange={setSuperCategoryId} />
       </Stack>
-      <VenuesTable fetchRows={fetchRows} refetchRef={refetchRef} />
+      <VenuesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        superCategoryId={superCategoryId}
+      />
     </Box>
   );
 }

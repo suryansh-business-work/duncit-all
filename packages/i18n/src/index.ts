@@ -8,6 +8,7 @@ export {
   type NestedCatalogue,
 } from './catalogue';
 export {
+  ADMIN_BUNDLE,
   allFallbackEntries,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,

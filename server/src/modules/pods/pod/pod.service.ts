@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
+import { podLifecycleFilter, type PodLifecycle } from './pod.lifecycle';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
@@ -1588,11 +1589,30 @@ export const podService = {
    * stay excluded via the model's pre-find hook. */
   async table(
     input?: TableQueryInput | null,
-    opts?: { includePendingApproval?: boolean; includeDeleted?: boolean }
+    opts?: {
+      includePendingApproval?: boolean;
+      includeDeleted?: boolean;
+      /** Narrows the page to one derived bucket (Admin > Pods > All Pods). */
+      lifecycle?: PodLifecycle | null;
+    }
   ) {
-    const baseFilter = opts?.includePendingApproval
+    // CANCELLED reads soft-deleted rows. The model's pre-find hook normally
+    // re-pins `deleted_at: null` for callers without the includeDeleted opt-in
+    // — but it stands down the moment a filter mentions `deleted_at`, which
+    // this one does. So the guarantee is restored here rather than leaned on: a
+    // caller who may not see cancelled pods sees none, not all of them.
+    if (opts?.lifecycle === 'CANCELLED' && !opts.includeDeleted) {
+      return { rows: [], total: 0, page: 1, page_size: 0 };
+    }
+    const baseFilter: Record<string, unknown> = opts?.includePendingApproval
       ? {}
       : { venue_approval_status: { $ne: 'PENDING' } };
+    // Derived from dates rather than stored, so it cannot ride the engine's
+    // field allowlist — it joins the approval guard in the baseFilter instead,
+    // where a client filter can never widen it.
+    if (opts?.lifecycle) {
+      Object.assign(baseFilter, podLifecycleFilter(opts.lifecycle, new Date()));
+    }
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
       baseFilter,

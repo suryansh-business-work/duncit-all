@@ -145,8 +145,12 @@ const POD_ROW_FIELDS = gql`
 `;
 
 export const PODS_TABLE = gql`
-  query PodsTable($query: TableQueryInput, $include_deleted: Boolean) {
-    podsTable(query: $query, include_deleted: $include_deleted) {
+  query PodsTable(
+    $query: TableQueryInput
+    $include_deleted: Boolean
+    $lifecycle: PodLifecycle
+  ) {
+    podsTable(query: $query, include_deleted: $include_deleted, lifecycle: $lifecycle) {
       total
       rows {
         ...PodRowFields

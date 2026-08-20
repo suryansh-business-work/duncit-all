@@ -1,6 +1,11 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  type DuncitColumn,
+  type TableFetch,
+  type TableFilterValue,
+} from '@duncit/table';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
 
 const getVenueRowId = (v: VenueRow) => v.id;
@@ -56,9 +61,12 @@ const createdValue = (v: VenueRow) =>
 export default function VenuesTable({
   fetchRows,
   refetchRef,
+  superCategoryId,
 }: Readonly<{
   fetchRows: TableFetch<VenueRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  /** Toolbar's Super Category filter; '' means every super category. */
+  superCategoryId: string;
 }>) {
   const columns = useMemo<DuncitColumn<VenueRow>[]>(
     () => [
@@ -75,6 +83,14 @@ export default function VenuesTable({
     [],
   );
 
+  // Pinned page filter rather than a column one: it belongs to the header, so
+  // it never shows as a removable chip and a change resets to page 1.
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () =>
+      superCategoryId ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }] : [],
+    [superCategoryId],
+  );
+
   return (
     <DuncitTable<VenueRow>
       tableId="admin-venues"
@@ -84,6 +100,7 @@ export default function VenuesTable({
       emptyText="No venues found."
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, type, city or owner"
+      externalFilters={externalFilters}
       refetchRef={refetchRef}
     />
   );

@@ -45,6 +45,7 @@ export {
   useTranslation,
 } from './useTranslation';
 export {
+  ADMIN_BUNDLE,
   allFallbackEntries,
   createTranslator,
   FINANCE_BUNDLE,

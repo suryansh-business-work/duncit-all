@@ -6,7 +6,7 @@
 
 /** `Name <a@b.c>` or a bare `a@b.c`. Anchored, so no backtracking tail. */
 const ADDRESS_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/;
-const DISPLAY_RE = /^(?<name>[^<>]*)<(?<address>[^<>\s]+)>$/;
+const DISPLAY_RE = /^[^<>]*<(?<address>[^<>\s]+)>$/;
 
 /** The address out of a `Name <a@b.c>` form, or the input unchanged. */
 export function bareAddress(input: string): string {

@@ -153,13 +153,17 @@ export function stripChrome(mjml: string): StripResult {
   const footerNote = footer ? reasonOnly(sectionText(mjml.slice(footer.start, footer.end))) : '';
 
   // Cut from the back so the earlier span's offsets stay valid.
-  const cuts = [header, footer].filter(Boolean).sort((a, b) => b!.start - a!.start);
+  // A type-guard predicate rather than `filter(Boolean)`: the latter does not
+  // narrow away `undefined`, which is why each use below needed a `!`.
+  const cuts = [header, footer]
+    .filter((s): s is NonNullable<typeof s> => Boolean(s))
+    .sort((a, b) => b.start - a.start);
   let out = mjml;
   for (const cut of cuts) {
     // Take the whole line the section sits on, so no blank indent is left behind.
-    let from = cut!.start;
+    let from = cut.start;
     while (from > 0 && (out[from - 1] === ' ' || out[from - 1] === '\t')) from -= 1;
-    let to = cut!.end;
+    let to = cut.end;
     if (out.startsWith('\r\n', to)) to += 2;
     else if (out[to] === '\n') to += 1;
     out = out.slice(0, from) + out.slice(to);

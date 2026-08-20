@@ -31,7 +31,7 @@ export function useSpotsBounds(): SpotsBounds {
 
   const club = clubs.find((item: any) => String(item?.id) === String(clubId));
   // A club stores its SUB-category in `category_id`.
-  const subId = club ? String((club as any).category_id ?? '') : '';
+  const subId = club ? String(club.category_id ?? '') : '';
   const minPax = categories.find((category) => category.id === subId)?.min_pax ?? 0;
 
   const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? null;

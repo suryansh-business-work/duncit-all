@@ -15,5 +15,5 @@ export const POD_OCCURRENCE_LABELS: Record<string, string> = {
 /** Human occurrence label from the enum value, e.g. "ONE_TIME" → "One time". */
 export function podOccurrenceLabel(occurrence?: string | null): string {
   if (!occurrence) return '';
-  return POD_OCCURRENCE_LABELS[occurrence] ?? occurrence.replace(/_/g, ' ');
+  return POD_OCCURRENCE_LABELS[occurrence] ?? occurrence.replaceAll('_', ' ');
 }

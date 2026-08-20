@@ -92,7 +92,7 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
   const podium = rows.filter((entry) => leaderboardMedal(entry.rank) !== null);
   const rest = rows.filter((entry) => leaderboardMedal(entry.rank) === null);
   // Silver – gold – bronze, so #1 stands in the middle, a head taller.
-  const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean) as LeaderboardEntry[];
+  const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
 
   return (
     <Stack spacing={1.5}>

@@ -2076,8 +2076,8 @@ export const podService = {
     // NOT_FOUND before any refund or penalty runs.
     const doc = await PodModel.findById(podId);
     if (!doc) notFound();
-    await assertOwnedVenue(doc!, userId);
-    if (bucketForPod(doc!, Date.now()) !== 'upcoming') {
+    await assertOwnedVenue(doc, userId);
+    if (bucketForPod(doc, Date.now()) !== 'upcoming') {
       throw new GraphQLError('Only an upcoming pod can be cancelled', {
         extensions: { code: 'BAD_REQUEST' },
       });
@@ -2085,7 +2085,7 @@ export const podService = {
 
     const podTitle = doc!.pod_title;
     const venueId = String(doc!.venue_id);
-    const refunded_count = await refundAndNotifyCancellation(doc!, userId, note, 'VENUE_OWNER');
+    const refunded_count = await refundAndNotifyCancellation(doc, userId, note, 'VENUE_OWNER');
     // A concurrent cancel committed the delete first and already took the
     // penalty. Report that cancellation's outcome — docking the venue a second
     // time for one cancellation is the bug this guard exists to stop.

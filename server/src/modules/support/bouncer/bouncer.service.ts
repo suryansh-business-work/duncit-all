@@ -516,7 +516,7 @@ export const bouncerService = {
     }).lean();
 
     return {
-      pod: pod!,
+      pod: pod,
       mine: mine
         ? {
             rating: mine.rating,

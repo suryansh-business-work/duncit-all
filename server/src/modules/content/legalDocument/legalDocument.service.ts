@@ -362,7 +362,7 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
-    return renderPdf(doc!);
+    return renderPdf(doc);
   },
 
   /**
@@ -380,7 +380,7 @@ export const legalDocumentService = {
     if (!doc) fail('NOT_FOUND', 'Document not found');
     if (!doc!.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
 
-    const pdf = await renderPdf(doc!);
+    const pdf = await renderPdf(doc);
     const { sendSignedContractEmail } = await import('@services/email/email.service');
     await sendSignedContractEmail({
       to: recipient,

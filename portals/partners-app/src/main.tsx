@@ -1,4 +1,5 @@
 import { mountPortal } from '@duncit/shell';
+import { NotifyHost } from '@duncit/dialogs';
 import { flattenCatalogue, PARTNERS_BUNDLE } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
@@ -26,5 +27,8 @@ mountPortal({
   // portal gains the copy without gaining a dependency (and without the
   // matching Dockerfile COPY that a new @duncit/* dep would silently require).
   i18nFallback: flattenCatalogue(PARTNERS_BUNDLE),
+  // The pod and club editors are pages now: they navigate back to their list on
+  // save, so the confirmation has to outlive the screen that triggered it.
+  extras: <NotifyHost />,
   children: <App />,
 });

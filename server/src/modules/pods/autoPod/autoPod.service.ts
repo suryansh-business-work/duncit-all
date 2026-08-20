@@ -348,7 +348,7 @@ export const autoPodService = {
       );
     }
     await venueSlotService.releaseForAutoPod(String(doc._id));
-    autoPodNotify.cancelled(cancelled!).catch((error) =>
+    autoPodNotify.cancelled(cancelled).catch((error) =>
       logs.server.error('autoPod', 'notifyCancelled', { error, auto_pod_id: autoPodId })
     );
     return autoPodToPub(cancelled);

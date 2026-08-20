@@ -18,7 +18,7 @@ interface NavigatorExtras {
 }
 
 const navigatorExtras = (): NavigatorExtras | undefined =>
-  typeof navigator === 'undefined' ? undefined : (navigator as NavigatorExtras);
+  typeof navigator === 'undefined' ? undefined : navigator;
 
 /** `4g` / `wifi` / `offline` — whichever the browser is willing to admit to. */
 function currentNetwork(): string | undefined {

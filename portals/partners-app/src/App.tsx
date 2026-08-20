@@ -30,6 +30,7 @@ import ClubAdminClubsPage from './pages/club-admin-clubs-page/ClubAdminClubsPage
 import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminClubPodsPage';
 import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
 import ClubAdminPodDetailsPage from './pages/club-admin-pod-details-page/ClubAdminPodDetailsPage';
+import ClubAdminPodEditorPage from './pages/club-admin-pod-editor-page';
 import ClubAdminPodMonitoringPage from './pages/club-admin-monitoring-page/ClubAdminPodMonitoringPage';
 import ClubAdminAutoPodsPage from './pages/club-admin-auto-pods-page/ClubAdminAutoPodsPage';
 import VerificationPage from './pages/verification-page/VerificationPage';
@@ -79,7 +80,11 @@ export default function App() {
       <Route path="/club-admin/monitoring" element={authed(<ClubAdminPodMonitoringPage />)} />
       <Route path="/club-admin/auto-pods" element={authed(<ClubAdminAutoPodsPage />)} />
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
+      {/* Static before dynamic so /pods/new is never read as a pod id —
+          React Router ranks it first either way, and the order says so. */}
+      <Route path="/club-admin/clubs/:clubId/pods/new" element={authed(<ClubAdminPodEditorPage />)} />
       <Route path="/club-admin/clubs/:clubId/pods/:id" element={authed(<ClubAdminPodDetailsPage />)} />
+      <Route path="/club-admin/clubs/:clubId/pods/:id/edit" element={authed(<ClubAdminPodEditorPage />)} />
       <Route path="/wallet" element={authed(<WalletPage />)} />
       <Route path="/earn" element={authed(<EarnPage />)} />
       <Route path="/verification" element={authed(<VerificationPage />)} />

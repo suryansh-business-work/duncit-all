@@ -91,7 +91,7 @@ async function main() {
       `(${meeting.request_no})`
     );
     if (!dryRun) {
-      host.host_categories.push({ ...normalized, request_no: meeting.request_no ?? '' } as never);
+      host.host_categories.push({ ...normalized, request_no: meeting.request_no ?? '' });
       await host.save();
     }
     backfilled += 1;

@@ -303,7 +303,7 @@ export const giftcardService = {
     return {
       coins_added: credited,
       coin_balance: await coinService.balanceOf(userId),
-      card: giftCardPub(card!),
+      card: giftCardPub(card),
     };
   },
 

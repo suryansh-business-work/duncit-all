@@ -1,8 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
-import { useDateFormat, useTranslation } from '@duncit/app-settings';
-import { buildSlotLabels } from '@duncit/slots';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
@@ -10,20 +8,14 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { PodEditorDialog, useMediaPickerBridge } from '@duncit/pod-form';
-import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
-import { getClubVenueIds } from '../pods-page/partner-pod-config';
-import useClubAdminPodEditor, { CLUB_ADMIN_POD_CONFIG } from './useClubAdminPodEditor';
 import PodActivityDialog from './PodActivityDialog';
 import AiMonitorPill from './AiMonitorPill';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 
 export default function ClubAdminClubPodsPage() {
-  const fmt = useDateFormat();
-  const { t } = useTranslation();
-  const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
   const { clubId = '' } = useParams();
+  const navigate = useNavigate();
   const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -33,25 +25,12 @@ export default function ClubAdminClubPodsPage() {
   const [trailPod, setTrailPod] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const picker = useMediaPickerBridge();
-
-  const editor = useClubAdminPodEditor({
-    clubId,
-    onSaved: ({ created, draft }) => {
-      if (created) {
-        setMessage(draft ? 'Pod draft saved.' : 'Pod created.');
-      } else {
-        setMessage('Pod updated.');
-      }
-      refetchRef.current?.();
-    },
-  });
 
   const clubs = lookups.data?.myAdminClubs ?? [];
   const venues = (lookups.data?.myVenues ?? []).filter((venue: any) => venue.status === 'APPROVED' && venue.is_active);
-  const products = lookups.data?.availablePodProducts ?? [];
   const club = clubs.find((item: any) => item.id === clubId);
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
+  const podsPath = `/club-admin/clubs/${clubId}/pods`;
 
   // Every page (and every user filter) stays pinned to this club server-side:
   // clubAdminPodsTable resolves the caller's club membership itself, so no
@@ -82,16 +61,14 @@ export default function ClubAdminClubPodsPage() {
   const renderActions = (pod: PodRowBase) => (
     <Stack direction="row" justifyContent="flex-end" component="span">
       <Tooltip title="Pod details">
-        <IconButton
-          size="small"
-          component={RouterLink}
-          to={`/club-admin/clubs/${clubId}/pods/${pod.id}`}
-        >
+        <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
       <Tooltip title="Edit pod">
-        <IconButton size="small" onClick={() => editor.openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
+        <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
+          <EditIcon fontSize="small" />
+        </IconButton>
       </Tooltip>
       {/* An already-cancelled pod stays editable, but there is nothing left
           to delete. */}
@@ -133,7 +110,11 @@ export default function ClubAdminClubPodsPage() {
             venueName={venueName}
             emptyText="This club has no pods yet. Create the first one."
             toolbarActions={
-              <CreatePodLauncher clubId={clubId} club={club ?? null} onNormal={editor.openCreate} />
+              <CreatePodLauncher
+                clubId={clubId}
+                club={club ?? null}
+                onNormal={() => navigate(`${podsPath}/new`)}
+              />
             }
             renderActions={renderActions}
             renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}
@@ -142,41 +123,6 @@ export default function ClubAdminClubPodsPage() {
       </CardContent>
 
       <PodActivityDialog pod={trailPod} onClose={() => setTrailPod(null)} />
-
-      <PodEditorDialog
-        open={editor.open}
-        editing={!!editor.editingPod}
-        onClose={editor.close}
-        initialValues={editor.initialValues}
-        config={CLUB_ADMIN_POD_CONFIG}
-        busy={editor.busy}
-        error={editor.opError}
-        clubs={clubs}
-        venues={venues}
-        users={editor.hostSeed}
-        products={products}
-        getClubVenueIds={getClubVenueIds}
-        onPickImage={picker.pickImage}
-        onPickVideo={picker.pickVideo}
-        searchHosts={editor.searchHosts}
-        dateFormatter={fmt}
-        slotLabels={slotLabels}
-        onSubmit={editor.submit}
-        intro={
-          <Alert severity="info" sx={{ mb: 1.5 }}>
-            You are added as the pod host automatically unless you assign hosts below.
-          </Alert>
-        }
-      />
-
-      <MediaPickerDialog
-        open={picker.pickerOpen}
-        onClose={() => picker.settlePicker(null)}
-        onPicked={(url) => picker.settlePicker(url)}
-        folder="/pods/media"
-        title={picker.title}
-        accept={picker.accept}
-      />
 
       <ConfirmDialog
         open={!!podToDelete}

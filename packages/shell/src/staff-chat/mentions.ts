@@ -1,5 +1,5 @@
 /** An @ followed by a name, the way the server looks for one. */
-export const MENTION_TOKEN = /@[\w][\w.-]*/g;
+export const MENTION_TOKEN = /@\w[\w.-]*/g;
 
 /** The half-typed mention under the caret, or null. */
 export const MENTION_QUERY = /@([\w.-]*)$/;

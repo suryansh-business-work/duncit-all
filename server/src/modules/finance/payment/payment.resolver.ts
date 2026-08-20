@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { paymentService, computeQuote } from './payment.service';
+import { paymentService } from './payment.service';
 import { paymentDetailService } from './payment.detail.service';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { PodModel } from '@modules/pods/pod/pod.model';

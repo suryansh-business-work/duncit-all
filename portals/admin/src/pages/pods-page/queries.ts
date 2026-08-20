@@ -160,7 +160,7 @@ export const PODS_TABLE = gql`
   ${POD_ROW_FIELDS}
 `;
 
-/** Single-pod fetch for the /pods?edit=<id> deep-link (rows are paged now).
+/** Single-pod fetch for the /pods/<id>/edit page (rows are paged now).
  * include_deleted so a cancelled pod stays editable from its details page. */
 export const POD_FOR_EDIT = gql`
   query PodForEdit($id: ID!) {

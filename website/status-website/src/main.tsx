@@ -17,7 +17,7 @@ configureLogs(httpTransport(`${SERVER_BASE}/logs`), { platform: 'web' });
 // dl/dlc markers. The shared helper verifies them against the API and records
 // the visit; ordinary traffic costs one no-op call.
 captureShortLinkAttribution({
-  search: window.location.search,
+  search: globalThis.location.search,
   referrer: document.referrer,
   serverUrl: SERVER_BASE,
 });

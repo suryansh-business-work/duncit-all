@@ -4,12 +4,11 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 import ChargesAccordion from './ChargesAccordion';
 import PayoutCard from './PayoutCard';
 import type { EarningsPreview } from './useEarningsPreview';
 
-export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES };
+export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 export { useEarningsPreview, type EarningsPreview } from './useEarningsPreview';
 export { default as TicketPriceField } from './TicketPriceField';
 

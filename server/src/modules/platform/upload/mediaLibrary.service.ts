@@ -107,7 +107,7 @@ const toItem = (raw: any): MediaItem => ({
 function searchExpression(search?: string | null): string | undefined {
   const term = search?.trim();
   if (!term) return undefined;
-  return `name : "${term.replaceAll('"', '\\"')}"`;
+  return `name : "${term.replaceAll('"', String.raw`\"`)}"`;
 }
 
 /** ImageKit's own `fileType` values. Anything else means "do not filter". */

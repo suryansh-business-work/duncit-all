@@ -284,7 +284,7 @@ async function runGiftCardLeg(ctx: CoreContext): Promise<void> {
     step(ctx, 'GIFT_CARD_ISSUED', 'SKIPPED', 'This payment bought no gift card');
     return;
   }
-  const facts = (p.metadata as Record<string, any>)?.gift_card;
+  const facts = p.metadata?.gift_card;
   if (!facts) {
     throw new GraphQLError('This gift card payment carries no card facts', {
       extensions: { code: 'INTERNAL_SERVER_ERROR' },

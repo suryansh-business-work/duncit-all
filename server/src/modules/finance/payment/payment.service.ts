@@ -1362,7 +1362,6 @@ export const paymentService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    const fs = await getFinanceSettings();
     const pdf = await generateInvoicePdf(
       await invoiceDataForPayment(doc, {
         paymentMethod: doc.gateway || 'Gateway',

@@ -22,7 +22,7 @@ export default function OwnerField({ control, options, loading }: Readonly<Props
         <Autocomplete<OwnerOption>
           options={options}
           loading={loading}
-          value={options.filter((o) => o.id === field.value)[0] ?? null}
+          value={options.find((o) => o.id === field.value) ?? null}
           onBlur={field.onBlur}
           getOptionLabel={ownerLabel}
           isOptionEqualToValue={(a, b) => a.id === b.id}

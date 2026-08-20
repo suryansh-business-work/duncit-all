@@ -9,7 +9,7 @@ const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
  * memoised onto the parent: a 50-row inbox must not issue three reads per row.
  * A non-actionable row resolves to null without touching the database.
  */
-async function loadRequest(parent: any): Promise<any | null> {
+async function loadRequest(parent: any): Promise<any> {
   if (parent?.action_type !== 'FOLLOW_REQUEST' || !parent?.action_ref_id) return null;
   if (parent.__followRequest !== undefined) return parent.__followRequest;
   const { FollowRequestModel } = await import(
@@ -28,7 +28,7 @@ async function loadRequest(parent: any): Promise<any | null> {
 async function actorIdOf(parent: any): Promise<string | null> {
   const stored = parent?.action_actor_id;
   if (stored) return String(stored);
-  const requester = ((await loadRequest(parent)) as any)?.requester_id;
+  const requester = (await loadRequest(parent))?.requester_id;
   return requester ? String(requester) : null;
 }
 
@@ -41,7 +41,7 @@ export const notificationResolvers = {
    * never rewritten.
    */
   Notification: {
-    action_status: async (parent: any) => ((await loadRequest(parent)) as any)?.status ?? null,
+    action_status: async (parent: any) => (await loadRequest(parent))?.status ?? null,
 
     /** Who the row is about — what the recipient's Follow Back targets. */
     action_actor_id: (parent: any) => actorIdOf(parent),

@@ -125,7 +125,7 @@ export function PodAttendanceScreen() {
 
       <AttendanceOtpSheet
         podId={podId}
-        row={board.otpRow as PodAttendanceRow | null}
+        row={board.otpRow}
         labels={labels}
         onClose={board.cancelOtp}
         onVerified={board.finishMark}

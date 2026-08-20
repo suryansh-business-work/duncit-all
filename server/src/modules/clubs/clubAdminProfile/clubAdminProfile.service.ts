@@ -396,7 +396,7 @@ export const clubAdminProfileService = {
       }
       const want = taxonomy.category_id;
       const ids: string[] = want?.$in
-        ? want.$in.map((v: any) => String(v))
+        ? want.$in.map(String)
         : [String(want)];
       return ids.includes(String(club.category_id ?? ''));
     };

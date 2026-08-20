@@ -93,7 +93,7 @@ async function openSupportTicket(input: InboundEmail): Promise<OpenedTicket> {
         // The sender when there is an account; the ticket itself when there is
         // not, because a message has to say who wrote it. Same arrangement as
         // the website contact form.
-        author_id: (account?._id as Types.ObjectId | undefined) ?? new Types.ObjectId(),
+        author_id: account?._id ?? new Types.ObjectId(),
         author_role: 'USER',
         body_text: input.bodyText,
         body_html: '',

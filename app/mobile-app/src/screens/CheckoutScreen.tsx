@@ -16,7 +16,7 @@ import {
 } from '@/components/checkout';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
-import { formatMoney } from '@/utils/checkout-math';
+import { buildBreakup, formatMoney } from '@/utils/checkout-math';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
   buildCheckoutContact,
@@ -35,7 +35,6 @@ import type { ParsedIssue } from '@duncit/errors';
 import { usePodTicket } from '@/hooks/usePodHistory';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
-import { buildBreakup } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import type { Translator } from '@duncit/i18n';
 

@@ -1,22 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
-import { makeNativeParityPodConfig, useMediaPickerBridge, type PodFormConfig } from '@duncit/pod-form';
+import { useMediaPickerBridge } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { useFeatureFlag } from '@duncit/app-settings';
 import PodActivityDialog from '../pod-monitoring/PodActivityDialog';
 import { PODS_TABLE, type PodRow } from './queries';
 import CompletePodDialog from './complete-pod-dialog';
 import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
-import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
 import CreatePodLauncher from './CreatePodLauncher';
 import type { PodLifecycleFilter } from './podLifecycle';
 import QuickEditPodDialog from './QuickEditPodDialog';
-import usePodEditor from './usePodEditor';
+import usePodDelete from './usePodDelete';
 import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
 
@@ -24,6 +22,8 @@ export default function PodsPage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const clubFilter = params.get('club_id') ?? '';
+  // Bookmarks from before the editor became a page still point at /pods?edit=.
+  const legacyEditId = params.get('edit') ?? '';
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
@@ -42,30 +42,16 @@ export default function PodsPage() {
     setToast,
   });
 
-  const productsFlag = useFeatureFlag('is_product_visible');
-  // Native-parity base (venue slots, place charges, reel, hosts) + admin extras.
-  const config = useMemo<PodFormConfig>(
-    () => ({
-      ...makeNativeParityPodConfig({ showProducts: productsFlag }),
-      requireHosts: true,
-      singleHost: true,
-      showLocationZone: true,
-      showInventory: true,
-      showFinance: true,
-      showIsActive: true,
-    }),
-    [productsFlag]
-  );
-
-  const editor = usePodEditor({
-    config,
-    clubFilter,
-    editId: params.get('edit') ?? '',
+  const remove = usePodDelete({
     onChanged: (message) => {
       setToast(message);
       refetchRef.current?.();
     },
   });
+
+  // The editor is its own route now, so the club filter rides along and comes
+  // back with the author when they cancel or save.
+  const editorSuffix = clubFilter ? `?club_id=${clubFilter}` : '';
 
   const fetchRows = useApolloTableFetch<PodRow>(
     client,
@@ -89,6 +75,8 @@ export default function PodsPage() {
     prevScopeRef.current = scope;
     refetchRef.current?.();
   }, [clubFilter, showCancelled, lifecycle]);
+
+  if (legacyEditId) return <Navigate to={`/pods/${legacyEditId}/edit`} replace />;
 
   return (
     <Stack spacing={3}>
@@ -116,15 +104,15 @@ export default function PodsPage() {
               label="Include cancelled"
               slotProps={{ typography: { variant: 'body2' } }}
             />
-            <CreatePodLauncher onNormal={editor.openCreate} />
+            <CreatePodLauncher onNormal={() => navigate(`/pods/new${editorSuffix}`)} />
           </>
         }
         clubName={lookups.clubName}
         venueName={lookups.venueName}
         locName={lookups.locName}
-        onEdit={editor.openEdit}
+        onEdit={(p) => navigate(`/pods/${p.id}/edit${editorSuffix}`)}
         onQuickEdit={setQuickPod}
-        onDelete={editor.remove}
+        onDelete={remove}
         onComplete={releaseRequest.openCompletePod}
         onMonitor={setTrailPod}
         onView={(p) => navigate(`/pods/${p.id}`)}
@@ -145,24 +133,6 @@ export default function PodsPage() {
       <ReleaseSummaryDialog
         summary={releaseRequest.releaseSummary}
         onClose={releaseRequest.closeReleaseSummary}
-      />
-
-      <PodFormDialog
-        open={editor.open}
-        editing={!!editor.editingPod}
-        onClose={editor.close}
-        initialValues={editor.initialValues}
-        config={config}
-        busy={editor.busy}
-        opError={editor.opError}
-        clubs={lookups.clubs}
-        venues={lookups.approvedVenues}
-        inventoryProducts={lookups.inventoryProducts}
-        hosts={lookups.approvedHosts}
-        onSubmit={editor.submit}
-        finance={lookups.finance}
-        onPickImage={picker.pickImage}
-        onPickVideo={picker.pickVideo}
       />
 
       <QuickEditPodDialog

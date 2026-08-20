@@ -24,7 +24,7 @@ import { createRequire } from 'node:module';
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 const require = createRequire(import.meta.url);
-const mongoose = require('../node_modules/mongoose');
+const mongoose = require('mongoose');
 
 const uri = readFileSync(new URL('../.env', import.meta.url), 'utf8')
   .split(/\r?\n/)

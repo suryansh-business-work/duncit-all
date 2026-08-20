@@ -220,7 +220,7 @@ export const grievanceService = {
     if (input.resolution !== undefined) doc!.resolution = String(input.resolution).slice(0, 5000);
     doc!.handled_by = new Types.ObjectId(userId);
     await doc!.save();
-    return toPub(doc!);
+    return toPub(doc);
   },
 
   /** The published Grievance Officer. Readable by anyone — that is the point of it. */

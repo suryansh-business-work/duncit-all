@@ -3,10 +3,9 @@ import { requireRole } from '@middleware/rbac';
 import { STAFF_ROLES } from './staffChat.model';
 import { staffChatService } from './staffChat.service';
 import { staffCallIceServers } from './staffCallIce';
-import { statusOf } from './staffPresence';
+import { snapshot, statusOf } from './staffPresence';
 import { previewLink } from './staffChat.links';
 import { emitStaffMessage } from './staffChat.socket';
-import { snapshot } from './staffPresence';
 
 /**
  * Only staff may use any of this — including reading the directory.

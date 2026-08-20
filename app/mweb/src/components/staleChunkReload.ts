@@ -58,6 +58,6 @@ export function reloadForStaleChunk(error: unknown): boolean {
     // the crash screen is the safer answer.
     return false;
   }
-  window.location.reload();
+  globalThis.location.reload();
   return true;
 }

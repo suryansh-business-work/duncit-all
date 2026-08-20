@@ -120,7 +120,7 @@ export const staffChatService = {
   async coworkers(meId: string, search?: string | null, role?: string | null): Promise<Coworker[]> {
     const filter: Record<string, unknown> = {
       _id: { $ne: meId },
-      'metadata.role_keys': role ? role : { $in: STAFF_ROLES },
+      'metadata.role_keys': role || { $in: STAFF_ROLES },
     };
     const term = search?.trim();
     if (term) {

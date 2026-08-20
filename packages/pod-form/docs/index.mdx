@@ -1,6 +1,6 @@
 ---
 name: '@duncit/pod-form'
-summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder and editor dialog — shared by the Admin and Partners consoles.'
+summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder, full-page editor and live member preview — shared by the Admin and Partners consoles.'
 category: 'forms'
 zeroDeps: false
 frameworkFree: false
@@ -10,7 +10,9 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'PodForm'
-  - 'PodEditorDialog'
+  - 'PodEditorPage'
+  - 'PodPreview'
+  - 'buildPodPreview'
   - 'usePodEditorState'
   - 'useMediaPickerBridge'
   - 'makePodSchema'
@@ -279,18 +281,27 @@ Every key absent from the server pod comes back as its `blankPodFormValues` defa
 | `onSubmit` | `(values, { draft }) => Promise<void> \| void` | yes | — | Final or draft submit; a draft skips the Zod resolver. |
 | `onReady` | `(methods: UseFormReturn<PodFormValues>) => void` | no | `undefined` | Hands the RHF methods up (admin AI-fill). |
 | `hideDraftOnEdit` | `boolean` | no | `undefined` | Hides "Save as Draft" once a pod exists. |
+| `preview` | `ReactNode` | no | `undefined` | Live preview column. Given one, the form lays itself out in two columns and renders this node **inside** its `FormProvider`. |
 
-### `<PodEditorDialog>` — `PodEditorDialogProps`
+### `<PodEditorPage>` — `PodEditorPageProps`
 
-Takes every `PodForm` prop except `onCancel`, plus:
+Takes every `PodForm` prop except `onCancel` and `preview` (it mounts `<PodPreview>` itself), plus:
 
 | Prop | Type | Required | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `open` | `boolean` | yes | — | Dialog visibility. |
-| `editing` | `boolean` | yes | — | Drives the "New Pod" / "Edit Pod" title. |
-| `onClose` | `() => void` | yes | — | Close handler. |
-| `titleExtras` | `ReactNode` | no | `undefined` | Extra title-row content (admin AI-fill button). |
+| `editing` | `boolean` | yes | — | Drives the "New Pod" / "Edit Pod" heading. |
+| `eyebrow` | `string` | yes | — | Small line above the heading, e.g. `"Admin · Pods"`. |
+| `onBack` | `() => void` | yes | — | Where the back button and Cancel go. |
+| `backLabel` | `string` | yes | — | Back button label. |
+| `titleExtras` | `ReactNode` | no | `undefined` | Extra heading-row content (admin AI-fill button). |
 | `intro` | `ReactNode` | no | `undefined` | Content above the form (club-admin host alert). |
+
+### `<PodPreview>` — no props
+
+Reads the enclosing `FormProvider` and renders the pod as a member sees it: the
+list card and the pod page, stacked and live. Only valid inside `<PodForm>`.
+`buildPodPreview(values, data)` is the pure derivation behind it, so the shape
+both surfaces render can be asserted without mounting either.
 
 ### Functions and hooks
 
@@ -383,13 +394,18 @@ hand-rolled input is where that asymmetry gets forgotten.
 media textarea into the `{ url, type: 'IMAGE' | 'VIDEO' }` list (extension-driven), and
 `getProductRequestTotal` prices a request list against the product catalogue.
 
-## Dialog vs bare form — pick by who owns the state
+## Page vs bare form — pick by who owns the state
 
-- `PodForm` — the form body plus its actions. You own the dialog, the mutations and the values.
-- `PodEditorDialog` + `usePodEditorState` — the whole create/edit dialog with its open/close,
-  initial values and save plumbing. `portals/admin/src/pages/pods-page/usePodEditor.ts` and
-  `portals/partners-app/src/pages/club-admin-club-pods-page/useClubAdminPodEditor.ts` both take this
-  path. If you are writing the dialog boilerplate by hand, you picked the wrong one.
+- `PodForm` — the form body plus its actions. You own the page, the mutations and the values.
+- `PodEditorPage` + `usePodEditorState` — the whole create/edit screen: heading, back button,
+  live preview, initial values and save plumbing. `portals/admin/src/pages/pods-page/pod-editor-page`
+  and `portals/partners-app/src/pages/club-admin-pod-editor-page` both take this path. If you are
+  writing the editor boilerplate by hand, you picked the wrong one.
+
+The editor is a ROUTE, not a modal. Eight sections, a slot calendar and a media gallery do not
+fit a `maxWidth="md"` dialog, and a modal leaves nowhere to show the author what they are
+building — which is what the preview column is for. `usePodEditorState` takes the pod being
+edited (`editingPod`) and owns only the values and the submit; the route owns which pod that is.
 
 `useMediaPickerBridge` exists because `@duncit/media-picker` is callback-shaped
 (`onPicked(url)`) while the form wants promises (`onPickImage: () => Promise<string | null>`). The

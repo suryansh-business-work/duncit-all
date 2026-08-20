@@ -1,16 +1,16 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Card, CardContent, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
-  ClubForm,
+  ClubEditorPage,
   blankClubFormValues,
   buildClubInput,
   clubToFormValues,
   type ClubFormConfig,
   type ClubFormValues,
 } from '@duncit/club-form';
+import { notifySuccess } from '@duncit/dialogs';
+import { QueryGuard } from '@duncit/ui';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CLUB_ADMIN_UPDATE_CLUB, CLUB_FOR_EDIT } from './queries';
 
@@ -30,7 +30,6 @@ export default function ClubAdminEditClubPage() {
   });
   const [updateClub, updateState] = useMutation(CLUB_ADMIN_UPDATE_CLUB);
   const [opError, setOpError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerFolder, setPickerFolder] = useState('/clubs');
@@ -59,7 +58,7 @@ export default function ClubAdminEditClubPage() {
     const input = buildClubInput(values, { config: PARTNER_CLUB_CONFIG });
     try {
       await updateClub({ variables: { club_doc_id: clubId, input } });
-      setMessage('Club details updated.');
+      notifySuccess('Club details updated.');
       navigate(backTo);
     } catch (submitError: any) {
       setOpError(submitError.message);
@@ -67,36 +66,30 @@ export default function ClubAdminEditClubPage() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-      <CardContent>
-        <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
-            <Stack spacing={0.25}>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>Club Admin · Edit</Typography>
-              <Typography variant="h6" fontWeight={950}>{club?.club_name ?? 'Edit club details'}</Typography>
-              <Typography variant="body2" color="text.secondary">Update your club's page content and links.</Typography>
-            </Stack>
-            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>Back to pods</Button>
-          </Stack>
-          {error && <Alert severity="error">{error.message}</Alert>}
-          {loading && !club && (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <CircularProgress />
-            </Stack>
-          )}
-          {club && (
-            <ClubForm
-              initialValues={initialValues}
-              config={PARTNER_CLUB_CONFIG}
-              onPickImage={pickImage}
-              busy={updateState.loading}
-              error={opError}
-              onCancel={() => navigate(backTo)}
-              onSubmit={submit}
-            />
-          )}
-        </Stack>
-      </CardContent>
+    <>
+      <QueryGuard
+        loading={loading && !club}
+        error={error}
+        errorText={error?.message}
+        notFound={!club}
+        notFoundText="Club not found."
+        notFoundSeverity="warning"
+      >
+        {() => (
+          <ClubEditorPage
+            eyebrow="Club Admin · Edit"
+            heading={club.club_name}
+            onBack={() => navigate(backTo)}
+            backLabel="Back to pods"
+            initialValues={initialValues}
+            config={PARTNER_CLUB_CONFIG}
+            busy={updateState.loading}
+            error={opError}
+            onSubmit={submit}
+            onPickImage={pickImage}
+          />
+        )}
+      </QueryGuard>
 
       <MediaPickerDialog
         open={pickerOpen}
@@ -105,7 +98,6 @@ export default function ClubAdminEditClubPage() {
         folder={pickerFolder}
         title="Add club image"
       />
-      <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />
-    </Card>
+    </>
   );
 }

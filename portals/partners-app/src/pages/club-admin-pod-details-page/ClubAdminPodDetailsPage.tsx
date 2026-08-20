@@ -12,8 +12,8 @@ import ClubAdminAttendanceSection from './ClubAdminAttendanceSection';
  * twin on `assertClubAdminForPod`, so a club admin reaching another club's pod
  * gets FORBIDDEN whatever this route says.
  *
- * Back returns to the club's own pod list. Edit routes into that list's editor,
- * which is where a club admin edits a pod today.
+ * Back returns to the club's own pod list. Edit opens the full-page pod
+ * editor, which is where a club admin edits a pod today.
  */
 export default function ClubAdminPodDetailsPage() {
   const { clubId = '' } = useParams();
@@ -24,7 +24,7 @@ export default function ClubAdminPodDetailsPage() {
       scope="CLUB_ADMIN"
       backTo={clubPods}
       backLabel="Club pods"
-      editTo={(podId) => `${clubPods}?edit=${podId}`}
+      editTo={(podId) => `${clubPods}/pods/${podId}/edit`}
       // Below the attendee table, because it is the ACTION on the people that
       // table lists — and because it is the one thing on this page a club admin
       // opens the pod specifically to do.

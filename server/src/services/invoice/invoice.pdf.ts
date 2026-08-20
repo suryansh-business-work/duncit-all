@@ -131,136 +131,134 @@ export function drawInvoice(
  data: InvoiceData,
  logo: Buffer | null
 ): void {
-  {
-      const W = doc.page.width;
-      const L = 48; // left margin
-      const R = W - 48; // right edge
-      const cur = data.currency_symbol;
-      const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
+  const W = doc.page.width;
+  const L = 48; // left margin
+  const R = W - 48; // right edge
+  const cur = data.currency_symbol;
+  const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
 
-      // ---- Brand header band (logo mark + business name) ----
-      doc.rect(0, 0, W, 96).fill(ACCENT);
-      let brandX = L;
-      // Prefer the admin-configured logo; otherwise fall back to the bundled
-      // white brand mark so the invoice always carries the Duncit logo.
-      const headerLogo = logo ?? BRAND_MARK;
-      if (headerLogo) {
-        try {
-          doc.image(headerLogo, L, 26, { fit: [44, 44], valign: 'center' });
-          brandX = L + 54;
-        } catch {
-          brandX = L;
-        }
-      }
-      doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold').text(data.business_name, brandX, 36);
-      doc
-        .fillColor('#ffffff')
-        .fontSize(20)
-        .font('Helvetica-Bold')
-        .text(data.invoice_label || 'TAX INVOICE', L, 36, { width: R - L, align: 'right' });
-
-      // ---- Business + invoice meta row ----
-      let y = 116;
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.business_name, L, y);
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica');
-      if (data.business_address) doc.text(data.business_address, L, doc.y + 2, { width: 260 });
-      if (data.business_gstin) doc.text(`GSTIN: ${data.business_gstin}`, L, doc.y + 2);
-
-      doc
-        .fillColor(MUTED)
-        .fontSize(9)
-        .font('Helvetica')
-        .text(`Invoice No`, 360, y, { width: R - 360, align: 'right' });
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.invoice_no, 360, doc.y, { width: R - 360, align: 'right' });
-      doc
-        .fillColor(MUTED)
-        .fontSize(9)
-        .font('Helvetica')
-        .text(`Date: ${data.invoice_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
-        .text(`Payment ID: ${data.payment_id}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
-
-      // ---- Bill To card (name · GSTIN · contact + billing email · address) ----
-      y = Math.max(doc.y, y + 64) + 14;
-      const cardH = drawBillToCard(doc, data, L, R, y);
-
-      // ---- Items table ----
-      y += cardH + 22;
-      const colX = { desc: L + 6, qty: 320, price: 386, amount: 476 };
-      doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
-      doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
-      doc
-        .text('DESCRIPTION', colX.desc, y, { width: 250 })
-        .text('QTY', colX.qty, y, { width: 50, align: 'right' })
-        .text('PRICE', colX.price, y, { width: 80, align: 'right' })
-        .text('AMOUNT', colX.amount, y, { width: R - colX.amount, align: 'right' });
-
-      y += 26;
-      doc.fillColor(INK).fontSize(10).font('Helvetica');
-      for (const it of data.items) {
-        doc
-          .text(it.description, colX.desc, y, { width: 250 })
-          .text(String(it.qty), colX.qty, y, { width: 50, align: 'right' })
-          .text(fmt(it.unit_price), colX.price, y, { width: 80, align: 'right' })
-          .text(fmt(it.amount), colX.amount, y, { width: R - colX.amount, align: 'right' });
-        y = doc.y + 8;
-        doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
-      }
-
-      // ---- Totals ----
-      y += 10;
-      const totalsRow = (label: string, value: string, bold = false) => {
-        doc
-          .font(bold ? 'Helvetica-Bold' : 'Helvetica')
-          .fontSize(bold ? 12 : 10)
-          .fillColor(bold ? INK : MUTED)
-          .text(label, 300, y, { width: 150, align: 'right' })
-          .fillColor(bold ? ACCENT : INK)
-          .text(value, 456, y, { width: R - 456, align: 'right' });
-        y += bold ? 22 : 17;
-      };
-      totalsRow('Taxable value', fmt(data.subtotal));
-      totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
-      doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
-      y += 8;
-      totalsRow('Total Paid', fmt(data.total), true);
-
-      // ---- Duncit Coins ----
-      // Below the paid total on purpose: coins are not money the tax lines
-      // describe. The redeemed row explains a total smaller than the items, and
-      // the earned row records a reward that otherwise lives only in the app.
-      const coinsSpent = Math.max(0, Math.floor(Number(data.coins_redeemed) || 0));
-      const coinsEarned = Math.max(0, Math.floor(Number(data.coins_earned) || 0));
-      if (coinsSpent > 0 || coinsEarned > 0) {
-        y += 2;
-        if (coinsSpent > 0) totalsRow('Duncit Coins used', `- ${coinsSpent}`);
-        if (coinsEarned > 0) totalsRow('Duncit Coins earned', `+ ${coinsEarned}`);
-      }
-
-      // ---- Footer ----
-      y += 18;
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(`Payment method: ${data.payment_method}`, L, y);
-      const support = [
-        data.invoice_support_email ? `Email: ${data.invoice_support_email}` : '',
-        data.invoice_support_phone ? `Phone: ${data.invoice_support_phone}` : '',
-      ]
-        .filter(Boolean)
-        .join('   ·   ');
-      if (support) doc.fillColor(MUTED).fontSize(9).text(support, L, doc.y + 4);
-      if (data.invoice_terms) {
-        doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text('Terms', L, doc.y + 12);
-        doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(data.invoice_terms, L, doc.y + 2, { width: R - L });
-      }
-      doc
-        .fontSize(8)
-        .fillColor('#9ca3af')
-        .text(
-          data.invoice_footer_note || 'This is a computer-generated invoice and does not require a signature.',
-          L,
-          doc.y + 14,
-          { align: 'center', width: R - L }
-        );
-
+  // ---- Brand header band (logo mark + business name) ----
+  doc.rect(0, 0, W, 96).fill(ACCENT);
+  let brandX = L;
+  // Prefer the admin-configured logo; otherwise fall back to the bundled
+  // white brand mark so the invoice always carries the Duncit logo.
+  const headerLogo = logo ?? BRAND_MARK;
+  if (headerLogo) {
+    try {
+      doc.image(headerLogo, L, 26, { fit: [44, 44], valign: 'center' });
+      brandX = L + 54;
+    } catch {
+      brandX = L;
+    }
   }
+  doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold').text(data.business_name, brandX, 36);
+  doc
+    .fillColor('#ffffff')
+    .fontSize(20)
+    .font('Helvetica-Bold')
+    .text(data.invoice_label || 'TAX INVOICE', L, 36, { width: R - L, align: 'right' });
+
+  // ---- Business + invoice meta row ----
+  let y = 116;
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.business_name, L, y);
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica');
+  if (data.business_address) doc.text(data.business_address, L, doc.y + 2, { width: 260 });
+  if (data.business_gstin) doc.text(`GSTIN: ${data.business_gstin}`, L, doc.y + 2);
+
+  doc
+    .fillColor(MUTED)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(`Invoice No`, 360, y, { width: R - 360, align: 'right' });
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.invoice_no, 360, doc.y, { width: R - 360, align: 'right' });
+  doc
+    .fillColor(MUTED)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(`Date: ${data.invoice_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
+    .text(`Payment ID: ${data.payment_id}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
+
+  // ---- Bill To card (name · GSTIN · contact + billing email · address) ----
+  y = Math.max(doc.y, y + 64) + 14;
+  const cardH = drawBillToCard(doc, data, L, R, y);
+
+  // ---- Items table ----
+  y += cardH + 22;
+  const colX = { desc: L + 6, qty: 320, price: 386, amount: 476 };
+  doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
+  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
+  doc
+    .text('DESCRIPTION', colX.desc, y, { width: 250 })
+    .text('QTY', colX.qty, y, { width: 50, align: 'right' })
+    .text('PRICE', colX.price, y, { width: 80, align: 'right' })
+    .text('AMOUNT', colX.amount, y, { width: R - colX.amount, align: 'right' });
+
+  y += 26;
+  doc.fillColor(INK).fontSize(10).font('Helvetica');
+  for (const it of data.items) {
+    doc
+      .text(it.description, colX.desc, y, { width: 250 })
+      .text(String(it.qty), colX.qty, y, { width: 50, align: 'right' })
+      .text(fmt(it.unit_price), colX.price, y, { width: 80, align: 'right' })
+      .text(fmt(it.amount), colX.amount, y, { width: R - colX.amount, align: 'right' });
+    y = doc.y + 8;
+    doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(LINE).stroke();
+  }
+
+  // ---- Totals ----
+  y += 10;
+  const totalsRow = (label: string, value: string, bold = false) => {
+    doc
+      .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+      .fontSize(bold ? 12 : 10)
+      .fillColor(bold ? INK : MUTED)
+      .text(label, 300, y, { width: 150, align: 'right' })
+      .fillColor(bold ? ACCENT : INK)
+      .text(value, 456, y, { width: R - 456, align: 'right' });
+    y += bold ? 22 : 17;
+  };
+  totalsRow('Taxable value', fmt(data.subtotal));
+  totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
+  doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
+  y += 8;
+  totalsRow('Total Paid', fmt(data.total), true);
+
+  // ---- Duncit Coins ----
+  // Below the paid total on purpose: coins are not money the tax lines
+  // describe. The redeemed row explains a total smaller than the items, and
+  // the earned row records a reward that otherwise lives only in the app.
+  const coinsSpent = Math.max(0, Math.floor(Number(data.coins_redeemed) || 0));
+  const coinsEarned = Math.max(0, Math.floor(Number(data.coins_earned) || 0));
+  if (coinsSpent > 0 || coinsEarned > 0) {
+    y += 2;
+    if (coinsSpent > 0) totalsRow('Duncit Coins used', `- ${coinsSpent}`);
+    if (coinsEarned > 0) totalsRow('Duncit Coins earned', `+ ${coinsEarned}`);
+  }
+
+  // ---- Footer ----
+  y += 18;
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(`Payment method: ${data.payment_method}`, L, y);
+  const support = [
+    data.invoice_support_email ? `Email: ${data.invoice_support_email}` : '',
+    data.invoice_support_phone ? `Phone: ${data.invoice_support_phone}` : '',
+  ]
+    .filter(Boolean)
+    .join('   ·   ');
+  if (support) doc.fillColor(MUTED).fontSize(9).text(support, L, doc.y + 4);
+  if (data.invoice_terms) {
+    doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text('Terms', L, doc.y + 12);
+    doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(data.invoice_terms, L, doc.y + 2, { width: R - L });
+  }
+  doc
+    .fontSize(8)
+    .fillColor('#9ca3af')
+    .text(
+      data.invoice_footer_note || 'This is a computer-generated invoice and does not require a signature.',
+      L,
+      doc.y + 14,
+      { align: 'center', width: R - L }
+    );
+
 }
 
 /** Renders a standalone invoice PDF. */

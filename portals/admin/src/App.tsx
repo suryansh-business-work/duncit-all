@@ -16,7 +16,9 @@ import ClubsPage from './pages/ClubsPage';
 import VenuesPage from './pages/VenuesPage';
 import PartnersPage from './pages/PartnersPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
+import ClubEditorPage from './pages/clubs-page/club-editor-page';
 import PodsPage from './pages/PodsPage';
+import PodEditorPage from './pages/pods-page/pod-editor-page';
 import AutoPodsPage from './pages/auto-pods-page';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
@@ -71,13 +73,20 @@ export default function App() {
                 <Route path="/clubs" element={<ClubsPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
                 <Route path="/partners" element={<PartnersPage />} />
+                {/* Static before dynamic so /clubs/new is never read as a club
+                    id — React Router ranks it first either way, and the order
+                    says so out loud. */}
+                <Route path="/clubs/new" element={<ClubEditorPage />} />
                 <Route path="/clubs/:id" element={<ClubDetailsPage />} />
+                <Route path="/clubs/:id/edit" element={<ClubEditorPage />} />
                 <Route path="/pods" element={<PodsPage />} />
                 {/* Static before dynamic so /pods/dashboard is never read as a
                     pod id — React Router ranks it first either way, and the
                     order says so out loud. */}
                 <Route path="/pods/dashboard" element={<PodsDashboardPage />} />
+                <Route path="/pods/new" element={<PodEditorPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
+                <Route path="/pods/:id/edit" element={<PodEditorPage />} />
                 <Route path="/auto-pods" element={<AutoPodsRoute />} />
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
                 <Route path="/pod-monitoring" element={<PodMonitoringPage />} />

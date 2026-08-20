@@ -18,7 +18,7 @@ export default function BrandFontLoader() {
 
   useEffect(() => {
     if (!family) return undefined;
-    const enc = family.trim().replace(/ /g, '+');
+    const enc = family.trim().replaceAll(' ', '+');
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = `https://fonts.googleapis.com/css2?family=${enc}:wght@400;500;600;700;800;900&display=swap`;

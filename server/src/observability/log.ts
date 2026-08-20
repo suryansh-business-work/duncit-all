@@ -119,7 +119,7 @@ type Stringifiable = string | number | boolean | bigint | symbol | ((...args: un
  * contract.
  */
 function isStringifiable(value: unknown): value is Stringifiable {
-  return value !== null && typeof value !== 'object' && typeof value !== 'undefined';
+  return value !== null && typeof value !== 'object' && value !== undefined;
 }
 
 /**

@@ -594,6 +594,13 @@ export const clubAdminService = {
     return buildClubPodSummary(await this.scopedClubIds(actor, clubId));
   },
 
+  /** One pod in the actor's clubs, cancelled ones included — what the club-admin
+   * pod editor prefills from. */
+  async podForEdit(actor: Actor, podDocId: string) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    return podService.getById(podDocId, { includeDeleted: true });
+  },
+
   /** The AI-monitored action trail of one pod in the actor's clubs. */
   async podAuditLogs(actor: Actor, podDocId: string) {
     await this.assertClubAdminForPod(actor, podDocId);

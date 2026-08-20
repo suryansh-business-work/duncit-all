@@ -1,9 +1,6 @@
-import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { KeyboardScreen } from '@/components/KeyboardScreen';
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ReasonField } from './ReasonField';
 
@@ -17,7 +14,15 @@ interface Props {
   onConfirm: () => void;
 }
 
-/** Confirm + required reason before cancelling an onboarding meeting. */
+/**
+ * Confirm + required reason before cancelling an onboarding meeting.
+ *
+ * The reason field is why this one matters: it used to sit in a capless centred
+ * card wrapped in `KeyboardScreen`, so on a short device the keyboard covered
+ * the buttons under it. {@link DuncitDialog} lifts the card AND shrinks its
+ * scroll area, and the two actions are pinned in the footer where the keyboard
+ * cannot reach them.
+ */
 export function CancelDialog({
   open,
   reason,
@@ -28,94 +33,77 @@ export function CancelDialog({
   onConfirm,
 }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
+
+  const footer = (
+    <XStack gap={12}>
+      <XStack
+        testID="cancel-keep"
+        role="button"
+        aria-label="Keep meeting"
+        onPress={onClose}
+        flex={1}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$borderColor"
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="600" color="$color">
+          Keep meeting
+        </Text>
+      </XStack>
+      <XStack
+        testID="cancel-confirm"
+        role="button"
+        aria-label="Cancel meeting"
+        aria-disabled={busy}
+        onPress={busy ? undefined : onConfirm}
+        flex={1}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        backgroundColor="$danger"
+        opacity={busy ? 0.7 : 1}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          {busy ? 'Cancelling…' : 'Cancel meeting'}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <ModalThemeScope>
-        <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="cancel-dialog">
-            <YStack
-              testID="cancel-backdrop"
-              role="button"
-              aria-label="Close"
-              onPress={onClose}
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              bottom={0}
-              backgroundColor="rgba(0,0,0,0.5)"
-            />
-            <YStack
-              width="86%"
-              maxWidth={420}
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={20}
-              gap={10}
-            >
-              <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="700" color="$color">
-                  Cancel this meeting?
-                </Text>
-                <Text fontSize={13.5} color="$muted" paddingTop={6}>
-                  Your onboarding meeting will be cancelled and the slot freed. You can book a new
-                  one anytime.
-                </Text>
-                <ReasonField
-                  testID="cancel-reason"
-                  label="Why are you cancelling?"
-                  value={reason}
-                  onChangeText={onChangeReason}
-                />
-                {error ? (
-                  <Text testID="cancel-error" fontSize={12.5} color="$danger" paddingTop={8}>
-                    {error}
-                  </Text>
-                ) : null}
-                <XStack gap={12} paddingTop={16}>
-                  <XStack
-                    testID="cancel-keep"
-                    role="button"
-                    aria-label="Keep meeting"
-                    onPress={onClose}
-                    flex={1}
-                    height={46}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    <Text fontSize={14} fontWeight="600" color="$color">
-                      Keep meeting
-                    </Text>
-                  </XStack>
-                  <XStack
-                    testID="cancel-confirm"
-                    role="button"
-                    aria-label="Cancel meeting"
-                    aria-disabled={busy}
-                    onPress={busy ? undefined : onConfirm}
-                    flex={1}
-                    height={46}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={12}
-                    backgroundColor="$danger"
-                    opacity={busy ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                      {busy ? 'Cancelling…' : 'Cancel meeting'}
-                    </Text>
-                  </XStack>
-                </XStack>
-              </SafeAreaView>
-            </YStack>
-          </YStack>
-        </KeyboardScreen>
-      </ModalThemeScope>
-    </Modal>
+    <DuncitDialog
+      open={open}
+      onClose={onClose}
+      testID="cancel-dialog"
+      title="Cancel this meeting?"
+      closeLabel="Close"
+      variant="center"
+      showCloseButton={false}
+      footer={footer}
+    >
+      <YStack gap={10}>
+        <Text fontSize={13.5} color="$muted">
+          Your onboarding meeting will be cancelled and the slot freed. You can book a new one
+          anytime.
+        </Text>
+        <ReasonField
+          testID="cancel-reason"
+          label="Why are you cancelling?"
+          value={reason}
+          onChangeText={onChangeReason}
+        />
+        {error ? (
+          <Text testID="cancel-error" fontSize={12.5} color="$danger">
+            {error}
+          </Text>
+        ) : null}
+      </YStack>
+    </DuncitDialog>
   );
 }

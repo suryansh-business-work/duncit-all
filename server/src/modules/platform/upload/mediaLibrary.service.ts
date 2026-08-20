@@ -23,7 +23,8 @@ async function authHeader(): Promise<string> {
       { extensions: { code: 'CONFIG_ERROR' } }
     );
   }
-  return `Basic ${Buffer.from(`${privateKey}:`).toString('base64')}`;
+  const credentials = Buffer.from(`${privateKey}:`).toString('base64');
+  return `Basic ${credentials}`;
 }
 
 /**

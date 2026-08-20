@@ -5,6 +5,7 @@ import { Alert, Button, Grid, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { RhfTextField } from '@duncit/forms';
 import DateTimeField from '../../../components/DateTimeField';
+import { peopleCount } from '../../../lib/reach';
 import CampaignMjmlEditor from './CampaignMjmlEditor';
 import CampaignVariables from './CampaignVariables';
 import {
@@ -95,7 +96,7 @@ export default function MarketingCampaignForm({
           <Grid item xs={12}>
             <Alert severity={reach > 0 ? 'info' : 'warning'} data-testid="campaign-reach">
               {reach > 0
-                ? `This campaign reaches ${reach.toLocaleString()} ${reach === 1 ? 'person' : 'people'}.`
+                ? `This campaign reaches ${peopleCount(reach)}.`
                 : 'This campaign reaches nobody right now.'}
             </Alert>
           </Grid>

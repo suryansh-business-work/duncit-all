@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { peopleCount } from '../../lib/reach';
 import {
   Alert,
   Button,
@@ -137,7 +138,7 @@ export default function NotificationFormDialog({
               >
                 <Typography variant="body2">
                   {reach > 0
-                    ? `This reaches ${reach.toLocaleString()} ${reach === 1 ? 'person' : 'people'}.`
+                    ? `This reaches ${peopleCount(reach)}.`
                     : 'This reaches nobody right now.'}
                 </Typography>
               </Alert>

@@ -204,7 +204,7 @@ export function useCall(
           that device today. Fall back to the system default, forget the
           stale id so it cannot bite twice, and say what happened.
 
-          A mid-call switch (useDevice) still fails loudly, because there the
+          A mid-call switch (switchDevice) still fails loudly, because there the
           person just picked that device and silently using another one is how
           you end up broadcasting the wrong room.
         */
@@ -239,7 +239,7 @@ export function useCall(
    * the screen share: open the one track and swap what the sender is pushing,
    * with no renegotiation.
    */
-  const useDevice = useCallback(
+  const switchDevice = useCallback(
     async (want: 'audio' | 'video', deviceId: string) => {
       // No call in progress: the choice is remembered and the next call opens it.
       const sender = pc.current?.getSenders().find((s) => s.track?.kind === want);
@@ -297,17 +297,17 @@ export function useCall(
   const chooseMic = useCallback(
     (deviceId: string) => {
       devices.onChoose('mic', deviceId);
-      useDevice('audio', deviceId).catch(() => undefined);
+      switchDevice('audio', deviceId).catch(() => undefined);
     },
-    [useDevice, devices]
+    [switchDevice, devices]
   );
 
   const chooseCam = useCallback(
     (deviceId: string) => {
       devices.onChoose('cam', deviceId);
-      useDevice('video', deviceId).catch(() => undefined);
+      switchDevice('video', deviceId).catch(() => undefined);
     },
-    [useDevice, devices]
+    [switchDevice, devices]
   );
 
   /**

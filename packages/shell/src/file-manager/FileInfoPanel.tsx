@@ -28,6 +28,8 @@ function Row({ label, value }: Readonly<{ label: string; value: string }>) {
  */
 export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
   const isImage = file.fileType === 'image';
+  // Hoisted out of the Type row's template so the two do not nest.
+  const mimeSuffix = file.mime ? ` · ${file.mime}` : '';
 
   return (
     <Stack spacing={1}>
@@ -70,7 +72,7 @@ export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
 
       <Row label="Name" value={file.name} />
       <Row label="Path" value={file.filePath} />
-      <Row label="Type" value={`${file.fileType ?? file.type}${file.mime ? ` · ${file.mime}` : ''}`} />
+      <Row label="Type" value={`${file.fileType ?? file.type}${mimeSuffix}`} />
       <Row label="Size" value={formatBytes(file.size)} />
       <Row
         label="Dimensions"

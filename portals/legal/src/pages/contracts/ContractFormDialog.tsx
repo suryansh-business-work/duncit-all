@@ -65,6 +65,7 @@ export default function ContractFormDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const saveLabel = isNew ? 'Create Contract' : 'Save';
   const heading = () => {
     if (isNew) return 'New Contract';
     return `${readOnly ? 'View' : 'Edit'} · ${editingTitle}`;
@@ -162,7 +163,7 @@ export default function ContractFormDialog({
         </Button>
         {!readOnly && (
           <Button variant="contained" disabled={saving || !form.title.trim()} onClick={onSubmit}>
-            {saving ? 'Saving…' : isNew ? 'Create Contract' : 'Save'}
+            {saving ? 'Saving…' : saveLabel}
           </Button>
         )}
       </DialogActions>

@@ -1941,10 +1941,8 @@ export const podService = {
     // Same Step-4 economics guard as create, on the MERGED (input over stored)
     // values — a resubmitted paid pod must still cover its venue price and
     // leave the host a positive projected payout.
-    const resubmitVenueId =
-      nextMode === 'PHYSICAL'
-        ? input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null)
-        : null;
+    const docVenueId = doc.venue_id ? String(doc.venue_id) : null;
+    const resubmitVenueId = nextMode === 'PHYSICAL' ? (input.venue_id ?? docVenueId) : null;
     await breakdownService.assertViablePodEconomics({
       hostUserId: userId,
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,

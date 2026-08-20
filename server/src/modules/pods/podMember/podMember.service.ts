@@ -193,8 +193,8 @@ async function ensureSeatsAvailable(pod: any, want = 1) {
   if (spots <= 0) return;
   const free = spots - podSeatsTaken(pod);
   if (free < want) {
-    const message =
-      free <= 0 ? 'Pod is full' : `Only ${free} seat${free === 1 ? '' : 's'} left on this pod`;
+    const plural = free === 1 ? '' : 's';
+    const message = free <= 0 ? 'Pod is full' : `Only ${free} seat${plural} left on this pod`;
     throw new GraphQLError(message, { extensions: { code: 'POD_FULL' } });
   }
 }

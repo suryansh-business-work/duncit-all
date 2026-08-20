@@ -11,6 +11,7 @@ import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { BackHeader } from '@duncit/ui';
 import AudiencePicker from './AudiencePicker';
+import { peopleLabel } from '../../lib/reach';
 import {
   AudienceListForm,
   AUDIENCE_LIST_FORM_ID,
@@ -28,8 +29,6 @@ import { AUDIENCE_LIST_OWNERS, CREATE_AUDIENCE_LIST } from './queries';
 
 const STEPS = ['Choose the audience', 'Name the list'];
 
-const peopleLabel = (count: number | null) =>
-  count === null ? 'Counting…' : `${count.toLocaleString()} ${count === 1 ? 'person' : 'people'}`;
 
 /** Two steps: define who is in the list, then say what the list is. */
 export default function CreateAudienceListPage() {

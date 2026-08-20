@@ -594,9 +594,10 @@ export const ticketService = {
     // Scanning at the wrong pod's door is the mistake this catches — the token
     // is perfectly valid, just not for tonight.
     if (String(t.pod_id) !== String(podDocId)) {
+      const otherPod = t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : '';
       return {
         ok: false,
-        message: `This ticket is for another pod${t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : ''}`,
+        message: `This ticket is for another pod${otherPod}`,
         already_checked_in: false,
         // Every field the schema marks non-null, or this branch nulls one and
         // the whole result errors instead of showing the message.

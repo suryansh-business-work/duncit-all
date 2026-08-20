@@ -44,6 +44,10 @@ export default function GiftCardCheckoutPage() {
     currencySymbol,
   }));
   const payment = useGiftCardPayment({ onPaymentFailure: failure.report });
+  // Same three account facts the server checks before it will take money.
+  // Must sit with the other hooks: the early returns below would otherwise
+  // skip it and change the hook order between renders.
+  const eligibility = useCheckoutEligibility();
 
   // Reached directly (refresh, pasted URL) — there is nothing to charge yet.
   if (!selection) return <Navigate to="/gift-cards" replace />;
@@ -60,8 +64,6 @@ export default function GiftCardCheckoutPage() {
     ? selection.recipient_name || selection.recipient_email
     : t('mweb.giftCards.checkoutSelf');
   const me = payment.me;
-  // Same three account facts the server checks before it will take money.
-  const eligibility = useCheckoutEligibility();
   const contactName = [me?.first_name, me?.last_name].filter(Boolean).join(' ').trim();
   const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
 

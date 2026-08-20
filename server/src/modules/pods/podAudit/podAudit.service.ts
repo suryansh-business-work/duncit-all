@@ -66,7 +66,8 @@ export function snapshotPod(doc: any): PodAuditSnapshot {
   for (const field of TRACKED_FIELDS) {
     const summarise = ARRAY_FIELD_SUMMARY[field];
     const value = doc?.[field];
-    snap[field] = summarise ? summarise(Array.isArray(value) ? value : []) : asText(value);
+    const asArray = Array.isArray(value) ? value : [];
+    snap[field] = summarise ? summarise(asArray) : asText(value);
   }
   return snap;
 }

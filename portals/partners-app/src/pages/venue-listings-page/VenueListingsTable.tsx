@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { MY_VENUES_TABLE, type VenueListingRow } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const rowAction = (status: string) => {
   if (status === 'APPROVED' || status === 'SUBMITTED') return 'View';
@@ -18,8 +19,7 @@ const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value
   label: value,
 }));
 
-const formatDate = (value?: string | null) =>
-  value ? format(new Date(value), 'dd MMM yyyy') : 'Not available';
+const availabilityDate = (value?: string | null) => formatDate(value) || 'Not available';
 
 const getVenueRowId = (venue: VenueListingRow) => venue.id;
 
@@ -92,7 +92,7 @@ const COLUMNS: DuncitColumn<VenueListingRow>[] = [
     field: 'updated_at',
     headerName: 'Updated',
     width: 140,
-    valueGetter: (venue) => formatDate(venue.updated_at ?? venue.created_at),
+    valueGetter: (venue) => availabilityDate(venue.updated_at ?? venue.created_at),
   },
   { field: 'venue_type', headerName: 'Type', hide: true, filter: { type: 'text' }, minWidth: 130 },
   { field: 'city', headerName: 'City', hide: true, filter: { type: 'text' }, minWidth: 130 },
@@ -103,7 +103,7 @@ const COLUMNS: DuncitColumn<VenueListingRow>[] = [
     hide: true,
     filter: { type: 'date' },
     width: 140,
-    valueGetter: (venue) => formatDate(venue.created_at),
+    valueGetter: (venue) => availabilityDate(venue.created_at),
   },
   { field: 'actions', headerName: 'Action', sortable: false, width: 230, cellRenderer: renderActions },
 ];

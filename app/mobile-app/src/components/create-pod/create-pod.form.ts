@@ -1,9 +1,9 @@
-import { parse } from 'date-fns';
 import { z } from 'zod';
 import { isMeetingPlatform } from '@duncit/utils';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
+import { appFormatter } from '@/utils/app-formatter';
 import {
   blankCreatePodForm,
   type CreatePodClub,
@@ -11,19 +11,21 @@ import {
   type CreatePodHostCategory,
 } from './create-pod.types';
 
-const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
-const DATE_TIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
-
 /** Minimum pod length — the end picker blocks the first 30 minutes after the
  * start, and the schema enforces the same for typed times. mWeb twin. */
 export const MIN_POD_DURATION_MINUTES = 30;
 const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
 
-/** Parses the form's `YYYY-MM-DD HH:mm` local date-time text; null when invalid. */
+/**
+ * Parses the schedule text the member typed, in the ADMIN's configured date and
+ * time patterns (rule 11) — the same shape mWeb's MUI X picker asks for. Null
+ * when the text is not a complete, real moment.
+ *
+ * Read straight off the settings store rather than a hook so this stays a plain
+ * function: the zod schema and the input builder both call it outside React.
+ */
 export function parseDateTimeText(text: string): Date | null {
-  if (!DATE_TIME_RE.test(text)) return null;
-  const date = parse(text, DATE_TIME_FORMAT, new Date());
-  return Number.isNaN(date.getTime()) ? null : date;
+  return appFormatter().parseDateTime(text);
 }
 
 const intIn = (min: number, max: number) => (text: string) => {
@@ -218,15 +220,18 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       meeting_notes: z.string().trim().max(1000),
       pod_description: z.string().trim().min(10, t('mweb.createPod.validation.descriptionShort')),
       pod_info: z.string().max(2000),
-      pod_date_time_text: z
-        .string()
-        .refine((text) => !!parseDateTimeText(text), t('mweb.createPod.validation.dateTimeFormat')),
-      pod_end_date_time_text: z
-        .string()
-        .refine(
-          (text) => text === '' || !!parseDateTimeText(text),
-          t('mweb.createPod.validation.dateTimeFormat'),
-        ),
+      pod_date_time_text: z.string().refine(
+        (text) => !!parseDateTimeText(text),
+        t('mweb.createPod.validation.dateTimeFormat', {
+          vars: { format: appFormatter().dateTimePlaceholder },
+        }),
+      ),
+      pod_end_date_time_text: z.string().refine(
+        (text) => text === '' || !!parseDateTimeText(text),
+        t('mweb.createPod.validation.dateTimeFormat', {
+          vars: { format: appFormatter().dateTimePlaceholder },
+        }),
+      ),
       pod_type: z.string().min(1),
       pod_amount_text: z
         .string()

@@ -24,6 +24,7 @@ import { QueryGuard } from '@duncit/ui';
 import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
 import PublicApiKeyCard from './PublicApiKeyCard';
+import { formatDateTime } from '@duncit/app-settings';
 
 const DEFAULTS: TelemetrySettingsForm = {
   signoz_enabled: true,
@@ -165,7 +166,7 @@ export default function TelemetryLogsSettingsPage() {
         </Box>
         {data?.telemetrySettings?.updated_at && (
           <Typography variant="caption" color="text.secondary">
-            Last updated {new Date(data.telemetrySettings.updated_at).toLocaleString()}
+            Last updated {formatDateTime(data.telemetrySettings.updated_at)}
           </Typography>
         )}
       </Stack>

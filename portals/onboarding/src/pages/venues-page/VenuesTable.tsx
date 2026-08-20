@@ -143,7 +143,7 @@ export default function VenuesTable({
       { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
       { field: 'pod_count', headerName: 'Pods', sortable: false, width: 100, cellRenderer: renderPods, valueGetter: (v) => v.pod_count ?? 0 },
       { field: 'venue_commission_pct', headerName: 'Commission', width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
-      dateColumn<VenueRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125, formatDate: (d) => d.toLocaleDateString() }),
+      dateColumn<VenueRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
       { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
     ];

@@ -1,17 +1,12 @@
 import type { CrmActivity } from '../../api/crm.types';
 import type { Granularity } from './types';
+import { formatDateTime } from '@duncit/app-settings';
 
 export const formatLogTimestamp = (iso?: string | null) => {
   if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(date);
 };
 
 export const logKey = (activity: CrmActivity) =>

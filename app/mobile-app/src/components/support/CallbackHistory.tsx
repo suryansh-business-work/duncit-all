@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useBouncer, type CallbackHistoryItem } from '@/hooks/useBouncer';
 import { durationLabel } from '@/utils/support-chat';
+import { formatDateTime } from '@/utils/date-format';
 
 const STATUS_COLOR: Record<string, string> = {
   PENDING: '#f5a623',
@@ -55,7 +55,7 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
           >
             <XStack justifyContent="space-between" alignItems="center">
               <Text fontSize={12} color="$muted">
-                {format(new Date(c.created_at), 'd MMM yyyy, HH:mm')}
+                {formatDateTime(c.created_at)}
               </Text>
               <Text fontSize={11} fontWeight="700" color={STATUS_COLOR[c.status] ?? '$muted'}>
                 {c.status}
@@ -68,7 +68,7 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
             ) : null}
             {c.contacted_at || dur || c.conclusion ? (
               <Text fontSize={11.5} color="$muted">
-                {c.contacted_at ? `Called ${format(new Date(c.contacted_at), 'd MMM, HH:mm')}` : ''}
+                {c.contacted_at ? `Called ${formatDateTime(c.contacted_at)}` : ''}
                 {dur ? ` · ${dur}` : ''}
                 {c.conclusion ? ` · ${c.conclusion}` : ''}
               </Text>

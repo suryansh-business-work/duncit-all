@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ScannedAttendee } from './scan.types';
+import { formatDateTime } from '@/utils/date-format';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -39,7 +40,7 @@ function DetailRow({ icon, value, tint, href }: Readonly<DetailRowProps>) {
 const formatWhen = (value: string | null) => {
   if (!value) return '';
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
+  return formatDateTime(d);
 };
 
 interface Props {

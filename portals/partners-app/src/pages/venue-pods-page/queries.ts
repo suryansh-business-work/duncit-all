@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import type { TableQueryState } from '@duncit/table';
 import type { StatusColorMap } from '@duncit/ui';
+import { formatDateTime } from '@duncit/app-settings';
 
 export const VENUE_PODS = gql`
   query VenuePods($venue_id: ID) {
@@ -155,8 +156,7 @@ export const tabCounts = (rows: readonly VenuePodRow[]): Record<VenuePodTab, num
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
+  return formatDateTime(iso) || '—';
 };
 
 type RowComparator = (a: VenuePodRow, b: VenuePodRow) => number;

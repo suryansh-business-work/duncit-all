@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { ambientDateFormatter } from '@duncit/app-settings';
 import type { SlotRequestRow } from './queries';
 
 /**
@@ -15,24 +15,26 @@ import type { SlotRequestRow } from './queries';
 export const slotWindow = (
   row: Pick<SlotRequestRow, 'start_at' | 'end_at' | 'whole_day'>,
 ): string => {
+  const fmt = ambientDateFormatter();
   const start = new Date(row.start_at);
   const end = new Date(row.end_at);
-  const multiDay =
-    format(start, 'yyyy-MM-dd') !== format(new Date(end.getTime() - 1), 'yyyy-MM-dd');
+  // A calendar-day key, not display text — it decides whether the window needs
+  // to name two dates, so it must stay a fixed shape whatever the admin picked.
+  const multiDay = fmt.dayKey(start) !== fmt.dayKey(new Date(end.getTime() - 1));
   if (row.whole_day) {
     const days = multiDay
-      ? `${format(start, 'EEE, d MMM yyyy')} – ${format(end, 'EEE, d MMM yyyy')}`
-      : format(start, 'EEE, d MMM yyyy');
+      ? `${fmt.formatDate(start)} – ${fmt.formatDate(end)}`
+      : fmt.formatDate(start);
     return `Whole day · ${days}`;
   }
   if (multiDay) {
-    return `${format(start, 'EEE, d MMM yyyy · h:mm a')} – ${format(end, 'EEE, d MMM yyyy · h:mm a')}`;
+    return `${fmt.formatDateTime(start)} – ${fmt.formatDateTime(end)}`;
   }
-  return `${format(start, 'EEE, d MMM yyyy · h:mm a')} – ${format(end, 'h:mm a')}`;
+  return `${fmt.formatDateTime(start)} – ${fmt.formatTime(end)}`;
 };
 
 /** When the host asked, in the same shape as everything else on the card. */
-export const requestedAt = (iso: string): string => format(new Date(iso), 'd MMM yyyy, h:mm a');
+export const requestedAt = (iso: string): string => ambientDateFormatter().formatDateTime(iso);
 
 /** A free slot says so rather than showing a zero. */
 export const slotPrice = (price: number): string =>

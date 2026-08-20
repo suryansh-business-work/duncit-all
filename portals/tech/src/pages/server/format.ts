@@ -1,4 +1,7 @@
-import { format, isValid, parseISO } from 'date-fns';
+import {
+  formatDate as adminDate,
+  formatDateTime as adminDateTime,
+} from '@duncit/app-settings';
 
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
@@ -28,14 +31,16 @@ export function formatUptime(seconds: number): string {
   return parts.join(' ') || '<1m';
 }
 
+/**
+ * Both read the admin's configured patterns (rule 11). They used to render
+ * date-fns' locale-long forms ('PPp'/'PP'), which answer to the BROWSER rather
+ * than the admin panel — a build timestamp in this portal disagreed with the
+ * same timestamp on every other screen.
+ */
 export function formatDateTime(iso?: string | null): string {
-  if (!iso) return '—';
-  const d = parseISO(iso);
-  return isValid(d) ? format(d, 'PPp') : '—';
+  return adminDateTime(iso) || '—';
 }
 
 export function formatDate(iso?: string | null): string {
-  if (!iso) return '—';
-  const d = parseISO(iso);
-  return isValid(d) ? format(d, 'PP') : '—';
+  return adminDate(iso) || '—';
 }

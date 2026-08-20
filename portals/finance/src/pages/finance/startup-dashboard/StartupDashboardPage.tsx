@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { FOUNDER_DASHBOARD, SAVE_FOUNDER_SETTING } from './queries';
@@ -124,30 +122,28 @@ export default function StartupDashboardPage() {
   );
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
-        {loading && !dashboard ? (
-          <Stack spacing={3}>
-            {header}
-            <Stack alignItems="center" sx={{ py: 8 }}>
-              <CircularProgress />
-            </Stack>
+      {loading && !dashboard ? (
+        <Stack spacing={3}>
+          {header}
+          <Stack alignItems="center" sx={{ py: 8 }}>
+            <CircularProgress />
           </Stack>
-        ) : (
-          <DuncitDashboard dashboardId="finance.startup" header={header} widgets={widgets} />
-        )}
+        </Stack>
+      ) : (
+        <DuncitDashboard dashboardId="finance.startup" header={header} widgets={widgets} />
+      )}
 
-        <MetricDrawer
-          metric={active?.metric ?? null}
-          mode={active?.mode ?? null}
-          settings={settingsMap}
-          saving={saving}
-          onClose={() => setActive(null)}
-          onSave={handleSave}
-        />
-      </Box>
-    </LocalizationProvider>
+      <MetricDrawer
+        metric={active?.metric ?? null}
+        mode={active?.mode ?? null}
+        settings={settingsMap}
+        saving={saving}
+        onClose={() => setActive(null)}
+        onSave={handleSave}
+      />
+    </Box>
   );
 }

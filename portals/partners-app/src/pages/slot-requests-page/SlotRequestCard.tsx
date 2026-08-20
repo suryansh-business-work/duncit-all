@@ -11,6 +11,7 @@ import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
 import { InfoRow } from '@duncit/ui';
 import type { SlotRequestRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   request: SlotRequestRow;
@@ -47,7 +48,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           <Detail label="Venue" value={request.venue_name} />
           <Detail label="Slot" value={slotWindow(request)} />
           <Detail label="Slot price" value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />
-          <Detail label="Requested" value={format(new Date(request.requested_at), 'd MMM yyyy, h:mm a')} />
+          <Detail label="Requested" value={formatDateTime(request.requested_at)} />
         </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
           <Detail label="Host" value={request.host_name || '—'} />

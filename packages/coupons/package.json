@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@duncit/datetime": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/table": "workspace:*"

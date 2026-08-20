@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
+import {
+  DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  FALLBACK_DATE_FORMAT,
+  dobMinAgeMessage,
+  isEligibleDob,
+  patternPlaceholder,
+} from '@duncit/datetime';
 import { PERSON_NAME_PATTERN } from '../../../forms/validation/rules';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -30,11 +36,11 @@ const optionalLocation = (label: string) =>
 /** Optional full birth date — empty (no change) or a YYYY-MM-DD that clears the
  * admin-configured minimum age. Same rule and message as signup, from
  * @duncit/datetime, so a profile edit cannot walk around the joining age. */
-const makeDob = (minAge: number, initialDob: string) =>
+const makeDob = (minAge: number, initialDob: string, datePlaceholder: string) =>
   z
     .string()
     .trim()
-    .refine((v) => v === '' || DOB_PATTERN.test(v), 'Use the format YYYY-MM-DD')
+    .refine((v) => v === '' || DOB_PATTERN.test(v), `Use the format ${datePlaceholder}`)
     .refine((v) => {
       if (!v || !DOB_PATTERN.test(v)) return true;
       // A stored date the user has not touched is grandfathered: tightening the
@@ -62,6 +68,8 @@ const extension = z
 export const makeAccountEditSchema = (
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   initialDob = '',
+  /** How the date box asks to be typed, from the admin's date pattern. */
+  datePlaceholder: string = patternPlaceholder(FALLBACK_DATE_FORMAT),
 ) =>
   z.object({
   first_name: z
@@ -74,7 +82,7 @@ export const makeAccountEditSchema = (
     }),
   last_name: optionalPersonName('Last name'),
   bio: z.string().trim().max(500, 'Bio must be 500 characters or fewer'),
-  dob: makeDob(minAge, initialDob),
+  dob: makeDob(minAge, initialDob, datePlaceholder),
   country: optionalLocation('Country'),
   state: optionalLocation('State'),
   city: optionalLocation('City'),

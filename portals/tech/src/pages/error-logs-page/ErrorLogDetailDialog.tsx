@@ -2,6 +2,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack }
 import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
 import { userLabel } from '../../components/telemetry-identity';
 import { parseIssueData, type ErrorLogRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** Everything one captured server-operation failure knows about itself. */
 export default function ErrorLogDetailDialog({
@@ -16,7 +17,7 @@ export default function ErrorLogDetailDialog({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <Field label="When" value={new Date(row.created_at).toLocaleString()} />
+            <Field label="When" value={formatDateTime(row.created_at)} />
             <Field label="Environment" value={row.environment} />
             <Field label="Source" value={row.source} />
             <Field label="Page" value={row.page} />

@@ -1,4 +1,5 @@
 import type { PodRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 export const POD_MODE_OPTIONS = [
   { value: 'PHYSICAL', label: 'Physical' },
@@ -39,4 +40,4 @@ export const spotsValue = (p: PodRow) => {
   return `${p.pod_attendees?.length ?? 0}${cap}`;
 };
 
-export const dateValue = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
+export const dateValue = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');

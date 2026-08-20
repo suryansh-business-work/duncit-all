@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { usd, tokens } from '../../lib/usd';
+import { formatDateTime } from '@duncit/app-settings';
 
 export interface SpendBarRow {
   /** Stable identity — a model name, a module, a date. Also the row's key. */
@@ -51,7 +52,7 @@ export default function SpendBars({ rows, emptyText }: Readonly<{ rows: readonly
             />
           </Box>
           <Typography variant="caption" color="text.secondary">
-            {row.calls.toLocaleString()} calls · {tokens(row.tokens)} tokens
+            {formatDateTime(row.calls)} calls · {tokens(row.tokens)} tokens
           </Typography>
         </Box>
       ))}

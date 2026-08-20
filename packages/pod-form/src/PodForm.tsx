@@ -32,7 +32,6 @@ export interface PodFormProps {
   onPickImage?: () => Promise<string | null>;
   onPickVideo?: () => Promise<string | null>;
   searchHosts?: SearchPodHosts;
-  dateTimeFormat?: string;
   /** Admin-configured formatter from `useDateFormat()`; drives the slot calendar. */
   dateFormatter: PodFormData['dateFormatter'];
   /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
@@ -61,7 +60,6 @@ export default function PodForm({
   onPickImage,
   onPickVideo,
   searchHosts,
-  dateTimeFormat,
   dateFormatter,
   slotLabels,
   busy = false,
@@ -121,11 +119,10 @@ export default function PodForm({
       onPickImage,
       onPickVideo,
       searchHosts,
-      dateTimeFormat,
       dateFormatter,
       slotLabels,
     }),
-    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateTimeFormat, dateFormatter, slotLabels],
+    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels],
   );
 
   const submit = methods.handleSubmit(async (values) => {

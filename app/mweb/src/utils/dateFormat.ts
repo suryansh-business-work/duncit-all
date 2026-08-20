@@ -1,5 +1,10 @@
 import { useQuery } from '@apollo/client';
-import { PUBLIC_APP_SETTINGS, useDateFormat as useSharedDateFormat } from '@duncit/app-settings';
+import {
+  PUBLIC_APP_SETTINGS,
+  ambientDateFormatter,
+  useDateFormat as useSharedDateFormat,
+  type DateInput,
+} from '@duncit/app-settings';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
 
 /**
@@ -9,7 +14,23 @@ import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
  * mWeb-specific settings hooks and preserves the existing import paths.
  */
 export { PUBLIC_APP_SETTINGS };
-export type { DateInput } from '@duncit/app-settings';
+export type { DateInput };
+
+/**
+ * Plain (non-hook) formatters, for the helpers that build date text OUTSIDE a
+ * component — list-item subtitles, `valueGetter`-style mappers, pure modules.
+ * They read the settings the root provider publishes, so they answer the same
+ * as `useDateFormat()` without needing a component to call them from.
+ *
+ * Named to match the native app's `utils/date-format` (rule 27), so the twin
+ * files read alike.
+ */
+export const formatDate = (input: DateInput): string => ambientDateFormatter().formatDate(input);
+export const formatTime = (input: DateInput): string => ambientDateFormatter().formatTime(input);
+export const formatDateTime = (input: DateInput): string =>
+  ambientDateFormatter().formatDateTime(input);
+/** A stored 'yyyy-MM-dd' calendar day — never shifted by a time zone. */
+export const formatDay = (value: string): string => ambientDateFormatter().formatDay(value);
 
 const FALLBACK_DRAFT_RETENTION_DAYS = 3;
 

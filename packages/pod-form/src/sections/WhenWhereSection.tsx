@@ -12,7 +12,7 @@ const venueLabel = (venue: any) => {
 };
 
 export default function WhenWhereSection() {
-  const { config, clubs, venues, getClubVenueIds, dateTimeFormat } = usePodFormData();
+  const { config, clubs, venues, getClubVenueIds } = usePodFormData();
   const { control, setValue, formState: { errors, defaultValues } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
@@ -108,8 +108,8 @@ export default function WhenWhereSection() {
             />
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required format={dateTimeFormat} />
-            <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} format={dateTimeFormat} />
+            <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required />
+            <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} />
           </Stack>
         </>
       )}

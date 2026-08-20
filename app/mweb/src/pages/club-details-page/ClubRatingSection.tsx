@@ -21,7 +21,7 @@ import {
 import StarIcon from '@mui/icons-material/Star';
 import { ADD_CLUB_RATING, CLUB_RATINGS } from '../ClubDetailsPage/clubDetailsQueries';
 import { notify } from '../../components/notify';
-import { format } from 'date-fns';
+import { formatDate } from '../../utils/dateFormat';
 
 interface Props {
   clubId: string;
@@ -105,7 +105,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
                       <Typography variant="body2" fontWeight={700}>{r.user_name}</Typography>
                       <Rating value={r.stars} readOnly size="small" max={5} />
                       <Typography variant="caption" color="text.secondary">
-                        {format(new Date(r.created_at), 'MMM d, yyyy')}
+                        {formatDate(r.created_at)}
                       </Typography>
                     </Stack>
                   }

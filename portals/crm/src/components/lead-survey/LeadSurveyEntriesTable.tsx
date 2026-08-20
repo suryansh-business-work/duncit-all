@@ -8,6 +8,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { surveyLinkUrl, type LeadSurveyDef, type LeadSurveyEntry } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   entries: LeadSurveyEntry[];
@@ -20,7 +21,7 @@ interface Props {
 }
 
 const SOURCE_COLOR: Record<string, 'primary' | 'secondary' | 'info'> = { MANUAL: 'primary', LINK: 'secondary', APP: 'info' };
-const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
+const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 
 const statusChip = (e: LeadSurveyEntry) => {
   if (e.source === 'LINK' && e.token_revoked) return <Chip size="small" label="Revoked" variant="outlined" />;

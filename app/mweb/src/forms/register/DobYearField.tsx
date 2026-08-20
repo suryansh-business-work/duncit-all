@@ -1,7 +1,5 @@
 import { Controller, type Control } from 'react-hook-form';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { parseISO } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -25,7 +23,13 @@ const toIsoDay = (date: Date) =>
 /** MUIX date-of-birth picker bound to react-hook-form, storing 'YYYY-MM-DD'.
  * The calendar cannot reach a date younger than the minimum joining age, so an
  * ineligible birthday cannot be picked; the schema still re-checks it, which is
- * what catches a typed date. */
+ * what catches a typed date.
+ *
+ * What the box READS as is the admin's configured date pattern, inherited from
+ * the root DuncitLocalizationProvider — the stored value stays ISO either way.
+ * This field used to wrap its own LocalizationProvider, which shadowed the root
+ * one and put the adapter's en-US MM/DD/YYYY back on the very first thing a new
+ * member types. */
 export default function DobYearField({
   control,
   minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -39,38 +43,36 @@ export default function DobYearField({
       control={control}
       name="dob"
       render={({ field, fieldState }) => (
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label={t('mweb.auth.dateOfBirth')}
-            openTo="year"
-            views={['year', 'month', 'day']}
-            value={field.value ? parseISO(field.value) : null}
-            minDate={minDate}
-            maxDate={maxDate}
-            onChange={(d) => {
-              const isReal = d && !Number.isNaN(d.getTime());
-              field.onChange(isReal ? toIsoDay(d) : '');
-              /* Typing a birthday never blurs the field, so under the form's
-                 `onTouched` mode the age rule stayed silent until focus moved
-                 on — while picking one flagged straight away, because opening
-                 the calendar blurs the input first. The field publishes only
-                 complete dates, so marking it touched here checks a typed date
-                 the same moment a picked one is checked. */
-              field.onBlur();
-            }}
-            slotProps={{
-              textField: {
-                required: true,
-                size: 'small',
-                fullWidth: true,
-                onBlur: field.onBlur,
-                InputLabelProps: { shrink: true },
-                error: !!fieldState.error,
-                helperText: fieldState.error?.message ?? hint,
-              },
-            }}
-          />
-        </LocalizationProvider>
+        <DatePicker
+          label={t('mweb.auth.dateOfBirth')}
+          openTo="year"
+          views={['year', 'month', 'day']}
+          value={field.value ? parseISO(field.value) : null}
+          minDate={minDate}
+          maxDate={maxDate}
+          onChange={(d) => {
+            const isReal = d && !Number.isNaN(d.getTime());
+            field.onChange(isReal ? toIsoDay(d) : '');
+            /* Typing a birthday never blurs the field, so under the form's
+               `onTouched` mode the age rule stayed silent until focus moved
+               on — while picking one flagged straight away, because opening
+               the calendar blurs the input first. The field publishes only
+               complete dates, so marking it touched here checks a typed date
+               the same moment a picked one is checked. */
+            field.onBlur();
+          }}
+          slotProps={{
+            textField: {
+              required: true,
+              size: 'small',
+              fullWidth: true,
+              onBlur: field.onBlur,
+              InputLabelProps: { shrink: true },
+              error: !!fieldState.error,
+              helperText: fieldState.error?.message ?? hint,
+            },
+          }}
+        />
       )}
     />
   );

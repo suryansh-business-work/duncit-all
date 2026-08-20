@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import type { TableQueryState } from '@duncit/table';
 import type { StatusColorMap } from '@duncit/ui';
+import { formatDateTime } from '@duncit/app-settings';
 
 export const POD_CANCELLATIONS = gql`
   query PodCancellations($kind: PodCancelKind) {
@@ -101,8 +102,7 @@ export const money = (sym: string, value?: number | null) =>
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
+  return formatDateTime(iso) || '—';
 };
 
 type RowComparator = (a: PodCancellationRow, b: PodCancellationRow) => number;

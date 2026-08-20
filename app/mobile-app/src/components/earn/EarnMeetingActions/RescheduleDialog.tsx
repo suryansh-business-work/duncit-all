@@ -9,6 +9,7 @@ import { SlotPicker } from '@/components/survey-onboarding/SlotPicker';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { MeetingSlot } from '@/graphql/onboarding-survey';
 import { ReasonField } from './ReasonField';
+import { formatDateTime } from '@/utils/date-format';
 
 interface Props {
   open: boolean;
@@ -26,8 +27,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-const formatSlot = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+const formatSlot = (iso: string) => formatDateTime(iso);
 
 /** Slot grid + required reason for a one-time meeting reschedule. */
 export function RescheduleDialog({

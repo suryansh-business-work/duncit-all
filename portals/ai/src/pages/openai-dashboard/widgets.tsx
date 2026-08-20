@@ -10,6 +10,7 @@ import SpendBars, { type SpendBarRow } from './SpendBars';
 import TaskSpendTable from './TaskSpendTable';
 import RateCardList from './RateCardList';
 import type { ModelPrice, SpendBucket, UsageDashboardData } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const bucketRows = (buckets: readonly SpendBucket[]): SpendBarRow[] =>
   buckets.map((b) => ({ id: b.key, label: b.key, cost_usd: b.cost_usd, calls: b.calls, tokens: b.tokens }));
@@ -70,7 +71,7 @@ export function buildWidgets(
         sx={{ height: '100%' }}
         icon={<SmartToyIcon fontSize="small" />}
         label="CALLS"
-        value={d.total_calls.toLocaleString()}
+        value={formatDateTime(d.total_calls)}
         hint={`${d.avg_duration_ms} ms average`}
       />
     ),

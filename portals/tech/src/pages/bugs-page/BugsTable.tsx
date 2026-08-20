@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getBugRowId = (b: BugRow) => b.id;
 
@@ -19,7 +20,7 @@ const renderTitle = (b: BugRow) => (
 
 const renderLastSeen = (b: BugRow) => (
   <Typography variant="body2" color="text.secondary">
-    {new Date(b.last_seen_at).toLocaleString()}
+    {formatDateTime(b.last_seen_at)}
   </Typography>
 );
 
@@ -118,7 +119,7 @@ export default function BugsTable({
         headerName: 'First seen',
         hide: true,
         width: 190,
-        valueGetter: (b) => new Date(b.first_seen_at).toLocaleString(),
+        valueGetter: (b) => formatDateTime(b.first_seen_at),
       },
       { field: 'last_seen_at', headerName: 'Last seen', width: 180, cellRenderer: renderLastSeen },
       {

@@ -23,6 +23,7 @@ import {
   type AppBuildCiToken,
   type AppBuildSettings,
 } from '../queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** A copy button that reports whether the clipboard actually took the value. */
 function CopyAdornment({ value, label }: Readonly<{ value: string; label: string }>) {
@@ -102,7 +103,7 @@ function ReportingStatus({ settings }: Readonly<{ settings: AppBuildSettings }>)
           // Date AND time, matching the builds table and the details dialog. The
           // time is the point here: after pasting the secret you are looking for
           // a report from minutes ago, which a date alone cannot show.
-          when: new Date(settings.last_reported_at).toLocaleString(),
+          when: formatDateTime(settings.last_reported_at),
           account: settings.last_reported_by ?? '—',
         },
       })}

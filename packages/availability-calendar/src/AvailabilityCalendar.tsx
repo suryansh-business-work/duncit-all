@@ -11,6 +11,7 @@ import {
 } from 'date-fns';
 import { slotCoveredDays } from './slot-window';
 import type { CalendarView, VenueSlotRow } from './types';
+import { formatDate } from '@duncit/datetime';
 
 interface Props {
   month: Date;
@@ -117,7 +118,7 @@ function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderPr
         variant="body2"
         sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
       >
-        {isDayView ? format(date, 'EEEE, dd MMM') : format(date, 'd')}
+        {isDayView ? formatDate(date) : format(date, 'd')}
       </Typography>
       {isHoliday && !isDayView && (
         <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 800 }} aria-label="Venue on leave">

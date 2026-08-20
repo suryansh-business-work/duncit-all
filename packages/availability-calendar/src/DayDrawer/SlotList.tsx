@@ -17,6 +17,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { format, isSameDay } from 'date-fns';
 import type { VenueSlotRow } from '../types';
+import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
 
 const priceLabel = (price: number) => (price > 0 ? `₹${price}` : 'Free');
 
@@ -38,12 +39,12 @@ export function slotWhenLabel(slot: Pick<VenueSlotRow, 'start_at' | 'end_at' | '
   // The end instant is exclusive: ending exactly at midnight claims no extra day.
   const multiDay = !isSameDay(start, new Date(end.getTime() - 1));
   if (slot.whole_day) {
-    return multiDay ? `Whole day · ${format(start, 'dd MMM')} – ${format(end, 'dd MMM')}` : 'Whole day';
+    return multiDay ? `Whole day · ${formatDate(start)} – ${formatDate(end)}` : 'Whole day';
   }
   if (multiDay) {
-    return `${format(start, 'dd MMM, hh:mm a')} – ${format(end, 'dd MMM, hh:mm a')}`;
+    return `${formatDateTime(start)} – ${formatDateTime(end)}`;
   }
-  return `${format(start, 'hh:mm a')} – ${format(end, 'hh:mm a')}`;
+  return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
 interface Props {

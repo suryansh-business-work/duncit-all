@@ -15,6 +15,7 @@ import {
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { MY_WALLET } from './queries';
 import { WithdrawForm } from './withdraw';
+import { formatDate } from '@duncit/app-settings';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -28,8 +29,7 @@ const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
 };
 
 const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return formatDate(iso) || '—';
 };
 
 /** Partner wallet — balance, payout cycle, withdrawals and transactions, plus a

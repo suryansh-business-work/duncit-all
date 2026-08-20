@@ -6,6 +6,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { WithdrawCta } from '@/components/wallet/WithdrawCta';
 import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { useWallet, type WalletTxn, type Withdrawal } from '@/hooks/useWallet';
+import { formatDate } from '@/utils/date-format';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -20,7 +21,7 @@ const STATUS_BG: Record<string, string> = {
 
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return formatDate(d) || '—';
 };
 
 function TxnRow({ txn, symbol }: Readonly<{ txn: WalletTxn; symbol: string }>) {

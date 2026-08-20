@@ -5,6 +5,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { usePricing } from '../../hooks/usePricing';
+import { formatDateTime } from '../../utils/dateFormat';
 
 interface Props {
   pod: any;
@@ -104,12 +105,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             <Chip
               size="small"
               icon={<EventIcon sx={{ color: 'common.white !important' }} />}
-              label={new Date(pod.pod_date_time).toLocaleString(undefined, {
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
+              label={formatDateTime(pod.pod_date_time)}
               sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
             />
           )}

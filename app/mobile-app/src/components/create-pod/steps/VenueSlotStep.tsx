@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { MapEmbed } from '@/components/MapEmbed';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { formatDurationBetween } from '@/utils/date-format';
@@ -13,8 +14,6 @@ import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
 import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
-
-const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
  * this space books ('' = whole venue), used to filter the slot list. */
@@ -184,6 +183,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
     formState: { errors },
   } = form;
   const { t } = useTranslation();
+  const { dateTimeInputFormat } = useDateFormat();
   const spaceError = errors.venue_space_label?.message;
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
@@ -219,14 +219,16 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
     parseDateTimeText(watch('pod_end_date_time_text')),
   );
 
+  // A slot fills the schedule boxes, so it must be written in the same shape
+  // those boxes are typed in — the admin's patterns, not a fixed ISO one.
   const pickSlot = (slot: CreatePodSlot) => {
     setValue('venue_slot_id', slot.id, { shouldDirty: true, shouldValidate: true });
     // The slot window is the pod window — the server enforces the same.
-    setValue('pod_date_time_text', format(new Date(slot.start_at), DATE_TIME_FORMAT), {
+    setValue('pod_date_time_text', format(new Date(slot.start_at), dateTimeInputFormat), {
       shouldDirty: true,
       shouldValidate: true,
     });
-    setValue('pod_end_date_time_text', format(new Date(slot.end_at), DATE_TIME_FORMAT), {
+    setValue('pod_end_date_time_text', format(new Date(slot.end_at), dateTimeInputFormat), {
       shouldDirty: true,
     });
   };

@@ -10,6 +10,7 @@ import ProductRowActions from './ProductRowActions';
 import ListingPauseDialog from './ListingPauseDialog';
 import RunAdDialog, { type AdKind } from './RunAdDialog';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 /** Available stock at/below the product's low-stock threshold (opt-in per product). */
 const isLowStock = (product: ProductListingRow) =>
@@ -147,7 +148,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         width: 140,
         filter: { type: 'date' },
         valueGetter: (product) =>
-          product.updated_at ? format(new Date(product.updated_at), 'dd MMM yyyy') : '—',
+          formatDate(product.updated_at) || '—',
       },
       { field: 'actions', headerName: '', sortable: false, width: 72, cellRenderer: renderActions },
     ];

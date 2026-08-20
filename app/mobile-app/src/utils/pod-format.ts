@@ -1,10 +1,10 @@
-import { format } from 'date-fns';
 import { buildPodShareMessage, meetingPlatformName } from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { PodOccurrence } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
 import type { HomePod } from '@/hooks/useHomeFeed';
+import { formatDateTime, formatTime } from '@/utils/date-format';
 
 /** First image (preferred) or first media url for a pod, else null. */
 export function podImageUrl(pod: HomePod): string | null {
@@ -13,12 +13,10 @@ export function podImageUrl(pod: HomePod): string | null {
   return media?.url ?? null;
 }
 
-/** Local-timezone date label, e.g. "Sat, 7 Jun · 6:30 PM". date-fns formats in
- * the device timezone; admin-configurable formatting is a follow-up (rule 11). */
+/** Pod date label in the admin's configured date and time patterns and zone,
+ * e.g. "07 Jun 2026 · 06:30 PM" — the same reading mWeb's pod cards give. */
 export function podDateLabel(pod: HomePod): string {
-  if (!pod.pod_date_time) return 'Date pending';
-  const date = new Date(pod.pod_date_time);
-  return Number.isNaN(date.getTime()) ? 'Date pending' : format(date, 'EEE, d MMM · h:mm a');
+  return formatDateTime(pod.pod_date_time) || 'Date pending';
 }
 
 /** "Free" for a free pod, else the rupee amount. `t` comes from the rendering
@@ -128,22 +126,17 @@ export function podTimeChip(
   return { label, tone: days <= 1 ? 'warning' : 'info' };
 }
 
-/** Long schedule label, e.g. "Tuesday, 2 June 2026 at 19:00 → 21:00" in the
- * device timezone. */
+/** Full schedule label, e.g. "02 Jun 2026 · 07:00 PM → 09:00 PM", in the admin's
+ * configured patterns and zone. */
 export function podScheduleLabel(
   start?: string | null,
   end?: string | null,
   t: Translate = fallbackT,
 ): string {
-  if (!start) return t('mweb.podDetails.datePending');
-  const startDate = new Date(start);
-  if (Number.isNaN(startDate.getTime())) return t('mweb.podDetails.datePending');
-  let label = format(startDate, "EEEE, d MMMM yyyy 'at' h:mm a");
-  if (end) {
-    const endDate = new Date(end);
-    if (!Number.isNaN(endDate.getTime())) label += ` → ${format(endDate, 'h:mm a')}`;
-  }
-  return label;
+  const label = formatDateTime(start);
+  if (!label) return t('mweb.podDetails.datePending');
+  const endLabel = end ? formatTime(end) : '';
+  return endLabel ? `${label} → ${endLabel}` : label;
 }
 
 /** The mWeb origin this build shares links to — local in dev, production in a

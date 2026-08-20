@@ -3,10 +3,11 @@ import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
 import SellIcon from '@mui/icons-material/Sell';
 import type { SavedPod } from './queries';
+import { formatDateTime } from '../../utils/dateFormat';
 
 function formatDate(value?: string | null) {
   if (!value) return 'Date pending';
-  return new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  return formatDateTime(value);
 }
 
 interface Props {

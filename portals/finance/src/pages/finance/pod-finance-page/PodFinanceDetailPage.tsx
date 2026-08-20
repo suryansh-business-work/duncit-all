@@ -7,6 +7,7 @@ import HostEarningsCard from './HostEarningsCard';
 import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
 import WaterfallAccordions from './WaterfallAccordions';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
           </Stack>
           <Typography variant="body2" color="text.secondary">
             {breakdown.bookings_count} bookings · Customer paid {money(sym, breakdown.collected_total)}
-            {breakdown.completed_at ? ` · Completed ${new Date(breakdown.completed_at).toLocaleString()}` : ''}
+            {breakdown.completed_at ? ` · Completed ${formatDateTime(breakdown.completed_at)}` : ''}
           </Typography>
           {/* Coins cut the gross before GST, so "Customer paid" above is lower
               than the tickets' face value by exactly the redeemed figure.

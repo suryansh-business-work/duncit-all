@@ -1,3 +1,4 @@
+import { formatDateTime } from '@duncit/app-settings';
 // Pure aggregation helpers for the onboarding dashboard. All chart/KPI numbers
 // derive from these, so they are unit-tested to 100% while the chart wrappers
 // (canvas) stay presentational.
@@ -134,7 +135,7 @@ export function monthlyOnboarding(
     const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
     indexByKey.set(monthKey(date), buckets.length);
     buckets.push({
-      label: date.toLocaleString('en-US', { month: 'short' }),
+      label: formatDateTime(date),
       hosts: 0,
       venues: 0,
       brands: 0,

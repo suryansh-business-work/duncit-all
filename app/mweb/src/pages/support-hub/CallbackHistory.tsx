@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
-import { format } from 'date-fns';
 import { MY_CALLBACK_REQUESTS, type CallbackHistoryItem } from './queries';
+import { formatDateTime } from '../../utils/dateFormat';
 
 const STATUS_COLOR: Record<CallbackHistoryItem['status'], 'warning' | 'info' | 'success'> = {
   PENDING: 'warning',
@@ -44,7 +44,7 @@ export default function CallbackHistory() {
             <Paper key={c.id} variant="outlined" sx={{ p: 1.25, borderRadius: '16px' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                 <Typography variant="caption" color="text.secondary">
-                  {format(new Date(c.created_at), 'd MMM yyyy, HH:mm')}
+                  {formatDateTime(c.created_at)}
                 </Typography>
                 <Chip size="small" color={STATUS_COLOR[c.status]} label={c.status} />
               </Stack>
@@ -55,7 +55,7 @@ export default function CallbackHistory() {
               )}
               {(c.contacted_at || dur || c.conclusion) && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                  {c.contacted_at && `Called ${format(new Date(c.contacted_at), 'd MMM, HH:mm')}`}
+                  {c.contacted_at && `Called ${formatDateTime(c.contacted_at)}`}
                   {dur && ` · ${dur}`}
                   {c.conclusion && ` · ${c.conclusion}`}
                 </Typography>

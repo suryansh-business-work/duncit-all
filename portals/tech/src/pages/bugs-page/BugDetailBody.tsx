@@ -3,6 +3,7 @@ import { DetailBlock, DetailField as Field } from '../../components/DetailField'
 import { userLabel } from '../../components/telemetry-identity';
 import { affectedSummary, type BugRow } from './queries';
 import BugOccurrences from './BugOccurrences';
+import { formatDateTime } from '@duncit/app-settings';
 
 /**
  * Everything one bug knows about itself.
@@ -14,7 +15,7 @@ import BugOccurrences from './BugOccurrences';
 /** `14/08/2026, 10:12:03 · by 66a1…` — when it was resolved and by whom. */
 const resolvedLine = (bug: BugRow) => {
   if (!bug.resolved_at) return '';
-  const when = new Date(bug.resolved_at).toLocaleString();
+  const when = formatDateTime(bug.resolved_at);
   return bug.resolved_by ? `${when} · by ${bug.resolved_by}` : when;
 };
 
@@ -70,11 +71,11 @@ export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
         <Field label="Page" value={bug.page} />
         <Field label="Platform" value={[bug.platform, bug.os].filter(Boolean).join(' · ')} />
         <Field label="App" value={appLine} />
-        <Field label="First seen" value={new Date(bug.first_seen_at).toLocaleString()} />
-        <Field label="Last seen" value={new Date(bug.last_seen_at).toLocaleString()} />
+        <Field label="First seen" value={formatDateTime(bug.first_seen_at)} />
+        <Field label="Last seen" value={formatDateTime(bug.last_seen_at)} />
         <Field label="Last URL" value={bug.last_url ?? ''} />
         <Field label="Last host" value={bug.last_host ?? ''} />
-        <Field label="Tracked since" value={new Date(bug.created_at).toLocaleString()} />
+        <Field label="Tracked since" value={formatDateTime(bug.created_at)} />
         <Field label="Resolved" value={resolvedLine(bug)} />
       </Box>
 

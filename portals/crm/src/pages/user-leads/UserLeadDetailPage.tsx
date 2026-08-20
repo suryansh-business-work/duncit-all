@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BackHeader, InfoRow, QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
+import { formatDateTime } from '@duncit/app-settings';
 
 function Field({ label, value }: Readonly<{ label: string; value?: string | null }>) {
   return <InfoRow label={label} value={value || '—'} />;
@@ -54,7 +55,7 @@ export default function UserLeadDetailPage() {
               <Field label="Source WhatsApp account" value={lead.source_account ? `+${lead.source_account}` : null} />
               <Field
                 label="Imported"
-                value={lead.imported_at ? new Date(lead.imported_at).toLocaleString() : null}
+                value={lead.imported_at ? formatDateTime(lead.imported_at) : null}
               />
               <Field label="Contact JID" value={lead.contact_jid} />
             </Stack>

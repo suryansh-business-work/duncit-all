@@ -8,7 +8,7 @@ import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
-import { useMinSignupAge } from '../../../utils/dateFormat';
+import { useDateFormat, useMinSignupAge } from '../../../utils/dateFormat';
 
 const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
   line1: 'address_line1',
@@ -47,9 +47,10 @@ export default function AccountEditForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   // The joining age is admin-configured, so the schema is built from it.
   const minAge = useMinSignupAge();
+  const { datePlaceholder } = useDateFormat();
   const schema = useMemo(
-    () => makeAccountEditSchema(minAge, defaultValues.dob),
-    [minAge, defaultValues.dob],
+    () => makeAccountEditSchema(minAge, defaultValues.dob, datePlaceholder),
+    [minAge, defaultValues.dob, datePlaceholder],
   );
   const {
     control,

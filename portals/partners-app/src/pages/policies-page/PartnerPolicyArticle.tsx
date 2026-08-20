@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { POLICY_BY_SLUG } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }>) {
   const { data, loading, error } = useQuery(POLICY_BY_SLUG, { variables: { slug }, fetchPolicy: 'cache-and-network' });
@@ -26,7 +27,7 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
         }}
         dangerouslySetInnerHTML={{ __html: policy.content || '' }}
       />
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 4, display: 'block', textAlign: 'right' }}>Last updated {new Date(policy.updated_at).toLocaleDateString()}</Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 4, display: 'block', textAlign: 'right' }}>Last updated {formatDate(policy.updated_at)}</Typography>
       {loading && <CircularProgress size={18} sx={{ position: 'fixed', top: 80, right: 24 }} />}
     </Box>
   );

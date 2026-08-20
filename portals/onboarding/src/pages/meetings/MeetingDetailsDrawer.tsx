@@ -4,6 +4,7 @@ import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting, SurveyKind } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const STATUS_COLOR: StatusColorMap = {
   REQUESTED: 'default',
@@ -12,7 +13,7 @@ const STATUS_COLOR: StatusColorMap = {
   CANCELLED: 'error',
 };
 const KIND_LABEL: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
-const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
+const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 
 interface Props {
   meeting: OnboardingMeeting | null;

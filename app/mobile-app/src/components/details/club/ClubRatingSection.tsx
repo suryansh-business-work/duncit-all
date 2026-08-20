@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
 import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
-import { format } from 'date-fns';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { ClubRatingsDocument, AddClubRatingDocument } from '@/graphql/details';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { formatDate } from '@/utils/date-format';
 
 interface ClubRating {
   id: string;
@@ -168,7 +168,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
               <XStack alignItems="center" gap={6}>
                 <StarRow value={r.stars} size={13} />
                 <Text fontSize={11} color="$muted">
-                  {format(new Date(r.created_at), 'MMM d, yyyy')}
+                  {formatDate(r.created_at)}
                 </Text>
               </XStack>
             </YStack>

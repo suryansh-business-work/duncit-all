@@ -13,7 +13,6 @@ export {
   dateColumn,
   entityIdColumn,
   formatDateCell,
-  DEFAULT_DATE_FORMAT,
   EM_DASH,
 } from './cells';
 export type {

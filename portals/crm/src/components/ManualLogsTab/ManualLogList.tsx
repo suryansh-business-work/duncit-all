@@ -2,6 +2,7 @@ import { Box, Card, Chip, Stack, Typography } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { CrmActivity } from '../../api/crm.types';
 import { formatLogTimestamp, logKey } from './logUtils';
+import { formatDate } from '@duncit/app-settings';
 
 interface Props {
   groups: Array<[string, CrmActivity[]]>;
@@ -19,12 +20,7 @@ export function ManualLogList({ groups }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       {groups.map(([day, entries]) => {
-        const heading = new Date(day).toLocaleDateString(undefined, {
-          weekday: 'long',
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        const heading = formatDate(day);
         return (
           <Box key={day}>
             <Typography

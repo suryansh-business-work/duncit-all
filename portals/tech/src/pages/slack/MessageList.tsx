@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Avatar, Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { messageDate, messageDayKey, type SlackMessage } from './queries';
+import { formatDate, formatTime } from '@duncit/app-settings';
 
 interface Props {
   messages: SlackMessage[];
@@ -26,7 +27,7 @@ function MessageRow({
           </Typography>
           {message.is_bot && <Chip size="small" variant="outlined" label={botLabel} />}
           <Typography variant="caption" color="text.secondary">
-            {messageDate(message.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {formatTime(messageDate(message.ts))}
           </Typography>
         </Stack>
         {/* Slack mrkdwn is not markdown, and half-rendering it is worse than
@@ -70,7 +71,7 @@ export default function MessageList({ messages, channelId }: Readonly<Props>) {
             {isNewDay && (
               <Divider sx={{ my: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  {messageDate(m.ts).toLocaleDateString()}
+                  {formatDate(messageDate(m.ts))}
                 </Typography>
               </Divider>
             )}

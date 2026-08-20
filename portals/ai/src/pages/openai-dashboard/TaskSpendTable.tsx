@@ -3,6 +3,7 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { usd, tokens } from '../../lib/usd';
 import type { TaskSpend } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: TaskSpend) => row.task;
 const searchOf = (row: TaskSpend) => `${row.label} ${row.module} ${row.task}`;
@@ -59,7 +60,7 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
         field: 'calls',
         headerName: 'Calls',
         width: 100,
-        valueGetter: (row) => row.calls.toLocaleString(),
+        valueGetter: (row) => formatDateTime(row.calls),
       },
       {
         field: 'failures',

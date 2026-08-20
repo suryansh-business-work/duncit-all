@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import InventoryAnalyticsChart from './InventoryAnalyticsChart';
 import StockMovementTimeline from './StockMovementTimeline';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface ActivityLog {
   id: string;
@@ -101,7 +102,7 @@ export default function ActivityLogsSection({
                       : log.notes || 'No additional detail'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(log.created_at).toLocaleString()} · {log.user_name || 'system'}
+                    {formatDateTime(log.created_at)} · {log.user_name || 'system'}
                   </Typography>
                 </Box>
               </Box>

@@ -5,6 +5,7 @@ import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import MeetingRowActions from './MeetingRowActions';
 import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',
@@ -29,7 +30,7 @@ const APPROVAL_OPTIONS = (['APPROVED', 'DENIED'] as const).map((s) => ({
   label: APPROVAL_LABELS[s],
 }));
 
-const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
+const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 const catPath = (m: OnboardingMeeting) =>
   [m.super_category_name, m.category_name, m.sub_category_name].filter(Boolean).join(' › ') || '—';
 

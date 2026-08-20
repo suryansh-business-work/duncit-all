@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Box, CircularProgress, FormHelperText, Stack, Typography } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DateCalendar, LocalizationProvider } from '@mui/x-date-pickers';
+import { DateCalendar } from '@mui/x-date-pickers';
 
 import { groupSlotsByDay, resolveSlotDay, slotDayBounds, slotDayKeys } from '../group';
 import type { CalendarSlot, SlotFormatter, SlotLabels } from '../types';
@@ -103,37 +102,35 @@ export default function SlotCalendar({
 
       {/* mWeb mounts no app-wide provider, so the calendar brings its own. The
        * portals already have one from the shell; nesting is harmless. */}
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <DateCalendar
-          value={dayKeyToDate(activeDay)}
-          onChange={(next) => {
-            if (next) setOverride(localDayKey(next));
-          }}
-          shouldDisableDate={shouldDisableDate}
-          minDate={bounds ? dayKeyToDate(bounds.first) ?? undefined : undefined}
-          maxDate={bounds ? dayKeyToDate(bounds.last) ?? undefined : undefined}
-          views={['day']}
-          slots={{ day: SlotDayCell }}
-          slotProps={{ day: { hasSlots } as never }}
-          sx={{
-            width: '100%',
-            maxWidth: 360,
-            mx: 'auto',
-            // MUIX lays the weekday labels and the day cells out as two
-            // independent flex rows, sized from their own content. Stretching
-            // only the header (which this used to do) therefore slid the labels
-            // out of line with the dates under them. Both rows share one
-            // 7-equal-column grid instead, so alignment holds at any width and
-            // whatever a day cell renders inside.
-            '& .MuiDayCalendar-header, & .MuiDayCalendar-weekContainer': {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(7, 1fr)',
-              justifyItems: 'center',
-            },
-            '& .MuiDayCalendar-weekDayLabel, & .MuiPickersDay-root': { margin: 0 },
-          }}
-        />
-      </LocalizationProvider>
+      <DateCalendar
+        value={dayKeyToDate(activeDay)}
+        onChange={(next) => {
+          if (next) setOverride(localDayKey(next));
+        }}
+        shouldDisableDate={shouldDisableDate}
+        minDate={bounds ? dayKeyToDate(bounds.first) ?? undefined : undefined}
+        maxDate={bounds ? dayKeyToDate(bounds.last) ?? undefined : undefined}
+        views={['day']}
+        slots={{ day: SlotDayCell }}
+        slotProps={{ day: { hasSlots } as never }}
+        sx={{
+          width: '100%',
+          maxWidth: 360,
+          mx: 'auto',
+          // MUIX lays the weekday labels and the day cells out as two
+          // independent flex rows, sized from their own content. Stretching
+          // only the header (which this used to do) therefore slid the labels
+          // out of line with the dates under them. Both rows share one
+          // 7-equal-column grid instead, so alignment holds at any width and
+          // whatever a day cell renders inside.
+          '& .MuiDayCalendar-header, & .MuiDayCalendar-weekContainer': {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            justifyItems: 'center',
+          },
+          '& .MuiDayCalendar-weekDayLabel, & .MuiPickersDay-root': { margin: 0 },
+        }}
+      />
 
       <Box>
         <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 0.75 }}>

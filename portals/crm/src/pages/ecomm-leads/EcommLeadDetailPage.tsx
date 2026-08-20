@@ -25,13 +25,9 @@ import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs from '../../components/LeadTabs';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import { buildEcommLeadTabs } from './ecommLeadTabs';
+import { formatDate as adminDate } from '@duncit/app-settings';
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 export default function EcommLeadDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +44,7 @@ export default function EcommLeadDetailPage() {
     );
   }
 
-  const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
+  const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
   const tabs = buildEcommLeadTabs(lead);
 
   return (

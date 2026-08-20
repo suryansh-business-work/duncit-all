@@ -1,6 +1,7 @@
 import { Avatar, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ResponsiveDialog from '../ResponsiveDialog';
+import { formatDate } from '../../utils/dateFormat';
 
 const CONDITION_LABEL: Record<string, string> = {
   POD_JOIN_COUNT: 'Pods joined',
@@ -109,7 +110,7 @@ export default function BadgeDetailsSheet({
 
         {awardedAt && (
           <Typography variant="caption" color="text.secondary">
-            Earned on {new Date(awardedAt).toLocaleDateString()}
+            Earned on {formatDate(awardedAt)}
           </Typography>
         )}
       </Stack>

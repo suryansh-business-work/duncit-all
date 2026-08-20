@@ -1,6 +1,7 @@
 import { Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { changesLabel, durationLabel, sizeLabel, type AppBuildRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const Fact = ({ label, value }: Readonly<{ label: string; value: string }>) => (
   <Stack direction="row" spacing={1} justifyContent="space-between">
@@ -37,7 +38,7 @@ export default function BuildFacts({ build }: Readonly<{ build: AppBuildRow }>) 
       <Fact label={t('tech.appBuilds.colVersion')} value={build.version || '—'} />
       <Fact
         label={t('tech.appBuilds.colWhen')}
-        value={build.created_at ? new Date(build.created_at).toLocaleString() : '—'}
+        value={build.created_at ? formatDateTime(build.created_at) : '—'}
       />
       <Fact label={t('tech.appBuilds.colEnv')} value={envValue} />
       <Fact

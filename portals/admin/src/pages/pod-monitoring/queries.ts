@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { formatDateTime } from '@duncit/app-settings';
 
 export const POD_AUDIT_LOGS_TABLE = gql`
   query PodAuditLogsTable($query: TableQueryInput) {
@@ -131,8 +132,4 @@ export const SOURCE_OPTIONS = (Object.keys(SOURCE_LABELS) as PodAuditSource[]).m
   label: SOURCE_LABELS[value],
 }));
 
-export const fmtWhen = (iso?: string | null) => {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
-};
+export const fmtWhen = (iso?: string | null) => formatDateTime(iso) || '—';

@@ -1,5 +1,4 @@
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { useDateFormat } from '@duncit/app-settings';
 
 interface Props {
   label: string;
@@ -34,7 +33,6 @@ export default function DateField({
   disabled,
   size,
 }: Readonly<Props>) {
-  const { dateFormat } = useDateFormat();
   const dateValue = value ? new Date(value) : null;
   const valid = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue : null;
 
@@ -50,7 +48,6 @@ export default function DateField({
         const dd = String(d.getDate()).padStart(2, '0');
         onChange(`${yyyy}-${mm}-${dd}`);
       }}
-      format={dateFormat}
       minDate={minDate ?? undefined}
       maxDate={maxDate ?? undefined}
       disabled={disabled}

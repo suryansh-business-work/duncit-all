@@ -16,6 +16,7 @@ import {
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import AssignClubsSection from './AssignClubsSection';
 import { categoryPath, isActiveClubAdmin, type ClubAdminRow } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 interface Props {
   active: ClubAdminRow | null;
@@ -36,7 +37,7 @@ const STATUS_COLOR: StatusColorMap = {
   REJECTED: 'error',
 };
 
-const dateLabel = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString() : '—');
+const dateLabel = (iso?: string | null) => (iso ? formatDate(iso) : '—');
 
 export default function ClubAdminReviewDialog({
   active,

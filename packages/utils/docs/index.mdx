@@ -54,6 +54,20 @@ exports:
   - 'renderReferralMessage'
   - 'DEFAULT_REFERRAL_MESSAGE'
   - 'REFERRAL_MESSAGE_TOKENS'
+  - 'APP_POPUP_DISMISSED_KEY'
+  - 'APP_POPUP_MAX_WIDTH'
+  - 'APP_POPUP_HEIGHT_FRACTION'
+  - 'APP_POPUP_VIEWPORT_GUTTER'
+  - 'APP_POPUP_DEFAULT_ASPECT'
+  - 'parseDismissedPopupIds'
+  - 'withDismissedPopupId'
+  - 'isPopupDismissed'
+  - 'readDismissedPopupIds'
+  - 'rememberDismissedPopup'
+  - 'appPopupAspect'
+  - 'appPopupLimits'
+  - 'appPopupImageSize'
+  - 'detectClientPlatform'
 ---
 
 ## Why this exists
@@ -616,6 +630,57 @@ leaderboardMedal(1); // 'gold'  ·  leaderboardMedal(4) → null (past the podiu
 
 The i18n keys are literals on purpose — the translation-key gate parses source statically and
 cannot follow a key assembled from the category name.
+
+## The app-open popup — one dismissal, one set of dimensions
+
+The marketing popup is rendered three times — MUI in mWeb, Tamagui in the native app and in
+the native web build — so the two things that must never drift live here.
+
+**Dismissal is a LIST OF POPUP IDS, never a `hasSeenPopup` flag.** Marketing publishes a new
+campaign by creating a new id, and a single flag would silently swallow every campaign after
+the first. The server also records a dismissal per user, but only after a round trip that can
+fail: the local write is what hides the popup on the same frame and survives that failure, and
+the server write is what carries it to that person's other devices.
+
+```ts
+import {
+  readDismissedPopupIds,
+  rememberDismissedPopup,
+  isPopupDismissed,
+} from '@duncit/utils';
+
+// `storage` is described structurally, so each surface passes its own: `localStorage` in
+// mWeb, `expo-secure-store` on a phone (which is `localStorage` again on native web).
+const ids = await readDismissedPopupIds(storage);
+isPopupDismissed(ids, 'popup-a'); // true  — closed on this device already
+isPopupDismissed(ids, 'popup-b'); // false — new campaign, show it
+
+await rememberDismissedPopup(storage, 'popup-b'); // ['popup-a', 'popup-b']
+```
+
+Storage can be unavailable — private browsing, a locked keystore — and every function above
+absorbs that. The cost is the popup showing once more, never a throw on app open.
+
+**Dimensions come from the artwork, not the screen.** Campaign images arrive in whatever
+aspect the designer exported, so a fixed box letterboxes one and crops the next. The card is
+sized to the picture instead, capped at `APP_POPUP_MAX_WIDTH` and at
+`APP_POPUP_HEIGHT_FRACTION` of the viewport:
+
+```ts
+appPopupAspect({ width: 1080, height: 1350 }); // 0.8
+appPopupAspect(null); // 0.8 — the portrait default, so the card cannot resize under the user
+
+appPopupImageSize({ width: 1080, height: 1350 }, appPopupLimits({ width: 390, height: 844 }));
+// { width: 342, height: 428 } — touches the width limit, well inside the height one
+```
+
+The native app calls `appPopupImageSize` against `useWindowDimensions`. mWeb expresses the
+same rule as a CSS `min()` built from the same three constants, so a browser re-solves it on
+every resize and orientation change without a listener.
+
+`detectClientPlatform(userAgent)` answers which store build a BROWSER stands in for. Both
+browser surfaces use it: a campaign aimed at Android has to reach an Android phone whether
+the person opened mWeb or the native web build (rule 27).
 
 ## Adding a helper
 

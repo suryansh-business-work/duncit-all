@@ -3,6 +3,7 @@ import { Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { ENV_COLOR, ENV_OPTIONS, UserCell } from '../../components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const getRowId = (row: ErrorLogRow) => row.id;
 
@@ -36,7 +37,7 @@ const renderUser = (row: ErrorLogRow) => <UserCell user={row.user} />;
 
 const renderWhen = (row: ErrorLogRow) => (
   <Typography variant="body2" color="text.secondary">
-    {new Date(row.created_at).toLocaleString()}
+    {formatDateTime(row.created_at)}
   </Typography>
 );
 

@@ -46,6 +46,7 @@ import {
 } from './queries';
 import RecurringAvailabilityDialog from './recurring/RecurringAvailabilityDialog';
 import { MY_VENUES } from '../register-venue-page/queries';
+import { formatDate } from '@duncit/app-settings';
 
 function viewRange(view: CalendarView, anchor: Date) {
   if (view === 'day') return { from: startOfDay(anchor), to: endOfDay(anchor) };
@@ -56,7 +57,7 @@ function viewRange(view: CalendarView, anchor: Date) {
 }
 
 function periodLabel(view: CalendarView, anchor: Date, range: { from: Date; to: Date }) {
-  if (view === 'day') return format(anchor, 'EEEE, dd MMM yyyy');
+  if (view === 'day') return formatDate(anchor);
   if (view === 'week') return `${format(range.from, 'dd MMM')} – ${format(range.to, 'dd MMM')}`;
   return format(anchor, 'MMMM yyyy');
 }

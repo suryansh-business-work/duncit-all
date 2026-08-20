@@ -25,6 +25,7 @@ import {
 } from './queries';
 import IdeaCommentsList from './IdeaCommentsList';
 import IdeaActionsBar from './IdeaActionsBar';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface DetailsProps {
   id: string;
@@ -70,7 +71,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
             {idea.author?.full_name ?? 'Member'}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {idea.author?.email ?? ''} · {new Date(idea.created_at).toLocaleString()}
+            {idea.author?.email ?? ''} · {formatDateTime(idea.created_at)}
           </Typography>
         </Box>
       </Stack>

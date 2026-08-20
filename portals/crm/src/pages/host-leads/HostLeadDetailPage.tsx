@@ -47,15 +47,12 @@ import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { hostVariableValues } from '../../config/leadVariables';
+import { formatDateTime } from '@duncit/app-settings';
+import { formatDate as adminDate } from '@duncit/app-settings';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 export default function HostLeadDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,8 +70,8 @@ export default function HostLeadDetailPage() {
     );
   }
 
-  const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
-  const preferredDate = formatDate(lead.preferred_event_date);
+  const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
+  const preferredDate = leadDate(lead.preferred_event_date);
   const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
 
   const tabs: LeadTab[] = [
@@ -128,8 +125,8 @@ export default function HostLeadDetailPage() {
                 <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
                 <LeadDetailRow label="Follow-up" value={followUpLabel} />
                 <Divider sx={{ my: 1 }} />
-                <LeadDetailRow label="Created" value={lead.created_at ? new Date(lead.created_at).toLocaleString() : '—'} />
-                <LeadDetailRow label="Updated" value={lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '—'} />
+                <LeadDetailRow label="Created" value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
+                <LeadDetailRow label="Updated" value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
                 {lead.notes && (
                   <>
                     <Divider sx={{ my: 1 }} />

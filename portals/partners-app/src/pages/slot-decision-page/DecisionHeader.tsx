@@ -3,6 +3,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import { format } from 'date-fns';
+import { formatDateTime } from '@duncit/app-settings';
 
 type Decision = 'NONE' | 'APPROVED' | 'DECLINED';
 
@@ -17,7 +18,7 @@ export default function DecisionHeader({
   decision,
   startAt,
 }: Readonly<{ decision: Decision; startAt: string }>) {
-  const when = format(new Date(startAt), 'EEE, d MMM yyyy · h:mm a');
+  const when = formatDateTime(startAt);
 
   let icon = <HourglassTopIcon sx={{ fontSize: 44 }} />;
   let eyebrow = 'Awaiting your decision';

@@ -8,6 +8,7 @@ import { PolicyAcceptanceField } from '@/components/policy-acceptance';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { useSignupPolicies } from '@/hooks/usePolicies';
 import { useTranslation } from '@/hooks/useTranslation';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
@@ -25,9 +26,10 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
   const { minSignupAge } = useAppSettings();
   const { policies, loaded } = useSignupPolicies();
   const requiredPolicyIds = useMemo(() => policies.map((policy) => policy.id), [policies]);
+  const { datePlaceholder } = useDateFormat();
   const schema = useMemo(
-    () => makeSignupSchema(minSignupAge, t, requiredPolicyIds),
-    [minSignupAge, t, requiredPolicyIds],
+    () => makeSignupSchema(minSignupAge, t, requiredPolicyIds, datePlaceholder),
+    [minSignupAge, t, requiredPolicyIds, datePlaceholder],
   );
   const { control, handleSubmit, watch } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,

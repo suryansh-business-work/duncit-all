@@ -19,11 +19,12 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { formatDate } from '@/utils/date-format';
 
 function formatWhen(value?: string | null) {
   if (!value) return '';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+  return formatDate(date);
 }
 
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */

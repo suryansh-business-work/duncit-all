@@ -19,6 +19,7 @@ import {
 } from './productQueries';
 import { productEditPath, productListLabel, productListPath } from './productPaths';
 import { STATUS_CHIP_COLOR } from './constants';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface ProductPageHeaderProps {
   isNew: boolean;
@@ -68,7 +69,7 @@ export default function ProductPageHeader({
               {product.last_updated_by_name && (
                 <Typography variant="caption" color="text.secondary">
                   Last edited by {product.last_updated_by_name} ·{' '}
-                  {new Date(product.updated_at).toLocaleString()}
+                  {formatDateTime(product.updated_at)}
                 </Typography>
               )}
             </Stack>

@@ -143,8 +143,6 @@ export interface PodFormData {
   onPickVideo?: () => Promise<string | null>;
   /** When provided (and hosts are shown), hosts use a server-search picker. */
   searchHosts?: SearchPodHosts;
-  /** MUI X date/time display format (e.g. from the admin app settings). */
-  dateTimeFormat?: string;
   /**
    * The admin-configured formatter, from `useDateFormat()`. Required: the slot
    * calendar buckets days and renders times through it, so a missing formatter

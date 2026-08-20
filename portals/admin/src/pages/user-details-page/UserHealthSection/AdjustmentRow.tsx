@@ -3,6 +3,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import type { AdminHealthAdjustment } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   adjustment: AdminHealthAdjustment;
@@ -24,7 +25,7 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
           <Typography variant="body2">{remark || '—'}</Typography>
           <Typography variant="caption" color="text.secondary">
             {adjustment.created_by_name} ·{' '}
-            {format(new Date(adjustment.created_at), 'dd MMM yyyy, hh:mm a')}
+            {formatDateTime(adjustment.created_at)}
           </Typography>
         </Box>
         <Tooltip title="Edit">

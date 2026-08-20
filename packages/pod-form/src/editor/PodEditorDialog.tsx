@@ -32,7 +32,6 @@ export interface PodEditorDialogProps {
   onPickImage?: () => Promise<string | null>;
   onPickVideo?: () => Promise<string | null>;
   searchHosts?: SearchPodHosts;
-  dateTimeFormat?: string;
   /** Admin-configured formatter from `useDateFormat()`; drives the slot calendar. */
   dateFormatter: PodFormData['dateFormatter'];
   /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
@@ -66,7 +65,6 @@ export default function PodEditorDialog({
   onPickImage,
   onPickVideo,
   searchHosts,
-  dateTimeFormat,
   dateFormatter,
   slotLabels,
   onSubmit,
@@ -97,7 +95,6 @@ export default function PodEditorDialog({
           onPickImage={onPickImage}
           onPickVideo={onPickVideo}
           searchHosts={searchHosts}
-          dateTimeFormat={dateTimeFormat}
           dateFormatter={dateFormatter}
           slotLabels={slotLabels}
           busy={busy}

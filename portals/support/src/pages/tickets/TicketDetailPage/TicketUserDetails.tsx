@@ -8,6 +8,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { Ticket } from '../../../graphql/tickets';
+import { formatDate } from '@duncit/app-settings';
 
 /** The Admin portal's user-details URL, derived from the current support origin
  * (support.duncit.com → admin.duncit.com) with a prod fallback for dev. */
@@ -23,7 +24,7 @@ function formatJoined(iso: string | null): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatDate(date);
 }
 
 /** One contact/detail row with an optional "Verified" chip. */

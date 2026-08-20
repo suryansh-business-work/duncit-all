@@ -10,6 +10,8 @@
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@mui/material": ">=5",
+    "@mui/x-date-pickers": ">=6",
     "date-fns": ">=2",
     "date-fns-tz": ">=2",
     "graphql": ">=16",
@@ -17,6 +19,8 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@mui/material": "^5.15.18",
+    "@mui/x-date-pickers": "^6.20.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",

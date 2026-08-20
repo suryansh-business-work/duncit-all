@@ -27,6 +27,7 @@ import CalendarMonth from './CalendarMonth';
 import CalendarList from './CalendarList';
 import EventDrawer from './EventDrawer';
 import ReminderFormDialog from '../reminders-tab/ReminderFormDialog';
+import { formatDate } from '@duncit/app-settings';
 
 type View = 'month' | 'week' | 'day' | 'upcoming' | 'year';
 const VIEWS: { value: View; label: string }[] = [
@@ -60,7 +61,7 @@ export default function CalendarSection() {
       const s = startOfWeek(cursor);
       return { title: `${format(s, 'dd MMM')} – ${format(endOfWeek(cursor), 'dd MMM yyyy')}`, listDays: eachDayOfInterval({ start: s, end: endOfWeek(cursor) }) };
     }
-    if (view === 'day') return { title: format(cursor, 'EEE, dd MMM yyyy'), listDays: [cursor] };
+    if (view === 'day') return { title: formatDate(cursor), listDays: [cursor] };
     if (view === 'year') return { title: format(cursor, 'yyyy'), listDays: eachDayOfInterval({ start: startOfYear(cursor), end: endOfYear(cursor) }) };
     if (view === 'upcoming') return { title: 'Upcoming', listDays: eachDayOfInterval({ start: startOfDay(new Date()), end: addDays(new Date(), 60) }) };
     return { title: format(cursor, 'MMMM yyyy'), listDays: [] };

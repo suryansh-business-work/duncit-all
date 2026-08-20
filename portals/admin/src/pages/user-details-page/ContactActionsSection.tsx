@@ -14,6 +14,7 @@ import {
   USER_CONTACT_ACTIONS_TABLE,
   type ContactActionRow,
 } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   userId: string;
@@ -55,7 +56,7 @@ const notesValue = (a: ContactActionRow) => [a.subject, a.notes].filter(Boolean)
 
 const whenValue = (a: ContactActionRow) => {
   const dur = a.duration_seconds ? ` (${a.duration_seconds}s)` : '';
-  return `${new Date(a.created_at).toLocaleString()}${dur}`;
+  return `${formatDateTime(a.created_at)}${dur}`;
 };
 
 export default function ContactActionsSection({ userId, refreshToken }: Readonly<Props>) {

@@ -12,9 +12,10 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import type { ClubPodRow } from './types';
+import { formatDate } from '@duncit/app-settings';
 
 const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
+  iso ? formatDate(iso) : '—';
 
 const priceLabel = (pod: ClubPodRow) =>
   (pod.pod_type ?? '').includes('FREE') ? 'Free' : `₹${pod.pod_amount}`;

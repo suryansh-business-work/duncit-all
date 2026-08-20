@@ -1,6 +1,7 @@
 import { Alert, Box, Chip, Paper, Stack, Typography } from '@mui/material';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import type { HealthScore } from './queries';
+import { formatDateTime } from '../../utils/dateFormat';
 
 interface Props {
   score: HealthScore;
@@ -71,7 +72,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
                       <Typography variant="body2">{a.remark}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {a.created_by_name} ·{' '}
-                        {format(new Date(a.created_at), 'dd MMM yyyy, hh:mm a')} ·{' '}
+                        {formatDateTime(a.created_at)} ·{' '}
                         {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                       </Typography>
                     </Box>

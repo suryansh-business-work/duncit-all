@@ -3,6 +3,7 @@ import { Box, Chip, CircularProgress, Divider, Drawer, IconButton, Stack, Typogr
 import CloseIcon from '@mui/icons-material/Close';
 import { usd, tokens } from '../../lib/usd';
 import { OPENAI_LOG_ONE, STATUS_COLOR, type OpenAiLogDetail } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   /** The row to open, or null for a closed drawer. */
@@ -20,7 +21,7 @@ function Facts({ log }: Readonly<{ log: OpenAiLogDetail }>) {
     ['Cost', log.priced || log.total_tokens === 0 ? usd(log.cost_usd) : 'unpriced model'],
     ['Took', `${log.duration_ms} ms`],
     ['HTTP', log.http_status ? String(log.http_status) : 'never sent'],
-    ['When', new Date(log.created_at).toLocaleString()],
+    ['When', formatDateTime(log.created_at)],
   ];
   return (
     <Stack spacing={0.75}>

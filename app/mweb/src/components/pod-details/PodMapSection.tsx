@@ -8,6 +8,7 @@ import VenueMapPreview from '../VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
 import { formatMeetingPlatform } from '../../utils/meetingPlatform';
 import { useTranslation } from '../../i18n/useTranslation';
+import { formatDateTime, formatTime } from '../../utils/dateFormat';
 
 interface Props {
   pod: any;
@@ -15,25 +16,9 @@ interface Props {
   venue?: any;
 }
 
-const formatStart = (iso?: string | null) =>
-  iso
-    ? new Date(iso).toLocaleString(undefined, {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : '\u2014';
+const formatStart = (iso?: string | null) => formatDateTime(iso) || '\u2014';
 
-const formatEnd = (iso?: string | null) =>
-  iso
-    ? new Date(iso).toLocaleString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : '';
+const formatEnd = (iso?: string | null) => formatTime(iso);
 
 const venueParts = (venue: any) => [
   venue.venue_name,

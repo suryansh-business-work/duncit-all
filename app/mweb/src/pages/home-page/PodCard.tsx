@@ -10,6 +10,7 @@ import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
 import { podSeatsTaken } from '@duncit/utils';
+import { formatDateTime } from '../../utils/dateFormat';
 
 /**
  * Image-first pod card (mock): full-bleed media, the category chip and the save
@@ -53,15 +54,7 @@ export default function PodCard({
   // in a prop (S3358).
   const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
   const saveButtonContent = saving ? <CircularProgress size={18} color="inherit" /> : savedIcon;
-  const dateText = pod.pod_date_time
-    ? new Date(pod.pod_date_time).toLocaleString(undefined, {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : '—';
+  const dateText = formatDateTime(pod.pod_date_time) || '—';
 
   return (
     <Card

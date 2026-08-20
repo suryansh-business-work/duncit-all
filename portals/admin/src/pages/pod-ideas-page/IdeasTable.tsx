@@ -10,6 +10,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLOR_MAP, statusIcon, type IdeaRow, type Status } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<IdeaRow>;
@@ -145,7 +146,7 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
         headerName: 'Created',
         filter: { type: 'date' },
         width: 170,
-        valueGetter: (it) => (it.created_at ? new Date(it.created_at).toLocaleString() : '—'),
+        valueGetter: (it) => (it.created_at ? formatDateTime(it.created_at) : '—'),
       },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
     ];

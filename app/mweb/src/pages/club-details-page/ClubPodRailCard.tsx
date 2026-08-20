@@ -1,5 +1,6 @@
 import EventIcon from '@mui/icons-material/Event';
 import { Box, Button, Card, CardMedia, Typography } from '@mui/material';
+import { formatDate } from '../../utils/dateFormat';
 
 interface Props {
   pod: any;
@@ -11,11 +12,7 @@ interface Props {
 export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<Props>) {
   const isFree = pod.pod_type === 'FREE';
   const cover = pod.pod_images_and_videos?.[0]?.url;
-  const dateLabel = pod.pod_date_time
-    ? new Date(pod.pod_date_time)
-        .toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
-        .toUpperCase()
-    : 'TBA';
+  const dateLabel = formatDate(pod.pod_date_time).toUpperCase() || 'TBA';
 
   return (
     <Card

@@ -99,7 +99,6 @@ export default function LeadsTable({
         headerName: 'Imported',
         hide: false,
         filterable: false,
-        formatDate: (d) => d.toLocaleDateString('en-IN'),
       }),
       actionsColumn<LeadRow>({
         onEdit,

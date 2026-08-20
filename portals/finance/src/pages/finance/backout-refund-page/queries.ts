@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { formatMoney, type PodParticipationFields } from '@duncit/utils';
+import { formatDateTime } from '@duncit/app-settings';
 
 /** Same selection as the list rows — one row per Backout request. */
 const BACKOUT_REFUND_ROW_FIELDS = gql`
@@ -210,8 +211,7 @@ export const money = (symbol: string, value: number) =>
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
+  return formatDateTime(iso) || '—';
 };
 
 export interface PodMedia {

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CategoryMediaType } from '@/generated/graphql/graphql';
 import { hasImageLine } from '@/components/create-pod/create-pod.form';
+import { formatDate, formatTime } from '@/utils/date-format';
 
 /** Shared logic for the venue-rejected pod's full edit + resubmission flow —
  * mirrors mWeb's pod-resubmit.form (rule 27 parity). */
@@ -92,12 +93,8 @@ export function podResubmitInitialValues(pod: HostPodForResubmit | null): PodRes
 export function slotOptionLabel(slot: ResubmitSlotOption): string {
   const start = new Date(slot.start_at);
   const end = new Date(slot.end_at);
-  const day = start.toLocaleDateString(undefined, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-  const time = `${start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} – ${end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+  const day = formatDate(start);
+  const time = `${formatTime(start)} – ${formatTime(end)}`;
   const space = slot.space_label ? ` · ${slot.space_label}` : '';
   const price = slot.price > 0 ? ` · ₹${slot.price}` : '';
   return `${day}, ${time}${space}${price}`;

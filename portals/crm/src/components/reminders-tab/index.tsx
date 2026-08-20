@@ -26,6 +26,7 @@ import { LeadDetailCard } from '../LeadDetailCard';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import ReminderFormDialog from './ReminderFormDialog';
+import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD';
@@ -76,7 +77,7 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
                   {r.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {format(new Date(r.due_at), 'dd MMM yyyy, p')}{r.notes ? ` · ${r.notes}` : ''}
+                  {formatDateTime(r.due_at)}{r.notes ? ` · ${r.notes}` : ''}
                 </Typography>
               </Stack>
               {r.status === 'DONE' && <Chip size="small" color="success" label="Done" />}

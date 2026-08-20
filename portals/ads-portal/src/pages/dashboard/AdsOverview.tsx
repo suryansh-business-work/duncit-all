@@ -9,12 +9,13 @@ import { QueryGuard } from '@duncit/ui';
 import StatGrid from './StatGrid';
 import RecentAdsTable from './RecentAdsTable';
 import { MY_ADS_DASHBOARD, type AdsDashboardStats } from './queries';
+import { formatDateTime } from '@duncit/app-settings';
 
 const CREATE_AD_PATH = '/ads/new';
 
 function NextStartHint({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
   if (!stats.next_start_at) return null;
-  const when = format(new Date(stats.next_start_at), "EEE, d MMM yyyy 'at' h:mm a");
+  const when = formatDateTime(stats.next_start_at);
   return (
     <Alert severity="info" icon={<RocketLaunchOutlinedIcon fontSize="inherit" />}>
       Next ad goes live: <strong>{stats.next_start_title}</strong> on {when}.

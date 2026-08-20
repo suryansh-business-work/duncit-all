@@ -1,5 +1,14 @@
 import './agGridSetup';
-import { useCallback, useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  type MutableRefObject,
+  type ReactNode,
+} from 'react';
+import { ambientDateSettings, subscribeAmbientDateSettings } from '@duncit/datetime';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -197,6 +206,18 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       refetchRef.current = null;
     };
   }, [refetchRef, refetch]);
+
+  /*
+   * Date cells read the admin's pattern inside their value getter, and the
+   * settings arrive over the network — a grid that mounted first would keep
+   * painting the fallback pattern until something else made it repaint. AG Grid
+   * caches getter results, so a React re-render alone is not enough; the cells
+   * have to be told.
+   */
+  const dateSettings = useSyncExternalStore(subscribeAmbientDateSettings, ambientDateSettings);
+  useEffect(() => {
+    gridRef.current?.api?.refreshCells({ force: true });
+  }, [dateSettings]);
 
   const selectionOnChange = selection?.onChange;
   const selectionClearRef = selection?.clearRef;

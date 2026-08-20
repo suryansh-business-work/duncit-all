@@ -8,12 +8,10 @@ import {
   venueApprovalChip,
   type HostPodMenuHandlers,
 } from '@duncit/host-pod-actions';
+import { formatDateTime } from '../../utils/dateFormat';
 
 function formatDate(value?: string | null) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString();
+  return formatDateTime(value) || '—';
 }
 
 interface Props {

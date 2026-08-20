@@ -9,6 +9,7 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { format } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EcommBrandRow } from './queries';
+import { formatDate } from '@duncit/app-settings';
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
   DRAFT: 'warning',
@@ -63,7 +64,7 @@ const renderStatus = (brand: EcommBrandRow) => (
 );
 
 const updatedValue = (brand: EcommBrandRow) =>
-  brand.updated_at ? format(new Date(brand.updated_at), 'dd MMM yyyy') : '—';
+  formatDate(brand.updated_at) || '—';
 
 export default function PartnerBrandsTable({
   fetchRows,

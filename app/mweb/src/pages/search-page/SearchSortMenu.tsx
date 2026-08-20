@@ -1,5 +1,6 @@
 import {
   Dialog,
+  DialogContent,
   DialogTitle,
   IconButton,
   List,
@@ -27,25 +28,33 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
           <CloseIcon />
         </IconButton>
       </Stack>
-      <List sx={{ pb: 2 }}>
-        {SEARCH_SORT_OPTIONS.map((option) => (
-          <ListItemButton
-            key={option.value}
-            selected={option.value === value}
-            onClick={() => {
-              onSelect(option.value);
-              onClose();
-            }}
-          >
-            <Radio checked={option.value === value} tabIndex={-1} disableRipple sx={{ mr: 0.5 }} />
-            <ListItemText
-              primary={option.label}
-              secondary={option.description}
-              primaryTypographyProps={{ fontWeight: 600 }}
-            />
-          </ListItemButton>
-        ))}
-      </List>
+      {/* The option list is the scroll area, so the title row stays pinned. */}
+      <DialogContent dividers sx={{ p: 0 }}>
+        <List sx={{ pb: 2 }}>
+          {SEARCH_SORT_OPTIONS.map((option) => (
+            <ListItemButton
+              key={option.value}
+              selected={option.value === value}
+              onClick={() => {
+                onSelect(option.value);
+                onClose();
+              }}
+            >
+              <Radio
+                checked={option.value === value}
+                tabIndex={-1}
+                disableRipple
+                sx={{ mr: 0.5 }}
+              />
+              <ListItemText
+                primary={option.label}
+                secondary={option.description}
+                primaryTypographyProps={{ fontWeight: 600 }}
+              />
+            </ListItemButton>
+          ))}
+        </List>
+      </DialogContent>
     </Dialog>
   );
 }

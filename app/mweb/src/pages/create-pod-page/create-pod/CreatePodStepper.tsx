@@ -17,6 +17,7 @@ import {
   stepForField,
 } from './create-pod.form';
 import { useTranslation } from '../../../i18n/useTranslation';
+import AiMonitorBackdrop from './AiMonitorBackdrop';
 import StepHero from './StepHero';
 import StepFooterBar from './StepFooterBar';
 import { ModerationBlockedDialog, type BlockedViolation } from '@duncit/ui';
@@ -305,6 +306,9 @@ export default function CreatePodStepper({
           }}
         />
       </Box>
+      {/* The wait between pressing Create Pod and an answer IS the AI reading
+          the pod, so it is named rather than left as a nameless spinner. */}
+      <AiMonitorBackdrop open={busy} />
       <ModerationBlockedDialog
         violations={blocked}
         onJump={jumpToStep}

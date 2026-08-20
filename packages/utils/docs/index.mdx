@@ -349,6 +349,17 @@ Three things to read off that output:
 | `FormatMoneyOptions.compact` | `boolean` | `false` | `₹1.2L` notation at \|value\| ≥ 1,00,000. |
 | `formatStatementMoney` | `(value: number, symbol: string) => string` | — | The one `₹X,XXX.XX` format both Step-4 surfaces render. |
 
+### AI content check — `ai-monitor`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `AI_MONITOR_GRADIENT` | `readonly [string, string, string]` | Violet → pink → amber stops; pass straight to `expo-linear-gradient`. |
+| `AI_MONITOR_GRADIENT_CSS` | `string` | The same stops as a `linear-gradient(…)` value for MUI `sx`. |
+
+Four surfaces paint it — the "AI monitoring" chip and the Create Pod waiting overlay, on mWeb
+and on native. They have to read as the same feature, so the stops live here rather than as
+four literals that drift apart.
+
 ### Checkout bill — `checkout-bill`
 
 | Export | Signature | Meaning |

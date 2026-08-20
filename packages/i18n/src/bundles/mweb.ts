@@ -1200,6 +1200,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // same rows an admin sees, rather than one blob.
       aiMonitoring: 'AI monitoring',
       aiMonitors: 'What AI monitors',
+      // The blocking overlay between pressing Create Pod and an answer. The
+      // wait IS the check reading the pod, so the screen says so rather than
+      // showing a nameless spinner over a form the host must not edit now.
+      aiMonitoringTitle: 'AI is monitoring…',
+      aiMonitoringNote:
+        'Reading your title, description, details, hashtags and photos against the community guidelines.',
+      aiMonitoringHold: 'Please stay on this screen.',
       gotIt: 'Got it',
       guidelinesIntro:
         "When you tap Create Pod, our AI (GPT-4o) deep-checks everything you entered — title, description, details, hashtags and uploaded images — against Duncit's community guidelines.",

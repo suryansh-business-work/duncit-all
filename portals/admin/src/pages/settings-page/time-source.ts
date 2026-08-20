@@ -6,6 +6,7 @@ import {
   stampServerTime,
   toTimeSource,
 } from '@duncit/app-settings';
+import { toLocalDateTimeInput } from '@duncit/datetime';
 
 /** Common IANA zones; any other zone can still be typed in free-text. */
 export const TIME_ZONES = [
@@ -38,19 +39,12 @@ export const SOURCE_OPTIONS = [
   },
 ];
 
-const PAD = (n: number) => String(n).padStart(2, '0');
-
 /**
- * ISO instant -> the `YYYY-MM-DDTHH:mm` shape `<input type="datetime-local">`
- * expects, in the browser's local zone (which is what the input displays).
- * Returns '' for missing/unusable input.
+ * The local `YYYY-MM-DDTHH:mm` draft shape, re-exported so this module stays
+ * the settings screen's one import. The implementation is shared — the branding
+ * screen keeps the same kind of draft state and used to carry its own copy.
  */
-export function toLocalInput(iso: string | null | undefined): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getFullYear()}-${PAD(d.getMonth() + 1)}-${PAD(d.getDate())}T${PAD(d.getHours())}:${PAD(d.getMinutes())}`;
-}
+export const toLocalInput = toLocalDateTimeInput;
 
 interface SavedClock {
   time_source?: string | null;

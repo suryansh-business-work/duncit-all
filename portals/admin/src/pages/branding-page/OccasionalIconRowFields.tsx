@@ -1,17 +1,15 @@
 import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
+import { toLocalDateTimeInput } from '@duncit/datetime';
+import LocalDateTimeField from '../../components/LocalDateTimeField';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { OccasionalIconRow } from './queries';
 
-/** ISO instant -> the `YYYY-MM-DDTHH:mm` shape datetime-local expects. */
-export function toLocalInput(iso: string | null | undefined): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+/** The local `YYYY-MM-DDTHH:mm` draft shape these rows keep. Re-exported
+ * because the branding page reads it from here; the implementation is shared
+ * with the settings screen, which keeps the same kind of draft state. */
+export const toLocalInput = toLocalDateTimeInput;
 
 interface Props {
   row: OccasionalIconRow;
@@ -60,21 +58,15 @@ export default function OccasionalIconRowFields({
       </Stack>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
+        <LocalDateTimeField
           label="Starts at"
-          type="datetime-local"
           value={toLocalInput(row.starts_at)}
-          onChange={(e) => onChange(index, { starts_at: e.target.value })}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
+          onChange={(starts_at) => onChange(index, { starts_at })}
         />
-        <TextField
+        <LocalDateTimeField
           label="Ends at"
-          type="datetime-local"
           value={toLocalInput(row.ends_at)}
-          onChange={(e) => onChange(index, { ends_at: e.target.value })}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
+          onChange={(ends_at) => onChange(index, { ends_at })}
           error={badWindow}
           helperText={badWindow ? 'Ends before it starts — this row will be dropped.' : ' '}
         />

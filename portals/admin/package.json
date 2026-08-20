@@ -27,6 +27,7 @@
     "@duncit/club-form": "workspace:*",
     "@duncit/coupons": "workspace:*",
     "@duncit/dashboard": "workspace:*",
+    "@duncit/datetime": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/forms": "workspace:*",

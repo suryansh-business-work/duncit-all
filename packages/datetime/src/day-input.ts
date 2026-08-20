@@ -122,3 +122,33 @@ export function formatIsoDay(value: string, pattern: string): string {
     return '';
   }
 }
+
+const LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+/**
+ * An instant as the local `YYYY-MM-DDTHH:mm` shape, in the browser's own zone.
+ *
+ * It is what `<input type="datetime-local">` speaks, and several admin screens
+ * keep their draft state in it — so the shape survives even though the inputs
+ * are now MUI X pickers, and a "has this changed?" comparison still works.
+ */
+export function toLocalDateTimeInput(input: string | Date | null | undefined): string {
+  if (!input) return '';
+  const d = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** The inverse: a local `YYYY-MM-DDTHH:mm` back to a Date, or null. */
+export function parseLocalDateTimeInput(value: string): Date | null {
+  const parts = LOCAL_DATE_TIME.exec(value);
+  if (!parts) return null;
+  const date = new Date(
+    Number(parts[1]),
+    Number(parts[2]) - 1,
+    Number(parts[3]),
+    Number(parts[4]),
+    Number(parts[5]),
+  );
+  return Number.isNaN(date.getTime()) ? null : date;
+}

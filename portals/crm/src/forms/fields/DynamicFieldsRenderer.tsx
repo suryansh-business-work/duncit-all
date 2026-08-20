@@ -20,6 +20,7 @@ import {
   Typography,
 } from '@mui/material';
 import { CRM_DYNAMIC_FIELDS } from '../../api/crm.gql';
+import DynamicDateField from './DynamicDateField';
 import type { CrmDynamicField } from '../../api/crm.types';
 
 const ENTITY_LABELS = { VENUE_LEAD: 'venue', HOST_LEAD: 'host', ECOMM_LEAD: 'ecomm' } as const;
@@ -98,8 +99,13 @@ const FieldCell = ({ field, value, onChange }: CellProps) => {
       );
     case 'date':
       return (
-        <TextField fullWidth size="small" type="date" label={field.label} helperText={hint} required={field.required}
-          InputLabelProps={{ shrink: true }} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)} />
+        <DynamicDateField
+          label={field.label}
+          hint={hint}
+          required={field.required}
+          value={typeof value === 'string' ? value : ''}
+          onChange={(day) => onChange(day || null)}
+        />
       );
     case 'select':
       if (field.multi) return <MultiSelectCell field={field} value={value} onChange={onChange} />;

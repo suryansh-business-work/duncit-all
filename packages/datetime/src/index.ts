@@ -39,6 +39,8 @@ export {
   isIsoDay,
   parseInPattern,
   parseIsoDay,
+  parseLocalDateTimeInput,
+  toLocalDateTimeInput,
   patternPlaceholder,
   toIsoDay,
 } from './day-input';

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProfilePage, RequireAuth } from '@duncit/shell';
+import { useFeatureFlag } from '@duncit/app-settings';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
@@ -16,6 +17,7 @@ import VenuesPage from './pages/VenuesPage';
 import PartnersPage from './pages/PartnersPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
 import PodsPage from './pages/PodsPage';
+import AutoPodsPage from './pages/auto-pods-page';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
@@ -38,6 +40,17 @@ import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
 import WhatsappPage from './pages/whatsapp-page';
 import { getToken } from './lib/session';
+
+/**
+ * Auto Pods ship behind the `auto_pods` flag. With it off the route falls back
+ * to All Pods rather than 404-ing, which is what a stale bookmark or a link in
+ * an older email hits.
+ */
+function AutoPodsRoute() {
+  const enabled = useFeatureFlag('auto_pods');
+  if (!enabled) return <Navigate to="/pods" replace />;
+  return <AutoPodsPage />;
+}
 
 export default function App() {
   return (
@@ -65,6 +78,7 @@ export default function App() {
                     order says so out loud. */}
                 <Route path="/pods/dashboard" element={<PodsDashboardPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
+                <Route path="/auto-pods" element={<AutoPodsRoute />} />
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
                 <Route path="/pod-monitoring" element={<PodMonitoringPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />

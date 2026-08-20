@@ -19,6 +19,8 @@ export const MobileNotificationsDocument = gql(`
         action_type
         action_ref_id
         action_status
+        action_actor_id
+        follow_back_status
         created_at
       }
     }

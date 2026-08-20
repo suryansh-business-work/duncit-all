@@ -187,11 +187,15 @@ export {
 } from './pod-share';
 export {
   FOLLOW_LABEL_KEY,
+  canFollowBack,
   followActionFor,
+  followBackLabelKey,
+  followRequestRowState,
   followStatusFrom,
   nextFollowStatus,
   readFollowStatus,
   type FollowAction,
+  type FollowRequestRowState,
   type FollowStatus,
 } from './follow-status';
 export {
@@ -252,6 +256,29 @@ export {
   type AttendanceTranslate,
   type PodAttendanceLabels,
 } from './pod-attendance-copy';
+export {
+  autoPodActionable,
+  autoPodEnrolledCount,
+  autoPodModeCount,
+  autoPodTicks,
+  autoPodWaitingOn,
+  splitAutoPods,
+  type AutoPodActionCounts,
+  type AutoPodClubClaim,
+  type AutoPodHostClaim,
+  type AutoPodRole,
+  type AutoPodRow,
+  type AutoPodStage,
+  type AutoPodStudioMode,
+  type AutoPodTick,
+  type AutoPodVenueClaim,
+} from './auto-pod';
+export {
+  mwebAutoPodLabels,
+  shellAutoPodLabels,
+  type AutoPodLabels,
+  type AutoPodTranslate,
+} from './auto-pod-copy';
 export {
   groupMembershipBenefits,
   membershipCellKind,

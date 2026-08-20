@@ -1,0 +1,120 @@
+import { gql } from '@apollo/client';
+import type { AutoPodClubClaim, AutoPodHostClaim, AutoPodStage, AutoPodVenueClaim } from '@duncit/utils';
+
+/**
+ * One Auto Pod as the admin console reads it: the template the admin wrote plus
+ * the three enrolment claims. The claims are selected in full because the shared
+ * tick row (`@duncit/auto-pods`) types them off `@duncit/utils` — a partial
+ * selection would be a different shape, not a smaller one.
+ */
+const ADMIN_AUTO_POD_FIELDS = gql`
+  fragment AdminAutoPodFields on AutoPod {
+    id
+    auto_pod_no
+    stage
+    pod_title
+    pod_description
+    pod_info
+    pod_hashtag
+    pod_images_and_videos {
+      url
+      type
+    }
+    super_category_id
+    sub_category_id
+    category_name
+    pod_amount
+    no_of_spots
+    pod_occurrence
+    payment_terms
+    venue_claim {
+      venue_id
+      venue_slot_id
+      owner_user_id
+      venue_name
+      pod_date_time
+      pod_end_date_time
+      slot_price
+      accepted_at
+    }
+    host_claim {
+      user_id
+      host_name
+      assigned_at
+    }
+    club_claim {
+      club_id
+      club_name
+      user_id
+      claimed_at
+    }
+    pod_id
+    created_at
+  }
+`;
+
+/** DUNCIT TABLE CONTRACT v1 — server-paged, sorted and filtered. */
+export const ADMIN_AUTO_PODS_TABLE = gql`
+  ${ADMIN_AUTO_POD_FIELDS}
+  query AdminAutoPodsTable($query: TableQueryInput) {
+    adminAutoPodsTable(query: $query) {
+      rows {
+        ...AdminAutoPodFields
+      }
+      total
+    }
+  }
+`;
+
+export const CREATE_AUTO_POD = gql`
+  ${ADMIN_AUTO_POD_FIELDS}
+  mutation AdminCreateAutoPod($input: CreateAutoPodInput!) {
+    createAutoPod(input: $input) {
+      ...AdminAutoPodFields
+    }
+  }
+`;
+
+export const UPDATE_AUTO_POD = gql`
+  ${ADMIN_AUTO_POD_FIELDS}
+  mutation AdminUpdateAutoPod($auto_pod_doc_id: ID!, $input: UpdateAutoPodInput!) {
+    updateAutoPod(auto_pod_doc_id: $auto_pod_doc_id, input: $input) {
+      ...AdminAutoPodFields
+    }
+  }
+`;
+
+export const CANCEL_AUTO_POD = gql`
+  mutation AdminCancelAutoPod($auto_pod_doc_id: ID!, $reason: String) {
+    cancelAutoPod(auto_pod_doc_id: $auto_pod_doc_id, reason: $reason) {
+      id
+      stage
+      cancel_reason
+      cancelled_at
+    }
+  }
+`;
+
+/** Row shape of `adminAutoPodsTable`, matching the fragment above. */
+export interface AutoPodTableRow {
+  id: string;
+  auto_pod_no: string;
+  stage: AutoPodStage;
+  pod_title: string;
+  pod_description: string;
+  pod_info: string;
+  pod_hashtag: string[];
+  pod_images_and_videos: { url: string; type: string }[];
+  super_category_id: string;
+  sub_category_id: string;
+  category_name: string | null;
+  pod_amount: number;
+  no_of_spots: number;
+  pod_occurrence: string;
+  payment_terms: string | null;
+  venue_claim: AutoPodVenueClaim | null;
+  host_claim: AutoPodHostClaim | null;
+  club_claim: AutoPodClubClaim | null;
+  pod_id: string | null;
+  created_at: string;
+}

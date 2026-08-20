@@ -190,7 +190,7 @@ export default function CheckoutPage() {
     : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 58%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`;
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
+    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
       <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
           <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>

@@ -22,6 +22,7 @@
   "dependencies": {
     "@apollo/client": "^3.10.4",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/auto-pods": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/coupons": "workspace:*",

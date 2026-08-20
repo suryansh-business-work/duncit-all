@@ -107,7 +107,7 @@ export async function assertInvitable(
 }
 
 /** User ids of approved, active hosts onboarded into this sub-category. */
-async function approvedHostUserIdsInSubCategory(subCategoryId: string): Promise<Set<string>> {
+export async function approvedHostUserIdsInSubCategory(subCategoryId: string): Promise<Set<string>> {
   const hosts = await HostModel.find({
     status: 'APPROVED',
     is_active: true,

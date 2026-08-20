@@ -1,10 +1,17 @@
 /** Param-less in-app deep-link routes reachable from a notification. */
-type ParamlessRoute = 'Earn' | 'PodIdeas';
+type ParamlessRoute = 'Earn' | 'PodIdeas' | 'VenueAutoPods' | 'HostAutoPods' | 'ClubAutoPods';
 
-/** Param-less in-app deep-link path → React Navigation screen. */
+/** Param-less in-app deep-link path → React Navigation screen.
+ *
+ * The three Auto Pod paths are the exact `link_url` values the server sends
+ * when an offer starts waiting on a partner (`autoPod.notify.ts`). Without a
+ * row here the push simply resolves to `none` and the tap does nothing. */
 const IN_APP_ROUTES: Record<string, ParamlessRoute> = {
   '/earn': 'Earn',
   '/pod-ideas': 'PodIdeas',
+  '/venues/auto-pods': 'VenueAutoPods',
+  '/host/auto-pods': 'HostAutoPods',
+  '/clubs/auto-pods': 'ClubAutoPods',
 };
 
 /** Resolved navigation intent for a notification's `link_url`. */

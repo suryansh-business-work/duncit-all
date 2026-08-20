@@ -163,6 +163,8 @@ export const podTypeDefs = /* GraphQL */ `
     is_deleted: Boolean!
     deleted_at: String
     venue_approval_status: PodVenueApproval!
+    "The Auto Pod offer this pod materialized from — null for ordinary pods."
+    auto_pod_id: ID
     host_names: [String!]!
     "Invited co-hosts (view-only). Empty unless the pod's sub-category allows co-hosting."
     co_hosts: [PodCoHost!]!

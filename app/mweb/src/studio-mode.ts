@@ -1,3 +1,5 @@
+import { autoPodModeCount, type AutoPodActionCounts } from '@duncit/utils';
+
 /** Studio "modes" the account drawer + header can switch between. A mode maps to
  * a role the user must hold (USER is always available). The active mode drives
  * the sidebar menu and the header studio badge. */
@@ -44,3 +46,28 @@ export const STUDIO_HOME_PATH: Record<StudioMode, string> = {
   ECOMM: '/products/manage',
   CLUB: '/clubs/manage',
 };
+
+/** The Auto Pod queue each partner mode owns. USER and ECOMM are absent because
+ * neither enrols in an Auto Pod. */
+export const AUTO_POD_PATH: Partial<Record<StudioMode, string>> = {
+  VENUE: '/venues/auto-pods',
+  HOST: '/host/auto-pods',
+  CLUB: '/clubs/auto-pods',
+};
+
+/**
+ * Where switching into `mode` actually lands.
+ *
+ * An Auto Pod waiting on the role IS the reason they switched, so the switch
+ * opens that queue instead of the usual dashboard — the offer is a race, and a
+ * dashboard the partner has to navigate out of is a slot someone else takes.
+ * Counts are read from an already-fetched cache, so nothing here waits on the
+ * network: with none loaded (or none waiting) the mode's home is used.
+ */
+export function studioSwitchPath(
+  mode: StudioMode,
+  counts: AutoPodActionCounts | null | undefined
+): string {
+  if (autoPodModeCount(counts, mode) > 0) return AUTO_POD_PATH[mode] ?? STUDIO_HOME_PATH[mode];
+  return STUDIO_HOME_PATH[mode];
+}

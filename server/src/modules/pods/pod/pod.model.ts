@@ -113,6 +113,8 @@ export interface IPod extends Document {
   completed_at?: Date | null;
   is_active: boolean;
   venue_approval_status: PodVenueApproval;
+  /** The Auto Pod offer this pod materialized from (null for ordinary pods). */
+  source_auto_pod_id?: Types.ObjectId | null;
   // Soft-delete marker (distinct from is_active, which is the venue-approval
   // offline flag). Set instead of hard-deleting so bookings/payments/history
   // survive; excluded from every discovery/listing read.
@@ -231,6 +233,7 @@ const podSchema = new Schema<IPod>(
       enum: ['NONE', 'PENDING', 'APPROVED', 'DECLINED'],
       default: 'NONE',
     },
+    source_auto_pod_id: { type: Schema.Types.ObjectId, ref: 'AutoPod', default: null, index: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

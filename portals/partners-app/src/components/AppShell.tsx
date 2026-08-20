@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
+import { useFeatureFlag } from '@duncit/app-settings';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig, buildNav } from '../config/app-config';
 import { clearToken } from '../lib/session';
@@ -14,6 +15,9 @@ import { clearToken } from '../lib/session';
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const { user, loading, logout: ctxLogout } = useUserData();
+  // The shell's nav config has no flag of its own, so the gate is applied here,
+  // where the portal already assembles its role-adaptive sidebar.
+  const autoPods = useFeatureFlag('auto_pods');
 
   const logout = () => {
     clearToken();
@@ -24,7 +28,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   return (
     <ShellAppShell
       config={appConfig}
-      nav={buildNav(user?.roles)}
+      nav={buildNav(user?.roles, { autoPods })}
       user={user ?? undefined}
       loading={loading}
       profileTo="/profile"

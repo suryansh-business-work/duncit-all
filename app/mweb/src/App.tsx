@@ -136,6 +136,13 @@ export default function App() {
           <ErrorBoundary>
             <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
           </ErrorBoundary>
+          {/* The wrapper above is a flex item with a pinned height, so its
+              padding-bottom only shrinks the box a full-height page (chat) is
+              measured against — a page taller than the viewport overflows past
+              it and the padding adds nothing to the scroll length. This spacer
+              rides after the routed page in normal flow, so every scrolling
+              page ends on the same reserved strip instead of under the bar. */}
+          <Box aria-hidden sx={{ height: contentPadBottom }} />
         </Box>
       </Container>
       {showBottomNav && <BottomNav />}

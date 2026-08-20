@@ -28,6 +28,17 @@ export const notificationTypeDefs = /* GraphQL */ `
     action_ref_id: ID
     "Live status of action_ref_id, so an answered request stops offering buttons."
     action_status: String
+    """
+    The other user this row is about — the requester behind a FOLLOW_REQUEST.
+    What the recipient's Follow Back acts on.
+    """
+    action_actor_id: ID
+    """
+    The signed-in viewer's follow state TOWARDS action_actor_id, so an accepted
+    request can offer Follow Back and hide it once the viewer already follows
+    them. NONE when there is no actor, no viewer, or the actor is the viewer.
+    """
+    follow_back_status: FollowStatus!
     scope: NotificationScope!
     silent: Boolean!
     location_id: ID

@@ -9,6 +9,7 @@ import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildUploadRouter } from './routes/upload.router';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
+import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
@@ -273,6 +274,9 @@ async function bootstrap() {
 
   // Draft-pod retention: delete drafts past the admin-configured window daily.
   startPodDraftCleanupScheduler();
+
+  // Auto Pods: expire offers whose slot date passed, recover stuck materializations.
+  startAutoPodSweepScheduler();
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();

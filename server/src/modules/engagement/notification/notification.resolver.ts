@@ -4,6 +4,34 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
+/**
+ * The FollowRequest behind an actionable row. Three fields need it, so it is
+ * memoised onto the parent: a 50-row inbox must not issue three reads per row.
+ * A non-actionable row resolves to null without touching the database.
+ */
+async function loadRequest(parent: any): Promise<any | null> {
+  if (parent?.action_type !== 'FOLLOW_REQUEST' || !parent?.action_ref_id) return null;
+  if (parent.__followRequest !== undefined) return parent.__followRequest;
+  const { FollowRequestModel } = await import(
+    '@modules/access/user/relations/followRequest.model'
+  );
+  const request = await FollowRequestModel.findById(parent.action_ref_id)
+    .select('status requester_id')
+    .lean();
+  parent.__followRequest = request ?? null;
+  return parent.__followRequest;
+}
+
+/** The actor a Follow Back would act on: the column when the row has one, else
+ * the requester behind action_ref_id so rows written before the column existed
+ * still resolve one. */
+async function actorIdOf(parent: any): Promise<string | null> {
+  const stored = parent?.action_actor_id;
+  if (stored) return String(stored);
+  const requester = ((await loadRequest(parent)) as any)?.requester_id;
+  return requester ? String(requester) : null;
+}
+
 export const notificationResolvers = {
   /**
    * An actionable row's buttons must disappear once the request behind it is
@@ -13,13 +41,25 @@ export const notificationResolvers = {
    * never rewritten.
    */
   Notification: {
-    action_status: async (parent: any) => {
-      if (parent?.action_type !== 'FOLLOW_REQUEST' || !parent?.action_ref_id) return null;
-      const { FollowRequestModel } = await import(
-        '@modules/access/user/relations/followRequest.model'
-      );
-      const request = await FollowRequestModel.findById(parent.action_ref_id).select('status').lean();
-      return (request as any)?.status ?? null;
+    action_status: async (parent: any) => ((await loadRequest(parent)) as any)?.status ?? null,
+
+    /** Who the row is about — what the recipient's Follow Back targets. */
+    action_actor_id: (parent: any) => actorIdOf(parent),
+
+    /**
+     * The viewer's own follow state towards that actor, which is what decides
+     * whether Follow Back is offered. Resolved live rather than frozen onto the
+     * row: the viewer may have followed them from their profile since, and
+     * offering Follow Back to somebody they already follow is the exact bug
+     * this field exists to prevent.
+     */
+    follow_back_status: async (parent: any, _a: unknown, ctx: GraphQLContext) => {
+      const viewerId = ctx.user?.id;
+      if (!viewerId) return 'NONE';
+      const actorId = await actorIdOf(parent);
+      if (!actorId || actorId === String(viewerId)) return 'NONE';
+      const { userService } = await import('@modules/access/user/user.service');
+      return userService.followStatus(viewerId, actorId);
     },
   },
   Query: {

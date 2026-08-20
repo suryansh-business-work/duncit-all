@@ -21,6 +21,14 @@ export interface IVenueSlot extends Document {
   capacity: number;
   status: VenueSlotStatus;
   booked_by_pod_id: Types.ObjectId | null;
+  /**
+   * Set while an Auto Pod holds this slot — a venue accepted the offer but the
+   * pod itself does not exist yet (it is created once a host and a club admin
+   * enroll too). The slot stays BOOKED for that whole window, so no ordinary
+   * pod can claim it, and `transferAutoPodHold` moves the booking onto the real
+   * pod id the moment the Auto Pod materializes.
+   */
+  booked_by_auto_pod_id: Types.ObjectId | null;
   /** Set when the slot was booked through the public developer API. */
   booked_by_api_key_id: Types.ObjectId | null;
   /** Integrator-supplied reference for an external (API) booking. */
@@ -59,6 +67,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
       index: true,
     },
     booked_by_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
+    booked_by_auto_pod_id: { type: Schema.Types.ObjectId, ref: 'AutoPod', default: null, index: true },
     booked_by_api_key_id: { type: Schema.Types.ObjectId, ref: 'ApiKey', default: null, index: true },
     external_ref: { type: String, default: '', trim: true, maxlength: 120 },
     notes: { type: String, default: '', trim: true, maxlength: 280 },

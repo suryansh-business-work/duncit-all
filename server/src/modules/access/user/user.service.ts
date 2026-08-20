@@ -2114,6 +2114,9 @@ export const userService = {
         link_url: `/u/${requesterId}`,
         action_type: 'FOLLOW_REQUEST',
         action_ref_id: requestId,
+        // The recipient's Follow Back acts on this, so the row carries the
+        // requester rather than making every read re-derive them.
+        action_actor_id: requesterId,
         scope: 'USER',
         target_user_ids: [targetUserId],
       });

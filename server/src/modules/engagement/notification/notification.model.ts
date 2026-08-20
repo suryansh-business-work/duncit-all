@@ -15,6 +15,11 @@ export interface INotification extends Document {
   action_type?: NotificationAction | null;
   /** Document the action operates on — a FollowRequest id for FOLLOW_REQUEST. */
   action_ref_id?: Types.ObjectId | null;
+  /** The OTHER user this row is about — the requester behind a FOLLOW_REQUEST.
+   * It is what a Follow Back acts on, so it is stored rather than re-derived:
+   * the row must still know its actor after the document behind action_ref_id
+   * has been answered. */
+  action_actor_id?: Types.ObjectId | null;
   scope: NotificationScope;
   silent: boolean;
   location_id?: Types.ObjectId | null;
@@ -36,6 +41,7 @@ const notificationSchema = new Schema<INotification>(
     link_url: { type: String, default: null },
     action_type: { type: String, enum: ['FOLLOW_REQUEST'], default: null },
     action_ref_id: { type: Schema.Types.ObjectId, default: null },
+    action_actor_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     scope: {
       type: String,
       enum: ['GLOBAL', 'LOCATION', 'ZONE', 'USER', 'AUDIENCE_LIST'],

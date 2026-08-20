@@ -35,6 +35,7 @@ export function SidebarUserContent({
   showMembership = false,
   showGiftCards = false,
   showTourGuide = false,
+  showAutoPods = false,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
@@ -51,11 +52,25 @@ export function SidebarUserContent({
   showGiftCards?: boolean;
   /** Server `tour_guide` feature flag — hides the Tour Guide row without it. */
   showTourGuide?: boolean;
+  /** Server `auto_pods` feature flag — hides the partner Auto Pods row without it. */
+  showAutoPods?: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
   const { t } = useTranslation();
   const percent = profileCompletion(account ?? {});
-  const partnerMenus = buildPartnerMenus(roles, mode);
+  // Each enrolling role reads its own queue, so the row is named for the mode
+  // it appears in. Written as literal `t('…')` calls because the translation
+  // gate greps source for the literal key (rule 38).
+  const autoPodTitles: Partial<Record<StudioMode, string>> = {
+    VENUE: t('mweb.autoPods.venueTitle'),
+    HOST: t('mweb.autoPods.hostTitle'),
+    CLUB: t('mweb.autoPods.clubTitle'),
+  };
+  const partnerMenus = buildPartnerMenus(
+    roles,
+    mode,
+    showAutoPods ? autoPodTitles[mode] : undefined,
+  );
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

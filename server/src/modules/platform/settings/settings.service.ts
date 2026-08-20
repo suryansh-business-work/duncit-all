@@ -334,6 +334,13 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
+    key: "auto_pods",
+    name: "Auto Pods",
+    description:
+      "Show the Auto Pod sections (a venue accepts an admin-written pod, then a host and a club admin enrol) in the mobile app, mobile web, the Partners portal and Admin.",
+    enabled: false,
+  },
+  {
     // Seeded ON so enabling this feature changes nothing for users already on
     // the current build — turning it OFF is the deliberate act.
     key: "force_app_update",

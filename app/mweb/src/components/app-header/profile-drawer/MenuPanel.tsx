@@ -17,9 +17,10 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
+import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { useTranslation } from '../../../i18n/useTranslation';
-import { STUDIO_HOME_PATH, STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
+import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
@@ -56,9 +57,13 @@ export default function MenuPanel({
   const showMembership = useFeatureFlag('membership');
   const showGiftCards = useFeatureFlag('gift_cards');
   const showTourGuide = useFeatureFlag('tour_guide');
+  const showAutoPods = useFeatureFlag('auto_pods');
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
+  // Fetched with the menu, not with the dialog, so the switch below already
+  // knows whether an Auto Pod is waiting on the role being switched into.
+  const autoPods = useAutoPodCounts(roles);
   const effectiveMode = resolveMode(mode, roles);
   const canSwitch = availableModes(roles).length > 1;
   // Leaving the menu REPLACES its history entry, so Back from the destination
@@ -99,13 +104,17 @@ export default function MenuPanel({
           showMembership={showMembership}
           showGiftCards={showGiftCards}
           showTourGuide={showTourGuide}
+          showAutoPods={showAutoPods}
           onNavigate={go}
         />
 
         {canSwitch && (
           <Box sx={{ px: 2, pb: 1.25 }}>
             <ListItemButton
-              onClick={() => setSwitchOpen(true)}
+              onClick={() => {
+                autoPods.reload();
+                setSwitchOpen(true);
+              }}
               sx={{ borderRadius: '16px', border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
@@ -152,7 +161,8 @@ export default function MenuPanel({
         onSelect={(next) => {
           setMode(next);
           setSwitchOpen(false);
-          go(STUDIO_HOME_PATH[next]);
+          // An Auto Pod waiting on the new role wins over its dashboard.
+          go(studioSwitchPath(next, autoPods.counts));
         }}
       />
     </Box>

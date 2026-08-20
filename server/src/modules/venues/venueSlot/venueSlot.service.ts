@@ -17,7 +17,7 @@ function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
 }
 
-async function ensureOwnedVenue(userId: string, venueId: string) {
+export async function ensureOwnedVenue(userId: string, venueId: string) {
   if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
   const venue = await VenueModel.findOne({
     _id: venueId,
@@ -969,6 +969,84 @@ export const venueSlotService = {
     );
     if (!updated) fail('CONFLICT', 'This slot is no longer available. Pick another slot.');
     return updated!;
+  },
+
+  /**
+   * A venue accepting an Auto Pod claims its own slot outright: there is no pod
+   * to approve later, because the venue's acceptance IS the approval. Keyed on
+   * `booked_by_auto_pod_id` so the offer holds the slot for the whole
+   * host/club-admin enrolment window and no ordinary pod can book it.
+   */
+  async bookForAutoPod(
+    slotId: string,
+    venueId: string,
+    ownerUserId: string,
+    autoPodId: string
+  ): Promise<IVenueSlot> {
+    if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
+    const updated = await VenueSlotModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(slotId),
+        venue_id: new Types.ObjectId(venueId),
+        owner_user_id: new Types.ObjectId(ownerUserId),
+        status: 'AVAILABLE',
+      },
+      { $set: { status: 'BOOKED', booked_by_auto_pod_id: new Types.ObjectId(autoPodId) } },
+      { new: true }
+    );
+    if (!updated) fail('CONFLICT', 'This slot is no longer available. Pick another slot.');
+    return updated!;
+  },
+
+  /**
+   * Hand the booking from the Auto Pod to the pod it just became. One
+   * conditional write, so the slot is never AVAILABLE in between — the same
+   * claim-then-release ordering every other re-route obeys. The decision fields
+   * are stamped because the venue really did approve this booking.
+   */
+  async transferAutoPodHold(slotId: string, autoPodId: string, podId: string): Promise<void> {
+    const moved = await VenueSlotModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(slotId),
+        booked_by_auto_pod_id: new Types.ObjectId(autoPodId),
+      },
+      {
+        $set: {
+          status: 'BOOKED',
+          booked_by_pod_id: new Types.ObjectId(podId),
+          booked_by_auto_pod_id: null,
+          decision: 'APPROVED',
+          decided_at: new Date(),
+          decided_pod_id: new Types.ObjectId(podId),
+        },
+      },
+      { new: true }
+    );
+    if (!moved) fail('CONFLICT', 'This slot is no longer held by that Auto Pod.');
+  },
+
+  /**
+   * Free ONE slot this Auto Pod holds. Used to compensate a venue that booked
+   * its slot and then lost the race to accept the offer: matching on the slot id
+   * AND the auto-pod id means it can only ever free the slot THAT attempt
+   * booked, never the winning venue's — which the blanket release below would.
+   */
+  async releaseAutoPodSlot(slotId: string, autoPodId: string): Promise<void> {
+    await VenueSlotModel.updateOne(
+      {
+        _id: new Types.ObjectId(slotId),
+        booked_by_auto_pod_id: new Types.ObjectId(autoPodId),
+      },
+      { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } }
+    );
+  },
+
+  /** Free the slot an Auto Pod held (cancelled or expired before it went live). */
+  async releaseForAutoPod(autoPodId: string): Promise<void> {
+    await VenueSlotModel.updateMany(
+      { booked_by_auto_pod_id: new Types.ObjectId(autoPodId) },
+      { $set: { status: 'AVAILABLE', booked_by_auto_pod_id: null } }
+    );
   },
 
   // Release any slot tied to a pod (called when the pod is deleted/cancelled).

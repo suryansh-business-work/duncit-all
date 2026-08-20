@@ -13,6 +13,7 @@ interface Props {
   podTitle: string;
   onClose: () => void;
   onScan: () => void;
+  onSeeAttendance: () => void;
   onComplete: () => void;
   onEdit: () => void;
   onOpenFeedback: () => void;
@@ -29,6 +30,7 @@ export function PodActionsSheet({
   podTitle,
   onClose,
   onScan,
+  onSeeAttendance,
   onComplete,
   onEdit,
   onOpenFeedback,
@@ -75,6 +77,13 @@ export function PodActionsSheet({
                   label="Scan attendee event tickets"
                   tint={primary}
                   onPress={onScan}
+                />
+                <ActionRow
+                  testID="pod-action-attendance"
+                  icon="fact-check"
+                  label={t('mweb.attendance.menuItem')}
+                  tint={success}
+                  onPress={onSeeAttendance}
                 />
                 <ActionRow
                   testID="pod-action-complete"

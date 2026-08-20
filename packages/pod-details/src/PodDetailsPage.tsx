@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { type ReactNode } from 'react';
+import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -7,7 +7,6 @@ import { BackButton, QueryGuard } from '@duncit/ui';
 import { useFeatureFlag } from '@duncit/app-settings';
 import { POD_DETAIL, type AdminPodAttendeeRow } from './queries';
 import { PodDetailsScopeProvider, usePodDetailsScope, type PodDetailsScope } from './scope';
-import { CLUB_ADMIN_FORCE_ATTENDANCE } from './queries.club-admin';
 import PodStatusChips from './PodStatusChips';
 import PodOverviewCard from './PodOverviewCard';
 import PodTimelineSection from './PodTimelineSection';
@@ -56,8 +55,6 @@ function PodDetailsView({
   const navigate = useNavigate();
   const scopeDocs = usePodDetailsScope();
   const showProducts = useFeatureFlag('is_product_visible');
-  const [forceAttendance, forceState] = useMutation(CLUB_ADMIN_FORCE_ATTENDANCE);
-  const [forcingId, setForcingId] = useState<string | null>(null);
   const { data, loading, error } = useQuery(POD_DETAIL, {
     variables: { id },
     skip: !id,
@@ -136,30 +133,17 @@ function PodDetailsView({
 
           {/* The tables want every pixel of width, so they sit below both
               columns rather than inside one. */}
+          {/* Read-only. Marking somebody present used to be a bare "Mark
+              present" link in this table's Status cell — one click, no
+              confirmation, on the write that decides what the host is paid.
+              It now lives in the Mark Attendance section the Partners console
+              injects through `footer`, behind a warning that names who is
+              about to be marked. */}
           <PodAttendeesSection
             rows={attendeeRows}
             loading={attendeesQuery.loading}
             podDateTime={pod.pod_date_time}
-            errorText={attendeesQuery.error?.message || forceState.error?.message}
-            // Offered ONLY at club-admin scope. The host has no button here on
-            // purpose: attendance decides what the host is paid, so a host who
-            // could mark by hand would be writing their own payout.
-            onForceAttendance={
-              scopeDocs.scope === 'CLUB_ADMIN'
-                ? (membershipId) => {
-                    setForcingId(membershipId);
-                    forceAttendance({
-                      variables: { pod_doc_id: pod.id, membership_id: membershipId },
-                    })
-                      // Re-read so the row moves to attended and every
-                      // attendance-derived figure on the page follows it.
-                      .then(() => attendeesQuery.refetch())
-                      .catch(() => undefined)
-                      .finally(() => setForcingId(null));
-                  }
-                : undefined
-            }
-            forcingId={forcingId}
+            errorText={attendeesQuery.error?.message}
           />
           <PodPaymentsSection podId={pod.id} />
           {footer?.(pod)}

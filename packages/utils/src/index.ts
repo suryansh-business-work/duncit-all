@@ -225,6 +225,34 @@ export {
   type LeaderboardPeriodKey,
 } from './leaderboard';
 export {
+  OTP_MEDIUMS,
+  attendanceProgress,
+  attendanceRowState,
+  hasUnmarked,
+  isOtpCodeShape,
+  isOtpExtensionShape,
+  isOtpPhoneShape,
+  joinPhone,
+  needsOtp,
+  splitAttendance,
+  type AttendanceMarkMethod,
+  type AttendanceRowState,
+  type OtpMedium,
+  type PodAttendanceBoard,
+  type PodAttendanceClubAdmin,
+  type PodAttendanceCompanion,
+  type PodAttendanceLock,
+  type PodAttendanceRow,
+  type PodAttendanceViewer,
+} from './pod-attendance';
+export {
+  buildAttendanceLabels,
+  mwebAttendanceLabels,
+  shellAttendanceLabels,
+  type AttendanceTranslate,
+  type PodAttendanceLabels,
+} from './pod-attendance-copy';
+export {
   groupMembershipBenefits,
   membershipCellKind,
   membershipCellValue,

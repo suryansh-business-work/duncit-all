@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -15,6 +16,11 @@ interface Props {
   disabled?: boolean;
   onScan: () => void;
   onComplete: () => void;
+  /**
+   * Opens the pod's attendance page. A PAGE, not a dialog — so, like
+   * `onClubAdmin`, the item only appears where the surface has that route.
+   */
+  onSeeAttendance?: () => void;
   onEdit: () => void;
   onOpenFeedback: () => void;
   onShareFeedback: () => void;
@@ -39,6 +45,7 @@ export default function HostPodActionsMenu({
   disabled = false,
   onScan,
   onComplete,
+  onSeeAttendance,
   onEdit,
   onOpenFeedback,
   onShareFeedback,
@@ -81,6 +88,14 @@ export default function HostPodActionsMenu({
           </ListItemIcon>
           <ListItemText primary="Scan attendee event tickets" />
         </MenuItem>
+        {onSeeAttendance && (
+          <MenuItem onClick={pick(onSeeAttendance)}>
+            <ListItemIcon>
+              <FactCheckIcon fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText primary={labels.seeAttendance} />
+          </MenuItem>
+        )}
         <MenuItem onClick={pick(onComplete)}>
           <ListItemIcon>
             <TaskAltIcon fontSize="small" color="success" />

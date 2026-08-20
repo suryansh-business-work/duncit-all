@@ -31,6 +31,7 @@ const brandLight = {
   onPrimary: light.onPrimary,
   danger: semantic.error,
   success: semantic.success,
+  warning: semantic.warning,
 };
 
 const brandDark: typeof brandLight = {
@@ -53,6 +54,7 @@ const brandDark: typeof brandLight = {
   onPrimary: dark.onPrimary,
   danger: semantic.error,
   success: semantic.success,
+  warning: semantic.warning,
 };
 
 // Brand typeface. On web we use the SAME Quicksand stack mWeb loads via Google

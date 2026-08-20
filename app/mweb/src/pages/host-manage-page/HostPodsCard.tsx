@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Badge,
@@ -40,6 +41,7 @@ export default function HostPodsCard({
   errorMessage,
   onChanged,
 }: Readonly<HostPodsCardProps>) {
+  const navigate = useNavigate();
   const { menuHandlers, dialogs } = useHostPodActions(onChanged);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -76,6 +78,7 @@ export default function HostPodsCard({
             pod={p}
             actions={menuHandlers(p)}
             onClubAdmin={() => setClubAdminPod(p)}
+            onSeeAttendance={() => navigate(`/host/pod/${p.id}/attendance`)}
           />
         ))}
       </Stack>

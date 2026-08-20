@@ -21,6 +21,12 @@ export type HostPodTranslate = (
 export interface HostPodActionLabels {
   /** "Pod Club Admin" — only rendered when the surface passes `onClubAdmin`. */
   clubAdmin: string;
+  /**
+   * "See Marked Attendance" — only rendered when the surface passes
+   * `onSeeAttendance`. It opens a PAGE rather than a dialog, so the surface
+   * owns the navigation and a console without that route simply omits it.
+   */
+  seeAttendance: string;
   /** The rating link in the pod's action menu. */
   feedbackLink: string;
   shareLink: string;
@@ -56,6 +62,7 @@ export interface HostPodActionLabels {
 export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('mweb.podClubAdmin.menuItem'),
+    seeAttendance: t('mweb.attendance.menuItem'),
     feedbackLink: t('mweb.podFeedback.feedbackLink'),
     shareLink: t('mweb.podFeedback.shareLink'),
     copyLink: t('mweb.podFeedback.copyLink'),
@@ -89,6 +96,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
 export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('shell.podClubAdmin.menuItem'),
+    seeAttendance: t('shell.attendance.menuItem'),
     feedbackLink: t('shell.podFeedback.feedbackLink'),
     shareLink: t('shell.podFeedback.shareLink'),
     copyLink: t('shell.podFeedback.copyLink'),

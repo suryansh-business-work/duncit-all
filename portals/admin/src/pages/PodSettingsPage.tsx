@@ -3,6 +3,7 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import NumberSettingCard from './pod-settings/NumberSettingCard';
+import ToggleSettingCard from './pod-settings/ToggleSettingCard';
 
 const POD_SETTINGS = gql`
   query PodSettings {
@@ -10,6 +11,7 @@ const POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
+      attendance_otp_required
       updated_at
     }
   }
@@ -21,6 +23,7 @@ const UPDATE_POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
+      attendance_otp_required
       updated_at
     }
   }
@@ -41,7 +44,7 @@ export default function PodSettingsPage() {
 
   const settings = data?.appSettings;
 
-  const saveField = async (input: Record<string, number>) => {
+  const saveField = async (input: Record<string, number | boolean>) => {
     await save({ variables: { input } });
     setToast('Pod settings saved');
     await refetch();
@@ -87,6 +90,15 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.venue_cancel_health_penalty ?? null}
         onSave={(next) => saveField({ venue_cancel_health_penalty: next })}
+      />
+      <ToggleSettingCard
+        title="OTP Verification Before Marking Attendance"
+        description="When on, a host marking an attendee present by hand must first verify that attendee's name and phone number with a one-time code. Scanning a ticket is proof on its own and is never gated by this, and a Club Admin's override never asks for a code either."
+        onHint="On — the host verifies the attendee's number before the Mark Attendance button unlocks."
+        offHint="Off — the host can mark an attendee present without verifying their number."
+        loading={loading}
+        value={settings?.attendance_otp_required ?? null}
+        onSave={(next) => saveField({ attendance_otp_required: next })}
       />
       <Snackbar
         open={!!toast}

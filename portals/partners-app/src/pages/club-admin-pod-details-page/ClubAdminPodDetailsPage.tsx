@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { PodDetailsPage } from '@duncit/pod-details';
+import ClubAdminAttendanceSection from './ClubAdminAttendanceSection';
 
 /**
  * Club Admin's pod detail — the SAME page the admin portal renders, at
@@ -24,6 +25,10 @@ export default function ClubAdminPodDetailsPage() {
       backTo={clubPods}
       backLabel="Club pods"
       editTo={(podId) => `${clubPods}?edit=${podId}`}
+      // Below the attendee table, because it is the ACTION on the people that
+      // table lists — and because it is the one thing on this page a club admin
+      // opens the pod specifically to do.
+      footer={(pod) => <ClubAdminAttendanceSection podId={pod.id} />}
     />
   );
 }

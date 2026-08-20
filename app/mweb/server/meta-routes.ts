@@ -90,6 +90,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/host/dashboard', titleKey: 'mweb.meta.hostDashboard.title' },
   { pattern: '/verification', titleKey: 'mweb.meta.verification.title' },
   { pattern: '/host/manage', titleKey: 'mweb.meta.hostManage.title' },
+  { pattern: '/host/pod/:podId/attendance', titleKey: 'mweb.meta.podAttendance.title' },
   { pattern: '/host/apply', titleKey: 'mweb.meta.hostApply.title' },
   { pattern: '/host/wallet', titleKey: 'mweb.meta.wallet.title' },
   { pattern: '/create-pod', titleKey: 'mweb.meta.createPod.title' },

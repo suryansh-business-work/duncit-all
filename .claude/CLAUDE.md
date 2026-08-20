@@ -365,3 +365,73 @@ shared `@duncit/*` package, not a third copy.** This is rule 34 made operational
 - The audit that measured all of this (55 clusters, ~19k duplicated lines, the
   live bugs drift caused) is `docs/duplication-audit.md` — read it before
   proposing a new shared package; it likely already names the right home.
+
+41. Attendance & one-time codes (ENFORCED) — **attendance is what a host is
+paid on**, so every rule below exists to keep the record honest rather than to
+keep the screen tidy.
+
+- **One board, one query.** `podAttendanceBoard(pod_doc_id)` is the ONLY read of
+  a pod's roster. It authorises the caller as the pod's host/co-host OR as an
+  admin of the pod's club and answers with `viewer: HOST | CLUB_ADMIN`; the host
+  page, the native screen and the Partners console's Mark Attendance section all
+  render that one payload. Two queries would be two places for "is this person
+  marked" to disagree.
+- **Four ways in, ONE write.** `markTicketPresent(ticket, by, method,
+  verification)` in `server/src/modules/pods/ticket/attendance.service.ts` is the
+  only function that flips a ticket to `CHECKED_IN`. Every path goes through it —
+  `hostScanPodTicket` (`HOST_SCAN`), `hostMarkPodAttendance` (`HOST_MANUAL`),
+  `clubAdminForceAttendance` (`CLUB_ADMIN_FORCE`), `checkInEventTicket`
+  (`ADMIN`) — so `checked_in_method` and the proof behind it can never be
+  recorded by one path and forgotten by another. Never write `status =
+  'CHECKED_IN'` by hand.
+- **Attendance closes at completion, not on a clock.** `attendanceLock(pod)`
+  returns `COMPLETED` once `completed_at` is set (the payout is already split by
+  then) and `CANCELLED` once `deleted_at` is. There is no grace window and no
+  admin-configured deadline — do not add one without moving the settlement with
+  it. A locked page tells the host to contact their Club Admin and renders the
+  club-admin contact card at the bottom.
+- **The earnings note is not decoration.** Every attendance surface states, above
+  the roster, that an unmarked attendee is a seat left out of the host's payout.
+  Keep it; it is the reason the screen exists.
+- **A forced mark always warns first.** The Club Admin's override writes
+  attendance with no scan and no code behind it, so it goes through
+  `ForceMarkDialog`, which names the person (name, number, ticket code) before
+  confirming. Never re-add a bare one-click "Mark present" — that is exactly what
+  was removed from `@duncit/pod-details`' attendee table.
+- **ONE OTP service, medium as a parameter.** `otpService` in
+  `server/src/modules/platform/otp/` issues and checks every PHONE one-time code:
+  `request({ purpose, mediums, … })`, `verify`, `verifyLatest`, `consume`.
+  `mediums` carries `SMS`, `WHATSAPP` or both — never write a second code path
+  per channel, and never write a second `verifyOtp`. A duplicate drifts on
+  exactly the parts that matter (expiry, attempt limit, single use).
+  - Delivery is stubbed: `otp.delivery.ts` is the ONE seam a code leaves through,
+    it returns `STUBBED` for both mediums today, and the server then hands the
+    fixed test code back as `test_code` for the client to display. Wiring a real
+    transport is one branch there; nothing above it changes.
+  - `consume` is single-use and bound to its context — one verified code marks
+    one booking, never a roster.
+  - There is deliberately **no generic `requestOtp` mutation**. Each flow
+    authorises its own request (the pod's host for attendance, the signed-in
+    account for a WhatsApp number) and then calls the shared service. A generic
+    entry point would be an open relay for texting arbitrary numbers.
+  - GraphQL types are named `PhoneOtp…`, because `OtpRequestResult` already
+    belongs to the EMAIL code flows in `auth.schema.ts`. Two types with one name
+    are folded into one by the schema builder and the caller silently reads null.
+  - The EMAIL codes (sign-in, password reset, account deletion) still keep a
+    hash/expiry pair per purpose on the user document. That is known debt with a
+    much wider blast radius; `otpService` is the home they consolidate into.
+- **Whether a by-hand mark needs a code is an admin setting.**
+  `appSettings.attendance_otp_required` (Admin > Pods > Pod Settings), default
+  ON. It gates ONLY the host's manual mark: a scan is proof on its own, and the
+  Club Admin's override exists precisely for the attendee who cannot be reached,
+  so neither ever asks for a code. `needsOtp(board)` from `@duncit/utils` is the
+  one place that rule is expressed on the client.
+- **Where the code lives.** Shared logic (row shapes, `splitAttendance`,
+  `attendanceRowState`, `needsOtp`, the phone/OTP shapes and every label) is in
+  `@duncit/utils` — `pod-attendance.ts` + `pod-attendance-copy.ts` — because that
+  package is zero-dependency and both mobile Dockerfiles already copy it. The MUI
+  view is `@duncit/host-pod-actions/src/attendance/` (mWeb page + Partners
+  section); the native app keeps its own Tamagui twin under
+  `src/components/attendance/` and `src/screens/PodAttendanceScreen/`. Rule 40
+  again: share the logic, never the UI.
+

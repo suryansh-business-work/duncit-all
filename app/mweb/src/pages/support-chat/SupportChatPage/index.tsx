@@ -72,7 +72,7 @@ export default function SupportChatPage() {
   };
 
   return (
-    <Stack spacing={1.5} sx={{ height: 'calc(100dvh - 120px)', position: 'relative' }}>
+    <Stack spacing={1.5} sx={{ height: '100%', minHeight: 0, position: 'relative' }}>
       <ChatHeader
         ticketNo={session?.ticket_no ?? null}
         status={session?.status ?? null}

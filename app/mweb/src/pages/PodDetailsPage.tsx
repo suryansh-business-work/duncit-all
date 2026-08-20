@@ -154,6 +154,9 @@ export default function PodDetailsPage() {
       spacing={3}
       sx={{
         pt: 0,
+        // Kept on the page, unlike the other surfaces: the shell already
+        // reserves the bottom bar, but StickyPodActionPanel floats a second
+        // fixed bar above it that only this page has to clear.
         pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)',
       }}
     >

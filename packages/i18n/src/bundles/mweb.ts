@@ -1526,9 +1526,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       requested: 'Requested',
       following: 'Following',
       accept: 'Accept',
-      reject: 'Reject',
+      reject: 'Deny',
       accepted: 'Accepted',
-      rejected: 'Rejected',
+      rejected: 'Denied',
+      // Offered on an accepted request: they follow the viewer now, and the
+      // viewer does not follow them back yet.
+      followBack: 'Follow Back',
     },
     // The attendance page (Host Studio > Your Pods > three dots > See Marked
     // Attendance, and the Club Admin's Mark Attendance section). Attendance is

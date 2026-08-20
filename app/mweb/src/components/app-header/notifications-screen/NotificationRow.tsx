@@ -115,6 +115,8 @@ export default function NotificationRow({
         actionType={notification?.action_type}
         requestId={notification?.action_ref_id}
         status={notification?.action_status}
+        actorId={notification?.action_actor_id}
+        followBackStatus={notification?.follow_back_status}
         unreadRow={unread}
         onAnswered={() => onAnswered?.()}
       />

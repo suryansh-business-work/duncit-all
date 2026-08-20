@@ -66,7 +66,7 @@ const podOwnerId = (d: any): string => String((d?.pod_hosts_id ?? [])[0] ?? '');
  * club-slug + pod-slug, so a pod whose club could not be resolved gets no link
  * rather than a broken `/club//pod/x`.
  */
-function podNotificationLink(d: any, clubSlugById: Map<string, string>): string | null {
+export function podNotificationLink(d: any, clubSlugById: Map<string, string>): string | null {
   const clubSlug = d?.club_id ? clubSlugById.get(String(d.club_id)) : null;
   if (!clubSlug || !d?.pod_id) return null;
   return `/club/${clubSlug}/pod/${d.pod_id}`;
@@ -140,6 +140,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     is_deleted: !!d.deleted_at,
     deleted_at: d.deleted_at?.toISOString?.() ?? null,
     venue_approval_status: d.venue_approval_status ?? 'NONE',
+    auto_pod_id: d.source_auto_pod_id ? String(d.source_auto_pod_id) : null,
     liked_user_ids: (d.liked_user_ids ?? []).map(String),
     like_count: (d.liked_user_ids ?? []).length,
     comment_count: (d.comments ?? []).length,
@@ -320,7 +321,7 @@ function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
 }
 
 /** Every pod must carry at least one IMAGE in its media gallery. */
-function validateHasImage(media: any[] | null | undefined) {
+export function validateHasImage(media: any[] | null | undefined) {
   const hasImage = (media ?? []).some((m: any) => (m?.type ?? 'IMAGE') === 'IMAGE' && m?.url);
   if (!hasImage) {
     throw new GraphQLError('At least one pod image is required', {
@@ -354,6 +355,34 @@ function buildDeleteReason(subject: string, note?: string | null): string {
     });
   }
   return cleanNote ? `${cleanSubject} — ${cleanNote}` : cleanSubject;
+}
+
+/**
+ * The one host-capability gate. Host powers follow the HOST role — granted by
+ * the admin role toggle AND automatically on host-application approval — with
+ * an approved host profile accepted as a fallback so legacy approved hosts
+ * (without the cached role) keep working. A deactivated host is refused even
+ * while still holding the cached role; role-only hosts (no Host doc) are
+ * unaffected.
+ *
+ * Exported so a host claiming an Auto Pod is authorised by exactly the same
+ * rule as a host creating one — two gates would drift on who counts as active.
+ */
+export async function assertActiveHost(userId: string) {
+  const userObjectId = new Types.ObjectId(userId);
+  const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
+  if (hostDoc?.is_active === false) {
+    throw new GraphQLError('Your host account has been deactivated', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
+  const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
+  const approvedHost = !hasHostRole && hostDoc?.status === 'APPROVED';
+  if (!hasHostRole && !approvedHost) {
+    throw new GraphQLError('Host access is required before creating pods', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
 }
 
 /** Loads a pod and asserts the viewer is one of its hosts. */
@@ -1065,10 +1094,31 @@ async function resolvePodSlugForCreate(input: any): Promise<string> {
  * pod row is created (see `bookOrHoldSlotForPod`) so we never orphan a slot. */
 async function resolveSlotForCreate(
   input: any,
-  podMode: PodMode
+  podMode: PodMode,
+  autoPodId?: string | null
 ): Promise<{ slotDoc: any; needsVenueApproval: boolean }> {
   if (!(podMode === 'PHYSICAL' && input.venue_slot_id)) {
     return { slotDoc: null, needsVenueApproval: false };
+  }
+  // An Auto Pod's venue already accepted the offer and has been HOLDING this
+  // slot (BOOKED under booked_by_auto_pod_id) ever since, so the AVAILABLE and
+  // holiday checks below would reject the venue's own booking. That acceptance
+  // IS the approval — there is nothing left for the venue to answer.
+  if (autoPodId) {
+    const held = await VenueSlotModel.findOne({
+      _id: input.venue_slot_id,
+      booked_by_auto_pod_id: new Types.ObjectId(autoPodId),
+      status: 'BOOKED',
+    });
+    if (!held) {
+      throw new GraphQLError('The venue slot for this Auto Pod is no longer held', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+    input.venue_id = String(held.venue_id);
+    input.pod_date_time = held.start_at.toISOString();
+    input.pod_end_date_time = held.end_at.toISOString();
+    return { slotDoc: held, needsVenueApproval: false };
   }
   const slotDoc = await VenueSlotModel.findById(input.venue_slot_id);
   if (!slotDoc) {
@@ -1103,6 +1153,16 @@ async function resolveSlotForCreate(
   return { slotDoc, needsVenueApproval };
 }
 
+/** An Auto Pod's venue approved when it accepted the offer; every other pod
+ * either waits for its venue or needs no approval at all. */
+function venueApprovalForCreate(
+  autoPodSlot: { slotId: string; autoPodId: string } | null,
+  needsVenueApproval: boolean
+): 'NONE' | 'PENDING' | 'APPROVED' {
+  if (autoPodSlot) return 'APPROVED';
+  return needsVenueApproval ? 'PENDING' : 'NONE';
+}
+
 /** Meeting details are persisted for virtual pods only. */
 function meetingFieldsForCreate(
   podMode: PodMode,
@@ -1132,8 +1192,29 @@ function meetingFieldsForCreate(
  * rather than thrown. A venue that was not emailed still has the request in its
  * approval queue; a pod deleted because SMTP blipped is unrecoverable.
  */
-async function bookOrHoldSlotForPod(doc: any, slotDoc: any, needsVenueApproval: boolean) {
+async function bookOrHoldSlotForPod(
+  doc: any,
+  slotDoc: any,
+  needsVenueApproval: boolean,
+  autoPodSlot?: { slotId: string; autoPodId: string } | null
+) {
   if (!slotDoc) return;
+  // The Auto Pod already holds this slot: hand the booking over in ONE
+  // conditional write rather than booking it again, so it is never AVAILABLE
+  // in between for an ordinary pod to snatch.
+  if (autoPodSlot) {
+    try {
+      await venueSlotService.transferAutoPodHold(
+        autoPodSlot.slotId,
+        autoPodSlot.autoPodId,
+        String(doc._id)
+      );
+    } catch (e) {
+      await doc.deleteOne();
+      throw e;
+    }
+    return;
+  }
   try {
     if (needsVenueApproval) {
       await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
@@ -1605,7 +1686,19 @@ export const podService = {
     return toPub(doc, slugMap);
   },
 
-  async create(input: any, audit?: { actorUserId?: string | null; source: PodAuditSource }) {
+  /**
+   * The ONE funnel every pod is born through. `opts.autoPodSlot` is the Auto Pod
+   * handover: the venue accepted the offer long before this pod existed and has
+   * held its slot ever since, so the slot is adopted rather than claimed afresh
+   * and the pod lands venue-APPROVED. Every other invariant still runs here with
+   * real values — hosts, image, future date, economics, club category, slug.
+   */
+  async create(
+    input: any,
+    audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null },
+    opts?: { autoPodSlot?: { slotId: string; autoPodId: string } }
+  ) {
+    const autoPodSlot = opts?.autoPodSlot ?? null;
     const pod_id = await resolvePodSlugForCreate(input);
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
@@ -1617,7 +1710,11 @@ export const podService = {
     assertWritablePodType(input.pod_type, podMode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
 
-    const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(input, podMode);
+    const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
+      input,
+      podMode,
+      autoPodSlot?.autoPodId
+    );
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time);
     validateMeetingDetails(podMode, input);
@@ -1701,15 +1798,17 @@ export const podService = {
       product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
       // A pod awaiting the venue's slot approval stays offline until approved.
       is_active: needsVenueApproval ? false : input.is_active ?? true,
-      venue_approval_status: needsVenueApproval ? 'PENDING' : 'NONE',
+      venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
+      source_auto_pod_id: autoPodSlot ? new Types.ObjectId(autoPodSlot.autoPodId) : null,
     });
 
-    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval);
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot);
     await podAuditService.record({
       pod: doc,
       action: 'CREATE',
       source: audit?.source ?? 'ADMIN',
       actorUserId: audit?.actorUserId,
+      note: audit?.note,
     });
 
     const slugMap = await loadClubSlugMap([doc]);
@@ -1718,21 +1817,7 @@ export const podService = {
 
   async createForPartner(userId: string, input: any) {
     const userObjectId = new Types.ObjectId(userId);
-    // Host capability follows the HOST role — granted by the admin role toggle
-    // AND automatically on host-application approval. An approved host profile is
-    // accepted as a fallback so legacy approved hosts (without the cached role)
-    // keep working.
-    // A deactivated host may not create pods even if they still hold the cached
-    // HOST role. Role-only hosts (no Host doc) are unaffected.
-    const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
-    if (hostDoc?.is_active === false) {
-      throw new GraphQLError('Your host account has been deactivated', { extensions: { code: 'FORBIDDEN' } });
-    }
-    const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
-    const approvedHost = !hasHostRole && hostDoc?.status === 'APPROVED';
-    if (!hasHostRole && !approvedHost) {
-      throw new GraphQLError('Host access is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
-    }
+    await assertActiveHost(userId);
     // Deterministic content guard so a crafted client can't bypass the client-side
     // AI preflight and publish a pod with a phone/email/link/payment handle etc.
     moderationService.assertCleanOrThrow({

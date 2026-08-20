@@ -187,11 +187,15 @@ export {
 } from './pod-share';
 export {
   FOLLOW_LABEL_KEY,
+  canFollowBack,
   followActionFor,
+  followBackLabelKey,
+  followRequestRowState,
   followStatusFrom,
   nextFollowStatus,
   readFollowStatus,
   type FollowAction,
+  type FollowRequestRowState,
   type FollowStatus,
 } from './follow-status';
 export {

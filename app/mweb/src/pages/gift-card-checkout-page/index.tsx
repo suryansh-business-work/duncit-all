@@ -66,7 +66,7 @@ export default function GiftCardCheckoutPage() {
   const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
 
   return (
-    <Box sx={{ maxWidth: 560, mx: 'auto', p: 2, pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
+    <Box sx={{ maxWidth: 560, mx: 'auto', p: 2 }}>
       <Stack spacing={2}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ bgcolor: 'action.hover' }}>

@@ -77,3 +77,46 @@ export const FOLLOW_LABEL_KEY: Record<FollowStatus, string> = {
   REQUESTED: 'mweb.follow.requested',
   FOLLOWING: 'mweb.follow.following',
 };
+
+/**
+ * What a FOLLOW_REQUEST notification row should render right now.
+ *
+ * mWeb and native both own a Tamagui/MUI view of this row, so the DECISION
+ * lives here and only the pixels differ (rule 40). The ordering matters:
+ *
+ *  - ANSWER      the request is still open — Accept / Deny.
+ *  - FOLLOW_BACK it was accepted, and the viewer does NOT follow them back yet.
+ *  - SETTLED     nothing left to do — it was denied, or it was accepted and the
+ *                viewer already follows them, which is precisely when Follow
+ *                Back must be hidden rather than offered.
+ *  - HIDDEN      not an actionable follow row at all.
+ */
+export type FollowRequestRowState = 'HIDDEN' | 'ANSWER' | 'FOLLOW_BACK' | 'SETTLED';
+
+export function followRequestRowState(row: {
+  actionType?: string | null;
+  requestId?: string | null;
+  status?: string | null;
+  followBackStatus?: string | null;
+}): FollowRequestRowState {
+  if (row.actionType !== 'FOLLOW_REQUEST' || !row.requestId) return 'HIDDEN';
+  // A row whose status has not loaded yet is treated as open: the request only
+  // stops being answerable once the server says so.
+  if (!row.status || row.status === 'PENDING') return 'ANSWER';
+  if (row.status !== 'ACCEPTED') return 'SETTLED';
+  // Accepted. FOLLOWING is the one state with nothing to offer — REQUESTED
+  // still renders the button so the viewer can see their ask is pending.
+  return row.followBackStatus === 'FOLLOWING' ? 'SETTLED' : 'FOLLOW_BACK';
+}
+
+/** The i18n key for the Follow Back button in each of its two live states.
+ * Literal keys, because the shipped-key gate greps for them (rule 38). */
+export function followBackLabelKey(followBackStatus?: string | null): string {
+  return followBackStatus === 'REQUESTED' ? 'mweb.follow.requested' : 'mweb.follow.followBack';
+}
+
+/** Whether tapping Follow Back can still do anything. A pending ask cannot be
+ * re-sent, so the button reads "Requested" and stops accepting taps. */
+export function canFollowBack(followBackStatus?: string | null): boolean {
+  return followBackStatus !== 'REQUESTED' && followBackStatus !== 'FOLLOWING';
+}

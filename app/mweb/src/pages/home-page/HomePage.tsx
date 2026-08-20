@@ -88,7 +88,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         pt: 0.25,
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
-        pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 10px)',
         minHeight: '100%',
       }}
     >

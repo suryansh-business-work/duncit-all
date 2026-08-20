@@ -31,6 +31,7 @@ const toPub = (n: INotification) => ({
   // it was collateral: it returned null too.
   action_type: n.action_type ?? null,
   action_ref_id: n.action_ref_id ? String(n.action_ref_id) : null,
+  action_actor_id: n.action_actor_id ? String(n.action_actor_id) : null,
   scope: n.scope,
   silent: !!n.silent,
   location_id: n.location_id ? String(n.location_id) : null,
@@ -281,6 +282,7 @@ export const notificationService = {
       // admin broadcast can never mint Accept/Reject buttons over a document.
       action_type: input.action_type || null,
       action_ref_id: input.action_ref_id || null,
+      action_actor_id: input.action_actor_id || null,
       scope: input.scope,
       silent: !!input.silent,
       location_id: input.scope === 'LOCATION' || input.scope === 'ZONE' ? input.location_id : null,

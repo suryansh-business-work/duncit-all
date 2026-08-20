@@ -22,11 +22,18 @@ interface Props {
   actions: HostPodMenuHandlers;
   /** Opens the club-admin card — mWeb's own dialog, not one the package owns. */
   onClubAdmin: () => void;
+  /** Opens the pod's attendance PAGE — a route, so mWeb owns the navigation. */
+  onSeeAttendance: () => void;
 }
 
 /** One hosted pod row — link to the pod + the host's actions behind a single
  * overflow menu. A venue-rejected pod shows its status + the resubmission note. */
-export default function HostPodRow({ pod, actions, onClubAdmin }: Readonly<Props>) {
+export default function HostPodRow({
+  pod,
+  actions,
+  onClubAdmin,
+  onSeeAttendance,
+}: Readonly<Props>) {
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
   const rejected = isVenueRejected(pod.venue_approval_status);
   const free = pod.pod_type === 'FREE';
@@ -66,7 +73,11 @@ export default function HostPodRow({ pod, actions, onClubAdmin }: Readonly<Props
           color={free ? 'success' : 'primary'}
           variant="outlined"
         />
-        <HostPodActionsMenu {...actions} onClubAdmin={onClubAdmin} />
+        <HostPodActionsMenu
+          {...actions}
+          onClubAdmin={onClubAdmin}
+          onSeeAttendance={onSeeAttendance}
+        />
       </Stack>
       {rejected && (
         <Alert severity="warning" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ py: 0.25 }}>

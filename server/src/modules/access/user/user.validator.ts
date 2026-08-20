@@ -5,6 +5,12 @@ import { STATUSES } from './user.constants';
 // one definition so the three surfaces can never drift apart.
 export const phoneRegex = /^\d{6,15}$/;
 export const extRegex = /^\+?\d{1,5}$/;
+// A human name: letters, spaces, apostrophes (straight or typographic) and
+// periods, starting with a letter — digits, underscores and emoji are out.
+// The mirror of PERSON_NAME in @duncit/regex, restated here because server/src
+// imports no @duncit/* package. A client rule only shapes a form; signup runs
+// this one, so a hand-rolled mutation cannot store a surname like "Doe_123".
+export const personNameRegex = /^[A-Za-z][A-Za-z .'’]{0,79}$/;
 
 export const createUserSchema = yup.object({
   first_name: yup.string().min(1).max(60).required(),

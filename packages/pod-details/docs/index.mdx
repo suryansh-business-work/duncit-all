@@ -71,11 +71,19 @@ create/delete) and reaches into the admin coupons page. Admin injects it:
 <PodDetailsPage footer={(pod) => <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />} />
 ```
 
-## Force-marking attendance
+## Attendance
 
-At `CLUB_ADMIN` scope only, each un-scanned booking gets a **Mark present** action
-(`clubAdminForceAttendance`). The host has no such button anywhere, on purpose:
-attendance decides what a completed pod pays the host, so a host who could mark by hand
-would be writing their own payout. A scan is proof; this is the override for when that
-proof cannot be produced. Every forced mark records who forced it and notifies the
-member.
+This page's attendee table is **read-only about attendance** — it shows the status, and
+nothing on it writes one. Marking somebody present lives in `<PodAttendanceView>` from
+`@duncit/host-pod-actions`, which the Partners console injects through `footer` on the
+Club Admin route:
+
+```tsx
+<PodDetailsPage scope="CLUB_ADMIN" footer={(pod) => <ClubAdminAttendanceSection podId={pod.id} />} />
+```
+
+It used to be a bare **Mark present** link in the Status cell that fired
+`clubAdminForceAttendance` on one click. That mutation writes the number a completed pod
+pays the host on, and a forced mark has no scan behind it — so it now sits behind a
+warning that names who is about to be marked, in the same view the host reads. One
+document, one set of preconditions.

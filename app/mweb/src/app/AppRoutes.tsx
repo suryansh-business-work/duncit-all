@@ -27,6 +27,7 @@ const ClubDetailsPage = lazy(() => import('../pages/ClubDetailsPage'));
 const HostsVenuesPage = lazy(() => import('../pages/HostsVenuesPage'));
 const SurveyGatePage = lazy(() => import('../pages/survey-gate'));
 const HostManagePage = lazy(() => import('../pages/HostManagePage'));
+const PodAttendancePage = lazy(() => import('../pages/pod-attendance-page'));
 const HostApplyPage = lazy(() => import('../pages/host-apply-page'));
 const HostDashboardPage = lazy(() => import('../pages/host-dashboard-page'));
 const VerificationPage = lazy(() => import('../pages/verification-page'));
@@ -160,6 +161,10 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/host/dashboard" element={withAuth(<HostDashboardPage />)} />
         <Route path="/verification" element={withAuth(<VerificationPage />)} />
         <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
+        <Route
+          path="/host/pod/:podId/attendance"
+          element={withAuth(<PodAttendancePage />)}
+        />
         <Route path="/host/apply" element={withAuth(<HostApplyPage />)} />
         <Route path="/host/wallet" element={withAuth(<WalletPage />)} />
         <Route path="/create-pod" element={withAuth(<CreatePodPage />)} />

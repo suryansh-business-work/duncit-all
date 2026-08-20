@@ -197,6 +197,85 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     podMonitoring: {
       aiMonitoring: 'AI Monitoring',
     },
+    // The attendance page (Host Studio > Your Pods > three dots > See Marked
+    // Attendance, and the Club Admin's Mark Attendance section). Attendance is
+    // what the host is PAID on, which is why the earnings note is not a
+    // footnote here — an unmarked attendee is an unpaid seat.
+    attendance: {
+      pageTitle: 'Mark Attendance',
+      menuItem: 'See Marked Attendance',
+      summary: '{marked} of {total} attendees marked',
+      seatsSummary: '{marked} of {total} seats marked',
+      markedHeading: 'Attendance marked',
+      unmarkedHeading: 'Not marked yet',
+      emptyRoster: 'Nobody has booked this pod yet.',
+      allMarked: 'Everyone on this pod is marked. Nothing left to do.',
+      markButton: 'Mark Attendance',
+      marking: 'Marking…',
+      markedChip: 'Marked',
+      notMarkedChip: 'Not marked',
+      seats: 'Admits {count}',
+      companionsNeeded: 'Add the other {count} on this booking at the door first.',
+      markedBy: 'Marked by {name}',
+      markedAt: 'Marked {when}',
+      verifiedPhone: 'Verified {phone}',
+      methodScan: 'Ticket scanned',
+      methodManual: 'Marked by host',
+      methodClubAdmin: 'Marked by Club Admin',
+      methodAdmin: 'Marked by Duncit',
+      scanCta: 'Scan Attendee Event Tickets',
+      earningsTitle: 'Marking attendance is how you get paid',
+      earningsBody:
+        'Your earnings are calculated only from the attendees you mark. If someone came but is never marked, their seat is left out of your payout.',
+      lockedCompletedTitle: 'Attendance is closed for this pod',
+      lockedCompletedBody:
+        'This pod is completed and its payout is already split, so attendance can no longer be changed. If somebody is missing, contact your Club Admin below.',
+      lockedCancelledTitle: 'This pod was cancelled',
+      lockedCancelledBody:
+        'A cancelled pod has no attendance to record. Contact your Club Admin below if you think this is wrong.',
+      clubAdminTitle: 'Need help? Contact your Club Admin',
+      clubAdminBody:
+        'They can mark an attendee present after the fact — have the booking details ready.',
+      clubAdminNone: 'This pod has no Club Admin assigned yet. Reach out to Duncit support.',
+      contactEmail: 'Email',
+      contactPhone: 'Call',
+      contactWhatsapp: 'WhatsApp',
+      retry: 'Try again',
+      back: 'Back',
+      // Verifying the person before a by-hand mark. The code is not actually
+      // delivered yet, so the server hands back a test code and this copy tells
+      // the host to type it — the flow is real, only the transport is not.
+      otpTitle: 'Verify the attendee',
+      otpBody:
+        'Send {name} a one-time code and enter it here. Their name and number are verified before attendance can be marked.',
+      otpName: 'Attendee name',
+      otpExtension: 'Country code',
+      otpPhone: 'Phone number',
+      otpMediumLabel: 'Send the code by',
+      otpMediumWhatsapp: 'WhatsApp',
+      otpMediumSms: 'SMS',
+      otpMediumRequired: 'Choose at least one way to send the code.',
+      otpNameRequired: 'Enter the attendee name',
+      otpExtensionInvalid: 'Enter a country code',
+      otpPhoneInvalid: 'Enter a phone number — digits only, 6 to 15',
+      otpSend: 'Send code',
+      otpSending: 'Sending…',
+      otpResend: 'Send again',
+      otpCode: 'One-time code',
+      otpCodeInvalid: 'Enter the 6-digit code',
+      otpVerify: 'Verify',
+      otpVerifying: 'Verifying…',
+      otpVerified: 'Verified — you can mark this attendance now.',
+      otpTestCode: 'Codes are not being delivered yet. Enter the test code {code}.',
+      otpCancel: 'Cancel',
+      // The Club Admin's override. It exists for when proof cannot be produced,
+      // so the warning is the only thing standing between it and a wrong payout.
+      forceTitle: 'Force mark attendance',
+      forceWarning:
+        'You are marking this person present without a ticket scan. Check their details or ask for valid proof first — a wrong mark changes what the host is paid.',
+      forceConfirm: 'Yes, mark present',
+      forceCancel: 'Cancel',
+    },
     hostScan: {
       personOnTicket: 'person on this ticket',
       peopleOnTicket: 'people on this ticket',

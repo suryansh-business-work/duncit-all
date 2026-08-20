@@ -1,42 +1,43 @@
 import { GraphQLError } from 'graphql';
 import { UserModel } from '@modules/access/user/user.model';
+import { normalizePhone, otpService } from '@modules/platform/otp/otp.service';
 
-const DEV_OTP = process.env.WHATSAPP_DEV_OTP || '123456';
-const isDev = (process.env.NODE_ENV || 'development') !== 'production';
-
-function normalize(extension: string, number: string) {
-  const ext = String(extension || '').trim().replace(/[^\d+]/g, '');
-  const num = String(number || '').trim().replace(/\D/g, '');
-  if (!ext) throw new GraphQLError('Country code is required', { extensions: { code: 'BAD_USER_INPUT' } });
-  if (num.length < 6 || num.length > 15) {
-    throw new GraphQLError('Enter a valid WhatsApp number', { extensions: { code: 'BAD_USER_INPUT' } });
-  }
-  return { ext: ext.startsWith('+') ? ext : `+${ext}`, num };
-}
-
+/**
+ * Proving the WhatsApp number a new account signs up with.
+ *
+ * The code itself is issued and checked by the shared `otpService` — this file
+ * only knows what a verified number MEANS here (it is written onto the user).
+ * It used to hold its own compare-against-a-constant check; two OTP
+ * implementations drift on expiry, attempt limits and single use, which is
+ * exactly the duplication the shared service exists to remove.
+ */
 export const whatsappAuthService = {
-  async requestOtp(extension: string, number: string) {
-    normalize(extension, number);
-    // In dev/staging we simply echo a known OTP. In production this is where
-    // a WhatsApp Business API send call would go.
+  async requestOtp(extension: string, number: string, userId?: string) {
+    const result = await otpService.request({
+      purpose: 'WHATSAPP_SIGNUP',
+      // The medium is an argument, not a second code path.
+      mediums: ['WHATSAPP'],
+      phone_extension: extension,
+      phone_number: number,
+      requested_by: userId ?? null,
+    });
     return {
       ok: true,
-      dev_otp: isDev ? DEV_OTP : null,
+      // Kept as `dev_otp` because the signup screens already read that field.
+      dev_otp: result.test_code,
     };
   },
 
   async verifyOtp(userId: string, extension: string, number: string, otp: string) {
-    const { ext, num } = normalize(extension, number);
-    const expected = DEV_OTP;
-    if (String(otp).trim() !== expected) {
-      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
+    const challenge = await otpService.verifyLatest('WHATSAPP_SIGNUP', extension, number, otp);
+    await otpService.consume(String(challenge._id), { purpose: 'WHATSAPP_SIGNUP' });
+    const { phone_extension, phone_number } = normalizePhone(extension, number);
     const user = await UserModel.findByIdAndUpdate(
       userId,
       {
         $set: {
-          'communication.whatsapp.extension': ext,
-          'communication.whatsapp.number': num,
+          'communication.whatsapp.extension': phone_extension,
+          'communication.whatsapp.number': phone_number,
           'communication.whatsapp.verified_at': new Date(),
         },
       },

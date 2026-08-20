@@ -17,6 +17,7 @@ const POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
+      attendance_otp_required
       updated_at
     }
   }
@@ -28,6 +29,7 @@ const UPDATE_POD_SETTINGS = gql`
       draft_retention_days
       max_backout_attempts
       venue_cancel_health_penalty
+      attendance_otp_required
       updated_at
     }
   }
@@ -37,12 +39,14 @@ interface SavedPodSettings {
   draft_retention_days: number;
   max_backout_attempts: number;
   venue_cancel_health_penalty: number;
+  attendance_otp_required: boolean;
 }
 
 const SAVED: SavedPodSettings = {
   draft_retention_days: 3,
   max_backout_attempts: 3,
   venue_cancel_health_penalty: 5,
+  attendance_otp_required: true,
 };
 
 /** The page refetches after every save, so this mock must be reusable. */

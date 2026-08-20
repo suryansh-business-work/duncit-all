@@ -123,6 +123,10 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           if (actionsPod) setScanPod({ id: actionsPod.id, pod_title: actionsPod.pod_title });
           setActionsPod(null);
         }}
+        onSeeAttendance={() => {
+          if (actionsPod) navigation.navigate('PodAttendance', { podId: actionsPod.id });
+          setActionsPod(null);
+        }}
         onComplete={() => {
           if (actionsPod) {
             setCompletePod({

@@ -65,14 +65,8 @@ export const CLUB_ADMIN_POD_FEEDBACK = gql`
   }
 `;
 
-/** Club Admin's no-scan override. The host's path stays QR-only: a scan is
- * proof the person was at the door, and the host is paid on the result. */
-export const CLUB_ADMIN_FORCE_ATTENDANCE = gql`
-  mutation ClubAdminForceAttendance($pod_doc_id: ID!, $membership_id: ID!) {
-    clubAdminForceAttendance(pod_doc_id: $pod_doc_id, membership_id: $membership_id) {
-      id
-      status
-      checked_in_at
-    }
-  }
-`;
+// The Club Admin's no-scan override used to have its document here, fired from
+// a bare link in the attendee table's Status cell. It now lives in
+// `@duncit/host-pod-actions`' attendance view — behind a warning, beside the
+// host's own marking path — so there is ONE document for that mutation and one
+// place that decides what has to be true before it runs (rule 34).

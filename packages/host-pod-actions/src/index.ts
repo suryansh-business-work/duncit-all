@@ -50,6 +50,17 @@ export {
 } from './pod-resubmit/pod-resubmit.form';
 export type { PodResubmitValues } from './pod-resubmit/pod-resubmit.form';
 
+export { default as PodAttendanceView } from './attendance/PodAttendanceView';
+export { useAttendanceBoard } from './attendance/useAttendanceBoard';
+export type { AttendanceBoardApi } from './attendance/useAttendanceBoard';
+export {
+  FORCE_ATTENDANCE,
+  HOST_MARK_ATTENDANCE,
+  POD_ATTENDANCE_BOARD,
+  REQUEST_ATTENDANCE_OTP,
+  VERIFY_ATTENDANCE_OTP,
+} from './attendance/queries';
+
 export { default as TicketScanDialog } from './ticket-scan/TicketScanDialog';
 export { default as ScannedAttendeeCard } from './ticket-scan/ScannedAttendeeCard';
 export { useQrScanner } from './ticket-scan/useQrScanner';

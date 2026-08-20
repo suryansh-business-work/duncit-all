@@ -77,6 +77,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Wallet: 'host/wallet',
       CreatePod: 'create-pod',
       PodPending: 'host/pod-pending/:podId',
+      // Mirrors mWeb's /host/pod/:podId/attendance exactly.
+      PodAttendance: 'host/pod/:podId/attendance',
       Earn: 'earn',
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',

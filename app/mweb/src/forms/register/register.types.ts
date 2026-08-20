@@ -1,9 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
-import { REFERRAL_CODE } from '@duncit/regex';
+import { PERSON_NAME, REFERRAL_CODE } from '@duncit/regex';
 import { fallbackT, type Translate } from '../../i18n/fallback';
-
-export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 
 /**
  * Register contract — RHF + Zod (migrated from Formik + Yup). Mirrors the native
@@ -37,7 +35,8 @@ export function makeRegisterSchema(
         .string()
         .trim()
         .min(1, t('mweb.signup.validation.nameRequired'))
-        .regex(PERSON_NAME_PATTERN, t('mweb.signup.validation.namePattern')),
+        .max(60, t('mweb.signup.validation.nameTooLong'))
+        .regex(PERSON_NAME, t('mweb.signup.validation.namePattern')),
       email: z
         .string()
         .trim()

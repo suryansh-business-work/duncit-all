@@ -24,6 +24,8 @@ const DEFAULT_DRAFT_RETENTION_DAYS = 3;
 const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
 /** Default Account Health penalty when a venue owner cancels a pod. */
 const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
+/** OTP verification before a by-hand attendance mark is on unless switched off. */
+const DEFAULT_ATTENDANCE_OTP_REQUIRED = true;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -60,6 +62,10 @@ const toAppPub = (d: any) => ({
   max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
   venue_cancel_health_penalty:
     d?.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
+  // Defaults ON: a host marking someone present by hand is the one attendance
+  // path with no scan behind it, so it starts verified until an admin says
+  // otherwise.
+  attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -350,6 +356,7 @@ type AppSettingsUpdateInput = {
   draft_retention_days?: number;
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
+  attendance_otp_required?: boolean;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -360,6 +367,7 @@ const APP_SETTING_PASSTHROUGH_FIELDS = [
   "time_format",
   "time_zone",
   "time_source",
+  "attendance_otp_required",
 ] as const;
 
 /** Saving an anchor stamps the server clock beside it, so every device can
@@ -414,6 +422,8 @@ export const settingsService = {
       max_backout_attempts: doc.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
       venue_cancel_health_penalty:
         doc.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
+      attendance_otp_required:
+        doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
     };
   },
 

@@ -10,8 +10,12 @@ export const whatsappResolvers = {
       args: { phone_extension: string; phone_number: string },
       ctx: GraphQLContext
     ) => {
-      requireAuth(ctx);
-      return whatsappAuthService.requestOtp(args.phone_extension, args.phone_number);
+      const auth = requireAuth(ctx);
+      return whatsappAuthService.requestOtp(
+        args.phone_extension,
+        args.phone_number,
+        auth.id
+      );
     },
     verifyWhatsAppOtp: async (
       _p: unknown,

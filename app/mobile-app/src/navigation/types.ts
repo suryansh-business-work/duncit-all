@@ -35,6 +35,8 @@ export type RootStackParamList = {
   Booking: { bookingId: string };
   BecomeHost: undefined;
   HostManage: undefined;
+  /** Host Studio > Your Pods > actions > See Marked Attendance. */
+  PodAttendance: { podId: string };
   HostApply: undefined;
   HostDashboard: undefined;
   Wallet: undefined;
@@ -113,6 +115,7 @@ export type MenuRoute = Exclude<
   | 'Menu'
   | 'CreatePod'
   | 'PodPending'
+  | 'PodAttendance'
   | 'Policy'
   | 'TicketDetails'
   | 'Login'

@@ -15,6 +15,7 @@ export function useThemeColors() {
     primary: theme.primary?.val as string,
     danger: theme.danger?.val as string,
     success: theme.success?.val as string,
+    warning: theme.warning?.val as string,
     onPrimary: theme.onPrimary?.val as string,
     borderColor: theme.borderColor?.val as string,
   };

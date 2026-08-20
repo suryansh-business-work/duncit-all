@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
+import { markTicketPresent } from './attendance.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -318,7 +319,7 @@ async function pdfFor(t: ITicket): Promise<Buffer> {
  * at the door is what counts, and a notification failure must never make a host
  * think the guest was not let in.
  */
-async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
+export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
   try {
     const [{ notificationService }, { PodModel }] = await Promise.all([
       import('@modules/engagement/notification/notification.service'),
@@ -642,10 +643,10 @@ export const ticketService = {
           companions: (membership?.companions ?? []).map(toPubCompanion),
         };
       }
-      t.status = 'CHECKED_IN';
-      t.checked_in_at = new Date();
-      t.checked_in_by = new Types.ObjectId(hostUserId);
-      await t.save();
+      // The scan IS the proof, so it carries no OTP verification — but it is
+      // still stamped with its method, so the roster can say how each person
+      // came to be marked.
+      await markTicketPresent(t, hostUserId, 'HOST_SCAN');
       await notifyAttendanceMarked(t);
     }
 
@@ -695,10 +696,7 @@ export const ticketService = {
           { extensions: { code: 'COMPANIONS_REQUIRED', companions_required: stillNeeded } }
         );
       }
-      t.status = 'CHECKED_IN';
-      t.checked_in_at = new Date();
-      t.checked_in_by = new Types.ObjectId(adminId);
-      await t.save();
+      await markTicketPresent(t, adminId, 'ADMIN');
       await notifyAttendanceMarked(t);
     }
     return toPub(t);
@@ -743,10 +741,7 @@ export const ticketService = {
     }
     if (t.status === 'CHECKED_IN') return toPub(t);
 
-    t.status = 'CHECKED_IN';
-    t.checked_in_at = new Date();
-    t.checked_in_by = new Types.ObjectId(actor.id);
-    await t.save();
+    await markTicketPresent(t, actor.id, 'CLUB_ADMIN_FORCE');
     await notifyAttendanceMarked(t);
     logs.server.info('ticket.service', 'clubAdminForceAttendance', {
       msg: 'attendance forced without a scan',

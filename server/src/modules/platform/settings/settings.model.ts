@@ -27,6 +27,11 @@ export interface IAppSettings extends Document {
   /** Account Health points deducted from a venue when its owner cancels a pod
    * booked there (Admin > Pods > Pod Settings). 0 disables the penalty. */
   venue_cancel_health_penalty: number;
+  /** Whether a host must verify an attendee's name + phone over OTP before
+   * marking them present by hand (Admin > Pods > Pod Settings). Switched off,
+   * the host vouches for the identity themselves and the mark is recorded as
+   * unverified. The door scan is proof on its own and is unaffected either way. */
+  attendance_otp_required: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -51,6 +56,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     draft_retention_days: { type: Number, default: 3, min: 1 },
     max_backout_attempts: { type: Number, default: 3, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
+    attendance_otp_required: { type: Boolean, default: true },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

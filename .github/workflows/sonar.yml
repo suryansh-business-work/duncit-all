@@ -71,7 +71,10 @@ jobs:
   coverage-workspaces:
     name: Coverage — workspaces
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 71 workspaces at up to 8 minutes each is a worst case nobody hits; the
+    # cap exists so a pathological run still reaches the upload step, because a
+    # job that times out never uploads and the coverage is lost.
+    timeout-minutes: 150
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
@@ -87,22 +90,36 @@ jobs:
       # in, which does not happen here. The lcov is written either way, and the
       # quality gate — not a local threshold — is what judges us.
       #
-      # Run GROUP BY GROUP rather than as one recursive command. A single
-      # workspace that hangs used to take every other group down with it and
-      # the artifact was then never written, so Sonar saw 0% for everything but
-      # the mobile app. Each group is time-boxed and cannot veto the others.
+      # ONE WORKSPACE AT A TIME, each with its own time box. Grouping them was
+      # still too coarse: "./portals/**" put all 17 portals inside a single 25
+      # minute budget, so when it ran out the whole group was killed and admin,
+      # crm, mweb and shell reported 0.0% while covering 41-100% locally. A
+      # workspace can now only ever cost itself.
       - name: Run coverage
         continue-on-error: true
         run: |
           set +e
-          # Quoted: bash would otherwise expand the globs itself and pnpm would
-          # never see the workspace patterns it is meant to filter on.
-          for group in "./packages/**" "./portals/**" "./website/**" "./app/mweb" "./server"; do
-            echo "::group::coverage $group"
-            timeout 25m pnpm --filter "$group" --if-present --no-bail test:coverage
-            echo "  -> exit $? for $group"
-            echo "::endgroup::"
+          # The workspace list comes from pnpm itself, so a new package is
+          # picked up without editing this file.
+          mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json |
+            node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+              for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name);
+            })')
+          echo "found ${#WORKSPACES[@]} workspace(s)"
+          failed=()
+          for ws in "${WORKSPACES[@]}"; do
+            timeout 8m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
+            code=$?
+            if [ $code -ne 0 ]; then
+              failed+=("$ws($code)")
+              echo "::group::coverage FAILED $ws (exit $code)"
+              tail -40 "/tmp/cov-$$.log"
+              echo "::endgroup::"
+            fi
           done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::warning::coverage run did not succeed for: ${failed[*]}"
+          fi
           exit 0
       - name: Collect lcov
         run: |

@@ -191,18 +191,33 @@ const fillEverything = async () => {
   await settle();
 };
 
-const MAX_CLICKS = 20;
+const MAX_CLICKS = 24;
+/**
+ * Two waves, because a console page is layered.
+ *
+ * The first wave opens the tabs, drawers and dialogs; their own controls only
+ * exist once that has happened, so a single snapshot of the page stops one
+ * level short of where most of the uncovered code lives. Two bounded waves,
+ * never re-pressing the same node, reach that layer without any risk of walking
+ * forever.
+ */
+const WAVES = 2;
 
 const pressEverything = async () => {
-  const controls = [...document.body.querySelectorAll<HTMLElement>('button:not([disabled]), [role="tab"]')].slice(
-    0,
-    MAX_CLICKS
-  );
+  const pressed = new Set<HTMLElement>();
 
-  for (const control of controls) {
-    if (!control.isConnected) continue;
-    fireEvent.click(control);
-    await settle();
+  for (let wave = 0; wave < WAVES; wave += 1) {
+    const controls = [...document.body.querySelectorAll<HTMLElement>('button:not([disabled]), [role="tab"]')]
+      .filter((control) => !pressed.has(control))
+      .slice(0, MAX_CLICKS);
+    if (controls.length === 0) return;
+
+    for (const control of controls) {
+      pressed.add(control);
+      if (!control.isConnected) continue;
+      fireEvent.click(control);
+      await settle();
+    }
   }
 };
 

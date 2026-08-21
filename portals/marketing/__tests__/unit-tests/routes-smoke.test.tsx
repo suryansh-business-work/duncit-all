@@ -134,6 +134,24 @@ beforeAll(() => {
   Element.prototype.getBoundingClientRect = function box() {
     return { x: 0, y: 0, top: 0, left: 0, right: 1200, bottom: 800, width: 1200, height: 800, toJSON: () => ({}) };
   } as typeof Element.prototype.getBoundingClientRect;
+
+  // jsdom implements neither observer, and a chart, a virtualised list or a
+  // MUI popper constructing one throws `ResizeObserver is not defined` — which
+  // takes the whole page down mid-render, so the half of it below the chart
+  // never runs. A no-op that never reports is enough: nothing here asserts on
+  // a resize, only that the page survives being built.
+  class NoopObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  globalThis.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver;
+  globalThis.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionObserver;
+  Element.prototype.scrollTo ??= () => undefined;
+  Element.prototype.scrollIntoView ??= () => undefined;
 });
 
 const settle = async () => {

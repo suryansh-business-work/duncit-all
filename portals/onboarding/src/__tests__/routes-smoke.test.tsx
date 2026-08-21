@@ -24,6 +24,35 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { schemaMockLink, serverSchema } from './schema-mock';
 
+/**
+ * A signed-in reader who holds every role.
+ *
+ * A token alone is not a session. Partners gates each area on
+ * `useUserData().user.roles` and renders NOTHING while the user is still
+ * unknown — which, with no provider above it, is forever. Its role-gated pages
+ * were therefore at zero however well the queries answered. The portals that do
+ * not read a session are unaffected by this.
+ */
+vi.mock('@duncit/user-context', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    useUserData: () => ({
+      user: {
+        user_id: 'smoke-user',
+        full_name: 'Smoke Reader',
+        email: 'smoke@duncit.com',
+        roles: ['USER', 'HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        city: 'Bengaluru',
+      },
+      loading: false,
+      error: null,
+      refetch: () => undefined,
+      logout: () => undefined,
+    }),
+  };
+});
+
 vi.mock('../components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));

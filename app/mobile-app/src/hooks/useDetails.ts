@@ -202,6 +202,14 @@ export function useClubDetails(clubId: string) {
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
+    // Opened from a /club/:clubSlug link, this screen renders once before
+    // useResolvedClubId has an id — and keeps the empty one when the slug
+    // resolves to nothing. Asking for club "" could only ever answer with an
+    // error, so it waits for a real id rather than spending a round trip on one.
+    if (!clubId) {
+      setIsLoading(false);
+      return;
+    }
     let active = true;
     setIsLoading(true);
     graphqlRequest(ClubDetailsDocument, { clubId }, { auth: true })

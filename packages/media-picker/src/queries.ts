@@ -99,8 +99,8 @@ export const VIDEO_COMPRESSION_JOB = gql`
  * leaves the server. Used by useImagekitDirectUpload (large support videos).
  */
 export const GET_IMAGEKIT_AUTH = gql`
-  mutation GetImagekitAuth($folder: String) {
-    getImagekitAuth(folder: $folder) {
+  mutation GetImagekitAuth($folder: String, $surface: UploadSurface) {
+    getImagekitAuth(folder: $folder, surface: $surface) {
       uploadUrl
       ticket
       urlEndpoint

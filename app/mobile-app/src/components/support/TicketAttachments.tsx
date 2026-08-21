@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { AttachmentView } from '@/components/AttachmentView';
 import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -34,6 +35,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         <Text flex={1} fontSize={12} color="$muted">
           Attach files ({attachments.length}/{MAX_ATTACHMENTS})
         </Text>
+        <AiMonitoringChip testID="ticket-attach-ai-monitoring" />
         <XStack
           testID="ticket-attach-add"
           role="button"

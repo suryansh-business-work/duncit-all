@@ -1,4 +1,4 @@
-import { uploadSettingService, mediaScanService, type UpdateUploadSettingInput } from './uploadSetting.service';
+import { uploadSettingService, type UpdateUploadSettingInput } from './uploadSetting.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
@@ -16,10 +16,6 @@ export const uploadSettingResolvers = {
     allUploadSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return uploadSettingService.list();
-    },
-    mediaScanLogsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
-      return mediaScanService.table(args.query);
     },
   },
   Mutation: {

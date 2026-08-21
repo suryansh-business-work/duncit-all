@@ -350,6 +350,80 @@ export type AiMjmlTemplateInput = {
   prompt: Scalars['String']['input'];
 };
 
+/**
+ * The AI Monitoring chip/dialog copy every upload surface renders.
+ * A null field means "no override" — the surface renders its own localized
+ * fallback, so untouched copy still follows the reader's language.
+ */
+export type AiMonitoringConfig = {
+  __typename?: 'AiMonitoringConfig';
+  /** Master switch for the chip. Off hides it everywhere; scans still log. */
+  chip_enabled: Scalars['Boolean']['output'];
+  chip_label?: Maybe<Scalars['String']['output']>;
+  dialog_footnote?: Maybe<Scalars['String']['output']>;
+  dialog_intro?: Maybe<Scalars['String']['output']>;
+  dialog_points: Array<Scalars['String']['output']>;
+  dialog_title?: Maybe<Scalars['String']['output']>;
+  dismiss_label?: Maybe<Scalars['String']['output']>;
+};
+
+/** One AI monitoring check — every image the platform screened, and what came of it. */
+export type AiMonitoringLog = {
+  __typename?: 'AiMonitoringLog';
+  /** Action Taken: NONE, ALLOWED, FLAGGED or BLOCKED. */
+  action: Scalars['String']['output'];
+  checked_at?: Maybe<Scalars['String']['output']>;
+  /** Upload date and time. */
+  created_at: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  /** User/Entity that uploaded it, resolved to a display name. */
+  entity?: Maybe<Scalars['String']['output']>;
+  /** Failure detail when the check did not complete. */
+  error: Scalars['String']['output'];
+  file_name: Scalars['String']['output'];
+  /** Upload folder — the Source/Module the image came from. */
+  folder: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  model: Scalars['String']['output'];
+  /** AI Result: PENDING, LOW, MEDIUM or HIGH. */
+  risk: Scalars['String']['output'];
+  /** Monitoring Status: PENDING, COMPLETED, FAILED or SKIPPED. */
+  status: Scalars['String']['output'];
+  /** Reason/Comment — the model's one-line explanation, or why it never ran. */
+  summary: Scalars['String']['output'];
+  /** Client family the upload came from: PORTALS, MOBILE or MWEB. */
+  surface: Scalars['String']['output'];
+  /** Uploaded image. */
+  url: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['String']['output']>;
+};
+
+export type AiMonitoringLogsTableResult = {
+  __typename?: 'AiMonitoringLogsTableResult';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AiMonitoringLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** The config plus the prompt the image check runs on (AI Portal > Settings). */
+export type AiMonitoringSettings = {
+  __typename?: 'AiMonitoringSettings';
+  chip_enabled: Scalars['Boolean']['output'];
+  chip_label?: Maybe<Scalars['String']['output']>;
+  dialog_footnote?: Maybe<Scalars['String']['output']>;
+  dialog_intro?: Maybe<Scalars['String']['output']>;
+  dialog_points: Array<Scalars['String']['output']>;
+  dialog_title?: Maybe<Scalars['String']['output']>;
+  dismiss_label?: Maybe<Scalars['String']['output']>;
+  /** Live body of the system prompt that analyses every uploaded image. */
+  image_prompt: Scalars['String']['output'];
+  /** Its row in the AI Prompt Library — the same prompt, one store. */
+  image_prompt_id?: Maybe<Scalars['ID']['output']>;
+  image_prompt_key: Scalars['String']['output'];
+  image_scan_model: Scalars['String']['output'];
+};
+
 export type AiProductDescribeInput = {
   brand_name?: InputMaybe<Scalars['String']['input']>;
   product_name: Scalars['String']['input'];
@@ -1391,6 +1465,17 @@ export type BackoutRefundRequest = {
   backout_no: Scalars['String']['output'];
   /** Lifecycle status of this Backout request. */
   backout_status: BackoutStatus;
+  /**
+   * Duncit Coins this release's share of the booking was paid with, before the
+   * deduction — the coin twin of payment_amount.
+   */
+  coins_paid: Scalars['Float']['output'];
+  /**
+   * Coins handed back, after the SAME Backouts deduction the cash refund takes
+   * (Finance > Default Deductions). Credited to the balance at the moment the
+   * cash refund is processed, never before.
+   */
+  coins_refunded: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
   /** Backouts deduction % snapshotted when the request was created. */
   deduction_pct: Scalars['Float']['output'];
@@ -7035,27 +7120,6 @@ export type MediaItem = {
   width?: Maybe<Scalars['Int']['output']>;
 };
 
-export type MediaScanLog = {
-  __typename?: 'MediaScanLog';
-  created_at: Scalars['String']['output'];
-  file_name: Scalars['String']['output'];
-  folder: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  risk: Scalars['String']['output'];
-  summary: Scalars['String']['output'];
-  surface: Scalars['String']['output'];
-  url: Scalars['String']['output'];
-  user_id?: Maybe<Scalars['String']['output']>;
-};
-
-export type MediaScanLogsTableResult = {
-  __typename?: 'MediaScanLogsTableResult';
-  page: Scalars['Int']['output'];
-  page_size: Scalars['Int']['output'];
-  rows: Array<MediaScanLog>;
-  total: Scalars['Int']['output'];
-};
-
 /** Global onboarding-meeting availability (edited from the Onboarding portal). */
 export type MeetingAvailability = {
   __typename?: 'MeetingAvailability';
@@ -7520,6 +7584,12 @@ export type Mutation = {
   createApiKey: CreatedApiKey;
   createAppPopup: AppPopup;
   createAudienceList: AudienceList;
+  /**
+   * Opens an Auto Pod for the marketplace. A Duncit admin opens one for every
+   * club to compete for; a Club Admin passes club_id to open one FOR their own
+   * club, which enrols that club at creation (so only a venue and a host are
+   * still needed) and fixes the category to the club's own.
+   */
   createAutoPod: AutoPod;
   createBadge: Badge;
   createCategory: Category;
@@ -8288,6 +8358,8 @@ export type Mutation = {
   unsubscribeNewsletter: Scalars['Boolean']['output'];
   /** Marketing edits per-position per-day pricing. */
   updateAdPricing: AdPricing;
+  /** AI Portal: save the chip/dialog copy and the image-analysis prompt. */
+  updateAiMonitoringSettings: AiMonitoringSettings;
   updateAiPrompt: AiPrompt;
   updateAppBuildSettings: AppBuildSettings;
   updateAppPopup: AppPopup;
@@ -8929,6 +9001,7 @@ export type MutationCreateAudienceListArgs = {
 
 
 export type MutationCreateAutoPodArgs = {
+  club_id?: InputMaybe<Scalars['ID']['input']>;
   input: CreateAutoPodInput;
 };
 
@@ -9812,6 +9885,7 @@ export type MutationGenerateMeetingLinkArgs = {
 
 export type MutationGetImagekitAuthArgs = {
   folder?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<UploadSurface>;
 };
 
 
@@ -11080,6 +11154,11 @@ export type MutationUpdateAdPricingArgs = {
 };
 
 
+export type MutationUpdateAiMonitoringSettingsArgs = {
+  input: UpdateAiMonitoringSettingsInput;
+};
+
+
 export type MutationUpdateAiPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateAiPromptInput;
@@ -12330,6 +12409,12 @@ export type PaymentReleaseFilterInput = {
 export type PaymentReleaseKind =
   /** The club-admin cut of a completed pod, paid to the club's admin user. */
   | 'CLUB_ADMIN'
+  /**
+   * An e-commerce brand's product-sale earnings on a completed pod, paid to the
+   * seller who listed the stock. The amount is the gross buyers paid minus the
+   * Duncit commission — the same net the seller's product invoice bills.
+   */
+  | 'ECOMM_PAYMENT'
   | 'HOST_PAYMENT'
   | 'VENUE_BILLING';
 
@@ -13051,6 +13136,15 @@ export type PodFilterInput = {
 export type PodFinanceBreakdown = {
   __typename?: 'PodFinanceBreakdown';
   bookings_count: Scalars['Int']['output'];
+  /** Coins this pod's bookings paid back to buyers as reward. */
+  coins_earned_total: Scalars['Float']['output'];
+  /**
+   * Duncit Coins spent across this pod's successful bookings. Cash the pod never
+   * collected: coins cut the gross before GST, so collected_total is lower by
+   * this much than the tickets' face value. Stating it is what makes the gap
+   * explainable instead of looking like missing money.
+   */
+  coins_redeemed_total: Scalars['Float']['output'];
   collected_total: Scalars['Float']['output'];
   completed_at?: Maybe<Scalars['String']['output']>;
   currency_symbol: Scalars['String']['output'];
@@ -13144,6 +13238,20 @@ export type PodIdeaTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/**
+ * Where a pod sits in its life, DERIVED rather than stored: cancelled is
+ * soft-deleted, completed is finance-settled or past its end, ongoing has
+ * started and not ended, and everything else is upcoming. Named PodLifecycle
+ * because VenuePodBucket already means the same four values scoped to one
+ * venue — one name for two types would be folded into one by the schema
+ * builder.
+ */
+export type PodLifecycle =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'ONGOING'
+  | 'UPCOMING';
+
 export type PodMedia = {
   __typename?: 'PodMedia';
   type: CategoryMediaType;
@@ -13200,6 +13308,17 @@ export type PodMemberBackout = {
   /** 1-based attempt for this user on this pod (a pod allows a few). */
   attempt_no: Scalars['Int']['output'];
   backout_no: Scalars['String']['output'];
+  /**
+   * Duncit Coins this release's share of the booking was paid with, before the
+   * deduction — the coin twin of payment_amount.
+   */
+  coins_paid: Scalars['Float']['output'];
+  /**
+   * Coins handed back, after the SAME Backouts deduction the cash refund takes
+   * (Finance > Default Deductions). Credited to the balance at the moment the
+   * cash refund is processed, never before.
+   */
+  coins_refunded: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
   deduction_pct: Scalars['Float']['output'];
   events: Array<PodMemberBackoutEvent>;
@@ -13244,6 +13363,12 @@ export type PodMembershipState = {
   backout_in_process: Scalars['Boolean']['output'];
   /** Estimated refund after deduction for the caller's paid booking (null for free). */
   backout_refund_amount?: Maybe<Scalars['Float']['output']>;
+  /**
+   * Coins the caller would get back if they released everything they hold —
+   * their share of what the booking was paid in coins, less the same Backouts
+   * deduction. 0 when the booking spent no coins.
+   */
+  backout_refund_coins: Scalars['Float']['output'];
   /**
    * Refund after deduction for ONE seat, so a partial backout can be priced for
    * any number the buyer picks without another round trip. Null for a free join.
@@ -13554,6 +13679,33 @@ export type PodVenueApproval =
   | 'APPROVED'
   | 'DECLINED'
   | 'NONE'
+  | 'PENDING';
+
+/** One pod somebody has withdrawn against — a row of the Withdrawal Payments list. */
+export type PodWithdrawalGroup = {
+  __typename?: 'PodWithdrawalGroup';
+  /** Sum of the slices attributed to this pod across those requests. */
+  attributed_total: Scalars['Float']['output'];
+  last_requested_at: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** Every partner who has raised a withdrawal against this pod so far. */
+  requested_from: Array<WithdrawerRole>;
+  /** APPROVED only when every request against this pod has been paid. */
+  status: PodWithdrawalStatus;
+  withdrawal_count: Scalars['Int']['output'];
+};
+
+export type PodWithdrawalGroupPage = {
+  __typename?: 'PodWithdrawalGroupPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodWithdrawalGroup>;
+  total: Scalars['Int']['output'];
+};
+
+export type PodWithdrawalStatus =
+  | 'APPROVED'
   | 'PENDING';
 
 export type Policy = {
@@ -14248,6 +14400,12 @@ export type Query = {
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   agentAvailability: AgentAvailability;
+  /** Chip/dialog copy for any upload surface. Public — it is copy, and an upload field must never wait on a session to render its own safety notice. */
+  aiMonitoringConfig: AiMonitoringConfig;
+  /** AI Portal: full monitoring history (server-side table). */
+  aiMonitoringLogsTable: AiMonitoringLogsTableResult;
+  /** AI Portal: the copy plus the image-analysis prompt. */
+  aiMonitoringSettings: AiMonitoringSettings;
   aiPrompt?: Maybe<AiPrompt>;
   aiPrompts: Array<AiPrompt>;
   /** The API campaigns AiSensy has for this project. */
@@ -14375,6 +14533,16 @@ export type Query = {
   clubAdminPodAuditLogsTable: PodAuditLogTablePage;
   /** Rating + review summary for one pod in the caller's clubs. */
   clubAdminPodFeedback: PodFeedbackSummary;
+  /**
+   * ONE pod in the caller's clubs, in the shape the club-admin pod editor
+   * prefills from.
+   *
+   * Its own query rather than the public pod query: that one only honours
+   * include_deleted for platform reviewers, and a cancelled pod stays editable
+   * for the club admin who has to correct it. Gated on assertClubAdminForPod,
+   * which is what keeps a club admin inside their own club.
+   */
+  clubAdminPodForEdit?: Maybe<Pod>;
   /**
    * The host profile behind one of this pod's hosts.
    *
@@ -14687,8 +14855,6 @@ export type Query = {
    * by default).
    */
   mediaFiles: Array<MediaItem>;
-  /** Admin: AI image-monitoring scan log (server-side table). */
-  mediaScanLogsTable: MediaScanLogsTableResult;
   /** Global slot-availability config. */
   meetingAvailability: MeetingAvailability;
   /** Onboarding-team holidays / leave days (block slots; shown on the calendar). */
@@ -14918,10 +15084,27 @@ export type Query = {
   podSettlementPreview: PodSettlement;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
+  /**
+   * Withdrawal Payments, grouped by pod.
+   *
+   * A requested_from filter in the query narrows to pods that partner has
+   * withdrawn against. It is applied to the allocations BEFORE grouping, so a
+   * pod's totals only ever count that partner's legs — matching it against the
+   * grouped row would keep pods whose other partners matched.
+   */
+  podWithdrawalGroupsTable: PodWithdrawalGroupPage;
+  /** One pod's row from that list. Null when nothing has been withdrawn against it. */
+  podWithdrawalSummary?: Maybe<PodWithdrawalGroup>;
+  /** Every withdrawal attributed to one pod — the Withdrawal Payments drill-down. */
+  podWithdrawalsTable: WalletWithdrawalTablePage;
   pods: Array<Pod>;
   /** Pods that currently stock a catalogue product — per-pod purchase context so a buyer can add the product to the cart from the catalogue / standalone product detail (any signed-in user). */
   podsForProduct: Array<ProductPodOption>;
-  /** include_deleted also lists cancelled pods — honored for admin reviewers only. */
+  /**
+   * include_deleted also lists cancelled pods — honored for admin reviewers only.
+   * lifecycle narrows the page to one derived bucket; asking for CANCELLED is
+   * itself the opt-in to soft-deleted rows, again for reviewers only.
+   */
   podsTable: PodTablePage;
   policies: Array<Policy>;
   policiesTable: PolicyTablePage;
@@ -15154,6 +15337,8 @@ export type Query = {
   userAccountHealth: HealthScore;
   userActivityYear: UserActivityYear;
   userBadges: Array<UserBadge>;
+  /** Admin: the complete profile change history of one user, newest first. */
+  userChangeLogsTable: UserChangeLogTablePage;
   userClickstream: Array<AppAnalyticsEvent>;
   userContactActions: Array<UserContactAction>;
   userContactActionsTable: UserContactActionTablePage;
@@ -15308,6 +15493,11 @@ export type QueryAdminVenueSlotsArgs = {
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAiMonitoringLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -15546,6 +15736,11 @@ export type QueryClubAdminPodAuditLogsTableArgs = {
 
 export type QueryClubAdminPodFeedbackArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminPodForEditArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -16320,11 +16515,6 @@ export type QueryMediaFilesArgs = {
 };
 
 
-export type QueryMediaScanLogsTableArgs = {
-  query?: InputMaybe<TableQueryInput>;
-};
-
-
 export type QueryMeetingSlotsArgs = {
   exclude_meeting_id?: InputMaybe<Scalars['ID']['input']>;
   kind?: InputMaybe<SurveyKind>;
@@ -16737,6 +16927,22 @@ export type QueryPodSpotFillsArgs = {
 };
 
 
+export type QueryPodWithdrawalGroupsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPodWithdrawalSummaryArgs = {
+  pod_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodWithdrawalsTableArgs = {
+  pod_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPodsArgs = {
   filter?: InputMaybe<PodFilterInput>;
 };
@@ -16749,6 +16955,7 @@ export type QueryPodsForProductArgs = {
 
 export type QueryPodsTableArgs = {
   include_deleted?: InputMaybe<Scalars['Boolean']['input']>;
+  lifecycle?: InputMaybe<PodLifecycle>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -17205,6 +17412,12 @@ export type QueryUserActivityYearArgs = {
 
 
 export type QueryUserBadgesArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserChangeLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
   user_id: Scalars['ID']['input'];
 };
 
@@ -19463,6 +19676,18 @@ export type UpdateAdPricingInput = {
   venue_list_per_day?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type UpdateAiMonitoringSettingsInput = {
+  chip_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  chip_label?: InputMaybe<Scalars['String']['input']>;
+  dialog_footnote?: InputMaybe<Scalars['String']['input']>;
+  dialog_intro?: InputMaybe<Scalars['String']['input']>;
+  dialog_points?: InputMaybe<Array<Scalars['String']['input']>>;
+  dialog_title?: InputMaybe<Scalars['String']['input']>;
+  dismiss_label?: InputMaybe<Scalars['String']['input']>;
+  /** Replaces the body of the upload.image_scan system prompt. */
+  image_prompt?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateAiPromptInput = {
   category?: InputMaybe<Scalars['String']['input']>;
   content?: InputMaybe<Scalars['String']['input']>;
@@ -20245,6 +20470,61 @@ export type UserBadge = {
   id: Scalars['ID']['output'];
   user_id: Scalars['ID']['output'];
 };
+
+/** What happened to the account (not to the individual field). */
+export type UserChangeAction =
+  | 'CREATE'
+  | 'DELETE'
+  | 'UPDATE';
+
+/**
+ * Who made the change, relative to the account it changed. Editing your own
+ * profile is USER, editing someone else's is ADMIN, and a write with no
+ * signed-in caller (signup, webhook, background job) is SYSTEM.
+ */
+export type UserChangeActorType =
+  | 'ADMIN'
+  | 'SYSTEM'
+  | 'USER';
+
+/** One immutable entry: one field of one user, changed once. */
+export type UserChangeLog = {
+  __typename?: 'UserChangeLog';
+  action: UserChangeAction;
+  actor_name: Scalars['String']['output'];
+  actor_type: UserChangeActorType;
+  /** The account that made the change; null for SYSTEM writes. */
+  actor_user_id?: Maybe<Scalars['ID']['output']>;
+  /** When the change was recorded. */
+  created_at: Scalars['String']['output'];
+  /** Document path of the field, e.g. profile.first_name. */
+  field: Scalars['String']['output'];
+  /** Human label for the same field, e.g. First Name. */
+  field_label: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  new_value: Scalars['String']['output'];
+  old_value: Scalars['String']['output'];
+  source: UserChangeSource;
+  /** The account the change was made TO. */
+  user_id: Scalars['ID']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type UserChangeLogTablePage = {
+  __typename?: 'UserChangeLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UserChangeLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** Which surface the change was made from. */
+export type UserChangeSource =
+  | 'ADMIN_PORTAL'
+  | 'MWEB'
+  | 'NATIVE'
+  | 'PORTAL'
+  | 'SERVER';
 
 export type UserContactAction = {
   __typename?: 'UserContactAction';
@@ -21397,6 +21677,8 @@ export type WalletWithdrawal = {
   __typename?: 'WalletWithdrawal';
   account_holder_name: Scalars['String']['output'];
   account_number: Scalars['String']['output'];
+  /** Empty on a rejected request — the money went back, so the pods are free again. */
+  allocations: Array<WithdrawalAllocation>;
   amount: Scalars['Float']['output'];
   beneficiary_email: Scalars['String']['output'];
   beneficiary_name: Scalars['String']['output'];
@@ -21521,6 +21803,26 @@ export type WhatsAppOtpRequestResult = {
   __typename?: 'WhatsAppOtpRequestResult';
   dev_otp?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+};
+
+/**
+ * Which pod's earnings funded a slice of a withdrawal.
+ *
+ * Decided once, when the withdrawal is requested, by drawing the withdrawer's
+ * un-withdrawn pod credits oldest first. It is an accounting attribution, not a
+ * physical fact — a wallet holds one fungible balance — so Finance reads it as
+ * "where this money came from", never as a separate payable.
+ */
+export type WithdrawalAllocation = {
+  __typename?: 'WithdrawalAllocation';
+  amount: Scalars['Float']['output'];
+  kind: PaymentReleaseKind;
+  pod_id: Scalars['ID']['output'];
+  /** Frozen at request time, so a soft-deleted pod still renders a title. */
+  pod_title: Scalars['String']['output'];
+  release_id: Scalars['String']['output'];
+  /** The capacity THIS pod's money was earned in, derived from the payout leg. */
+  role: WithdrawerRole;
 };
 
 export type WithdrawalMethod =

@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.65.25",
+  "version": "1.66.0",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -46,6 +46,7 @@
     "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
   },
   "dependencies": {
+    "@duncit/ai-monitoring": "file:../../packages/ai-monitoring",
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
     "@duncit/datetime": "file:../../packages/datetime",
     "@duncit/dialogs-native": "file:../../packages/dialogs-native",

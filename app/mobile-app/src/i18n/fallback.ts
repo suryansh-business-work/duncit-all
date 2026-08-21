@@ -1,4 +1,5 @@
 import {
+  AI_MONITORING_BUNDLE,
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
@@ -28,8 +29,13 @@ import {
 // `whatsappPreference.categories.*` is what the admin console names a scenario
 // row with, and `policyAcceptance.*` is the signup gate both apps must word
 // identically.
+// `aiMonitoring.*` is the notice shown beside every upload control. It is its
+// own namespace rather than an mweb.* key because the portals render the same
+// sentences through @duncit/ai-monitoring/mui — three copies of them is exactly
+// the drift rule 27 exists to stop.
 export const NATIVE_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
+  ...AI_MONITORING_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,

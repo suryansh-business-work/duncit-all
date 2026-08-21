@@ -389,3 +389,27 @@ gate is real for the pure validation logic; the MUI/Apollo dialog is covered by 
 Cypress flows instead. Adding a new pure helper to `src/utils.ts` therefore requires tests for
 every branch, while adding one to a `.tsx` does not — an asymmetry worth knowing before you decide
 where a helper goes.
+
+## The AI Monitoring notice
+
+Every field and dialog in this package renders `<AiMonitoringChip />` from
+`@duncit/ai-monitoring/mui` beside its upload control. Do not add another one at
+a call site, and do not remove it from a field: the chip is how a person finds
+out — before they pick a file — that what they upload is screened by AI, and the
+picker is the one place that promise can be made everywhere at once.
+
+The wording it shows is edited in AI Portal → AI Monitoring → Settings; the
+checks it describes are listed in AI Portal → AI Monitoring → Logs. The chip
+needs no props and renders nothing when an operator turns the notice off.
+
+## Which route an upload takes
+
+Two, and both are logged:
+
+- `uploadImageToImagekit` / `useImagekitBase64Upload` — the GraphQL mutation.
+  Applies crop, compression and the per-surface size and format rules.
+- `directUploadToImagekit` / `useImagekitDirectUpload` — a streamed multipart
+  POST to the server's `/upload` route, which is what gets a large video past
+  the API body limit. It carries no body limit of its own, so pass the
+  `surface` argument: the raw POST holds only a one-shot ticket, and the surface
+  fixed on that ticket is what the AI Monitoring row is attributed to.

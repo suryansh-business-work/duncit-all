@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { outboundFetch } from '@utils/outboundFetch';
 
 /**
  * Slack gateway — thin Web API wrapper. The bot token is owned by the Tech
@@ -145,7 +146,10 @@ async function slackCall(
   init: RequestInit,
   token: string
 ): Promise<any> {
-  const res = await fetch(`${SLACK_API}/${method}${query}`, {
+  // outboundFetch, so a Slack call that never left the box says why: an
+  // announcement that failed on the wire recorded only 'fetch failed', both in
+  // the log and in the build row's slack_error.
+  const res = await outboundFetch('Slack', `${SLACK_API}/${method}${query}`, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, ...init.headers },
   });
@@ -423,7 +427,7 @@ export interface SlackAuthStatus {
  */
 export async function authStatus(): Promise<SlackAuthStatus> {
   const token = await botToken();
-  const res = await fetch(`${SLACK_API}/auth.test`, {
+  const res = await outboundFetch('Slack', `${SLACK_API}/auth.test`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

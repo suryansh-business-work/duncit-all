@@ -1,0 +1,61 @@
+{
+  "name": "@duncit/ai-monitoring",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One AI Monitoring notice for every upload field: framework-free copy resolution at the root, the MUI chip + dialog behind ./mui. The native app renders the same copy through its own Tamagui view.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mui": "./src/mui/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/ai-monitoring"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@duncit/app-settings": "workspace:*",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
+    "@duncit/app-settings": {
+      "optional": true
+    },
+    "@mui/icons-material": {
+      "optional": true
+    },
+    "@mui/material": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.10.4",
+    "@duncit/app-settings": "workspace:*",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.3",
+    "@vitest/coverage-v8": "^2.1.9",
+    "graphql": "^16.8.1",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
+}

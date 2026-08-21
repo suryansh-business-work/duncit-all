@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
@@ -55,6 +56,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
           <Typography variant="subtitle2">Attachments</Typography>
           <Typography variant="caption" color="text.secondary">Image or video — sent with every email that uses this template (max 25MB each).</Typography>
         </Box>
+        <AiMonitoringChip />
         <Button size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
           {busy ? 'Uploading…' : 'Add file'}
         </Button>

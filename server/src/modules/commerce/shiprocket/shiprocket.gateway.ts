@@ -20,6 +20,24 @@ interface Creds {
 
 let tokenCache: { hash: string; token: string; exp: number } | null = null;
 
+/**
+ * A credential ShipRocket has already refused.
+ *
+ * Retrying a wrong password cannot make it right, and ShipRocket counts the
+ * attempts: the payment reconciler re-running one failing shipment every sweep
+ * is what turned "Invalid email and password combination" into "User blocked
+ * due to too many failed login attempts" — locking the live shipping account
+ * out over a credential nobody had fixed yet.
+ *
+ * So a refusal is remembered against the same email+password hash the token
+ * cache is keyed on, and every later call fails on it without touching the
+ * login endpoint. Rotating the password in the Tech portal changes the hash and
+ * clears this for free, exactly as it does the token — and, being module state
+ * like the token, a restart clears it too, so a ShipRocket-side block that has
+ * since lifted is never latched for good.
+ */
+let refusedCreds: { hash: string; message: string } | null = null;
+
 export async function isShiprocketConfigured(): Promise<boolean> {
   const [email, password] = await Promise.all([
     getRuntimeEnvValue('SHIPROCKET_EMAIL'),
@@ -43,28 +61,43 @@ async function getCreds(): Promise<Creds> {
   return { email, password, ttlMs: hours * 3_600_000 };
 }
 
-async function login({ email, password }: Creds): Promise<string> {
+function loginRefused(message: string): GraphQLError {
+  return new GraphQLError(
+    `ShipRocket login failed: ${message}. Update the credentials in the Tech portal — they are not retried until they change.`,
+    { extensions: { code: 'BAD_GATEWAY' } }
+  );
+}
+
+async function login({ email, password }: Creds, hash: string): Promise<string> {
   const res = await fetch(`${SR_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
   const data = (await res.json().catch(() => ({}))) as { token?: string; message?: string };
-  if (!res.ok || !data.token) {
-    throw new GraphQLError(`ShipRocket login failed: ${data.message ?? res.status}`, {
-      extensions: { code: 'BAD_GATEWAY' },
-    });
+  if (res.ok && data.token) return data.token;
+  const message = String(data.message ?? res.status);
+  // A 4xx is ShipRocket saying these credentials are wrong, blocked or being
+  // sent too fast — all three are answered by stopping, not by asking again.
+  // Everything else stays retryable: a 5xx is ShipRocket having a bad minute,
+  // and a 2xx carrying no token is a malformed answer rather than a refusal.
+  if (res.status >= 400 && res.status < 500) {
+    refusedCreds = { hash, message };
+    throw loginRefused(message);
   }
-  return data.token;
+  throw new GraphQLError(`ShipRocket login failed: ${message}`, {
+    extensions: { code: 'BAD_GATEWAY' },
+  });
 }
 
 async function getToken(force = false): Promise<string> {
   const creds = await getCreds();
   const hash = createHash('sha256').update(`${creds.email}:${creds.password}`).digest('hex');
+  if (refusedCreds?.hash === hash) throw loginRefused(refusedCreds.message);
   if (!force && tokenCache && tokenCache.hash === hash && tokenCache.exp > Date.now()) {
     return tokenCache.token;
   }
-  const token = await login(creds);
+  const token = await login(creds, hash);
   tokenCache = { hash, token, exp: Date.now() + creds.ttlMs };
   return token;
 }

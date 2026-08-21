@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import jwt from 'jsonwebtoken';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
+import { outboundFetch } from '@utils/outboundFetch';
 
 /**
  * Google's authorization-code flow for a Gmail mailbox.
@@ -127,7 +128,9 @@ export interface GoogleTokenResponse {
 }
 
 async function postToken(form: Record<string, string>): Promise<GoogleTokenResponse> {
-  const resp = await fetch(TOKEN_ENDPOINT, {
+  // Through outboundFetch so a token refresh that never reaches Google reports
+  // why, rather than the bare 'fetch failed' the mailbox row used to record.
+  const resp = await outboundFetch('Google', TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(form).toString(),

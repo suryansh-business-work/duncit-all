@@ -2,9 +2,12 @@
  * The slice of the Gmail REST API this feature uses: where am I in the mailbox,
  * what arrived since, what does it say, and send this back on the same thread.
  *
- * Plain `fetch` against `gmail.googleapis.com` — see gmail.oauth.ts for why
- * there is no SDK here.
+ * Plain REST against `gmail.googleapis.com` — see gmail.oauth.ts for why there
+ * is no SDK here — through `outboundFetch`, so a transport failure names its
+ * cause instead of reaching the operator (and `account.last_error`) as the two
+ * words "fetch failed".
  */
+import { outboundFetch } from '@utils/outboundFetch';
 
 const API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
@@ -40,7 +43,7 @@ function gmailErrorMessage(status: number, body: string): string {
 }
 
 async function gmailFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`${API_BASE}${path}`, {
+  const resp = await outboundFetch('Gmail', `${API_BASE}${path}`, {
     ...init,
     headers: {
       authorization: `Bearer ${token}`,

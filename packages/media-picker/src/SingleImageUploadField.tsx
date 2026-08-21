@@ -1,3 +1,5 @@
+import { Stack } from '@mui/material';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useSingleImageUpload } from './single-image/useSingleImageUpload';
 import UrlAdornmentVariant from './single-image/UrlAdornmentVariant';
 import UrlButtonVariant from './single-image/UrlButtonVariant';
@@ -62,11 +64,14 @@ export default function SingleImageUploadField({
     fileInput,
   };
 
+  // Chosen into a variable rather than returned from three branches: all three
+  // chromes carry the same AI Monitoring notice, and three placements would be
+  // three chances for one of them to lose it.
+  let chrome = <UrlAdornmentVariant {...shared} externalError={externalError} />;
   if (variant === 'avatar') {
-    return <AvatarVariant {...shared} shape={shape} uploadTestId={uploadTestId} />;
-  }
-  if (variant === 'url-button') {
-    return (
+    chrome = <AvatarVariant {...shared} shape={shape} uploadTestId={uploadTestId} />;
+  } else if (variant === 'url-button') {
+    chrome = (
       <UrlButtonVariant
         {...shared}
         externalError={externalError}
@@ -75,5 +80,11 @@ export default function SingleImageUploadField({
       />
     );
   }
-  return <UrlAdornmentVariant {...shared} externalError={externalError} />;
+
+  return (
+    <Stack spacing={0.75} alignItems="flex-start">
+      {chrome}
+      <AiMonitoringChip />
+    </Stack>
+  );
 }

@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -127,7 +128,10 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
         )}
       </XStack>
       {open ? (
-        <YStack padding={12} paddingTop={0}>
+        <YStack padding={12} paddingTop={0} gap={8}>
+          <XStack>
+            <AiMonitoringChip testID="reel-ai-monitoring" />
+          </XStack>
           <ReelPanelBody
             value={value}
             uploading={uploading}

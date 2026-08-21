@@ -23,6 +23,7 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/media-picker"
   },
   "dependencies": {
+    "@duncit/ai-monitoring": "workspace:*",
     "@duncit/app-settings": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/tabs": "workspace:*",

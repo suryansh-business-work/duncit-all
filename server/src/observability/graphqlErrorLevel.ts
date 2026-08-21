@@ -33,6 +33,13 @@ const CALLER_FIXABLE_CODES = new Set([
   // The caller's account is not ready for this act yet.
   'CHECKOUT_NOT_ELIGIBLE',
   'VERIFICATION_UNDER_REVIEW',
+  // Sign-in refusals the client is built to answer: it offers signup, or the
+  // consent step that links Google to an existing email/password account.
+  'GOOGLE_ACCOUNT_NOT_FOUND',
+  'EMAIL_LOGIN_REQUIRED',
+  // A rule of the product telling the caller no, not a fault: the Pod's
+  // backout allowance is spent.
+  'BACKOUT_LIMIT_REACHED',
   // The thing asked for is gone, or someone else got there first.
   'NOT_FOUND',
   'CONFLICT',

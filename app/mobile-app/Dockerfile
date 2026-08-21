@@ -20,6 +20,7 @@ ENV CI=1 CYPRESS_INSTALL_BINARY=0
 # GraphQL SDL that codegen reads (self-contained `export const … = gql\`…\``).
 # Every @duncit/* file: dep the app imports (Metro resolves them via
 # watchFolders, so each must be present in the build context).
+COPY packages/ai-monitoring ./packages/ai-monitoring
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs ./packages/logs
 COPY packages/geo ./packages/geo

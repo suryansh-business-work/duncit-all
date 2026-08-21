@@ -15,6 +15,7 @@ import {
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import DeviceUploadTab from './DeviceUploadTab';
 import SelectionTray from './SelectionTray';
@@ -122,8 +123,13 @@ export default function MediaPickerDialog({
       // cannot end up below the fold.
       fullScreen={onPhone}
     >
-      <DialogTitle sx={{ pr: 6 }}>
+      {/* The notice belongs on the title row, not next to the Upload button:
+          it has to be readable BEFORE a file is chosen, and this dialog is the
+          one screen every picker-driven upload in mWeb and the portals passes
+          through. */}
+      <DialogTitle sx={{ pr: 6, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         {heading}
+        <AiMonitoringChip />
         <IconButton
           onClick={onClose}
           disabled={device.uploading}

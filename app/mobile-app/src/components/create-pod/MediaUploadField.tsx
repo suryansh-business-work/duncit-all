@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { addToSelection, coverSearchTerm, pickerBatchSize } from '@duncit/utils';
 
+import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { FieldLabel } from '@/components/Field';
 import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
@@ -97,7 +98,10 @@ export function MediaUploadField({
 
   return (
     <YStack gap={8}>
-      <FieldLabel label={fieldLabel} required={required} testID="media" />
+      <XStack gap={8} alignItems="center" flexWrap="wrap">
+        <FieldLabel label={fieldLabel} required={required} testID="media" />
+        <AiMonitoringChip testID="media-ai-monitoring" />
+      </XStack>
       {urls.length > 0 ? (
         <XStack gap={8} flexWrap="wrap">
           {urls.map((url) => (

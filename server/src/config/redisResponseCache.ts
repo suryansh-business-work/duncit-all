@@ -62,6 +62,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // a 60s stale answer there is exactly the window in which somebody accepts
   // and the gate fires at them again.
   'signupPolicies',
+  // The AI Monitoring chip/dialog copy. No arguments, no caller: every upload
+  // field on every surface asks for the same sentences, and an admin edit
+  // reaches them all within the TTL.
+  'aiMonitoringConfig',
   'publicWebsiteContent',
   'publicWebsiteNav',
   'publicPodPlans',

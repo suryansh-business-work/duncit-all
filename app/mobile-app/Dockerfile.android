@@ -33,6 +33,7 @@ ENV CI=1 EXPO_NO_TELEMETRY=1 CYPRESS_INSTALL_BINARY=0
 # `file:` workspace deps — must exist BEFORE `npm ci` resolves them (and Metro
 # resolves them via watchFolders during the Gradle JS bundle). They change
 # rarely, so keeping them above the install layer maximises cache reuse.
+COPY packages/ai-monitoring ./packages/ai-monitoring
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs        ./packages/logs
 COPY packages/geo         ./packages/geo

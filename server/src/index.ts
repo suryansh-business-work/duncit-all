@@ -344,6 +344,12 @@ async function bootstrap() {
             // A bare "fetch failed" is undebuggable — log the undici cause too.
             const cause = describeFetchFailure(unwrapResolverError(err));
             logs.server[graphqlErrorLevel(code)]('graphql', ctx.operationName ?? 'anonymous', {
+              // The failure itself, not only its text. A Bug takes its title and
+              // its fingerprint from `error`, and falls back to the COMPONENT
+              // when a record carries none — which named every GraphQL bug after
+              // the operation that tripped it ("Error: MobilePexelsSearch") and
+              // filed one such row per operation instead of one per fault.
+              error: err,
               code,
               message: cause ? `${err.message} (${cause})` : err.message,
               path: err.path?.join('.'),

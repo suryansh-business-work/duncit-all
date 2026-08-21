@@ -32,49 +32,6 @@ export const UPDATE_UPLOAD_SETTINGS = gql`
   }
 `;
 
-export const MEDIA_SCAN_LOGS_TABLE = gql`
-  query MediaScanLogsTable($query: TableQueryInput) {
-    mediaScanLogsTable(query: $query) {
-      rows {
-        id
-        url
-        file_name
-        folder
-        surface
-        risk
-        summary
-        created_at
-      }
-      total
-      page
-      page_size
-    }
-  }
-`;
-
-export interface MediaScanLog {
-  id: string;
-  url: string;
-  file_name: string;
-  folder: string;
-  surface: string;
-  risk: 'PENDING' | 'LOW' | 'MEDIUM' | 'HIGH';
-  summary: string;
-  created_at: string;
-}
-
-export const SCAN_RISK_COLORS: Record<MediaScanLog['risk'], 'default' | 'success' | 'warning' | 'error'> = {
-  PENDING: 'default',
-  LOW: 'success',
-  MEDIUM: 'warning',
-  HIGH: 'error',
-};
-
-export const SCAN_RISK_OPTIONS = ['PENDING', 'LOW', 'MEDIUM', 'HIGH'].map((value) => ({
-  value,
-  label: value,
-}));
-
 /**
  * Where each crop preset's resolution comes from (researched across the apps) —
  * shown as helper copy on the crop accordion.

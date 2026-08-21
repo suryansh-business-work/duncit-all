@@ -56,6 +56,7 @@ COPY packages/auto-pods/package.json ./packages/auto-pods/
 # @duncit/auto-pods now ships the Auto Pod template form, which builds its inputs
 # from @duncit/forms — a workspace dep needs its manifest here or pnpm install fails.
 COPY packages/forms/package.json ./packages/forms/
+COPY packages/ai-monitoring/package.json ./packages/ai-monitoring/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/ui/package.json ./packages/ui/

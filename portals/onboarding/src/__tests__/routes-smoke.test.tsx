@@ -14,7 +14,7 @@
  */
 import type { ReactNode } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { MemoryRouter } from 'react-router-dom';
@@ -86,6 +86,35 @@ const settle = async () => {
   });
 };
 
+/**
+ * Presses every enabled control the screen offers, once.
+ *
+ * This is where the dialogs, accordions and tab panels live: a portal page is
+ * mostly a table plus a dozen things that only exist after a click, and none of
+ * them had ever been rendered. What it asserts is the honest version of that —
+ * no control on any screen may throw when it is pressed with no data behind it.
+ *
+ * The list is taken once, from document.body rather than the container, because
+ * MUI renders a dialog into its own portal outside the tree under test. Nodes a
+ * click detaches are simply no longer in the document, and firing at them is a
+ * no-op, so the walk cannot loop. The cap keeps a page with a hundred row
+ * buttons from dominating the run.
+ */
+const MAX_CLICKS = 20;
+
+const pressEverything = async () => {
+  const controls = [...document.body.querySelectorAll<HTMLElement>('button:not([disabled]), [role="tab"]')].slice(
+    0,
+    MAX_CLICKS
+  );
+
+  for (const control of controls) {
+    if (!control.isConnected) continue;
+    fireEvent.click(control);
+    await settle();
+  }
+};
+
 describe('every route mounts with no data behind it', () => {
   it('covers every path the route table declares, with no duplicates', () => {
     expect(ROUTES.length).toBeGreaterThan(0);
@@ -97,6 +126,16 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     await settle();
+    unmount();
+  });
+
+  it.each(ROUTES)('survives every control on %s being pressed', async (route) => {
+    const { unmount } = mountRoute(route);
+
+    await settle();
+    await pressEverything();
+
+    expect(document.body.innerHTML).not.toBe('');
     unmount();
   });
 });

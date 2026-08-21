@@ -154,6 +154,17 @@ const STATUS_TEMPLATES: TemplateDefault[] = [
     tone: PAUSED,
   }),
   statusTemplate({
+    slug: 'product-activated',
+    name: 'Product Activated',
+    description: 'The product owner, when their product is switched back on and returns to the marketplace.',
+    subject: '{{product_name}} is active on Duncit again',
+    copyKey: 'email.productActivated',
+    labelKey: 'email.accountStatus.productLabel',
+    nameVar: 'name',
+    valueVar: 'product_name',
+    tone: LIVE,
+  }),
+  statusTemplate({
     slug: 'product-deactivated',
     name: 'Product Deactivated',
     description: 'The product owner, when their product is temporarily hidden from the marketplace.',

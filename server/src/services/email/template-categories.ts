@@ -52,6 +52,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'brand-deactivated',
     'host-activated',
     'host-deactivated',
+    'product-activated',
     'product-deactivated',
     'venue-activated',
     'venue-deactivated',

@@ -136,16 +136,47 @@ beforeAll(() => {
   // takes the whole page down mid-render, so the half of it below the chart
   // never runs. A no-op that never reports is enough: nothing here asserts on
   // a resize, only that the page survives being built.
-  class NoopObserver {
-    observe() {}
+  // It has to REPORT, not merely exist. A carousel or a virtualised list
+  // measures itself and renders nothing until the first observation arrives, so
+  // an observer that never fires is as good as no size at all — mWeb's club
+  // hero (a react-slick slider) fell from 193 covered lines to 53 on a silent
+  // one. This answers immediately with the same box getBoundingClientRect gives.
+  const box = { x: 0, y: 0, top: 0, left: 0, right: 1200, bottom: 800, width: 1200, height: 800 };
+  const size = [{ inlineSize: 1200, blockSize: 800 }];
+
+  class SizedResizeObserver {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+
+    observe(target: Element) {
+      this.callback(
+        [{ target, contentRect: box, borderBoxSize: size, contentBoxSize: size, devicePixelContentBoxSize: size }] as never,
+        this as never
+      );
+    }
+
+    unobserve() {}
+    disconnect() {}
+  }
+
+  class SeenIntersectionObserver {
+    constructor(private readonly callback: IntersectionObserverCallback) {}
+
+    observe(target: Element) {
+      this.callback(
+        [{ target, isIntersecting: true, intersectionRatio: 1, boundingClientRect: box, intersectionRect: box, rootBounds: box, time: 0 }] as never,
+        this as never
+      );
+    }
+
     unobserve() {}
     disconnect() {}
     takeRecords() {
       return [];
     }
   }
-  globalThis.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver;
-  globalThis.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionObserver;
+
+  globalThis.ResizeObserver ??= SizedResizeObserver as unknown as typeof ResizeObserver;
+  globalThis.IntersectionObserver ??= SeenIntersectionObserver as unknown as typeof IntersectionObserver;
   Element.prototype.scrollTo ??= () => undefined;
   Element.prototype.scrollIntoView ??= () => undefined;
 });

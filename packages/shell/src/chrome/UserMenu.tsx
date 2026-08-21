@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, ButtonBase, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import { accountEmail, accountName, initials, type ShellUser } from './user-display';
@@ -16,6 +17,7 @@ export interface UserMenuProps {
 
 /** Header account block: 28px avatar + name/email (hidden on xs) opening Profile/Logout. */
 export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<UserMenuProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const email = accountEmail(user);
@@ -32,10 +34,10 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
 
   return (
     <>
-      <Tooltip title="Account">
+      <Tooltip title={t('shell.chrome.account')}>
         <ButtonBase
           onClick={(e) => setAnchorEl(e.currentTarget)}
-          aria-label="account menu"
+          aria-label={t('shell.chrome.accountMenu')}
           aria-haspopup="menu"
           sx={{ gap: 1, px: 0.5, py: 0.25, borderRadius: 1 }}
         >

@@ -1,4 +1,5 @@
 import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import { format } from 'date-fns';
 
 /** The `me`-query fields the account card renders. */
@@ -37,6 +38,7 @@ function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
  * hr / employee / ads-portal / finance / onboarding portals.
  */
 export function AccountSummaryCard({ user }: Readonly<{ user?: AccountSummaryUser | null }>) {
+  const { t } = useTranslation();
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || '—';
   const phone = user?.phone_number ? `${user?.phone_extension ?? ''} ${user.phone_number}`.trim() : '—';
   return (
@@ -47,10 +49,10 @@ export function AccountSummaryCard({ user }: Readonly<{ user?: AccountSummaryUse
             Your account
           </Typography>
           <Grid container spacing={2}>
-            <Detail label="Name" value={name} />
-            <Detail label="Email" value={user?.email || '—'} />
-            <Detail label="Phone" value={phone} />
-            <Detail label="Member since" value={formatDate(user?.created_at)} />
+            <Detail label={t('shell.account.name')} value={name} />
+            <Detail label={t('shell.account.email')} value={user?.email || '—'} />
+            <Detail label={t('shell.account.phone')} value={phone} />
+            <Detail label={t('shell.account.memberSince')} value={formatDate(user?.created_at)} />
           </Grid>
         </Stack>
       </CardContent>

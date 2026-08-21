@@ -1,4 +1,5 @@
 import { Box, Button, Chip, Divider, Link, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import DownloadIcon from '@mui/icons-material/Download';
 import { formatBytes } from '@duncit/media-picker';
 import type { MediaItem } from './queries';
@@ -27,6 +28,7 @@ function Row({ label, value }: Readonly<{ label: string; value: string }>) {
  * read them.
  */
 export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
+  const { t } = useTranslation();
   const isImage = file.fileType === 'image';
   // Hoisted out of the Type row's template so the two do not nest.
   const mimeSuffix = file.mime ? ` · ${file.mime}` : '';
@@ -70,18 +72,18 @@ export default function FileInfoPanel({ file }: Readonly<{ file: MediaItem }>) {
 
       <Divider sx={{ my: 0.5 }} />
 
-      <Row label="Name" value={file.name} />
-      <Row label="Path" value={file.filePath} />
-      <Row label="Type" value={`${file.fileType ?? file.type}${mimeSuffix}`} />
-      <Row label="Size" value={formatBytes(file.size)} />
+      <Row label={t('shell.fileManager.infoName')} value={file.name} />
+      <Row label={t('shell.fileManager.infoPath')} value={file.filePath} />
+      <Row label={t('shell.fileManager.infoType')} value={`${file.fileType ?? file.type}${mimeSuffix}`} />
+      <Row label={t('shell.fileManager.infoSize')} value={formatBytes(file.size)} />
       <Row
-        label="Dimensions"
+        label={t('shell.fileManager.infoDimensions')}
         value={file.width ? `${file.width} × ${file.height} px` : 'not an image'}
       />
-      <Row label="Uploaded" value={when(file.createdAt)} />
-      <Row label="Updated" value={when(file.updatedAt)} />
-      <Row label="File ID" value={file.fileId} />
-      <Row label="Version" value={file.versionId ?? '—'} />
+      <Row label={t('shell.fileManager.infoUploaded')} value={when(file.createdAt)} />
+      <Row label={t('shell.fileManager.infoUpdated')} value={when(file.updatedAt)} />
+      <Row label={t('shell.fileManager.infoFileId')} value={file.fileId} />
+      <Row label={t('shell.fileManager.infoVersion')} value={file.versionId ?? '—'} />
 
       <Divider sx={{ my: 1 }} />
 

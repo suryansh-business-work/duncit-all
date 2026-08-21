@@ -134,6 +134,76 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     chrome: {
       skipToContent: 'Skip to main content',
       primaryNav: 'primary navigation',
+      openNav: 'open navigation',
+      openSearch: 'open search',
+      closeSearch: 'close search',
+      search: 'Search',
+      apps: 'Apps',
+      openApps: 'open apps',
+      toggleColorMode: 'toggle color mode',
+      goHome: 'Go to home',
+      searchMenu: 'Search menu…',
+      account: 'Account',
+      accountMenu: 'account menu',
+    },
+
+    /** The signed-in account card on every portal welcome dashboard. */
+    /** The e-mail sign-in panel on the portal login screen. */
+    login: {
+      emailAddress: 'e-mail address',
+    },
+
+    /** Emoji picker category headings + the chat launcher. */
+    emoji: {
+      reactions: 'Reactions',
+      faces: 'Faces',
+      work: 'Work',
+    },
+
+    account: {
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      memberSince: 'Member since',
+    },
+
+    /** The shared file browser, opened from the header apps drawer. */
+    fileManager: {
+      title: 'File Manager',
+      close: 'Close file manager',
+      search: 'Search by file name',
+      type: 'Type',
+      sort: 'Sort',
+      reload: 'Reload',
+      reloadFiles: 'Reload files',
+      copyLink: 'Copy link',
+      prevFile: 'Previous selected file',
+      nextFile: 'Next selected file',
+      closeDetails: 'Close file details',
+      fileName: 'File name',
+      renameHint: 'Renaming purges the CDN copy so the link updates.',
+      tags: 'Tags',
+      tagsHint: 'Type and press Enter. Tags are searchable in ImageKit.',
+      info: 'Info',
+      edit: 'Edit',
+      renameFailed: 'Rename failed',
+      tagsFailed: 'Could not save tags',
+      linkCopied: 'Link copied',
+      deleted: 'Deleted {name}',
+      deleteNothing: 'Nothing was deleted',
+      noMatches: 'Nothing matches “{query}”.',
+      emptyUploads: 'Nothing uploaded yet.',
+      upload: 'Upload',
+      uploading: 'Uploading…',
+      infoName: 'Name',
+      infoPath: 'Path',
+      infoType: 'Type',
+      infoSize: 'Size',
+      infoDimensions: 'Dimensions',
+      infoUploaded: 'Uploaded',
+      infoUpdated: 'Updated',
+      infoFileId: 'File ID',
+      infoVersion: 'Version',
     },
 
     /**
@@ -434,6 +504,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // is unrepresentable, so whichever bundle merged last would silently
       // overwrite the other surface's copy.
       languageHint: 'Choose the language for this portal.',
+      firstName: 'First name',
+      lastName: 'Last name',
+      languageSaveFailed: 'Could not save your language',
     },
     /** The apps drawer's Jump to Portal dialog — shell chrome, so one copy for all consoles. */
     jumpToPortal: {
@@ -766,6 +839,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         dropToAttach: 'Drop to attach',
         replyingTo: 'Replying to {name}',
         cancelReply: 'Cancel reply',
+      searchPlace: 'Search a place',
+      sendLocation: 'Send my location',
         attachment: 'Attachment',
       },
       actions: {

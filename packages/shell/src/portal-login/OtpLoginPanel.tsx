@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import { useTranslation } from '../i18n/useTranslation';
 import LoginIcon from '@mui/icons-material/Login';
 
 const OTP_LENGTH = 6;
@@ -45,6 +46,7 @@ export default function OtpLoginPanel({
   errorMessage,
 }: Readonly<OtpLoginPanelProps>) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
@@ -95,7 +97,7 @@ export default function OtpLoginPanel({
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         type="email"
-        placeholder="e-mail address"
+        placeholder={t('shell.login.emailAddress')}
         fullWidth
         size="small"
         sx={pillSx}

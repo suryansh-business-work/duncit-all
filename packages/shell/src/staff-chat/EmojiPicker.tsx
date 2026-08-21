@@ -11,17 +11,22 @@ import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt
  * same three dozen every day, and anything else they can paste. No new package
  * on seventeen portal bundles for that.
  */
-const GROUPS: Array<{ title: string; emoji: string[] }> = [
+/** `titleKey` is a literal so the build gate can see it; `title` stays the
+ *  stable English name the React key and the `:` search use. */
+const GROUPS: Array<{ title: string; titleKey: string; emoji: string[] }> = [
   {
     title: 'Reactions',
+    titleKey: 'shell.emoji.reactions',
     emoji: ['👍', '👎', '👌', '🙏', '👏', '🙌', '💪', '🤝', '❤️', '🔥', '🎉', '✨'],
   },
   {
     title: 'Faces',
+    titleKey: 'shell.emoji.faces',
     emoji: ['😀', '😄', '😅', '😂', '🙂', '😉', '😍', '🤔', '😐', '😴', '😬', '😢', '😡', '🤯', '🥳', '😎'],
   },
   {
     title: 'Work',
+    titleKey: 'shell.emoji.work',
     emoji: ['✅', '❌', '⚠️', '📌', '📎', '📝', '📅', '⏰', '🚀', '🐛', '🔧', '📊', '💡', '☕', '👀', '🆗'],
   },
 ];
@@ -114,7 +119,7 @@ export default function EmojiPicker({ onPick, disabled }: Readonly<Props>) {
                 color="text.secondary"
                 sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}
               >
-                {group.title}
+                {t(group.titleKey)}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.25 }}>
                 {group.emoji.map((emoji) => (

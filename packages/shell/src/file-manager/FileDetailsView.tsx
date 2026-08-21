@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Autocomplete,
@@ -19,6 +19,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import FileInfoPanel from './FileInfoPanel';
 import { RENAME_MEDIA_FILE, UPDATE_MEDIA_FILE, type MediaItem } from './queries';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   file: MediaItem;
@@ -42,18 +43,17 @@ interface Props {
 }
 
 type TabKey = 'info' | 'edit';
-const INFO_TAB: DuncitTabItem<TabKey> = {
-  value: 'info',
-  label: 'Info',
-  sx: { minHeight: 36, minWidth: 0, px: 1 },
+const TAB_SX = { minHeight: 36, minWidth: 0, px: 1 };
+
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Tab labels are copy, so the strip is built from the active catalogue.
+ *  @duncit/tabs is framework-free and takes resolved text, not keys. */
+const buildTabs = (t: Translate, canWrite: boolean): DuncitTabItem<TabKey>[] => {
+  const info = { value: 'info' as const, label: t('shell.fileManager.info'), sx: TAB_SX };
+  if (!canWrite) return [info];
+  return [info, { value: 'edit' as const, label: t('shell.fileManager.edit'), sx: TAB_SX }];
 };
-const EDIT_TAB: DuncitTabItem<TabKey> = {
-  value: 'edit',
-  label: 'Edit',
-  sx: { minHeight: 36, minWidth: 0, px: 1 },
-};
-const READER_TABS: DuncitTabItem<TabKey>[] = [INFO_TAB];
-const WRITER_TABS: DuncitTabItem<TabKey>[] = [INFO_TAB, EDIT_TAB];
 
 /**
  * One file, opened INSIDE the dialog rather than in a drawer over it.
@@ -78,10 +78,12 @@ export default function FileDetailsView({
   siblings,
   onNavigate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Own key — this panel sits beside the grid inside the File Manager dialog,
   // which opens over portal pages that have their own tab strip.
+  const tabItems = useMemo(() => buildTabs(t, canWrite), [t, canWrite]);
   const tabs = useTabParam<TabKey>({
-    items: canWrite ? WRITER_TABS : READER_TABS,
+    items: tabItems,
     fallback: 'info',
     param: 'selectedtab_file',
   });
@@ -115,7 +117,7 @@ export default function FileDetailsView({
       });
       onChanged(res.data.renameMediaFile);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Rename failed');
+      onError(err instanceof Error ? err.message : t('shell.fileManager.renameFailed'));
     }
   };
 
@@ -124,7 +126,7 @@ export default function FileDetailsView({
       const res = await update({ variables: { fileId: file.fileId, tags } });
       onChanged(res.data.updateMediaFile);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not save tags');
+      onError(err instanceof Error ? err.message : t('shell.fileManager.tagsFailed'));
     }
   };
 
@@ -141,7 +143,7 @@ export default function FileDetailsView({
             size="small"
             onClick={() => step(-1)}
             disabled={at === 0}
-            aria-label="Previous selected file"
+            aria-label={t('shell.fileManager.prevFile')}
           >
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
@@ -152,7 +154,7 @@ export default function FileDetailsView({
             size="small"
             onClick={() => step(1)}
             disabled={at === list.length - 1}
-            aria-label="Next selected file"
+            aria-label={t('shell.fileManager.nextFile')}
           >
             <ChevronRightIcon fontSize="small" />
           </IconButton>
@@ -163,7 +165,7 @@ export default function FileDetailsView({
         <Typography variant="subtitle2" noWrap sx={{ flex: 1, minWidth: 0 }} title={file.name}>
           {file.name}
         </Typography>
-        <IconButton size="small" onClick={onBack} aria-label="Close file details">
+        <IconButton size="small" onClick={onBack} aria-label={t('shell.fileManager.closeDetails')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -194,10 +196,10 @@ export default function FileDetailsView({
             <TextField
               fullWidth
               size="small"
-              label="File name"
+              label={t('shell.fileManager.fileName')}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              helperText="Renaming purges the CDN copy so the link updates."
+              helperText={t('shell.fileManager.renameHint')}
             />
             <Button size="small" onClick={saveName} disabled={busy || name === file.name}>
               Save
@@ -223,8 +225,8 @@ export default function FileDetailsView({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Tags"
-                  helperText="Type and press Enter. Tags are searchable in ImageKit."
+                  label={t('shell.fileManager.tags')}
+                  helperText={t('shell.fileManager.tagsHint')}
                 />
               )}
             />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Autocomplete, Box, InputAdornment, TextField, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import SearchIcon from '@mui/icons-material/Search';
 import type { AppNavItem, SearchItem } from '../types';
@@ -38,11 +39,13 @@ export interface HeaderSearchProps {
 export function HeaderSearch({
   items,
   nav,
-  placeholder = 'Search',
+  placeholder,
   autoFocus,
   disableSlashShortcut,
   onNavigated,
 }: Readonly<HeaderSearchProps>) {
+  const { t } = useTranslation();
+  const label = placeholder ?? t('shell.chrome.search');
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -82,7 +85,7 @@ export function HeaderSearch({
       renderInput={(params) => (
         <TextField
           {...params}
-          placeholder={placeholder}
+          placeholder={label}
           autoFocus={autoFocus}
           inputRef={inputRef}
           InputProps={{

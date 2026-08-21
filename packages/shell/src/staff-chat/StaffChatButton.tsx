@@ -55,7 +55,7 @@ export function StaffChatButton({
         size="small"
         onClick={onToggle}
         color={open ? 'primary' : 'default'}
-        aria-label="chat with a coworker"
+        aria-label={t('shell.chat.panel.open')}
       >
         <Badge color="error" badgeContent={unread} max={99}>
           <ChatBubbleOutlineIcon fontSize="small" />

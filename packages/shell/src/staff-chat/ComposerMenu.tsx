@@ -41,7 +41,7 @@ export default function ComposerMenu({ onShareLocation, onShareCurrentLocation }
           <ListItemIcon>
             <PlaceIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Search a place</ListItemText>
+          <ListItemText>{t('shell.chat.composer.searchPlace')}</ListItemText>
         </MenuItem>
         {onShareCurrentLocation && (
           <MenuItem
@@ -53,7 +53,7 @@ export default function ComposerMenu({ onShareLocation, onShareCurrentLocation }
             <ListItemIcon>
               <MyLocationIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Send my location</ListItemText>
+            <ListItemText>{t('shell.chat.composer.sendLocation')}</ListItemText>
           </MenuItem>
         )}
       </Menu>

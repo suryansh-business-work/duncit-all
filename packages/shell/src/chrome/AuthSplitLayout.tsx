@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import { alpha, styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -85,13 +86,14 @@ export function AuthSplitLayout({
   children,
 }: Readonly<AuthSplitLayoutProps>) {
   const { mode, toggle } = useColorMode();
+  const { t } = useTranslation();
   const { logoUrl, appName } = useBranding();
   return (
     <Shell>
       <FormPane>
         <TopRight>
           <Tooltip title={mode === 'dark' ? 'Switch to light' : 'Switch to dark'}>
-            <IconButton onClick={toggle} aria-label="toggle color mode" size="small">
+            <IconButton onClick={toggle} aria-label={t('shell.chrome.toggleColorMode')} size="small">
               {mode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
             </IconButton>
           </Tooltip>

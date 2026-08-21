@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Box, Button, InputAdornment, List, Skeleton, Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import SearchIcon from '@mui/icons-material/Search';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -25,6 +26,7 @@ export interface AppSidebarProps {
 
 /** The unified console sidebar: branding, menu search, nav tree, signed-in user. */
 export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigate }: Readonly<AppSidebarProps>) {
+  const { t } = useTranslation();
   const location = useLocation();
   const { logoUrl, appName, loading, onLogoError } = useBranding();
   const [query, setQuery] = useState('');
@@ -44,7 +46,7 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
         component={NavLink}
         to="/"
         onClick={onNavigate}
-        aria-label="Go to home"
+        aria-label={t('shell.chrome.goHome')}
         sx={{
           minHeight: tokens.size.headerHeight,
           px: 2,
@@ -78,7 +80,7 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
         <TextField
           size="small"
           fullWidth
-          placeholder="Search menu…"
+          placeholder={t('shell.chrome.searchMenu')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           InputProps={{

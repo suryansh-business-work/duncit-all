@@ -36,9 +36,17 @@ import ClubAdminAutoPodsPage from './pages/club-admin-auto-pods-page/ClubAdminAu
 import VerificationPage from './pages/verification-page/VerificationPage';
 import EarnPage from './pages/earn-page/EarnPage';
 import AppShell from './components/AppShell';
+import SectionGate from './components/SectionGate';
 import { getToken } from './lib/session';
 
-const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> });
+const authed = createAuthed({
+  getToken,
+  wrap: (el) => (
+    <AppShell>
+      <SectionGate>{el}</SectionGate>
+    </AppShell>
+  ),
+});
 
 export default function App() {
   return (

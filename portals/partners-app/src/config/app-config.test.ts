@@ -2,23 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { appConfig, buildNav } from './app-config';
 
 describe('buildNav', () => {
-  it('returns the base nav (no Wallet / Club Admin) for a user with no earning roles', () => {
+  it('shows only Become a Host and the common tail to a user with no partner role', () => {
     const nav = buildNav([]);
-    expect(nav.map((i) => i.label)).toEqual(appConfig.nav.map((i) => i.label));
+    expect(nav.map((i) => i.label)).toEqual(['Become a Host', ...appConfig.nav.map((i) => i.label)]);
     expect(nav.some((i) => i.to === '/wallet')).toBe(false);
     expect(nav.some((i) => i.label === 'Club Admin')).toBe(false);
   });
 
   it('offers Become a Host only to a user who is not already one', () => {
-    const childLabels = (roles: string[]) =>
-      buildNav(roles)
-        .find((i) => i.label === 'Host')
-        ?.children?.map((c) => c.label) ?? [];
-    expect(childLabels([])).toEqual(['Dashboard', 'Become a Host', 'Your Pods']);
-    expect(childLabels(['HOST'])).toEqual(['Dashboard', 'Your Pods']);
+    expect(buildNav([]).some((i) => i.to === '/become-host')).toBe(true);
+    const host = buildNav(['HOST']);
+    expect(host.some((i) => i.to === '/become-host')).toBe(false);
+    expect(host.find((i) => i.label === 'Host')?.children?.map((c) => c.label)).toEqual(['Dashboard', 'Your Pods']);
   });
 
-  it('handles null / undefined roles as no earning roles', () => {
+  it('handles null / undefined roles as no partner roles', () => {
     expect(buildNav(null).some((i) => i.to === '/wallet')).toBe(false);
     expect(buildNav(undefined).some((i) => i.to === '/wallet')).toBe(false);
   });

@@ -9,8 +9,9 @@ import { clearToken } from '../lib/session';
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's
  * user-context + session into the one common header/sidebar/breadcrumbs.
- * Partners is a portal-gate-exempt surface (any authenticated user may sign in),
- * so no client-side role gate is applied — the nav adapts to the user's roles.
+ * Partners is a portal-gate-exempt surface (any authenticated user may sign in);
+ * access is per area instead — buildNav() shows the partner sections the user
+ * holds, and SectionGate keeps their routes to the same roles.
  */
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();

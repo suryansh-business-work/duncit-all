@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { appConfig, buildNav } from './app-config';
 
 describe('buildNav', () => {
-  it('shows only Become a Host and the common tail to a user with no partner role', () => {
+  it('shows only the common tail to a user with no partner role', () => {
     const nav = buildNav([]);
-    expect(nav.map((i) => i.label)).toEqual(['Become a Host', ...appConfig.nav.map((i) => i.label)]);
+    expect(nav.map((i) => i.label)).toEqual(appConfig.nav.map((i) => i.label));
     expect(nav.some((i) => i.to === '/wallet')).toBe(false);
     expect(nav.some((i) => i.label === 'Club Admin')).toBe(false);
   });
 
-  it('offers Become a Host only to a user who is not already one', () => {
-    expect(buildNav([]).some((i) => i.to === '/become-host')).toBe(true);
+  it('never puts the host application in the sidebar', () => {
+    expect(buildNav([]).some((i) => i.to === '/become-host')).toBe(false);
     const host = buildNav(['HOST']);
     expect(host.some((i) => i.to === '/become-host')).toBe(false);
     expect(host.find((i) => i.label === 'Host')?.children?.map((c) => c.label)).toEqual(['Dashboard', 'Your Pods']);

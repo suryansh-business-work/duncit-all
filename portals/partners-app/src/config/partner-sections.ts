@@ -76,13 +76,6 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
   },
 ];
 
-/**
- * The one partner area somebody can apply for from this console. Without the
- * HOST role the application is the way in; once the role is granted it has
- * nothing left to offer, so `buildNav()` swaps it for the Host section.
- */
-export const BECOME_HOST_NAV: AppNavItem = { label: 'Become a Host', to: '/become-host', icon: 'work' };
-
 export const hasPartnerRole = (roles: readonly string[] | null | undefined, role: PartnerRole): boolean =>
   roles?.includes(role) ?? false;
 

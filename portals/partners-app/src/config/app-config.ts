@@ -1,5 +1,5 @@
 import type { AppNavItem } from '@duncit/shell';
-import { BECOME_HOST_NAV, hasPartnerRole, PARTNER_SECTIONS, type PartnerSection } from './partner-sections';
+import { hasPartnerRole, PARTNER_SECTIONS, type PartnerSection } from './partner-sections';
 
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
@@ -97,8 +97,8 @@ export interface BuildNavOptions {
  * Sidebar nav for the signed-in user: the partner sections they hold (in
  * catalogue order), Wallet when any of them can earn a payout, then the
  * role-independent tail. A section they were never granted is simply absent —
- * with one exception: the Host area is the one they can apply for from here, so
- * somebody without that role sees "Become a Host" in its place instead.
+ * applying for one starts from Earn with Duncit, which closes the sidebar for
+ * everyone.
  */
 export function buildNav(
   roles?: readonly string[] | null,
@@ -106,10 +106,7 @@ export function buildNav(
 ): AppNavItem[] {
   const autoPods = options?.autoPods === true;
   const held = PARTNER_SECTIONS.filter((section) => hasPartnerRole(roles, section.role));
-  const sections = PARTNER_SECTIONS.flatMap((section) => {
-    if (held.includes(section)) return [withAutoPods(section, autoPods)];
-    return section.role === 'HOST' ? [BECOME_HOST_NAV] : [];
-  });
+  const sections = held.map((section) => withAutoPods(section, autoPods));
   const wallet = held.length > 0 ? [WALLET_NAV] : [];
   return [...sections, ...wallet, ...appConfig.nav];
 }

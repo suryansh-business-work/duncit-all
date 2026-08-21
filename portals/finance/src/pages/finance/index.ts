@@ -5,7 +5,11 @@ export { CancellationsDashboardPage, HostCancelPage, VenueCancelPage } from './c
 export { default as PaymentLogsPage } from './PaymentLogsPage';
 export { default as PaymentDetailPage } from './payment-detail-page';
 export { default as PaymentReleasePage } from './PaymentReleasePage';
-export { default as WithdrawalsPage, WithdrawalSettingsPage } from './withdrawals-page';
+export {
+  default as WithdrawalsPage,
+  PodWithdrawalDetailPage,
+  WithdrawalSettingsPage,
+} from './withdrawals-page';
 export { default as InvoiceManagementPage } from './InvoiceManagementPage';
 export { default as InvoiceTemplatePage } from './invoice-template-page';
 export { default as LedgerPage } from './LedgerPage';

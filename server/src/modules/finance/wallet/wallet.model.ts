@@ -1,5 +1,6 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { WITHDRAWER_ROLES, type WithdrawerRole } from '@modules/finance/finance/finance.model';
+import type { PaymentReleaseKind } from '@modules/finance/finance/paymentRelease.model';
 
 export type WalletTxnType = 'CREDIT' | 'DEBIT';
 export type WalletTxnSource = 'POD_COMPLETION' | 'WITHDRAWAL' | 'WITHDRAWAL_REVERSAL';
@@ -27,6 +28,44 @@ export interface IWalletTransaction extends Document {
   created_at: Date;
 }
 
+/**
+ * Which pod's earnings a slice of a withdrawal came from.
+ *
+ * A withdrawal is one debit against a fungible aggregate balance, so nothing in
+ * the ledger inherently says "this ₹359 was pod P's money". This array is that
+ * answer, decided ONCE at request time by walking the withdrawer's un-withdrawn
+ * pod credits oldest-first, and never recomputed — a later reversal must not
+ * silently re-attribute a payout Finance has already actioned.
+ *
+ * `kind` is the payout leg the money was earned through, which is what the
+ * Finance pod view reports as the withdrawer's role. It is deliberately NOT the
+ * withdrawal's own `withdrawer_role`: that is one global capacity per user, so a
+ * host who also owns a venue would otherwise read the same on both their pods.
+ */
+export interface IWithdrawalAllocation {
+  pod_id: Types.ObjectId;
+  pod_title: string;
+  release_id: string;
+  kind: PaymentReleaseKind;
+  amount: number;
+}
+
+/**
+ * The payout leg a pod's money was earned through -> the capacity it is
+ * withdrawn in. ONE definition, because both the per-withdrawal view and the
+ * pod-grouped list answer "which partner is this?" from it.
+ *
+ * This is per-pod and exact, unlike the withdrawal's own `withdrawer_role`,
+ * which resolves ONE capacity per user by fixed precedence and therefore
+ * mislabels anyone who earns in two (a host who also owns the venue).
+ */
+export const WITHDRAWER_ROLE_BY_KIND: Record<PaymentReleaseKind, WithdrawerRole> = {
+  HOST_PAYMENT: 'HOST',
+  VENUE_BILLING: 'VENUE_OWNER',
+  CLUB_ADMIN: 'CLUB_ADMIN',
+  ECOMM_PAYMENT: 'ECOMM_MANAGER',
+};
+
 export interface IWalletWithdrawal extends Document {
   withdrawal_id: string;
   user_id: Types.ObjectId;
@@ -43,6 +82,7 @@ export interface IWalletWithdrawal extends Document {
   scheduled_for: Date;
   reject_reason: string;
   requested_at: Date;
+  allocations: Types.DocumentArray<IWithdrawalAllocation & Types.Subdocument>;
   reviewed_by?: Types.ObjectId | null;
   reviewed_at?: Date | null;
   paid_at?: Date | null;
@@ -75,6 +115,23 @@ const txnSchema = new Schema<IWalletTransaction>(
 );
 txnSchema.index({ user_id: 1, created_at: -1 });
 
+const allocationSchema = new Schema<IWithdrawalAllocation>(
+  {
+    pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true },
+    // Denormalised so the Finance pod list never loses a row's title to a
+    // soft-deleted pod, and never needs a lookup to render.
+    pod_title: { type: String, default: '', trim: true, maxlength: 200 },
+    release_id: { type: String, default: '', trim: true },
+    kind: {
+      type: String,
+      enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN', 'ECOMM_PAYMENT'],
+      required: true,
+    },
+    amount: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
 const withdrawalSchema = new Schema<IWalletWithdrawal>(
   {
     withdrawal_id: { type: String, required: true, unique: true, index: true },
@@ -96,6 +153,7 @@ const withdrawalSchema = new Schema<IWalletWithdrawal>(
     scheduled_for: { type: Date, required: true },
     reject_reason: { type: String, default: '', trim: true, maxlength: 500 },
     requested_at: { type: Date, default: () => new Date() },
+    allocations: { type: [allocationSchema], default: [] },
     reviewed_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     reviewed_at: { type: Date, default: null },
     paid_at: { type: Date, default: null },
@@ -103,6 +161,8 @@ const withdrawalSchema = new Schema<IWalletWithdrawal>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 withdrawalSchema.index({ status: 1, created_at: -1 });
+// The Finance pod drill-down reads every withdrawal attributed to one pod.
+withdrawalSchema.index({ 'allocations.pod_id': 1, status: 1 });
 
 export const WalletModel = model<IWallet>('Wallet', walletSchema);
 export const WalletTransactionModel = model<IWalletTransaction>('WalletTransaction', txnSchema);

@@ -16,6 +16,7 @@ import {
   PaymentDetailPage,
   PaymentReleasePage,
   WithdrawalsPage,
+  PodWithdrawalDetailPage,
   WithdrawalSettingsPage,
   InvoiceManagementPage,
   InvoiceTemplatePage,
@@ -55,6 +56,9 @@ export default function App() {
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/withdrawals/settings" element={authed(<WithdrawalSettingsPage />)} />
+      {/* Static /settings outranks this dynamic segment in the router's own
+          ranking, so the sibling order here is presentation only. */}
+      <Route path="/withdrawals/:podId" element={authed(<PodWithdrawalDetailPage />)} />
       <Route path="/invoices" element={authed(<InvoiceManagementPage />)} />
       <Route path="/invoices/venue" element={authed(<InvoiceTemplatePage kind="venue" />)} />
       <Route path="/invoices/host" element={authed(<InvoiceTemplatePage kind="host" />)} />

@@ -23,6 +23,12 @@ export const WITHDRAWALS = gql`
   }
 `;
 
+/** Which pod's earnings funded a slice of one withdrawal. */
+export interface WithdrawalAllocation {
+  pod_id: string;
+  amount: number;
+}
+
 /** Row shape for the withdrawals table (fields the columns and dialogs touch). */
 export interface WithdrawalRow {
   id: string;
@@ -40,6 +46,7 @@ export interface WithdrawalRow {
   scheduled_for: string;
   reject_reason: string;
   requested_at: string;
+  allocations: WithdrawalAllocation[];
 }
 
 /** Same selection as WITHDRAWALS rows, for the server-paged table query. */
@@ -60,12 +67,62 @@ const WITHDRAWAL_ROW_FIELDS = gql`
     scheduled_for
     reject_reason
     requested_at
+    allocations {
+      pod_id
+      amount
+    }
   }
 `;
 
-export const WITHDRAWALS_TABLE = gql`
-  query WithdrawalsTable($query: TableQueryInput) {
-    withdrawalRequestsTable(query: $query) {
+/** A pod somebody has withdrawn against — one row of the Withdrawal Payments list. */
+export interface PodWithdrawalGroup {
+  pod_id: string;
+  pod_title: string;
+  requested_from: WithdrawerRole[];
+  status: 'PENDING' | 'APPROVED';
+  attributed_total: number;
+  withdrawal_count: number;
+  last_requested_at: string;
+}
+
+export const POD_WITHDRAWAL_GROUPS_TABLE = gql`
+  query PodWithdrawalGroupsTable($query: TableQueryInput) {
+    podWithdrawalGroupsTable(query: $query) {
+      total
+      rows {
+        pod_id
+        pod_title
+        requested_from
+        status
+        attributed_total
+        withdrawal_count
+        last_requested_at
+      }
+    }
+  }
+`;
+
+export const POD_WITHDRAWAL_SUMMARY = gql`
+  query PodWithdrawalSummary($pod_id: ID!) {
+    podWithdrawalSummary(pod_id: $pod_id) {
+      pod_id
+      pod_title
+      requested_from
+      status
+      attributed_total
+      withdrawal_count
+      last_requested_at
+    }
+  }
+`;
+
+/**
+ * One pod's withdrawal requests — the same row shape the flat list used, so the
+ * drill-down renders the identical table.
+ */
+export const POD_WITHDRAWALS_TABLE = gql`
+  query PodWithdrawalsTable($pod_id: ID!, $query: TableQueryInput) {
+    podWithdrawalsTable(pod_id: $pod_id, query: $query) {
       total
       rows {
         ...WithdrawalRowFields

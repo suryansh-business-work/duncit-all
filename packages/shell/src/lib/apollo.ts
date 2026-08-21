@@ -9,7 +9,13 @@ import {
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
-import { NO_REDIS_HEADER, getOrCreateDuid, resolveNoRedisFlag } from '@duncit/user-core';
+import {
+  NO_REDIS_HEADER,
+  SURFACE_HEADER,
+  getOrCreateDuid,
+  resolveNoRedisFlag,
+  type ClientSurface,
+} from '@duncit/user-core';
 
 const NETWORK_FAILURE_PATTERN = /failed to fetch|network request failed|load failed/i;
 const FRIENDLY_NETWORK_MESSAGE = 'Unable to connect to server. Please check your internet connection and try again.';
@@ -35,6 +41,12 @@ export interface CreateApolloClientOptions {
   typePolicies?: TypePolicies;
   /** Send the anonymous `x-duid` device header (default true; admin historically omits it). */
   includeDuid?: boolean;
+  /**
+   * Which surface this client is, sent as `x-duncit-surface` and stamped onto
+   * the user change log. Defaults to `PORTAL`; admin declares itself so a
+   * profile edit made there is not filed as one more portal.
+   */
+  surface?: ClientSurface;
 }
 
 /**
@@ -43,7 +55,7 @@ export interface CreateApolloClientOptions {
  * transport retry + friendly network-error rewrite.
  */
 export function createApolloClient(options: Readonly<CreateApolloClientOptions>): ApolloClient<NormalizedCacheObject> {
-  const { graphqlUrl, getToken, typePolicies, includeDuid = true } = options;
+  const { graphqlUrl, getToken, typePolicies, includeDuid = true, surface = 'PORTAL' } = options;
 
   const httpLink = new HttpLink({ uri: graphqlUrl });
 
@@ -55,6 +67,7 @@ export function createApolloClient(options: Readonly<CreateApolloClientOptions>)
         ...headers,
         ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(duid ? { 'x-duid': duid } : {}),
+        [SURFACE_HEADER]: surface,
         // `?noRedis=true` in the portal URL: skip the server's Redis response
         // cache for every request from this tab (sticky until ?noRedis=false).
         ...(resolveNoRedisFlag() ? { [NO_REDIS_HEADER]: 'true' } : {}),

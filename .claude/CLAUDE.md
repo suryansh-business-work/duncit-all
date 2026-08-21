@@ -435,3 +435,4 @@ keep the screen tidy.
   `src/components/attendance/` and `src/screens/PodAttendanceScreen/`. Rule 40
   again: share the logic, never the UI.
 
+Only Use staging for push no branch creation for any branch

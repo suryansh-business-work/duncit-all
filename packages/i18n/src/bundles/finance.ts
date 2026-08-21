@@ -163,6 +163,38 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       gatewayReference: 'Gateway reference',
     },
     // Finance > Gift Cards — the dashboard, the card book and the ledger.
+    /**
+     * Withdrawal Payments, which is now two screens: the pod list and one pod's
+     * requests. Only the NEW copy is keyed — the per-withdrawal table below the
+     * drill-down is older and still ships plain strings, so its columns are not
+     * here. Keys arrive with the screens that render them (see the note above).
+     */
+    withdrawals: {
+      title: 'Withdrawal Payments',
+      subtitle:
+        'Withdrawal requests raised against each pod by hosts, venue owners, e-commerce brands and club admins.',
+      colPodTitle: 'Pod Title',
+      colRequestedFrom: 'Requested From',
+      colStatus: 'Status',
+      // A pod is only settled once every request against it has been paid.
+      statusPending: 'Pending',
+      statusApproved: 'Approved',
+      searchPods: 'Search pod title',
+      empty: 'No withdrawals have been requested against any pod yet.',
+      // Says WHY the list is empty, so a role filter never reads as "no data".
+      emptyForRole: 'No pod has a withdrawal request from a {role} yet.',
+      roleFilter: 'Role',
+      roleAll: 'All roles',
+      roleHost: 'Host',
+      roleVenueOwner: 'Venue Owner',
+      roleEcommBrand: 'E-Commerce Brand',
+      roleClubAdmin: 'Club Admin',
+      // The one pod's requests.
+      back: 'Back to Withdrawal Payments',
+      detailSubtitle: 'Every withdrawal request raised against this pod.',
+      detailEmpty: 'No withdrawal requests for this pod.',
+      notFound: 'This pod has no withdrawal requests.',
+    },
     giftCards: {
       dashboardTitle: 'Gift Cards',
       periodLabel: 'Period',

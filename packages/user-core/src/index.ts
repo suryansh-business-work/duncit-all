@@ -20,6 +20,8 @@ export {
   NO_REDIS_STORAGE_KEY,
   resolveNoRedisFlag,
 } from './no-redis';
+export { SURFACE_HEADER } from './surface';
+export type { ClientSurface } from './surface';
 export {
   USER_CHANGED_EVENT,
   parseUserChangedFrame,

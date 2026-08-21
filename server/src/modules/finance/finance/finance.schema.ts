@@ -130,6 +130,12 @@ export const financeTypeDefs = /* GraphQL */ `
     HOST_PAYMENT
     "The club-admin cut of a completed pod, paid to the club's admin user."
     CLUB_ADMIN
+    """
+    An e-commerce brand's product-sale earnings on a completed pod, paid to the
+    seller who listed the stock. The amount is the gross buyers paid minus the
+    Duncit commission — the same net the seller's product invoice bills.
+    """
+    ECOMM_PAYMENT
   }
 
   enum PaymentReleaseStatus {

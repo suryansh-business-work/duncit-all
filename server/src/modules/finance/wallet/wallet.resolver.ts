@@ -29,6 +29,22 @@ export const walletResolvers = {
       requireRole(ctx, FINANCE_RW);
       return walletService.withdrawalsTable(args.query);
     },
+    podWithdrawalGroupsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.podWithdrawalGroupsTable(args.query);
+    },
+    podWithdrawalSummary: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.podWithdrawalSummary(args.pod_id);
+    },
+    podWithdrawalsTable: async (
+      _p: unknown,
+      args: { pod_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.podWithdrawalsTable(args.pod_id, args.query);
+    },
     withdrawalMinimums: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_RW);
       return walletService.getWithdrawalMinimums();

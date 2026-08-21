@@ -121,6 +121,66 @@ async function clubAdminBeneficiary(pod: any) {
   };
 }
 
+/**
+ * One ECOMM_PAYMENT release per seller who actually sold something on this pod.
+ *
+ * The amounts come from {@link computeSellerPayoutsForPod} — the SAME buckets
+ * the product invoice bills — so the release can never credit a different
+ * number from the one the seller was invoiced for. Sellers with nothing sold
+ * (their reserved stock went back to them at completion) get no release at all
+ * rather than a ₹0 one, and a seller whose account has no email is skipped for
+ * the same reason the other kinds require one: there is nobody to send the
+ * statement to. Best-effort — a product hiccup must never fail a completion.
+ */
+async function ecommReleases(pod: any, actorId: string, notes: string): Promise<IPaymentRelease[]> {
+  // Dynamic, like sendProductInvoices below: productInvoice.service pulls in
+  // the inventory + order models, which this module must not load eagerly.
+  const { computeSellerPayoutsForPod, sellerTotals } = await import('./productInvoice.service');
+  const bySeller = await computeSellerPayoutsForPod(pod, await getFinanceSettings());
+  if (bySeller.size === 0) return [];
+  const sellerIds = [...bySeller.keys()];
+  const sellers = await UserModel.find({ _id: { $in: sellerIds } }).select('auth.email profile.first_name profile.last_name');
+  const sellerById = new Map(sellers.map((s: any) => [String(s._id), s]));
+
+  const created: IPaymentRelease[] = [];
+  for (const [sellerId, bucket] of bySeller) {
+    const { net_total } = sellerTotals(bucket);
+    if (net_total <= 0) continue;
+    const seller: any = sellerById.get(sellerId);
+    const email = seller?.auth?.email;
+    if (!email) {
+      logs.server.warn('paymentRelease', 'ecommReleases', {
+        pod_id: String(pod._id),
+        sellerId,
+        msg: 'product seller has no email — ECOMM payout skipped',
+      });
+      continue;
+    }
+    const name =
+      [seller?.profile?.first_name, seller?.profile?.last_name].filter(Boolean).join(' ').trim() ||
+      bucket.name;
+    created.push(
+      await PaymentReleaseModel.create({
+        release_id: releaseId(),
+        kind: 'ECOMM_PAYMENT',
+        pod_id: pod._id,
+        pod_title: pod.pod_title,
+        venue_id: null,
+        host_user_id: seller._id,
+        beneficiary_name: name,
+        beneficiary_email: email,
+        amount_requested: net_total,
+        bill_url: '',
+        evidence_media: [],
+        notes,
+        requested_by: new Types.ObjectId(actorId),
+        requested_at: new Date(),
+      })
+    );
+  }
+  return created;
+}
+
 async function beneficiaryFor(kind: PaymentReleaseKind, pod: any, hostUserId?: string | null) {
   if (kind === 'VENUE_BILLING') {
     if (!pod.venue_id) throw new GraphQLError('This pod has no venue billing target', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -224,9 +284,12 @@ const attendanceOf = (s: PodSettlement) => ({
 function statementTypeLabel(kind: PaymentReleaseKind): string {
   if (kind === 'HOST_PAYMENT') return 'host commission';
   if (kind === 'CLUB_ADMIN') return 'club admin payout';
+  if (kind === 'ECOMM_PAYMENT') return 'product sales payout';
   return 'venue payout';
 }
 
+// ECOMM_PAYMENT falls through to the default: a seller reads "Your Payout"
+// exactly like a venue owner does.
 function payoutLabel(kind: PaymentReleaseKind): string {
   if (kind === 'HOST_PAYMENT') return 'Your Commission';
   if (kind === 'CLUB_ADMIN') return 'Club Admin Payout';
@@ -252,6 +315,10 @@ const WA_PAYOUT_EVENT: Record<PaymentReleaseKind, string> = {
   HOST_PAYMENT: 'HOST_PAYMENT_SENT',
   VENUE_BILLING: 'VENUE_PAYMENT_SENT',
   CLUB_ADMIN: 'CLUB_ADMIN_PAYMENT_SENT',
+  // Never actually sent from here — the seller's ECOMM_PAYMENT_SENT WhatsApp
+  // rides their product invoice instead (see notifyApproval). Mapped because
+  // the Record is exhaustive over the kind union.
+  ECOMM_PAYMENT: 'ECOMM_PAYMENT_SENT',
 };
 
 /**
@@ -322,6 +389,11 @@ async function notifyApprovalWhatsapp(doc: IPaymentRelease, payout: number) {
 // reconciled lines. Best-effort.
 async function notifyApproval(doc: IPaymentRelease) {
   if (doc.status !== 'APPROVED') return;
+  // A seller is told about this money ONCE, by their product invoice —
+  // sendProductInvoicesForPod already emails the PDF and fires
+  // ECOMM_PAYMENT_SENT for the same net amount this release credits. Sending a
+  // payout statement here too would bill one sale twice in the seller's inbox.
+  if (doc.kind === 'ECOMM_PAYMENT') return;
   try {
     const fs = await getFinanceSettings();
     const cur = fs.currency_symbol;
@@ -500,6 +572,20 @@ async function applyApproval(doc: IPaymentRelease) {
     return;
   }
 
+  if (doc.kind === 'ECOMM_PAYMENT') {
+    // Product-sale money goes to the seller who listed the stock. Duncit
+    // collected it from the buyer, so this is the leg that actually hands it
+    // over — before this existed the seller only ever got an invoice.
+    if (doc.host_user_id) {
+      await walletService.creditPodPayout(String(doc.host_user_id), payout, {
+        pod_id: doc.pod_id,
+        release_id: doc.release_id,
+        reason: `Product sales payout for ${doc.pod_title}`,
+      });
+    }
+    return;
+  }
+
   // HOST_PAYMENT: the host's money is credited to their wallet to withdraw later.
   if (doc.host_user_id) {
     await walletService.creditPodPayout(String(doc.host_user_id), payout, {
@@ -647,7 +733,7 @@ export const paymentReleaseService = {
     // the venue a second time, past the wallet's per-release idempotency.
     const already = await PaymentReleaseModel.findOne({
       pod_id: pod._id,
-      kind: { $in: ['HOST_PAYMENT', 'VENUE_BILLING', 'CLUB_ADMIN'] },
+      kind: { $in: ['HOST_PAYMENT', 'VENUE_BILLING', 'CLUB_ADMIN', 'ECOMM_PAYMENT'] },
       status: { $in: ['PENDING', 'APPROVED'] },
     });
     if (already) {
@@ -767,9 +853,14 @@ export const paymentReleaseService = {
       }
     }
 
+    // Product sellers are paid on the same trigger, one release each for what
+    // they actually sold on this pod.
+    releases.push(...(await ecommReleases(pod, actor.id, clean(input.notes))));
+
     // Completion is the trigger: every payout is approved and credited to the
-    // beneficiary wallets right here — host, venue owner and club admin — no
-    // manual Finance step in between. The releases stay as the audit trail.
+    // beneficiary wallets right here — host, venue owner, club admin and each
+    // product seller — no manual Finance step in between. The releases stay as
+    // the audit trail.
     for (const doc of releases) {
       await autoApprove(doc, actor.id);
     }

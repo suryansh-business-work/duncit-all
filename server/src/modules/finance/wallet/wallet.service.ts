@@ -5,6 +5,7 @@ import {
   WalletModel,
   WalletTransactionModel,
   WalletWithdrawalModel,
+  WITHDRAWER_ROLE_BY_KIND,
   type IWallet,
   type IWalletTransaction,
   type IWalletWithdrawal,
@@ -21,8 +22,83 @@ import {
 } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { allocateWithdrawal, consumedByRelease, type PodCredit } from './withdrawal-allocation';
 
 const withdrawalId = () => `wd_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
+
+/**
+ * The pod earnings this user has not withdrawn yet, oldest first, ready for
+ * {@link allocateWithdrawal}.
+ *
+ * The pod link lives on the CREDIT side of the ledger: every POD_COMPLETION
+ * credit carries the pod and the release that paid it. The release is then read
+ * for the leg it was earned through (host / venue / club admin / seller), which
+ * is the role the Finance pod view reports.
+ *
+ * Credits whose release no longer resolves are still returned — losing the
+ * title is better than dropping the money out of the attribution entirely.
+ */
+async function podCreditsFor(userId: string): Promise<PodCredit[]> {
+  const credits = await WalletTransactionModel.find({
+    user_id: new Types.ObjectId(userId),
+    type: 'CREDIT',
+    source: 'POD_COMPLETION',
+    pod_id: { $ne: null },
+  })
+    .sort({ created_at: 1 })
+    .lean();
+  if (credits.length === 0) return [];
+
+  const releaseIds = credits.map((c: any) => c.release_id).filter(Boolean);
+  const { PaymentReleaseModel } = await import('@modules/finance/finance/paymentRelease.model');
+  const releases = releaseIds.length
+    ? await PaymentReleaseModel.find({ release_id: { $in: releaseIds } })
+        .select('release_id kind pod_title')
+        .lean()
+    : [];
+  const releaseById = new Map(releases.map((r: any) => [String(r.release_id), r]));
+
+  return credits.map((c: any) => {
+    const release = releaseById.get(String(c.release_id ?? ''));
+    return {
+      pod_id: String(c.pod_id),
+      pod_title: release?.pod_title ?? '',
+      release_id: String(c.release_id ?? ''),
+      // A credit with no resolvable release still belongs to its pod; HOST is
+      // the same default the withdrawer_role precedence falls back to.
+      kind: release?.kind ?? 'HOST_PAYMENT',
+      amount: Number(c.amount) || 0,
+    };
+  });
+}
+
+/**
+ * Attribution for one new withdrawal of `amount`.
+ *
+ * REJECTED withdrawals are left out of the consumed tally on purpose: a
+ * rejection hands the money back to the wallet, so the releases behind it are
+ * available to be drawn again.
+ *
+ * Not serialised against a concurrent request from the SAME user: two of them
+ * could read this tally before either has written, and attribute one release
+ * twice. That is deliberate — the money is already safe, because the balance
+ * debit above is a single atomic findOneAndUpdate that no pair of requests can
+ * both win. What can drift is the reporting, which is why the Finance view
+ * calls this an attributed total rather than an amount owed. Taking a lock here
+ * would put a wallet write behind a second round-trip to protect a label.
+ */
+async function allocationsFor(userId: string, amount: number) {
+  const [credits, existing] = await Promise.all([
+    podCreditsFor(userId),
+    WalletWithdrawalModel.find({
+      user_id: new Types.ObjectId(userId),
+      status: { $in: ['PENDING', 'PAID'] },
+    })
+      .select('allocations')
+      .lean(),
+  ]);
+  return allocateWithdrawal(credits, consumedByRelease(existing as any), amount);
+}
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const clean = (value: string | number | null | undefined, max = 160) => String(value ?? '').trim().slice(0, max);
 const METHODS = new Set<string>(['UPI', 'IMPS', 'NEFT']);
@@ -125,6 +201,14 @@ const withdrawalPub = (w: IWalletWithdrawal) => ({
   scheduled_for: w.scheduled_for?.toISOString?.() ?? '',
   reject_reason: w.reject_reason ?? '',
   requested_at: w.requested_at?.toISOString?.() ?? '',
+  allocations: (w.allocations ?? []).map((a) => ({
+    pod_id: String(a.pod_id),
+    pod_title: a.pod_title ?? '',
+    release_id: a.release_id ?? '',
+    kind: a.kind,
+    role: WITHDRAWER_ROLE_BY_KIND[a.kind] ?? 'HOST',
+    amount: a.amount,
+  })),
   reviewed_at: w.reviewed_at?.toISOString?.() ?? null,
   paid_at: w.paid_at?.toISOString?.() ?? null,
   created_at: w.created_at?.toISOString?.() ?? '',
@@ -312,9 +396,14 @@ export const walletService = {
       throw new GraphQLError('Insufficient wallet balance', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const name = [user?.profile?.first_name, user?.profile?.last_name].filter(Boolean).join(' ').trim();
+    // Which pods this money came from, decided here and frozen on the record.
+    // Read AFTER the debit succeeded so a request that lost the balance race
+    // never consumes credits, and never re-derived afterwards.
+    const allocations = await allocationsFor(userId, amount);
     const doc = await WalletWithdrawalModel.create({
       withdrawal_id: withdrawalId(),
       user_id: new Types.ObjectId(userId),
+      allocations,
       beneficiary_name: name || user?.auth?.email || 'Host',
       beneficiary_email: user?.auth?.email ?? '',
       amount,
@@ -356,6 +445,24 @@ export const walletService = {
     return { rows: docs.map(withdrawalPub), total, page, page_size };
   },
 
+  /** Finance → Withdrawal Payments, level 1: one row per pod withdrawn against. */
+  async podWithdrawalGroupsTable(input?: TableQueryInput | null) {
+    const { withdrawalPodsService } = await import('./withdrawalPods.service');
+    return withdrawalPodsService.podWithdrawalGroupsTable(input);
+  },
+
+  /** The drill-down header: one pod's row, or null when nothing was withdrawn. */
+  async podWithdrawalSummary(podId: string) {
+    const { withdrawalPodsService } = await import('./withdrawalPods.service');
+    return withdrawalPodsService.podWithdrawalSummary(podId);
+  },
+
+  /** Finance → Withdrawal Payments, level 2: one pod's withdrawal requests. */
+  async podWithdrawalsTable(podId: string, input?: TableQueryInput | null) {
+    const { withdrawalPodsService } = await import('./withdrawalPods.service');
+    return withdrawalPodsService.podWithdrawalsTable(podId, input, WITHDRAWAL_TABLE_CONFIG, withdrawalPub);
+  },
+
   async reviewWithdrawal(id: string, status: string, reason: string | undefined, reviewerId?: string | null) {
     const doc = await WalletWithdrawalModel.findById(id);
     if (!doc) throw new GraphQLError('Withdrawal not found', { extensions: { code: 'NOT_FOUND' } });
@@ -388,6 +495,12 @@ export const walletService = {
         withdrawal_id: doc.withdrawal_id,
       });
       doc.reject_reason = cleaned;
+      // The money is back in the wallet, so the pod earnings behind it are
+      // spendable again. Clearing the attribution is what makes the NEXT
+      // withdrawal able to draw those same releases — and it drops the
+      // rejected row out of the Finance pod view, where it would otherwise
+      // read as a live claim on a pod that was never paid.
+      doc.set('allocations', []);
     }
     doc.status = status as IWalletWithdrawal['status'];
     doc.reviewed_by = reviewerId ? new Types.ObjectId(reviewerId) : null;

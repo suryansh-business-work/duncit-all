@@ -11,9 +11,24 @@ import { logs } from '@observability/log';
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
 
-interface SellerBucket {
+export interface SellerBucket {
   name: string;
   lines: ProductInvoiceLine[];
+}
+
+/**
+ * What a seller is owed for a pod: gross taken at the door minus the Duncit
+ * commission on it.
+ *
+ * ONE definition, because the same three numbers are now billed to the seller
+ * on their product invoice AND credited to their wallet by the ECOMM_PAYMENT
+ * release. Computing them twice is exactly how an invoice comes to quote money
+ * that was never paid.
+ */
+export function sellerTotals(bucket: SellerBucket) {
+  const gross_total = round2(bucket.lines.reduce((s, l) => s + l.gross, 0));
+  const commission_total = round2(bucket.lines.reduce((s, l) => s + l.commission, 0));
+  return { gross_total, commission_total, net_total: round2(gross_total - commission_total) };
 }
 
 interface SoldTotals {
@@ -92,9 +107,7 @@ async function sendSellerInvoice(sellerId: string, bucket: SellerBucket, pod: an
   const email = seller?.auth?.email;
   if (!email) return;
   const name = [seller?.profile?.first_name, seller?.profile?.last_name].filter(Boolean).join(' ').trim() || bucket.name;
-  const gross_total = round2(bucket.lines.reduce((s, l) => s + l.gross, 0));
-  const commission_total = round2(bucket.lines.reduce((s, l) => s + l.commission, 0));
-  const net_total = round2(gross_total - commission_total);
+  const { gross_total, commission_total, net_total } = sellerTotals(bucket);
   const invoice_no = await nextInvoiceNumber();
   // One instant for both the PDF and the WhatsApp, so the seller cannot read
   // two different invoice dates for the same payout.
@@ -160,11 +173,16 @@ async function sendSellerInvoice(sellerId: string, bucket: SellerBucket, pod: an
   });
 }
 
-/** On pod completion, email each product seller an invoice for their products
- * sold on the pod (gross − Duncit commission = net payout). Best-effort. */
-export async function sendProductInvoicesForPod(pod: any, fs: any) {
+/**
+ * What every seller on this pod actually sold, keyed by their user id.
+ *
+ * Exported because the ECOMM_PAYMENT release pays exactly what the invoice
+ * bills — the release creator calls this rather than re-deriving the same
+ * lines from the same orders (rule 34).
+ */
+export async function computeSellerPayoutsForPod(pod: any, fs: any): Promise<Map<string, SellerBucket>> {
   const requests = pod.product_requests ?? [];
-  if (!requests.length) return;
+  if (!requests.length) return new Map();
 
   const soldByProduct = await collectSoldByProduct(pod._id);
 
@@ -182,7 +200,14 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
     : [];
   const brandPctById = new Map(brands.map((b: any) => [String(b._id), b.product_commission_pct ?? 0]));
 
-  const bySeller = buildSellerBuckets(requests, byId, brandPctById, soldByProduct, fs);
+  return buildSellerBuckets(requests, byId, brandPctById, soldByProduct, fs);
+}
+
+/** On pod completion, email each product seller an invoice for their products
+ * sold on the pod (gross − Duncit commission = net payout). Best-effort. */
+export async function sendProductInvoicesForPod(pod: any, fs: any) {
+  const bySeller = await computeSellerPayoutsForPod(pod, fs);
+  if (bySeller.size === 0) return;
 
   const tmpl = fs.invoice_templates.product;
   const cur = fs.currency_symbol;

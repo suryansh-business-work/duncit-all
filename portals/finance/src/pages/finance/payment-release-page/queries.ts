@@ -131,7 +131,7 @@ export const REVIEW_PAYMENT_RELEASE = gql`
   }
 `;
 
-export type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN';
+export type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
 export type ReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 /** Row shape for the payment-release table (fields the columns touch — rows

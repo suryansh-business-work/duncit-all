@@ -24,6 +24,27 @@ export const ROLE_LABELS: Record<WithdrawerRole, string> = {
 export const ROLE_OPTIONS: ReadonlyArray<{ value: WithdrawerRole; label: string }> =
   WITHDRAWER_ROLES.map((value) => ({ value, label: ROLE_LABELS[value] }));
 
+/**
+ * The same four labels, keyed, for the pod-grouped screens.
+ *
+ * Written as literal strings because the Shared Gates check greps source for
+ * `t('<key>')` — a key assembled at runtime counts as unused and fails the
+ * build. `ROLE_LABELS` above stays as the fallback for the older per-withdrawal
+ * table, which has not been through the localization sweep yet.
+ */
+export const ROLE_LABEL_KEYS = {
+  HOST: 'finance.withdrawals.roleHost',
+  VENUE_OWNER: 'finance.withdrawals.roleVenueOwner',
+  ECOMM_MANAGER: 'finance.withdrawals.roleEcommBrand',
+  CLUB_ADMIN: 'finance.withdrawals.roleClubAdmin',
+} as const satisfies Record<WithdrawerRole, string>;
+
+/** Localized role label, falling back to the English map for an unknown role. */
+export const translatedRoleLabel = (t: (key: string) => string, role: string): string => {
+  const key = ROLE_LABEL_KEYS[role as WithdrawerRole];
+  return key ? t(key) : roleLabel(role);
+};
+
 /** Role -> the matching field on `WithdrawalMinimums` / `UpdateWithdrawalMinimumsInput`. */
 export const ROLE_MINIMUM_FIELD = {
   HOST: 'host',

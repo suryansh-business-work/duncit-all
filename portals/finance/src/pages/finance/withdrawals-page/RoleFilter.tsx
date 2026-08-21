@@ -1,5 +1,6 @@
 import { MenuItem, TextField } from '@mui/material';
-import { ALL_ROLES, ROLE_OPTIONS, type RoleFilterValue } from './roles';
+import { useTranslation } from '@duncit/app-settings';
+import { ALL_ROLES, WITHDRAWER_ROLES, translatedRoleLabel, type RoleFilterValue } from './roles';
 
 interface Props {
   value: RoleFilterValue;
@@ -9,22 +10,24 @@ interface Props {
 /**
  * Page-level Role filter. It drives the table's `externalFilters` rather than a
  * column filter, so the chosen role stays pinned across search, sort and paging
- * instead of reading as one dismissible chip among many.
+ * instead of reading as one dismissible chip among many — and, because those
+ * are compared by value, changing it resets to page 1 and refetches.
  */
 export default function RoleFilter({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <TextField
       select
       size="small"
-      label="Role"
+      label={t('finance.withdrawals.roleFilter')}
       value={value}
       onChange={(e) => onChange(e.target.value as RoleFilterValue)}
       sx={{ minWidth: 200 }}
     >
-      <MenuItem value={ALL_ROLES}>All roles</MenuItem>
-      {ROLE_OPTIONS.map((option) => (
-        <MenuItem key={option.value} value={option.value}>
-          {option.label}
+      <MenuItem value={ALL_ROLES}>{t('finance.withdrawals.roleAll')}</MenuItem>
+      {WITHDRAWER_ROLES.map((role) => (
+        <MenuItem key={role} value={role}>
+          {translatedRoleLabel(t, role)}
         </MenuItem>
       ))}
     </TextField>

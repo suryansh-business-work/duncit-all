@@ -1,10 +1,13 @@
 import { Chip } from '@mui/material';
 import type { ReleaseKind } from './queries';
 
-const KIND_CHIPS: Record<ReleaseKind, { label: string; color: 'info' | 'secondary' | 'success' }> = {
+type KindChipColor = 'info' | 'secondary' | 'success' | 'warning';
+
+const KIND_CHIPS: Record<ReleaseKind, { label: string; color: KindChipColor }> = {
   VENUE_BILLING: { label: 'Venue Billing', color: 'info' },
   HOST_PAYMENT: { label: 'Host Payment', color: 'secondary' },
   CLUB_ADMIN: { label: 'Club Admin', color: 'success' },
+  ECOMM_PAYMENT: { label: 'E-Commerce Brand', color: 'warning' },
 };
 
 export function ReleaseKindChip({ kind }: Readonly<{ kind: ReleaseKind }>) {

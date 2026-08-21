@@ -90,9 +90,7 @@ export function EarnScreen() {
                   disabled={state.disabled}
                   disabledLabel={state.disabledLabel}
                   cta={cta}
-                  onPress={() =>
-                    navigation.navigate(box.nativeRoute as never)
-                  }
+                  onPress={() => navigation.navigate(box.nativeRoute as never)}
                 />
                 {scheduledMeeting ? (
                   <EarnMeetingActions

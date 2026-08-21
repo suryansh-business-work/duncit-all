@@ -115,14 +115,25 @@ export function VenueSlotRequestsScreen() {
   const confirmApprove = (slotId: string) => {
     Alert.alert('Approve this booking?', 'The pod goes live and the host is told.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Approve', onPress: () => { slots.approve(slotId).catch(() => undefined); } },
+      {
+        text: 'Approve',
+        onPress: () => {
+          slots.approve(slotId).catch(() => undefined);
+        },
+      },
     ]);
   };
 
   const confirmDecline = (slotId: string) => {
     Alert.alert('Decline this booking?', 'The slot opens again and the host is told.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Decline', style: 'destructive', onPress: () => { slots.decline(slotId, '').catch(() => undefined); } },
+      {
+        text: 'Decline',
+        style: 'destructive',
+        onPress: () => {
+          slots.decline(slotId, '').catch(() => undefined);
+        },
+      },
     ]);
   };
 

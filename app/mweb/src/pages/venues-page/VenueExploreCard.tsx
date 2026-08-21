@@ -50,8 +50,22 @@ export default function VenueExploreCard({
             <StorefrontIcon sx={{ fontSize: 34 }} />
           )}
         </Box>
-        <Stack spacing={0.25} sx={{ p: 1.5 }}>
-          <Typography fontWeight={700} noWrap>
+        {/* The name block paints its own opaque surface and sits above the
+            cover in the stacking order. The card's gradient let a busy photo
+            read straight through into the text, which is what made the venue
+            name hard to pick out; a flat panel and a rule under the image give
+            it a ground of its own. Native twin does the same. */}
+        <Stack
+          spacing={0.25}
+          sx={{
+            p: 1.5,
+            position: 'relative',
+            bgcolor: 'background.paper',
+            borderTop: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Typography variant="subtitle1" fontWeight={700} color="text.primary" noWrap>
             {venue.venue_name}
           </Typography>
           {meta && (

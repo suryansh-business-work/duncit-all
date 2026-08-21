@@ -8,6 +8,7 @@ import { podCancellationService, type PodCancelKind } from './podCancellation.se
 import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 
@@ -292,10 +293,17 @@ export const financeResolvers = {
           extensions: { code: 'BAD_USER_INPUT' },
         });
       }
-      const updated = await UserModel.findByIdAndUpdate(args.user_id, {
+      // Without `{ new: true }` this answers with the PRE-update document,
+      // which is exactly the before-image the user change log diffs against.
+      const before = await UserModel.findByIdAndUpdate(args.user_id, {
         $set: { 'finance.host_commission_pct': args.host_commission_pct },
       });
-      if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+      if (!before) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+      await userAuditService.record({
+        userId: args.user_id,
+        before,
+        after: await UserModel.findById(args.user_id).lean(),
+      });
       return true;
     },
   },

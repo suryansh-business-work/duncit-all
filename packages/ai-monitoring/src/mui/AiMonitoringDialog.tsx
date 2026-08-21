@@ -1,0 +1,69 @@
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import type { AiMonitoringCopy } from '../index';
+
+export interface AiMonitoringDialogProps {
+  open: boolean;
+  onClose: () => void;
+  copy: AiMonitoringCopy;
+}
+
+/**
+ * What "AI Monitoring" means, in the reader's language.
+ *
+ * Purely informational — it explains, it never gates the upload. Every
+ * sentence comes from `copy`, which is the admin's setting layered over the
+ * localized fallback, so this component holds no text of its own.
+ */
+export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitoringDialogProps>) {
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <SmartToyIcon color="primary" fontSize="small" />
+          <Typography component="span" variant="h6" fontWeight={700}>
+            {copy.title}
+          </Typography>
+        </Stack>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Typography variant="body2" color="text.secondary">
+          {copy.intro}
+        </Typography>
+        <List dense disablePadding sx={{ mt: 1 }}>
+          {copy.points.map((point) => (
+            <ListItem key={point} disableGutters alignItems="flex-start">
+              <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
+                <CheckCircleOutlineIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ variant: 'body2' }} primary={point} />
+            </ListItem>
+          ))}
+        </List>
+        {copy.footnote && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            {copy.footnote}
+          </Typography>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} variant="contained">
+          {copy.dismissLabel}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}

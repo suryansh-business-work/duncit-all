@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { GetImagekitAuthDocument } from '@/graphql/status';
+import { UploadSurface } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export interface DirectUploadFile {
@@ -76,10 +77,12 @@ export async function uploadToImagekitDirect(
   folder: string,
   onProgress?: (pct: number) => void,
 ): Promise<string> {
-  // The pass is single use, so it is fetched per upload.
+  // The pass is single use, so it is fetched per upload. The surface rides on
+  // it because the raw POST that follows carries only the ticket, and the AI
+  // Monitoring row has to be attributed to the app.
   const { getImagekitAuth: ticket } = await graphqlRequest(
     GetImagekitAuthDocument,
-    { folder },
+    { folder, surface: UploadSurface.Mobile },
     { auth: true },
   );
   const form = new FormData();

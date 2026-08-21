@@ -10,6 +10,7 @@ import {
   VoteProductReviewDocument,
 } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
+import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useUploadSettings, type MobileUploadSettings } from '@/hooks/useUploadSettings';
@@ -94,6 +95,9 @@ function ReviewPhotos({
         <Text fontSize={13} fontWeight="700" color={primary}>
           {uploadBusy ? 'Uploading…' : 'Add photo'}
         </Text>
+      </XStack>
+      <XStack>
+        <AiMonitoringChip testID="review-ai-monitoring" />
       </XStack>
       <MediaCropDialog
         media={upload.pending}

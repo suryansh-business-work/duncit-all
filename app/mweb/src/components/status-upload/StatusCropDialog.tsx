@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import {
   FileDetails,
   ImageCropStep,
@@ -50,7 +51,10 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
 
   return (
     <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="sm">
-      <DialogTitle>Crop status image</DialogTitle>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        Crop status image
+        <AiMonitoringChip />
+      </DialogTitle>
       <DialogContent dividers>
         {previewUrl && (
           <ImageCropStep

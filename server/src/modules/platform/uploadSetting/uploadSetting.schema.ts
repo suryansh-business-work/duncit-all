@@ -57,32 +57,11 @@ export const uploadSettingTypeDefs = /* GraphQL */ `
     crop_presets: [UploadCropPresetInput!]
   }
 
-  type MediaScanLog {
-    id: ID!
-    url: String!
-    file_name: String!
-    folder: String!
-    surface: String!
-    user_id: String
-    risk: String!
-    summary: String!
-    created_at: String!
-  }
-
-  type MediaScanLogsTableResult {
-    rows: [MediaScanLog!]!
-    total: Int!
-    page: Int!
-    page_size: Int!
-  }
-
   extend type Query {
     "Upload rules for the calling client's surface (any signed-in user)."
     uploadSettings(surface: UploadSurface!): UploadSetting!
     "Admin: both surfaces for the Upload Settings pages."
     allUploadSettings: [UploadSetting!]!
-    "Admin: AI image-monitoring scan log (server-side table)."
-    mediaScanLogsTable(query: TableQueryInput): MediaScanLogsTableResult!
   }
 
   extend type Mutation {

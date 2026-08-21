@@ -27,6 +27,12 @@ interface Ticket {
   userId: string;
   folder: string;
   store: UploadStore;
+  /**
+   * Which client family issued it. Fixed here for the same reason the folder is:
+   * the raw POST carries only the ticket, so the surface an AI Monitoring row is
+   * attributed to has to be decided by the authenticated call that knows it.
+   */
+  surface: string;
   expiresAt: number;
 }
 
@@ -43,14 +49,15 @@ function sweep(): void {
 export function issueUploadTicket(
   userId: string,
   folder: string,
-  store: UploadStore = 'imagekit'
+  store: UploadStore = 'imagekit',
+  surface = ''
 ): string {
   sweep();
   // Refuse rather than grow without bound: something is very wrong if five
   // thousand tickets are open at once, and quietly eating memory hides it.
   if (tickets.size >= MAX_OPEN) throw new Error('Too many uploads in flight');
   const id = crypto.randomUUID();
-  tickets.set(id, { userId, folder, store, expiresAt: Date.now() + TTL_MS });
+  tickets.set(id, { userId, folder, store, surface, expiresAt: Date.now() + TTL_MS });
   return id;
 }
 
@@ -60,12 +67,17 @@ export function issueUploadTicket(
  */
 export function spendUploadTicket(
   id: string
-): { userId: string; folder: string; store: UploadStore } | null {
+): { userId: string; folder: string; store: UploadStore; surface: string } | null {
   sweep();
   const ticket = tickets.get(id);
   if (!ticket) return null;
   tickets.delete(id);
-  return { userId: ticket.userId, folder: ticket.folder, store: ticket.store };
+  return {
+    userId: ticket.userId,
+    folder: ticket.folder,
+    store: ticket.store,
+    surface: ticket.surface,
+  };
 }
 
 /** Test seam — tickets are process state. */

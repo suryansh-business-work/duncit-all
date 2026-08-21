@@ -31,6 +31,14 @@ export const appConfig = {
         { label: 'Logs', to: '/openai/logs', icon: 'article' },
       ],
     },
+    {
+      label: 'AI Monitoring',
+      icon: 'shield',
+      children: [
+        { label: 'Logs', to: '/monitoring', icon: 'image' },
+        { label: 'Settings', to: '/monitoring/settings', icon: 'settings' },
+      ],
+    },
   ],
   modules: [
     {
@@ -42,6 +50,11 @@ export const appConfig = {
       title: 'OpenAI',
       description: 'Every OpenAI call across the platform, with its tokens and cost.',
       icon: 'ai',
+    },
+    {
+      title: 'AI Monitoring',
+      description: 'Every uploaded image the platform screened, and the prompt it screened it with.',
+      icon: 'shield',
     },
   ],
 } satisfies AppConfig;

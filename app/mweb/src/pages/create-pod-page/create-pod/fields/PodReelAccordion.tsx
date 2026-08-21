@@ -16,6 +16,7 @@ import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useApolloClient } from '@apollo/client';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm } from '../create-pod.types';
@@ -116,6 +117,9 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           <Typography variant="caption" color="text.secondary">
             {t('mweb.createPod.reelHint')}
           </Typography>
+          <Box>
+            <AiMonitoringChip />
+          </Box>
           {hasReel && (
             <Box
               component="video"

@@ -3,6 +3,7 @@ import { useController, useFormContext } from 'react-hook-form';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { parseApiError } from '@duncit/utils';
 
@@ -70,16 +71,19 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}>
           {label}
         </Typography>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={busy ? <CircularProgress size={14} /> : <UploadIcon />}
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-          data-testid={`upload-${name}`}
-        >
-          {busy ? 'Uploading…' : addLabel}
-        </Button>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <AiMonitoringChip />
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={busy ? <CircularProgress size={14} /> : <UploadIcon />}
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            data-testid={`upload-${name}`}
+          >
+            {busy ? 'Uploading…' : addLabel}
+          </Button>
+        </Stack>
       </Stack>
 
       {list.length > 0 && (

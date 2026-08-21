@@ -23,6 +23,7 @@ const SAMPLE_TITLE: Record<NotificationCategory, string> = {
   support: 'Support ticket updated',
   club: 'You joined a club',
   pod: 'Pod starts in 1 hour',
+  post: 'New like on your post',
   account: 'New follower',
   general: 'Terms updated',
 };
@@ -118,6 +119,7 @@ describe('NOTIFICATION_CATEGORY_ORDER', () => {
       'support',
       'club',
       'pod',
+      'post',
       'account',
       'general',
     ]);

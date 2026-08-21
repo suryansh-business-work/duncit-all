@@ -8,6 +8,7 @@ import { pipeline } from 'node:stream/promises';
 import { logs } from '@observability/log';
 import { uploadFileToImagekit } from '@modules/platform/upload/upload.service';
 import { spendUploadTicket } from '@modules/platform/upload/uploadTicket';
+import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
   artifactUrl,
   ensureArtifactsDir,
@@ -37,6 +38,12 @@ import {
 
 /** Hard ceiling. Sized for a build artifact; per-surface Upload Settings gate the rest. */
 const MAX_BYTES = 300 * 1024 * 1024;
+
+/** Extensions AI Monitoring reviews. The multipart body carries no reliable
+ * mime type, so the name is what there is to go on. */
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i;
+
+const isImageUpload = (fileName: string) => IMAGE_EXT_RE.test(fileName);
 
 interface Spooled {
   fileName: string;
@@ -164,6 +171,21 @@ export function buildUploadRouter(): Router {
           // holding a pass could write anywhere in the library.
           folder: ticket.folder,
         });
+        // Images that come through here (support attachments, native picks)
+        // never touched the GraphQL upload path, so this is the only place they
+        // can be logged. Without it "every upload is checked" would be true of
+        // one of the two routes a file can take. Videos are not AI-reviewed.
+        if (isImageUpload(fileName)) {
+          mediaScanService
+            .record({
+              url: uploaded.url,
+              fileName,
+              folder: ticket.folder,
+              surface: ticket.surface,
+              userId: ticket.userId,
+            })
+            .catch(() => undefined);
+        }
         res.json(uploaded);
       } catch (error: any) {
         logs.server.error('upload', 'proxy', {

@@ -4,6 +4,7 @@ import type { ChangeEvent } from 'react';
 import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { parseApiError } from '@duncit/utils';
 import { isVideoUpload } from './attachment';
 import { useImagekitBase64Upload } from './upload';
@@ -146,6 +147,7 @@ export default function AttachmentUploadField({
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {heading} ({value.length}/{max})
         </Typography>
+        <AiMonitoringChip />
         <input ref={inputRef} type="file" accept={accept} multiple={multiple} hidden onChange={onPick} />
         <Button
           size="small"

@@ -1,0 +1,81 @@
+---
+name: '@duncit/ai-monitoring'
+summary: 'One AI Monitoring notice for every upload field. Framework-free copy resolution at the root, the MUI chip + dialog behind /mui; the native app renders the same resolved copy through its own Tamagui view.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'packages/media-picker'
+  - 'app/mweb'
+  - 'app/mobile-app'
+exports:
+  - 'resolveAiMonitoringCopy'
+  - 'aiMonitoringFallbackCopy'
+  - 'isAiMonitoringChipVisible'
+  - 'AI_MONITORING_CONFIG_QUERY'
+  - 'AiMonitoringChip'
+  - 'AiMonitoringDialog'
+  - 'useAiMonitoringConfig'
+---
+
+# AI Monitoring
+
+Every image and file uploaded to Duncit is reviewed by an AI model. This
+package is the notice that says so: a chip beside the upload control, and an
+informational dialog behind it.
+
+There is exactly one place each half of it is decided:
+
+- **What it says** — AI Portal → AI Monitoring → **Settings**. Any field left
+  blank falls back to the localized `aiMonitoring.*` copy shipped in
+  `@duncit/i18n`, so an untouched setting still follows the reader's language.
+- **What it did** — AI Portal → AI Monitoring → **Logs**. Every check is one
+  row: the image, who uploaded it, when, how far the check got, what the model
+  said, why, what was done about it, and which surface and folder it came from.
+
+## Where the chip goes
+
+Beside anything that accepts an image or a file. In mWeb and the portals every
+such control routes through `@duncit/media-picker`, so the chip is placed once
+per field there and reaches all eighteen surfaces:
+
+```tsx
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
+
+<Stack direction="row" spacing={1} alignItems="center">
+  <Typography variant="caption">{hint}</Typography>
+  <AiMonitoringChip />
+</Stack>;
+```
+
+The chip renders nothing when an operator turns the notice off, and needs no
+props: it reads the config itself through a public, Redis-cached query, so a
+page with six upload fields still makes one request.
+
+## Why the root is framework-free
+
+The native app is a standalone npm project; Metro resolves a linked package's
+peer imports by walking up from `packages/<name>/`, which finds nothing in the
+Docker build. So the root exports no React at all — only the copy resolution
+and the query text — and the app renders its own Tamagui chip over
+`resolveAiMonitoringCopy`. Rule 40: share the logic, never the UI.
+
+```ts
+import { resolveAiMonitoringCopy } from '@duncit/ai-monitoring';
+
+const copy = resolveAiMonitoringCopy(config, t);
+// copy.chipLabel, copy.title, copy.intro, copy.points, copy.footnote, copy.dismissLabel
+```
+
+`config` is `null` until the query answers (and forever, offline). That is the
+normal case, not an error case: the fallback copy is complete on its own.
+
+## Adding a bullet to the dialog
+
+1. Add the key to `AI_MONITORING_BUNDLE` in `packages/i18n/src/bundles/ai-monitoring.ts`.
+2. Add a literal `t('aiMonitoring.<key>')` line to `aiMonitoringFallbackCopy`.
+3. Press **Import app keys** in Admin → Localization → Translations.
+
+Do not compose the key from a variable — the Shared Gates check greps for the
+literal, and a composed key is invisible to it.

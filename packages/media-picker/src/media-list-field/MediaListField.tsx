@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import MediaPickerDialog from '../MediaPickerDialog';
 import MediaListRow from './MediaListRow';
 
@@ -51,9 +52,12 @@ export default function MediaListField({
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Typography variant="subtitle2">{label}</Typography>
-        <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
-          {buttonLabel}
-        </Button>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <AiMonitoringChip />
+          <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
+            {buttonLabel}
+          </Button>
+        </Stack>
       </Stack>
       {helperText && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>

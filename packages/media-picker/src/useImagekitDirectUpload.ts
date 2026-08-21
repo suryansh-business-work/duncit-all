@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import { GET_IMAGEKIT_AUTH } from './queries';
+import type { UploadSurface } from './types';
 
 interface UploadTicket {
   uploadUrl: string;
@@ -92,10 +93,14 @@ export async function directUploadToImagekit(
   file: File,
   folder: string,
   onProgress?: UploadProgress,
+  // The raw POST carries only the ticket, so the surface has to be fixed on the
+  // pass — it is what the AI Monitoring row is attributed to, and what decides
+  // whether this surface's uploads are screened at all.
+  surface: UploadSurface = 'PORTALS',
 ): Promise<string> {
   const { data } = await client.mutate({
     mutation: GET_IMAGEKIT_AUTH,
-    variables: { folder },
+    variables: { folder, surface },
   });
   const ticket = (data as { getImagekitAuth?: UploadTicket } | null)?.getImagekitAuth;
   if (!ticket) throw new Error('Upload is not available right now');
@@ -110,10 +115,15 @@ export function useImagekitDirectUpload() {
   const client = useApolloClient();
   const [uploading, setUploading] = useState(false);
   const upload = useCallback(
-    async (file: File, folder: string, onProgress?: UploadProgress): Promise<string> => {
+    async (
+      file: File,
+      folder: string,
+      onProgress?: UploadProgress,
+      surface: UploadSurface = 'PORTALS',
+    ): Promise<string> => {
       setUploading(true);
       try {
-        return await directUploadToImagekit(client, file, folder, onProgress);
+        return await directUploadToImagekit(client, file, folder, onProgress, surface);
       } finally {
         setUploading(false);
       }

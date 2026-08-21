@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { AppImage } from '@/components/AppImage';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -280,6 +281,12 @@ export function MediaCropDialog({
             </YStack>
 
             <YStack paddingHorizontal={16} gap={10}>
+              {/* Every status, story, profile post and review photo lands here
+                  before it is sent, so this is the one screen that can carry the
+                  notice for all of them. */}
+              <XStack>
+                <AiMonitoringChip testID="crop-ai-monitoring" />
+              </XStack>
               <FileDetailsPanel media={media} />
               {uploading ? <UploadProgress stage={stage} progress={progress} /> : null}
               {error ? (

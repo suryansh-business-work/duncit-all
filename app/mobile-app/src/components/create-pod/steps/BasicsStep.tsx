@@ -9,6 +9,7 @@ import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
+import { ReelEngagementNotice } from '../ReelEngagementNotice';
 import { ReelUploadField } from '../ReelUploadField';
 import { HostCategoryField } from './HostCategoryField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -93,7 +94,14 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
       <Controller
         control={control}
         name="reel_url"
-        render={({ field }) => <ReelUploadField value={field.value} onChange={field.onChange} />}
+        render={({ field }) => (
+          // The nudge reads from outside the collapsed card, so it lives beside
+          // the field rather than inside it, and clears once a reel is added.
+          <YStack gap={14}>
+            {field.value ? null : <ReelEngagementNotice />}
+            <ReelUploadField value={field.value} onChange={field.onChange} />
+          </YStack>
+        )}
       />
     </YStack>
   );

@@ -9,6 +9,7 @@ export {
 } from './catalogue';
 export {
   ADMIN_BUNDLE,
+  AI_MONITORING_BUNDLE,
   allFallbackEntries,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,

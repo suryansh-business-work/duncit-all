@@ -5,6 +5,7 @@ import MediaUrlsField from '../fields/MediaUrlsField';
 import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import PodReelAccordion from '../fields/PodReelAccordion';
+import ReelEngagementNotice from '../fields/ReelEngagementNotice';
 import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
@@ -38,6 +39,9 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const subCategoryName = coverCategoryName(
     hostCategories.find((category) => hostCategoryKeyOf(category) === categoryKey),
   );
+  // The reel nudge is the only thing on this step that reacts to the reel,
+  // and it goes away the moment one is added.
+  const hasReel = !!watch('reel_url');
 
   return (
     <Stack spacing={2.25}>
@@ -96,6 +100,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
       />
       <HashtagChipsField form={form} />
       <OptionalSettingsCards form={form} />
+      {!hasReel && <ReelEngagementNotice />}
       <PodReelAccordion form={form} />
     </Stack>
   );

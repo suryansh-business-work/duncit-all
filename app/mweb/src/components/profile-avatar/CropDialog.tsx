@@ -13,6 +13,7 @@ import {
   Stack,
 } from '@mui/material';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { getCroppedImage } from './cropImage';
 
 interface Props {
@@ -61,7 +62,10 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
 
   return (
     <Dialog open={open && !!src} onClose={busy ? undefined : cancel} fullWidth maxWidth="xs">
-      <DialogTitle>Adjust photo</DialogTitle>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        Adjust photo
+        <AiMonitoringChip />
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ position: 'relative', width: '100%', height: 300, bgcolor: '#111', borderRadius: '16px' }}>
           {src && (

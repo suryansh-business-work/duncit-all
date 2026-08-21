@@ -89,34 +89,3 @@ const uploadSettingSchema = new Schema<IUploadSetting>(
 );
 
 export const UploadSettingModel = model<IUploadSetting>('UploadSetting', uploadSettingSchema);
-
-/** Append-only AI review log for uploaded images (admin Upload Settings →
- * AI image monitoring). Written best-effort after every image upload. */
-export interface IMediaScanLog extends Document {
-  url: string;
-  file_name: string;
-  folder: string;
-  surface: string;
-  user_id?: string;
-  risk: 'PENDING' | 'LOW' | 'MEDIUM' | 'HIGH';
-  summary: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-const mediaScanLogSchema = new Schema<IMediaScanLog>(
-  {
-    url: { type: String, required: true },
-    file_name: { type: String, default: '' },
-    folder: { type: String, default: '' },
-    surface: { type: String, default: '' },
-    user_id: { type: String },
-    risk: { type: String, enum: ['PENDING', 'LOW', 'MEDIUM', 'HIGH'], default: 'PENDING' },
-    summary: { type: String, default: '' },
-  },
-  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } },
-);
-
-mediaScanLogSchema.index({ created_at: -1 });
-
-export const MediaScanLogModel = model<IMediaScanLog>('MediaScanLog', mediaScanLogSchema);

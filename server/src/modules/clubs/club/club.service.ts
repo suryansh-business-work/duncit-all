@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, isValidObjectId } from 'mongoose';
 import { ClubModel } from './club.model';
 import { ClubRatingModel } from './clubRating.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -140,6 +140,11 @@ export const clubService = {
   },
 
   async getById(id: string) {
+    // A blank or malformed id is "no such club", not a crash. findById casts
+    // first, so an empty string threw a Mongoose CastError out of the resolver
+    // — an unrecognised code, so it opened a Bug — where the field is nullable
+    // and null is the honest answer.
+    if (!isValidObjectId(id)) return null;
     return toPub(await ClubModel.findById(id));
   },
 

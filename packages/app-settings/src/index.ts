@@ -63,6 +63,7 @@ export {
 } from './useTranslation';
 export {
   ADMIN_BUNDLE,
+  AI_MONITORING_BUNDLE,
   allFallbackEntries,
   createTranslator,
   FINANCE_BUNDLE,

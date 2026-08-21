@@ -18,6 +18,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
@@ -77,7 +78,10 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Image library</DialogTitle>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        Image library
+        <AiMonitoringChip />
+      </DialogTitle>
       <DialogContent dividers>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>

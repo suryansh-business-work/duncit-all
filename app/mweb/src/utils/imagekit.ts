@@ -10,8 +10,8 @@ import { gql, useMutation } from '@apollo/client';
  * mismatched pair rejects every upload and names no cause.
  */
 export const GET_IMAGEKIT_AUTH = gql`
-  mutation GetImagekitAuth($folder: String) {
-    getImagekitAuth(folder: $folder) {
+  mutation GetImagekitAuth($folder: String, $surface: UploadSurface) {
+    getImagekitAuth(folder: $folder, surface: $surface) {
       uploadUrl
       ticket
       urlEndpoint
@@ -53,8 +53,10 @@ export function useImagekitUpload() {
     async (file: File, folder: string): Promise<string> => {
       setUploading(true);
       try {
-        // The pass is single use, so it is fetched per upload.
-        const { data } = await getAuth({ variables: { folder } });
+        // The pass is single use, so it is fetched per upload. The surface
+        // rides on it because the raw POST that follows carries only the
+        // ticket, and the AI Monitoring row has to be attributed to mWeb.
+        const { data } = await getAuth({ variables: { folder, surface: 'MWEB' } });
         const ticket = data?.getImagekitAuth as UploadTicket | undefined;
         if (!ticket) throw new Error('Upload is not available right now');
         return await postToServer(file, ticket);

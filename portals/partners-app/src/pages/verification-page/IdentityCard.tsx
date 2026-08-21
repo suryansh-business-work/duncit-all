@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button } from '@mui/material';
+import { Button, Stack } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useTranslation } from '@duncit/app-settings';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import VerificationCardShell from './VerificationCardShell';
@@ -64,16 +65,19 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
               if (file) onFile(file).catch(() => undefined);
             }}
           />
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            sx={{ mt: 1, borderRadius: 999, fontWeight: 700 }}
-          >
-            {uploadLabel}
-          </Button>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<UploadFileIcon />}
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+              sx={{ borderRadius: 999, fontWeight: 700 }}
+            >
+              {uploadLabel}
+            </Button>
+            <AiMonitoringChip />
+          </Stack>
         </>
       )}
     </VerificationCardShell>

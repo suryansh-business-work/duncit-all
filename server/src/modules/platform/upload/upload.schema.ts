@@ -149,7 +149,7 @@ export const uploadTypeDefs = /* GraphQL */ `
     Ask for somewhere to put a file. The folder is fixed on the pass, so one
     issued for avatars cannot be spent writing somewhere else.
     """
-    getImagekitAuth(folder: String): ImagekitAuth!
+    getImagekitAuth(folder: String, surface: UploadSurface): ImagekitAuth!
 
     "Delete files by id. Returns how many ImageKit actually removed."
     deleteMediaFiles(fileIds: [ID!]!): Int!

@@ -5,6 +5,8 @@ import WelcomePage from './pages/WelcomePage';
 import PromptLibraryPage from './pages/prompt-library';
 import OpenAiDashboardPage from './pages/openai-dashboard';
 import OpenAiLogsPage from './pages/openai-logs';
+import AiMonitoringLogsPage from './pages/ai-monitoring/logs';
+import AiMonitoringSettingsPage from './pages/ai-monitoring/settings';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -19,6 +21,8 @@ export default function App() {
       <Route path="/library" element={authed(<PromptLibraryPage />)} />
       <Route path="/openai" element={authed(<OpenAiDashboardPage />)} />
       <Route path="/openai/logs" element={authed(<OpenAiLogsPage />)} />
+      <Route path="/monitoring" element={authed(<AiMonitoringLogsPage />)} />
+      <Route path="/monitoring/settings" element={authed(<AiMonitoringSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

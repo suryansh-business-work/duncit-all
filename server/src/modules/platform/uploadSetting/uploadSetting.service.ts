@@ -1,16 +1,8 @@
-import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
-import { logs } from '@observability/log';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
-import { openaiChat } from '@services/openai/openai.client';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   LEGACY_MOBILE_MWEB_SURFACE,
-  MediaScanLogModel,
-  normalizeSurface,
   UploadSettingModel,
   UPLOAD_SURFACES,
-  type IMediaScanLog,
   type IUploadCropPreset,
   type IUploadSetting,
   type UploadSurface,
@@ -176,126 +168,5 @@ export const uploadSettingService = {
     }
     await doc.save();
     return doc;
-  },
-};
-
-/** Parse the strict-JSON AI verdict; null on any shape mismatch. */
-export function parseScanVerdict(content: string): { risk: 'LOW' | 'MEDIUM' | 'HIGH'; summary: string } | null {
-  try {
-    const parsed = JSON.parse(content) as { risk?: unknown; summary?: unknown };
-    const risk = (typeof parsed.risk === 'string' ? parsed.risk : '').toUpperCase();
-    if (risk !== 'LOW' && risk !== 'MEDIUM' && risk !== 'HIGH') return null;
-    return { risk, summary: typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : '' };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Best-effort AI vision review of a stored scan entry (same fallback contract
- * as podAudit.reviewLogWithAi): no key / HTTP failure / bad JSON leave the
- * entry at LOW with a stock summary — an AI outage never blocks uploads.
- */
-export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
-  try {
-    let risk: IMediaScanLog['risk'] = 'LOW';
-    let summary = 'AI review unavailable — no verdict.';
-    const res = await openaiChat({
-      task: 'moderation.image_scan',
-      detail: log.file_name || log.folder || '',
-      model: 'gpt-4o-mini',
-      temperature: 0,
-      max_tokens: 200,
-      json: true,
-      messages: [
-        { role: 'system', content: await getSystemPrompt('upload.image_scan') },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: `Folder: ${log.folder || '/'} — review this uploaded image.` },
-            { type: 'image_url', image_url: { url: log.url } },
-          ],
-        },
-      ],
-    });
-    if (res.ok) {
-      const verdict = parseScanVerdict(res.content);
-      if (verdict) {
-        risk = verdict.risk;
-        summary = verdict.summary || summary;
-      }
-    }
-    log.risk = risk;
-    log.summary = summary;
-    await log.save();
-  } catch {
-    // Swallow everything — the scan is strictly best-effort.
-  }
-}
-
-/** Allowlists for the shared table engine (mediaScanLogsTable — DUNCIT TABLE CONTRACT v1). */
-const MEDIA_SCAN_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['file_name', 'folder', 'summary', 'url'],
-  sortFields: {
-    created_at: 'created_at',
-    risk: 'risk',
-    surface: 'surface',
-  },
-  filterFields: {
-    risk: { type: 'enum' },
-    surface: { type: 'enum' },
-    created_at: { type: 'date' },
-  },
-  defaultSort: { created_at: -1 },
-};
-
-const toScanPub = (d: IMediaScanLog) => ({
-  id: String(d._id),
-  url: d.url,
-  file_name: d.file_name,
-  folder: d.folder,
-  surface: d.surface,
-  user_id: d.user_id ?? null,
-  risk: d.risk,
-  summary: d.summary,
-  created_at: d.created_at?.toISOString?.() ?? '',
-});
-
-export const mediaScanService = {
-  /** Best-effort: store a PENDING scan row and enrich it with AI async.
-   * Never throws — an upload must not fail because monitoring hiccupped. */
-  async record(input: {
-    url: string;
-    fileName?: string;
-    folder?: string;
-    surface?: string;
-    userId?: string | null;
-  }): Promise<void> {
-    if (mongoose.connection.readyState !== 1) return;
-    try {
-      const setting = await uploadSettingService.get(normalizeSurface(input.surface));
-      if (!setting.ai_image_monitoring_enabled) return;
-      const log = await MediaScanLogModel.create({
-        url: input.url,
-        file_name: input.fileName ?? '',
-        folder: input.folder ?? '',
-        surface: input.surface ?? '',
-        user_id: input.userId ?? undefined,
-      });
-      reviewImageWithAi(log).catch(() => undefined);
-    } catch (err) {
-      logs.server.error('mediaScan', 'record', { error: err, msg: 'record failed' });
-    }
-  },
-
-  /** Admin: server-side table page over the image scan log. */
-  async table(input?: TableQueryInput | null) {
-    const { docs, total, page, page_size } = await runTableQuery<IMediaScanLog>(
-      MediaScanLogModel,
-      {},
-      input,
-      MEDIA_SCAN_TABLE_CONFIG,
-    );
-    return { rows: docs.map(toScanPub), total, page, page_size };
   },
 };

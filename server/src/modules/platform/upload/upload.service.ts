@@ -7,7 +7,7 @@ import { outboundFetch } from '@utils/outboundFetch';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
-import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
+import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
   getUploadSettingsSafe,
   isProcessableImage,
@@ -91,7 +91,7 @@ export async function getImagekitConfig() {
  *
  * `urlEndpoint` still comes back: callers render from it.
  */
-export async function getImagekitAuth(userId: string, folder = '/uploads') {
+export async function getImagekitAuth(userId: string, folder = '/uploads', surface = '') {
   const config = await getImagekitConfig();
   if (!config.privateKey) {
     throw new GraphQLError(
@@ -102,7 +102,7 @@ export async function getImagekitAuth(userId: string, folder = '/uploads') {
   const { serverUrl } = await getUrlConfigs();
   return {
     uploadUrl: `${serverUrl.replace(/\/$/, '')}/upload`,
-    ticket: issueUploadTicket(userId, folder),
+    ticket: issueUploadTicket(userId, folder, 'imagekit', surface),
     urlEndpoint: config.urlEndpoint,
   };
 }

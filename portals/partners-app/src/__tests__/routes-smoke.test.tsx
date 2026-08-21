@@ -14,7 +14,7 @@
  */
 import type { ReactNode } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { MemoryRouter } from 'react-router-dom';
@@ -98,16 +98,33 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+/**
+ * Lets Apollo's rejection land.
+ *
+ * MockedProvider answers every operation with "No more mocked responses", but
+ * that arrives a tick after the mount — so without this the pages are only ever
+ * seen in their loading state and their error branch never runs. A page must not
+ * throw when its data FAILS either, which is what the flush makes this assert.
+ */
+const settle = async () => {
+  await act(async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  });
+};
+
 describe('every route mounts with no data behind it', () => {
   it('covers every path the route table declares, with no duplicates', () => {
     expect(ROUTES.length).toBeGreaterThan(0);
     expect(new Set(ROUTES).size).toBe(ROUTES.length);
   });
 
-  it.each(ROUTES)('mounts %s', (route) => {
+  it.each(ROUTES)('mounts %s', async (route) => {
     const { container, unmount } = mountRoute(route);
 
     expect(container.innerHTML).not.toBe('');
+    await settle();
     unmount();
   });
 });

@@ -15,7 +15,7 @@
  */
 import type { ComponentType } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -100,7 +100,7 @@ const PAGES: PageEntry[] = [
   ['/login', '/login', () => import('../pages/LoginPage')],
   ['/forgot-password', '/forgot-password', () => import('../pages/ForgotPasswordPage')],
   ['/reset-password', '/reset-password', () => import('../pages/ResetPasswordPage')],
-  ['*', '*', () => import('../pages/NotFoundPage')],
+  ['*', '/no-such-page', () => import('../pages/NotFoundPage')],
 ];
 
 beforeEach(() => {
@@ -112,6 +112,22 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.clear();
 });
+
+/**
+ * Lets Apollo's rejection land.
+ *
+ * MockedProvider answers every operation with "No more mocked responses", but
+ * that arrives a tick after the mount — so without this the pages are only ever
+ * seen in their loading state and their error branch never runs. A page must not
+ * throw when its data FAILS either, which is what the flush makes this assert.
+ */
+const settle = async () => {
+  await act(async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  });
+};
 
 describe('every routed page mounts with no data behind it', () => {
   it('covers every lazy page the route table declares', () => {
@@ -138,6 +154,7 @@ describe('every routed page mounts with no data behind it', () => {
     );
 
     expect(container).toBeDefined();
+    await settle();
     unmount();
   });
 });

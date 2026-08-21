@@ -15,6 +15,7 @@
  */
 import type { ComponentType } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -194,6 +195,17 @@ beforeAll(() => {
   Element.prototype.scrollIntoView ??= () => undefined;
 });
 
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider.
+ *
+ * It does not fall back to the default one, so any component reading the theme
+ * through a callback — `useMediaQuery((theme) => theme.breakpoints.down('sm'))`
+ * is the common shape — throws "Cannot read properties of null" and takes the
+ * page down with it. In the app the theme comes from the chrome, which these
+ * suites stub out; this puts one back.
+ */
+const smokeTheme = createTheme();
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {
@@ -293,11 +305,13 @@ describe('every routed page mounts with no data behind it', () => {
 
     const { container, unmount } = render(
       <MockedProvider mocks={[]}>
+        <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
             <Route path={pattern} element={<Page />} />
           </Routes>
         </MemoryRouter>
+        </ThemeProvider>
       </MockedProvider>
     );
 
@@ -312,11 +326,13 @@ describe('every routed page mounts with no data behind it', () => {
 
     const { unmount } = render(
       <MockedProvider mocks={[]}>
+        <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
             <Route path={pattern} element={<Page />} />
           </Routes>
         </MemoryRouter>
+        </ThemeProvider>
       </MockedProvider>
     );
 
@@ -347,11 +363,13 @@ describe('every routed page mounts with no data behind it', () => {
 
     const { container, unmount } = render(
       <MockedProvider link={schemaMockLink()}>
+        <ThemeProvider theme={smokeTheme}>
         <MemoryRouter initialEntries={[concrete]}>
           <Routes>
             <Route path={pattern} element={<Page />} />
           </Routes>
         </MemoryRouter>
+        </ThemeProvider>
       </MockedProvider>
     );
 

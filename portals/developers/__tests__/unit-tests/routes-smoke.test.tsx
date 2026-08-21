@@ -15,6 +15,7 @@
 import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -71,11 +72,13 @@ const ROUTES = [
 const mountRoute = (route: string, link?: ApolloLink) =>
   render(
     <MockedProvider mocks={[]} link={link}>
+      <ThemeProvider theme={smokeTheme}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <MemoryRouter initialEntries={[route]}>
           <App />
         </MemoryRouter>
       </LocalizationProvider>
+      </ThemeProvider>
     </MockedProvider>
   );
 
@@ -137,6 +140,17 @@ beforeAll(() => {
   Element.prototype.scrollTo ??= () => undefined;
   Element.prototype.scrollIntoView ??= () => undefined;
 });
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider.
+ *
+ * It does not fall back to the default one, so any component reading the theme
+ * through a callback — `useMediaQuery((theme) => theme.breakpoints.down('sm'))`
+ * is the common shape — throws "Cannot read properties of null" and takes the
+ * page down with it. In the app the theme comes from the chrome, which these
+ * suites stub out; this puts one back.
+ */
+const smokeTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {

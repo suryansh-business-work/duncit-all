@@ -23,7 +23,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'finance', name: 'Finance', description: 'Payments, payouts, invoices and reconciliation.', port: 2008, subdomain: 'finance', category: 'Operations', image: PEXELS('7869097') },
   { key: 'support', name: 'Support', description: 'Tickets, live chat and customer support.', port: 2010, subdomain: 'support', category: 'Operations', image: PEXELS('5453823') },
   { key: 'crm', name: 'CRM', description: 'Leads, contacts and customer conversations.', port: 2007, subdomain: 'crm', category: 'Growth', image: PEXELS('7658434') },
-  { key: 'ads', name: 'Ads', description: 'Advertising creatives and campaign delivery.', port: 2006, subdomain: 'ads', category: 'Growth', image: PEXELS('3183153') },
+  { key: 'ads', name: 'Ads', description: 'Advertising creatives and campaign delivery.', port: 2006, subdomain: 'ads-portal', category: 'Growth', image: PEXELS('3183153') },
   { key: 'marketing', name: 'Marketing', description: 'Campaigns, notifications and audiences.', port: 2015, subdomain: 'marketing', category: 'Growth', image: PEXELS('7693745') },
   { key: 'challenge', name: 'Challenges', description: 'Create and manage challenges across categories.', port: 2026, subdomain: 'challenge', category: 'Growth', image: PEXELS('863988') },
   { key: 'developers', name: 'Developers', description: 'API keys and venue APIs — slots, availability and bookings.', port: 2027, subdomain: 'developers', category: 'Content & AI', image: PEXELS('574071') },

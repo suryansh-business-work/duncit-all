@@ -13,6 +13,7 @@
  * ROUTES is generated from the route table in src/App.tsx.
  */
 import type { ReactNode } from 'react';
+import type { ApolloLink } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
 import { act, fireEvent, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -20,6 +21,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { MemoryRouter } from 'react-router-dom';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { schemaMockLink } from './schema-mock';
 
 vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
@@ -37,9 +40,10 @@ const ROUTES = [
   '/ads/smoke-id',
 ];
 
-const mountRoute = (route: string) =>
+/** `link` swaps what answers the page: nothing, or the schema-shaped mock. */
+const mountRoute = (route: string, link?: ApolloLink) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mocks={[]} link={link}>
         <ConfirmProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <MemoryRouter initialEntries={[route]}>
@@ -125,6 +129,23 @@ describe('every route mounts with no data behind it', () => {
     await pressEverything();
 
     expect(document.body.innerHTML).not.toBe('');
+    unmount();
+  });
+
+  /**
+   * The same screens again, with the schema-shaped mock answering every query.
+   *
+   * The no-data pass proves a screen survives a failed request; this one runs the
+   * half that only exists once data arrives — the rows, the cards, the chips, the
+   * formatted money and dates. See ./schema-mock for what it answers with.
+   */
+  it.each(ROUTES)('renders %s with data behind it', async (route) => {
+    const { container, unmount } = mountRoute(route, schemaMockLink());
+
+    await settle();
+    await settle();
+
+    expect(container.innerHTML).not.toBe('');
     unmount();
   });
 });

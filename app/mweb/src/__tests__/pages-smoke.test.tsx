@@ -19,6 +19,8 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { schemaMockLink } from './schema-mock';
+
 type PageEntry = [pattern: string, concrete: string, load: () => Promise<Record<string, unknown>>];
 
 const PAGES: PageEntry[] = [
@@ -205,6 +207,34 @@ describe('every routed page mounts with no data behind it', () => {
     await pressEverything();
 
     expect(document.body.innerHTML).not.toBe('');
+    unmount();
+  });
+
+  /**
+   * The same screens again, with the schema-shaped mock answering every query.
+   *
+   * The no-data pass proves a screen survives a failed request; this one runs the
+   * half that only exists once data arrives — the rows, the cards, the chips, the
+   * formatted money and dates. See ./schema-mock for what it answers with.
+   */
+  it.each(PAGES)('renders %s with data behind it', async (pattern, concrete, load) => {
+    const module = await load();
+    const Page = module.default as ComponentType<Record<string, never>>;
+
+    const { container, unmount } = render(
+      <MockedProvider link={schemaMockLink()}>
+        <MemoryRouter initialEntries={[concrete]}>
+          <Routes>
+            <Route path={pattern} element={<Page />} />
+          </Routes>
+        </MemoryRouter>
+      </MockedProvider>
+    );
+
+    await settle();
+    await settle();
+
+    expect(container.innerHTML).not.toBe('');
     unmount();
   });
 });

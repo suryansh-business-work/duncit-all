@@ -133,6 +133,12 @@ async function clubAdminBeneficiary(pod: any) {
  * statement to. Best-effort — a product hiccup must never fail a completion.
  */
 async function ecommReleases(pod: any, actorId: string, notes: string): Promise<IPaymentRelease[]> {
+  // Idempotency guard, because there are two ways in: completePod creates
+  // these up front (so they ride back to the caller and show in the completion
+  // summary), and the legacy manual-release path creates them when the host
+  // payment is approved. Whichever runs first wins; the other is a no-op.
+  const already = await PaymentReleaseModel.exists({ pod_id: pod._id, kind: 'ECOMM_PAYMENT' });
+  if (already) return [];
   // Dynamic, like sendProductInvoices below: productInvoice.service pulls in
   // the inventory + order models, which this module must not load eagerly.
   const { computeSellerPayoutsForPod, sellerTotals } = await import('./productInvoice.service');
@@ -495,6 +501,17 @@ async function sendProductInvoices(doc: IPaymentRelease) {
       const fs = await getFinanceSettings();
       const { sendProductInvoicesForPod } = await import('./productInvoice.service');
       await sendProductInvoicesForPod(pod, fs);
+      // The seller's money, not just their invoice. completePod normally makes
+      // these already (and the guard inside makes this a no-op), but a pod
+      // settled through the legacy manual-release flow reaches an approved host
+      // payment without ever passing through it — and used to leave every
+      // seller invoiced and unpaid.
+      const actorId = doc.reviewed_by ? String(doc.reviewed_by) : String(doc.requested_by ?? '');
+      if (actorId) {
+        for (const release of await ecommReleases(pod, actorId, doc.notes ?? '')) {
+          await autoApprove(release, actorId);
+        }
+      }
     }
   } catch (e) {
     logs.server.warn('paymentRelease', 'sendProductInvoices', { error: e, msg: 'product invoices failed' });

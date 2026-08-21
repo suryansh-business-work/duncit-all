@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   gates:
-    name: Shared gates (fallback icons + translation keys)
+    name: Shared gates (fallback icons + localization)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -43,9 +43,14 @@ jobs:
       - name: Fallback icons — portal shell (all 17 portals)
         run: node scripts/verify-fallback-icons.mjs packages/shell/src/fallback-icons
 
-      # Rule 38: no shipped translation key that nothing renders.
-      - name: Translation keys are rendered
+      # Rule 38, both directions: no shipped key that nothing renders, and no
+      # rendered key that nothing ships (the latter prints the raw key on screen).
+      - name: Translation keys match the bundles
         run: node scripts/verify-translation-keys.mjs .
+
+      # Rule 38, the ratchet: the hardcoded-copy backlog may shrink, never grow.
+      - name: No new hardcoded user-facing copy
+        run: node scripts/verify-hardcoded-copy.mjs .
 
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no

@@ -96,6 +96,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       artifactNotApplicable: 'Not applicable',
       artifactMissing: 'Missing',
       artifactItem: 'Item',
+      artifactStatus: 'Status',
       artifactReference: 'Reference',
       artifactsEmpty: 'Nothing was recorded for this payment.',
       artifactsSearch: 'Search item or reference',

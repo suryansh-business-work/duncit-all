@@ -11,8 +11,9 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTranslation } from '@duncit/shell';
 import TryItPanel from './TryItPanel';
-import { API_BASE, API_ENDPOINTS, buildCurl } from './apiReference';
+import { API_BASE, API_ENDPOINTS, API_KEY_HEADER, buildCurl } from './apiReference';
 
 const METHOD_COLOR: Record<string, 'success' | 'primary' | 'error'> = {
   GET: 'success',
@@ -21,25 +22,30 @@ const METHOD_COLOR: Record<string, 'success' | 'primary' | 'error'> = {
 };
 
 export default function ApiDocsPage() {
+  const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
 
   return (
     <Stack spacing={2}>
       <Box>
         <Typography variant="h5" fontWeight={900}>
-          API Reference
+          {t('developers.apiDocs.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Venue APIs, versioned under <Box component="code">{API_BASE}</Box>. Authenticate every
-          request with the <Box component="code">x-api-key</Box> header.
+          {/* The host and header name are substituted rather than written into
+              the sentence, so a translation cannot fork the values an
+              integrator is meant to copy. */}
+          {t('developers.apiDocs.subtitle', {
+            vars: { base: API_BASE, header: API_KEY_HEADER },
+          })}
         </Typography>
       </Box>
 
       <TextField
         size="small"
         type="password"
-        label="Your API key (used by Try-It, never stored)"
-        placeholder="dk_live_…"
+        label={t('developers.apiDocs.keyLabel')}
+        placeholder={t('developers.apiDocs.keyPlaceholder')}
         value={apiKey}
         onChange={(e) => setApiKey(e.target.value)}
         sx={{ maxWidth: 480 }}
@@ -54,7 +60,7 @@ export default function ApiDocsPage() {
                 {endpoint.path}
               </Typography>
               <Typography variant="body2" fontWeight={800} sx={{ display: { xs: 'none', sm: 'block' } }}>
-                {endpoint.title}
+                {t(endpoint.titleKey)}
               </Typography>
               <Chip size="small" variant="outlined" label={endpoint.scope} />
             </Stack>
@@ -62,7 +68,7 @@ export default function ApiDocsPage() {
           <AccordionDetails>
             <Stack spacing={1.5}>
               <Typography variant="body2" color="text.secondary">
-                {endpoint.description}
+                {t(endpoint.descriptionKey)}
               </Typography>
               <Box
                 component="pre"
@@ -71,7 +77,7 @@ export default function ApiDocsPage() {
                 {buildCurl(endpoint, {}, apiKey)}
               </Box>
               <Typography variant="caption" fontWeight={900} color="text.secondary">
-                SAMPLE RESPONSE
+                {t('developers.apiDocs.sampleResponse')}
               </Typography>
               <Box
                 component="pre"
@@ -81,7 +87,7 @@ export default function ApiDocsPage() {
               </Box>
               <Divider />
               <Typography variant="caption" fontWeight={900} color="text.secondary">
-                TRY IT
+                {t('developers.apiDocs.tryIt')}
               </Typography>
               <TryItPanel endpoint={endpoint} apiKey={apiKey} />
             </Stack>

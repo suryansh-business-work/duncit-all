@@ -2,6 +2,7 @@ import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { ADMIN_BUNDLE } from './bundles/admin';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
+import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
@@ -39,6 +40,7 @@ export {
   ADMIN_BUNDLE,
   AI_MONITORING_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  DEVELOPERS_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
@@ -57,6 +59,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   admin: ADMIN_BUNDLE,
   aiMonitoring: AI_MONITORING_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
+  developers: DEVELOPERS_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,

@@ -65,6 +65,7 @@ export {
   ADMIN_BUNDLE,
   AI_MONITORING_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  DEVELOPERS_BUNDLE,
   allFallbackEntries,
   createTranslator,
   FINANCE_BUNDLE,

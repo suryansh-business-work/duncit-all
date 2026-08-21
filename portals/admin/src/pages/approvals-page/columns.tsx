@@ -3,6 +3,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { humanizeType, type ApprovalRequest } from './helpers';
+import { useTranslation } from '@duncit/shell';
 
 const renderSubject = (row: ApprovalRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
@@ -29,20 +30,22 @@ const renderKind = (row: ApprovalRequest) => {
 const renderStatus = (row: ApprovalRequest) => <StatusChip status={row.status} />;
 
 interface ColumnDeps {
+  /** Column headings are copy — the page hands its translator down. */
+  t: (key: string) => string;
   formatDateTime: (s: string) => string;
   onReview: (row: ApprovalRequest) => void;
 }
 
-export function getApprovalColumns({ formatDateTime, onReview }: Readonly<ColumnDeps>): DuncitColumn<ApprovalRequest>[] {
+export function getApprovalColumns({ formatDateTime, onReview, t }: Readonly<ColumnDeps>): DuncitColumn<ApprovalRequest>[] {
   const renderAction = (row: ApprovalRequest) => (
     <Button size="small" startIcon={<VisibilityIcon fontSize="small" />} onClick={() => onReview(row)}>
-      Review
+      {t('admin.verification.review')}
     </Button>
   );
   return [
     {
       field: 'subject_name',
-      headerName: 'Subject',
+      headerName: t('admin.contact.subject'),
       flex: 1.3,
       minWidth: 240,
       cellRenderer: renderSubject,
@@ -50,7 +53,7 @@ export function getApprovalColumns({ formatDateTime, onReview }: Readonly<Column
     },
     {
       field: 'kind',
-      headerName: 'Kind',
+      headerName: t('admin.approvals.colKind'),
       filter: { type: 'text' },
       width: 130,
       cellRenderer: renderKind,
@@ -58,7 +61,7 @@ export function getApprovalColumns({ formatDateTime, onReview }: Readonly<Column
     },
     {
       field: 'type',
-      headerName: 'Type',
+      headerName: t('admin.roles.type'),
       filter: { type: 'text' },
       hide: true,
       minWidth: 170,
@@ -66,28 +69,28 @@ export function getApprovalColumns({ formatDateTime, onReview }: Readonly<Column
     },
     {
       field: 'source_portal',
-      headerName: 'Source portal',
+      headerName: t('admin.approvals.colSourcePortal'),
       filter: { type: 'text' },
       width: 150,
       valueGetter: (row) => row.source_portal || '—',
     },
     {
       field: 'requested_by_name',
-      headerName: 'Requested by',
+      headerName: t('admin.approvals.colRequestedBy'),
       flex: 1,
       minWidth: 160,
       valueGetter: (row) => row.requested_by_name || '—',
     },
     {
       field: 'created_at',
-      headerName: 'Requested at',
+      headerName: t('admin.approvals.colRequestedAt'),
       filter: { type: 'date' },
       width: 180,
       valueGetter: (row) => (row.created_at ? formatDateTime(row.created_at) : ''),
     },
     {
       field: 'reviewed_at',
-      headerName: 'Reviewed at',
+      headerName: t('admin.approvals.colReviewedAt'),
       filter: { type: 'date' },
       hide: true,
       width: 180,
@@ -95,11 +98,11 @@ export function getApprovalColumns({ formatDateTime, onReview }: Readonly<Column
     },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       width: 130,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
     },
-    { field: 'actions', headerName: 'Action', sortable: false, width: 130, cellRenderer: renderAction },
+    { field: 'actions', headerName: t('admin.activity.action'), sortable: false, width: 130, cellRenderer: renderAction },
   ];
 }

@@ -21,6 +21,7 @@ import {
   type AdminHealthAdjustment,
   type AdminHealthScore,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -44,6 +45,7 @@ export default function AdjustHealthDialog({
   onClose,
   onSaved,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [direction, setDirection] = useState<'plus' | 'minus'>('plus');
   const [magnitude, setMagnitude] = useState<number>(5);
   const [remark, setRemark] = useState('');
@@ -75,7 +77,7 @@ export default function AdjustHealthDialog({
   const submit = async () => {
     setError(null);
     if (!magnitude || magnitude < 1) {
-      setError('Enter an adjustment between 1 and 100.');
+      setError(t('admin.health.range'));
       return;
     }
     try {
@@ -121,7 +123,7 @@ export default function AdjustHealthDialog({
           </ToggleButtonGroup>
 
           <TextField
-            label="Magnitude"
+            label={t('admin.health.magnitude')}
             type="number"
             inputProps={{ min: 1, max: 100, step: 1 }}
             size="small"
@@ -131,7 +133,7 @@ export default function AdjustHealthDialog({
           />
 
           <TextField
-            label="Remark (optional)"
+            label={t('admin.health.remark')}
             multiline
             minRows={3}
             value={remark}

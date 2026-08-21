@@ -6,6 +6,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -15,9 +16,10 @@ interface Props {
 }
 
 export default function DeleteUserDialog({ open, busy, onClose, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Delete this user?</DialogTitle>
+      <DialogTitle>{t('admin.users.deleteTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2">
           This action permanently removes the account. It cannot be undone.

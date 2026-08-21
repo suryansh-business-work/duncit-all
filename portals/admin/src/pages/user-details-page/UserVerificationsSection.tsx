@@ -21,6 +21,7 @@ import {
   type VerificationItem,
   type VerificationType,
 } from './VerificationCells';
+import { useTranslation } from '@duncit/shell';
 
 const USER_VERIFICATIONS_TABLE = gql`
   query AdminUserVerificationsTable($user_id: ID!, $query: TableQueryInput) {
@@ -63,18 +64,20 @@ const REVIEW = gql`
   }
 `;
 
-const TYPE_OPTIONS = [
-  { value: 'IDENTITY', label: 'Identity' },
-  { value: 'ADDRESS', label: 'Address' },
-  { value: 'EMAIL', label: 'Email' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const typeOptions = (t: Translate) => [
+  { value: 'IDENTITY', label: t('admin.verification.identity') },
+  { value: 'ADDRESS', label: t('admin.profile.address') },
+  { value: 'EMAIL', label: t('shell.common.email') },
 ];
 
-const STATUS_OPTIONS = [
-  { value: 'NOT_SUBMITTED', label: 'Not Verified' },
-  { value: 'PENDING', label: 'Under Review' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
-  { value: 'VERIFIED_BY_APP', label: 'Verified by the App' },
+const statusOptions = (t: Translate) => [
+  { value: 'NOT_SUBMITTED', label: t('admin.verification.notVerified') },
+  { value: 'PENDING', label: t('admin.verification.underReview') },
+  { value: 'APPROVED', label: t('admin.verification.approved') },
+  { value: 'REJECTED', label: t('admin.verification.rejected') },
+  { value: 'VERIFIED_BY_APP', label: t('admin.verification.verifiedByApp') },
 ];
 
 // One row per verification type, so the type doubles as the row id.
@@ -83,6 +86,7 @@ const getVerificationRowId = (v: VerificationItem) => v.type;
 /** Admin review of a user's 3 verification types — Identity (document) and
  * Address (manual fields) are approve/reject; Email is verified by the app. */
 export default function UserVerificationsSection({ userId }: Readonly<{ userId: string }>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [review, { loading: saving }] = useMutation(REVIEW);
@@ -120,29 +124,29 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
     return [
       {
         field: 'type',
-        headerName: 'Type',
-        filter: { type: 'select', options: TYPE_OPTIONS },
+        headerName: t('admin.roles.type'),
+        filter: { type: 'select', options: typeOptions(t) },
         minWidth: 120,
         valueGetter: (v) => TYPE_LABELS[v.type],
       },
       {
         field: 'status',
-        headerName: 'Status',
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        headerName: t('shell.common.status'),
+        filter: { type: 'select', options: statusOptions(t) },
         minWidth: 160,
         cellRenderer: renderStatusCell,
         valueGetter: (v) => statusLabel(v.status),
       },
       {
         field: 'details',
-        headerName: 'Details',
+        headerName: t('admin.verification.details'),
         sortable: false,
         flex: 1,
         minWidth: 200,
         cellRenderer: renderDetailCell,
         valueGetter: detailValue,
       },
-      { field: 'review', headerName: 'Review', sortable: false, minWidth: 380, cellRenderer: renderReview },
+      { field: 'review', headerName: t('admin.verification.review'), sortable: false, minWidth: 380, cellRenderer: renderReview },
     ];
   }, [saving, onAct]);
 
@@ -158,7 +162,7 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
           columns={columns}
           fetchRows={fetchRows}
           getRowId={getVerificationRowId}
-          emptyText="No verifications yet."
+          emptyText={t('admin.verification.empty')}
           searchPlaceholder="Search type or status"
           refetchRef={refetchRef}
         />

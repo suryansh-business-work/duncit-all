@@ -5,6 +5,7 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 export const PARTNERS_TABLE = gql`
   query PartnersTable($query: TableQueryInput) {
@@ -71,6 +72,7 @@ const getRowId = (row: PartnerRow) => row.user_id;
 /** Admin → Partners: every user holding a partner role, filterable by type.
  * Clicking a row opens the common user-details page. */
 export default function PartnersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -79,10 +81,10 @@ export default function PartnersPage() {
 
   const columns = useMemo<DuncitColumn<PartnerRow>[]>(
     () => [
-      { field: 'full_name', headerName: 'Partner', flex: 1, minWidth: 200, cellRenderer: renderPartner, valueGetter: (r) => r.full_name || '—' },
-      { field: 'role', headerName: 'Partner type', minWidth: 220, sortable: false, filter: { type: 'select', options: TYPE_OPTIONS }, cellRenderer: renderTypes, valueGetter: (r) => partnerTypesOf(r).join(', ') },
-      { field: 'phone_number', headerName: 'Phone', minWidth: 140, valueGetter: (r) => r.phone_number || '—' },
-      { field: 'created_at', headerName: 'Joined', width: 125, filter: { type: 'date' }, valueGetter: joinedValue },
+      { field: 'full_name', headerName: t('admin.partners.title'), flex: 1, minWidth: 200, cellRenderer: renderPartner, valueGetter: (r) => r.full_name || '—' },
+      { field: 'role', headerName: t('admin.partners.partnerType'), minWidth: 220, sortable: false, filter: { type: 'select', options: TYPE_OPTIONS }, cellRenderer: renderTypes, valueGetter: (r) => partnerTypesOf(r).join(', ') },
+      { field: 'phone_number', headerName: t('shell.common.phone'), minWidth: 140, valueGetter: (r) => r.phone_number || '—' },
+      { field: 'created_at', headerName: t('admin.partners.joined'), width: 125, filter: { type: 'date' }, valueGetter: joinedValue },
     ],
     [],
   );
@@ -106,7 +108,7 @@ export default function PartnersPage() {
         fetchRows={fetchRows}
         getRowId={getRowId}
         onRowClick={(row) => navigate(`/users/${row.user_id}`)}
-        emptyText="No partners yet."
+        emptyText={t('admin.partners.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search name, email or phone"
         refetchRef={refetchRef}

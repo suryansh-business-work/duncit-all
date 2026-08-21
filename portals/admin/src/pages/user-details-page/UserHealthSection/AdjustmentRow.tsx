@@ -3,6 +3,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { AdminHealthAdjustment } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   adjustment: AdminHealthAdjustment;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   const sign = adjustment.delta > 0 ? `+${adjustment.delta}` : `${adjustment.delta}`;
   const color: 'success' | 'error' = adjustment.delta > 0 ? 'success' : 'error';
   const remark = adjustment.remark?.trim();
@@ -27,14 +29,14 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
             {formatDateTime(adjustment.created_at)}
           </Typography>
         </Box>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <span>
             <IconButton size="small" disabled={busy} onClick={() => onEdit(adjustment)}>
               <EditIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title="Delete">
+        <Tooltip title={t('shell.common.delete')}>
           <span>
             <IconButton
               size="small"

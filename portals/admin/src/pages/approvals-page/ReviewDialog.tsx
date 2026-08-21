@@ -6,6 +6,7 @@ import { logs } from '@duncit/logs';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import ReviewDetails from './ReviewDetails';
 import type { ApprovalRequest } from './helpers';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   request: ApprovalRequest | null;
@@ -26,6 +27,7 @@ export default function ReviewDialog({
   onApprove,
   onDeny,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [denying, setDenying] = useState(false);
   const [notes, setNotes] = useState('');
 
@@ -102,7 +104,7 @@ export default function ReviewDialog({
             minRows={2}
             fullWidth
             required
-            placeholder="Explain why this request is being denied"
+            placeholder={t('admin.approvals.denyReason')}
           />
         )}
         {error && <Alert severity="error">{error}</Alert>}

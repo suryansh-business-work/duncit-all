@@ -1,5 +1,6 @@
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import InterestsIcon from '@mui/icons-material/Interests';
+import { useTranslation } from '@duncit/shell';
 
 const levelLabel: Record<string, string> = {
   SUPER: 'Super',
@@ -8,13 +9,14 @@ const levelLabel: Record<string, string> = {
 };
 
 export default function UserInterestsSection({ user }: Readonly<{ user: any }>) {
+  const { t } = useTranslation();
   const interests = user.interest_categories ?? [];
   return (
     <Card>
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
           <InterestsIcon color="primary" />
-          <Typography variant="subtitle1">Signup Survey Interests</Typography>
+          <Typography variant="subtitle1">{t('admin.surveys.interests')}</Typography>
         </Stack>
         {interests.length === 0 ? (
           <Typography variant="body2" color="text.secondary">

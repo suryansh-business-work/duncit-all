@@ -8,6 +8,7 @@ import {
   type GeoState,
 } from '../../utils/geo';
 import type { EditForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const COUNTRY_CODE = 'IN';
 
@@ -42,6 +43,7 @@ export default function AddressFields({
   pincodeError,
   setFieldValue,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const states = getStatesForCountry(COUNTRY_CODE);
   const selectedState = findState(COUNTRY_CODE, undefined, state) ?? null;
   const stateCode = selectedState?.isoCode;
@@ -74,7 +76,7 @@ export default function AddressFields({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="State"
+              label={t('admin.profile.state')}
               error={stateError.error}
               helperText={stateError.helperText}
               fullWidth
@@ -99,7 +101,7 @@ export default function AddressFields({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="City"
+              label={t('admin.profile.city')}
               error={cityError.error}
               helperText={cityError.helperText}
               fullWidth
@@ -110,7 +112,7 @@ export default function AddressFields({
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          label="Pincode"
+          label={t('admin.profile.pincode')}
           name="pincode"
           value={pincode}
           onChange={(event) => setFieldValue('pincode', event.target.value)}

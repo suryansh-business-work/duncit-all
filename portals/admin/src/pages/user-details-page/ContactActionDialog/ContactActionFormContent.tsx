@@ -4,6 +4,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import type { Control } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ContactActionValues, ContactType } from '../contact-action.form';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   type: ContactType;
@@ -34,6 +35,7 @@ export default function ContactActionFormContent({
   onOpenNativeAction,
   onStartRecorded,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <DialogTitle data-dialog-drag-handle="true" sx={{ cursor: 'move' }}>
@@ -52,8 +54,8 @@ export default function ContactActionFormContent({
             fullWidth
             helperText={target ? ' ' : 'No target available for this contact action.'}
           />
-          {type === 'EMAIL' && <RhfTextField control={control} name="subject" label="Subject" />}
-          <RhfTextField control={control} name="status" select label="Status" required>
+          {type === 'EMAIL' && <RhfTextField control={control} name="subject" label={t('admin.contact.subject')} />}
+          <RhfTextField control={control} name="status" select label={t('shell.common.status')} required>
             {statusOptions.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
@@ -65,14 +67,14 @@ export default function ContactActionFormContent({
               <RhfTextField
                 control={control}
                 name="duration_seconds"
-                label="Duration seconds"
+                label={t('admin.contact.durationSeconds')}
                 type="number"
                 inputProps={{ min: 0, step: 1 }}
               />
-              <RhfTextField control={control} name="recording_url" label="Recording URL" />
+              <RhfTextField control={control} name="recording_url" label={t('admin.contact.recordingUrl')} />
             </Stack>
           )}
-          <RhfTextField control={control} name="notes" label="Notes" multiline minRows={4} />
+          <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={4} />
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -89,7 +91,7 @@ export default function ContactActionFormContent({
           {type === 'CALL' ? 'Open Dialer' : 'Open Email'}
         </Button>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={onSubmit} disabled={busy || !target}>
           {busy ? 'Saving...' : 'Save Log'}

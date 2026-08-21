@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
 import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const USER_SURVEYS = gql`
   query AdminUserSurveys($user_id: ID!) {
@@ -19,6 +20,7 @@ const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '');
 
 /** Read-only view of a user's venue/host onboarding survey answers. */
 export default function UserSurveysSection({ userId }: Readonly<{ userId: string }>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ userSurveyResponses: UserSurvey[] }>(USER_SURVEYS, {
     variables: { user_id: userId }, skip: !userId, fetchPolicy: 'cache-and-network',
   });
@@ -26,7 +28,7 @@ export default function UserSurveysSection({ userId }: Readonly<{ userId: string
 
   if (loading && responses.length === 0) return null;
   if (responses.length === 0) {
-    return <Typography variant="body2" color="text.secondary">This user hasn't submitted any onboarding survey yet.</Typography>;
+    return <Typography variant="body2" color="text.secondary">{t('admin.surveys.none')}</Typography>;
   }
 
   return (
@@ -40,7 +42,7 @@ export default function UserSurveysSection({ userId }: Readonly<{ userId: string
             </Stack>
             <Divider sx={{ mb: 1 }} />
             {r.items.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">No answers.</Typography>
+              <Typography variant="body2" color="text.secondary">{t('admin.surveys.empty')}</Typography>
             ) : (
               <Stack spacing={1}>
                 {r.items.map((it) => (

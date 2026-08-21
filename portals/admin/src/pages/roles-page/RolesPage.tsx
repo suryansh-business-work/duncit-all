@@ -9,8 +9,10 @@ import { blankRole, type RoleEdit } from './types';
 import RolesTable from './RolesTable';
 import RoleEditDialog from './RoleEditDialog';
 import SuperAdminsManager from './SuperAdminsManager';
+import { useTranslation } from '@duncit/shell';
 
 export default function RolesPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createRole] = useMutation(CREATE_ROLE);
@@ -65,7 +67,7 @@ export default function RolesPage() {
 
   const removeRole = async (r: RoleRow) => {
     const ok = await confirm({
-      title: 'Delete role',
+      title: t('admin.roles.deleteRole'),
       message: `Delete role "${r.key}"?`,
       destructive: true,
       confirmLabel: 'Delete',

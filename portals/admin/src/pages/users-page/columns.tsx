@@ -8,12 +8,13 @@ import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { initials, loginMeta, STATUS_OPTIONS } from './helpers';
 import type { UserRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_FILTER_OPTIONS = STATUS_OPTIONS.filter(Boolean).map((s) => ({ value: s, label: s }));
-const PROVIDER_OPTIONS = [
-  { value: 'GOOGLE', label: 'Google' },
-  { value: 'EMAIL', label: 'Email' },
-] as const;
+const providerOptions = (t: ColumnDeps['t']) => [
+  { value: 'GOOGLE', label: t('admin.users.google') },
+  { value: 'EMAIL', label: t('shell.common.email') },
+];
 
 const renderUser = (u: UserRow) => (
   <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }} component="span">
@@ -82,12 +83,14 @@ const renderStatus = (u: UserRow) => (
 );
 
 interface ColumnDeps {
+  /** Column headings are copy — the page hands its translator down. */
+  t: (key: string) => string;
   formatDate: (s: string) => string;
   formatDateTime: (s: string) => string;
   roleOptions: ReadonlyArray<{ value: string; label: string }>;
 }
 
-export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
+export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
   const renderLogin = (u: UserRow) => {
     const meta = loginMeta(u);
     return (
@@ -114,7 +117,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
   return [
     {
       field: 'first_name',
-      headerName: 'User',
+      headerName: t('admin.users.colUser'),
       flex: 1.2,
       minWidth: 240,
       cellRenderer: renderUser,
@@ -122,14 +125,14 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     },
     {
       field: 'phone_number',
-      headerName: 'Contact',
+      headerName: t('admin.users.colContact'),
       minWidth: 180,
       cellRenderer: renderContact,
       valueGetter: (u) => u.phone_number ?? '',
     },
     {
       field: 'roles',
-      headerName: 'Roles',
+      headerName: t('admin.roles.title'),
       sortable: false,
       minWidth: 200,
       cellRenderer: renderRoles,
@@ -137,7 +140,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     },
     {
       field: 'role',
-      headerName: 'Role',
+      headerName: t('admin.users.colRole'),
       sortable: false,
       filter: { type: 'select', options: roleOptions },
       hide: true,
@@ -146,15 +149,15 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     },
     {
       field: 'last_login_provider',
-      headerName: 'Login Method',
-      filter: { type: 'select', options: PROVIDER_OPTIONS },
+      headerName: t('admin.users.colLoginMethod'),
+      filter: { type: 'select', options: providerOptions(t) },
       width: 170,
       cellRenderer: renderLogin,
       valueGetter: (u) => loginMeta(u).label,
     },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       filter: { type: 'select', options: STATUS_FILTER_OPTIONS },
       width: 120,
       cellRenderer: renderStatus,
@@ -162,17 +165,17 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     },
     {
       field: 'google_email',
-      headerName: 'Google Account',
+      headerName: t('admin.users.googleAccount'),
       filter: { type: 'text' },
       hide: true,
       minWidth: 220,
       valueGetter: (u) => u.google_email ?? '',
     },
-    { field: 'city', headerName: 'City', filter: { type: 'text' }, hide: true, minWidth: 130 },
-    { field: 'zone', headerName: 'Zone', filter: { type: 'text' }, hide: true, minWidth: 130 },
+    { field: 'city', headerName: t('admin.profile.city'), filter: { type: 'text' }, hide: true, minWidth: 130 },
+    { field: 'zone', headerName: t('admin.profile.zone'), filter: { type: 'text' }, hide: true, minWidth: 130 },
     {
       field: 'last_login_at',
-      headerName: 'Last Login',
+      headerName: t('admin.users.colLastLogin'),
       filter: { type: 'date' },
       hide: true,
       width: 150,
@@ -180,7 +183,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     },
     {
       field: 'created_at',
-      headerName: 'Created',
+      headerName: t('shell.common.created'),
       filter: { type: 'date' },
       width: 170,
       valueGetter: (u) => (u.created_at ? formatDateTime(u.created_at) : ''),

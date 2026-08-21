@@ -4,6 +4,7 @@ import { Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type TableQueryState } from '@duncit/table';
 import { USER_CHANGE_LOGS_TABLE, type UserChangeLogRow } from '../queries';
 import { CHANGE_LOG_COLUMNS } from './columns';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * The complete profile change history of one user.
@@ -17,6 +18,7 @@ import { CHANGE_LOG_COLUMNS } from './columns';
 const getRowId = (row: UserChangeLogRow) => row.id;
 
 export default function UserChangeLogsSection({ userId }: Readonly<{ userId: string }>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
 
   const fetchTable = useApolloTableFetch<UserChangeLogRow>(
@@ -35,7 +37,7 @@ export default function UserChangeLogsSection({ userId }: Readonly<{ userId: str
     <Stack spacing={2}>
       <Stack spacing={0.25}>
         <Typography variant="subtitle1" fontWeight={700}>
-          User Change Logs
+          {t('admin.profile.changeLogs')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Every profile change ever made to this account — by the user from Native or mWeb, or by an
@@ -47,7 +49,7 @@ export default function UserChangeLogsSection({ userId }: Readonly<{ userId: str
         columns={CHANGE_LOG_COLUMNS}
         fetchRows={fetchRows}
         getRowId={getRowId}
-        emptyText="No profile changes recorded yet."
+        emptyText={t('admin.profile.noChanges')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search field, old or new value, or who changed it"
       />

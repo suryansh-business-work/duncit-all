@@ -9,6 +9,7 @@ import MediaPickerField from '../../components/MediaPickerField';
 import AddressFields from './AddressFields';
 import type { EditForm } from './queries';
 import { userProfileSchema } from './user-profile.form';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: EditForm;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset, setValue, watch, formState } = useForm<EditForm>({
     defaultValues: form,
     resolver: zodResolver(userProfileSchema),
@@ -53,13 +55,13 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
         </Stack>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="first_name" label="First name" required />
+            <RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="last_name" label="Last name" required />
+            <RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required />
           </Grid>
           <Grid item xs={12}>
-            <RhfTextField control={control} name="email" type="email" label="Email" />
+            <RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} />
           </Grid>
           <Grid item xs={4} sm={3}>
             <Controller
@@ -77,7 +79,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             />
           </Grid>
           <Grid item xs={8} sm={9}>
-            <RhfTextField control={control} name="phone_number" label="Phone number" required />
+            <RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required />
           </Grid>
           <AddressFields
             state={watch('state')}
@@ -89,13 +91,13 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             setFieldValue={setField}
           />
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="zone" label="Zone" />
+            <RhfTextField control={control} name="zone" label={t('admin.profile.zone')} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="assigned_city" label="Assigned city (admin scope)" />
+            <RhfTextField control={control} name="assigned_city" label={t('admin.profile.assignedCityField')} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="assigned_zones" label="Assigned zones (comma-separated)" />
+            <RhfTextField control={control} name="assigned_zones" label={t('admin.profile.assignedZonesField')} />
           </Grid>
           <Grid item xs={12}>
             <Controller
@@ -103,7 +105,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
               name="profile_photo"
               render={({ field, fieldState }) => (
                 <MediaPickerField
-                  label="Profile photo URL"
+                  label={t('admin.profile.photoUrl')}
                   value={field.value}
                   onChange={(url) => field.onChange(url)}
                   helperText={fieldState.error?.message ?? ' '}
@@ -114,13 +116,13 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             />
           </Grid>
           <Grid item xs={12}>
-            <RhfTextField control={control} name="bio" label="Bio" multiline minRows={3} />
+            <RhfTextField control={control} name="bio" label={t('admin.profile.bio')} multiline minRows={3} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="status" label="Status" select>
-              <MenuItem value="ACTIVE">Active</MenuItem>
-              <MenuItem value="INACTIVE">Inactive</MenuItem>
-              <MenuItem value="SUSPENDED">Blocked</MenuItem>
+            <RhfTextField control={control} name="status" label={t('shell.common.status')} select>
+              <MenuItem value="ACTIVE">{t('admin.profile.active')}</MenuItem>
+              <MenuItem value="INACTIVE">{t('admin.profile.inactive')}</MenuItem>
+              <MenuItem value="SUSPENDED">{t('admin.profile.blocked')}</MenuItem>
             </RhfTextField>
           </Grid>
           {opError && (

@@ -16,11 +16,13 @@ import {
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { ADMINS, GRANT_ADMIN, REVOKE_ADMIN, SEARCH_USERS } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const ROOT_ADMIN_EMAIL = 'admin@duncit.com';
 const label = (u: any) => u.full_name || u.email || 'Unnamed user';
 
 export default function SuperAdminsManager() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(ADMINS, { fetchPolicy: 'cache-and-network' });
   const [search, setSearch] = useState('');
   const { data: found, loading: searching } = useQuery(SEARCH_USERS, {
@@ -48,10 +50,10 @@ export default function SuperAdminsManager() {
 
   const removeAdmin = async (u: any) => {
     const ok = await confirm({
-      title: 'Revoke admin access',
-      message: `Revoke admin access for ${label(u)}? They will be emailed about this change.`,
+      title: t('admin.roles.revokeAccess'),
+      message: t('admin.roles.revokeMessage', { vars: { name: label(u) } }),
       destructive: true,
-      confirmLabel: 'Revoke',
+      confirmLabel: t('admin.roles.revoke'),
     });
     if (!ok) return;
     try {
@@ -69,7 +71,7 @@ export default function SuperAdminsManager() {
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
           <AdminPanelSettingsIcon color="primary" />
           <Box>
-            <Typography variant="h6">Super Admins</Typography>
+            <Typography variant="h6">{t('admin.roles.superAdmins')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Admins have full access to every Duncit console. Grant carefully.
             </Typography>
@@ -95,8 +97,8 @@ export default function SuperAdminsManager() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Search a user by name or email to make admin"
-              placeholder="Type at least 2 characters…"
+              label={t('admin.roles.searchUser')}
+              placeholder={t('admin.roles.typeMore')}
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (

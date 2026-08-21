@@ -10,10 +10,12 @@ import { blankForm, genPassword, type CreateForm } from './helpers';
 import { getUsersColumns } from './columns';
 import CreateUserDialog from './CreateUserDialog';
 import { createUserSchema, toCreateUserInput } from './create-user.form';
+import { useTranslation } from '@duncit/shell';
 
 const getUserRowId = (u: UserRow) => u.user_id;
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -57,7 +59,7 @@ export default function UsersPage() {
 
   const columns = useMemo(() => {
     const roleOptions = roles.map((r: any) => ({ value: r.key, label: r.name }));
-    return getUsersColumns({ formatDate, formatDateTime, roleOptions });
+    return getUsersColumns({ formatDate, formatDateTime, roleOptions, t });
   }, [formatDate, formatDateTime, roles]);
 
   return (
@@ -77,10 +79,10 @@ export default function UsersPage() {
         onRowClick={(u) => navigate(`/users/${u.user_id}`)}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Create User
+            {t('admin.users.create')}
           </Button>
         }
-        emptyText="No users match the current filters."
+        emptyText={t('admin.users.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search name, email or phone"
         refetchRef={refetchRef}

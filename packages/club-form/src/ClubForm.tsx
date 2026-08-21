@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, DialogActions } from '@mui/material';
+import { Alert, Box, Button, DialogActions, Grid } from '@mui/material';
 import { makeClubSchema } from './schema';
 import { ClubFormDataProvider } from './context';
 import ClubSections from './ClubSections';
@@ -20,6 +20,12 @@ export interface ClubFormProps {
   onSubmit: (values: ClubFormValues, options: { draft: boolean }) => Promise<void> | void;
   /** Hands the RHF methods to the parent (used by the admin AI-fill button). */
   onReady?: (methods: UseFormReturn<ClubFormValues>) => void;
+  /**
+   * Live preview column, rendered INSIDE this form's provider so it can watch
+   * the values being typed. Given one, the form lays itself out in two columns;
+   * omitted, it stays a single column.
+   */
+  preview?: ReactNode;
 }
 
 export default function ClubForm({
@@ -32,6 +38,7 @@ export default function ClubForm({
   onCancel,
   onSubmit,
   onReady,
+  preview,
 }: Readonly<ClubFormProps>) {
   const schema = useMemo(() => makeClubSchema(config), [config]);
   const methods = useForm<ClubFormValues>({
@@ -65,30 +72,57 @@ export default function ClubForm({
   const nameFilled = !!methods.watch('club_name')?.trim();
   const busyOrSubmitting = busy || methods.formState.isSubmitting;
 
+  const fields = (
+    <>
+      <ClubSections />
+      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
+        <Button onClick={onCancel}>Cancel</Button>
+        {!isEdit && (
+          <Button
+            variant="outlined"
+            type="button"
+            disabled={busyOrSubmitting || !nameFilled}
+            onClick={() => {
+              saveDraft().catch(console.error);
+            }}
+          >
+            Save as Draft
+          </Button>
+        )}
+        <Button variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled}>
+          {busy ? 'Saving…' : 'Save'}
+        </Button>
+      </DialogActions>
+    </>
+  );
+
   return (
     <FormProvider {...methods}>
       <ClubFormDataProvider value={data}>
         <form noValidate onSubmit={submitFinal}>
-          <ClubSections />
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-          <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
-            <Button onClick={onCancel}>Cancel</Button>
-            {!isEdit && (
-              <Button
-                variant="outlined"
-                type="button"
-                disabled={busyOrSubmitting || !nameFilled}
-                onClick={() => {
-                  saveDraft().catch(console.error);
-                }}
-              >
-                Save as Draft
-              </Button>
+          <Grid container spacing={3} alignItems="flex-start">
+            <Grid item xs={12} lg={preview ? 7 : 12}>
+              {fields}
+            </Grid>
+            {preview && (
+              <Grid item xs={12} lg={5}>
+                {/* Scrolls inside itself: the detail preview is taller than the
+                    viewport on a long pod, and a plain sticky box would park
+                    its bottom out of reach. */}
+                <Box
+                  sx={{
+                    position: { lg: 'sticky' },
+                    top: 16,
+                    maxHeight: { lg: 'calc(100vh - 32px)' },
+                    overflowY: { lg: 'auto' },
+                  }}
+                >
+                  {preview}
+                </Box>
+              </Grid>
             )}
-            <Button variant="contained" type="submit" disabled={busyOrSubmitting || !nameFilled}>
-              {busy ? 'Saving…' : 'Save'}
-            </Button>
-          </DialogActions>
+          </Grid>
         </form>
       </ClubFormDataProvider>
     </FormProvider>

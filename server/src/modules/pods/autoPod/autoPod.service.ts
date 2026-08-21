@@ -146,7 +146,7 @@ export async function resolveCategoryPair(subCategoryId: string) {
   const sub: any = await CategoryModel.findById(subCategoryId)
     .select('name level parent_id min_pax')
     .lean();
-  if (!sub || sub.level !== 'SUB') {
+  if (sub?.level !== 'SUB') {
     autoPodFail('BAD_USER_INPUT', 'Select a valid sub-category');
   }
   const middle: any = sub.parent_id
@@ -348,7 +348,7 @@ export const autoPodService = {
       );
     }
     await venueSlotService.releaseForAutoPod(String(doc._id));
-    autoPodNotify.cancelled(cancelled!).catch((error) =>
+    autoPodNotify.cancelled(cancelled).catch((error) =>
       logs.server.error('autoPod', 'notifyCancelled', { error, auto_pod_id: autoPodId })
     );
     return autoPodToPub(cancelled);

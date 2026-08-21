@@ -5,7 +5,6 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { mapClubToPublic } from '@modules/clubs/club/club.service';
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
-import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SUGGESTION_CAP = 20;

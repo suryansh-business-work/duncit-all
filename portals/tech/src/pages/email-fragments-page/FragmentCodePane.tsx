@@ -1,7 +1,6 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import { formatMjml } from '@duncit/utils';
-import { IconButton, Tooltip } from '@mui/material';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 
 interface Props {

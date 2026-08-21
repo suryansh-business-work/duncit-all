@@ -87,18 +87,18 @@ const NO_E2E_SURFACE = new Map([
   ['server', 'GraphQL API — no browser surface; covered by its own jest suites'],
 ]);
 
-const name = process.argv[2];
+const workspace = process.argv[2];
 
-if (!name) {
+if (!workspace) {
   console.error('e2e-no-surface: expected a workspace name argument.');
   process.exit(1);
 }
 
-const reason = NO_E2E_SURFACE.get(name);
+const reason = NO_E2E_SURFACE.get(workspace);
 
 if (!reason) {
   console.error(
-    `e2e-no-surface: "${name}" is not on the no-e2e-surface allowlist.\n` +
+    `e2e-no-surface: "${workspace}" is not on the no-e2e-surface allowlist.\n` +
       'Every portal and app must run a real Cypress suite from its `e2e` script.\n' +
       'If this workspace genuinely has no browser surface, add it (with a reason) to\n' +
       'scripts/e2e-no-surface.mjs — deliberately, in review.',
@@ -106,4 +106,4 @@ if (!reason) {
   process.exit(1);
 }
 
-console.log(`e2e: no end-to-end surface for ${name} — ${reason}.`);
+console.log(`e2e: no end-to-end surface for ${workspace} — ${reason}.`);

@@ -1,6 +1,5 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
-import { format } from 'date-fns';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { AttendanceChip } from '@duncit/ui';
 import { formatDate, formatDateTime } from '@duncit/app-settings';

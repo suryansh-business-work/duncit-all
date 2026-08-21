@@ -110,6 +110,18 @@ export const CLUB_ADMIN_PODS_TABLE = gql`
   ${CLUB_ADMIN_POD_ROW_FIELDS}
 `;
 
+/** Single-pod fetch for the /club-admin/clubs/:clubId/pods/:id/edit page.
+ * Its own query rather than the public pod query: a cancelled pod stays editable
+ * here, and only this one returns soft-deleted rows to a club admin. */
+export const CLUB_ADMIN_POD_FOR_EDIT = gql`
+  query ClubAdminPodForEdit($pod_doc_id: ID!) {
+    clubAdminPodForEdit(pod_doc_id: $pod_doc_id) {
+      ...ClubAdminPodRowFields
+    }
+  }
+  ${CLUB_ADMIN_POD_ROW_FIELDS}
+`;
+
 /** The AI-monitored action trail of one pod in the caller's clubs. */
 export const CLUB_ADMIN_POD_AUDIT_LOGS = gql`
   query ClubAdminPodAuditLogs($pod_doc_id: ID!) {

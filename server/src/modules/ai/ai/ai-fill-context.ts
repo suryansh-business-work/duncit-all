@@ -26,8 +26,9 @@ const text = (value: unknown): string => (typeof value === 'string' ? value.trim
 
 /** Case-insensitive exact-name match, anchored, with regex metacharacters
  * escaped — a club called "C++ Devs" must not compile as a pattern. */
+const ESCAPE_REPLACEMENT = String.raw`\$&`;
 const nameRx = (name: string) =>
-  new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)}$`, 'i');
+  new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, ESCAPE_REPLACEMENT)}$`, 'i');
 
 const line = (name: string, values: string[], empty: string) =>
   `- ${name}: ${values.join(', ') || empty}`;

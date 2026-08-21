@@ -2,7 +2,6 @@ import { useApolloClient } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
 import { Avatar, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { MY_VENUES_TABLE, type VenueListingRow } from './queries';

@@ -24,7 +24,7 @@ function parseValue(raw) {
   const quote = value[0];
   if (QUOTES.has(quote) && value.length > 1 && value.endsWith(quote)) {
     const inner = value.slice(1, -1);
-    return quote === '"' ? inner.replaceAll("\\n", "\n") : inner;
+    return quote === '"' ? inner.replaceAll(String.raw`\n`, "\n") : inner;
   }
   // dotenv reads an unquoted value as everything before the first `#`.
   return value.split("#")[0].trim();

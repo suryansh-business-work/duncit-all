@@ -71,6 +71,10 @@ jobs:
   coverage-workspaces:
     name: Coverage — workspaces
     runs-on: ubuntu-latest
+    # 71 workspaces at up to 8 minutes each is a worst case nobody hits; the
+    # cap exists so a pathological run still reaches the upload step, because a
+    # job that times out never uploads and the coverage is lost.
+    timeout-minutes: 150
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
@@ -85,9 +89,38 @@ jobs:
       # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
       # in, which does not happen here. The lcov is written either way, and the
       # quality gate — not a local threshold — is what judges us.
+      #
+      # ONE WORKSPACE AT A TIME, each with its own time box. Grouping them was
+      # still too coarse: "./portals/**" put all 17 portals inside a single 25
+      # minute budget, so when it ran out the whole group was killed and admin,
+      # crm, mweb and shell reported 0.0% while covering 41-100% locally. A
+      # workspace can now only ever cost itself.
       - name: Run coverage
         continue-on-error: true
-        run: pnpm -r --if-present --no-bail test:coverage
+        run: |
+          set +e
+          # The workspace list comes from pnpm itself, so a new package is
+          # picked up without editing this file.
+          mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json |
+            node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+              for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name);
+            })')
+          echo "found ${#WORKSPACES[@]} workspace(s)"
+          failed=()
+          for ws in "${WORKSPACES[@]}"; do
+            timeout 8m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
+            code=$?
+            if [ $code -ne 0 ]; then
+              failed+=("$ws($code)")
+              echo "::group::coverage FAILED $ws (exit $code)"
+              tail -40 "/tmp/cov-$$.log"
+              echo "::endgroup::"
+            fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::warning::coverage run did not succeed for: ${failed[*]}"
+          fi
+          exit 0
       - name: Collect lcov
         run: |
           mkdir -p lcov-out
@@ -96,12 +129,16 @@ jobs:
               dest="lcov-out/$(dirname "${f#./}" | tr '/' '_').info"
               cp "$f" "$dest"
             done
+          echo "collected $(ls -1 lcov-out | wc -l) report(s):"
           ls -la lcov-out
       - uses: actions/upload-artifact@v6
         with:
           name: lcov-workspaces
           path: lcov-out
-          if-no-files-found: error
+          # warn, not error: a partial set of reports is still worth scanning,
+          # and the analyze job verifies the count and fails loudly if it is
+          # short. Failing HERE only threw the partial results away.
+          if-no-files-found: warn
 
   coverage-mobile:
     name: Coverage — mobile app
@@ -206,6 +243,27 @@ jobs:
           paths=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | sed 's|^\./||' | sort | paste -sd, -)
           echo "Reports handed to the scanner: $paths"
           echo "SONAR_LCOV_PATHS=$paths" >> "$GITHUB_ENV"
+
+      # The scan used to publish 5.4% coverage without a single warning: the
+      # workspace lcov artifact was missing, every workspace but the mobile app
+      # reported exactly 0.0%, and nothing in the pipeline said so. A silently
+      # coverage-less scan is worse than a failed one, because the quality gate
+      # then reports a number that describes the pipeline rather than the code.
+      #
+      # The floor is deliberately well under the ~40 reports a healthy run
+      # produces: this is a smoke alarm for "the artifact went missing", not a
+      # coverage threshold. The gate itself judges the percentage.
+      - name: Verify coverage reached the scanner
+        if: ${{ !inputs.skip_coverage }}
+        run: |
+          count=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | wc -l)
+          echo "lcov reports available to the scanner: $count"
+          if [ "$count" -lt 20 ]; then
+            echo "::error::Only $count lcov report(s) reached the scanner (expected 20+)."
+            echo "::error::The coverage jobs did not deliver their artifacts, so this"
+            echo "::error::scan would report a coverage figure for the pipeline, not the code."
+            exit 1
+          fi
 
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
       # single biggest saving on a repeat scan of the same branch.

@@ -47,8 +47,7 @@ import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { hostVariableValues } from '../../config/leadVariables';
-import { formatDateTime } from '@duncit/app-settings';
-import { formatDate as adminDate } from '@duncit/app-settings';
+import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 

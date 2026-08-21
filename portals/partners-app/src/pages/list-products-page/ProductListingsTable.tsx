@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';

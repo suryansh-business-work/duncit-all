@@ -9,7 +9,6 @@ import { Types } from 'mongoose';
 import { ProductReviewModel, type IProductReview } from './productReview.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
-import { UserModel } from '@modules/access/user/user.model';
 
 const oid = (v: string) => new Types.ObjectId(v);
 const has = (arr: Types.ObjectId[], id: string) => (arr ?? []).some((x) => String(x) === id);

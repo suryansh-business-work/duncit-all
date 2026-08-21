@@ -32,10 +32,10 @@ export function TourGuideScreen() {
   const run = (tour: TourDefinition) => {
     startTour(tour.id);
     if (tour.nativeTab) {
-      navigation.navigate('Home', { screen: tour.nativeTab as keyof TabParamList & string });
+      navigation.navigate('Home', { screen: tour.nativeTab as keyof TabParamList });
       return;
     }
-    navigation.navigate(tour.nativeRoute as keyof RootStackParamList as never);
+    navigation.navigate(tour.nativeRoute as never);
   };
 
   return (

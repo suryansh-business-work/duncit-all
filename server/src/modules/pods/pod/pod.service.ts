@@ -1941,10 +1941,8 @@ export const podService = {
     // Same Step-4 economics guard as create, on the MERGED (input over stored)
     // values — a resubmitted paid pod must still cover its venue price and
     // leave the host a positive projected payout.
-    const resubmitVenueId =
-      nextMode === 'PHYSICAL'
-        ? input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null)
-        : null;
+    const docVenueId = doc.venue_id ? String(doc.venue_id) : null;
+    const resubmitVenueId = nextMode === 'PHYSICAL' ? (input.venue_id ?? docVenueId) : null;
     await breakdownService.assertViablePodEconomics({
       hostUserId: userId,
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,
@@ -2076,8 +2074,8 @@ export const podService = {
     // NOT_FOUND before any refund or penalty runs.
     const doc = await PodModel.findById(podId);
     if (!doc) notFound();
-    await assertOwnedVenue(doc!, userId);
-    if (bucketForPod(doc!, Date.now()) !== 'upcoming') {
+    await assertOwnedVenue(doc, userId);
+    if (bucketForPod(doc, Date.now()) !== 'upcoming') {
       throw new GraphQLError('Only an upcoming pod can be cancelled', {
         extensions: { code: 'BAD_REQUEST' },
       });
@@ -2085,7 +2083,7 @@ export const podService = {
 
     const podTitle = doc!.pod_title;
     const venueId = String(doc!.venue_id);
-    const refunded_count = await refundAndNotifyCancellation(doc!, userId, note, 'VENUE_OWNER');
+    const refunded_count = await refundAndNotifyCancellation(doc, userId, note, 'VENUE_OWNER');
     // A concurrent cancel committed the delete first and already took the
     // penalty. Report that cancellation's outcome — docking the venue a second
     // time for one cancellation is the bug this guard exists to stop.

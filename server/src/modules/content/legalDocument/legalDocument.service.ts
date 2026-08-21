@@ -362,7 +362,7 @@ export const legalDocumentService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
-    return renderPdf(doc!);
+    return renderPdf(doc);
   },
 
   /**
@@ -374,13 +374,17 @@ export const legalDocumentService = {
   async share(userId: string, id: string, to: string, message: string) {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid document id');
     const recipient = String(to ?? '').trim();
-    if (!/^\S+@\S+\.\S+$/.test(recipient)) fail('BAD_USER_INPUT', 'Enter a valid email address');
+    // Length first: the pattern backtracks quadratically on a long string that
+    // never matches, and `to` is unbounded user input. 254 is the RFC 5321 cap.
+    if (recipient.length > 254 || !/^\S+@\S+\.\S+$/.test(recipient)) {
+      fail('BAD_USER_INPUT', 'Enter a valid email address');
+    }
 
     const doc = await LegalDocumentModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Document not found');
     if (!doc!.signed_at) fail('FORBIDDEN', 'This contract has not been signed yet.');
 
-    const pdf = await renderPdf(doc!);
+    const pdf = await renderPdf(doc);
     const { sendSignedContractEmail } = await import('@services/email/email.service');
     await sendSignedContractEmail({
       to: recipient,

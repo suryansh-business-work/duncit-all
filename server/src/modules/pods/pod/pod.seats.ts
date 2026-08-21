@@ -59,5 +59,5 @@ export function maxSeatsForBooking(pod: SeatCountable): number {
 /** Normalise a client-supplied seat count to a whole number ≥ 1. */
 export function normalizeSeats(value: unknown): number {
   const seats = Math.floor(Number(value) || 1);
-  return seats < 1 ? 1 : seats;
+  return Math.max(1, seats);
 }

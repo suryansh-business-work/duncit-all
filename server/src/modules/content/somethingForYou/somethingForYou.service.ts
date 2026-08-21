@@ -46,7 +46,7 @@ const normalize = (input: Input) => ({
   title: String(input.title ?? '').trim(),
   image_url: String(input.image_url ?? '').trim(),
   bottom_text: String(input.bottom_text ?? '').trim(),
-  action_type: (input.action_type ?? 'NONE') as SomethingForYouAction,
+  action_type: input.action_type ?? 'NONE',
   link_path: String(input.link_path ?? '').trim(),
   link_url: String(input.link_url ?? '').trim(),
   sort_order: Number(input.sort_order ?? 0),

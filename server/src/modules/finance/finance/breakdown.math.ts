@@ -135,7 +135,7 @@ export function payingAttendees(
 ): number {
   const attendees = attendeeIds ?? [];
   if (attendees.length === 0) return 0;
-  const hosts = new Set((hostIds ?? []).map((id) => String(id)));
+  const hosts = new Set((hostIds ?? []).map(String));
   return attendees.filter((id) => !hosts.has(String(id))).length;
 }
 

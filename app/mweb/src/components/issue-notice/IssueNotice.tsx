@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { Alert, Button } from '@mui/material';
 import {
   ISSUE_REPORT_CATEGORY,

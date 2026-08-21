@@ -1,7 +1,18 @@
 import { useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';

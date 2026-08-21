@@ -116,7 +116,7 @@ async function fetchOpenGraph(url: URL): Promise<Partial<StaffLinkPreview>> {
 /** The portal a `<name>.duncit.com` host belongs to, or null when it is outside. */
 function portalOf(hostname: string, ourHosts: string[]): string | null {
   const host = hostname.toLowerCase();
-  if (ourHosts.some((known) => host === known)) {
+  if (ourHosts.includes(host)) {
     return host.split('.')[0] ?? null;
   }
   if (!host.endsWith('.duncit.com') && host !== 'duncit.com') return null;

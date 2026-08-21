@@ -16,9 +16,8 @@ import {
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { useDraftRetentionDays } from '../utils/dateFormat';
+import { useDraftRetentionDays, formatDateTime } from '../utils/dateFormat';
 import { STEP_TITLES } from './create-pod-page/create-pod';
-import { formatDateTime } from '../utils/dateFormat';
 
 const MY_POD_DRAFTS = gql`
   query MyPodDrafts {

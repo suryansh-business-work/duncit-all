@@ -126,7 +126,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
           uploading={manager.uploading}
           onUpload={upload}
           onDeleteSelected={deleteSelected}
-          onRefresh={() => void manager.refetch()}
+          onRefresh={() => { manager.refetch().catch(() => undefined); }}
         />
 
         {(manager.uploading || manager.loading) && <LinearProgress sx={{ mb: 2 }} />}
@@ -213,7 +213,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
               onDelete={deleteOne}
               onChanged={(file) => {
                 setActive(file);
-                void manager.refetch();
+                manager.refetch().catch(() => undefined);
                 say('Saved');
               }}
               onError={(message) => say(message, 'error')}

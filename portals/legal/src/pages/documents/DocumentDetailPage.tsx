@@ -9,7 +9,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
 import { BackHeader } from '@duncit/ui';
 import { downloadTextFile } from '@duncit/utils';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';

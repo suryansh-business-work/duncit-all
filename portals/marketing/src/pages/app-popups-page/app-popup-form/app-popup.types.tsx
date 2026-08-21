@@ -97,7 +97,7 @@ export type AppPopupFormValues = z.infer<typeof appPopupSchema>;
  * window the marketer edits rather than builds from nothing. */
 export function blankAppPopupValues(): AppPopupFormValues {
   const start = new Date();
-  const end = new Date(start.getTime());
+  const end = new Date(start);
   end.setDate(end.getDate() + 7);
   return {
     name: '',

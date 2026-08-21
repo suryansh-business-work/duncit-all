@@ -3,10 +3,10 @@ import type { SessionUser } from './types';
 const str = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 const strOrNull = (value: unknown): string | null => {
   const s = str(value);
-  return s ? s : null;
+  return s || null;
 };
 const list = (value: unknown): string[] =>
-  Array.isArray(value) ? value.map((v) => String(v)).filter(Boolean) : [];
+  Array.isArray(value) ? value.map(String).filter(Boolean) : [];
 
 /**
  * Raw `me` → the session shape, with every empty-vs-null trap flattened once.

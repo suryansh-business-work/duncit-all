@@ -216,6 +216,16 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     myClubPods(club_id: ID): [ClubPod!]!
     "Roll-up figures for exactly the myClubPods scope, over every pod in it."
     myClubPodsSummary(club_id: ID): ClubPodSummary!
+    """
+    ONE pod in the caller's clubs, in the shape the club-admin pod editor
+    prefills from.
+
+    Its own query rather than the public pod query: that one only honours
+    include_deleted for platform reviewers, and a cancelled pod stays editable
+    for the club admin who has to correct it. Gated on assertClubAdminForPod,
+    which is what keeps a club admin inside their own club.
+    """
+    clubAdminPodForEdit(pod_doc_id: ID!): Pod
     "Full action trail of one pod in the caller's clubs, newest first."
     clubAdminPodAuditLogs(pod_doc_id: ID!): [PodAuditLog!]!
     """

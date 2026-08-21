@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { format } from 'date-fns';
 import {
   Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
   Divider, Link, Stack, TextField, Typography,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { useDateFormat, useTranslation, formatDateTime } from '@duncit/app-settings';
 import { slotSpanLabel } from '@duncit/slots';
 import { InfoRow } from '@duncit/ui';
 import type { SlotRequestRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
 
 interface Props {
   request: SlotRequestRow;

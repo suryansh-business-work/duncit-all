@@ -115,7 +115,7 @@ export const CLUBS_TABLE = gql`
   ${CLUB_ROW_FIELDS}
 `;
 
-/** Single-club fetch for the /clubs?edit=<id> deep-link (rows are paged now). */
+/** Single-club fetch for the /clubs/<id>/edit page (rows are paged now). */
 export const CLUB_FOR_EDIT = gql`
   query ClubForEdit($id: ID!) {
     club(club_doc_id: $id) {

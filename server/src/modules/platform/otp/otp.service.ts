@@ -254,7 +254,7 @@ export const otpService = {
     expected: Readonly<{ purpose: OtpPurpose; match?: (c: IOtpChallenge) => boolean }>
   ): Promise<IOtpChallenge> {
     const doc = await OtpChallengeModel.findById(challengeId).catch(() => null);
-    if (!doc || doc.purpose !== expected.purpose) throw badInput('Verify the phone number first');
+    if (doc?.purpose !== expected.purpose) throw badInput('Verify the phone number first');
     if (!doc.verified_at) throw badInput('Verify the phone number first');
     if (doc.consumed_at) throw badInput('That verification has already been used');
     if (doc.expires_at.getTime() <= Date.now()) {

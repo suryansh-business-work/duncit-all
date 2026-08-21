@@ -14,17 +14,20 @@ export const CLUB_ADMIN_POD_CONFIG = makeNativeParityPodConfig({ showProducts: t
 
 interface Args {
   clubId: string;
+  /** The pod being edited; null on the create route. */
+  editingPod?: any;
   onSaved: (meta: PodEditorSaveMeta) => void;
 }
 
 /** Club-admin wiring for the shared pod editor: pinned club, host search + seed. */
-export default function useClubAdminPodEditor({ clubId, onSaved }: Args) {
+export default function useClubAdminPodEditor({ clubId, editingPod, onSaved }: Args) {
   const client = useApolloClient();
   const [createPod] = useMutation(CLUB_ADMIN_CREATE_POD);
   const [updatePod] = useMutation(CLUB_ADMIN_UPDATE_POD);
 
   const editor = usePodEditorState({
     config: CLUB_ADMIN_POD_CONFIG,
+    editingPod,
     createDefaults: { club_id: clubId },
     // Every save stays pinned to this club server-side.
     submitCreate: (input) => createPod({ variables: { input: { ...input, club_id: clubId } } }),
@@ -43,7 +46,6 @@ export default function useClubAdminPodEditor({ clubId, onSaved }: Args) {
       .then(({ data }) => data?.clubAdminHostSearch ?? []);
 
   // Labelled seed for the pod's preselected hosts (host_names is id-ordered).
-  const editingPod = editor.editingPod;
   const hostSeed: PodHostOption[] = useMemo(
     () =>
       (editingPod?.pod_hosts_id ?? []).map((id: string, index: number) => ({

@@ -2,7 +2,6 @@ import { Box, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import { format } from 'date-fns';
 import { formatDateTime } from '@duncit/app-settings';
 
 type Decision = 'NONE' | 'APPROVED' | 'DECLINED';

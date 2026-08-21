@@ -6,7 +6,7 @@ import type { AppBuildArtifactKind, AppBuildEnv, AppBuildPlatform } from '../que
  * may contain and strict about what git itself forbids — a leading/trailing
  * slash or dot, `..`, whitespace, and the characters git reserves for refspecs.
  */
-const REF_RE = /^(?!\/|\.)(?!.*\.\.)[\w./-]+(?<![/.])$/;
+const REF_RE = /^(?![/.])(?!.*\.\.)[\w./-]+(?<![/.])$/;
 
 export interface CreateBuildMessages {
   refFormat: string;

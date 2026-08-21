@@ -48,7 +48,7 @@ export default function PodDetailsPage(props: Readonly<PodDetailsViewProps>) {
 function PodDetailsView({
   backTo = '/pods',
   backLabel = 'Pods',
-  editTo = (podId: string) => `/pods?edit=${podId}`,
+  editTo = (podId: string) => `/pods/${podId}/edit`,
   footer,
 }: Readonly<PodDetailsViewProps>) {
   const { id = '' } = useParams();

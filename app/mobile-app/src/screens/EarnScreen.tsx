@@ -61,7 +61,7 @@ export function EarnScreen() {
   // (venue/ecomm/club — opening the deep link there preserves it through login).
   const runCta = (cta: EarnJourneyCta) => {
     if (cta.target === 'internal') {
-      navigation.navigate(cta.internalRoute as keyof RootStackParamList as never);
+      navigation.navigate(cta.internalRoute as never);
       return;
     }
     fireAndForget(Linking.openURL(partnerPortalUrl(cta.partnerPath)));
@@ -90,9 +90,7 @@ export function EarnScreen() {
                   disabled={state.disabled}
                   disabledLabel={state.disabledLabel}
                   cta={cta}
-                  onPress={() =>
-                    navigation.navigate(box.nativeRoute as keyof RootStackParamList as never)
-                  }
+                  onPress={() => navigation.navigate(box.nativeRoute as never)}
                 />
                 {scheduledMeeting ? (
                   <EarnMeetingActions

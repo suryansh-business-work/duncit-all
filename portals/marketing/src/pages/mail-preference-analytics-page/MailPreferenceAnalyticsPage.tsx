@@ -6,7 +6,7 @@ import DoNotDisturbOnIcon from '@mui/icons-material/DoNotDisturbOn';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
-import { useTranslation } from '@duncit/app-settings';
+import { useTranslation, formatDateTime } from '@duncit/app-settings';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import KpiCard from '../dashboard-page/KpiCard';
 import CategoryBreakdown from './CategoryBreakdown';
@@ -18,7 +18,6 @@ import {
   type MailPreferenceAnalytics,
   type MailPreferenceLogRow,
 } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
 
 /** The windows an opt-out report is actually read over. */
 const RANGES = [7, 30, 90, 365];

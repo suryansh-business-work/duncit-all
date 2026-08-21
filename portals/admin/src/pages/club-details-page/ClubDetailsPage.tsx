@@ -64,7 +64,7 @@ export default function ClubDetailsPage() {
         <Button
           variant="contained"
           startIcon={<EditIcon />}
-          onClick={() => navigate(`/clubs?edit=${club.id}`)}
+          onClick={() => navigate(`/clubs/${club.id}/edit`)}
         >
           Edit club
         </Button>

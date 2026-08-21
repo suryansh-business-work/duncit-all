@@ -1,6 +1,5 @@
 import { useApolloClient } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatINR, payingAttendees } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';

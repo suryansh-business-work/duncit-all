@@ -28,7 +28,7 @@ const inFlight = new Map<string, Promise<unknown>>();
 async function gqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
   const key = query + JSON.stringify(variables ?? {});
   const cached = inFlight.get(key);
-  if (cached) return cached as Promise<T | null>;
+  if (cached !== undefined) return cached as Promise<T | null>;
 
   const request = (async (): Promise<T | null> => {
     try {

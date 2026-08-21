@@ -38,7 +38,7 @@ export default function HostSelectField() {
       label={label}
       value={value}
       onChange={(event) => {
-        const next = toHostIds(event.target.value as unknown as string | string[]);
+        const next = toHostIds(event.target.value);
         setValue('pod_hosts_id', next, { shouldValidate: true });
       }}
       SelectProps={selectProps}

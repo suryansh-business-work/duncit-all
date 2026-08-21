@@ -48,6 +48,8 @@ export const clubAdminResolvers = {
       clubAdminService.myPods(actorOf(ctx), args.club_id),
     myClubPodsSummary: (_p: unknown, args: { club_id?: string | null }, ctx: GraphQLContext) =>
       clubAdminService.myPodsSummary(actorOf(ctx), args.club_id),
+    clubAdminPodForEdit: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
+      clubAdminService.podForEdit(actorOf(ctx), args.pod_doc_id),
     clubAdminPodAuditLogs: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
       clubAdminService.podAuditLogs(actorOf(ctx), args.pod_doc_id),
     clubAdminPodAttendees: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>

@@ -79,7 +79,7 @@ export default function OtpLoginPanel({
   const submitCode = () => onSubmitCode(email.trim(), code.trim());
 
   const emailReady = /^\S+@\S+\.\S+$/.test(email.trim());
-  const codeReady = new RegExp(`^\\d{${OTP_LENGTH}}$`).test(code.trim());
+  const codeReady = new RegExp(String.raw`^\d{${OTP_LENGTH}}$`).test(code.trim());
 
   return (
     <Stack spacing={1.5}>

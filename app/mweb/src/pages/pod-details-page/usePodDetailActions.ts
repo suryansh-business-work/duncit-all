@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client';
-import { format } from 'date-fns';
+import { formatDateTime } from '../../utils/dateFormat';
 import { buildPodShareMessage } from '@duncit/utils';
 import type { NavigateFunction } from 'react-router-dom';
 import {
@@ -16,12 +16,11 @@ import {
 import { podUrl } from '../../utils/seoUrls';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** The pod's date/time as this surface renders it, for the share message. */
+/** The pod's date/time as this surface renders it, for the share message. In
+ * the admin's configured patterns, so a shared pod reads the same whether the
+ * link was copied from mWeb or the app (rule 27). */
 function shareWhenText(pod: any): string | null {
-  if (!pod?.pod_date_time) return null;
-  const date = new Date(pod.pod_date_time);
-  if (Number.isNaN(date.getTime())) return null;
-  return format(date, "EEE, d MMM yyyy 'at' h:mm a");
+  return formatDateTime(pod?.pod_date_time) || null;
 }
 
 /**

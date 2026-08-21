@@ -1,7 +1,7 @@
 import { Box, Skeleton, Stack } from '@mui/material';
 import { normalisePosition } from './layout';
 import { DashboardWidgetCard } from './DashboardWidgetCard';
-import type { DashboardLayoutItem, DashboardWidget } from './types';
+import type { DashboardLayoutItem, DashboardPosition, DashboardWidget } from './types';
 
 /**
  * How GridStack's own chrome is themed. gridstack.css addresses these elements
@@ -46,6 +46,28 @@ const GRID_SX = {
   },
   '&.grid-stack > .grid-stack-item:hover > .ui-resizable-handle': { opacity: 1 },
 } as const;
+
+/**
+ * GridStack reads a tile's placement off `gs-*` DOM attributes, which are not
+ * known JSX props (Sonar S6747). Building them as one record and spreading it
+ * renders exactly the same attributes without writing each one inline.
+ */
+function gridAttributes(
+  widget: DashboardWidget,
+  slot: DashboardPosition,
+  size: DashboardPosition,
+): Record<string, string | number | undefined> {
+  return {
+    'gs-id': widget.id,
+    'gs-x': slot.x,
+    'gs-y': slot.y,
+    'gs-w': slot.w,
+    'gs-h': slot.h,
+    'gs-min-w': widget.minW ?? Math.min(size.w, 3),
+    'gs-min-h': widget.minH ?? Math.min(size.h, 2),
+    'gs-size-to-content': widget.fitContent ? 'true' : undefined,
+  };
+}
 
 export type DashboardGridProps = Readonly<{
   widgets: readonly DashboardWidget[];
@@ -93,18 +115,7 @@ export function DashboardGrid({
         const slot = slots.get(widget.id) ?? normalisePosition(widget.defaultLayout);
         const size = normalisePosition(widget.defaultLayout);
         return (
-          <div
-            key={widget.id}
-            className="grid-stack-item"
-            gs-id={widget.id}
-            gs-x={slot.x}
-            gs-y={slot.y}
-            gs-w={slot.w}
-            gs-h={slot.h}
-            gs-min-w={widget.minW ?? Math.min(size.w, 3)}
-            gs-min-h={widget.minH ?? Math.min(size.h, 2)}
-            gs-size-to-content={widget.fitContent ? 'true' : undefined}
-          >
+          <div key={widget.id} className="grid-stack-item" {...gridAttributes(widget, slot, size)}>
             <div className="grid-stack-item-content">
               <DashboardWidgetCard widget={widget} editing={editing} dragLabel={dragLabel} />
             </div>

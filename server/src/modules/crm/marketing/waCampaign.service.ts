@@ -231,7 +231,7 @@ function validateScope(input: SendInput) {
   if (audience === 'AUDIENCE_LIST' && !Types.ObjectId.isValid(audienceListId)) {
     throw badInput('Pick the audience list to send to');
   }
-  const userIds = (input.user_ids ?? []).map(str).filter(Types.ObjectId.isValid);
+  const userIds = (input.user_ids ?? []).map(str).filter((id) => Types.ObjectId.isValid(id));
   if (audience === 'SPECIFIC_USERS' && userIds.length === 0) {
     throw badInput('Pick at least one person to send to');
   }

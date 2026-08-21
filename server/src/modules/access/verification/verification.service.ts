@@ -115,9 +115,9 @@ async function claimForSubmit(
     { $set: set },
     { new: true }
   );
-  if (updated) return updated as UserVerificationDoc;
+  if (updated) return updated;
   try {
-    return (await UserVerificationModel.create({ user_id, type, ...set })) as UserVerificationDoc;
+    return await UserVerificationModel.create({ user_id, type, ...set });
   } catch (err) {
     if (isDuplicateKey(err)) throw underReview();
     throw err;

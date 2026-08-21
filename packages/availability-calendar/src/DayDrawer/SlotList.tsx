@@ -15,7 +15,7 @@ import {
 import BlockIcon from '@mui/icons-material/Block';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { format, isSameDay } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import type { VenueSlotRow } from '../types';
 import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
 

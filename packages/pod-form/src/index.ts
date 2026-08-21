@@ -1,7 +1,10 @@
 export { default as PodForm } from './PodForm';
 export type { PodFormProps } from './PodForm';
-export { default as PodEditorDialog } from './editor/PodEditorDialog';
-export type { PodEditorDialogProps } from './editor/PodEditorDialog';
+export { default as PodEditorPage } from './editor/PodEditorPage';
+export type { PodEditorPageProps } from './editor/PodEditorPage';
+export { default as PodPreview } from './preview/PodPreview';
+export { buildPodPreview } from './preview/pod-preview-model';
+export type { PodPreviewModel } from './preview/pod-preview-model';
 export { default as usePodEditorState } from './editor/usePodEditorState';
 export type { UsePodEditorStateArgs, PodEditorSaveMeta } from './editor/usePodEditorState';
 export { default as useMediaPickerBridge } from './editor/useMediaPickerBridge';

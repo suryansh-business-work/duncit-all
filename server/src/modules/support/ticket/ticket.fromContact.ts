@@ -52,7 +52,7 @@ export async function ticketFromContact(input: {
       {
         // The sender when there is an account; the ticket itself when there is
         // not, because a message has to say who wrote it and a guest has no id.
-        author_id: (account?._id as Types.ObjectId | undefined) ?? new Types.ObjectId(),
+        author_id: account?._id ?? new Types.ObjectId(),
         author_role: 'USER',
         body_text: input.message,
         body_html: '',

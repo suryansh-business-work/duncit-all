@@ -2,7 +2,6 @@ import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/
 import { alpha } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { format } from 'date-fns';
 import StatusVisual, { TranscriptWave } from './statusVisuals';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 import { formatDateTime } from '@duncit/app-settings';

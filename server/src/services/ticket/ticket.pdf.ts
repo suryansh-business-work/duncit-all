@@ -49,68 +49,66 @@ export const ticketQr = (token: string) =>
  * two, without a second renderer that could drift from this one.
  */
 export function drawTicket(doc: PDFKit.PDFDocument, data: TicketPdfData, qrPng: Buffer): void {
-  {
-      const W = doc.page.width;
-      const H = doc.page.height;
-      const stubX = W - 200;
+  const W = doc.page.width;
+  const H = doc.page.height;
+  const stubX = W - 200;
 
-      // Background + accent band (brand mark + name)
-      doc.rect(0, 0, W, H).fill('#ffffff');
-      doc.rect(0, 0, W, 64).fill(ACCENT);
-      let brandX = 28;
-      if (BRAND_MARK) {
-        try {
-          doc.image(BRAND_MARK, 28, 16, { fit: [32, 32], valign: 'center' });
-          brandX = 68;
-        } catch {
-          brandX = 28;
-        }
-      }
-      doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text(data.brand, brandX, 18);
-      doc.fontSize(10).font('Helvetica').text('EVENT TICKET', brandX, 42);
-
-      // Left: event details
-      const leftX = 28;
-      let y = 92;
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text('EVENT', leftX, y);
-      y += 14;
-      doc.fillColor(INK).fontSize(18).font('Helvetica-Bold').text(data.event_title, leftX, y, { width: stubX - leftX - 24 });
-      y = doc.y + 10;
-
-      const row = (label: string, value: string) => {
-        doc.fillColor(MUTED).fontSize(8.5).font('Helvetica').text(label, leftX, y);
-        doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(value || '—', leftX, y + 11, { width: stubX - leftX - 24 });
-        y = doc.y + 8;
-      };
-      row('WHEN', data.date_label);
-      row(data.mode === 'VIRTUAL' ? 'MEETING' : 'VENUE', data.mode === 'VIRTUAL' ? data.meeting_platform || 'Online' : data.venue_name || '—');
-      if (data.mode !== 'VIRTUAL' && data.venue_address) row('ADDRESS', data.venue_address);
-      row('ATTENDEE', `${data.attendee_name}  ·  ${data.attendee_email}`);
-      // Only when it admits more than the buyer, so a single-seat ticket keeps
-      // the layout it has today.
-      const seats = Math.max(1, Math.floor(Number(data.seats) || 1));
-      if (seats > 1) row('ADMITS', `${seats} people`);
-
-      // Perforation
-      doc.save();
-      doc.lineWidth(1).dash(4, { space: 4 }).strokeColor('#d1d5db');
-      doc.moveTo(stubX, 64).lineTo(stubX, H).stroke();
-      doc.restore();
-
-      // Right stub: QR + code + status
-      const qrSize = 150;
-      const qrX = stubX + (200 - qrSize) / 2;
-      doc.image(qrPng, qrX, 84, { width: qrSize, height: qrSize });
-      doc.fillColor(MUTED).fontSize(8).font('Helvetica').text('SCAN AT ENTRY', stubX, 240, { width: 200, align: 'center' });
-      doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(data.ticket_code, stubX, 254, { width: 200, align: 'center' });
-      doc.fillColor(data.status === 'CHECKED_IN' ? '#16a34a' : ACCENT).fontSize(9).font('Helvetica-Bold').text(data.status, stubX, 274, { width: 200, align: 'center' });
-      // The stub is the half the door keeps, so how many people it lets in has
-      // to be readable without opening anything.
-      if (seats > 1) {
-        doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(`ADMITS ${seats}`, stubX, 290, { width: 200, align: 'center' });
-      }
-
+  // Background + accent band (brand mark + name)
+  doc.rect(0, 0, W, H).fill('#ffffff');
+  doc.rect(0, 0, W, 64).fill(ACCENT);
+  let brandX = 28;
+  if (BRAND_MARK) {
+    try {
+      doc.image(BRAND_MARK, 28, 16, { fit: [32, 32], valign: 'center' });
+      brandX = 68;
+    } catch {
+      brandX = 28;
+    }
   }
+  doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text(data.brand, brandX, 18);
+  doc.fontSize(10).font('Helvetica').text('EVENT TICKET', brandX, 42);
+
+  // Left: event details
+  const leftX = 28;
+  let y = 92;
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica').text('EVENT', leftX, y);
+  y += 14;
+  doc.fillColor(INK).fontSize(18).font('Helvetica-Bold').text(data.event_title, leftX, y, { width: stubX - leftX - 24 });
+  y = doc.y + 10;
+
+  const row = (label: string, value: string) => {
+    doc.fillColor(MUTED).fontSize(8.5).font('Helvetica').text(label, leftX, y);
+    doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(value || '—', leftX, y + 11, { width: stubX - leftX - 24 });
+    y = doc.y + 8;
+  };
+  row('WHEN', data.date_label);
+  row(data.mode === 'VIRTUAL' ? 'MEETING' : 'VENUE', data.mode === 'VIRTUAL' ? data.meeting_platform || 'Online' : data.venue_name || '—');
+  if (data.mode !== 'VIRTUAL' && data.venue_address) row('ADDRESS', data.venue_address);
+  row('ATTENDEE', `${data.attendee_name}  ·  ${data.attendee_email}`);
+  // Only when it admits more than the buyer, so a single-seat ticket keeps
+  // the layout it has today.
+  const seats = Math.max(1, Math.floor(Number(data.seats) || 1));
+  if (seats > 1) row('ADMITS', `${seats} people`);
+
+  // Perforation
+  doc.save();
+  doc.lineWidth(1).dash(4, { space: 4 }).strokeColor('#d1d5db');
+  doc.moveTo(stubX, 64).lineTo(stubX, H).stroke();
+  doc.restore();
+
+  // Right stub: QR + code + status
+  const qrSize = 150;
+  const qrX = stubX + (200 - qrSize) / 2;
+  doc.image(qrPng, qrX, 84, { width: qrSize, height: qrSize });
+  doc.fillColor(MUTED).fontSize(8).font('Helvetica').text('SCAN AT ENTRY', stubX, 240, { width: 200, align: 'center' });
+  doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(data.ticket_code, stubX, 254, { width: 200, align: 'center' });
+  doc.fillColor(data.status === 'CHECKED_IN' ? '#16a34a' : ACCENT).fontSize(9).font('Helvetica-Bold').text(data.status, stubX, 274, { width: 200, align: 'center' });
+  // The stub is the half the door keeps, so how many people it lets in has
+  // to be readable without opening anything.
+  if (seats > 1) {
+    doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(`ADMITS ${seats}`, stubX, 290, { width: 200, align: 'center' });
+  }
+
 }
 
 /** Renders a single, designed event-ticket PDF with an embedded verifiable QR. */

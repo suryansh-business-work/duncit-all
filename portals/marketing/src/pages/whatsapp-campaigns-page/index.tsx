@@ -13,7 +13,6 @@ import { WaCampaignForm, valuesFromCampaign, type WaCampaignValues } from './wa-
 import { useWaCampaignActions } from './useWaCampaignActions';
 import {
   WA_CAMPAIGN_SETUP,
-  type AisensyCampaign,
   type WaAudienceList,
   type WaCampaignNameOption,
   type WaCampaignRow,

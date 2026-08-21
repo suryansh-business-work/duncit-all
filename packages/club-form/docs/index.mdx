@@ -1,6 +1,6 @@
 ---
 name: '@duncit/club-form'
-summary: 'The one MUI Club create/edit form — sections, Zod schema and GraphQL input builder — shared by the admin portal and the club-admin partner page.'
+summary: 'The one MUI Club create/edit form — sections, Zod schema, GraphQL input builder, full-page editor and live member preview — shared by the admin portal and the club-admin partner page.'
 category: 'forms'
 zeroDeps: false
 frameworkFree: false
@@ -10,6 +10,9 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'ClubForm'
+  - 'ClubEditorPage'
+  - 'ClubPreview'
+  - 'buildClubPreview'
   - 'makeClubSchema'
   - 'buildClubInput'
   - 'clubToFormValues'
@@ -21,7 +24,7 @@ exports:
 
 ## Why this exists
 
-A Club is edited from two places: the admin portal's `ClubsPage` dialog and the club-admin's
+A Club is edited from two places: the admin portal's `/clubs/:id/edit` page and the club-admin's
 own edit page in `partners-app`. Before this package each held its own copy of the field list,
 its own `validateClub`, and its own hand-built `CreateClubInput`. The two drifted the moment a
 field was added on one side — a club saved from partners-app could silently lose `faqs` or
@@ -238,8 +241,30 @@ Given a server Club, the fields that change shape:
 | `onCancel` | `() => void` | yes | — | Close/dismiss handler. |
 | `onSubmit` | `(values: ClubFormValues, options: { draft: boolean }) => Promise<void> \| void` | yes | — | Final save runs the resolver; a draft submits `getValues()` unvalidated. |
 | `onReady` | `(methods: UseFormReturn<ClubFormValues>) => void` | no | `undefined` | Hands the RHF methods up (admin AI-fill). |
+| `preview` | `ReactNode` | no | `undefined` | Live preview column. Given one, the form lays itself out in two columns and renders this node **inside** its `FormProvider`. |
 
 The form validates on **blur** (`mode: 'onBlur'`), not on change.
+
+### `<ClubEditorPage>` — `ClubEditorPageProps`
+
+Takes every `ClubForm` prop except `onCancel` and `preview` (it mounts `<ClubPreview>` itself), plus:
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `eyebrow` | `string` | yes | — | Small line above the heading, e.g. `"Admin · Clubs"`. |
+| `heading` | `string` | no | `"New Club"` / `"Edit Club"` | Overrides the heading; the club-admin page names the club. |
+| `onBack` | `() => void` | yes | — | Where the back button and Cancel go. |
+| `backLabel` | `string` | yes | — | Back button label. |
+| `titleExtras` | `ReactNode` | no | `undefined` | Extra heading-row content (admin AI-fill button). |
+| `intro` | `ReactNode` | no | `undefined` | Content above the form. |
+
+### `<ClubPreview>` — no props
+
+Reads the enclosing `FormProvider` and renders the club as a member sees it: the
+list card and the club page, stacked and live. Category and location are ids in
+the form, so it resolves their names through `useAdminCategories` /
+`useAdminLocations` — the same datasets the Basic section's cascades read.
+`buildClubPreview(values, labels)` is the pure derivation behind it.
 
 ### `ClubFormConfig`
 

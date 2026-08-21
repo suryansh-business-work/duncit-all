@@ -272,7 +272,7 @@ async function invoiceForTicket(t: ITicket): Promise<InvoiceData | null> {
           status: 'SUCCESS',
           invoice_no: { $ne: null },
         }).sort({ paid_at: -1, created_at: -1 });
-    if (!payment || payment.status !== 'SUCCESS' || !payment.invoice_no) return null;
+    if (payment?.status !== 'SUCCESS' || !payment.invoice_no) return null;
     return await invoiceDataForPayment(payment, {
       paymentMethod: payment.gateway || 'Gateway',
       currencySymbol: payment.currency_symbol,
@@ -594,9 +594,10 @@ export const ticketService = {
     // Scanning at the wrong pod's door is the mistake this catches — the token
     // is perfectly valid, just not for tonight.
     if (String(t.pod_id) !== String(podDocId)) {
+      const otherPod = t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : '';
       return {
         ok: false,
-        message: `This ticket is for another pod${t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : ''}`,
+        message: `This ticket is for another pod${otherPod}`,
         already_checked_in: false,
         // Every field the schema marks non-null, or this branch nulls one and
         // the whole result errors instead of showing the message.

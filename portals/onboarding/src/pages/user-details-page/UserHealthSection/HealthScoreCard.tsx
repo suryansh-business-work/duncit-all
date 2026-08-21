@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
-import { format } from 'date-fns';
 import AdjustHealthDialog from './AdjustHealthDialog';
 import type { AdminHealthScore } from './queries';
 import { formatDateTime } from '@duncit/app-settings';

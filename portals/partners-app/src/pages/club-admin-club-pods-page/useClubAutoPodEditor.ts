@@ -45,8 +45,8 @@ export default function useClubAutoPodEditor({ clubId, onSaved }: Readonly<Args>
         notifySuccess(t('admin.autoPods.created'));
         setOpen(false);
         onSaved();
-      } catch (caught) {
-        setError(t('admin.autoPods.saveFailed', { vars: { reason: parseApiError(caught) } }));
+      } catch (error_) {
+        setError(t('admin.autoPods.saveFailed', { vars: { reason: parseApiError(error_) } }));
       } finally {
         setSaving(false);
       }

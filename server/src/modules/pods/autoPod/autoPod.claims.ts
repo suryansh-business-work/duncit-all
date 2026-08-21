@@ -99,7 +99,7 @@ export async function venueAcceptAutoPod(
     autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
   }
 
-  autoPodNotify.venueEnrolled(claimed!).catch((error) =>
+  autoPodNotify.venueEnrolled(claimed).catch((error) =>
     logs.server.error('autoPod', 'notifyVenueEnrolled', { error, auto_pod_id: autoPodId })
   );
   return autoPodToPub(claimed);
@@ -148,7 +148,7 @@ export async function hostAssignAutoPod(userId: string, autoPodId: string) {
   );
   if (!claimed) autoPodFail('CONFLICT', 'Another host has already taken this Auto Pod.');
 
-  autoPodNotify.hostEnrolled(claimed!).catch((error) =>
+  autoPodNotify.hostEnrolled(claimed).catch((error) =>
     logs.server.error('autoPod', 'notifyHostEnrolled', { error, auto_pod_id: autoPodId })
   );
   return finishIfComplete(claimed!, userId);
@@ -198,7 +198,7 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
   );
   if (!claimed) autoPodFail('CONFLICT', 'Another club has already claimed this Auto Pod.');
 
-  autoPodNotify.clubEnrolled(claimed!).catch((error) =>
+  autoPodNotify.clubEnrolled(claimed).catch((error) =>
     logs.server.error('autoPod', 'notifyClubEnrolled', { error, auto_pod_id: autoPodId })
   );
   return finishIfComplete(claimed!, userId);

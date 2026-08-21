@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Directories in pnpm-workspace.yaml that contain a browser app. */
-const BROWSER_GLOBS = ['portals', 'app'];
+const BROWSER_GLOBS = new Set(['portals', 'app']);
 const NO_OP_RUNNER = 'scripts/e2e-no-surface.mjs';
 const CYPRESS_RUNNER = 'cypress run';
 
@@ -55,7 +55,7 @@ for (const dir of workspaceDirs()) {
     continue;
   }
 
-  const isBrowserWorkspace = BROWSER_GLOBS.includes(dir.split('/')[0]);
+  const isBrowserWorkspace = BROWSER_GLOBS.has(dir.split('/')[0]);
 
   if (isBrowserWorkspace && !script.includes(CYPRESS_RUNNER)) {
     problems.push(

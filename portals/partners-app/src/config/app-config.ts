@@ -1,4 +1,5 @@
 import type { AppNavItem } from '@duncit/shell';
+import { BECOME_HOST_NAV, hasPartnerRole, PARTNER_SECTIONS, type PartnerSection } from './partner-sections';
 
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
@@ -24,32 +25,20 @@ export const appConfig: AppConfig = {
   tokenKey: 'token',
   colorModeKey: 'partners_color_mode',
   // Partners is a portal-gate-exempt surface: any authenticated user may sign in
-  // (e.g. to apply as a host / venue / brand), so there is no client-side role gate.
+  // (e.g. to apply as a host). Access is per area instead — see partner-sections.ts.
   requiredRoles: [],
+  // The role-independent tail of the sidebar. The four partner sections live in
+  // partner-sections.ts, and buildNav() puts the ones the user holds above this.
   nav: [
-    {
-      label: 'Venues',
-      icon: 'storefront',
-      children: [
-        { label: 'Venue Dashboard', to: '/venues/dashboard', icon: 'analytics' },
-        { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
-        { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
-        { label: 'Pods', to: '/venues/pods', icon: 'orders' },
-      ],
-    },
-    // Host's children are role-dependent — buildNav() assembles them.
-    { label: 'Host', icon: 'work', children: [] },
-    {
-      label: 'E-Commerce Brand',
-      icon: 'marketplace',
-      children: [
-        { label: 'Dashboard', to: '/ecomm/dashboard', icon: 'analytics' },
-        { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
-      ],
-    },
+    // Account-level — same section as mWeb/native's Manage Account list, which
+    // also places it right before FAQs.
+    { label: 'Verification', to: '/verification', icon: 'verified-user' },
+    { label: 'FAQs', to: '/faqs', icon: 'help' },
+    { label: 'Support', to: '/support', icon: 'support' },
+    { label: 'Policies', to: '/policies', icon: 'policy' },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.
-    // Kept below the partner sections so landingPath() is unaffected.
+    // Last on purpose: it closes the sidebar for everyone, partner or not yet.
     {
       label: 'Earn with Duncit',
       caption: 'Host, list or sell',
@@ -57,29 +46,11 @@ export const appConfig: AppConfig = {
       icon: 'volunteer-activism',
       featured: true,
     },
-    // Account-level, role-independent — same section as mWeb/native's
-    // Manage Account list, which also places it right before FAQs.
-    { label: 'Verification', to: '/verification', icon: 'verified-user' },
-    { label: 'FAQs', to: '/faqs', icon: 'help' },
-    { label: 'Support', to: '/support', icon: 'support' },
-    { label: 'Policies', to: '/policies', icon: 'policy' },
-  ],
-};
-
-/** Club Admin tools are shown only to users holding the CLUB_ADMIN role. */
-const CLUB_ADMIN_NAV: AppNavItem = {
-  label: 'Club Admin',
-  icon: 'groups',
-  children: [
-    { label: 'Dashboard', to: '/club-admin/dashboard', icon: 'dashboard' },
-    { label: 'Clubs', to: '/club-admin/clubs', icon: 'storefront' },
-    { label: 'Pod Monitoring (AI)', to: '/club-admin/monitoring', icon: 'insights' },
   ],
 };
 
 /** Wallet/Withdrawal is shown to partner roles that can earn payouts. */
 const WALLET_NAV: AppNavItem = { label: 'Wallet', to: '/wallet', icon: 'wallet' };
-const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER']);
 
 const AUTO_PODS_LABEL = 'Auto Pods';
 const AUTO_PODS_ICON = 'handshake';
@@ -87,64 +58,33 @@ const AUTO_PODS_ICON = 'handshake';
 /**
  * Adds a partner section's Auto Pods entry, directly AFTER its Dashboard child.
  *
- * Never first: `landingPath()` returns the first entry of the user's nav, so a
- * first-position insert would silently move where `/` sends that role.
+ * Never first: `landingPath()` opens the first child of the user's first
+ * section, so a first-position insert would silently move where `/` sends them.
  */
-function withAutoPods(group: AppNavItem, enabled: boolean, to: string): AppNavItem {
-  if (!enabled) return group;
-  const children = group.children ?? [];
+function withAutoPods(section: PartnerSection, enabled: boolean): AppNavItem {
+  const { nav, autoPodsTo } = section;
+  if (!enabled || !autoPodsTo) return nav;
+  const children = nav.children ?? [];
   return {
-    ...group,
+    ...nav,
     children: [
       ...children.slice(0, 1),
-      { label: AUTO_PODS_LABEL, to, icon: AUTO_PODS_ICON },
+      { label: AUTO_PODS_LABEL, to: autoPodsTo, icon: AUTO_PODS_ICON },
       ...children.slice(1),
     ],
   };
 }
 
 /**
- * The Host section, like every other partner area, is a group rather than a
- * single link.
+ * Where `/` sends somebody: the dashboard of the first partner area they hold.
  *
- * "Become a Host" is the one entry that comes and goes: somebody who already
- * holds the role has nothing to apply for, and leaving the application in the
- * sidebar invites them to re-submit a profile that is already approved.
- */
-function hostNav(isHost: boolean, autoPods: boolean): AppNavItem {
-  const apply: AppNavItem[] = isHost
-    ? []
-    : [{ label: 'Become a Host', to: '/become-host', icon: 'work' }];
-  return withAutoPods(
-    {
-      label: 'Host',
-      icon: 'work',
-      children: [
-        { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
-        ...apply,
-        { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
-      ],
-    },
-    autoPods,
-    '/host/auto-pods',
-  );
-}
-
-/** Sidebar nav for the signed-in user — appends Club Admin tools when entitled
- * and a Wallet entry for roles that can earn payouts. Both slot in before Help
- * (FAQs), keeping the partner tools grouped together. */
-/**
- * Where `/` sends somebody.
- *
- * The portal no longer has a dashboard of its own, and a fixed replacement
- * would be wrong for somebody: this surface is open to any signed-in user, so
- * one person arrives as a venue owner and the next arrives to apply as one.
- * Taking the first entry of THEIR nav means the landing is always something
- * they can also see in the sidebar.
+ * This surface is open to any signed-in user, and somebody with no partner
+ * access yet lands on Earn with Duncit — the page that says how to get it, and
+ * the one entry their sidebar shows besides the account pages.
  */
 export function landingPath(roles?: readonly string[] | null): string {
-  const [first] = buildNav(roles);
-  return first?.to ?? first?.children?.[0]?.to ?? '/faqs';
+  const first = PARTNER_SECTIONS.find((section) => hasPartnerRole(roles, section.role));
+  return first?.nav.children?.[0]?.to ?? '/earn';
 }
 
 export interface BuildNavOptions {
@@ -153,26 +93,23 @@ export interface BuildNavOptions {
   autoPods?: boolean;
 }
 
+/**
+ * Sidebar nav for the signed-in user: the partner sections they hold (in
+ * catalogue order), Wallet when any of them can earn a payout, then the
+ * role-independent tail. A section they were never granted is simply absent —
+ * with one exception: the Host area is the one they can apply for from here, so
+ * somebody without that role sees "Become a Host" in its place instead.
+ */
 export function buildNav(
   roles?: readonly string[] | null,
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
   const autoPods = options?.autoPods === true;
-  const isClubAdmin = roles?.includes('CLUB_ADMIN') ?? false;
-  const isEarner = roles?.some((role) => EARNING_ROLES.has(role)) ?? false;
-  const isHost = roles?.includes('HOST') ?? false;
-  const nav = appConfig.nav.map((item) => {
-    if (item.label === 'Host') return hostNav(isHost, autoPods);
-    if (item.label === 'Venues') return withAutoPods(item, autoPods, '/venues/auto-pods');
-    return item;
+  const held = PARTNER_SECTIONS.filter((section) => hasPartnerRole(roles, section.role));
+  const sections = PARTNER_SECTIONS.flatMap((section) => {
+    if (held.includes(section)) return [withAutoPods(section, autoPods)];
+    return section.role === 'HOST' ? [BECOME_HOST_NAV] : [];
   });
-  const helpIndex = () => {
-    const index = nav.findIndex((item) => item.to === '/faqs');
-    return index === -1 ? nav.length : index;
-  };
-  if (isClubAdmin) {
-    nav.splice(helpIndex(), 0, withAutoPods(CLUB_ADMIN_NAV, autoPods, '/club-admin/auto-pods'));
-  }
-  if (isEarner) nav.splice(helpIndex(), 0, WALLET_NAV);
-  return nav;
+  const wallet = held.length > 0 ? [WALLET_NAV] : [];
+  return [...sections, ...wallet, ...appConfig.nav];
 }

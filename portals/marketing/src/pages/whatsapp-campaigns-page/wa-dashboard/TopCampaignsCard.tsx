@@ -3,7 +3,6 @@ import { useDateFormat } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { WA_STATUS_COLORS, categoryLabel, waMoney } from '../helpers';
 import type { WaDashboardCampaign } from '../queries';
-import { formatDateTime } from '@duncit/app-settings';
 
 /** One send, as a line. Hoisted so it isn't redefined each render (S6478). */
 function CampaignLine({

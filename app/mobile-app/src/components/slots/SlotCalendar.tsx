@@ -7,9 +7,11 @@ import {
   slotDayBounds,
   slotDayKeys,
   slotTileLines,
+  monthKeyOf,
+  type CalendarSlot,
+  type SlotFormatter,
+  type SlotLabels,
 } from '@duncit/slots';
-import { monthKeyOf } from '@duncit/slots';
-import type { CalendarSlot, SlotFormatter, SlotLabels } from '@duncit/slots';
 import SlotMonthGrid from './SlotMonthGrid';
 
 export interface SlotCalendarProps {

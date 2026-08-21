@@ -54,11 +54,11 @@ export function LeaderboardYourPoints({
           <Text fontSize={11} color="$onPrimary" opacity={0.75}>
             {participantsLine}
           </Text>
-          {!board?.my_rank ? (
+          {!board?.my_rank && (
             <Text fontSize={11} color="$onPrimary" opacity={0.75}>
               {t('mweb.leaderboard.notRankedHint')}
             </Text>
-          ) : null}
+          )}
         </YStack>
         <MaterialIcons name="emoji-events" size={56} color={onPrimary} />
       </XStack>

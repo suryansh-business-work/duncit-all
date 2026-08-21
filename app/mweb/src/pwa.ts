@@ -24,7 +24,7 @@ const DELETE_SUB = gql`
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const base64 = (base64String + padding).replaceAll('-', '+').replaceAll('_', '/');
   const raw = globalThis.atob(base64);
   const out = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; ++i) out[i] = raw.codePointAt(i) ?? 0;

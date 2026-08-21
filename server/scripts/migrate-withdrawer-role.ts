@@ -70,7 +70,7 @@ async function main(): Promise<void> {
     const role = roleOf.get(String(w.user_id)) ?? 'HOST';
     counts[role] = (counts[role] ?? 0) + 1;
     if (!byRole.has(role)) byRole.set(role, []);
-    byRole.get(role)!.push(w._id as mongoose.Types.ObjectId);
+    byRole.get(role)!.push(w._id);
   }
 
   for (const [role, ids] of byRole) {

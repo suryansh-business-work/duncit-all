@@ -18,7 +18,7 @@ import {
 import { ProductDetailSheet } from '@/components/details/ProductDetailSheet';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
-import { formatMoney } from '@/utils/checkout-math';
+import { buildBreakup, formatMoney, round2 } from '@/utils/checkout-math';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import { MyAddressesDocument } from '@/graphql/address-book';
 import type { CouponPreview } from '@/hooks/checkoutRequests';
@@ -35,7 +35,6 @@ import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCartStore } from '@/stores/cart.store';
-import { buildBreakup, round2 } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
@@ -348,7 +347,7 @@ export function ProductCheckoutScreen() {
           // Close the sheet, then say what actually happened — every failure
           // used to be reported as the buyer's own cancellation.
           setOrder(null);
-          void paymentFailure.report(error);
+          paymentFailure.report(error).catch(() => undefined);
         }}
       />
       <PaymentFailureDialog

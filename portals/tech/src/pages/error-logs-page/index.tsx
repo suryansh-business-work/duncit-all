@@ -4,7 +4,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import ErrorLogsTable from './ErrorLogsTable';
 import ErrorLogDetailDialog from './ErrorLogDetailDialog';
-import { ERROR_LOGS_TABLE, ERROR_MODULE_FILTER, type ErrorLogRow } from './queries';
+import { ERROR_LOGS_TABLE, type ErrorLogRow } from './queries';
 
 /**
  * Error Logs — every server-operation failure the shared error module caught,

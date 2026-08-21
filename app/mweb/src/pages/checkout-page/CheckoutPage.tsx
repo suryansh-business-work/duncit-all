@@ -151,7 +151,7 @@ export default function CheckoutPage() {
         await openRazorpayCheckout(order as RazorpayOrderData, {
           onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
           // Every failure used to be reported as the buyer's own cancellation.
-          onFailure: (error) => void payment.report(error),
+          onFailure: (error) => { payment.report(error).catch(() => undefined); },
         });
         return;
       }

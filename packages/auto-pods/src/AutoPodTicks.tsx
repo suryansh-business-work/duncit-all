@@ -2,8 +2,7 @@ import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import { autoPodTicks, type AutoPodRole, type AutoPodRow } from '@duncit/utils';
-import type { AutoPodLabels } from '@duncit/utils';
+import { autoPodTicks, type AutoPodRole, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 
 export interface AutoPodTicksProps {
   row: Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>;

@@ -1,10 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
-import { useTranslation } from '@duncit/app-settings';
+import { useTranslation, formatDateTime } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
 import { ADMIN_LEADERBOARD_STATS, type LeaderboardCategoryStats } from './queries';
 import { CATEGORY_LABEL_KEYS, type TranslateFn } from './labels';
-import { formatDateTime } from '@duncit/app-settings';
 
 /** The three stat lines every card renders, in display order. */
 const STAT_LINES = [

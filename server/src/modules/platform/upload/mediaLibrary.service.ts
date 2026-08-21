@@ -23,7 +23,8 @@ async function authHeader(): Promise<string> {
       { extensions: { code: 'CONFIG_ERROR' } }
     );
   }
-  return `Basic ${Buffer.from(`${privateKey}:`).toString('base64')}`;
+  const credentials = Buffer.from(`${privateKey}:`).toString('base64');
+  return `Basic ${credentials}`;
 }
 
 /**
@@ -107,7 +108,7 @@ const toItem = (raw: any): MediaItem => ({
 function searchExpression(search?: string | null): string | undefined {
   const term = search?.trim();
   if (!term) return undefined;
-  return `name : "${term.replaceAll('"', '\\"')}"`;
+  return `name : "${term.replaceAll('"', String.raw`\"`)}"`;
 }
 
 /** ImageKit's own `fileType` values. Anything else means "do not filter". */

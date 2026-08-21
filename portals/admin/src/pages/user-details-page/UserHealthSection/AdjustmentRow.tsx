@@ -1,7 +1,6 @@
 import { Box, Chip, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
 import type { AdminHealthAdjustment } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 

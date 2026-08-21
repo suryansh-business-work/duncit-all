@@ -324,6 +324,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Create, edit and delete the website and app policies — title, auto-generated slug, policy type, rich content, active state and sort order — that the public surfaces render.' },
   { surface: 'legal', path: '/contracts', label: 'Contracts',
     description: 'Add a contract with counterparty, status, effective dates and content, then view it read-only, edit it, or archive it while it keeps its contract ID.' },
+  { surface: 'legal', path: '/reports', label: 'Report By User',
+    description: 'Review everything users have reported from the app and mWeb — the reason, the reporter, and a copy of the media as it was when it was flagged — then set a status and record what was done about it.' },
   { surface: 'legal', path: '/grievance/tickets', label: 'Grievance Tickets', group: 'Grievance',
     description: 'Browse every grievance raised from the app, website or portal by reference number and received date, open one for its full detail and update it.' },
   { surface: 'legal', path: '/grievance/info', label: 'Grievance Info', group: 'Grievance',

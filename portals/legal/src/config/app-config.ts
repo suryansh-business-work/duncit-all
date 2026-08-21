@@ -26,6 +26,10 @@ export const appConfig = {
     { label: 'Policies', to: '/policies', icon: 'policy' },
     { label: 'Policy Acceptance Logs', to: '/policy-acceptance-logs', icon: 'verified-user' },
     { label: 'Contracts', to: '/contracts', icon: 'handshake' },
+    // What users have reported from the app and mWeb. It sits beside
+    // Grievance rather than under it: a grievance is someone complaining
+    // about US, a report is someone flagging another user's content.
+    { label: 'Report By User', to: '/reports', icon: 'flag' },
     {
       label: 'Grievance',
       icon: 'flag',

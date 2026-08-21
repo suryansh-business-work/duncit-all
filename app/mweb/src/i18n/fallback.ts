@@ -1,4 +1,5 @@
 import {
+  CONTENT_REPORT_BUNDLE,
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
@@ -32,6 +33,7 @@ import {
 // it — no key can shadow another.
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
+  ...CONTENT_REPORT_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,

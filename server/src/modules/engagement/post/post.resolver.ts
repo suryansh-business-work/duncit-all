@@ -13,6 +13,15 @@ export const postResolvers = {
         return null;
       }
     },
+    // The delete rule lives here, not in the two apps: mWeb and native would
+    // otherwise each carry their own copy of "author, or an admin of the club
+    // it was posted to" and drift the moment one of them changed.
+    can_delete: async (parent: any, _a: unknown, ctx: GraphQLContext) => {
+      const viewerId = ctx.user?.id ?? null;
+      if (!viewerId) return false;
+      if (String(parent.author_id) === viewerId) return true;
+      return postService.viewerIsClubAdmin(parent.club_id, viewerId);
+    },
   },
   PostComment: {
     author: async (parent: any) => {

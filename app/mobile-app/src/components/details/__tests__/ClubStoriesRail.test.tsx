@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('ClubStoriesRail', () => {
   it('renders live club stories and the Add tile', () => {
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     expect(screen.getByText('Stories')).toBeOnTheScreen();
     expect(screen.getByTestId('club-story-add')).toBeOnTheScreen();
     expect(screen.getByTestId('club-story-cs1')).toBeOnTheScreen();
@@ -52,7 +52,7 @@ describe('ClubStoriesRail', () => {
   });
 
   it('scopes the upload to this club and posts on press', () => {
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     expect(mockedUpload).toHaveBeenCalledWith({ clubId: 'c1' });
     fireEvent.press(screen.getByTestId('club-story-add'));
     expect(pickAndUpload).toHaveBeenCalled();
@@ -66,14 +66,14 @@ describe('ClubStoriesRail', () => {
       isLoading: false,
       refetch,
     });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     expect(screen.queryByTestId('club-story-cs1')).toBeNull();
     // The Add tile still stands so the club can post its first story.
     expect(screen.getByTestId('club-story-add')).toBeOnTheScreen();
   });
 
   it('opens the viewer on a story, and every exit closes it', () => {
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     const open = () => fireEvent.press(screen.getByTestId('club-story-cs1'));
 
     open();
@@ -102,7 +102,7 @@ describe('ClubStoriesRail', () => {
       confirmVideo,
       cancelVideo,
     });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     fireEvent.press(screen.getByTestId('story-video-post'));
     expect(confirmVideo).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('story-video-cancel'));
@@ -115,7 +115,7 @@ describe('ClubStoriesRail', () => {
       isLoading: false,
       refetch,
     });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     fireEvent.press(screen.getByTestId('club-story-cs2'));
     // The viewer opens ON the tapped slide — its caption is the second story's.
     expect(screen.getByText('second story')).toBeOnTheScreen();
@@ -131,7 +131,7 @@ describe('ClubStoriesRail', () => {
       confirmVideo: jest.fn(),
       cancelVideo: jest.fn(),
     });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     expect(screen.getByTestId('club-story-error')).toHaveTextContent(
       'Follow this club to post a story to it',
     );
@@ -139,7 +139,7 @@ describe('ClubStoriesRail', () => {
 
   it('records the view so the ring greys, like the mWeb club page', async () => {
     useStatusStore.setState({ seenIds: new Set<string>() });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     fireEvent.press(screen.getByTestId('club-story-cs1'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
     // Opening a slide marks it seen in the shared story store.
@@ -155,7 +155,9 @@ describe('ClubStoriesRail', () => {
       confirmVideo: jest.fn(),
       cancelVideo: jest.fn(),
     });
-    const { rerender } = renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    const { rerender } = renderWithProviders(
+      <ClubStoriesRail clubId="c1" clubName="Runners" canPost />,
+    );
     expect(screen.getByText('Posting…')).toBeOnTheScreen();
     // Pressing while an upload runs must not start a second one.
     fireEvent.press(screen.getByTestId('club-story-add'));
@@ -170,7 +172,7 @@ describe('ClubStoriesRail', () => {
       confirmVideo: jest.fn(),
       cancelVideo: jest.fn(),
     });
-    rerender(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    rerender(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     await waitFor(() => expect(refetch).toHaveBeenCalled());
   });
 
@@ -191,7 +193,7 @@ describe('ClubStoriesRail', () => {
       isLoading: false,
       refetch,
     });
-    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" />);
+    renderWithProviders(<ClubStoriesRail clubId="c1" clubName="Runners" canPost />);
     // No author, and an author without a name, both fall back to Member.
     expect(screen.getAllByText('Member')).toHaveLength(2);
     fireEvent.press(screen.getByTestId('club-story-cs2'));

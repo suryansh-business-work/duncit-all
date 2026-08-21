@@ -42,7 +42,7 @@ describe('ClubStoriesSection', () => {
     ];
     render(
       <MockedProvider mocks={mocks} addTypename={false}>
-        <ClubStoriesSection clubId="c1" />
+        <ClubStoriesSection clubId="c1" canPost />
       </MockedProvider>,
     );
 

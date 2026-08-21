@@ -30,6 +30,13 @@ export const postTypeDefs = /* GraphQL */ `
     comments_count: Int!
     "Has the signed-in viewer opened this story? Drives the seen/unseen ring (Bug 2)."
     seen_by_me: Boolean!
+    """
+    May the signed-in viewer delete this? The author always can; a CLUB
+    story additionally answers to that club's admins, because it was
+    published under the club's name. Server-owned so the two apps cannot
+    disagree about who is allowed to press it.
+    """
+    can_delete: Boolean!
     "How many distinct viewers have opened this story (Bug 4)."
     views_count: Int!
     expires_at: String

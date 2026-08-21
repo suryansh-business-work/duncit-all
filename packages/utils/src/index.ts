@@ -36,6 +36,19 @@ export {
   type SubmittedGrievance,
 } from './grievance-gql';
 export {
+  isClubAdminOf,
+  reportReasonNeedsDetails,
+  REPORT_REASONS,
+  REPORT_REASON_KEY,
+  REPORT_STATUSES,
+  REPORT_STATUS_COLOR,
+  REPORT_STATUS_KEY,
+  REPORT_TARGET_KEY,
+  type ReportReason,
+  type ReportStatus,
+  type ReportTargetType,
+} from './content-report';
+export {
   readReferralCode,
   referralLink,
   renderReferralMessage,

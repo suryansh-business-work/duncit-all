@@ -9,6 +9,7 @@ import PolicyAcceptanceLogsPage from './pages/policy-acceptance-logs-page';
 import ContractsPage from './pages/contracts/ContractsPage';
 import GrievanceTicketsPage from './pages/grievance/GrievanceTicketsPage';
 import GrievanceInfoPage from './pages/grievance/GrievanceInfoPage';
+import UserReportsPage from './pages/reports/UserReportsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/contracts" element={authed(<ContractsPage />)} />
       <Route path="/grievance/tickets" element={authed(<GrievanceTicketsPage />)} />
       <Route path="/grievance/info" element={authed(<GrievanceInfoPage />)} />
+      <Route path="/reports" element={authed(<UserReportsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

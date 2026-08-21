@@ -10,6 +10,7 @@ export {
 export {
   ADMIN_BUNDLE,
   AI_MONITORING_BUNDLE,
+  CONTENT_REPORT_BUNDLE,
   allFallbackEntries,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,

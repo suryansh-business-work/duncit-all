@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Box, Dialog, IconButton, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -14,9 +14,24 @@ interface Props {
   index: number | null;
   onClose: () => void;
   onIndexChange: (idx: number) => void;
+  /**
+   * Controls for the item on screen, drawn beside Close.
+   *
+   * The lightbox itself knows nothing about what it is showing — a club
+   * story can be deleted and reported, a pod moment cannot — so the owner
+   * of the list passes its own menu in rather than this file growing a
+   * story-shaped branch.
+   */
+  actions?: ReactNode;
 }
 
-export default function MomentLightbox({ moments, index, onClose, onIndexChange }: Readonly<Props>) {
+export default function MomentLightbox({
+  moments,
+  index,
+  onClose,
+  onIndexChange,
+  actions,
+}: Readonly<Props>) {
   const [current, setCurrent] = useState<number>(index ?? 0);
   const pushedHistory = useRef(false);
   const suppressNextPop = useRef(false);
@@ -91,23 +106,26 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
       aria-label="Moment preview"
     >
       <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-        <IconButton
-          onClick={close}
-          aria-label="Close preview"
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            color: 'common.white',
-            bgcolor: 'rgba(0,0,0,0.4)',
-            zIndex: 2,
-            minWidth: 44,
-            minHeight: 44,
-            '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
-          }}
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
         >
-          <CloseIcon />
-        </IconButton>
+          {actions}
+          <IconButton
+            onClick={close}
+            aria-label="Close preview"
+            sx={{
+              color: 'common.white',
+              bgcolor: 'rgba(0,0,0,0.4)',
+              minWidth: 44,
+              minHeight: 44,
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Stack>
         {moments.length > 1 && (
           <>
             <IconButton

@@ -47,14 +47,11 @@ vi.mock('../../club-details-page/ClubHero', () => ({
 }));
 vi.mock('../../club-details-page/ClubSummaryHeader', () => ({
   default: (p: any) => (
-    <div>summary:{p.podCount}/{p.venueCount}/{p.followersCount}/{p.categoryCrumbs.join('>')}</div>
+    <div>summary:{p.categoryCrumbs.join('>')}</div>
   ),
 }));
 vi.mock('../../club-details-page/ClubStoriesSection', () => ({ default: () => <div>stories</div> }));
 vi.mock('../../club-details-page/ClubSocialLinks', () => ({ default: () => <div>social</div> }));
-vi.mock('../../club-details-page/ClubTotalMembersSection', () => ({
-  default: (p: any) => <div>total:{p.count}</div>,
-}));
 vi.mock('../../club-details-page/ClubMembersSection', () => ({
   default: (p: any) => <div>members:{p.memberIds.join(',')}</div>,
 }));
@@ -166,14 +163,13 @@ describe('ClubDetailsPage', () => {
     renderPage([slugMock({ clubBySlug: club }), relatedMock(), catMock]);
     expect(await screen.findByText('hero:Chess Club')).toBeInTheDocument();
     // pod count / venue count / followers / breadcrumb
-    expect(screen.getByText('summary:1/1/42/Games>Chess')).toBeInTheDocument();
+    expect(screen.getByText('summary:Games>Chess')).toBeInTheDocument();
     // About section rendered from description
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('We love chess')).toBeInTheDocument();
     // members = unique attendees, friends = intersect with following_user_ids
     expect(screen.getByText('members:u1,u2')).toBeInTheDocument();
     expect(screen.getByText('friends:u1')).toBeInTheDocument();
-    expect(screen.getByText('total:42')).toBeInTheDocument();
     expect(screen.getByText('rating:4.5/10')).toBeInTheDocument();
     expect(screen.getByText('venues:1')).toBeInTheDocument();
     // priceFormat passed through

@@ -58,27 +58,30 @@ function isExpiredStory(doc: Pick<IPost, 'kind' | 'expires_at'> | null): boolean
   return !!doc && doc.kind === 'STORY' && !!doc.expires_at && doc.expires_at <= new Date();
 }
 
-/**
- * A club story is posted by the club's community, so the author must actually
- * belong to it — a follower, or one of its admins. Without this any signed-in
- * user could drop a story into any club id (even one that does not exist).
- */
-async function assertMayPostToClub(clubId: Types.ObjectId, authorId: string) {
-  const author = new Types.ObjectId(authorId);
+/** Is `userId` one of the club's assigned admins? */
+async function isClubAdmin(clubId: Types.ObjectId, userId: string): Promise<boolean> {
   const club = await ClubModel.findById(clubId).select('admin_user_ids').lean();
   if (!club) {
     throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
   }
-  const isAdmin = ((club as any).admin_user_ids ?? []).some(
-    (id: Types.ObjectId) => String(id) === authorId,
+  return ((club as any).admin_user_ids ?? []).some(
+    (id: Types.ObjectId) => String(id) === userId,
   );
-  if (isAdmin) return;
-  const follows = await ClubFollowerModel.exists({ club_id: clubId, user_id: author });
-  if (!follows) {
-    throw new GraphQLError('Follow this club to post a story to it', {
-      extensions: { code: 'FORBIDDEN' },
-    });
-  }
+}
+
+/**
+ * A club story speaks FOR the club, so only the club's admins may post one.
+ *
+ * It used to be open to any follower, which made the club rail a place
+ * strangers could publish under the club's name — and left the club's own
+ * admins with no way to take it down. Followers still read the rail; they no
+ * longer write to it.
+ */
+async function assertMayPostToClub(clubId: Types.ObjectId, authorId: string) {
+  if (await isClubAdmin(clubId, authorId)) return;
+  throw new GraphQLError('Only this club’s admins can post a story to it', {
+    extensions: { code: 'FORBIDDEN' },
+  });
 }
 
 // Reject anything that isn't a sane media reference. The URL must be an
@@ -188,6 +191,22 @@ export const postService = {
     return doc ? toPub(doc, viewerId) : null;
   },
 
+  /**
+   * Field-resolver-safe club-admin check.
+   *
+   * `Post.can_delete` runs per row, so a club that has since been deleted must
+   * read as "not an admin" rather than throw NOT_FOUND and fail the whole
+   * story rail.
+   */
+  async viewerIsClubAdmin(clubId: unknown, viewerId: string | null | undefined) {
+    if (!clubId || !viewerId || !Types.ObjectId.isValid(String(clubId))) return false;
+    try {
+      return await isClubAdmin(new Types.ObjectId(String(clubId)), viewerId);
+    } catch {
+      return false;
+    }
+  },
+
   async create(
     authorId: string,
     input: { image_url: string; caption?: string; media_type?: string; kind?: string; club_id?: string | null }
@@ -216,6 +235,15 @@ export const postService = {
     return toPub(doc, authorId);
   },
 
+  /**
+   * Delete a post or story.
+   *
+   * The author can always remove their own. A CLUB story additionally answers
+   * to the club's admins: it was published under the club's name, so a club
+   * admin who did not post it is still the person accountable for it being
+   * there. Without this a co-admin's story was undeletable by anyone else —
+   * the club had no way to take down its own rail.
+   */
   async remove(id: string, viewerId: string) {
     assertId(id);
     const doc = await PostModel.findById(id);
@@ -223,10 +251,35 @@ export const postService = {
     // An expired story is unreachable by id too — never viewable, likeable
     // or commentable during the TTL sweep lag.
     if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
-    if (String(doc.author_id) !== viewerId)
+    const isAuthor = String(doc.author_id) === viewerId;
+    const mayDelete = isAuthor || (!!doc.club_id && (await isClubAdmin(doc.club_id, viewerId)));
+    if (!mayDelete)
       throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
     await doc.deleteOne();
     return true;
+  },
+
+  /**
+   * The facts a report is filed against, read from the story itself.
+   *
+   * Taken server-side on purpose: a reporter must not be able to describe
+   * media the story never showed. The media URL and caption are copied into
+   * the report because a story is gone in 24 hours — by review time the row
+   * would otherwise point at nothing.
+   */
+  async reportSnapshot(id: string) {
+    assertId(id);
+    const doc = await PostModel.findById(id);
+    if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    return {
+      target_type: (doc.kind === 'STORY' ? 'STORY' : 'POST') as 'STORY' | 'POST',
+      target_id: String(doc._id),
+      target_owner_id: String(doc.author_id),
+      club_id: doc.club_id ? String(doc.club_id) : null,
+      target_preview_url: doc.image_url,
+      target_caption: doc.caption || '',
+    };
   },
 
   /**

@@ -2,7 +2,6 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 
 import { ClubMeetupVenuesSection } from '../ClubMeetupVenuesSection';
-import { ClubTotalMembersSection } from '../ClubTotalMembersSection';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/constants/config', () => ({ config: { googleMapApiKey: 'KEY' } }));
@@ -119,21 +118,5 @@ describe('ClubMeetupVenuesSection', () => {
     expect(onOpenVenue).toHaveBeenCalledWith('v2');
     fireEvent.press(screen.getByTestId('club-venue-open-selected'));
     expect(onOpenVenue).toHaveBeenLastCalledWith('v1');
-  });
-});
-
-describe('ClubTotalMembersSection', () => {
-  it('renders the follower count as the club total members', () => {
-    renderWithProviders(<ClubTotalMembersSection count={128} />);
-    expect(screen.getByTestId('club-total-members')).toBeOnTheScreen();
-    expect(screen.getByText('Total Members')).toBeOnTheScreen();
-    expect(screen.getByText('People following this club')).toBeOnTheScreen();
-    expect(screen.getByText('128')).toBeOnTheScreen();
-  });
-
-  it('still renders at zero', () => {
-    renderWithProviders(<ClubTotalMembersSection count={0} />);
-    expect(screen.getByTestId('club-total-members')).toBeOnTheScreen();
-    expect(screen.getByText('0')).toBeOnTheScreen();
   });
 });

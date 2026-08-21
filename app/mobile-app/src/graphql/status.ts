@@ -53,6 +53,7 @@ export const ClubStoriesDocument = gql(`
       created_at
       expires_at
       seen_by_me
+      can_delete
       author {
         user_id
         full_name
@@ -69,6 +70,29 @@ export const RecordStoryViewDocument = gql(`
       id
       seen_by_me
       views_count
+    }
+  }
+`);
+
+/**
+ * Takes a club story down.
+ *
+ * The server decides who may — the author, or an admin of the club it was
+ * posted to — and reports that as `can_delete` above; this only fires when
+ * it said yes.
+ */
+export const DeleteClubStoryDocument = gql(`
+  mutation MobileDeleteClubStory($id: ID!) {
+    deletePost(post_doc_id: $id)
+  }
+`);
+
+/** Flags a story for the Legal team. Open to any signed-in viewer. */
+export const ReportStoryDocument = gql(`
+  mutation MobileReportStory($id: ID!, $reason: ReportReason!, $details: String) {
+    reportStory(post_doc_id: $id, reason: $reason, details: $details) {
+      id
+      report_no
     }
   }
 `);

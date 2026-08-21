@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { UserModel } from '@modules/access/user/user.model';
+import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import { normalizePhone, otpService } from '@modules/platform/otp/otp.service';
 
 /**
@@ -32,6 +33,9 @@ export const whatsappAuthService = {
     const challenge = await otpService.verifyLatest('WHATSAPP_SIGNUP', extension, number, otp);
     await otpService.consume(String(challenge._id), { purpose: 'WHATSAPP_SIGNUP' });
     const { phone_extension, phone_number } = normalizePhone(extension, number);
+    // The before-image is read first: this write moves three fields the admin
+    // user change log tracks, and a diff needs both sides.
+    const before = await UserModel.findById(userId).lean();
     const user = await UserModel.findByIdAndUpdate(
       userId,
       {
@@ -44,6 +48,7 @@ export const whatsappAuthService = {
       { new: true }
     );
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    await userAuditService.record({ userId, before, after: user });
     return user;
   },
 

@@ -29,6 +29,7 @@ exports:
   - 'USER_CHANGED_EVENT'
   - 'parseUserChangedFrame'
   - 'subscribeUserChanged'
+  - 'SURFACE_HEADER'
 ---
 
 # @duncit/user-core
@@ -115,6 +116,35 @@ one device. Two consequences worth knowing:
 `makeDevice` fills every field with a string, never `undefined`. This object is
 attached to bug reports and log frames, and an `undefined` model silently
 vanishes from the JSON.
+
+## Surface
+
+```ts
+import { SURFACE_HEADER, type ClientSurface } from '@duncit/user-core';
+
+headers[SURFACE_HEADER] = 'NATIVE'; // 'MWEB' | 'ADMIN_PORTAL' | 'PORTAL'
+```
+
+Every transport names itself on every request, and the server reads it into the
+request identity (`identityFromRequest`) so no resolver has to pass it. It is
+what puts "Native", "mWeb" or "Admin Portal" in the Source column of a user's
+change log in the admin console.
+
+It is **declared, not inferred**. The server already maps a browser `Origin`
+onto a surface for email logs, but a native store build sends no Origin at all
+and reads as `SERVER` — so mWeb and the app are indistinguishable that way. The
+header names the surface only; the account still comes from the verified token,
+so a forged value cannot claim to be someone else.
+
+Where it is sent: `graphql.client.ts` (native), `src/apollo.ts` (mWeb), and
+`createApolloClient({ surface })` for the portals — `PORTAL` by default, with
+admin passing `ADMIN_PORTAL`.
+
+**Changing the header name is not a one-file edit.** It is on the nginx
+`Access-Control-Allow-Headers` allowlist (`deploy/nginx/duncit.com` and
+`staging.duncit.com`), which is what makes the browser preflight pass — the
+server only mounts `cors()` outside production. A header missing from that list
+fails every preflight in staging and production, on every surface at once.
 
 ## Real time
 

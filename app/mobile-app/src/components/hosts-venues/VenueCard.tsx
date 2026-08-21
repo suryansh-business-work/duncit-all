@@ -46,8 +46,17 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
           <MaterialIcons name="storefront" size={34} color={onPrimary} />
         )}
       </YStack>
-      <YStack padding={12} gap={3}>
-        <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
+      {/* The name block paints its own opaque surface and sits above the cover
+          in the stacking order — a busy photo above it is what made the venue
+          name hard to pick out. mWeb twin does the same. */}
+      <YStack
+        padding={12}
+        gap={3}
+        backgroundColor="$surface"
+        borderTopWidth={1}
+        borderColor="$borderColor"
+      >
+        <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
           {venue.venue_name}
         </Text>
         <Text fontSize={12} color="$muted" numberOfLines={1}>

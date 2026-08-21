@@ -155,7 +155,13 @@ export default function PodContentFormDialog({
               )}
             </Box>
 
-            {error && <Alert severity="error">{error}</Alert>}
+            {/* `whiteSpace: pre-line` keeps a content refusal readable: it
+                arrives as a headline followed by one line per rule broken. */}
+            {error && (
+              <Alert severity="error" sx={{ whiteSpace: 'pre-line' }}>
+                {error}
+              </Alert>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>

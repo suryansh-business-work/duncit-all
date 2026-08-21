@@ -14,14 +14,16 @@ export {
 } from './labels';
 export type { HostPodActionLabels, HostPodTranslate } from './labels';
 
+export { default as PodEditDialog } from './PodEditDialog';
+export { default as ContentCheckAlert } from './ContentCheckAlert';
 export {
-  default as PodEditDialog,
   blankPodEditValues,
   buildHostUpdateInput,
+  buildPodEditModerationInput,
   podEditInitialValues,
   podEditSchema,
-} from './PodEditDialog';
-export type { PodEditValues } from './PodEditDialog';
+} from './pod-edit.form';
+export type { PodEditValues } from './pod-edit.form';
 
 export {
   default as PodCancelDialog,
@@ -82,6 +84,7 @@ export {
 
 export {
   COMPLETE_POD,
+  MODERATE_POD_CONTENT,
   HOST_DELETE_POD,
   HOST_POD_DELETE_IMPACT,
   HOST_RESUBMIT_POD,

@@ -9,15 +9,19 @@ import { parseApiError } from '@duncit/utils';
 import { getShortLinkColumns } from './columns';
 import CreateShortLinkDialog from './CreateShortLinkDialog';
 import {
+  CAMPAIGNS_FOR_SHORT_LINK,
   DELETE_SHORT_LINK,
   SHORT_LINKS_TABLE,
   SHORT_LINK_OPTIONS,
+  type CampaignChoice,
   type ShortLinkOptions,
   type ShortLinkRow,
 } from './queries';
 
 const getRowId = (row: ShortLinkRow) => row.id;
 const NO_OPTIONS: ShortLinkOptions = { sources: [], mediums: [] };
+// Stable empty array: a fresh [] each render would rebuild every column.
+const NO_CAMPAIGNS: CampaignChoice[] = [];
 
 /** Every duncit.com/<code> link, what it was made for, and how often it has
  * been followed. */
@@ -34,6 +38,12 @@ export default function ShortLinksPage() {
     SHORT_LINK_OPTIONS,
   );
   const options = optionsData?.shortLinkOptions ?? NO_OPTIONS;
+  // Names the campaign column and fills its filter — the share campaigns the
+  // apps mint into included, which is most of what this table now holds.
+  const { data: campaignsData } = useQuery<{ shortLinkCampaigns: CampaignChoice[] }>(
+    CAMPAIGNS_FOR_SHORT_LINK,
+  );
+  const campaigns = campaignsData?.shortLinkCampaigns ?? NO_CAMPAIGNS;
 
   const fetchRows = useApolloTableFetch<ShortLinkRow>(client, SHORT_LINKS_TABLE, 'shortLinksTable');
 
@@ -49,10 +59,11 @@ export default function ShortLinksPage() {
       getShortLinkColumns({
         sources: options.sources,
         mediums: options.mediums,
+        campaigns,
         onView: openLink,
         onDelete: setTarget,
       }),
-    [openLink, options],
+    [campaigns, openLink, options],
   );
 
   const refresh = useCallback(() => refetchRef.current?.(), []);

@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { referralLink, renderReferralMessage } from '@duncit/utils';
+import { useShareUrl } from '../../lib/share-link';
 import { notifySuccess } from '../../components/notify';
 import { formatRelative } from '../../components/app-header/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -31,6 +32,13 @@ export default function ReferralPage() {
     fetchPolicy: 'cache-and-network',
   });
   const referral = data?.myReferral;
+  // Handed out as a tracked duncit.com link, so the signups a member brings in
+  // are attributed to their share the same way any other campaign traffic is.
+  const link = useShareUrl(
+    'REFERRAL',
+    referral?.code ?? '',
+    referral ? referralLink(referral.code, globalThis.location.origin) : '',
+  );
 
   if (loading && !data) {
     return (
@@ -43,7 +51,6 @@ export default function ReferralPage() {
     return <Alert severity="error">{error?.message ?? t('mweb.referral.loadError')}</Alert>;
   }
 
-  const link = referralLink(referral.code, globalThis.location.origin);
   const message = renderReferralMessage(referral.share_message, {
     code: referral.code,
     link,

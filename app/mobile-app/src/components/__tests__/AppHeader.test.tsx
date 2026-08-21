@@ -116,12 +116,14 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('header-search')).toBeNull();
   });
 
-  it('hides search + location in a studio mode (focused header)', () => {
+  it('hides search but keeps the location switcher in a studio mode', () => {
     useStudioModeStore.setState({ mode: 'HOST' });
     renderWithProviders(<AppHeader />);
     expect(screen.queryByTestId('header-search')).toBeNull();
-    expect(screen.queryByTestId('header-location')).toBeNull();
     expect(screen.getByTestId('header-studio-badge')).toBeOnTheScreen();
+    expect(screen.getByTestId('header-location')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('header-location'));
+    expect(screen.getByTestId('location-dialog')).toBeOnTheScreen();
   });
 
   it('carries the cart entry point once the cart has items', () => {

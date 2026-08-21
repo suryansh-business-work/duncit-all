@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { podModerationImageUrls } from '@duncit/utils';
 
 import { CategoryMediaType } from '@/generated/graphql/graphql';
 
@@ -49,6 +50,18 @@ export function buildHostUpdateInput(values: PodEditValues) {
       url,
       type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
+  };
+}
+
+/** The same values as the AI content check's input — title, description and
+ * the gallery's images, which is exactly what the guidelines cover (mWeb twin:
+ * `buildPodEditModerationInput` in @duncit/host-pod-actions). */
+export function buildPodEditModerationInput(values: PodEditValues) {
+  const input = buildHostUpdateInput(values);
+  return {
+    pod_title: input.pod_title,
+    pod_description: input.pod_description,
+    image_urls: podModerationImageUrls(input.pod_images_and_videos),
   };
 }
 

@@ -58,6 +58,15 @@ export function buildDestination(
     utm_campaign?: string | null;
     /** This click, so a later signup or payment can be traced back to it. */
     click_id?: string | null;
+    /**
+     * Whether the link was minted for a member sharing something, rather than
+     * created in the marketing console. It rides the URL because the landing
+     * page has to know it BEFORE it can ask the API anything: mWeb ends the
+     * session on a marketing landing (the campaign is measured by the account
+     * it produces), and doing that to somebody opening a link a friend sent
+     * would sign them out of their own app.
+     */
+    share?: boolean;
   },
 ): string {
   const url = new URL(destinationUrl);
@@ -67,6 +76,7 @@ export function buildDestination(
     ['utm_campaign', tags.utm_campaign],
     ['dl', tags.code],
     ['dlc', tags.click_id],
+    ['dls', tags.share ? '1' : null],
   ];
   for (const [key, value] of params) {
     if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);

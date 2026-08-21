@@ -1,6 +1,5 @@
-import { Box, Skeleton, Stack, Typography } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Stack, Typography } from '@mui/material';
+import HeaderLocationRow from './HeaderLocationRow';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const DEFAULT_TAGLINE = 'It All Starts Here!';
@@ -27,48 +26,17 @@ export default function HeaderGreeting({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const title = tagline?.trim() || DEFAULT_TAGLINE;
-  const cityText = selectedZoneName
-    ? `${selectedLocationName ?? 'Select city'} · ${selectedZoneName}`
-    : (selectedLocationName ?? 'Select city');
 
   return (
     <Stack sx={{ minWidth: 0 }} spacing={0.1}>
       {onOpenLocation ? (
-        <Box
-          role="button"
-          tabIndex={0}
-          onClick={onOpenLocation}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') onOpenLocation();
-          }}
-          aria-label="Change city or zone"
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.25,
-            cursor: 'pointer',
-            color: 'primary.main',
-            minWidth: 0,
-            minHeight: 'auto',
-            maxWidth: { xs: 210, sm: 340 },
-          }}
-        >
-          {loading && !hasData ? (
-            <Skeleton variant="text" width={90} height={14} />
-          ) : (
-            <>
-              <LocationOnIcon sx={{ fontSize: 15, flex: '0 0 auto' }} />
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}
-                noWrap
-              >
-                {cityText}
-              </Typography>
-              <KeyboardArrowDownIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
-            </>
-          )}
-        </Box>
+        <HeaderLocationRow
+          selectedLocationName={selectedLocationName}
+          selectedZoneName={selectedZoneName}
+          loading={loading}
+          hasData={hasData}
+          onOpen={onOpenLocation}
+        />
       ) : null}
       {/* The title also opens the location picker — a bigger tap target than
        * the small city row alone (user ask). */}

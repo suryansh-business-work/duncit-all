@@ -4,7 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
-import { isPodExpired, podPriceLabel } from '@/utils/pod-format';
+import { isPodExpired, podPriceLabel, podWebUrl } from '@/utils/pod-format';
+import { shareUrl } from '@/services/share-link';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
@@ -66,8 +67,14 @@ export function ExplorePodCard({
   const ctaSubtitle = pod.pod_type === 'FREE' ? 'Free spot' : paidSubtitle;
 
   const share = async () => {
+    // The tracked pod link, so a reel passed on from Explore is measured — and
+    // so the message carries a link at all, as mWeb's already did (rule 27).
+    const url = await shareUrl('POD', pod.id, podWebUrl(pod));
     try {
-      await Share.share({ message: `${pod.pod_title} — join on Duncit`, title: pod.pod_title });
+      await Share.share({
+        message: `${pod.pod_title} — join on Duncit\n${url}`,
+        title: pod.pod_title,
+      });
     } catch {
       /* user cancelled */
     }

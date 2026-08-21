@@ -1764,6 +1764,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       checkedInList: 'Checked in on this ticket',
       confirmDone: 'Done',
     },
+    // Editing a pod runs the same AI content check publishing does. This heads
+    // the list of rules an edit broke; each line under it is the server's own
+    // explanation, so only the heading is translated here.
+    hostPodEdit: {
+      contentCheck: 'Content check',
+    },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —
     // they are written out rather than shared through a const because the

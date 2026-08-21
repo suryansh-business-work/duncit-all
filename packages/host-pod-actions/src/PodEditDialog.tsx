@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client';
@@ -14,46 +13,17 @@ import {
   TextField,
 } from '@mui/material';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
+import ContentCheckAlert from './ContentCheckAlert';
+import { useContentCheck } from './useContentCheck';
 import { HOST_UPDATE_POD } from './queries';
-import { hasImageLine, mediaTextToInput, mediaToText } from './media-text';
+import {
+  buildHostUpdateInput,
+  buildPodEditModerationInput,
+  podEditInitialValues,
+  podEditSchema,
+  type PodEditValues,
+} from './pod-edit.form';
 import type { HostPodTarget } from './types';
-
-export interface PodEditValues {
-  pod_title: string;
-  pod_description: string;
-  media_text: string;
-}
-
-export const blankPodEditValues: PodEditValues = {
-  pod_title: '',
-  pod_description: '',
-  media_text: '',
-};
-
-export const podEditSchema = z.object({
-  pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
-  pod_description: z.string().trim().min(10, 'Add a longer description'),
-  media_text: z.string().refine(hasImageLine, 'Add at least one image URL'),
-});
-
-/** Maps the validated values onto the server's HostUpdatePodInput. */
-export function buildHostUpdateInput(values: PodEditValues) {
-  return {
-    pod_title: values.pod_title.trim(),
-    pod_description: values.pod_description.trim(),
-    pod_images_and_videos: mediaTextToInput(values.media_text),
-  };
-}
-
-/** Prefills the form from the pod being edited. */
-export function podEditInitialValues(pod: HostPodTarget | null): PodEditValues {
-  if (!pod) return blankPodEditValues;
-  return {
-    pod_title: pod.pod_title ?? '',
-    pod_description: pod.pod_description ?? '',
-    media_text: mediaToText(pod.pod_images_and_videos),
-  };
-}
 
 interface Props {
   pod: HostPodTarget | null;
@@ -61,28 +31,43 @@ interface Props {
   onSaved: () => void;
 }
 
-/** Host's limited pod edit dialog — only title, images and description. */
+/**
+ * Host's limited pod edit dialog — only title, images and description.
+ *
+ * Saving runs the SAME content check publishing does. A pod that met the
+ * guidelines the day it was created can be renamed into one that does not, and
+ * until this check existed the edit screen was the way past them: the flagged
+ * word simply arrived a day late.
+ */
 export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
-  const { renderMediaField } = useHostPodActionsConfig();
+  const { labels, renderMediaField } = useHostPodActionsConfig();
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<PodEditValues>({
     resolver: zodResolver(podEditSchema),
     defaultValues: podEditInitialValues(pod),
   });
   const [save, saveState] = useMutation(HOST_UPDATE_POD);
+  const check = useContentCheck(setError);
+  const busy = saveState.loading || check.checking;
 
   useEffect(() => {
     reset(podEditInitialValues(pod));
+    check.clear();
+    // `check.clear` is a fresh closure each render; re-seeding is keyed on the pod.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pod, reset]);
 
   const submit = handleSubmit(async (values) => {
-    await save({ variables: { pod_doc_id: pod?.id, input: buildHostUpdateInput(values) } });
-    onSaved();
+    const saved = await check.run(buildPodEditModerationInput(values), () =>
+      save({ variables: { pod_doc_id: pod?.id, input: buildHostUpdateInput(values) } }),
+    );
+    if (saved) onSaved();
   });
 
   return (
@@ -120,21 +105,22 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
               })
             }
           />
-          {saveState.error && <Alert severity="error">{saveState.error.message}</Alert>}
+          <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
+          {check.failure && <Alert severity="error">{check.failure}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={saveState.loading}>
+        <Button onClick={onClose} disabled={busy}>
           Cancel
         </Button>
         <Button
           type="submit"
           form="pod-edit-form"
           variant="contained"
-          disabled={saveState.loading}
+          disabled={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {saveState.loading ? 'Saving…' : 'Save changes'}
+          {busy ? 'Saving…' : 'Save changes'}
         </Button>
       </DialogActions>
     </Dialog>

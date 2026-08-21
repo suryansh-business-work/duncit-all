@@ -21,13 +21,27 @@ export interface HostFeedbackLinkActions {
  * which has no rating page of its own, points at mWeb's.
  */
 export function useHostFeedbackLink(): HostFeedbackLinkActions {
-  const { labels, feedbackBaseUrl, onOpenFeedback, notifySuccess, notifyError } =
-    useHostPodActionsConfig();
+  const {
+    labels,
+    feedbackBaseUrl,
+    onOpenFeedback,
+    resolveShareUrl,
+    notifySuccess,
+    notifyError,
+  } = useHostPodActionsConfig();
 
   const linkFor = (pod: FeedbackPod) => podFeedbackLink(pod.id, feedbackBaseUrl);
 
-  const messageFor = (pod: FeedbackPod) =>
-    `${labels.shareMessage(pod.pod_title)}\n${linkFor(pod)}`;
+  /** What the host actually hands out: the tracked short link where the surface
+   * can mint one, so ratings arriving from a sent link are counted like every
+   * other share. */
+  const sharedLinkFor = async (pod: FeedbackPod) => {
+    const plain = linkFor(pod);
+    return resolveShareUrl ? resolveShareUrl(pod.id, plain) : plain;
+  };
+
+  const messageFor = async (pod: FeedbackPod) =>
+    `${labels.shareMessage(pod.pod_title)}\n${await sharedLinkFor(pod)}`;
 
   const copyText = async (text: string) => {
     const copied = await copyToClipboard(text);
@@ -38,17 +52,18 @@ export function useHostFeedbackLink(): HostFeedbackLinkActions {
   };
 
   const share = async (pod: FeedbackPod) => {
+    const message = await messageFor(pod);
     // No share sheet on this browser — copy the whole message instead, so the
     // host still pastes the question and not a naked URL.
     if (!navigator.share) {
-      await copyText(messageFor(pod));
+      await copyText(message);
       return;
     }
     try {
       // The link rides the LAST LINE of `text` and never a `url` field: targets
       // that accept `url` drop `text`, which would send a bare link with the
       // question that makes someone tap it stripped off.
-      await navigator.share({ title: pod.pod_title, text: messageFor(pod) });
+      await navigator.share({ title: pod.pod_title, text: message });
     } catch {
       // user dismissed the native share sheet — nothing to report
     }
@@ -59,6 +74,6 @@ export function useHostFeedbackLink(): HostFeedbackLinkActions {
     share,
     // The button says "copy link", so it copies the link — the host is pasting
     // it somewhere that already has their own words around it.
-    copy: (pod: FeedbackPod) => copyText(linkFor(pod)),
+    copy: async (pod: FeedbackPod) => copyText(await sharedLinkFor(pod)),
   };
 }

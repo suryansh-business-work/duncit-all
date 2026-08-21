@@ -366,6 +366,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       checkedInList: 'Checked in on this ticket',
       confirmDone: 'Done',
     },
+    // Word-for-word identical to `mweb.hostPodEdit` above — one console and one
+    // app render the same dialog, and rule 27 forbids the two drifting.
+    hostPodEdit: {
+      contentCheck: 'Content check',
+    },
     /**
      * Staff chat — the panel every console renders in its header.
      *

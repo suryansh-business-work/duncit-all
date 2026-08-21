@@ -23,6 +23,10 @@
  */
 export const SHORT_LINK_CLICK_KEY = 'duncit_short_link_click';
 export const SHORT_LINK_UTM_KEY = 'duncit_short_link_utm';
+/** Whether the stored click came from a member sharing something rather than
+ * from a marketing link. It changes nothing about the counting — only what a
+ * landing is allowed to do to the visitor's session. */
+export const SHORT_LINK_SHARE_KEY = 'duncit_short_link_share';
 
 /** The campaign tags worth carrying across surfaces. */
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
@@ -30,12 +34,32 @@ const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm
 export interface ShortLinkParams {
   code: string | null;
   clickId: string | null;
+  /**
+   * The link was minted for a member sharing something, not created in the
+   * marketing console. Both are counted the same way; what differs is what a
+   * landing may do to the visitor's session — see mWeb's session guard.
+   */
+  memberShare: boolean;
 }
 
 /** The short-link markers a query string carries, if any. */
 export function parseShortLinkParams(search: string): ShortLinkParams {
   const params = new URLSearchParams(search);
-  return { code: params.get('dl'), clickId: params.get('dlc') };
+  return {
+    code: params.get('dl'),
+    clickId: params.get('dlc'),
+    memberShare: params.get('dls') === '1',
+  };
+}
+
+/** Whether the stored click came from a member share. */
+export function storedMemberShare(): boolean {
+  try {
+    return globalThis.localStorage.getItem(SHORT_LINK_SHARE_KEY) === '1';
+  } catch {
+    // Storage disabled: treat it as the stricter marketing case.
+    return false;
+  }
 }
 
 /** The click this browser is attributed to, from an earlier visit. */
@@ -48,9 +72,14 @@ export function storedShortLinkClickId(): string | null {
   }
 }
 
-function store(clickId: string): void {
+function store(clickId: string, memberShare: boolean): void {
   try {
     globalThis.localStorage.setItem(SHORT_LINK_CLICK_KEY, clickId);
+    // Remembered with the click, not read off the address each time: the same
+    // fact has to survive the hops the visitor makes afterwards, and the URL
+    // it arrived on is gone by the second page.
+    if (memberShare) globalThis.localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
+    else globalThis.localStorage.removeItem(SHORT_LINK_SHARE_KEY);
   } catch {
     // Nothing to do — the visit was still reported against this page load.
   }
@@ -76,7 +105,7 @@ export interface CaptureOptions {
  * page over.
  */
 export async function captureShortLinkAttribution(options: CaptureOptions): Promise<string | null> {
-  const { code, clickId } = parseShortLinkParams(options.search);
+  const { code, clickId, memberShare } = parseShortLinkParams(options.search);
   // The utm tags persist independently of the markers: a landing tagged by an
   // external campaign (no short link involved) still deserves to keep its
   // campaign identity across the hops the visitor makes afterwards.
@@ -103,7 +132,7 @@ export async function captureShortLinkAttribution(options: CaptureOptions): Prom
     const body = await response.json();
     const resolved: string | null = body?.click_id ?? null;
     if (existing) return existing;
-    if (resolved) store(resolved);
+    if (resolved) store(resolved, memberShare);
     return resolved;
   } catch {
     // Offline, opaque response, or the API is down — the visit is lost, the
@@ -145,6 +174,9 @@ export function storedAttributionParams(): Record<string, string> {
   }
   const clickId = storedShortLinkClickId();
   if (clickId) params.dlc = clickId;
+  // Carried on, so a hop between surfaces cannot turn a link a friend shared
+  // into a marketing landing that signs the visitor out.
+  if (clickId && storedMemberShare()) params.dls = '1';
   return params;
 }
 

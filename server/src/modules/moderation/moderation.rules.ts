@@ -43,6 +43,13 @@ const PHONE_CANDIDATE_RE = /\+?\d[\d\s().-]{7,}\d/g;
 
 const escapeRe = (word: string) => word.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const wordListRe = (words: string[]) => new RegExp(String.raw`\b(?:${words.map(escapeRe).join('|')})\b`, 'i');
+// The same list anchored only at the START of a word. Gluing a banned term onto
+// the next word ("SexBadminton Play") leaves no closing boundary, so `\bword\b`
+// misses it — the cheapest evasion there is. Dropping the trailing `\b` catches
+// that and every suffixed form ("Sexy", "fucking"), while a word that merely
+// ENDS in one ("Essex", "Middlesex", "unisex") still has no opening boundary
+// and is left alone.
+const wordStartRe = (words: string[]) => new RegExp(String.raw`\b(?:${words.map(escapeRe).join('|')})`, 'i');
 
 // Collecting payments outside the platform.
 const PAYMENT_RE = wordListRe([
@@ -55,12 +62,12 @@ const CONTACT_RE = wordListRe([
   'whatsapp me', 'dm me', 'call me', 'text me', 'contact me on', 'ping me on', 'reach me at',
 ]);
 // A compact deterministic net for the most common abuse; GPT-4o covers the rest.
-const ABUSE_RE = wordListRe([
+const ABUSE_RE = wordStartRe([
   'fuck', 'fucking', 'motherfucker', 'bitch', 'bastard', 'asshole', 'slut',
   'retard', 'chutiya', 'chutiye', 'madarchod', 'behenchod', 'bhosdike', 'gaand', 'randi',
 ]);
 // Adult / explicit wording (text only; images are screened by the AI layer).
-const NUDE_RE = wordListRe([
+const NUDE_RE = wordStartRe([
   'nude', 'nudes', 'naked', 'porn', 'porno', 'xxx', 'sex', 'sexual', 'nsfw', 'escort', 'hookup', 'onlyfans',
 ]);
 
@@ -123,6 +130,24 @@ export function moderateText(field: string, raw: string): ModerationViolation[] 
   const nude = NUDE_RE.exec(text);
   if (nude) {
     out.push(violation(field, 'NUDITY', 'Remove explicit or adult content.', nude[0]));
+  }
+  return out;
+}
+
+// A pod's gallery is built from Duncit uploads, which are always plain https
+// addresses. Anything else — `data:`, `javascript:`, a relative path — is an
+// image nothing can serve and the AI vision layer cannot fetch to screen.
+const MEDIA_URL_RE = /^https?:\/\/\S+$/i;
+
+/** Deterministic violations for the media attached to a pod (field `image`). */
+export function moderateMediaUrls(urls: string[]): ModerationViolation[] {
+  const out: ModerationViolation[] = [];
+  for (const raw of urls) {
+    const url = (raw ?? '').trim();
+    if (!url || MEDIA_URL_RE.test(url)) continue;
+    out.push(
+      violation('image', 'MEDIA', 'Remove the media item — only uploaded image or video files are allowed.', url)
+    );
   }
   return out;
 }

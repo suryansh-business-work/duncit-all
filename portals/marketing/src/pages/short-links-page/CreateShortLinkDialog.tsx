@@ -24,7 +24,7 @@ export default function CreateShortLinkDialog({
 }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [createLink, { loading }] = useMutation(CREATE_SHORT_LINK);
-  const { data: campaignsData } = useQuery<{ marketingCampaigns: CampaignChoice[] }>(
+  const { data: campaignsData } = useQuery<{ shortLinkCampaigns: CampaignChoice[] }>(
     CAMPAIGNS_FOR_SHORT_LINK,
     { fetchPolicy: 'cache-and-network' },
   );
@@ -56,7 +56,7 @@ export default function CreateShortLinkDialog({
       <DialogContent dividers>
         <ShortLinkForm
           options={options}
-          campaigns={campaignsData?.marketingCampaigns ?? []}
+          campaigns={campaignsData?.shortLinkCampaigns ?? []}
           busy={loading}
           errorMessage={error}
           onCancel={onClose}

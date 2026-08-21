@@ -40,6 +40,12 @@ export interface PodShareInput {
   venue: PodShareVenue | null | undefined;
   /** Absolute pod URL. */
   url: string;
+  /**
+   * The venue map link, when the caller holds a tracked one for it. Left out,
+   * the plain Google Maps search is built from the venue text instead: the
+   * message reads the same either way, only one of the two is counted.
+   */
+  mapUrl?: string | null;
 }
 
 /**
@@ -60,7 +66,7 @@ export function buildPodShareMessage(input: PodShareInput): string {
     .trim();
   if (where) lines.push(`Where: ${where}`);
 
-  const map = podMapLink(input.venue);
+  const map = input.mapUrl ?? podMapLink(input.venue);
   if (map) lines.push(`Location: ${map}`);
 
   lines.push(`Join on Duncit: ${input.url}`);

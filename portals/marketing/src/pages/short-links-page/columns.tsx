@@ -1,11 +1,12 @@
 import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { EM_DASH, actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
-import type { ShortLinkOption, ShortLinkRow } from './queries';
+import type { CampaignChoice, ShortLinkOption, ShortLinkRow } from './queries';
 
 interface Args {
   sources: ShortLinkOption[];
   mediums: ShortLinkOption[];
+  campaigns: CampaignChoice[];
   onView: (row: ShortLinkRow) => void;
   onDelete: (row: ShortLinkRow) => void;
 }
@@ -40,9 +41,18 @@ const renderStatus = (row: ShortLinkRow) => (
   />
 );
 
+/** A link's campaign by name — the slug is what is stored, but nobody filters
+ * a report by "pod_shares". */
+const campaignText = (row: ShortLinkRow, campaigns: CampaignChoice[]) => {
+  if (!row.utm_campaign) return EM_DASH;
+  const match = campaigns.find((campaign) => campaign.utm_campaign === row.utm_campaign);
+  return match?.name ?? row.utm_campaign;
+};
+
 export function getShortLinkColumns({
   sources,
   mediums,
+  campaigns,
   onView,
   onDelete,
 }: Readonly<Args>): DuncitColumn<ShortLinkRow>[] {
@@ -80,7 +90,14 @@ export function getShortLinkColumns({
       headerName: 'Campaign',
       sortable: false,
       minWidth: 160,
-      valueGetter: (row) => row.utm_campaign ?? EM_DASH,
+      filter: {
+        type: 'select',
+        options: campaigns.map((campaign) => ({
+          value: campaign.utm_campaign,
+          label: campaign.name,
+        })),
+      },
+      valueGetter: (row) => campaignText(row, campaigns),
     },
     { field: 'click_count', headerName: 'Clicks', width: 110 },
     dateColumn<ShortLinkRow>({

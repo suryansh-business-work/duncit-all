@@ -5,6 +5,7 @@ import { Text, XStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
 import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
+import { LocationDialog } from '@/components/LocationDialog';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NotificationsBell } from '@/components/notifications';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
@@ -18,11 +19,13 @@ import { TourAnchor } from '@/tours/TourAnchor';
 import { STUDIO_LABEL, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 
 import { HeaderGreeting } from './HeaderGreeting';
+import { HeaderLocationRow } from './HeaderLocationRow';
 import { QuickAction } from './QuickAction';
 
 /**
  * In-app header — the admin-configurable tagline plus the tappable location on
- * the left (or the studio badge when in a Host/Venue/ecomm studio). On the
+ * the left (or the studio badge PLUS that same location switcher when in a
+ * Host/Venue/ecomm studio — the picker is never role-gated). On the
  * right: search, notifications and either the account avatar (which opens the
  * sidebar drawer) or — when `minimal`, i.e. the pre-onboarding survey — a plain
  * logout button.
@@ -38,7 +41,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   const effectiveStudio = resolveMode(studioMode, roles);
   const [switchOpen, setSwitchOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const showBrowseActions = !minimal && effectiveStudio === 'USER';
+  const openLocation = () => setLocationOpen(true);
   const autoPodCounts = useAutoPodCountsStore((s) => s.data);
   const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
 
@@ -64,28 +69,35 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
     >
       <XStack alignItems="center" gap={6} flex={1} minWidth={0}>
         {!minimal && effectiveStudio !== 'USER' ? (
-          <XStack
-            testID="header-studio-badge"
-            role="button"
-            aria-label="Switch role"
-            onPress={openSwitch}
-            alignItems="center"
-            gap={4}
-            paddingHorizontal={10}
-            paddingVertical={5}
-            borderRadius={999}
-            backgroundColor="$primary"
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <Text fontSize={11.5} fontWeight="700" color="$onPrimary">
-              {STUDIO_LABEL[effectiveStudio]}
-            </Text>
-            <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
-          </XStack>
+          // A studio header keeps the role badge AND the location switcher: a
+          // host/venue/club account still browses a city, so the picker stays.
+          <>
+            <XStack
+              testID="header-studio-badge"
+              role="button"
+              aria-label="Switch role"
+              onPress={openSwitch}
+              alignItems="center"
+              gap={4}
+              paddingHorizontal={10}
+              paddingVertical={5}
+              borderRadius={999}
+              backgroundColor="$primary"
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <Text fontSize={11.5} fontWeight="700" color="$onPrimary">
+                {STUDIO_LABEL[effectiveStudio]}
+              </Text>
+              <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
+            </XStack>
+            <HeaderLocationRow onOpen={openLocation} />
+          </>
         ) : (
+          // The picker follows the header, not the role: only the survey
+          // header (no city to browse yet) drops it.
           <HeaderGreeting
             tagline={branding?.home_header_tagline}
-            showLocation={showBrowseActions}
+            onOpenLocation={minimal ? undefined : openLocation}
           />
         )}
       </XStack>
@@ -145,6 +157,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
           navigation.navigate(studioSwitchRoute(next, autoPodCounts));
         }}
       />
+      {minimal ? null : (
+        <LocationDialog open={locationOpen} onClose={() => setLocationOpen(false)} />
+      )}
     </XStack>
   );
 }

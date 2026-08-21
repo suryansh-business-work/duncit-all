@@ -21,6 +21,7 @@ import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
 import { isPodExpired } from '../../utils/podStatus';
+import { shareUrl } from '../../lib/share-link';
 import { podSeatsTaken } from '@duncit/utils';
 
 interface Props {
@@ -93,9 +94,12 @@ export default function ExplorePodCard({
   };
 
   const share = async () => {
-    const url = pod.club_slug && pod.pod_id
+    const podUrl = pod.club_slug && pod.pod_id
       ? `${globalThis.window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
       : `${globalThis.window.location.origin}/explore`;
+    // Tracked through Short Links, so a pod passed around from Explore is
+    // measured the same way a promoted one is.
+    const url = await shareUrl('POD', pod.id, podUrl);
     const shareData = {
       title: pod.pod_title,
       text: pod.pod_description?.slice(0, 100) ?? pod.pod_title,

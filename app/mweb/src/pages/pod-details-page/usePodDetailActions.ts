@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client';
 import { formatDateTime } from '../../utils/dateFormat';
-import { buildPodShareMessage } from '@duncit/utils';
+import { buildPodShareMessage, podMapLink, trackedPodShareLinks } from '@duncit/utils';
 import type { NavigateFunction } from 'react-router-dom';
 import {
   BACKOUT,
@@ -14,6 +14,7 @@ import {
   TOGGLE_SAVED_POD_DETAIL,
 } from './queries';
 import { podUrl } from '../../utils/seoUrls';
+import { shareUrl } from '../../lib/share-link';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** The pod's date/time as this surface renders it, for the share message. In
@@ -28,15 +29,21 @@ function shareWhenText(pod: any): string | null {
  * from @duncit/utils so native shares the identical text (rule 27); only the
  * date formatting is this surface's own.
  */
-export function buildPodShareText(pod: any, url: string): string {
+export function buildPodShareText(pod: any, url: string, mapUrl?: string | null): string {
   if (!pod) return url;
   return buildPodShareMessage({
     title: pod.pod_title,
     whenText: shareWhenText(pod),
     venue: pod,
     url,
+    mapUrl,
   });
 }
+
+/** The pod link and the venue map link, both tracked. The pairing lives in
+ * @duncit/utils so the app resolves them exactly the same way (rule 27). */
+const trackedPodLinks = (pod: any, pageUrl: string) =>
+  trackedPodShareLinks(shareUrl, pod?.id ?? '', pageUrl, podMapLink(pod));
 
 interface Args {
   id: string;
@@ -120,9 +127,9 @@ export function usePodDetailActions({
   };
 
   const onShare = async () => {
-    const url = globalThis.window.location.href;
+    const { url, mapUrl } = await trackedPodLinks(pod, globalThis.window.location.href);
     const title = pod?.pod_title ?? t('mweb.podDetails.duncitPod');
-    const text = buildPodShareText(pod, url);
+    const text = buildPodShareText(pod, url, mapUrl);
     try {
       // Deliberately NO `url` field. The Web Share API lets a target choose what
       // it takes, and the common ones (iOS Safari's sheet, WhatsApp) prefer

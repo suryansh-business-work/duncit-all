@@ -1,5 +1,5 @@
 import { emitAuthChanged } from '@duncit/user-context';
-import { parseShortLinkParams } from '@duncit/utils';
+import { parseShortLinkParams, storedMemberShare } from '@duncit/utils';
 import { redirectPathFromLocation } from '../utils/redirect';
 
 /**
@@ -44,17 +44,24 @@ function withoutShortLinkParams(pathname: string, search: string): string {
   const params = new URLSearchParams(search);
   params.delete('dl');
   params.delete('dlc');
+  params.delete('dls');
   const rest = params.toString();
   return rest ? `${pathname}?${rest}` : pathname;
 }
 
 /**
- * A landing that followed a short link starts at sign-in, always.
+ * A landing that followed a MARKETING short link starts at sign-in, always.
  *
  * A marketing link is measured by the account it produces, and a session left
  * in this browser let the visit walk straight past that — home, pod, checkout,
  * all on somebody else's already-signed-in profile. The signed-OUT case needs
  * nothing here: `RequireAuth` already sends it to /login.
+ *
+ * A link a MEMBER shared is exempt. Every pod, club and profile handed out of
+ * mWeb or the app is a short link now, so without that exemption opening a
+ * link a friend sent would sign you out of your own account — and the visit is
+ * already credited to the account it lands on, because the journey report is
+ * sent authenticated.
  *
  * Runs at module scope in main.tsx, BEFORE React mounts, so the router's first
  * render is already the login route. The URL is rewritten in place rather than
@@ -63,8 +70,13 @@ function withoutShortLinkParams(pathname: string, search: string): string {
  */
 export function requireAuthForShortLinkLanding(): boolean {
   const { pathname, search } = globalThis.window.location;
-  const { code, clickId } = parseShortLinkParams(search);
+  const { code, clickId, memberShare } = parseShortLinkParams(search);
   if (!code && !clickId) return false;
+  // A landing that came through a link carries its own marker beside the code,
+  // so the address is authoritative there. A hop that arrives with only a click
+  // id — the outbound link decorator re-attaching it — has no marker, and the
+  // fact remembered with that click stands in.
+  if (memberShare || (!code && storedMemberShare())) return false;
   if (!globalThis.localStorage.getItem(TOKEN_KEY)) return false;
 
   clearCredentials();

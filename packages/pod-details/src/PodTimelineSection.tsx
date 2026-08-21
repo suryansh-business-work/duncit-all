@@ -16,6 +16,7 @@ const ACTION_COLORS: StatusColorMap = {
   VENUE_APPROVED: 'success',
   VENUE_DECLINED: 'warning',
   COMPLETE: 'primary',
+  REJECTED: 'error',
 };
 
 /** The three lifecycle steps and which of them this pod has reached. */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,12 +8,12 @@ import { FormTextField } from '@/components/FormTextField';
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { HostUpdatePodDocument } from '@/graphql/host-manage';
-import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { ContentCheckNotice } from './ContentCheckNotice';
+import { usePodEditSave } from './usePodEditSave';
 import {
-  buildHostUpdateInput,
   podEditInitialValues,
   podEditSchema,
   type HostPodSummary,
@@ -26,39 +26,30 @@ interface Props {
   onSaved: () => void;
 }
 
-/** Host's limited pod edit sheet — only title, images and description (2A). */
+/**
+ * Host's limited pod edit sheet — only title, images and description (2A).
+ *
+ * Saving runs the same AI content check publishing does (mWeb twin: rule 27):
+ * a pod that met the guidelines when it was created can be edited into one
+ * that does not, so the check belongs on every write, not just the first.
+ */
 export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { control, handleSubmit, reset } = useForm<PodEditValues>({
+  const { t } = useTranslation();
+  const { control, handleSubmit, reset, setError } = useForm<PodEditValues>({
     resolver: zodResolver(podEditSchema),
     defaultValues: podEditInitialValues(pod),
   });
+  const { busy, error, blocked, save, clear } = usePodEditSave(pod?.id, setError, onSaved);
 
   useEffect(() => {
     reset(podEditInitialValues(pod));
-    setError(null);
+    clear();
+    // `clear` is a fresh closure each render; re-seeding is keyed on the pod.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pod, reset]);
 
-  const submit = handleSubmit(async (values) => {
-    /* istanbul ignore next -- the dialog only mounts with a pod */
-    if (!pod) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await graphqlRequest(
-        HostUpdatePodDocument,
-        { pod_doc_id: pod.id, input: buildHostUpdateInput(values) },
-        { auth: true },
-      );
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the pod');
-    } finally {
-      setBusy(false);
-    }
-  });
+  const submit = handleSubmit(save);
 
   const dismiss = busy ? undefined : onClose;
 
@@ -122,6 +113,10 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                         label="Media"
                       />
                     )}
+                  />
+                  <ContentCheckNotice
+                    violations={blocked}
+                    title={t('mweb.hostPodEdit.contentCheck')}
                   />
                   {error ? (
                     <Text testID="pod-edit-error" fontSize={12.5} color="$danger">

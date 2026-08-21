@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { podContentRejectionMessage } from '@duncit/utils';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
 import { UPDATE } from './queries';
 
@@ -43,7 +44,9 @@ export default function QuickEditPodDialog({
       });
       onSaved();
     } catch (e: any) {
-      setError(e.message);
+      // A content refusal names the rules it broke; the headline alone does not
+      // say which word in which field to fix.
+      setError(podContentRejectionMessage(e) ?? e.message);
     } finally {
       setBusy(false);
     }

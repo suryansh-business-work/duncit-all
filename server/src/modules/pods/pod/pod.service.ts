@@ -332,6 +332,102 @@ export function validateHasImage(media: any[] | null | undefined) {
   }
 }
 
+/**
+ * The moderatable content of a pod write. An absent field reads as empty text,
+ * which never violates anything.
+ */
+export function podContentOf(input: any) {
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+  const media = Array.isArray(input?.pod_images_and_videos) ? input.pod_images_and_videos : [];
+  return {
+    pod_title: text(input?.pod_title),
+    pod_description: text(input?.pod_description),
+    pod_info: text(input?.pod_info),
+    pod_hashtag: Array.isArray(input?.pod_hashtag) ? input.pod_hashtag.map(String) : [],
+    image_urls: media.map((item: any) => String(item?.url ?? '')).filter(Boolean),
+  };
+}
+
+type PodContent = ReturnType<typeof podContentOf>;
+
+/** Which pod field a moderation violation belongs to, in audit-trail terms. */
+const VIOLATION_AUDIT_FIELD: Record<string, keyof PodContent | 'pod_images_and_videos'> = {
+  pod_title: 'pod_title',
+  pod_description: 'pod_description',
+  pod_info: 'pod_info',
+  pod_hashtag: 'pod_hashtag',
+  image: 'pod_images_and_videos',
+};
+
+/** The refused values, in the same shape `snapshotPod` stores them, so the
+ * monitoring console diffs a blocked attempt exactly like a saved edit. */
+const attemptedValues = (content: PodContent): Record<string, string> => ({
+  pod_title: content.pod_title,
+  pod_description: content.pod_description,
+  pod_info: content.pod_info,
+  pod_hashtag: content.pod_hashtag.join(', '),
+  pod_images_and_videos: content.image_urls.join(', '),
+});
+
+const sameList = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((item, index) => item === b[index]);
+
+/**
+ * The content fields this write actually CHANGES.
+ *
+ * An edit is judged on what it introduces, not on what it inherits. The portal
+ * editor posts the whole form on every save, so screening the payload as-is
+ * would let a description written before these rules existed block an
+ * unrelated price correction forever. Touch that description and it must come
+ * out clean; leave it alone and it is not this edit's business.
+ */
+function changedContent(doc: any, next: PodContent): PodContent {
+  const current = podContentOf(doc);
+  return {
+    pod_title: next.pod_title === current.pod_title ? '' : next.pod_title,
+    pod_description: next.pod_description === current.pod_description ? '' : next.pod_description,
+    pod_info: next.pod_info === current.pod_info ? '' : next.pod_info,
+    pod_hashtag: sameList(next.pod_hashtag, current.pod_hashtag) ? [] : next.pod_hashtag,
+    image_urls: sameList(next.image_urls, current.image_urls) ? [] : next.image_urls,
+  };
+}
+
+/**
+ * Content guard for an edit of an EXISTING pod — host, Club Admin and Admin
+ * alike. A refusal is not silently dropped: it lands in the AI-monitored audit
+ * trail as a REJECTED entry carrying what was attempted and why it was
+ * refused, so both monitoring consoles show the attempt and not only the edits
+ * that got through.
+ */
+async function assertEditContentClean(
+  doc: any,
+  attempt: PodContent,
+  audit: { actorUserId?: string | null; source: PodAuditSource }
+) {
+  const content = changedContent(doc, attempt);
+  const violations = moderationService.podViolations(content);
+  if (violations.length === 0) return;
+
+  const before = snapshotPod(doc);
+  const attempted = attemptedValues(content);
+  const fields = [...new Set(violations.map((v) => VIOLATION_AUDIT_FIELD[v.field]).filter(Boolean))];
+  await podAuditService.record({
+    pod: doc,
+    action: 'REJECTED',
+    source: audit.source,
+    actorUserId: audit.actorUserId,
+    changes: fields.map((field) => ({
+      field: String(field),
+      from: before[String(field)] ?? '',
+      to: attempted[String(field)] ?? '',
+    })),
+    note: violations
+      .map((v) => `${v.field}: ${v.message}${v.evidence ? ` ("${v.evidence}")` : ''}`)
+      .join(' · '),
+  });
+  throw moderationService.podRejection(violations);
+}
+
 /** Subjects offered in the host's delete-pod reason dropdown (kept in sync with the apps). */
 export const POD_DELETE_REASON_SUBJECTS = [
   'Event cancelled',
@@ -1738,6 +1834,11 @@ export const podService = {
       });
     }
     validateHasImage(input.pod_images_and_videos);
+    // Content guard on the ONE creation funnel, so the rules hold for the Admin
+    // portal, the Club Admin portal, the AI agent, an Auto Pod materialising and
+    // the host's own form alike — there is no pod yet to hang a REJECTED audit
+    // entry on, so this one only throws.
+    moderationService.assertCleanOrThrow(podContentOf(input));
     const podMode = normalizePodMode(input.pod_mode);
     assertWritablePodType(input.pod_type, podMode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
@@ -1850,14 +1951,6 @@ export const podService = {
   async createForPartner(userId: string, input: any) {
     const userObjectId = new Types.ObjectId(userId);
     await assertActiveHost(userId);
-    // Deterministic content guard so a crafted client can't bypass the client-side
-    // AI preflight and publish a pod with a phone/email/link/payment handle etc.
-    moderationService.assertCleanOrThrow({
-      pod_title: input.pod_title ?? '',
-      pod_description: input.pod_description ?? '',
-      pod_info: input.pod_info ?? '',
-      pod_hashtag: input.pod_hashtag ?? [],
-    });
     const podMode = normalizePodMode(input.pod_mode);
     if (podMode === 'PHYSICAL') {
       await assertPartnerVenue(input, userObjectId);
@@ -1886,6 +1979,13 @@ export const podService = {
     if (!doc) notFound();
 
     const source = audit?.source ?? 'SYSTEM';
+    // Editing at any stage is not editing under any rules: the title,
+    // description, extra info, hashtags and media a portal writes face the same
+    // guidelines a host's do, and a refusal is recorded before it is thrown.
+    await assertEditContentClean(doc, podContentOf(input), {
+      actorUserId: audit?.actorUserId,
+      source,
+    });
     // A cancelled pod stays correctable, but a content edit must never
     // contradict its cancellation by flipping it live again.
     if (doc.deleted_at) delete input.is_active;
@@ -1921,14 +2021,20 @@ export const podService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    // Same deterministic content guard as createForPartner — edited copy must
-    // stay clean (merged with the stored values for partial edits).
-    moderationService.assertCleanOrThrow({
-      pod_title: input.pod_title ?? doc.pod_title ?? '',
-      pod_description: input.pod_description ?? doc.pod_description ?? '',
-      pod_info: input.pod_info ?? doc.pod_info ?? '',
-      pod_hashtag: input.pod_hashtag ?? doc.pod_hashtag ?? [],
-    });
+    // Same deterministic content guard as create — the resubmitted copy must
+    // stay clean, judged on the values that will actually go back to the venue
+    // (input merged over what is stored, since a partial edit keeps the rest).
+    await assertEditContentClean(
+      doc,
+      podContentOf({
+        pod_title: input.pod_title ?? doc.pod_title,
+        pod_description: input.pod_description ?? doc.pod_description,
+        pod_info: input.pod_info ?? doc.pod_info,
+        pod_hashtag: input.pod_hashtag ?? doc.pod_hashtag,
+        pod_images_and_videos: input.pod_images_and_videos ?? doc.pod_images_and_videos,
+      }),
+      { actorUserId: userId, source: 'HOST' }
+    );
     for (const field of HOST_RESUBMIT_BLOCKED_FIELDS) delete input[field];
 
     const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
@@ -2000,6 +2106,13 @@ export const podService = {
       });
     }
     validateHasImage(input.pod_images_and_videos);
+    // The three fields a host may change are exactly the three the guidelines
+    // cover, so every host edit is screened — not just the first publish.
+    await assertEditContentClean(
+      doc,
+      podContentOf({ ...input, pod_title: title, pod_description: description }),
+      { actorUserId: userId, source: 'HOST' }
+    );
     doc.pod_title = title;
     doc.pod_description = description;
     doc.pod_images_and_videos = (input.pod_images_and_videos ?? []).map((m: any) => ({

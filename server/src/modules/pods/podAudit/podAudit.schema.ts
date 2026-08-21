@@ -8,6 +8,8 @@ export const podAuditTypeDefs = /* GraphQL */ `
     VENUE_APPROVED
     VENUE_DECLINED
     COMPLETE
+    "A content-guideline check refused the edit — nothing was written to the pod."
+    REJECTED
   }
 
   "Which surface performed the action."

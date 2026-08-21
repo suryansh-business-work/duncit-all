@@ -8317,6 +8317,14 @@ export type Mutation = {
   setWhatsappScenarioMedia: WaScenarioBoard;
   /** Email the signed contract, with the PDF attached. */
   shareLegalDocument: Scalars['Boolean']['output'];
+  /**
+   * The tracked link for something being shared out of mWeb or the app.
+   * Minted once per thing shared, under that target's campaign, and reused by
+   * everyone who shares it afterwards. Public: a pod is shared by signed-out
+   * visitors too, and the destination is built from the ref rather than sent, so
+   * a link can only ever point at something that already exists on Duncit.
+   */
+  shareLink: ShareLink;
   sharePodIdea: PodIdea;
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
@@ -10922,6 +10930,12 @@ export type MutationShareLegalDocumentArgs = {
 };
 
 
+export type MutationShareLinkArgs = {
+  ref: Scalars['ID']['input'];
+  target: ShareLinkTarget;
+};
+
+
 export type MutationSharePodIdeaArgs = {
   pod_idea_doc_id: Scalars['ID']['input'];
 };
@@ -12971,6 +12985,8 @@ export type PodAuditAction =
   | 'COMPLETE'
   | 'CREATE'
   | 'DELETE'
+  /** A content-guideline check refused the edit — nothing was written to the pod. */
+  | 'REJECTED'
   | 'RESUBMIT'
   | 'UPDATE'
   | 'VENUE_APPROVED'
@@ -15366,6 +15382,8 @@ export type Query = {
    */
   serverTranslationSeed: Array<TranslationEntry>;
   shortLink: ShortLink;
+  /** Every campaign a link can be filed under — the share campaigns and the email ones. */
+  shortLinkCampaigns: Array<ShortLinkCampaign>;
   /** Individual clicks on one link. */
   shortLinkClicks: ShortLinkClickTablePage;
   /** Click -> signup -> checkout -> paid, for one link. */
@@ -18335,6 +18353,32 @@ export type SendWaTestInput = {
   wa_campaign_name: Scalars['String']['input'];
 };
 
+/** The link a share should hand out. */
+export type ShareLink = {
+  __typename?: 'ShareLink';
+  /** The short code, or null when the plain destination is being handed out. */
+  code?: Maybe<Scalars['String']['output']>;
+  /** The duncit.com short link, or the plain destination when the link is retired. */
+  url: Scalars['String']['output'];
+};
+
+/**
+ * What is being shared. The destination behind each one is built by the server
+ * from the thing itself, never taken from the request.
+ */
+export type ShareLinkTarget =
+  | 'CLUB'
+  | 'GIFT_CARD'
+  | 'POD'
+  /** A pod's rating form, sent by its host. */
+  | 'POD_FEEDBACK'
+  | 'POD_IDEA'
+  /** The venue map link a shared pod message carries. */
+  | 'POD_LOCATION'
+  | 'POST'
+  | 'PROFILE'
+  | 'REFERRAL';
+
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
   awb: Scalars['String']['output'];
@@ -18378,6 +18422,21 @@ export type ShortLinkBreakdown = {
   count: Scalars['Int']['output'];
   label: Scalars['String']['output'];
 };
+
+export type ShortLinkCampaign = {
+  __typename?: 'ShortLinkCampaign';
+  campaign_id: Scalars['ID']['output'];
+  kind: ShortLinkCampaignKind;
+  name: Scalars['String']['output'];
+  utm_campaign: Scalars['String']['output'];
+};
+
+/** Where a short link's campaign comes from. */
+export type ShortLinkCampaignKind =
+  /** A marketing campaign. */
+  | 'EMAIL'
+  /** Defined by the platform; what the apps file every share under. */
+  | 'SHARE';
 
 /** A single recorded click. Addresses are hashed on the way in, never stored. */
 export type ShortLinkClick = {

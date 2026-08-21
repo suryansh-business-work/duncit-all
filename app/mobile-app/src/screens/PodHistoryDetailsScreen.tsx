@@ -25,7 +25,7 @@ import { useProductOrders } from '@/hooks/useProductOrders';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
-import { refundLabel } from '@/utils/pod-history';
+import { podHistoryGate, refundLabel } from '@/utils/pod-history';
 
 const GENERAL_TERMS_URL = 'https://duncit.com/terms';
 
@@ -134,7 +134,9 @@ export function PodHistoryDetailsScreen() {
           onRefundStatus={() =>
             setNotice(
               t('mweb.podHistory.refundStatusToast', {
-                vars: { status: refundLabel(selected.refund_status, t) },
+                // The word the Refund button wears: from the backout REQUEST, not the
+                // booking's own refund_status, which a partial backout never writes.
+                vars: { status: refundLabel(podHistoryGate(selected).refundStatus, t) },
               }),
             )
           }

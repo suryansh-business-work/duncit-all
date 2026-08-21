@@ -5,6 +5,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { mapClubToPublic, clubService } from '@modules/clubs/club/club.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { podService } from '@modules/pods/pod/pod.service';
+import type { PodRowStatus } from '@modules/pods/pod/pod.rowStatus';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -43,22 +44,55 @@ const MONTH_LABELS = [
 const monthKey = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 
 /** Inclusive month sequence [from..to], each `{ key: 'YYYY-MM', label: 'Mon' }`.
- * Guarded to 36 months so a bad range can never produce an unbounded series. */
+ * Capped at the LAST 36 months of the window: "All time" on a club that has
+ * been running for years would otherwise draw its first three years and stop
+ * short of the months the admin actually came to look at. */
 function monthSequence(from: Date, to: Date) {
   const seq: Array<{ key: string; label: string }> = [];
   const cur = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
   const end = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 1));
-  let guard = 0;
-  while (cur <= end && guard < 36) {
+  while (cur <= end) {
     seq.push({ key: monthKey(cur), label: MONTH_LABELS[cur.getUTCMonth()] });
     cur.setUTCMonth(cur.getUTCMonth() + 1);
-    guard += 1;
   }
-  return seq;
+  return seq.slice(-36);
 }
 
 type ClubTally = { upcoming: number; completed: number; total: number; revenue: number };
-type DashboardRange = { from: Date; to: Date; now: number };
+
+/**
+ * The dashboard's date window. Either bound may be absent, and absent means
+ * UNBOUNDED rather than "now" — that is what makes "All time" a real option and
+ * what keeps the range presets honest: they all send a start and no end, so
+ * "Last 30 days" still counts the pods scheduled ahead instead of reporting
+ * zero upcoming for every range but one.
+ */
+type DashboardRange = { from: Date | null; to: Date | null; now: number };
+
+/** Whether a moment falls inside the window (an absent bound never excludes). */
+const inRange = (d: Date, r: DashboardRange) =>
+  (!r.from || d >= r.from) && (!r.to || d <= r.to);
+
+/** Mongo filter fragment scoping `field` to the window. Empty when both bounds
+ * are absent, so spreading it into a filter simply leaves that filter open. */
+function rangeFilter(field: string, from: Date | null, to: Date | null): Record<string, unknown> {
+  const cond: Record<string, Date> = {};
+  if (from) cond.$gte = from;
+  if (to) cond.$lte = to;
+  return Object.keys(cond).length > 0 ? { [field]: cond } : {};
+}
+
+/** Parses one ISO bound; null/empty means "no bound on this side". */
+function parseBound(raw: string | null | undefined, side: string): Date | null {
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) {
+    throw new GraphQLError(`Invalid dashboard ${side} date`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return d;
+}
 
 /** Fold one pod into its club's row (no-op when the pod's club is out of scope). */
 function bumpClubRow(row: ClubTally | undefined, isUpcoming: boolean, isCompleted: boolean) {
@@ -69,8 +103,14 @@ function bumpClubRow(row: ClubTally | undefined, isUpcoming: boolean, isComplete
 }
 
 /** Per-club + overall pod tallies, computed in-memory (pod_date_time may be a
- * Date or an ISO string, so we normalise via `new Date` rather than aggregate). */
+ * Date or an ISO string, so we normalise via `new Date` rather than aggregate).
+ *
+ * A pod belongs to the window by the date it RUNS on — the date the club admin
+ * sees in the pods table — so every figure derived here (counts, capacity,
+ * attendees, hosts) moves together when the range changes, and total stays
+ * upcoming + completed. */
 function tallyPods(pods: any[], byClub: Map<string, ClubTally>, range: DashboardRange) {
+  let total_pods = 0;
   let upcoming_pods = 0;
   let completed_pods = 0;
   let total_spots = 0;
@@ -78,25 +118,39 @@ function tallyPods(pods: any[], byClub: Map<string, ClubTally>, range: Dashboard
   const hostSet = new Set<string>();
   const podsSeries = new Map<string, number>();
   for (const p of pods) {
-    const t = +new Date(p.pod_date_time);
+    const d = new Date(p.pod_date_time);
+    if (!inRange(d, range)) continue;
+    const t = +d;
     const isUpcoming = p.is_active && t >= range.now;
     const isCompleted = t < range.now;
+    total_pods += 1;
     if (isUpcoming) upcoming_pods += 1;
     if (isCompleted) completed_pods += 1;
     total_spots += p.no_of_spots ?? 0;
     total_attendees += podSeatsTaken(p);
     (p.pod_hosts_id ?? []).forEach((h: any) => hostSet.add(String(h)));
     bumpClubRow(byClub.get(String(p.club_id)), isUpcoming, isCompleted);
-    const d = new Date(p.pod_date_time);
-    if (d >= range.from && d <= range.to) {
-      podsSeries.set(monthKey(d), (podsSeries.get(monthKey(d)) ?? 0) + 1);
-    }
+    podsSeries.set(monthKey(d), (podsSeries.get(monthKey(d)) ?? 0) + 1);
   }
-  return { upcoming_pods, completed_pods, total_spots, total_attendees, hostSet, podsSeries };
+  return {
+    total_pods,
+    upcoming_pods,
+    completed_pods,
+    total_spots,
+    total_attendees,
+    hostSet,
+    podsSeries,
+  };
 }
 
 /** Revenue (overall + monthly), summed in-memory from the SUCCESS payments joined
- * back to their pod's club (per-club revenue lands on the `byClub` rows). */
+ * back to their pod's club (per-club revenue lands on the `byClub` rows).
+ *
+ * Money belongs to the window by the date it was COLLECTED, not by the date of
+ * the pod it paid for — so an early booking for a pod months out still counts
+ * in the range that actually took the payment. The payment set is scoped to
+ * every pod in the caller's clubs for the same reason: narrowing it to the
+ * in-range pods as well would drop that payment twice over. */
 function tallyRevenue(
   payments: any[],
   podToClub: Map<string, string>,
@@ -106,17 +160,26 @@ function tallyRevenue(
   let total_revenue = 0;
   const revenueSeries = new Map<string, number>();
   for (const pay of payments) {
+    const d = new Date(pay.created_at);
+    if (!inRange(d, range)) continue;
     const amount = pay.total ?? 0;
     total_revenue += amount;
     const clubId = podToClub.get(String(pay.pod_id));
     const row = clubId ? byClub.get(clubId) : undefined;
     if (row) row.revenue += amount;
-    const d = new Date(pay.created_at);
-    if (d >= range.from && d <= range.to) {
-      revenueSeries.set(monthKey(d), (revenueSeries.get(monthKey(d)) ?? 0) + amount);
-    }
+    revenueSeries.set(monthKey(d), (revenueSeries.get(monthKey(d)) ?? 0) + amount);
   }
   return { total_revenue, revenueSeries };
+}
+
+/** Start of the trend series when the window has no lower bound ("All time"):
+ * the first month the clubs saw any activity, never later than this month — a
+ * club whose only pods are still ahead would otherwise get an empty series. */
+function earliestActivity(pods: any[], payments: any[], now: number): Date {
+  let earliest = now;
+  for (const p of pods) earliest = Math.min(earliest, +new Date(p.pod_date_time));
+  for (const pay of payments) earliest = Math.min(earliest, +new Date(pay.created_at));
+  return new Date(earliest);
 }
 
 /** Allowlists for the shared table engine over the COMPUTED per-club dashboard
@@ -577,9 +640,18 @@ export const clubAdminService = {
    * Pods across the actor's clubs, at every stage. Scope is resolved HERE and
    * pinned into the query's baseFilter, so a client filter can never widen it
    * to a club the actor does not administer.
+   *
+   * `status` narrows to ONE of the buckets the table's Status column shows.
+   * It is an argument rather than a column filter because the chip is derived
+   * from four fields at once — see pod.rowStatus.
    */
-  async podsTable(actor: Actor, clubId: string | null | undefined, query?: any) {
-    return podService.tableForClubAdmin(await this.scopedClubIds(actor, clubId), query);
+  async podsTable(
+    actor: Actor,
+    clubId: string | null | undefined,
+    query?: any,
+    status?: PodRowStatus | null
+  ) {
+    return podService.tableForClubAdmin(await this.scopedClubIds(actor, clubId), query, status);
   },
 
   /** Club Studio → "Your Pods": the same scope as podsTable, rendered as a flat
@@ -657,13 +729,29 @@ export const clubAdminService = {
     return clubService.update(clubDocId, clean);
   },
 
-  /** Rich dashboard scoped to the user's assigned clubs: KPIs, monthly trend
-   * series (pods / bookings / followers / revenue) and a per-club breakdown. */
+  /**
+   * Rich dashboard scoped to the user's assigned clubs: KPIs, monthly trend
+   * series (pods / bookings / followers / revenue) and a per-club breakdown.
+   *
+   * EVERY figure answers to the date window, on one of two bases:
+   *
+   *   FLOW  — things that HAPPENED in the window: pods (and the capacity,
+   *           attendees, hosts and fill rate derived from them), bookings,
+   *           back-outs, new followers, revenue, and the per-club pods +
+   *           revenue columns.
+   *   STOCK — things that ARE, measured as of the window's end: assigned
+   *           clubs, total followers, the rating average and its count, and
+   *           the per-club followers + rating columns. A club that took no new
+   *           ratings this month still has the rating it earned, so scoping
+   *           these like a flow would report 0.0 rather than the truth.
+   *
+   * An absent bound is unbounded (see DashboardRange), which is what lets the
+   * presets send a start and no end: "Last 30 days" then still counts the pods
+   * scheduled ahead, and total_pods stays upcoming + completed for every range.
+   */
   async dashboard(userId: string, from?: string | null, to?: string | null) {
-    const toDate = to ? new Date(to) : new Date();
-    const fromDate = from
-      ? new Date(from)
-      : new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth() - 5, 1));
+    const fromDate = parseBound(from, 'from');
+    const toDate = parseBound(to, 'to');
 
     const clubDocs = Types.ObjectId.isValid(userId)
       ? await ClubModel.find({ admin_user_ids: new Types.ObjectId(userId) })
@@ -689,39 +777,51 @@ export const clubAdminService = {
       byClub.set(String(c._id), { upcoming: 0, completed: 0, total: 0, revenue: 0 })
     );
     const range: DashboardRange = { from: fromDate, to: toDate, now };
-    const { upcoming_pods, completed_pods, total_spots, total_attendees, hostSet, podsSeries } =
-      tallyPods(pods as any[], byClub, range);
+    const {
+      total_pods,
+      upcoming_pods,
+      completed_pods,
+      total_spots,
+      total_attendees,
+      hostSet,
+      podsSeries,
+    } = tallyPods(pods as any[], byClub, range);
+
+    // The two bases the KPIs are read on (see the doc comment above): things
+    // that happened INSIDE the window, and things that stand AS OF its end.
+    const inWindow = rangeFilter('created_at', fromDate, toDate);
+    const asOfWindowEnd = rangeFilter('created_at', null, toDate);
 
     const [bookings, backed_out, followers, new_followers, ratingAgg, payments, followerRows, bookingRows, followerClubRows, ratingClubRows] =
       await Promise.all([
-        PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'JOINED' }),
-        PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'BACKED_OUT' }),
-        ClubFollowerModel.countDocuments({ club_id: { $in: clubOids } }),
-        ClubFollowerModel.countDocuments({
-          club_id: { $in: clubOids },
-          created_at: { $gte: fromDate, $lte: toDate },
-        }),
+        PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'JOINED', ...inWindow }),
+        PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'BACKED_OUT', ...inWindow }),
+        ClubFollowerModel.countDocuments({ club_id: { $in: clubOids }, ...asOfWindowEnd }),
+        ClubFollowerModel.countDocuments({ club_id: { $in: clubOids }, ...inWindow }),
         ClubRatingModel.aggregate([
-          { $match: { club_id: { $in: clubOids } } },
+          { $match: { club_id: { $in: clubOids }, ...asOfWindowEnd } },
           { $group: { _id: null, avg: { $avg: '$stars' }, count: { $sum: 1 } } },
         ]),
+        // Deliberately NOT date-filtered here: tallyRevenue is the one place
+        // that decides which payments the window keeps, and the same rows also
+        // date the "All time" trend series.
         PaymentModel.find({ pod_id: { $in: podIds }, status: 'SUCCESS' })
           .select('pod_id total currency_symbol created_at')
           .lean(),
         ClubFollowerModel.aggregate([
-          { $match: { club_id: { $in: clubOids }, created_at: { $gte: fromDate, $lte: toDate } } },
+          { $match: { club_id: { $in: clubOids }, ...inWindow } },
           { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$created_at' } }, count: { $sum: 1 } } },
         ]),
         PodMemberModel.aggregate([
-          { $match: { pod_id: { $in: podIds }, status: 'JOINED', created_at: { $gte: fromDate, $lte: toDate } } },
+          { $match: { pod_id: { $in: podIds }, status: 'JOINED', ...inWindow } },
           { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$created_at' } }, count: { $sum: 1 } } },
         ]),
         ClubFollowerModel.aggregate([
-          { $match: { club_id: { $in: clubOids } } },
+          { $match: { club_id: { $in: clubOids }, ...asOfWindowEnd } },
           { $group: { _id: '$club_id', count: { $sum: 1 } } },
         ]),
         ClubRatingModel.aggregate([
-          { $match: { club_id: { $in: clubOids } } },
+          { $match: { club_id: { $in: clubOids }, ...asOfWindowEnd } },
           { $group: { _id: '$club_id', avg: { $avg: '$stars' } } },
         ]),
       ]);
@@ -747,7 +847,14 @@ export const clubAdminService = {
       (ratingClubRows as any[]).map((r) => [String(r._id), r.avg ?? 0])
     );
 
-    const trend = monthSequence(fromDate, toDate).map((m) => ({
+    // The chart plots what has already happened, so it always stops at this
+    // month even when the window runs on: bookings, followers and revenue can
+    // have no future values, and drawing them to 0 past today reads as a crash
+    // rather than as "not yet".
+    const trendFrom = fromDate ?? earliestActivity(pods as any[], payments as any[], now);
+    const trendTo = new Date(Math.min(+(toDate ?? new Date(now)), now));
+
+    const trend = monthSequence(trendFrom, trendTo).map((m) => ({
       label: m.label,
       pods: podsSeries.get(m.key) ?? 0,
       bookings: bookingSeries.get(m.key) ?? 0,
@@ -772,7 +879,7 @@ export const clubAdminService = {
 
     const kpis = {
       assigned_clubs: clubDocs.length,
-      total_pods: pods.length,
+      total_pods,
       upcoming_pods,
       completed_pods,
       total_bookings: bookings,

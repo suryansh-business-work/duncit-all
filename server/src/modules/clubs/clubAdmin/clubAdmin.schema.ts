@@ -61,6 +61,28 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     clubs: [ClubAdminClubRow!]!
   }
 
+  """
+  The status a pod ROW shows in the Club Admin's pods table.
+
+  Not PodLifecycle: that one asks where a pod sits in time, this one names the
+  Status chip, which mixes the booking cycle with the pod's own flags. The six
+  values partition the table exactly — see pod.rowStatus for the precedence.
+  """
+  enum PodRowStatus {
+    "Live and published."
+    ACTIVE
+    "Live but not published."
+    DRAFT
+    "Waiting on the venue owner's answer to the slot request."
+    AWAITING_VENUE
+    "The venue owner declined the slot request."
+    VENUE_REJECTED
+    "Settled by finance."
+    COMPLETED
+    "Soft-deleted."
+    CANCELLED
+  }
+
   "Search + category + pagination filter for the Club Admin 'Your Clubs' list."
   input MyAdminClubsFilter {
     "Matches club name or slug (case-insensitive)."
@@ -202,8 +224,12 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     EVERY stage — including pods awaiting the venue owner's approval and
     cancelled ones — so a club admin can open and edit a pod wherever it sits
     in the booking cycle. Pass club_id to narrow to one of their clubs.
+
+    The status argument narrows to one bucket of the table's Status column. It
+    is an argument rather than a column filter because the chip is derived from
+    four fields at once, so it cannot ride the table engine's field allowlist.
     """
-    clubAdminPodsTable(club_id: ID, query: TableQueryInput): PodTablePage!
+    clubAdminPodsTable(club_id: ID, query: TableQueryInput, status: PodRowStatus): PodTablePage!
     """
     Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
     section, newest first — the club-side twin of venuePods. Every stage shows,

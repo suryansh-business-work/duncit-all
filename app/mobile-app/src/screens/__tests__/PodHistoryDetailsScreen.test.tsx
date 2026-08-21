@@ -165,7 +165,7 @@ describe('PodHistoryDetailsScreen actions', () => {
   it('shows the refund status as a notice', () => {
     renderWithProviders(<PodHistoryDetailsScreen />);
     fireEvent.press(screen.getByTestId('ph-refund'));
-    expect(screen.getByTestId('ph-notice')).toHaveTextContent('Refund status: Not started');
+    expect(screen.getByTestId('ph-notice')).toHaveTextContent('Refund status: Criteria pending');
   });
 
   it('downloads the invoice and surfaces a failure as a notice', async () => {

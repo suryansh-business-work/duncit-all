@@ -97,10 +97,13 @@ const CLUB_ADMIN_POD_ROW_FIELDS = gql`
 
 /** Club-scoped server-side (not a client filter) and deliberately covering
  * EVERY stage — pods awaiting venue approval and cancelled ones included — so
- * a club admin can open and edit a pod wherever it sits in the booking cycle. */
+ * a club admin can open and edit a pod wherever it sits in the booking cycle.
+ *
+ * `status` narrows to one bucket of the Status column, server-side, so the
+ * filter pages over every matching pod rather than the page already fetched. */
 export const CLUB_ADMIN_PODS_TABLE = gql`
-  query ClubAdminPodsTable($club_id: ID, $query: TableQueryInput) {
-    clubAdminPodsTable(club_id: $club_id, query: $query) {
+  query ClubAdminPodsTable($club_id: ID, $query: TableQueryInput, $status: PodRowStatus) {
+    clubAdminPodsTable(club_id: $club_id, query: $query, status: $status) {
       total
       rows {
         ...ClubAdminPodRowFields

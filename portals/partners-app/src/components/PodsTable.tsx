@@ -3,6 +3,8 @@ import { Box, Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { AttendanceChip } from '@duncit/ui';
 import { formatDate, formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '../i18n';
+import { POD_ROW_STATUS_COLORS, POD_ROW_STATUS_KEYS, podRowStatus } from './pod-status';
 
 /** Minimal row shape shared by the partner + club-admin pods tables. */
 export interface PodRowBase {
@@ -40,28 +42,6 @@ interface Props<T extends PodRowBase> {
   renderMonitor?: (pod: T) => ReactNode;
 }
 
-/** Booking-cycle state wins over the plain active/draft split, so a cancelled
- * or venue-blocked pod is never mistaken for a draft. */
-const podStatusLabel = (pod: PodRowBase): string => {
-  if (pod.is_deleted) return 'Cancelled';
-  if (pod.completed_at) return 'Completed';
-  if (pod.venue_approval_status === 'PENDING') return 'Awaiting venue';
-  if (pod.venue_approval_status === 'DECLINED') return 'Venue rejected';
-  return pod.is_active ? 'Active' : 'Draft';
-};
-
-const podStatusColor = (pod: PodRowBase): 'success' | 'info' | 'default' | 'error' | 'warning' => {
-  if (pod.is_deleted) return 'error';
-  if (pod.completed_at) return 'success';
-  if (pod.venue_approval_status === 'PENDING') return 'warning';
-  if (pod.venue_approval_status === 'DECLINED') return 'error';
-  return pod.is_active ? 'info' : 'default';
-};
-
-const renderStatus = (pod: PodRowBase) => (
-  <Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} />
-);
-
 const renderAttendance = (pod: PodRowBase) => <AttendanceChip attendance={pod.attendance} />;
 
 const dateValue = (pod: PodRowBase) =>
@@ -82,7 +62,16 @@ export default function PodsTable<T extends PodRowBase>({
   renderActions,
   renderMonitor,
 }: Readonly<Props<T>>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<T>[]>(() => {
+    const statusLabel = (pod: T) => t(POD_ROW_STATUS_KEYS[podRowStatus(pod)]);
+    const renderStatus = (pod: T) => (
+      <Chip
+        size="small"
+        label={statusLabel(pod)}
+        color={POD_ROW_STATUS_COLORS[podRowStatus(pod)]}
+      />
+    );
     const renderPod = (pod: T) => (
       <Box sx={{ lineHeight: 1.2 }}>
         <Typography variant="body2" fontWeight={900} component="div">
@@ -134,7 +123,7 @@ export default function PodsTable<T extends PodRowBase>({
         filter: { type: 'boolean' },
         width: 120,
         cellRenderer: renderStatus,
-        valueGetter: podStatusLabel,
+        valueGetter: statusLabel,
       },
       {
         field: 'pod_amount',
@@ -175,7 +164,7 @@ export default function PodsTable<T extends PodRowBase>({
       });
     }
     return cols;
-  }, [clubName, venueName, renderActions, renderMonitor]);
+  }, [clubName, venueName, renderActions, renderMonitor, t]);
 
   return (
     <DuncitTable<T>

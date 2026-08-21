@@ -9,6 +9,7 @@
  */
 import type { ReactElement } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,6 +17,14 @@ import EarnBox from '../src/EarnBox';
 import EarnJourneyList from '../src/EarnJourneyList';
 import EarnMeetingActions from '../src/EarnMeetingActions';
 import { EarnSurfaceProvider, type EarnSurfaceConfig } from '../src/EarnSurfaceProvider';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -42,7 +51,9 @@ const config = (over: Partial<EarnSurfaceConfig> = {}): EarnSurfaceConfig =>
 const wrap = (ui: ReactElement, surface: EarnSurfaceConfig = config()) =>
   render(
     <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
       <EarnSurfaceProvider config={surface}>{ui}</EarnSurfaceProvider>
+      </ThemeProvider>
     </MockedProvider>
   );
 

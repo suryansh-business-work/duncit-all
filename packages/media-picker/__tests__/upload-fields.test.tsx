@@ -9,6 +9,7 @@
  */
 import type { ReactElement } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,6 +22,14 @@ import type { SingleImageVariant } from '../src/single-image/types';
 const IMG = 'https://ik.imagekit.io/duncit/pod/cover.jpg';
 const PDF = 'https://ik.imagekit.io/duncit/support/receipt.pdf';
 
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {
@@ -29,7 +38,9 @@ const settle = async () => {
   });
 };
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
+    </MockedProvider>);
 
 const pressEverything = async () => {
   for (const control of [...document.body.querySelectorAll<HTMLElement>('button:not([disabled])')].slice(0, 15)) {

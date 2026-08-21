@@ -9,11 +9,20 @@
  * renders nothing at all.
  */
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import MediaPickerDialog from '../src/MediaPickerDialog';
 import type { MediaPickerDialogProps } from '../src/types';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -28,7 +37,9 @@ const mount = (props: Partial<MediaPickerDialogProps> = {}) => {
   const onPicked = vi.fn();
   const result = render(
     <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
       <MediaPickerDialog open onClose={onClose} onPicked={onPicked} {...props} />
+      </ThemeProvider>
     </MockedProvider>
   );
   return { ...result, onClose, onPicked };

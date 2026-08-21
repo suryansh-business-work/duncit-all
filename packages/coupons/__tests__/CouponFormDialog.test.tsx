@@ -6,11 +6,20 @@
  * two answers to "what does this code do".
  */
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import CouponFormDialog from '../src/CouponFormDialog';
 import type { CouponPodOption, CouponRow } from '../src/queries';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -45,7 +54,9 @@ const coupon = (over: Partial<CouponRow> = {}): CouponRow =>
 const mount = (props: Record<string, unknown> = {}) =>
   render(
     <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
       <CouponFormDialog open onClose={vi.fn()} onSaved={vi.fn()} pods={[POD]} {...(props as never)} />
+      </ThemeProvider>
     </MockedProvider>
   );
 

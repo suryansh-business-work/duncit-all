@@ -9,6 +9,7 @@
  * than blank.
  */
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,6 +18,14 @@ import { DashboardWidgetCard } from '../src/DashboardWidgetCard';
 import { DuncitDashboard } from '../src/DuncitDashboard';
 import { MY_DASHBOARD_LAYOUT } from '../src/queries';
 import type { DashboardWidget } from '../src/types';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -61,7 +70,9 @@ const layoutMock = (items: SavedItem[]): MockedResponse => ({
 const mount = (widgets = WIDGETS, mocks: MockedResponse[] = []) =>
   render(
     <MockedProvider mocks={mocks}>
+      <ThemeProvider theme={testTheme}>
       <DuncitDashboard dashboardId="admin.overview" widgets={widgets} header={<h1>Overview</h1>} />
+      </ThemeProvider>
     </MockedProvider>
   );
 

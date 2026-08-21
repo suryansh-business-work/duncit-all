@@ -7,6 +7,7 @@
  * what keeps the MUI and Tamagui halves saying the same sentences.
  */
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +16,14 @@ import { AiMonitoringChip } from '../src/mui/AiMonitoringChip';
 import { AiMonitoringDialog } from '../src/mui/AiMonitoringDialog';
 
 const copy = aiMonitoringFallbackCopy((key: string) => key);
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -32,7 +41,9 @@ describe('AiMonitoringChip', () => {
   it('renders while the settings request is still out — a slow request must not hide the notice', async () => {
     const { container } = render(
       <MockedProvider mocks={[]}>
+        <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
+        </ThemeProvider>
       </MockedProvider>
     );
     await settle();
@@ -43,7 +54,9 @@ describe('AiMonitoringChip', () => {
   it('opens its dialog when pressed', async () => {
     render(
       <MockedProvider mocks={[]}>
+        <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
+        </ThemeProvider>
       </MockedProvider>
     );
     await settle();
@@ -60,7 +73,9 @@ describe('AiMonitoringChip', () => {
   it('takes the size and spacing the hosting field gives it', async () => {
     const { container } = render(
       <MockedProvider mocks={[]}>
+        <ThemeProvider theme={testTheme}>
         <AiMonitoringChip size="small" sx={{ mt: 1 }} />
+        </ThemeProvider>
       </MockedProvider>
     );
     await settle();
@@ -71,13 +86,13 @@ describe('AiMonitoringChip', () => {
 
 describe('AiMonitoringDialog', () => {
   it('renders nothing while it is closed', () => {
-    render(<AiMonitoringDialog open={false} onClose={vi.fn()} copy={copy} />);
+    render(<ThemeProvider theme={testTheme}><AiMonitoringDialog open={false} onClose={vi.fn()} copy={copy} /></ThemeProvider>);
 
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('renders every sentence the caller resolved, in order', async () => {
-    render(<AiMonitoringDialog open onClose={vi.fn()} copy={copy} />);
+    render(<ThemeProvider theme={testTheme}><AiMonitoringDialog open onClose={vi.fn()} copy={copy} /></ThemeProvider>);
     await settle();
 
     const text = document.body.textContent ?? '';
@@ -88,7 +103,7 @@ describe('AiMonitoringDialog', () => {
 
   it('closes through the caller callback rather than on its own', async () => {
     const onClose = vi.fn();
-    render(<AiMonitoringDialog open onClose={onClose} copy={copy} />);
+    render(<ThemeProvider theme={testTheme}><AiMonitoringDialog open onClose={onClose} copy={copy} /></ThemeProvider>);
     await settle();
 
     fireEvent.click(screen.getByRole('button', { name: copy.dismissLabel }));

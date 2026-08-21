@@ -9,11 +9,20 @@
  */
 import type { ReactElement } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodProductDialog from '../src/PodProductDialog';
 import PodProductsField, { type PodProductRequestValue } from '../src/PodProductsField';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -50,7 +59,9 @@ const PRODUCTS = [
   product({ id: 'p-2', product_name: 'Grip Tape', unit_cost: 120, available_count: 0, sku: 'YX-GT-01' }),
 ];
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
+    </MockedProvider>);
 
 afterEach(() => {
   vi.clearAllMocks();

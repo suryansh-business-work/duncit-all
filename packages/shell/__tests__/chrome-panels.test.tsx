@@ -10,6 +10,7 @@
  */
 import type { ReactElement } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -17,6 +18,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AgentChat } from '../src/chrome/agent/AgentChat';
 import { BotChat } from '../src/chrome/ask-bot/BotChat';
 import { JumpToPortalDialog } from '../src/chrome/jump-to-portal/JumpToPortalDialog';
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -29,7 +38,9 @@ const settle = async () => {
 const wrap = (ui: ReactElement) =>
   render(
     <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={['/']}>{ui}</MemoryRouter>
+      </ThemeProvider>
     </MockedProvider>
   );
 

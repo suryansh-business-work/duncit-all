@@ -10,6 +10,7 @@
  */
 import type { ReactNode } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { buildSlotLabels } from '@duncit/slots';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -22,6 +23,14 @@ import { mwebHostPodLabels } from '../src/labels';
 import type { HostPodTarget } from '../src/types';
 
 const t = (key: string) => key;
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -59,7 +68,9 @@ const pod = (over: Partial<HostPodTarget> = {}): HostPodTarget =>
 const wrap = (ui: ReactNode) =>
   render(
     <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
       <HostPodActionsProvider {...config()}>{ui}</HostPodActionsProvider>
+      </ThemeProvider>
     </MockedProvider>
   );
 

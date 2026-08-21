@@ -11,6 +11,7 @@
  * from the server instead of a smaller page.
  */
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -65,6 +66,14 @@ const podMock = (over: Record<string, unknown> = {}): MockedResponse => ({
   result: { data: { pod: pod(over) } },
 });
 
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {
@@ -76,6 +85,7 @@ const settle = async () => {
 const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMock()]) =>
   render(
     <MockedProvider mocks={mocks}>
+      <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
         <Routes>
           <Route path="/pods/:id" element={<PodDetailsPage {...props} />} />
@@ -83,6 +93,7 @@ const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMo
           <Route path="/pods/:id/edit" element={<div>pod-editor</div>} />
         </Routes>
       </MemoryRouter>
+      </ThemeProvider>
     </MockedProvider>
   );
 

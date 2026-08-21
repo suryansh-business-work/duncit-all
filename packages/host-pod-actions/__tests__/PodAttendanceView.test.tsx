@@ -7,6 +7,7 @@
  * is already split, so a late mark would change money that has moved.
  */
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render, screen } from '@testing-library/react';
 import { mwebAttendanceLabels } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -18,6 +19,14 @@ const POD_ID = 'pod-1';
 
 /** Echoes the key back, so the assertions read as the key that was rendered. */
 const labels = mwebAttendanceLabels((key: string) => key);
+
+/**
+ * A theme, because MUI's `useTheme()` returns NULL outside a provider rather
+ * than falling back to the default one — so a component reading it through a
+ * callback (`useMediaQuery((theme) => theme.breakpoints.down('sm'))`) throws
+ * mid-render. In the app the theme comes from the surface; here it does not.
+ */
+const testTheme = createTheme();
 
 const settle = async () => {
   await act(async () => {
@@ -76,6 +85,7 @@ const boardMock = (over: Record<string, unknown> = {}): MockedResponse => ({
 const mount = (mocks: MockedResponse[] = [boardMock()]) =>
   render(
     <MockedProvider mocks={mocks}>
+      <ThemeProvider theme={testTheme}>
       <PodAttendanceView
         podId={POD_ID}
         labels={labels}
@@ -83,6 +93,7 @@ const mount = (mocks: MockedResponse[] = [boardMock()]) =>
         notifySuccess={vi.fn()}
         notifyError={vi.fn()}
       />
+      </ThemeProvider>
     </MockedProvider>
   );
 

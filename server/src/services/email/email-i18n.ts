@@ -60,6 +60,24 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.grievance.detailsLabel": "What you told us",
   "email.grievance.officerLabel": "Grievance Officer",
   "email.grievance.footer": "Reply to this email if you have anything to add.",
+  // Attendance recorded at a pod (template: attendance-marked, authored in
+  // Tech > Emails > Templates — rule 28, no local MJML). A completed pod pays
+  // the host on exactly who is marked, so the attendee gets their own written
+  // record of the mark while there is still time to say it is wrong.
+  "email.attendanceMarked.title": "Attendance marked",
+  "email.attendanceMarked.body":
+    "You've been marked present at the pod below. There's nothing for you to do — this is your record of it.",
+  "email.attendanceMarked.podLabel": "Pod",
+  "email.attendanceMarked.markedAtLabel": "Marked at",
+  "email.attendanceMarked.placeLabel": "Where",
+  "email.attendanceMarked.ticketLabel": "Ticket",
+  "email.attendanceMarked.seatsLabel": "Admits",
+  "email.attendanceMarked.cta": "View your booking",
+  "email.attendanceMarked.disputeNote":
+    "Your host is paid on who attended, so tell them right away if this wasn't you. Once the pod is completed the attendance can no longer be changed.",
+  "email.attendanceMarked.footer":
+    "You're receiving this because your attendance was recorded for a pod you joined on Duncit.",
+
   // The signup policy-acceptance receipt (template: policy-acceptance,
   // authored in Tech > Emails > Templates — rule 28, no local MJML).
   "email.policyAcceptance.title": "Your policy acceptance",

@@ -1587,11 +1587,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // and the club-admin help card. mWeb and native render the SAME journey
     // (rule 27), so every key here serves both unless its comment says which.
     podPending: {
-      // Native only — the stack screen's title; the mWeb page has no heading.
       title: 'Slot Request Sent',
+      // Host Studio > Your pods > three dots — reopens this page for a pod the
+      // host created earlier.
+      menuItem: 'Slot Request Status',
+      // The venue decides elsewhere, so the page carries its own way to ask
+      // again: a button in the header and a pull-down over the content.
+      refresh: 'Refresh',
+      // The banner follows the venue's decision — amber while it is pending,
+      // green once the slot is approved, red once it is declined.
       bannerTitle: 'Your Pod will go live once the venue accepts your slot request.',
       bannerBody:
         "We've sent your slot request to the venue. You'll be notified as soon as the venue approves or declines your request.",
+      bannerApprovedTitle: 'Your slot is confirmed — this Pod is live.',
+      bannerApprovedBody: 'People can book their spots now. Track them from Host Studio.',
+      bannerDeclinedTitle: 'The venue declined your slot request.',
+      bannerDeclinedBody:
+        'Edit this pod to pick another venue or another slot, and send the request again.',
       loadFailed: 'This pod could not be loaded.',
       // The pod summary card's rows. A missing date reads mweb.podDetails.datePending.
       dateTime: 'Date & time',

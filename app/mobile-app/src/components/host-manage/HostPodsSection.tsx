@@ -127,6 +127,10 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           if (actionsPod) navigation.navigate('PodAttendance', { podId: actionsPod.id });
           setActionsPod(null);
         }}
+        onSlotRequest={() => {
+          if (actionsPod) navigation.navigate('PodPending', { podId: actionsPod.id });
+          setActionsPod(null);
+        }}
         onComplete={() => {
           if (actionsPod) {
             setCompletePod({

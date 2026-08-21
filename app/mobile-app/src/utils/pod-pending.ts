@@ -16,9 +16,11 @@ export function pendingPodImage(media: readonly PendingMedia[]): string | null {
 
 export type ApprovalTone = 'warning' | 'success' | 'error';
 
+export type ApprovalIcon = 'schedule' | 'check-circle' | 'cancel';
+
 export interface ApprovalBadge {
   label: string;
-  icon: 'schedule' | 'check-circle' | 'cancel';
+  icon: ApprovalIcon;
   tone: ApprovalTone;
 }
 
@@ -32,6 +34,47 @@ export function approvalBadge(status?: string | null, t: Translate = fallbackT):
     return { label: t('mweb.podPending.approvalDeclined'), icon: 'cancel', tone: 'error' };
   }
   return { label: t('mweb.podPending.approvalPending'), icon: 'schedule', tone: 'warning' };
+}
+
+/** The banner only ever shows a decision, never the clock the venue badge
+ * uses — a pod still waiting keeps the same tick, just in amber. */
+export type PendingBannerIcon = 'check-circle' | 'cancel';
+
+export interface PendingBannerState {
+  title: string;
+  body: string;
+  icon: PendingBannerIcon;
+  tone: ApprovalTone;
+}
+
+/** The top banner follows the venue's decision too — a host who refreshes after
+ * an approval must see the amber tick turn green, not the same waiting copy. */
+export function pendingBannerState(
+  status?: string | null,
+  t: Translate = fallbackT,
+): PendingBannerState {
+  if (status === 'PENDING') {
+    return {
+      title: t('mweb.podPending.bannerTitle'),
+      body: t('mweb.podPending.bannerBody'),
+      icon: 'check-circle',
+      tone: 'warning',
+    };
+  }
+  if (status === 'DECLINED') {
+    return {
+      title: t('mweb.podPending.bannerDeclinedTitle'),
+      body: t('mweb.podPending.bannerDeclinedBody'),
+      icon: 'cancel',
+      tone: 'error',
+    };
+  }
+  return {
+    title: t('mweb.podPending.bannerApprovedTitle'),
+    body: t('mweb.podPending.bannerApprovedBody'),
+    icon: 'check-circle',
+    tone: 'success',
+  };
 }
 
 /** Pod-card "current status" line derived from the venue decision. */

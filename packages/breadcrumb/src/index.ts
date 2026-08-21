@@ -7,5 +7,7 @@
  * as a `<BreadcrumbProvider>` sits above them (the shell's `AppShell` mounts it).
  */
 export { AppBreadcrumbs, type AppBreadcrumbsProps } from './AppBreadcrumbs';
-export { BreadcrumbProvider, useSetBreadcrumbs } from './BreadcrumbContext';
+export { BreadcrumbProvider, useBreadcrumbOverride, useSetBreadcrumbs } from './BreadcrumbContext';
+export { ID_CRUMB_LABEL } from './humanise';
+export { useCrumbs } from './useCrumbs';
 export type { BreadcrumbNavItem, Crumb } from './types';

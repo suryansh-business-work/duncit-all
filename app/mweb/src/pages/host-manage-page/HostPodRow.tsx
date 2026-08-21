@@ -23,6 +23,8 @@ interface Props {
   onClubAdmin: () => void;
   /** Opens the pod's attendance PAGE — a route, so mWeb owns the navigation. */
   onSeeAttendance: () => void;
+  /** Opens the pod's "Slot Request Sent" PAGE — a route, same as above. */
+  onSlotRequest: () => void;
 }
 
 /** One hosted pod row — link to the pod + the host's actions behind a single
@@ -32,6 +34,7 @@ export default function HostPodRow({
   actions,
   onClubAdmin,
   onSeeAttendance,
+  onSlotRequest,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -76,6 +79,7 @@ export default function HostPodRow({
           {...actions}
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
+          onSlotRequest={onSlotRequest}
         />
       </Stack>
       {rejected && (

@@ -79,6 +79,7 @@ export default function HostPodsCard({
             actions={menuHandlers(p)}
             onClubAdmin={() => setClubAdminPod(p)}
             onSeeAttendance={() => navigate(`/host/pod/${p.id}/attendance`)}
+            onSlotRequest={() => navigate(`/host/pod-pending/${p.id}`)}
           />
         ))}
       </Stack>

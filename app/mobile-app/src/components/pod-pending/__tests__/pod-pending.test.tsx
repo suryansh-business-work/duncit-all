@@ -57,7 +57,7 @@ beforeEach(() => {
 
 describe('PendingBanner', () => {
   it('shows the heading and subheading under the tick', () => {
-    renderWithProviders(<PendingBanner />);
+    renderWithProviders(<PendingBanner status="PENDING" />);
     expect(screen.getByTestId('pod-pending-banner')).toBeOnTheScreen();
     expect(
       screen.getByText('Your Pod will go live once the venue accepts your slot request.'),

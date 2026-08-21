@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
@@ -44,6 +45,9 @@ export default function PodFeedbackPage() {
   });
 
   const form = data?.podFeedbackForm ?? null;
+  useEntityPageMeta(
+    form?.pod.title ? t('mweb.meta.podFeedback.title', { vars: { name: form.pod.title } }) : null,
+  );
   const mine = form?.mine ?? null;
   const aspects = useMemo(
     () => orderedAspects(form?.pod.feedback_aspects),

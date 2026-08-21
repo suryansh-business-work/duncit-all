@@ -70,3 +70,7 @@ export { SHELL_FALLBACK, SHELL_FALLBACK_FLAT } from './i18n/fallback';
 // always supplied — a portal importing @duncit/app-settings directly would have
 // to repeat that argument at every call site.
 export { useTranslation } from './i18n/useTranslation';
+// Re-exported so a detail page can name the tab after what it is showing (a
+// ticket's subject, a user's name) without reaching past the shell. The shell
+// already titles every routed page from the breadcrumb; this is the override.
+export { usePageMeta, type PageMetaInput } from '@duncit/app-settings';

@@ -1,4 +1,5 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
+import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -78,6 +79,7 @@ export default function PublicProfilePage() {
   const [follow, followState] = useMutation(FOLLOW_USER);
   const [unfollow, unfollowState] = useMutation(UNFOLLOW_USER);
   const [cancelRequest, cancelState] = useMutation(CANCEL_FOLLOW_REQUEST);
+  useEntityPageMeta(data?.publicUserProfile?.full_name);
 
   if (loading && !data) {
     return (

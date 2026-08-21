@@ -4,6 +4,8 @@ export type { DuncitLocalizationProviderProps } from './DuncitLocalizationProvid
 export { PUBLIC_APP_SETTINGS, useDateFormat } from './useDateFormat';
 export type { DateInput, UseDateFormatOptions } from './useDateFormat';
 export { PUBLIC_FEATURE_FLAGS, useFeatureFlag, useFeatureFlags } from './useFeatureFlag';
+export { applyPageMeta, pageTitle, usePageMeta } from './usePageMeta';
+export type { PageMetaInput } from './usePageMeta';
 export { useSession } from './useSession';
 export type { SessionValue } from './useSession';
 // The session shape and its pure derivations, re-exported so a surface reads

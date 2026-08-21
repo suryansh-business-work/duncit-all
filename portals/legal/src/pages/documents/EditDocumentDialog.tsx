@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { UPDATE_LEGAL_DOCUMENT, type LegalDocumentListItem } from '../../graphql/documents';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** The row being edited; null keeps the dialog closed. */
@@ -35,6 +36,7 @@ interface Props {
  * the dialog says so up front rather than after the press.
  */
 export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [active, setActive] = useState(true);
   const [error, setError] = useState('');
@@ -53,7 +55,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
 
   const apply = async () => {
     if (!trimmed) {
-      setError('Title is required.');
+      setError(t('legal.documents.titleRequired'));
       return;
     }
     try {
@@ -61,7 +63,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
       onSaved();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the document.');
+      setError(e instanceof Error ? e.message : t('legal.documents.saveFailed'));
     }
   };
 
@@ -74,7 +76,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
         </Typography>
         <IconButton
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
         >
           <CloseIcon />
@@ -92,7 +94,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
           {error && <Alert severity="error">{error}</Alert>}
 
           <TextField
-            label="Title"
+            label={t('shell.common.title')}
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
@@ -123,7 +125,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button variant="contained" onClick={apply} disabled={loading || locked || !trimmed}>
           Apply
         </Button>

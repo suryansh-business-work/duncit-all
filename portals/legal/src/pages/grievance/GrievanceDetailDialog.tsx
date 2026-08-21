@@ -23,6 +23,7 @@ import {
   type GrievanceTicket,
 } from '../../graphql/grievance';
 import GrievanceFactRow from './GrievanceFactRow';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   ticket: GrievanceTicket | null;
@@ -45,6 +46,7 @@ export default function GrievanceDetailDialog({
   onClose,
   onSaved,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<GrievanceStatus>('RECEIVED');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState('');
@@ -80,7 +82,7 @@ export default function GrievanceDetailDialog({
         </Typography>
         <IconButton
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
         >
           <CloseIcon />
@@ -92,14 +94,14 @@ export default function GrievanceDetailDialog({
           {error && <Alert severity="error">{error}</Alert>}
 
           <Stack spacing={1}>
-            <GrievanceFactRow label="Name" value={ticket?.name ?? ''} />
-            <GrievanceFactRow label="Email" value={ticket?.email ?? ''} />
-            <GrievanceFactRow label="Phone" value={ticket?.phone ?? ''} />
-            <GrievanceFactRow label="Address" value={ticket?.address ?? ''} />
-            <GrievanceFactRow label="Received" value={received} />
-            {closed && <GrievanceFactRow label="Closed" value={closed} />}
+            <GrievanceFactRow label={t('shell.common.name')} value={ticket?.name ?? ''} />
+            <GrievanceFactRow label={t('shell.common.email')} value={ticket?.email ?? ''} />
+            <GrievanceFactRow label={t('shell.common.phone')} value={ticket?.phone ?? ''} />
+            <GrievanceFactRow label={t('legal.grievance.address')} value={ticket?.address ?? ''} />
+            <GrievanceFactRow label={t('legal.grievance.colReceived')} value={received} />
+            {closed && <GrievanceFactRow label={t('legal.grievance.closed')} value={closed} />}
             {ticket?.handled_by_name && (
-              <GrievanceFactRow label="Handled by" value={ticket.handled_by_name} />
+              <GrievanceFactRow label={t('legal.grievance.handledBy')} value={ticket.handled_by_name} />
             )}
           </Stack>
 
@@ -127,7 +129,7 @@ export default function GrievanceDetailDialog({
 
           <TextField
             select
-            label="Status"
+            label={t('shell.common.status')}
             value={status}
             onChange={(e) => setStatus(e.target.value as GrievanceStatus)}
             fullWidth
@@ -140,19 +142,19 @@ export default function GrievanceDetailDialog({
           </TextField>
 
           <TextField
-            label="Resolution note"
+            label={t('legal.grievance.resolutionNote')}
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
             fullWidth
             multiline
             minRows={3}
-            helperText="Internal — what was done about this grievance."
+            helperText={t('legal.grievance.resolutionHint')}
           />
         </Stack>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button variant="contained" onClick={apply} disabled={loading}>
           Apply
         </Button>

@@ -14,6 +14,7 @@ import {
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import ContractDateField from './ContractDateField';
 import { CONTRACT_STATUS_OPTIONS, type ContractStatus } from '../../graphql/contracts';
+import { useTranslation } from '@duncit/shell';
 
 export interface ContractFormState {
   title: string;
@@ -65,6 +66,7 @@ export default function ContractFormDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const saveLabel = isNew ? 'Create Contract' : 'Save';
   const heading = () => {
     if (isNew) return 'New Contract';
@@ -86,7 +88,7 @@ export default function ContractFormDialog({
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Title"
+              label={t('shell.common.title')}
               value={form.title}
               onChange={(e) => onChange({ title: e.target.value })}
               required
@@ -95,18 +97,18 @@ export default function ContractFormDialog({
               disabled={readOnly}
             />
             <TextField
-              label="Counterparty"
+              label={t('legal.contracts.counterparty')}
               value={form.counterparty}
               onChange={(e) => onChange({ counterparty: e.target.value })}
               fullWidth
               disabled={readOnly}
-              helperText="Who the contract is with"
+              helperText={t('legal.contracts.counterpartyHint')}
             />
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Status"
+              label={t('shell.common.status')}
               select
               value={form.status}
               onChange={(e) => onChange({ status: e.target.value as ContractStatus })}
@@ -120,13 +122,13 @@ export default function ContractFormDialog({
               ))}
             </TextField>
             <ContractDateField
-              label="Effective from"
+              label={t('legal.contracts.effectiveFrom')}
               value={form.effective_from}
               onChange={(effective_from) => onChange({ effective_from })}
               disabled={readOnly}
             />
             <ContractDateField
-              label="Effective to"
+              label={t('legal.contracts.effectiveTo')}
               value={form.effective_to}
               onChange={(effective_to) => onChange({ effective_to })}
               disabled={readOnly}
@@ -134,7 +136,7 @@ export default function ContractFormDialog({
           </Stack>
 
           <TextField
-            label="Description"
+            label={t('shell.common.description')}
             value={form.description}
             onChange={(e) => onChange({ description: e.target.value })}
             fullWidth

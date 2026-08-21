@@ -25,8 +25,10 @@ import DocumentTypeSelect from '../../components/DocumentTypeSelect';
 import DocumentsTable from './DocumentsTable';
 import EditDocumentDialog from './EditDocumentDialog';
 import SignContractDialog from './SignContractDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function DocumentsListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -68,7 +70,7 @@ export default function DocumentsListPage() {
 
   return (
     <Stack spacing={2}>
-      <PageHeader title="Documents" subtitle="Create, version and manage legal documents." />
+      <PageHeader title={t('legal.documents.title')} subtitle={t('legal.documents.subtitle')} />
 
       <DocumentsTable
         fetchRows={fetchRows}
@@ -96,13 +98,13 @@ export default function DocumentsListPage() {
       />
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>New Document</DialogTitle>
+        <DialogTitle>{t('legal.documents.create')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
-            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus required />
+            <TextField label={t('legal.documents.documentName')} value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus required />
             <DocumentTypeSelect value={docType} onChange={setDocType} required />
             <TextField
-              label="Description"
+              label={t('shell.common.description')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               fullWidth
@@ -118,7 +120,7 @@ export default function DocumentsListPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
           <Button variant="contained" disabled={creating || !name.trim() || !docType.trim()} onClick={submit}>
             Create
           </Button>

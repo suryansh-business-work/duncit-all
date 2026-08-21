@@ -13,15 +13,19 @@ import {
   type LegalDocumentTypeCount,
 } from '../graphql/documents';
 import { POLICY_STATS_TABLE, type PolicyTypeCount } from '../graphql/policies';
+import { useTranslation } from '@duncit/shell';
 
 // Aggregate rows are keyed by document_type (no id field on the server type).
 const getStatsRowId = (r: LegalDocumentTypeCount) => r.document_type;
 
 // Allowlists (LEGAL_DOCUMENT_STATS_TABLE_CONFIG): sort document_type/count;
 // filter document_type (text) + count (number).
-const STATS_COLUMNS: DuncitColumn<LegalDocumentTypeCount>[] = [
-  { field: 'document_type', headerName: 'Document type', flex: 1, minWidth: 220, filter: { type: 'text' } },
-  { field: 'count', headerName: 'Count', width: 110, filter: { type: 'number' } },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Headings are copy, so the columns are built from the active catalogue. */
+const statsColumns = (t: Translate): DuncitColumn<LegalDocumentTypeCount>[] => [
+  { field: 'document_type', headerName: t('legal.dashboard.documentType'), flex: 1, minWidth: 220, filter: { type: 'text' } },
+  { field: 'count', headerName: t('legal.dashboard.count'), width: 110, filter: { type: 'number' } },
 ];
 
 // The policy aggregate has no id either — a row IS its type.
@@ -29,9 +33,9 @@ const getPolicyStatsRowId = (r: PolicyTypeCount) => r.policy_type;
 
 // Same shape as the document columns, against POLICY_STATS_TABLE_CONFIG's
 // allowlist: sort policy_type/count; filter policy_type (text) + count (number).
-const POLICY_STATS_COLUMNS: DuncitColumn<PolicyTypeCount>[] = [
-  { field: 'policy_type', headerName: 'Policy type', flex: 1, minWidth: 220, filter: { type: 'text' } },
-  { field: 'count', headerName: 'Total policies', width: 140, filter: { type: 'number' } },
+const policyStatsColumns = (t: Translate): DuncitColumn<PolicyTypeCount>[] => [
+  { field: 'policy_type', headerName: t('legal.dashboard.policyType'), flex: 1, minWidth: 220, filter: { type: 'text' } },
+  { field: 'count', headerName: t('legal.dashboard.totalPolicies'), width: 140, filter: { type: 'number' } },
 ];
 
 type NavCardProps = Readonly<{
@@ -62,6 +66,7 @@ function NavCard({ icon, heading, caption, to }: NavCardProps) {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const { data } = useQuery<{ legalDocumentStats: LegalDocumentStats }>(LEGAL_DOCUMENT_STATS, {
     fetchPolicy: 'cache-and-network',
@@ -91,7 +96,7 @@ export default function DashboardPage() {
         <NavCard
           to="/documents"
           icon={<DescriptionIcon fontSize="large" color="primary" />}
-          caption="Total documents"
+          caption={t('legal.dashboard.totalDocuments')}
           heading={
             <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
               {stats?.total ?? 0}
@@ -112,7 +117,7 @@ export default function DashboardPage() {
         <NavCard
           to="/policies"
           icon={<PolicyIcon fontSize="large" color="primary" />}
-          caption="View, manage, and publish platform policies."
+          caption={t('legal.dashboard.policiesHint')}
           heading={
             <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
               Policies
@@ -123,7 +128,7 @@ export default function DashboardPage() {
     },
     {
       id: 'documents-by-type',
-      title: 'Documents by type',
+      title: t('legal.dashboard.documentsByType'),
       disablePadding: true,
       // Toolbar + header + pagination alone are ~150px, so h6 always scrolled
       // internally even for a handful of rows.
@@ -133,10 +138,10 @@ export default function DashboardPage() {
       content: (
         <DuncitTable<LegalDocumentTypeCount>
           tableId="legal-documents-by-type"
-          columns={STATS_COLUMNS}
+          columns={statsColumns(t)}
           fetchRows={fetchRows}
           getRowId={getStatsRowId}
-          emptyText="No documents yet. Create one from the Documents section."
+          emptyText={t('legal.dashboard.emptyDocuments')}
           defaultSort={{ field: 'count', dir: 'desc' }}
           searchPlaceholder="Search document type"
         />
@@ -147,7 +152,7 @@ export default function DashboardPage() {
       // themselves, so creating, retyping or deleting one moves these numbers
       // on the next read.
       id: 'policies-by-type',
-      title: 'Policies by type',
+      title: t('legal.dashboard.policiesByType'),
       disablePadding: true,
       defaultLayout: { x: 0, y: 9, w: 12, h: 7 },
       minW: 4,
@@ -155,10 +160,10 @@ export default function DashboardPage() {
       content: (
         <DuncitTable<PolicyTypeCount>
           tableId="legal-policies-by-type"
-          columns={POLICY_STATS_COLUMNS}
+          columns={policyStatsColumns(t)}
           fetchRows={fetchPolicyRows}
           getRowId={getPolicyStatsRowId}
-          emptyText="No policies yet. Create one from the Policies section."
+          emptyText={t('legal.dashboard.emptyPolicies')}
           defaultSort={{ field: 'count', dir: 'desc' }}
           searchPlaceholder="Search policy type"
         />
@@ -171,8 +176,8 @@ export default function DashboardPage() {
       dashboardId="legal.overview"
       header={
         <PageHeader
-          title="Legal Dashboard"
-          subtitle="An overview of your legal documents and policies by type."
+          title={t('legal.dashboard.title')}
+          subtitle={t('legal.dashboard.subtitle')}
         />
       }
       widgets={widgets}

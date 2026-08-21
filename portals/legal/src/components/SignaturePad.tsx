@@ -10,6 +10,7 @@ import {
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import type { SignatureMethod } from '../graphql/documents';
+import { useTranslation } from '@duncit/shell';
 
 /** The brief's ceiling, enforced here as well as on the server. */
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -49,6 +50,7 @@ export default function SignaturePad({
   onChange,
   typedName,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Own key — the signing page this sits on may carry its own tab strip. The
   // items are the ENABLED methods, so a link naming a switched-off one falls
   // back rather than showing a tab that leads to a rejected save.
@@ -140,16 +142,16 @@ export default function SignaturePad({
     setError(null);
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setError('Upload an image file.');
+      setError(t('legal.signature.uploadHint'));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('That image is over 5 MB. Choose a smaller one.');
+      setError(t('legal.signature.tooLarge'));
       return;
     }
     const reader = new FileReader();
     reader.onload = () => onChange(typeof reader.result === 'string' ? reader.result : '', 'UPLOAD');
-    reader.onerror = () => setError('That image could not be read.');
+    reader.onerror = () => setError(t('legal.signature.unreadable'));
     reader.readAsDataURL(file);
   };
 
@@ -206,7 +208,7 @@ export default function SignaturePad({
       {tab === 'TYPE' && (
         <Stack spacing={1}>
           <TextField
-            label="Type your signature"
+            label={t('legal.signature.typeYours')}
             value={typed}
             onChange={(e) => commitTyped(e.target.value)}
             placeholder={typedName || 'Your name'}
@@ -224,7 +226,7 @@ export default function SignaturePad({
               <Box
                 component="img"
                 src={value}
-                alt="Typed signature preview"
+                alt={t('legal.signature.typedPreview')}
                 sx={{ height: 80, objectFit: 'contain', display: 'block' }}
               />
             </Box>
@@ -250,7 +252,7 @@ export default function SignaturePad({
             <Box
               component="img"
               src={value}
-              alt="Uploaded signature preview"
+              alt={t('legal.signature.uploadedPreview')}
               sx={{ height: 80, objectFit: 'contain' }}
             />
           )}

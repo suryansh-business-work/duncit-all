@@ -8,6 +8,7 @@ import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
+import { LEGAL_BUNDLE } from './bundles/legal';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { MWEB_BUNDLE } from './bundles/mweb';
@@ -50,6 +51,7 @@ export {
   DEVELOPERS_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
+  LEGAL_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
@@ -73,6 +75,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   developers: DEVELOPERS_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
+  legal: LEGAL_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   mweb: MWEB_BUNDLE,

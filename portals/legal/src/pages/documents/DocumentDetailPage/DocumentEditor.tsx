@@ -1,6 +1,7 @@
 import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import DocumentTypeSelect from '../../../components/DocumentTypeSelect';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   content: string;
@@ -17,11 +18,12 @@ interface Props {
 }
 
 export function DocumentEditor(props: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={2}>
         <TextField
-          label="Document name"
+          label={t('legal.documents.documentName')}
           value={props.name}
           onChange={(event) => props.onNameChange(event.target.value)}
           fullWidth
@@ -29,7 +31,7 @@ export function DocumentEditor(props: Readonly<Props>) {
         />
         <DocumentTypeSelect value={props.docType} onChange={props.onDocTypeChange} required />
         <TextField
-          label="Description"
+          label={t('shell.common.description')}
           value={props.description}
           onChange={(event) => props.onDescriptionChange(event.target.value)}
           fullWidth
@@ -48,7 +50,7 @@ export function DocumentEditor(props: Readonly<Props>) {
           />
         </Box>
         <Stack direction="row" spacing={1} justifyContent="flex-end">
-          <Button onClick={props.onCancel}>Cancel</Button>
+          <Button onClick={props.onCancel}>{t('shell.common.cancel')}</Button>
           <Button
             variant="contained"
             disabled={props.saving || !props.name.trim() || !props.docType.trim()}

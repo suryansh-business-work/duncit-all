@@ -31,6 +31,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       close: 'Close',
       view: 'View',
       edit: 'Edit',
+      copy: 'Copy',
 
       // Column headings a console repeats table after table. Only the ones
       // that carry no context of their own live here — anything that names
@@ -42,6 +43,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       actions: 'Actions',
       created: 'Created',
       order: 'Order',
+      title: 'Title',
+      description: 'Description',
+      updated: 'Updated',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,

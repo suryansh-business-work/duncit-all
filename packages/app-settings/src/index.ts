@@ -74,6 +74,7 @@ export {
   FINANCE_BUNDLE,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
+  LEGAL_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   mailCategoryCopy,
   MEDIA_BUNDLE,

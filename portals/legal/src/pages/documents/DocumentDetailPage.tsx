@@ -19,6 +19,7 @@ import { copyToClipboard, printHtml, safeFileName } from '../../lib/docActions';
 import { DocumentEditor } from './DocumentDetailPage/DocumentEditor';
 
 export default function DocumentDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery<{ legalDocument: LegalDocumentDetail | null }>(
@@ -55,7 +56,7 @@ export default function DocumentDetailPage() {
       variables: { id, input: { name: name.trim(), document_type: docType, description, content } },
     });
     setEditing(false);
-    setToast('Saved');
+    setToast(t('legal.documents.saved'));
   };
 
   const onPrint = () => {
@@ -123,7 +124,7 @@ export default function DocumentDetailPage() {
           {doc.content ? (
             <DuncitRichTextInput value={doc.content} onChange={() => undefined} readOnly bare />
           ) : (
-            <Typography variant="body2" color="text.secondary">No content yet.</Typography>
+            <Typography variant="body2" color="text.secondary">{t('legal.documents.noContent')}</Typography>
           )}
         </Paper>
 
@@ -158,12 +159,12 @@ export default function DocumentDetailPage() {
   const headerActions =
     doc && !editing ? (
       <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>Edit</Button>
-        <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>Print</Button>
-        <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>Download</Button>
-        <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>Copy</Button>
-        <Button size="small" startIcon={<FileCopyIcon />} onClick={onClone}>Clone</Button>
-        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>Delete</Button>
+        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>{t('shell.common.edit')}</Button>
+        <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>{t('legal.documents.print')}</Button>
+        <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>{t('legal.documents.download')}</Button>
+        <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>{t('shell.common.copy')}</Button>
+        <Button size="small" startIcon={<FileCopyIcon />} onClick={onClone}>{t('legal.documents.clone')}</Button>
+        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>{t('shell.common.delete')}</Button>
       </Stack>
     ) : undefined;
 
@@ -181,15 +182,15 @@ export default function DocumentDetailPage() {
       {renderBody()}
 
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
-        <DialogTitle>Delete document?</DialogTitle>
+        <DialogTitle>{t('legal.documents.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             This permanently deletes “{doc?.name}” and its history.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>Delete</Button>
+          <Button onClick={() => setConfirmDelete(false)}>{t('shell.common.cancel')}</Button>
+          <Button color="error" variant="contained" onClick={doDelete}>{t('shell.common.delete')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -198,3 +199,4 @@ export default function DocumentDetailPage() {
   );
 }
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';

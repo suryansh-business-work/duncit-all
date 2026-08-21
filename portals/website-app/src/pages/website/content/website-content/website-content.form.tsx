@@ -13,6 +13,7 @@ import {
   type WebsiteContentFormValues,
   type WebsiteContentInput,
 } from './website-content.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   type: WebsitePageType;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<WebsiteContentFormValues>({
     defaultValues: item ? toFormValues(item) : blankValues(),
     resolver: zodResolver(websiteContentSchema),
@@ -37,11 +39,11 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
       <Stack spacing={2} sx={{ mt: 1 }}>
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <RhfTextField control={control} name="title" label="Title" required />
+          <RhfTextField control={control} name="title" label={t('websiteApp.form.title')} required />
           <RhfTextField
             control={control}
             name="sort_order"
-            label="Sort order"
+            label={t('websiteApp.form.sortOrder')}
             type="number"
             sx={{ maxWidth: { sm: 160 } }}
           />
@@ -49,28 +51,28 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
         <RhfTextField
           control={control}
           name="slug"
-          label="Slug"
+          label={t('websiteApp.form.slug')}
           hint="Leave blank to generate from the title."
         />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <RhfTextField control={control} name="category" label="Category / Team" />
+          <RhfTextField control={control} name="category" label={t('websiteApp.form.category')} />
           <Controller
             control={control}
             name="published_at"
             render={({ field }) => (
-              <DateTimeField label="Published at" value={field.value ?? ''} onChange={field.onChange} />
+              <DateTimeField label={t('websiteApp.form.publishedAt')} value={field.value ?? ''} onChange={field.onChange} />
             )}
           />
         </Stack>
-        <RhfTextField control={control} name="summary" label="Summary" multiline minRows={2} />
-        <RhfTextField control={control} name="body" label="Body" multiline minRows={5} />
+        <RhfTextField control={control} name="summary" label={t('websiteApp.form.summary')} multiline minRows={2} />
+        <RhfTextField control={control} name="body" label={t('websiteApp.form.body')} multiline minRows={5} />
         <Controller
           control={control}
           name="image_url"
           render={({ field, fieldState }) => (
             <SingleImageUploadField
               variant="url-adornment"
-              label="Image"
+              label={t('websiteApp.form.image')}
               value={field.value ?? ''}
               onChange={field.onChange}
               folder="/website"
@@ -80,8 +82,8 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
           )}
         />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <RhfTextField control={control} name="cta_label" label="CTA label" />
-          <RhfTextField control={control} name="cta_url" label="CTA URL" />
+          <RhfTextField control={control} name="cta_label" label={t('websiteApp.form.ctaLabel')} />
+          <RhfTextField control={control} name="cta_url" label={t('websiteApp.form.ctaUrl')} />
         </Stack>
         <Controller
           control={control}
@@ -89,7 +91,7 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />}
-              label="Published"
+              label={t('websiteApp.form.published')}
             />
           )}
         />

@@ -28,6 +28,20 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       saving: 'Saving…',
       delete: 'Delete',
       deleting: 'Deleting…',
+      close: 'Close',
+      view: 'View',
+      edit: 'Edit',
+
+      // Column headings a console repeats table after table. Only the ones
+      // that carry no context of their own live here — anything that names
+      // WHAT is being listed belongs to that portal.
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      status: 'Status',
+      actions: 'Actions',
+      created: 'Created',
+      order: 'Order',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,

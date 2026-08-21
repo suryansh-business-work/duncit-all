@@ -9,6 +9,7 @@ import {
   NEWSLETTER_TABLE,
   type Subscriber,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getSubscriberRowId = (row: Subscriber) => row.id;
 
@@ -23,6 +24,7 @@ const renderStatus = (row: Subscriber) => (
 );
 
 export default function NewsletterPage() {
+  const { t } = useTranslation();
   // KPI cards still need the whole dataset; the table itself is server-paged.
   const { data } = useQuery<{ newsletterSubscribers: Subscriber[] }>(NEWSLETTER_SUBSCRIBERS, {
     fetchPolicy: 'cache-and-network',
@@ -37,16 +39,16 @@ export default function NewsletterPage() {
 
   const columns = useMemo<DuncitColumn<Subscriber>[]>(
     () => [
-      { field: 'email', headerName: 'Email', flex: 1, minWidth: 220 },
+      { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 220 },
       {
         field: 'source',
-        headerName: 'Source',
+        headerName: t('websiteApp.newsletter.colSource'),
         filter: { type: 'select', options: SOURCE_OPTIONS },
         minWidth: 150,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         sortable: false,
         width: 140,
         cellRenderer: renderStatus,
@@ -54,14 +56,14 @@ export default function NewsletterPage() {
       },
       {
         field: 'created_at',
-        headerName: 'Subscribed',
+        headerName: t('websiteApp.newsletter.colSubscribed'),
         filter: { type: 'date' },
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'unsubscribed_at',
-        headerName: 'Unsubscribed',
+        headerName: t('websiteApp.newsletter.colUnsubscribed'),
         filter: { type: 'date' },
         hide: true,
         minWidth: 180,
@@ -79,13 +81,13 @@ export default function NewsletterPage() {
       <Stack direction="row" spacing={2}>
         <Card sx={{ flex: 1 }}>
           <CardContent>
-            <Typography variant="overline">Total</Typography>
+            <Typography variant="overline">{t('websiteApp.newsletter.statTotal')}</Typography>
             <Typography variant="h4">{all.length}</Typography>
           </CardContent>
         </Card>
         <Card sx={{ flex: 1 }}>
           <CardContent>
-            <Typography variant="overline">Active</Typography>
+            <Typography variant="overline">{t('websiteApp.newsletter.statActive')}</Typography>
             <Typography variant="h4">{active}</Typography>
           </CardContent>
         </Card>
@@ -95,7 +97,7 @@ export default function NewsletterPage() {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getSubscriberRowId}
-        emptyText="No subscribers yet."
+        emptyText={t('websiteApp.newsletter.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search email or source"
       />

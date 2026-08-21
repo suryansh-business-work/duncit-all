@@ -12,6 +12,7 @@ import {
   type FaqSubmission,
   type FaqSubmissionStatus,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getFaqRowId = (row: FaqSubmission) => row.id;
 
@@ -22,6 +23,7 @@ const renderStatus = (row: FaqSubmission) => (
 );
 
 export default function FaqSubmissionsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateStatus] = useMutation(UPDATE_FAQ_SUBMISSION_STATUS, {
@@ -56,24 +58,24 @@ export default function FaqSubmissionsPage() {
       </Stack>
     );
     return [
-      { field: 'question', headerName: 'Question', flex: 2, minWidth: 260 },
+      { field: 'question', headerName: t('websiteApp.faq.colQuestion'), flex: 2, minWidth: 260 },
       {
         field: 'email',
-        headerName: 'Email',
+        headerName: t('shell.common.email'),
         flex: 1,
         minWidth: 180,
         valueGetter: (row) => row.email || '—',
       },
       {
         field: 'super_category_slug',
-        headerName: 'Super Cat.',
+        headerName: t('websiteApp.faq.colSuperCategory'),
         filter: { type: 'text' },
         minWidth: 130,
         valueGetter: (row) => row.super_category_slug || '—',
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         width: 130,
         cellRenderer: renderStatus,
@@ -81,14 +83,14 @@ export default function FaqSubmissionsPage() {
       },
       {
         field: 'created_at',
-        headerName: 'Received',
+        headerName: t('websiteApp.faq.colReceived'),
         filter: { type: 'date' },
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 250,
         cellRenderer: renderActions,
@@ -106,7 +108,7 @@ export default function FaqSubmissionsPage() {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getFaqRowId}
-        emptyText="No submissions."
+        emptyText={t('websiteApp.faq.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search question, email or category"
         refetchRef={refetchRef}

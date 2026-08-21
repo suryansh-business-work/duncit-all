@@ -7,6 +7,7 @@ import { WEBSITE_CONTENT, type WebsiteContentItem } from '../content/queries';
 import { NEWSLETTER_SUBSCRIBERS, type Subscriber } from '../newsletter/queries';
 import { CONTACT_SUBMISSIONS, type ContactSubmission } from '../contact-submissions/queries';
 import { FAQ_SUBMISSIONS, type FaqSubmission } from '../faq-submissions/queries';
+import { useTranslation } from '@duncit/shell';
 
 const STAT_CARD_SX = { borderRadius: 3, height: '100%' } as const;
 const STAT_SKELETON = { width: 60, height: 48 } as const;
@@ -38,6 +39,7 @@ function DashboardStat({ label, value, hint, icon, to, loading }: Readonly<Dashb
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { user } = useUserData();
   const content = useQuery<{ websiteContent: WebsiteContentItem[] }>(WEBSITE_CONTENT, {
     variables: { type: null },
@@ -84,12 +86,12 @@ export default function DashboardPage() {
   });
 
   const widgets: DashboardWidget[] = [
-    tile('career', 0, 0, <DashboardStat label="Career" value={countByType('CAREERS')} icon="work" to="/careers" loading={content.loading} hint="Published & draft posts" />),
-    tile('newsroom', 4, 0, <DashboardStat label="Newsroom" value={countByType('NEWSROOM')} icon="newspaper" to="/newsroom" loading={content.loading} hint="Published & draft entries" />),
-    tile('blog', 8, 0, <DashboardStat label="Blog" value={countByType('BLOG')} icon="article" to="/blog" loading={content.loading} hint="Published & draft articles" />),
-    tile('newsletter', 0, 2, <DashboardStat label="Newsletter" value={subscribers.length} icon="email" to="/newsletter" loading={newsletter.loading} hint={`${activeSubs} active`} />),
-    tile('contact', 4, 2, <DashboardStat label="Contact" value={contacts.length} icon="contactMail" to="/contact-submissions" loading={contact.loading} hint={`${newContacts} new`} />),
-    tile('faq', 8, 2, <DashboardStat label="FAQ" value={faqs.length} icon="help" to="/faq-submissions" loading={faq.loading} hint={`${newFaqs} new`} />),
+    tile('career', 0, 0, <DashboardStat label={t('websiteApp.dashboard.career')} value={countByType('CAREERS')} icon="work" to="/careers" loading={content.loading} hint={t('websiteApp.dashboard.hintPosts')} />),
+    tile('newsroom', 4, 0, <DashboardStat label={t('websiteApp.dashboard.newsroom')} value={countByType('NEWSROOM')} icon="newspaper" to="/newsroom" loading={content.loading} hint={t('websiteApp.dashboard.hintEntries')} />),
+    tile('blog', 8, 0, <DashboardStat label={t('websiteApp.dashboard.blog')} value={countByType('BLOG')} icon="article" to="/blog" loading={content.loading} hint={t('websiteApp.dashboard.hintArticles')} />),
+    tile('newsletter', 0, 2, <DashboardStat label={t('websiteApp.dashboard.newsletter')} value={subscribers.length} icon="email" to="/newsletter" loading={newsletter.loading} hint={t('websiteApp.dashboard.hintActive', { vars: { count: activeSubs } })} />),
+    tile('contact', 4, 2, <DashboardStat label={t('websiteApp.dashboard.contact')} value={contacts.length} icon="contactMail" to="/contact-submissions" loading={contact.loading} hint={t('websiteApp.dashboard.hintNew', { vars: { count: newContacts } })} />),
+    tile('faq', 8, 2, <DashboardStat label={t('websiteApp.dashboard.faq')} value={faqs.length} icon="help" to="/faq-submissions" loading={faq.loading} hint={t('websiteApp.dashboard.hintNew', { vars: { count: newFaqs } })} />),
   ];
 
   return (
@@ -98,7 +100,7 @@ export default function DashboardPage() {
       header={
         <PageHeader
           title={`Hi ${name}, welcome back`}
-          subtitle="A live overview of the content and submissions across duncit.com."
+          subtitle={t('websiteApp.dashboard.subtitle')}
         />
       }
       widgets={widgets}

@@ -88,6 +88,7 @@ export {
   resolveLocale,
   SHELL_BUNDLE,
   SURFACE_BUNDLES,
+  WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
   whatsappCategoryCopy,

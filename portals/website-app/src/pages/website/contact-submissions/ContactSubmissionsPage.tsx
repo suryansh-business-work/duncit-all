@@ -13,6 +13,7 @@ import {
   UPDATE_CONTACT_STATUS,
   type ContactSubmission,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getContactRowId = (row: ContactSubmission) => row.id;
 
@@ -23,6 +24,7 @@ const renderStatus = (row: ContactSubmission) => (
 );
 
 export default function ContactSubmissionsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateStatus] = useMutation(UPDATE_CONTACT_STATUS, {
@@ -35,23 +37,23 @@ export default function ContactSubmissionsPage() {
 
   const columns = useMemo<DuncitColumn<ContactSubmission>[]>(() => {
     const renderActions = (row: ContactSubmission) => (
-      <IconButton size="small" onClick={() => setOpen(row)} aria-label="view">
+      <IconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
         <VisibilityIcon fontSize="small" />
       </IconButton>
     );
     return [
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 150 },
-      { field: 'email', headerName: 'Email', filter: { type: 'text' }, flex: 1, minWidth: 200 },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 150 },
+      { field: 'email', headerName: t('shell.common.email'), filter: { type: 'text' }, flex: 1, minWidth: 200 },
       {
         field: 'subject',
-        headerName: 'Subject',
+        headerName: t('websiteApp.contact.colSubject'),
         flex: 1,
         minWidth: 160,
         valueGetter: (row) => row.subject || '—',
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         width: 140,
         cellRenderer: renderStatus,
@@ -59,7 +61,7 @@ export default function ContactSubmissionsPage() {
       },
       {
         field: 'created_at',
-        headerName: 'Received',
+        headerName: t('websiteApp.contact.colReceived'),
         filter: { type: 'date' },
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
@@ -85,7 +87,7 @@ export default function ContactSubmissionsPage() {
         fetchRows={fetchRows}
         getRowId={getContactRowId}
         onRowClick={setOpen}
-        emptyText="No submissions."
+        emptyText={t('websiteApp.contact.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search name, email or subject"
         refetchRef={refetchRef}

@@ -13,7 +13,7 @@
 import { MockedProvider } from '@apollo/client/testing';
 import { act, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from '../App';
 
@@ -46,6 +46,26 @@ vi.mock('@duncit/user-context', async (importOriginal) => {
   };
 });
 
+/**
+ * jsdom implements neither observer, and the shell mounts components that
+ * construct one — a throw there takes the whole page down mid-render, so the
+ * half of it below never runs. The theme comes from the app itself here.
+ */
+beforeAll(() => {
+  class NoopObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  globalThis.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver;
+  globalThis.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionObserver;
+  Element.prototype.scrollTo ??= () => undefined;
+  Element.prototype.scrollIntoView ??= () => undefined;
+});
+
 const mountAt = (route: string) =>
   render(
     <MockedProvider mocks={[]}>
@@ -67,6 +87,17 @@ afterEach(() => {
  * seen in their loading state and their error branch never runs. A page must not
  * throw when its data FAILS either, which is what the flush makes this assert.
  */
+/**
+ * Longer than the 5-second default, because these tests are deliberately slow.
+ *
+ * Each one mounts a whole page, waits for its data and then presses every
+ * control on it in two waves. On the biggest console that ran past five seconds
+ * and vitest cut the test off part-way — which does not fail loudly, it just
+ * silently stops opening the dialogs that the later presses would have opened.
+ * admin lost 2,673 covered lines to exactly that before the timeout was raised.
+ */
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {

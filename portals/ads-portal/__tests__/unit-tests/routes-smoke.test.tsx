@@ -156,6 +156,17 @@ beforeAll(() => {
  */
 const smokeTheme = createTheme();
 
+/**
+ * Longer than the 5-second default, because these tests are deliberately slow.
+ *
+ * Each one mounts a whole page, waits for its data and then presses every
+ * control on it in two waves. On the biggest console that ran past five seconds
+ * and vitest cut the test off part-way — which does not fail loudly, it just
+ * silently stops opening the dialogs that the later presses would have opened.
+ * admin lost 2,673 covered lines to exactly that before the timeout was raised.
+ */
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {

@@ -21,57 +21,20 @@ import { MemoryRouter } from 'react-router-dom';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../components/AppShell', () => ({
+vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));
 
-import App from '../App';
-import { clearToken, setToken } from '../lib/session';
+import App from '../../src/App';
+import { clearToken, setToken } from '../../src/lib/session';
 
 const ROUTES = [
-  '/login',
-  '/hub',
-  '/dashboard',
-  '/users',
-  '/users/smoke-id',
-  '/categories',
-  '/locations',
-  '/clubs',
-  '/venues',
-  '/partners',
-  '/clubs/new',
-  '/clubs/smoke-id',
-  '/clubs/smoke-id/edit',
-  '/pods',
-  '/pods/dashboard',
-  '/pods/new',
-  '/pods/smoke-id',
-  '/pods/smoke-id/edit',
-  '/auto-pods',
-  '/pod-settings',
-  '/pod-monitoring',
-  '/event-tickets',
-  '/faqs',
-  '/pod-ideas',
-  '/badges',
-  '/something-for-you',
-  '/partners/faqs',
-  '/pod-plans',
-  '/membership/plans',
-  '/membership/subscribers',
-  '/approvals',
-  '/portal-access',
-  '/upload-settings/portals',
-  '/upload-settings/mobile',
-  '/upload-settings/mweb',
-  '/whatsapp',
-  '/branding',
-  '/rbac/roles',
   '/profile',
-  '/settings',
-  '/portal-app-settings',
-  '/localization/locales',
-  '/localization/translations',
+  '/login',
+  '/',
+  '/ads',
+  '/ads/new',
+  '/ads/smoke-id',
 ];
 
 const mountRoute = (route: string) =>

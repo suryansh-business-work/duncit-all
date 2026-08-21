@@ -99,6 +99,7 @@ export const CLUB_STORIES = gql`
       caption
       created_at
       seen_by_me
+      can_delete
       author {
         user_id
         full_name
@@ -144,6 +145,29 @@ export const ADD_CLUB_RATING = gql`
       id
       rating
       ratings_count
+    }
+  }
+`;
+
+/**
+ * Take a club story down.
+ *
+ * The server decides who may — the author, or an admin of the club it was
+ * posted to — and reports that as `can_delete` above; this only fires when it
+ * said yes.
+ */
+export const DELETE_CLUB_STORY = gql`
+  mutation DeleteClubStory($id: ID!) {
+    deletePost(post_doc_id: $id)
+  }
+`;
+
+/** Flag a story for the Legal team. Open to any signed-in viewer. */
+export const REPORT_STORY = gql`
+  mutation ReportStory($id: ID!, $reason: ReportReason!, $details: String) {
+    reportStory(post_doc_id: $id, reason: $reason, details: $details) {
+      id
+      report_no
     }
   }
 `;

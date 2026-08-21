@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Button, Stack, Tooltip } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
@@ -16,6 +16,9 @@ interface Props {
   supportPath: string;
   /** From the shared participation rules — what this booking may still be offered. */
   canBackout: boolean;
+  /** True once the server says this pod has no Backout attempts left. Absent
+   * while that query is still open, which renders the same as "not maxed". */
+  backoutMaxed?: boolean;
   showRefundState: boolean;
   refundLabel: string;
   canRejoin: boolean;
@@ -31,13 +34,51 @@ interface Props {
 }
 
 /**
+ * The Backout control, and the reason it is sometimes dead.
+ *
+ * Shown-and-disabled rather than hidden once the attempts are gone: a booking
+ * that HAD this button yesterday and simply lacks it today reads as a bug, so
+ * the control stays and says why. The words come from Pod Details, which
+ * refuses the same booking for the same reason.
+ */
+function BackoutButton({
+  disabled,
+  maxed,
+  label,
+  onBackout,
+}: Readonly<{ disabled: boolean; maxed: boolean; label: string; onBackout: () => void }>) {
+  const { t } = useTranslation();
+  const button = (
+    <Button
+      data-tour="booking-backout"
+      onClick={onBackout}
+      disabled={disabled || maxed}
+      color="error"
+      variant="outlined"
+      startIcon={<RestartAltIcon />}
+    >
+      {label}
+    </Button>
+  );
+  if (!maxed) return button;
+  return (
+    // A disabled button fires no pointer events of its own, so the tooltip
+    // listens on a wrapper — otherwise hovering it says nothing at all.
+    <Tooltip title={t('mweb.podDetails.backoutMaxed')} enterTouchDelay={0} arrow>
+      <span style={{ display: 'inline-flex' }}>{button}</span>
+    </Tooltip>
+  );
+}
+
+/**
  * Everything this booking can still have done to it.
  *
  * Two of these are gated by the participation rules rather than by the
  * membership status, and both are absent rather than disabled when they do not
  * apply: a pod that has already happened cannot be backed out of, and a booking
- * nobody asked a refund for has no refund status to report. A disabled control
- * invites the question of how to enable it; an absent one does not.
+ * nobody asked a refund for has no refund status to report. An action the pod
+ * itself no longer allows is absent; one this person has simply run out of
+ * stays put and explains itself.
  */
 export default function PodHistoryActions({
   item,
@@ -45,6 +86,7 @@ export default function PodHistoryActions({
   podDetailsPath,
   supportPath,
   canBackout,
+  backoutMaxed = false,
   showRefundState,
   refundLabel,
   canRejoin,
@@ -80,16 +122,14 @@ export default function PodHistoryActions({
               {t('mweb.podHistory.goToPodDetails')}
             </Button>
             {canBackout && (
-              <Button
-                data-tour="booking-backout"
-                onClick={onBackout}
+              <BackoutButton
                 disabled={item.status !== 'JOINED' || backingOut}
-                color="error"
-                variant="outlined"
-                startIcon={<RestartAltIcon />}
-              >
-                {backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
-              </Button>
+                maxed={backoutMaxed}
+                label={
+                  backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')
+                }
+                onBackout={onBackout}
+              />
             )}
             {canRejoin && (
               <Button

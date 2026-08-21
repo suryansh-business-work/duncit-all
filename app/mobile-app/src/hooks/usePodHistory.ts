@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { PodBackoutAttempts } from '@duncit/utils';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -9,6 +10,7 @@ import {
   EventTicketPdfDocument,
   MyEventTicketForPodDocument,
   MyPodMembershipsDocument,
+  PodBackoutStateDocument,
   PodHistoryCategoriesDocument,
   PodInvoicePdfDocument,
   RejoinPodDocument,
@@ -81,6 +83,32 @@ export function usePodBackoutDeduction() {
   }, []);
 
   return pct;
+}
+
+/**
+ * Whether this pod's Backout attempts are spent — RN twin of mWeb's
+ * POD_HISTORY_BACKOUT_STATE query on the details page.
+ *
+ * Undefined until the server answers, so `isBackoutMaxed` keeps the control
+ * live on the first paint instead of greying it out while the query is open.
+ */
+export function usePodBackoutAttempts(podDocId?: string | null) {
+  const [state, setState] = useState<PodBackoutAttempts>();
+
+  useEffect(() => {
+    if (!podDocId) return undefined;
+    let active = true;
+    graphqlRequest(PodBackoutStateDocument, { pod_doc_id: podDocId }, { auth: true })
+      .then((data) => {
+        if (active) setState(data.podMembershipState);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [podDocId]);
+
+  return state;
 }
 
 /** Backout mutation with a busy flag — mWeb's BACKOUT_POD_HISTORY. */

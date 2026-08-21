@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
-import { isStoryLive } from '@duncit/utils';
+import { isStoryLive, parseApiError } from '@duncit/utils';
 
+import { ConfirmSheet } from '@/components/DuncitDialog';
+import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
+import { DeleteClubStoryDocument } from '@/graphql/status';
+import { graphqlRequest } from '@/services/graphql.client';
 import { useClubStories } from '@/hooks/useClubStories';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useStatusStore } from '@/stores/status.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import type { StatusGroup } from '@/hooks/useStatus';
@@ -16,16 +21,22 @@ import type { StatusGroup } from '@/hooks/useStatus';
 interface Props {
   clubId: string;
   clubName: string;
+  /**
+   * Only a club's admins may post to its rail, so the Add tile is theirs alone.
+   * The server refuses everyone else regardless — this is what stops a member
+   * being shown a button that would only ever tell them no.
+   */
+  canPost: boolean;
 }
 
 /**
- * The club's ephemeral 24h stories plus an "Add" tile that posts one to this
- * club — the RN twin of mWeb's ClubStoriesSection. Expired stories never
- * render: the server filters them and `isStoryLive` catches the boundary while
- * the screen stays open.
+ * The club's ephemeral 24h stories plus the admin-only "Add" tile — the RN twin
+ * of mWeb's ClubStoriesSection. Expired stories never render: the server filters
+ * them and `isStoryLive` catches the boundary while the screen stays open.
  */
-export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
+export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const { stories, refetch } = useClubStories(clubId);
   const { uploading, error, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
     useStatusUpload({ clubId });
@@ -35,6 +46,10 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
   // rewind an in-progress story (the home rail freezes its order the same way).
   const [openAtIndex, setOpenAtIndex] = useState<number | null>(null);
   const [openGroup, setOpenGroup] = useState<StatusGroup | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const live = useMemo(() => stories.filter((story) => isStoryLive(story.expires_at)), [stories]);
 
@@ -55,6 +70,9 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
       createdAt: story.created_at,
       expiresAt: story.expires_at,
       seenByMe: (story.seen_by_me ?? false) || seenIds.has(story.id),
+      // Server-owned, and per story: a club admin may delete any of them, an
+      // author only their own, everybody else none.
+      canDelete: story.can_delete ?? false,
       likedByMe: false,
       likesCount: 0,
     }));
@@ -77,6 +95,25 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
     setOpenGroup(null);
   }, []);
 
+  const removeStory = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await graphqlRequest(DeleteClubStoryDocument, { id: pendingDelete }, { auth: true });
+      setPendingDelete(null);
+      close();
+      await refetch();
+    } catch (e) {
+      setPendingDelete(null);
+      setDeleteError(parseApiError(e) || t('contentReport.deleteFailed'));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const railError = error || deleteError;
+
   return (
     <YStack gap={8} testID="club-stories">
       <XStack alignItems="center" gap={6}>
@@ -85,9 +122,9 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
           Stories
         </Text>
       </XStack>
-      {error ? (
+      {railError ? (
         <Text testID="club-story-error" fontSize={12} color="$danger">
-          {error}
+          {railError}
         </Text>
       ) : null}
       <ScrollView
@@ -95,18 +132,20 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12 }}
       >
-        <StatusTile
-          testID="club-story-add"
-          label={uploading ? 'Posting…' : 'Add'}
-          badge
-          progress={progress}
-          onPress={() => {
-            if (!uploading) fireAndForget(pickAndUpload());
-          }}
-          onBadgePress={() => {
-            if (!uploading) fireAndForget(pickAndUpload());
-          }}
-        />
+        {canPost ? (
+          <StatusTile
+            testID="club-story-add"
+            label={uploading ? 'Posting…' : 'Add'}
+            badge
+            progress={progress}
+            onPress={() => {
+              if (!uploading) fireAndForget(pickAndUpload());
+            }}
+            onBadgePress={() => {
+              if (!uploading) fireAndForget(pickAndUpload());
+            }}
+          />
+        ) : null}
         {live.map((story, index) => (
           <StatusTile
             key={story.id}
@@ -125,6 +164,21 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
         onNext={close}
         onPrev={close}
         onSlideSeen={recordView}
+        onDelete={setPendingDelete}
+        onReport={setReporting}
+      />
+      <ReportStorySheet storyId={reporting} onClose={() => setReporting(null)} />
+      <ConfirmSheet
+        open={!!pendingDelete}
+        busy={deleting}
+        testIDPrefix="club-story-delete"
+        title={t('contentReport.deleteConfirmTitle')}
+        message={t('contentReport.deleteConfirmBody')}
+        cancelLabel={t('contentReport.deleteCancel')}
+        confirmLabel={t('contentReport.deleteConfirmCta')}
+        busyLabel={t('contentReport.deleting')}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => fireAndForget(removeStory())}
       />
       <StatusVideoPreviewSheet
         video={

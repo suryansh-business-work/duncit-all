@@ -1,5 +1,6 @@
 import {
   AI_MONITORING_BUNDLE,
+  CONTENT_REPORT_BUNDLE,
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
@@ -36,6 +37,7 @@ import {
 export const NATIVE_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
   ...AI_MONITORING_BUNDLE,
+  ...CONTENT_REPORT_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,

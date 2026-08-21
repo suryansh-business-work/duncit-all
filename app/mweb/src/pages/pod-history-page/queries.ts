@@ -77,6 +77,24 @@ export const POD_HISTORY_CATEGORIES = gql`
   }
 `;
 
+/**
+ * How many Backout attempts this booking has left, from the same membership
+ * state the backout mutation itself guards on.
+ *
+ * Asked here rather than counted from `participation.backouts`: the server
+ * counts every request this user raised on this POD, and re-booking a pod after
+ * a replacement took the seat starts a fresh membership whose own list is empty.
+ */
+export const POD_HISTORY_BACKOUT_STATE = gql`
+  query PodHistoryBackoutState($pod_doc_id: ID!) {
+    podMembershipState(pod_doc_id: $pod_doc_id) {
+      pod_id
+      backout_attempts_used
+      backout_attempts_max
+    }
+  }
+`;
+
 export const BACKOUT_POD_HISTORY = gql`
   mutation BackoutPodFromHistory($pod_doc_id: ID!, $seats: Int) {
     backoutPod(pod_doc_id: $pod_doc_id, seats: $seats) {

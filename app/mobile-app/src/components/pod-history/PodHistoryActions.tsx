@@ -16,6 +16,7 @@ function ActionButton({
   onPress,
   variant = 'outlined',
   disabled = false,
+  onDisabledPress,
 }: Readonly<{
   testID: string;
   icon: IconName;
@@ -23,6 +24,9 @@ function ActionButton({
   onPress: () => void;
   variant?: 'contained' | 'outlined' | 'danger';
   disabled?: boolean;
+  /** Runs instead of onPress while disabled — a dead control that says why it
+   * is dead beats one that swallows the tap in silence. */
+  onDisabledPress?: () => void;
 }>) {
   const { onPrimary, color, danger, primary } = useThemeColors();
   const contained = variant === 'contained';
@@ -37,7 +41,8 @@ function ActionButton({
       aria-label={label}
       aria-disabled={disabled}
       onPress={() => {
-        if (!disabled) onPress();
+        if (disabled) onDisabledPress?.();
+        else onPress();
       }}
       alignItems="center"
       justifyContent="center"
@@ -63,6 +68,8 @@ interface LiveActionsProps {
   item: PodMembership;
   /** From the shared participation rules — computed once by the parent. */
   canBackout: boolean;
+  /** True once the server says this pod has no Backout attempts left. */
+  backoutMaxed: boolean;
   showRefundState: boolean;
   /** The refund word, from the request rather than the booking's stale copy. */
   refundText: string;
@@ -72,6 +79,7 @@ interface LiveActionsProps {
   ticketBusy: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
+  onBackoutBlocked?: () => void;
   onRejoin: () => void;
   onRefundStatus: () => void;
   onTicket: () => void;
@@ -81,6 +89,7 @@ interface LiveActionsProps {
 function LivePodActions({
   item,
   canBackout,
+  backoutMaxed,
   showRefundState,
   refundText,
   showRejoin,
@@ -89,11 +98,15 @@ function LivePodActions({
   ticketBusy,
   onPodDetails,
   onBackout,
+  onBackoutBlocked,
   onRejoin,
   onRefundStatus,
   onTicket,
 }: Readonly<LiveActionsProps>) {
   const { t } = useTranslation();
+  // Only the spent-attempts case has something to say. Backout is also dead
+  // while the mutation is in flight, and "you have used them all" is a lie there.
+  const onBackoutDisabled = backoutMaxed ? onBackoutBlocked : undefined;
   return (
     <>
       <ActionButton
@@ -111,8 +124,9 @@ function LivePodActions({
             icon="restart-alt"
             label={backingOut ? t('mweb.podHistory.backingOut') : t('mweb.podHistory.backoutPod')}
             variant="danger"
-            disabled={item.status !== 'JOINED' || backingOut}
+            disabled={item.status !== 'JOINED' || backingOut || backoutMaxed}
             onPress={onBackout}
+            onDisabledPress={onBackoutDisabled}
           />
         </TourAnchor>
       ) : null}
@@ -150,12 +164,17 @@ function LivePodActions({
 
 export interface PodHistoryActionsProps {
   item: PodMembership;
+  /** True once the server says this pod has no Backout attempts left. Absent
+   * while that query is still open, which renders the same as "not maxed". */
+  backoutMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
   invoiceBusy: boolean;
   ticketBusy: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
+  /** Pressed instead of onBackout once the attempts are spent — says why. */
+  onBackoutBlocked?: () => void;
   onRejoin: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
@@ -170,17 +189,20 @@ export interface PodHistoryActionsProps {
  * Two of these are gated by the participation rules rather than by the
  * membership status, and both are absent rather than disabled when they do not
  * apply: a pod that has already happened cannot be backed out of, and a booking
- * nobody asked a refund for has no refund status to report. A disabled control
- * invites the question of how to enable it; an absent one does not.
+ * nobody asked a refund for has no refund status to report. An action the pod
+ * itself no longer allows is absent; one this person has simply run out of
+ * stays put and explains itself when pressed.
  */
 export function PodHistoryActions({
   item,
+  backoutMaxed = false,
   backingOut,
   rejoining,
   invoiceBusy,
   ticketBusy,
   onPodDetails,
   onBackout,
+  onBackoutBlocked,
   onRejoin,
   onRefundStatus,
   onInvoice,
@@ -198,6 +220,7 @@ export function PodHistoryActions({
         <LivePodActions
           item={item}
           canBackout={gate.canBackout}
+          backoutMaxed={backoutMaxed}
           showRefundState={gate.showRefundState}
           refundText={refundLabel(gate.refundStatus, t)}
           showRejoin={showRejoin}
@@ -206,6 +229,7 @@ export function PodHistoryActions({
           ticketBusy={ticketBusy}
           onPodDetails={onPodDetails}
           onBackout={onBackout}
+          onBackoutBlocked={onBackoutBlocked}
           onRejoin={onRejoin}
           onRefundStatus={onRefundStatus}
           onTicket={onTicket}

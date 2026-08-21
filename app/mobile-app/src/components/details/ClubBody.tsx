@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -10,26 +10,13 @@ import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection
 import { ClubMeetupVenuesSection } from '@/components/details/club/ClubMeetupVenuesSection';
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
 import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
-import { ClubTotalMembersSection } from '@/components/details/club/ClubTotalMembersSection';
-import { ClubFollowersSheet } from '@/components/details/club/ClubFollowersSheet';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { pickPodMoments } from '@/utils/club-detail';
-
-function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
-  return (
-    <YStack flex={1} alignItems="flex-start">
-      <Text fontSize={18} fontWeight="700" color="$color">
-        {value}
-      </Text>
-      <Text fontSize={12} fontWeight="700" color="$muted">
-        {label}
-      </Text>
-    </YStack>
-  );
-}
+import { isClubAdminOf } from '@duncit/utils';
+import { useMeStore } from '@/stores/me.store';
 
 /** The club-details body — summary, stats, WhatsApp chat, members and the
  * tabbed segments (pods schedule, moments, content sections, hosts). */
@@ -59,7 +46,7 @@ export function ClubBody({
   onOpenVenue: (venueId: string) => void;
 }>) {
   const { onPrimary } = useThemeColors();
-  const [membersOpen, setMembersOpen] = useState(false);
+  const viewerId = useMeStore((s) => s.data?.me?.user_id);
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const chatLinks = [
     { key: 'community', label: 'Community', href: club.club_whats_app_community_link },
@@ -74,6 +61,10 @@ export function ClubBody({
     () => memberIds.filter((id) => followingUserIds.includes(id)),
     [memberIds, followingUserIds],
   );
+  // A club story speaks for the club, so only its admins may post one. The
+  // server refuses everyone else either way; this decides whether the Add tile
+  // is drawn at all. Shared with mWeb so they cannot answer it differently.
+  const canPostStory = isClubAdminOf(club.club_admins, viewerId);
 
   return (
     <YStack padding={16} gap={18}>
@@ -100,33 +91,13 @@ export function ClubBody({
       </TourAnchor>
       {/* Ephemeral 24h club stories + the "Add" tile — mirrors mWeb, which
           places this directly under the club summary header. */}
-      <ClubStoriesRail clubId={club.id} clubName={club.club_name} />
-      <XStack
-        gap={8}
-        padding={12}
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-      >
-        <Stat value={club.followers_count ?? 0} label="total members" />
-        <Stat value={pods.length} label="pods" />
-        <Stat value={moments.length} label="moments" />
-        <Stat value={club.matched_venues_count} label="venues" />
-      </XStack>
-      <ClubTotalMembersSection
-        count={club.followers_count ?? 0}
-        onOpen={() => setMembersOpen(true)}
-      />
-      <ClubFollowersSheet
-        open={membersOpen}
-        clubId={club.id}
-        onClose={() => setMembersOpen(false)}
-        onOpenProfile={(id) => {
-          setMembersOpen(false);
-          onOpenMember(id);
-        }}
-      />
+      <ClubStoriesRail clubId={club.id} clubName={club.club_name} canPost={canPostStory} />
+      {/* The follower/pod/moment/venue counts that used to sit here are gone,
+          along with the follower card under them: a brand new club read
+          "0 total members" as its loudest line, which is the worst possible
+          first impression of a page whose job is to recruit. Who is actually
+          in the club is answered by Club Members below — real people, from
+          real pods. mWeb twin (rule 27). */}
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">
           <Text fontSize={16} fontWeight="700" color="$color">

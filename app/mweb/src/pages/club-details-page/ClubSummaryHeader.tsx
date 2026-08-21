@@ -8,9 +8,6 @@ import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 interface Props {
   club: any;
   featureUrl?: string;
-  podCount: number;
-  venueCount: number;
-  followersCount: number;
   /** Super › Category › Sub category names (root-first). */
   categoryCrumbs: readonly string[];
   following: boolean;
@@ -18,32 +15,14 @@ interface Props {
   onToggleFollow: () => void;
 }
 
-function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
-  return (
-    <Box sx={{ flex: 1, textAlign: 'left' }}>
-      <Typography display="block" sx={{ fontWeight: 700, lineHeight: 1 }}>
-        {value}
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-        {label}
-      </Typography>
-    </Box>
-  );
-}
-
 export default function ClubSummaryHeader({
   club,
   featureUrl,
-  podCount,
-  venueCount,
-  followersCount,
   categoryCrumbs,
   following,
   chatUrl,
   onToggleFollow,
 }: Readonly<Props>) {
-  const momentsCount = club.club_moments?.length ?? 0;
-
   return (
     <Box
       sx={{
@@ -59,10 +38,12 @@ export default function ClubSummaryHeader({
         boxShadow: '0 24px 54px rgba(9,7,18,0.34)',
       }}
     >
-      {/* Identity only — name, category and the club's own description. The
-          stats row below is deliberately outside it: native has no equivalent
-          block in that position, and covering it here would put the follower
-          count inside one surface's step and not the other's. */}
+      {/* Identity and the two things you can do about it. The follower/pod/
+          moment/venue counts that used to sit between them are gone: a brand
+          new club read "0 total members" as its loudest line, which is the
+          worst possible first impression of a page whose job is to recruit.
+          Who is actually in the club is answered further down by Club Members
+          — real people, from real pods. */}
       <Stack direction="row" spacing={1.5} alignItems="center" data-tour="club-header">
         <Avatar
           src={featureUrl}
@@ -90,12 +71,6 @@ export default function ClubSummaryHeader({
             </Typography>
           )}
         </Box>
-      </Stack>
-      <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-        <Stat label="total members" value={followersCount} />
-        <Stat label="pods" value={podCount} />
-        <Stat label="moments" value={momentsCount} />
-        <Stat label="venues" value={venueCount} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
         <Button

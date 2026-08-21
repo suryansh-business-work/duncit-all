@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
 import { useQuery } from '@apollo/client';
+import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
@@ -147,10 +148,7 @@ export default function PodDetailsPage() {
   const media = pod.pod_images_and_videos ?? [];
   const supportSubject = `Support - ${pod.pod_title}`;
   const membershipState = data?.podMembershipState;
-  const backoutAttemptsLeft = Math.max(
-    0,
-    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
-  );
+  const backoutAttemptsLeft = attemptsLeftFor(membershipState);
   return (
     <Stack
       spacing={3}

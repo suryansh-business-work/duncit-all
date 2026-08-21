@@ -1,18 +1,16 @@
-import { useState } from 'react';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
+import { isClubAdminOf } from '@duncit/utils';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { notify } from '../../components/notify';
-import ClubFollowersDialog from '../club-details-page/ClubFollowersDialog';
 import { usePricing } from '../../hooks/usePricing';
 import ClubHero from '../club-details-page/ClubHero';
 import ClubDetailsSkeleton from '../club-details-page/ClubDetailsSkeleton';
 import ClubMeetupVenuesSection from '../club-details-page/ClubMeetupVenuesSection';
 import ClubSocialLinks from '../club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
-import ClubTotalMembersSection from '../club-details-page/ClubTotalMembersSection';
 import ClubMembersSection from '../club-details-page/ClubMembersSection';
 import ClubStoriesSection from '../club-details-page/ClubStoriesSection';
 import ClubSegments from '../club-details-page/ClubSegments';
@@ -29,7 +27,6 @@ import useSavedClub from './useSavedClub';
 export default function ClubDetailsPage() {
   const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
-  const [membersOpen, setMembersOpen] = useState(false);
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
 
@@ -65,6 +62,11 @@ export default function ClubDetailsPage() {
 
   const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
   const friendIds = memberIds.filter((id) => followingUserIds.includes(id));
+
+  // A club story speaks for the club, so only its admins may post one. The
+  // server refuses everyone else either way; this decides whether the Add tile
+  // is drawn at all. Shared with native so they cannot answer it differently.
+  const canPostStory = isClubAdminOf(club.club_admins, data?.me?.user_id);
 
   const categoryCrumbs = categoryPath(
     catData?.categories ?? [],
@@ -124,15 +126,12 @@ export default function ClubDetailsPage() {
       <ClubSummaryHeader
         club={club}
         featureUrl={featureMedia[0]?.url}
-        podCount={pods.length}
-        venueCount={venues.length}
-        followersCount={club.followers_count ?? 0}
         categoryCrumbs={categoryCrumbs}
         following={isFollowing(club.id)}
         chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
         onToggleFollow={toggleClubFollow}
       />
-      <ClubStoriesSection clubId={club.id} />
+      <ClubStoriesSection clubId={club.id} canPost={canPostStory} />
       <ClubSocialLinks club={club} />
       {club.club_description && (
         <Box>
@@ -144,15 +143,9 @@ export default function ClubDetailsPage() {
           </Typography>
         </Box>
       )}
-      <ClubTotalMembersSection
-        count={club.followers_count ?? 0}
-        onOpen={() => setMembersOpen(true)}
-      />
-      <ClubFollowersDialog
-        open={membersOpen}
-        clubId={club.id}
-        onClose={() => setMembersOpen(false)}
-      />
+      {/* Club Members is who has actually turned up — every distinct attendee
+          of every pod this club has run. It replaces the follower count that
+          used to sit above it: following is a tap, joining a pod is not. */}
       <ClubMembersSection memberIds={memberIds} />
       <ClubFriendsSection friendIds={friendIds} />
       <ClubRatingSection

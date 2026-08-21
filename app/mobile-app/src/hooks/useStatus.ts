@@ -16,6 +16,12 @@ export interface StatusSlide {
   expiresAt?: string | null;
   /** Has the viewer already opened this slide — greys the ring (Bug 2). */
   seenByMe: boolean;
+  /**
+   * May this viewer delete this slide? Server-owned (`Post.can_delete`):
+   * the author, or an admin of the club it was posted to. Absent on rails
+   * that do not ask for it, and on a sponsored slide.
+   */
+  canDelete?: boolean;
   /** Has the viewer liked this story, and the running like count (Bug 5). */
   likedByMe: boolean;
   likesCount: number;

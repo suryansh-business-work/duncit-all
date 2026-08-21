@@ -11,6 +11,8 @@ import { StatusVideo } from '@/components/status/StatusVideo';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { StoryTarget } from '@/hooks/useStoryRail';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { StatusViewerMenu } from '@/components/status/StatusViewerMenu';
+import { useTranslation } from '@/hooks/useTranslation';
 import { statusRemainingLabel } from '@/utils/date-format';
 import { resolveSwipe } from '@/utils/swipe';
 
@@ -31,6 +33,11 @@ interface StatusViewerProps {
   onOpenTarget?: (target: StoryTarget) => void;
   /** Own story only — delete the currently shown slide via the kebab menu (Bug 7). */
   onDelete?: (slideId: string) => void;
+  /**
+   * Flag the currently shown slide. Passed by ANY viewer who can see the
+   * story — unlike delete, reporting is not an owner's privilege.
+   */
+  onReport?: (slideId: string) => void;
   /** Own story only — open the "seen by" viewers sheet for a slide (Bug 4). */
   onViewers?: (slideId: string) => void;
   /** Followers' stories only — like/unlike the current slide (Bug 5). */
@@ -153,12 +160,14 @@ export function StatusViewer({
   onPrev,
   onOpenTarget,
   onDelete,
+  onReport,
   onViewers,
   onToggleLike,
   onSlideSeen,
   startIndex = 0,
 }: Readonly<StatusViewerProps>) {
-  const { onPrimary, danger } = useThemeColors();
+  const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const [index, setIndex] = useState(startIndex);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -167,6 +176,14 @@ export function StatusViewer({
   const slides = status?.slides ?? [];
   const current = slides[index];
   const isVideo = current?.mediaType === 'VIDEO';
+  // A rail that offers deletion at all passes `onDelete`; a rail whose slides
+  // differ (the club page, where an admin may delete some and not others) also
+  // marks each slide. Rails of the viewer's OWN stories mark nothing and every
+  // slide stays deletable, which is what they meant.
+  const canDeleteSlide = !!onDelete && (current?.canDelete ?? true);
+  // The kebab exists for whichever action is available on THIS slide — a club
+  // member gets Report alone, a club admin gets both.
+  const hasMenu = canDeleteSlide || !!onReport;
   // Countdown until the status is auto-removed (recomputed per slide change).
   const remaining = statusRemainingLabel(current?.expiresAt);
 
@@ -274,11 +291,11 @@ export function StatusViewer({
                 subLabel={status?.subLabel}
                 remaining={remaining}
               />
-              {onDelete && current ? (
+              {hasMenu && current ? (
                 <XStack
                   testID="status-viewer-kebab"
                   role="button"
-                  aria-label="Story options"
+                  aria-label={t('contentReport.menuLabel')}
                   onPress={() => setMenuOpen((open) => !open)}
                   width={36}
                   height={36}
@@ -306,39 +323,19 @@ export function StatusViewer({
                 <MaterialIcons name="close" size={20} color="#ffffff" />
               </XStack>
             </XStack>
-            {onDelete && menuOpen && current ? (
-              <YStack
-                testID="status-viewer-menu"
-                position="absolute"
-                top={92}
-                right={16}
-                zIndex={20}
-                backgroundColor="$surface"
-                borderRadius={12}
-                borderWidth={1}
-                borderColor="$borderColor"
-                overflow="hidden"
-              >
-                <XStack
-                  testID="status-viewer-delete"
-                  role="button"
-                  aria-label="Delete story"
-                  onPress={() => {
-                    setMenuOpen(false);
-                    onDelete(current.id);
-                  }}
-                  alignItems="center"
-                  gap={8}
-                  paddingHorizontal={16}
-                  paddingVertical={12}
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <MaterialIcons name="delete-outline" size={18} color={danger} />
-                  <Text fontSize={14} fontWeight="600" color="$danger">
-                    Delete
-                  </Text>
-                </XStack>
-              </YStack>
+            {hasMenu && menuOpen && current ? (
+              <StatusViewerMenu
+                canDelete={canDeleteSlide}
+                canReport={!!onReport}
+                onDelete={() => {
+                  setMenuOpen(false);
+                  onDelete?.(current.id);
+                }}
+                onReport={() => {
+                  setMenuOpen(false);
+                  onReport?.(current.id);
+                }}
+              />
             ) : null}
             <YStack
               flex={1}

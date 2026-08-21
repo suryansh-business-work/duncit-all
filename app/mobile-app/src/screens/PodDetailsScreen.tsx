@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 
 import { Reveal } from '@/animations/Reveal';
 import { useGoBack } from '@/hooks/useGoBack';
@@ -253,10 +254,7 @@ function PodBackoutDialogs({
   membershipState,
   onViewTerms,
 }: Readonly<PodBackoutDialogsProps>) {
-  const backoutAttemptsLeft = Math.max(
-    0,
-    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
-  );
+  const backoutAttemptsLeft = attemptsLeftFor(membershipState);
   return (
     <>
       <BackoutConfirmDialog

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
+import { isBackoutMaxed } from '@duncit/utils';
 import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
@@ -9,7 +10,13 @@ import { notify } from '../../components/notify';
 import { parseApiError } from '../../utils/parseApiError';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodHistoryDetails from './PodHistoryDetails';
-import { BACKOUT_POD_HISTORY, MY_POD_MEMBERSHIPS, REJOIN_POD, type PodHistoryItem } from './queries';
+import {
+  BACKOUT_POD_HISTORY,
+  MY_POD_MEMBERSHIPS,
+  POD_HISTORY_BACKOUT_STATE,
+  REJOIN_POD,
+  type PodHistoryItem,
+} from './queries';
 
 export default function PodHistoryDetailsPage() {
   const { membershipId = '' } = useParams();
@@ -24,6 +31,14 @@ export default function PodHistoryDetailsPage() {
   const [rejoinPod, rejoinState] = useMutation(REJOIN_POD);
   const items = useMemo(() => data?.myPodMemberships ?? [], [data]);
   const selected = items.find((item) => item.id === membershipId) ?? null;
+  // Attempts left, from the state the backout mutation itself guards on — the
+  // button was offered on a pod that had none, and every press of it failed.
+  const { data: stateData } = useQuery(POD_HISTORY_BACKOUT_STATE, {
+    variables: { pod_doc_id: selected?.pod?.id ?? '' },
+    skip: !selected?.pod?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+  const backoutMaxed = isBackoutMaxed(stateData?.podMembershipState);
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
@@ -66,6 +81,7 @@ export default function PodHistoryDetailsPage() {
       </Stack>
       <PodHistoryDetails
         item={selected}
+        backoutMaxed={backoutMaxed}
         backingOut={backoutState.loading}
         rejoining={rejoinState.loading}
         onBackout={() => setBackoutOpen(true)}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box, Container } from '@mui/material';
 import ScrollToTop from './components/ScrollToTop';
+import RouteMeta from './app/RouteMeta';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 import BrandFontLoader from './components/BrandFontLoader';
@@ -123,6 +124,7 @@ export default function App() {
         }}
       >
         <ScrollToTop />
+        <RouteMeta />
         <Box
           key={`${location.pathname}-${superCategory}-${locationId}-${zoneName}`}
           sx={{

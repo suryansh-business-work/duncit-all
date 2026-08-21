@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
@@ -38,6 +39,7 @@ export default function ClubDetailsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const club = slugQuery.data?.clubBySlug;
+  useEntityPageMeta(club?.club_name);
   const clubId: string = club?.id ?? '';
   const { saved, saving: savingClub, toggleSaved } = useSavedClub(clubId);
 

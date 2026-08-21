@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useEntityPageMeta } from '../app/pageMeta';
 import { gql, useQuery } from '@apollo/client';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -82,6 +83,7 @@ export default function VenueDetailsPage() {
     () => data?.publicVenues?.find((item: any) => item.id === venueId),
     [data?.publicVenues, venueId],
   );
+  useEntityPageMeta(venue?.venue_name);
   const images: string[] = useMemo(() => {
     if (!venue) return [];
     return Array.from(new Set([venue.cover_image_url, ...(venue.gallery ?? [])].filter(Boolean)));

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEntityPageMeta } from '../app/pageMeta';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
@@ -50,6 +51,7 @@ export default function ProductDetailPage() {
   });
 
   const product = data?.publicInventoryProduct;
+  useEntityPageMeta(product?.name);
   const variants: any[] = product?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
   const variantImages: string[] = selectedVariant?.images ?? [];

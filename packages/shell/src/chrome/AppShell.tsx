@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Drawer } from '@mui/material';
 import { tokens } from '@duncit/theme';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
+import PortalPageTitle from './PortalPageTitle';
 import type { AppNavItem, SearchItem } from '../types';
 import { AppHeader } from './AppHeader';
 import type { ShellTool } from './AppsDrawer/tools';
@@ -173,6 +174,12 @@ export function AppShell({
         <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <BreadcrumbProvider>
+              <PortalPageTitle
+                nav={nav}
+                shortName={config.name}
+                appName={config.fullName ?? config.name}
+                labelMap={breadcrumbLabelMap}
+              />
               <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
               {/* The page's own scroller. `contain` stops a wheel that reaches
                   the end of this box from carrying on into the chat beside it —

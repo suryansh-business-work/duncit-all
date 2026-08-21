@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useEntityPageMeta } from '../app/pageMeta';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -95,6 +96,7 @@ export default function PodDetailsPage() {
     [seatData],
   );
   const pod = data?.pod ?? null;
+  useEntityPageMeta(pod?.pod_title);
   const productSelection = usePodProductSelection(id, pod);
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
   const saved = pod ? savedIds.includes(pod.id) : false;

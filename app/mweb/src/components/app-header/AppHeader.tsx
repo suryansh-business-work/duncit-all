@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
-import { Alert, AppBar, Box, Chip, Toolbar } from '@mui/material';
+import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
 import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';
 import HeaderGreeting from './HeaderGreeting';
+import HeaderLocationRow from './HeaderLocationRow';
 import HeaderQuickActions from './HeaderQuickActions';
 import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
@@ -131,16 +132,27 @@ export default function AppHeader({
     >
       <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
         {!minimal && effectiveStudio !== 'USER' ? (
-          <Chip
-            label={STUDIO_LABEL[effectiveStudio]}
-            color="primary"
-            size="small"
-            onClick={() => {
-              autoPods.reload();
-              setStudioSwitchOpen(true);
-            }}
-            sx={{ fontWeight: 700, borderRadius: 999 }}
-          />
+          // A studio header keeps the role badge AND the location switcher: a
+          // host/venue/club account still browses a city, so the picker stays.
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+            <Chip
+              label={STUDIO_LABEL[effectiveStudio]}
+              color="primary"
+              size="small"
+              onClick={() => {
+                autoPods.reload();
+                setStudioSwitchOpen(true);
+              }}
+              sx={{ fontWeight: 700, borderRadius: 999, flex: '0 0 auto' }}
+            />
+            <HeaderLocationRow
+              selectedLocationName={selectedLocation?.location_name}
+              selectedZoneName={selectedZoneName}
+              loading={loading}
+              hasData={!!data}
+              onOpen={openLocationPicker}
+            />
+          </Stack>
         ) : (
           <HeaderGreeting
             tagline={branding?.home_header_tagline}
@@ -158,33 +170,33 @@ export default function AppHeader({
           <SurveyHeaderActions onLogout={logout} />
         ) : (
           <>
-            {/* Studio modes (Host/Venue/ecomm) get a focused header — no location, no search. */}
-            {effectiveStudio === 'USER' && (
-              <LocationDialog
-                  open={locDialogOpen}
-                  onClose={() => setLocDialogOpen(false)}
-                  locations={locations}
-                  activeLocationIds={data?.activePodLocationIds ?? []}
-                  draftLocationId={draftLocationId}
-                  setDraftLocationId={setDraftLocationId}
-                  draftZone={draftZone}
-                  setDraftZone={setDraftZone}
-                  onApply={() => {
-                    onLocationChange(draftLocationId);
-                    onZoneChange(draftZone);
-                    persistLocation(draftLocationId);
-                    setLocDialogOpen(false);
-                  }}
-                  onAutoApply={(locationId, zoneName) => {
-                    setDraftLocationId(locationId);
-                    setDraftZone(zoneName);
-                    onLocationChange(locationId);
-                    onZoneChange(zoneName);
-                    persistLocation(locationId);
-                    setLocDialogOpen(false);
-                  }}
-                />
-            )}
+            {/* Studio modes (Host/Venue/ecomm) get a focused header — no search.
+             * The location picker is NOT one of the things they lose. */}
+            <LocationDialog
+              open={locDialogOpen}
+              onClose={() => setLocDialogOpen(false)}
+              locations={locations}
+              activeLocationIds={data?.activePodLocationIds ?? []}
+              draftLocationId={draftLocationId}
+              setDraftLocationId={setDraftLocationId}
+              draftZone={draftZone}
+              setDraftZone={setDraftZone}
+              onApply={() => {
+                onLocationChange(draftLocationId);
+                onZoneChange(draftZone);
+                persistLocation(draftLocationId);
+                setLocDialogOpen(false);
+              }}
+              onAutoApply={(locationId, zoneName) => {
+                setDraftLocationId(locationId);
+                setDraftZone(zoneName);
+                onLocationChange(locationId);
+                onZoneChange(zoneName);
+                persistLocation(locationId);
+                setLocDialogOpen(false);
+              }}
+            />
+
             {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
              * with online dot. The cart still hides itself when empty. */}
             <HeaderQuickActions

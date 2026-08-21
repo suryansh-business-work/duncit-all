@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
 import { podLifecycleFilter, type PodLifecycle } from './pod.lifecycle';
+import { podRowStatusFilter, type PodRowStatus } from './pod.rowStatus';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
@@ -1651,11 +1652,22 @@ export const podService = {
    * club admin must be able to open and edit a pod wherever it sits in the
    * booking cycle.
    */
-  async tableForClubAdmin(clubIds: string[], input?: TableQueryInput | null) {
+  async tableForClubAdmin(
+    clubIds: string[],
+    input?: TableQueryInput | null,
+    status?: PodRowStatus | null
+  ) {
     if (clubIds.length === 0) return { rows: [], total: 0, page: 1, page_size: 0 };
+    const baseFilter: Record<string, unknown> = {
+      club_id: { $in: clubIds.map((id) => new Types.ObjectId(id)) },
+    };
+    // Derived from four fields, so it cannot ride the engine's allowlist — it
+    // joins the club scope in the baseFilter, which a client filter can never
+    // widen (runTableQuery $and-merges the two).
+    if (status) Object.assign(baseFilter, podRowStatusFilter(status));
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
-      { club_id: { $in: clubIds.map((id) => new Types.ObjectId(id)) } },
+      baseFilter,
       coerceLegacyPodTypeFilters(input),
       POD_TABLE_CONFIG,
       { includeDeleted: true }

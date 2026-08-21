@@ -44,5 +44,21 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       submitAddress: 'Submit address',
       submitting: 'Submitting…',
     },
+    /**
+     * The Status chip on every partner pods table AND the Club Admin pods
+     * page's status filter read these — one set of words, so a pod can never
+     * be filtered under one name and labelled with another. The English copy
+     * matches the chips these keys replaced.
+     */
+    podStatus: {
+      filterLabel: 'Status',
+      all: 'All statuses',
+      active: 'Active',
+      draft: 'Draft',
+      awaitingVenue: 'Awaiting venue',
+      venueRejected: 'Venue rejected',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
   },
 };

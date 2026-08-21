@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
@@ -11,7 +11,9 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
 import PodActivityDialog from './PodActivityDialog';
 import AiMonitorPill from './AiMonitorPill';
+import PodStatusFilter from './PodStatusFilter';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
+import type { PodRowStatusFilter } from '../../components/pod-status';
 
 export default function ClubAdminClubPodsPage() {
   const { clubId = '' } = useParams();
@@ -21,6 +23,10 @@ export default function ClubAdminClubPodsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
 
+  // One bucket of the table's Status column, or '' for every status. Derived
+  // from four fields server-side, so it is a query argument rather than one of
+  // the table's own column filters.
+  const [status, setStatus] = useState<PodRowStatusFilter>('');
   const [podToDelete, setPodToDelete] = useState<any>(null);
   const [trailPod, setTrailPod] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,9 +46,21 @@ export default function ClubAdminClubPodsPage() {
     client,
     CLUB_ADMIN_PODS_TABLE,
     'clubAdminPodsTable',
-    { extraVariables: { club_id: clubId } },
-    [clubId],
+    { extraVariables: { club_id: clubId, status: status || null } },
+    [clubId, status],
   );
+
+  // The status select lives outside the table, so nothing in the table's own
+  // query state changes when it does — reload it here (skipping the mount, which
+  // the table fetches for itself).
+  const statusMounted = useRef(false);
+  useEffect(() => {
+    if (!statusMounted.current) {
+      statusMounted.current = true;
+      return;
+    }
+    refetchRef.current?.();
+  }, [status]);
 
   const confirmDelete = async () => {
     if (!podToDelete) return;
@@ -110,11 +128,14 @@ export default function ClubAdminClubPodsPage() {
             venueName={venueName}
             emptyText="This club has no pods yet. Create the first one."
             toolbarActions={
-              <CreatePodLauncher
-                clubId={clubId}
-                club={club ?? null}
-                onNormal={() => navigate(`${podsPath}/new`)}
-              />
+              <>
+                <PodStatusFilter value={status} onChange={setStatus} />
+                <CreatePodLauncher
+                  clubId={clubId}
+                  club={club ?? null}
+                  onNormal={() => navigate(`${podsPath}/new`)}
+                />
+              </>
             }
             renderActions={renderActions}
             renderMonitor={(pod) => <AiMonitorPill onClick={() => setTrailPod(pod)} />}

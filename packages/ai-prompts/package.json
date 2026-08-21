@@ -1,0 +1,83 @@
+{
+  "name": "@duncit/ai-prompts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The AI Library: two kinds of prompt (CODE, seeded from the server catalogue and read back on every call; AI, authored in the portal and served by the public GET feed), the {{ var }} rules they share, and the MUI views behind ./mui.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mui": "./src/mui/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/ai-prompts"
+  },
+  "peerDependencies": {
+    "@apollo/client": ">=3",
+    "@duncit/dialogs": "workspace:*",
+    "@duncit/forms": "workspace:*",
+    "@duncit/table": "workspace:*",
+    "@duncit/tabs": "workspace:*",
+    "@duncit/utils": "workspace:*",
+    "@hookform/resolvers": ">=3",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "react": ">=18",
+    "react-hook-form": ">=7",
+    "zod": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
+    "@duncit/dialogs": {
+      "optional": true
+    },
+    "@duncit/forms": {
+      "optional": true
+    },
+    "@duncit/table": {
+      "optional": true
+    },
+    "@duncit/tabs": {
+      "optional": true
+    },
+    "@mui/icons-material": {
+      "optional": true
+    },
+    "@mui/material": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.10.4",
+    "@duncit/dialogs": "workspace:*",
+    "@duncit/forms": "workspace:*",
+    "@duncit/table": "workspace:*",
+    "@duncit/tabs": "workspace:*",
+    "@duncit/utils": "workspace:*",
+    "@hookform/resolvers": "^3.9.1",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.3",
+    "@vitest/coverage-v8": "^2.1.9",
+    "graphql": "^16.8.1",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.0",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9",
+    "zod": "^3.24.1"
+  }
+}

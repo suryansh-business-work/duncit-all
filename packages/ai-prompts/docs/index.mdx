@@ -1,0 +1,118 @@
+---
+name: '@duncit/ai-prompts'
+summary: 'The AI Library: two kinds of prompt (CODE, declared in the server catalogue and read back on every call; AI, authored in the portal and served by the public GET feed), the {{ var }} rules they share, and the MUI page behind /mui.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/ai'
+exports:
+  - 'PromptLibraryView'
+  - 'PromptDialog'
+  - 'PromptForm'
+  - 'PromptsTable'
+  - 'PromptContext'
+  - 'renderPrompt'
+  - 'extractVariables'
+  - 'missingRequiredVariables'
+  - 'exampleValues'
+  - 'estimateTokens'
+  - 'promptFormSchema'
+  - 'promptFeedUrl'
+  - 'apiOriginFromGraphqlUrl'
+  - 'PROMPT_COPY'
+  - 'AI_PROMPTS'
+---
+
+## Why this exists
+
+Every AI feature on Duncit — pod and product moderation, the upload scan, the support chatbot,
+the CRM parsers, the admin assistant, Ask Bot, the Agent, the release-notes writer — sends the
+model a prompt that is stored in the database and read back **on every call**. Editing a prompt
+in the AI portal changes what the product sends. There is no deploy in between.
+
+That is a strong promise, and for a while it was only half true. The *system* turn came from the
+library; the *user* turn — `Review this pod:\n…`, `Admin question: …` — was a template literal at
+the call site, and the model an operator picked in the portal was ignored because the call site
+pinned its own. So an operator changed a prompt, watched nothing happen, and reasonably concluded
+the library did not work. Both halves come from the library now, and so does the model.
+
+## The two kinds
+
+|                          | **CODE** ("Code Inside Prompt")                          | **AI**                                    |
+| ------------------------ | -------------------------------------------------------- | ----------------------------------------- |
+| Where it comes from      | `server/src/modules/ai/prompt/catalog/`, seeded on boot   | Written in the AI portal                  |
+| Who reads it             | A call site, on every request                             | Whatever fetches the public GET feed      |
+| Create / delete in portal| No — a row nothing calls is not a feature                 | Yes                                       |
+| Editable                 | Body, note, target model                                  | Everything                                |
+| Reset                    | Yes, back to the catalogue text                           | No default to go back to                  |
+
+A CODE prompt also carries two things the portal shows read-only, because the operator cannot
+change them and needs them to edit safely: `usage` (which file sends it, on which surface, after
+what) and `variables` (each `{{placeholder}}`, what the call site puts there, and an example).
+
+## `{{ var }}`
+
+Placeholders are `{{name}}`. Two rules, and both matter:
+
+- **An unsupplied placeholder is left as written, not blanked.** Some bodies talk about
+  `{{variables}}` as literal text — the MJML writer does — and swallowing those rewrites the
+  instruction.
+- **A required placeholder cannot be removed.** A body that lost `{{navigation_map}}` still runs,
+  still costs money, and answers from nothing, with no error anywhere. The editor refuses the save
+  and the server refuses it again.
+
+```ts
+import { renderPrompt, missingRequiredVariables, exampleValues } from '@duncit/ai-prompts';
+
+renderPrompt('Review this pod:\n{{pod_fields}}', { pod_fields: 'Title: Chess' });
+// → 'Review this pod:\nTitle: Chess'
+
+renderPrompt('Preserve useful {{variables}} from existing MJML.', {});
+// → unchanged: nothing was supplied for it, so it stays literal
+
+missingRequiredVariables('You are the navigation bot.', prompt.variables);
+// → ['navigation_map']
+
+renderPrompt(prompt.content, exampleValues(prompt.variables)); // what the preview shows
+```
+
+The server keeps its own eight-line copy of these in `prompt.render.ts` — it imports no
+`@duncit/*` package by design (rule 40), because everything it imports has to be COPYied into the
+Docker image. The two are pinned to the same semantics by the tests on both sides.
+
+## The page
+
+The AI portal renders the whole library in one component:
+
+```tsx
+import { PromptLibraryView } from '@duncit/ai-prompts/mui';
+import { apiOriginFromGraphqlUrl } from '@duncit/ai-prompts';
+
+<PromptLibraryView apiOrigin={apiOriginFromGraphqlUrl(urlConfigs.graphqlUrl)} />;
+```
+
+`apiOrigin` is the only thing a surface supplies: the feed is served by the same process as
+GraphQL, so it is derived from the endpoint the portal already talks to rather than a second env
+var to get wrong between environments.
+
+## The public GET feed
+
+```
+GET /ai-prompts/prompts.json                      every active prompt
+GET /ai-prompts/prompts.json?kind=AI              one kind
+GET /ai-prompts/prompt.json?key=moderation.pod    one prompt
+GET /ai-prompts/prompt.json?key=x&vars[city]=Pune already filled in
+```
+
+**No login and no key.** That is a deliberate product decision, and it is worth naming what it
+trades away: anyone with the URL can read every active prompt, CODE ones included — and those are
+the product's own instructions to the model, `moderation.pod` among them, which names the evasion
+patterns it screens for. Treat everything reachable there as public writing. Deactivating a prompt
+takes it off the feed; the feed never serves `usage` or `created_by`.
+
+## What this package will not do
+
+It does not send anything to a model, and it holds no OpenAI client. The library is what a prompt
+*is*; `server/src/services/openai/openai.client.ts` is the one place the product talks to OpenAI.

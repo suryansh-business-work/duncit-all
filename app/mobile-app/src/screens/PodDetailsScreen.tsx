@@ -37,6 +37,7 @@ import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
 import { JoinFreePodDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
+import { podShareLinks } from '@/services/share-link';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import type { CartLineMeta } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
@@ -127,7 +128,8 @@ function usePodDetailActions(pod: PodDetail | null, refetch: () => Promise<void>
     /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
-      const { message } = podShareMessage(pod);
+      // The pod link and its venue map link both go out tracked (rule 40).
+      const { message } = podShareMessage(pod, await podShareLinks(pod.id, pod));
       // Deliberately NO `url` — `message` already ends with the pod link, and
       // passing both makes iOS's sheet carry the link as a second item, which
       // is how the shared text arrived with the link written twice. mWeb omits

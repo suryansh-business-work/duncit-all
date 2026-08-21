@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { moderateText, type ModerationViolation } from './moderation.rules';
+import { moderateMediaUrls, moderateText, type ModerationViolation } from './moderation.rules';
 import {
   aiModeratePod,
   aiModerateProduct,
@@ -12,7 +12,8 @@ export interface ModerationResult {
   violations: ModerationViolation[];
 }
 
-/** Deterministic pass over every text field — always runs, no OpenAI needed. */
+/** Deterministic pass over every text field plus the attached media — always
+ * runs, no OpenAI needed. */
 function runRegexLayer(input: ModeratePodInput): ModerationViolation[] {
   const out: ModerationViolation[] = [];
   out.push(
@@ -23,6 +24,7 @@ function runRegexLayer(input: ModeratePodInput): ModerationViolation[] {
   for (const tag of input.pod_hashtag ?? []) {
     out.push(...moderateText('pod_hashtag', tag));
   }
+  out.push(...moderateMediaUrls(input.image_urls ?? []));
   return out;
 }
 
@@ -55,17 +57,29 @@ export const moderationService = {
   },
 
   /**
+   * Every deterministic violation in a pod's content. The edit paths need the
+   * list itself (they record the refused attempt in the AI-monitored audit
+   * trail before throwing), so the check and the throw are separate calls.
+   */
+  podViolations(input: ModeratePodInput): ModerationViolation[] {
+    return runRegexLayer(input);
+  },
+
+  /** The one error every rejected pod content write throws. */
+  podRejection(violations: ModerationViolation[]): GraphQLError {
+    return new GraphQLError('Your pod content violates the community guidelines', {
+      extensions: { code: 'POD_CONTENT_REJECTED', violations },
+    });
+  },
+
+  /**
    * Server-side hard guard invoked from pod creation so a crafted client cannot
    * bypass the explicit rules. Deterministic only (no AI cost/latency in the hot
    * path); throws with the violations attached when the text is not clean.
    */
   assertCleanOrThrow(input: ModeratePodInput): void {
     const violations = runRegexLayer(input);
-    if (violations.length > 0) {
-      throw new GraphQLError('Your pod content violates the community guidelines', {
-        extensions: { code: 'POD_CONTENT_REJECTED', violations },
-      });
-    }
+    if (violations.length > 0) throw this.podRejection(violations);
   },
 
   /** Advisory product check used by the partner-portal preflight before submit:

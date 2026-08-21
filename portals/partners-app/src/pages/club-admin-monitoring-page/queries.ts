@@ -38,7 +38,8 @@ export type PodAuditAction =
   | 'DELETE'
   | 'VENUE_APPROVED'
   | 'VENUE_DECLINED'
-  | 'COMPLETE';
+  | 'COMPLETE'
+  | 'REJECTED';
 export type PodAuditSource = 'ADMIN' | 'CLUB_ADMIN' | 'HOST' | 'VENUE_OWNER' | 'SYSTEM';
 export type PodAuditRisk = 'PENDING' | 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -75,6 +76,7 @@ export const ACTION_LABELS: Record<PodAuditAction, string> = {
   VENUE_APPROVED: 'Venue Approved',
   VENUE_DECLINED: 'Venue Rejected',
   COMPLETE: 'Completed',
+  REJECTED: 'Content Blocked',
 };
 
 export const ACTION_COLORS: Record<PodAuditAction, ChipColor> = {
@@ -85,6 +87,7 @@ export const ACTION_COLORS: Record<PodAuditAction, ChipColor> = {
   VENUE_APPROVED: 'success',
   VENUE_DECLINED: 'warning',
   COMPLETE: 'default',
+  REJECTED: 'error',
 };
 
 export const RISK_COLORS: Record<PodAuditRisk, ChipColor> = {

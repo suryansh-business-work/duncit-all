@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { podModerationImageUrls } from '@duncit/utils';
 import { hasImageLine, mediaTextToInput, mediaToText } from '../media-text';
 import type { HostPodTarget } from '../types';
 
@@ -34,6 +35,17 @@ export function buildHostResubmitInput(values: PodResubmitValues) {
     pod_images_and_videos: mediaTextToInput(values.media_text),
     venue_id: values.venue_id,
     venue_slot_id: values.venue_slot_id,
+  };
+}
+
+/** The resubmitted copy as the content check's input — the venue and slot are
+ * bookings, not content, so only the title, description and gallery go. */
+export function buildPodResubmitModerationInput(values: PodResubmitValues) {
+  const input = buildHostResubmitInput(values);
+  return {
+    pod_title: input.pod_title,
+    pod_description: input.pod_description,
+    image_urls: podModerationImageUrls(input.pod_images_and_videos),
   };
 }
 

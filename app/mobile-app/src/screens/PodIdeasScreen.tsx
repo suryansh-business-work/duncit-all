@@ -19,6 +19,8 @@ import {
 import { usePodIdeas, type PodIdea } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ideaMatchesScope } from '@/utils/idea-category';
+import { shareUrl } from '@/services/share-link';
+import { POD_WEB_BASE } from '@/utils/pod-format';
 
 /** Pod Ideas board — searchable community ideas with submit, like, share and a
  * comment thread. RN port of mWeb's PodIdeasPage. */
@@ -58,8 +60,14 @@ export function PodIdeasScreen() {
   );
 
   const onShareIdea = async (idea: PodIdea) => {
+    // Carries the tracked link mWeb's share already did (rule 27), so an idea
+    // passed on brings its visitors back attributed.
+    const url = await shareUrl('POD_IDEA', idea.id, `${POD_WEB_BASE}/pod-ideas?id=${idea.id}`);
     try {
-      await Share.share({ message: `${idea.title}\n\n${idea.description}`, title: idea.title });
+      await Share.share({
+        message: `${idea.title}\n\n${idea.description}\n${url}`,
+        title: idea.title,
+      });
       await share(idea.id);
     } catch {
       /* user cancelled the share sheet */

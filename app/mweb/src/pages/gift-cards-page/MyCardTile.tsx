@@ -5,6 +5,7 @@ import { formatMoney } from '@duncit/utils';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
+import { shareUrl } from '../../lib/share-link';
 import GiftCardVisual from './GiftCardVisual';
 import type { GiftCard, GiftCardStatus } from './queries';
 
@@ -47,7 +48,11 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
   };
 
   const shareCard = async () => {
-    const url = `${globalThis.window.location.origin}/gift-card/${card.code}`;
+    const url = await shareUrl(
+      'GIFT_CARD',
+      card.code,
+      `${globalThis.window.location.origin}/gift-card/${card.code}`,
+    );
     const text = t('mweb.giftCards.shareMessage', {
       vars: { sender: senderName, amount: formatMoney(card.initial_amount, { symbol: currencySymbol }) },
     });

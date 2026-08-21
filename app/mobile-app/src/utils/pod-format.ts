@@ -1,4 +1,4 @@
-import { buildPodShareMessage, meetingPlatformName } from '@duncit/utils';
+import { buildPodShareMessage, meetingPlatformName, type PodShareLinks } from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { PodOccurrence } from '@/generated/graphql/graphql';
@@ -153,12 +153,25 @@ export interface PodSharable {
   place_detail?: string | null;
 }
 
-/** Share text for a pod — name + a deep link plus the date/time and venue, so a
- * recipient lands on the pod detail page with full context (not just the title). */
-export function podShareMessage(pod: PodSharable): { message: string; url: string } {
-  const url = pod.club_slug
+/** The pod page on the web, as this build addresses it. */
+export const podWebUrl = (pod: PodSharable) =>
+  pod.club_slug
     ? `${POD_WEB_BASE}/club/${pod.club_slug}/pod/${pod.pod_id}`
     : `${POD_WEB_BASE}/pod/${pod.pod_id}`;
+
+/**
+ * Share text for a pod — name + a deep link plus the date/time and venue, so a
+ * recipient lands on the pod detail page with full context (not just the title).
+ *
+ * `links` carries the tracked short links the screen resolved for the pod and
+ * its venue map; without them the plain URLs are used, which reads the same but
+ * is not counted.
+ */
+export function podShareMessage(
+  pod: PodSharable,
+  links?: PodShareLinks,
+): { message: string; url: string } {
+  const url = links?.url ?? podWebUrl(pod);
   // Shape lives in @duncit/utils so mWeb shares the identical message (rule 27);
   // the date string is formatted here, through this surface's own clock.
   const message = buildPodShareMessage({
@@ -166,6 +179,7 @@ export function podShareMessage(pod: PodSharable): { message: string; url: strin
     whenText: pod.pod_date_time ? podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time) : null,
     venue: pod,
     url,
+    mapUrl: links?.mapUrl,
   });
   return { message, url };
 }

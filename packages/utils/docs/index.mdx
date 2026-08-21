@@ -592,6 +592,42 @@ renderReferralMessage('', { code: 'DUN-9F3A2C', link, coins: 50 })
 // 'Join me on Duncit! We both earn 50 Duncit Coins. Use my code DUN-9F3A2C or sign up here: …'
 ```
 
+## Every share is a tracked link
+
+A link a member hands out is a marketing channel — usually the biggest one — so it is minted
+as a `duncit.com/<code>` short link under a campaign, exactly like a link a marketer creates by
+hand. `share-link.ts` is the contract both surfaces send: `SHARE_LINK_MUTATION` (a plain
+string, because this package has no GraphQL client and must stay framework-free for Metro),
+and `trackedShareUrl`, which asks once per thing and caches the answer for the session.
+
+The surfaces never build the tracked URL. They say **what** is being shared — a target and the
+id of the thing — and the server looks it up, builds the destination and returns the link. That
+is what makes the mutation safe to leave unauthenticated: an id that resolves to nothing mints
+nothing, so it can never be pointed somewhere we did not choose.
+
+```ts
+// mWeb: Apollo. The app: graphql-request. Same document, same answer.
+const url = await shareUrl('POD', pod.id, `${origin}/club/${slug}/pod/${podSlug}`);
+```
+
+`plainUrl` is what the surface would have shared on its own, and it is what comes back when the
+API cannot be reached. Sharing is the member's action, not the tracking's: a share sheet must
+never fail to open because analytics did. A failed attempt is forgotten rather than cached, so
+the next share retries.
+
+`trackedPodShareLinks` resolves the **pair** a shared pod carries — the pod page and its venue
+map — in one round trip. The map link is an external destination (Google Maps), and it is
+counted like every other link: `buildPodShareMessage({ …, mapUrl })` takes the tracked one, and
+falls back to the plain `podMapLink` search when it has none.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `SHARE_LINK_MUTATION` | `string` | The `shareLink(target, ref)` document, parsed by each surface's own client. |
+| `ShareLinkTarget` | `'POD' \| 'POD_LOCATION' \| 'POD_FEEDBACK' \| 'CLUB' \| 'PROFILE' \| 'POST' \| 'POD_IDEA' \| 'GIFT_CARD' \| 'REFERRAL'` | Mirrors the server enum. Each one has its own campaign. |
+| `trackedShareUrl` | `(fetcher, target, ref, plainUrl) => Promise<string>` | The link to hand out; `plainUrl` when it cannot be minted. |
+| `trackedPodShareLinks` | `(resolve, podId, plainUrl, plainMapUrl) => Promise<PodShareLinks>` | The pod link and its venue map link together. |
+| `clearShareLinkCache` | `() => void` | Drops the session cache — sign-out and tests. |
+
 ## Metro, Docker and the `dist/` build
 
 The exports map points `import`/`types`/`react-native` at `src/index.ts` and only `require` at

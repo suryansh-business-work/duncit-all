@@ -7,6 +7,7 @@ import { podFeedbackLink } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { shareUrl } from '@/services/share-link';
 import { POD_WEB_BASE } from '@/utils/pod-format';
 
 /** How long the "copied" line stays up before it stops being news. */
@@ -29,10 +30,17 @@ export function useFeedbackLinkActions() {
 
   const linkFor = useCallback((pod: FeedbackPod) => podFeedbackLink(pod.id, POD_WEB_BASE), []);
 
+  /** What the host actually hands out: the tracked short link, so ratings that
+   * arrive from a sent link are counted (mWeb's twin does the same). */
+  const sharedLinkFor = useCallback(
+    (pod: FeedbackPod) => shareUrl('POD_FEEDBACK', pod.id, linkFor(pod)),
+    [linkFor],
+  );
+
   const messageFor = useCallback(
-    (pod: FeedbackPod) =>
-      `${t('mweb.podFeedback.shareMessage', { vars: { title: pod.pod_title } })}\n${linkFor(pod)}`,
-    [linkFor, t],
+    async (pod: FeedbackPod) =>
+      `${t('mweb.podFeedback.shareMessage', { vars: { title: pod.pod_title } })}\n${await sharedLinkFor(pod)}`,
+    [sharedLinkFor, t],
   );
 
   const open = useCallback(
@@ -43,7 +51,8 @@ export function useFeedbackLinkActions() {
   const share = useCallback(
     // No `url` field, exactly as PodDetailsScreen shares a pod: iOS repeats a
     // link given both ways, and the link is already the last line here.
-    (pod: FeedbackPod) => Share.share({ title: pod.pod_title, message: messageFor(pod) }),
+    async (pod: FeedbackPod) =>
+      Share.share({ title: pod.pod_title, message: await messageFor(pod) }),
     [messageFor],
   );
 
@@ -51,13 +60,13 @@ export function useFeedbackLinkActions() {
   // somewhere that already has their own words around it.
   const copy = useCallback(
     async (pod: FeedbackPod) => {
-      await Clipboard.setStringAsync(linkFor(pod));
+      await Clipboard.setStringAsync(await sharedLinkFor(pod));
       // The sheet has closed by now, so without this the host has no way of
       // knowing the copy landed.
       setNotice(t('mweb.podFeedback.linkCopied'));
       globalThis.setTimeout(() => setNotice(null), NOTICE_MS);
     },
-    [linkFor, t],
+    [sharedLinkFor, t],
   );
 
   return { open, share, copy, notice };

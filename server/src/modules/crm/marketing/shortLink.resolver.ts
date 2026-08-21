@@ -3,6 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import { shortLinkService } from './shortLink.service';
 import { shortLinkJourneyService } from './shortLinkJourney.service';
 import type { JourneyStep } from './shortLinkClick.model';
+import type { ShareLinkTarget } from './shortLink.share';
 
 /** Same gate as the rest of the marketing console. */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
@@ -12,6 +13,10 @@ export const shortLinkResolvers = {
     shortLinkOptions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.options();
+    },
+    shortLinkCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.campaigns();
     },
     shortLinksTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -59,6 +64,17 @@ export const shortLinkResolvers = {
       args: { click_id: string; step: JourneyStep },
       ctx: GraphQLContext
     ) => shortLinkJourneyService.recordStep(args.click_id, args.step, ctx.user?.id ?? null),
+    // Ungated for the same reason the journey report is: a pod, a club or a
+    // profile is shared by signed-out visitors too, and requiring a session
+    // would leave exactly those shares untracked. `ref` names a thing, not a
+    // destination, so the worst a forged call can do is mint the link that
+    // thing would have got anyway. The signed-in caller is recorded as the
+    // first sharer.
+    shareLink: (
+      _p: unknown,
+      args: { target: ShareLinkTarget; ref: string },
+      ctx: GraphQLContext
+    ) => shortLinkService.share(args.target, args.ref, ctx.user?.id ?? null),
     createShortLink: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       // requireRole returns the authenticated user it just proved, so there is
       // no need to re-guard ctx.user for the author id.

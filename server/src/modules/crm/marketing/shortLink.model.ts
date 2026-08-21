@@ -1,4 +1,5 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
+import type { ShareLinkTarget } from './shortLink.share';
 
 /**
  * Where a link is being handed out. Becomes `utm_source`.
@@ -77,6 +78,16 @@ export interface IShortLink extends Document {
   utm_source: string;
   utm_medium: string;
   utm_campaign?: string | null;
+  /** Set when the link was minted for something a member shared out of mWeb
+   * or the app, rather than typed into the marketing console. */
+  share_target?: ShareLinkTarget | null;
+  /**
+   * The thing that was shared, as target:ref. Unique, and that uniqueness is
+   * the feature: one link per pod, per club, per profile, however many people
+   * share it and however often. Without it the table would grow a row per tap
+   * and no link would carry a meaningful click count.
+   */
+  share_key?: string | null;
   is_active: boolean;
   click_count: number;
   first_clicked_at?: Date | null;
@@ -99,6 +110,10 @@ const shortLinkSchema = new Schema<IShortLink>(
     utm_source: { type: String, required: true },
     utm_medium: { type: String, required: true },
     utm_campaign: { type: String, default: null },
+    share_target: { type: String, default: null },
+    // No default: an absent path is what keeps every hand-made link out of
+    // the unique index below, which a stored null would not.
+    share_key: { type: String },
     is_active: { type: Boolean, default: true, index: true },
     click_count: { type: Number, default: 0, min: 0 },
     first_clicked_at: { type: Date, default: null },
@@ -106,6 +121,14 @@ const shortLinkSchema = new Schema<IShortLink>(
     created_by: { type: String, default: null, trim: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+// Partial rather than sparse: the share key is what makes a share link one
+// per thing, and two people sharing the same pod in the same second must
+// collide here rather than each get their own link.
+shortLinkSchema.index(
+  { share_key: 1 },
+  { unique: true, partialFilterExpression: { share_key: { $type: 'string' } } },
 );
 
 export const ShortLinkModel = model<IShortLink>('ShortLink', shortLinkSchema);

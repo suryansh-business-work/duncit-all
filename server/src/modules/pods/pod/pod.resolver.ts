@@ -7,8 +7,7 @@ import { clubService } from '@modules/clubs/club/club.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 import { UserModel } from '@modules/access/user/user.model';
-import { LocationModel } from '@modules/platform/location/location.model';
-import { VenueModel } from '@modules/venues/venue/venue.model';
+import { resolvePodPlace } from './pod.place';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 
@@ -23,91 +22,6 @@ const isAdminCtx = (ctx: GraphQLContext) =>
 
 const canReviewPendingPods = (ctx: GraphQLContext) =>
   !!ctx.user?.roles?.some((r) => POD_REVIEW_ROLES.has(r));
-
-const cleanParts = (parts: Array<string | null | undefined>) =>
-  parts.map((part) => part?.trim()).filter(Boolean) as string[];
-
-const joinParts = (parts: Array<string | null | undefined>) => cleanParts(parts).join(', ');
-
-const getPlaceCache = (ctx: GraphQLContext) => {
-  const bag = ctx as GraphQLContext & {
-    __podPlaceCache?: {
-      venues: Map<string, Promise<any>>;
-      locations: Map<string, Promise<any>>;
-    };
-  };
-  bag.__podPlaceCache ??= { venues: new Map(), locations: new Map() };
-  return bag.__podPlaceCache;
-};
-
-async function resolvePodPlace(parent: any, ctx: GraphQLContext) {
-  if (parent.__podPlace) return parent.__podPlace;
-  const cache = getPlaceCache(ctx);
-
-  if ((parent.pod_mode ?? 'PHYSICAL') === 'VIRTUAL') {
-    parent.__podPlace = {
-      label: 'Virtual pod',
-      detail: parent.meeting_platform || 'Online',
-    };
-    return parent.__podPlace;
-  }
-
-  if (parent.venue_id) {
-    const key = String(parent.venue_id);
-    if (!cache.venues.has(key)) {
-      cache.venues.set(
-        key,
-        VenueModel.findById(key)
-          .select('venue_name address_line1 address_line2 locality city state country postal_code')
-          .lean()
-          .exec()
-      );
-    }
-    const venue = await cache.venues.get(key);
-    if (venue) {
-      parent.__podPlace = {
-        label: venue.venue_name || joinParts([venue.locality, venue.city]) || 'Venue',
-        detail: joinParts([
-          venue.address_line1,
-          venue.address_line2,
-          venue.locality,
-          venue.city,
-          venue.state,
-          venue.postal_code,
-          venue.country,
-        ]),
-      };
-      return parent.__podPlace;
-    }
-  }
-
-  const zoneName = parent.zone_name?.trim() || '';
-  if (parent.location_id) {
-    const key = String(parent.location_id);
-    if (!cache.locations.has(key)) {
-      cache.locations.set(
-        key,
-        LocationModel.findById(key)
-          .select('location_name city state country location_pincode location_zones')
-          .lean()
-          .exec()
-      );
-    }
-    const location = await cache.locations.get(key);
-    if (location) {
-      const zone = (location.location_zones ?? []).find((item: any) => item.zone_name === zoneName);
-      const city = location.city || location.location_name;
-      parent.__podPlace = {
-        label: joinParts([zoneName, city]) || city || location.location_name,
-        detail: joinParts([location.state, zone?.pincode || location.location_pincode, location.country]),
-      };
-      return parent.__podPlace;
-    }
-  }
-
-  parent.__podPlace = zoneName ? { label: zoneName, detail: '' } : { label: null, detail: null };
-  return parent.__podPlace;
-}
 
 /** Per-request cache of live product free-delivery thresholds (one lookup per
  * product across every pod's product_requests in the operation). */

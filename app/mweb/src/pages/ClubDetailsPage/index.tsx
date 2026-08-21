@@ -22,6 +22,7 @@ import {
   CATEGORY_TREE,
 } from './clubDetailsQueries';
 import { categoryPath } from '../../utils/category-match';
+import { shareUrl } from '../../lib/share-link';
 import useSavedClub from './useSavedClub';
 
 export default function ClubDetailsPage() {
@@ -89,7 +90,11 @@ export default function ClubDetailsPage() {
   };
 
   const shareClub = async () => {
-    const url = `${globalThis.window.location.origin}/club/${club.club_id}`;
+    const url = await shareUrl(
+      'CLUB',
+      club.club_id,
+      `${globalThis.window.location.origin}/club/${club.club_id}`,
+    );
     try {
       if (navigator.share) {
         await navigator.share({ title: club.club_name, url });

@@ -15,10 +15,13 @@ import {
 import { SlotField, VenueField } from './VenueSlotFields';
 import {
   buildHostResubmitInput,
+  buildPodResubmitModerationInput,
   podResubmitInitialValues,
   podResubmitSchema,
   type PodResubmitValues,
 } from './pod-resubmit.form';
+import ContentCheckAlert from '../ContentCheckAlert';
+import { useContentCheck } from '../useContentCheck';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { HOST_RESUBMIT_POD, RESUBMIT_VENUES, RESUBMIT_VENUE_SLOTS } from '../queries';
 import type { HostPodTarget, ResubmitSlotOption, ResubmitVenueOption } from '../types';
@@ -33,13 +36,14 @@ interface Props {
  * venue or time slot, update the details and send the booking request again —
  * the same pod is reused, no new pod is created. */
 export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
-  const { renderMediaField } = useHostPodActionsConfig();
+  const { labels, renderMediaField } = useHostPodActionsConfig();
   const {
     register,
     control,
     handleSubmit,
     reset,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<PodResubmitValues>({
@@ -54,14 +58,23 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
     fetchPolicy: 'cache-and-network',
   });
   const [resubmit, resubmitState] = useMutation(HOST_RESUBMIT_POD);
+  const check = useContentCheck(setError);
+  const busy = resubmitState.loading || check.checking;
 
   useEffect(() => {
     reset(podResubmitInitialValues(pod));
+    check.clear();
+    // `check.clear` is a fresh closure each render; re-seeding is keyed on the pod.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pod, reset]);
 
   const submit = handleSubmit(async (values) => {
-    await resubmit({ variables: { pod_doc_id: pod?.id, input: buildHostResubmitInput(values) } });
-    onSaved();
+    // The resubmitted copy is screened like any other edit — a rejected pod is
+    // exactly where a host is most tempted to rewrite the details.
+    const sent = await check.run(buildPodResubmitModerationInput(values), () =>
+      resubmit({ variables: { pod_doc_id: pod?.id, input: buildHostResubmitInput(values) } }),
+    );
+    if (sent) onSaved();
   });
 
   return (
@@ -138,21 +151,22 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
               })
             }
           />
-          {resubmitState.error && <Alert severity="error">{resubmitState.error.message}</Alert>}
+          <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
+          {check.failure && <Alert severity="error">{check.failure}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={resubmitState.loading}>
+        <Button onClick={onClose} disabled={busy}>
           Cancel
         </Button>
         <Button
           type="submit"
           form="pod-resubmit-form"
           variant="contained"
-          disabled={resubmitState.loading}
+          disabled={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {resubmitState.loading ? 'Resubmitting…' : 'Resubmit request'}
+          {busy ? 'Resubmitting…' : 'Resubmit request'}
         </Button>
       </DialogActions>
     </Dialog>

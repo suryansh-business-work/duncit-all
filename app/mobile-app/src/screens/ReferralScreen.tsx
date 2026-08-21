@@ -10,6 +10,7 @@ import { referralLink, renderReferralMessage } from '@duncit/utils';
 import { useReferral, type MyReferral } from '@/hooks/useReferral';
 import { useTranslation } from '@/hooks/useTranslation';
 import { POD_WEB_BASE } from '@/utils/pod-format';
+import { useShareUrl } from '@/hooks/useShareUrl';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 
@@ -185,7 +186,13 @@ export function ReferralScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const referredList = referral?.referred ?? [];
 
-  const link = referral ? referralLink(referral.code, POD_WEB_BASE) : '';
+  // Handed out as a tracked duncit.com link, so the signups a member brings in
+  // are attributed to their share (mWeb does the same).
+  const link = useShareUrl(
+    'REFERRAL',
+    referral?.code ?? '',
+    referral ? referralLink(referral.code, POD_WEB_BASE) : '',
+  );
 
   const flash = (message: string) => {
     setNotice(message);

@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDate } from '@/utils/date-format';
 import { GIFT_CARD_STATUS_KEYS, giftCardShareLink } from '@/utils/gift-cards';
+import { shareUrl } from '@/services/share-link';
 import { GiftCardVisual } from './GiftCardVisual';
 
 interface Props {
@@ -42,11 +43,12 @@ export function GiftCardRow({
       .catch(() => undefined);
   };
 
-  const share = () => {
+  const share = async () => {
     const intro = t('mweb.giftCards.shareMessage', {
       vars: { sender: senderName, amount: formatMoney(currency, card.initial_amount) },
     });
-    Share.share({ message: `${intro} ${giftCardShareLink(card.code)}` }).catch(() => undefined);
+    const url = await shareUrl('GIFT_CARD', card.code, giftCardShareLink(card.code));
+    Share.share({ message: `${intro} ${url}` }).catch(() => undefined);
   };
 
   return (

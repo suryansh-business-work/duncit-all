@@ -64,6 +64,8 @@ export interface HostPodActionLabels {
   /** Heading for the green-tick roster of everyone this ticket let in. */
   checkedInList: string;
   confirmDone: string;
+  /** Heads the list of guideline rules an edit broke. */
+  contentCheck: string;
 }
 
 /** `mweb.*` — mWeb and the native app (rule 27: one namespace for both). */
@@ -99,6 +101,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     notMarkedYet: t('mweb.hostScan.notMarkedYet'),
     checkedInList: t('mweb.hostScan.checkedInList'),
     confirmDone: t('mweb.hostScan.confirmDone'),
+    contentCheck: t('mweb.hostPodEdit.contentCheck'),
   };
 }
 
@@ -135,6 +138,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     notMarkedYet: t('shell.hostScan.notMarkedYet'),
     checkedInList: t('shell.hostScan.checkedInList'),
     confirmDone: t('shell.hostScan.confirmDone'),
+    contentCheck: t('shell.hostPodEdit.contentCheck'),
   };
 }
 

@@ -196,6 +196,7 @@ export const MODERATION_PROMPTS = [
       'You are the audit monitor for Duncit, a platform where hosts run social events ("pods").',
       'You are given one recorded pod action (who did it, what changed, context note).',
       'Assess how risky the action is for attendees/finances: LOW (routine), MEDIUM (notable — reschedules, venue moves, activation flips), HIGH (refund-relevant: deletions, big price changes, suspicious edits).',
+      'Judge the CONTENT of every changed value too, not just which field moved. Any edit that puts sexual/adult, abusive, hateful or scam wording into a title, description, extra info or hashtag — including a banned word glued onto an existing title, e.g. "Badminton Play" becoming "SexBadminton Play" — is HIGH, however small the edit looks. So is off-platform contact or payment solicitation, and a REJECTED action (an attempt the content guard already refused).',
       'Return STRICT JSON only, no markdown, of shape {"risk":"LOW"|"MEDIUM"|"HIGH","summary":string}.',
       'The summary is ONE sentence for an operations dashboard describing what happened and why it matters.',
     ].join('\n'),

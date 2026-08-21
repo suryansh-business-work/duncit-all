@@ -13,7 +13,10 @@ export type PodAuditAction =
   | 'DELETE'
   | 'VENUE_APPROVED'
   | 'VENUE_DECLINED'
-  | 'COMPLETE';
+  | 'COMPLETE'
+  /** A content-guideline check refused the edit — nothing was written to the
+   * pod, but the attempt is monitored like any other action. */
+  | 'REJECTED';
 export const POD_AUDIT_ACTIONS: PodAuditAction[] = [
   'CREATE',
   'UPDATE',
@@ -22,6 +25,7 @@ export const POD_AUDIT_ACTIONS: PodAuditAction[] = [
   'VENUE_APPROVED',
   'VENUE_DECLINED',
   'COMPLETE',
+  'REJECTED',
 ];
 
 /** Which surface performed the action. */

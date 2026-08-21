@@ -57,12 +57,18 @@ export const SHORT_LINK_OPTIONS = gql`
   }
 `;
 
-/** Campaigns a link can be attributed to. */
+/**
+ * Campaigns a link can be attributed to: the platform's own share campaigns —
+ * what mWeb and the app file every share under — followed by the email ones.
+ * One list, so the create form and the table's campaign filter agree.
+ */
 export const CAMPAIGNS_FOR_SHORT_LINK = gql`
   query CampaignsForShortLink {
-    marketingCampaigns {
+    shortLinkCampaigns {
       campaign_id
       name
+      utm_campaign
+      kind
     }
   }
 `;
@@ -323,4 +329,7 @@ export interface ShortLinkRow {
 export interface CampaignChoice {
   campaign_id: string;
   name: string;
+  utm_campaign: string;
+  /** SHARE campaigns are the platform's own; EMAIL ones are marketing's. */
+  kind: 'SHARE' | 'EMAIL';
 }

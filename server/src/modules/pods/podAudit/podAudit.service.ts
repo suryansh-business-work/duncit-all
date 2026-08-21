@@ -92,6 +92,9 @@ const changed = (changes: IPodAuditChange[], field: string) =>
  * or refine it, never depend on it.
  */
 export function heuristicRisk(action: PodAuditAction, changes: IPodAuditChange[]): PodAuditRisk {
+  // A refused edit is always HIGH: someone tried to publish content the
+  // guidelines forbid, which is the single thing this trail exists to surface.
+  if (action === 'REJECTED') return 'HIGH';
   if (action === 'DELETE') return 'HIGH';
   if (action === 'VENUE_DECLINED') return 'MEDIUM';
   const amount = changed(changes, 'pod_amount');
@@ -202,6 +205,9 @@ export interface RecordPodAuditInput {
   actorUserId?: string | null;
   before?: PodAuditSnapshot | null;
   note?: string | null;
+  /** Changes to store verbatim instead of diffing the pod. A REJECTED attempt
+   * never reached the document, so what was tried can only come from here. */
+  changes?: IPodAuditChange[] | null;
 }
 
 const toPub = (d: IPodAuditLog) => ({
@@ -250,7 +256,8 @@ export const podAuditService = {
   async record(input: RecordPodAuditInput): Promise<void> {
     try {
       const after = snapshotPod(input.pod);
-      const changes = input.before ? diffSnapshots(input.before, after) : [];
+      const diffed = input.before ? diffSnapshots(input.before, after) : [];
+      const changes = input.changes ?? diffed;
       // A no-op save (nothing actually changed) is not an auditable event.
       if (input.before && input.action === 'UPDATE' && changes.length === 0) return;
       const log = await PodAuditLogModel.create({

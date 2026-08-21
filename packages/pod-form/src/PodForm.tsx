@@ -150,7 +150,13 @@ export default function PodForm({
         clubCount={clubs.length}
       />
       <PodSections />
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      {/* `whiteSpace: pre-line` keeps a content refusal readable: it arrives as
+          a headline followed by one line per rule broken. */}
+      {error && (
+        <Alert severity="error" sx={{ mt: 2, whiteSpace: 'pre-line' }}>
+          {error}
+        </Alert>
+      )}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
         <Button onClick={onCancel}>Cancel</Button>
         {showDraft && (

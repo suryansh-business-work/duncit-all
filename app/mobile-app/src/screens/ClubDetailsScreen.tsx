@@ -14,6 +14,7 @@ import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
+import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
@@ -42,7 +43,7 @@ export function ClubDetailsScreen() {
   const handleShare = async () => {
     /* istanbul ignore next */
     if (!club) return;
-    const url = `${DEEP_LINK_BASE}/${club.club_id}`;
+    const url = await shareUrl('CLUB', club.club_id, `${DEEP_LINK_BASE}/${club.club_id}`);
     await Share.share({ title: club.club_name, message: `${club.club_name} — ${url}`, url });
   };
 

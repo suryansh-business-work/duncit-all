@@ -9,6 +9,7 @@ import {
 } from '@duncit/host-pod-actions';
 import MediaUrlsField from '../create-pod-page/create-pod/fields/MediaUrlsField';
 import { notifyError, notifySuccess } from '../../components/notify';
+import { shareUrl } from '../../lib/share-link';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -39,6 +40,12 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
   );
 
   const onViewProfile = useCallback((path: string) => navigate(path), [navigate]);
+  // Every rating link a host sends goes out as a tracked short link, like the
+  // rest of mWeb's shares.
+  const resolveFeedbackShareUrl = useCallback(
+    (podId: string, plainUrl: string) => shareUrl('POD_FEEDBACK', podId, plainUrl),
+    [],
+  );
   const onOpenFeedback = useCallback(
     (podId: string) => navigate(podFeedbackPath(podId)),
     [navigate],
@@ -54,6 +61,7 @@ export default function HostPodActionsBridge({ children }: Readonly<{ children: 
       // instead of pointing at production.
       feedbackBaseUrl={globalThis.window.location.origin}
       onOpenFeedback={onOpenFeedback}
+      resolveShareUrl={resolveFeedbackShareUrl}
       notifySuccess={notifySuccess}
       notifyError={notifyError}
     >

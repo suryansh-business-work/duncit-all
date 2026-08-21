@@ -15,6 +15,23 @@ export const HOST_UPDATE_POD = gql`
   }
 `;
 
+/** The AI content check the host's edit runs before saving — the same deep
+ * (regex + GPT-4o vision) pass the create-pod stepper runs before publishing,
+ * so an edit is screened exactly as hard as the first draft was. */
+export const MODERATE_POD_CONTENT = gql`
+  mutation HostEditModeratePodContent($input: ModeratePodContentInput!) {
+    moderatePodContent(input: $input) {
+      allowed
+      violations {
+        field
+        type
+        message
+        evidence
+      }
+    }
+  }
+`;
+
 /** What cancelling a pod means for its audience — drives the cancel dialog. */
 export const HOST_POD_DELETE_IMPACT = gql`
   query HostPodDeleteImpact($pod_doc_id: ID!) {

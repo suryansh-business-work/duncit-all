@@ -225,6 +225,14 @@ async function bootstrap() {
     const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
     await giftcardService.syncIndexes();
   });
+  // Builds the share-key unique index that makes an automatically minted share
+  // link one per thing shared. Without it two people sharing the same pod at
+  // the same moment each get their own link, and neither carries the pod's
+  // real click count. New unique indexes only land through syncIndexes.
+  await safeSeed('shortLinkIndexes', async () => {
+    const { ShortLinkModel } = await import('@modules/crm/marketing/shortLink.model');
+    await ShortLinkModel.syncIndexes();
+  });
   // Builds the WhatsApp send log's unique index. It IS the idempotency: without
   // it every re-trigger of a domain event is a second billed message, and the
   // index only lands on an already-deployed database through syncIndexes.

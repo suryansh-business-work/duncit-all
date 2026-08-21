@@ -7,6 +7,15 @@ import { ShortLinkModel, SHORT_LINK_MEDIUMS, SHORT_LINK_SOURCES, type IShortLink
 import { MarketingCampaignModel } from './marketing.model';
 import { buildDestination, generateShortCode, utmSlug } from './shortLink.codes';
 import { mediumUtm, shortLinkOptions, sourceUtm } from './shortLink.options';
+import {
+  resolveShareDestination,
+  shareCampaignById,
+  shareCampaignFor,
+  shareCampaigns,
+  shareKey,
+  type ShareDestination,
+  type ShareLinkTarget,
+} from './shortLink.share';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { shortLinkClickService } from './shortLinkClick.service';
@@ -50,6 +59,11 @@ const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
     source: { type: 'enum' },
     medium: { type: 'enum' },
     campaign_id: { type: 'string' },
+    // The console filters by the frozen tag rather than the id: it is what the
+    // Campaign column shows, and it is the same value in a link filed under a
+    // share campaign and one filed by hand under the same campaign.
+    utm_campaign: { type: 'string' },
+    share_target: { type: 'enum' },
     is_active: { type: 'boolean' },
     click_count: { type: 'number' },
     created_at: { type: 'date' },
@@ -94,6 +108,11 @@ function requireText(value: string, kind: string) {
 /** The campaign's name, slugged, frozen onto the link at creation. */
 async function campaignUtm(campaignId?: string | null) {
   if (!campaignId) return { campaign_id: null, utm_campaign: null };
+  // A share campaign is defined by the platform rather than stored, so it is
+  // resolved before the database is asked — that is what lets a marketer file
+  // a hand-made link under the same campaign the apps mint into.
+  const share = shareCampaignById(campaignId);
+  if (share) return { campaign_id: share.campaign_id, utm_campaign: share.utm_campaign };
   const campaign = await MarketingCampaignModel.findOne({ campaign_id: campaignId })
     .select('name')
     .lean()
@@ -138,7 +157,7 @@ async function uniqueCode(attempts = 5): Promise<string> {
 
 async function toPub(doc: IShortLink) {
   const { websiteUrl } = await getUrlConfigs();
-  const shortUrl = `${websiteUrl.replace(/\/$/, '')}/${doc.code}`;
+  const shortUrl = shortUrlFor(websiteUrl, doc.code);
   return {
     id: doc._id.toHexString(),
     code: doc.code,
@@ -150,6 +169,7 @@ async function toPub(doc: IShortLink) {
       utm_source: doc.utm_source,
       utm_medium: doc.utm_medium,
       utm_campaign: doc.utm_campaign,
+      share: !!doc.share_target,
     }),
     source: doc.source,
     source_other: doc.source_other ?? null,
@@ -166,6 +186,82 @@ async function toPub(doc: IShortLink) {
     created_at: doc.created_at.toISOString(),
     updated_at: doc.updated_at.toISOString(),
   };
+}
+
+/**
+ * What every automatically minted share link is tagged as: a member handing a
+ * link to someone they know. The channel it ends up in — WhatsApp, Instagram,
+ * a paste into a group chat — is not knowable at share time and is not guessed
+ * here; it is read off each click's referrer instead.
+ */
+const SHARE_SOURCE = 'DIRECT_LINK_SHARE' as const;
+const SHARE_MEDIUM = 'REFERRAL' as const;
+
+const shortUrlFor = (websiteUrl: string, code: string) =>
+  `${websiteUrl.replace(/\/$/, '')}/${code}`;
+
+/**
+ * What a share hands out: the duncit.com link, or — for a link a marketer has
+ * retired — the plain destination. Retiring a share link stops it being
+ * counted; it must not stop the pod being shareable.
+ */
+async function shareResult(doc: IShortLink) {
+  if (!doc.is_active) return { url: doc.destination_url, code: null };
+  const { websiteUrl } = await getUrlConfigs();
+  return { url: shortUrlFor(websiteUrl, doc.code), code: doc.code };
+}
+
+/**
+ * A share link keeps pointing at the thing it names. A club renamed, a pod
+ * moved to another venue, a slug changed — the destination stored when the
+ * link was first minted would send everyone who follows it somewhere wrong,
+ * and unlike a poster campaign nobody would ever go back and fix it.
+ *
+ * A thing that no longer resolves keeps its last destination: a link already
+ * in circulation is better left pointing where it did than blanked.
+ */
+async function refreshDestination(doc: IShortLink, destination: ShareDestination | null) {
+  if (!destination || destination.url === doc.destination_url) return doc;
+  doc.destination_url = destination.url;
+  doc.label = destination.label;
+  await doc.save();
+  return doc;
+}
+
+async function createShareLink(
+  target: ShareLinkTarget,
+  key: string,
+  destination: ShareDestination,
+  userId?: string | null,
+) {
+  const campaign = shareCampaignFor(target);
+  try {
+    return await ShortLinkModel.create({
+      code: await uniqueCode(),
+      label: destination.label,
+      // Built by the server from the thing being shared, never sent by the
+      // caller, so the destination allow-list a hand-typed link is held to
+      // does not apply — a pod venue map legitimately points at Google Maps.
+      destination_url: destination.url,
+      source: SHARE_SOURCE,
+      medium: SHARE_MEDIUM,
+      campaign_id: campaign.campaign_id,
+      utm_campaign: campaign.utm_campaign,
+      utm_source: sourceUtm(SHARE_SOURCE),
+      utm_medium: mediumUtm(SHARE_MEDIUM),
+      share_target: target,
+      share_key: key,
+      created_by: userId ?? null,
+    });
+  } catch (error: any) {
+    // Someone shared the same thing a moment earlier and won the unique index.
+    // Their link is the link for this thing, so hand that one back.
+    if (error?.code === 11000) {
+      const raced = await ShortLinkModel.findOne({ share_key: key }).exec();
+      if (raced) return raced;
+    }
+    throw error;
+  }
 }
 
 export const shortLinkService = {
@@ -200,6 +296,55 @@ export const shortLinkService = {
       created_by: userId ?? null,
     });
     return toPub(doc);
+  },
+
+  /**
+   * The tracked link for something being shared out of mWeb or the app.
+   *
+   * One link per thing shared, reused by everyone who shares it — a pod that
+   * three hundred members pass on has one link carrying three hundred shares
+   * worth of clicks, which is the number worth reading. A brand new link is
+   * minted the first time, under the campaign its target belongs to.
+   *
+   * Callers pass what they are sharing, never where it should point.
+   */
+  async share(target: ShareLinkTarget, ref: string, userId?: string | null) {
+    const key = shareKey(target, ref);
+    const [existing, destination] = await Promise.all([
+      ShortLinkModel.findOne({ share_key: key }).exec(),
+      resolveShareDestination(target, ref),
+    ]);
+    if (existing) return shareResult(await refreshDestination(existing, destination));
+
+    if (!destination) {
+      throw new GraphQLError('There is nothing to share at that address', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    return shareResult(await createShareLink(target, key, destination, userId));
+  },
+
+  /**
+   * Every campaign a link can be filed under: the platform's own share
+   * campaigns and every marketing campaign. One list, so the console's
+   * dropdown and its campaign filter cannot disagree about what exists.
+   */
+  async campaigns() {
+    const share = shareCampaigns().map((campaign) => ({ ...campaign, kind: 'SHARE' as const }));
+    const email = await MarketingCampaignModel.find({})
+      .select('campaign_id name')
+      .sort({ name: 1 })
+      .lean()
+      .exec();
+    return [
+      ...share,
+      ...email.map((campaign: any) => ({
+        campaign_id: campaign.campaign_id,
+        name: campaign.name,
+        utm_campaign: utmSlug(campaign.name),
+        kind: 'EMAIL' as const,
+      })),
+    ];
   },
 
   async table(input?: TableQueryInput | null) {
@@ -261,6 +406,7 @@ export const shortLinkService = {
         utm_medium: doc.utm_medium,
         utm_campaign: doc.utm_campaign,
         click_id: clickId,
+        share: !!doc.share_target,
       }),
       shortLinkId: doc._id.toHexString(),
     };

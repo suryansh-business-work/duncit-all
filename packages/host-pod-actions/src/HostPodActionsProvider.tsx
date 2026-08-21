@@ -21,6 +21,12 @@ export interface HostPodActionsConfig {
   feedbackBaseUrl: string;
   /** Opens the rating form for a pod. */
   onOpenFeedback: (podId: string) => void;
+  /**
+   * Turns a pod's rating link into its tracked short link before the host
+   * sends it. Optional: a surface without a client for it hands out the plain
+   * link, which still works — it is simply not counted.
+   */
+  resolveShareUrl?: (podId: string, plainUrl: string) => Promise<string>;
   notifySuccess: (message: string) => void;
   notifyError: (message: string) => void;
   /** Slot-picker copy for the resubmit dialog — `buildSlotLabels(t, <ns>.slots)`. */
@@ -41,6 +47,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
     onViewProfile,
     feedbackBaseUrl,
     onOpenFeedback,
+    resolveShareUrl,
     notifySuccess,
     notifyError,
     slotLabels,
@@ -52,6 +59,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
       onViewProfile,
       feedbackBaseUrl,
       onOpenFeedback,
+      resolveShareUrl,
       notifySuccess,
       notifyError,
       slotLabels,
@@ -62,6 +70,7 @@ export function HostPodActionsProvider({ children, ...config }: Readonly<Provide
       onViewProfile,
       feedbackBaseUrl,
       onOpenFeedback,
+      resolveShareUrl,
       notifySuccess,
       notifyError,
       slotLabels,

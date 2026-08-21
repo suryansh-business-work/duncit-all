@@ -51,6 +51,47 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     OTHER
   }
 
+  """
+  What is being shared. The destination behind each one is built by the server
+  from the thing itself, never taken from the request.
+  """
+  enum ShareLinkTarget {
+    POD
+    "The venue map link a shared pod message carries."
+    POD_LOCATION
+    "A pod's rating form, sent by its host."
+    POD_FEEDBACK
+    CLUB
+    PROFILE
+    POST
+    POD_IDEA
+    GIFT_CARD
+    REFERRAL
+  }
+
+  "The link a share should hand out."
+  type ShareLink {
+    "The duncit.com short link, or the plain destination when the link is retired."
+    url: String!
+    "The short code, or null when the plain destination is being handed out."
+    code: String
+  }
+
+  "Where a short link's campaign comes from."
+  enum ShortLinkCampaignKind {
+    "Defined by the platform; what the apps file every share under."
+    SHARE
+    "A marketing campaign."
+    EMAIL
+  }
+
+  type ShortLinkCampaign {
+    campaign_id: ID!
+    name: String!
+    utm_campaign: String!
+    kind: ShortLinkCampaignKind!
+  }
+
   type ShortLinkOption {
     value: String!
     label: String!
@@ -221,6 +262,8 @@ export const shortLinkTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
+    "Every campaign a link can be filed under — the share campaigns and the email ones."
+    shortLinkCampaigns: [ShortLinkCampaign!]!
     "The channel and medium dropdowns, so no client keeps its own copy."
     shortLinkOptions: ShortLinkOptions!
     shortLinksTable(query: TableQueryInput): ShortLinkTablePage!
@@ -245,6 +288,14 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     anyone has signed in, and an authenticated call also binds the account.
     """
     recordShortLinkJourney(click_id: String!, step: ShortLinkJourneyStep!): Boolean!
+    """
+    The tracked link for something being shared out of mWeb or the app.
+    Minted once per thing shared, under that target's campaign, and reused by
+    everyone who shares it afterwards. Public: a pod is shared by signed-out
+    visitors too, and the destination is built from the ref rather than sent, so
+    a link can only ever point at something that already exists on Duncit.
+    """
+    shareLink(target: ShareLinkTarget!, ref: ID!): ShareLink!
     createShortLink(input: ShortLinkInput!): ShortLink!
     "Retire or revive a link without deleting its click history."
     setShortLinkActive(id: ID!, is_active: Boolean!): ShortLink!

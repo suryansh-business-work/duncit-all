@@ -19,6 +19,7 @@ import IdeaDetailsDialog from './IdeaDetailsDialog';
 import IdeasList from './IdeasList';
 import PodIdeasHeader from './PodIdeasHeader';
 import { ideaMatchesScope } from '../../utils/ideaCategory';
+import { shareUrl } from '../../lib/share-link';
 
 const EMPTY_LABELS: CategoryLabels = {
   super_category_name: '',
@@ -128,7 +129,11 @@ export default function PodIdeasPage() {
   };
 
   const share = async (idea: any) => {
-    const url = `${globalThis.window.location.origin}/pod-ideas?id=${idea.id}`;
+    const url = await shareUrl(
+      'POD_IDEA',
+      idea.id,
+      `${globalThis.window.location.origin}/pod-ideas?id=${idea.id}`,
+    );
     try {
       if (navigator.share) {
         await navigator.share({ title: idea.title, text: idea.description, url });

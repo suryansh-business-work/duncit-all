@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { podContentRejectionMessage } from '@duncit/utils';
 import { buildPodInput, podToFormValues } from '../build-input';
 import { blankPodFormValues, type PodFormConfig, type PodFormValues } from '../types';
 
@@ -84,7 +85,10 @@ export default function usePodEditorState({
       }
       onSaved({ created: !editingPod, draft: options.draft });
     } catch (e: any) {
-      setOpError(e.message);
+      // A content refusal carries the rules it broke; the headline alone
+      // ("violates the community guidelines") tells the author nothing about
+      // which word in which field to fix.
+      setOpError(podContentRejectionMessage(e) ?? e.message);
     } finally {
       setBusy(false);
     }

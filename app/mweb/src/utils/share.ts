@@ -1,4 +1,5 @@
 import { notifySuccess } from '../components/notify';
+import { shareUrl } from '../lib/share-link';
 
 /** Web URL for a post — /post/:postId (matches AppRoutes + the mobile deep-link config). */
 export const buildPostUrl = (postId: string) => `${globalThis.window.location.origin}/post/${postId}`;
@@ -20,10 +21,11 @@ async function share(url: string, title: string, text: string) {
   }
 }
 
-/** Share a post (post detail page). */
-export const sharePost = (postId: string, title: string) =>
-  share(buildPostUrl(postId), title, title);
+/** Share a post (post detail page). Handed out as the tracked duncit.com link
+ * so the visits it brings back are attributed to the share (rule 40). */
+export const sharePost = async (postId: string, title: string) =>
+  share(await shareUrl('POST', postId, buildPostUrl(postId)), title, title);
 
-/** Share a public profile. */
-export const shareProfile = (userId: string, name: string) =>
-  share(buildProfileUrl(userId), name, `${name} on Duncit`);
+/** Share a public profile, through its tracked link. */
+export const shareProfile = async (userId: string, name: string) =>
+  share(await shareUrl('PROFILE', userId, buildProfileUrl(userId)), name, `${name} on Duncit`);

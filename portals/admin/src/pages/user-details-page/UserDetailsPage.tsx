@@ -22,6 +22,7 @@ import DeleteUserDialog from './DeleteUserDialog';
 import UserHealthSection from './UserHealthSection';
 import UserVerificationsSection from './UserVerificationsSection';
 import UserSurveysSection from './UserSurveysSection';
+import UserChangeLogsSection from './UserChangeLogsSection';
 import { useUserDetailsState } from './useUserDetailsState';
 
 export default function UserDetailsPage() {
@@ -97,6 +98,11 @@ export default function UserDetailsPage() {
             value: 'contact-logs',
             label: 'Call & Email Logs',
             content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,
+          },
+          {
+            value: 'change-logs',
+            label: 'User Change Logs',
+            content: <UserChangeLogsSection userId={userId} />,
           },
         ]}
       />

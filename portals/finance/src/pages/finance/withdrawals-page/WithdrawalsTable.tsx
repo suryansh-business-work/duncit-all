@@ -1,4 +1,4 @@
-import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { useMemo, type MutableRefObject } from 'react';
 import { Button, Stack } from '@mui/material';
 import {
   DuncitTable,
@@ -6,14 +6,15 @@ import {
   formatDateCell,
   type DuncitColumn,
   type TableFetch,
-  type TableFilterValue,
 } from '@duncit/table';
 import { formatMoney } from '@duncit/utils';
 import { accountDetails } from './account-details';
 import type { WithdrawalRow } from './queries';
 import { roleLabel } from './roles';
 import {
+  podShareOf,
   renderAccount,
+  renderAmount,
   renderMethod,
   renderRole,
   renderStatus,
@@ -36,21 +37,25 @@ const METHOD_OPTIONS = [
 const getWithdrawalRowId = (w: WithdrawalRow) => w.id;
 
 interface Props {
+  /** Namespaces the column layout this table persists — never share one. */
+  tableId: string;
+  /** The pod being drilled into, so Amount can name this pod's slice. */
+  podId: string;
   fetchRows: TableFetch<WithdrawalRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   reviewing: boolean;
-  externalFilters: ReadonlyArray<TableFilterValue>;
-  toolbarActions: ReactNode;
+  emptyText: string;
   onMarkPaid: (w: WithdrawalRow) => void;
   onReject: (w: WithdrawalRow) => void;
 }
 
 export default function WithdrawalsTable({
+  tableId,
+  podId,
   fetchRows,
   refetchRef,
   reviewing,
-  externalFilters,
-  toolbarActions,
+  emptyText,
   onMarkPaid,
   onReject,
 }: Readonly<Props>) {
@@ -108,8 +113,15 @@ export default function WithdrawalsTable({
       {
         field: 'amount',
         headerName: 'Amount',
-        width: 130,
+        width: 150,
         filter: { type: 'number' },
+        cellRenderer: (w: WithdrawalRow) => {
+          const share = podShareOf(w, podId);
+          return renderAmount(
+            formatMoney(w.amount, { decimals: 2 }),
+            share === null ? null : formatMoney(share, { decimals: 2 }),
+          );
+        },
         valueGetter: (w) => formatMoney(w.amount, { decimals: 2 }),
       },
       {
@@ -139,27 +151,18 @@ export default function WithdrawalsTable({
       },
       { field: 'actions', headerName: 'Review', sortable: false, width: 210, cellRenderer: renderReview },
     ];
-  }, [reviewing, onMarkPaid, onReject]);
+  }, [podId, reviewing, onMarkPaid, onReject]);
 
   return (
     <DuncitTable<WithdrawalRow>
-      tableId="finance-withdrawals"
+      tableId={tableId}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getWithdrawalRowId}
-      emptyText={emptyTextFor(externalFilters)}
+      emptyText={emptyText}
       defaultSort={{ field: 'requested_at', dir: 'desc' }}
       searchPlaceholder="Search name, email, UPI or account"
       refetchRef={refetchRef}
-      externalFilters={externalFilters}
-      toolbarActions={toolbarActions}
     />
   );
-}
-
-/** Says WHY the table is empty, so a role filter never reads as "no data at all". */
-function emptyTextFor(filters: ReadonlyArray<TableFilterValue>): string {
-  const role = filters.find((f) => f.field === 'withdrawer_role')?.value;
-  if (!role) return 'No withdrawals yet.';
-  return `No withdrawals from a ${roleLabel(role)} yet.`;
 }

@@ -16,6 +16,7 @@ import {
 import { podSeatsAvailable, podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import { emitUserChanged } from '../../../realtime/user.events';
 import { syncUserMirrors } from './user.mirrors';
+import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
   LoginDTO,
@@ -985,6 +986,24 @@ function assignMyDob(set: Record<string, any>, input: UpdateMyProfileDTO) {
   set['profile.dob'] = d;
 }
 
+/**
+ * Apply a `$set` to a user and append one change-log row per field it moved.
+ *
+ * EVERY profile write goes through here. The alternative — logging at each
+ * call site — is one chance per site to forget, and the admin trail is only
+ * worth reading if it cannot be missing an edit. The before-image is read
+ * first because `{ new: true }` hands back the after value, and a diff needs
+ * both. The actor and the surface are not passed in: the audit service reads
+ * them from the request already in flight.
+ */
+async function applyUserUpdate(user_id: string, set: Record<string, any>) {
+  const before = await UserModel.findById(user_id).lean();
+  const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
+  if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+  await userAuditService.record({ userId: user_id, before, after: updated });
+  return updated;
+}
+
 export const userService = {
   // Backward-compat helper used by other modules. Returns the materialized
   // flat shape (toPublic) for a given doc.
@@ -1029,6 +1048,7 @@ export const userService = {
 
     await welcomeNewAccount(created, 'register');
     await recordSignupAcceptance(created, 'SIGNUP_FORM', acceptance);
+    await userAuditService.recordCreate(String(created._id), created);
     return authPayload(created);
   },
 
@@ -1347,6 +1367,7 @@ export const userService = {
       }
     );
     const fresh = await UserModel.findById(created._id);
+    await userAuditService.recordCreate(String(created._id), fresh);
     return authPayload(fresh);
   },
 
@@ -1361,8 +1382,7 @@ export const userService = {
     if ((input as any).address !== undefined) {
       set['profile.address'] = toPostalAddress((input as any).address);
     }
-    const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const updated = await applyUserUpdate(user_id, set);
     return publishSession(await toPublic(updated));
   },
 
@@ -1425,6 +1445,7 @@ export const userService = {
       }
     );
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: user, after: fresh });
     return toPublic(fresh);
   },
 
@@ -1774,6 +1795,7 @@ export const userService = {
     // Soft-delete (deleted_at + INACTIVE) and strip relation rows. Self-serve,
     // so no transaction wrapper — the deletes are independent and idempotent.
     const oid = new Types.ObjectId(user_id);
+    const before = await UserModel.findById(user_id).lean();
     await softDeleteUserWrites(oid);
     // Anonymize the login identifiers + clear roles/OTP so the freed email/phone
     // can be reused and the stale JWT can never re-authenticate.
@@ -1791,6 +1813,8 @@ export const userService = {
         },
       }
     );
+    const after = await UserModel.findById(user_id).lean();
+    await userAuditService.record({ userId: user_id, before, after, action: 'DELETE' });
     return true;
   },
 
@@ -2281,12 +2305,9 @@ export const userService = {
     if (visibility !== 'PUBLIC' && visibility !== 'PRIVATE') {
       throw new GraphQLError('Invalid visibility', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $set: { 'metadata.profile_visibility': visibility } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const updated = await applyUserUpdate(user_id, {
+      'metadata.profile_visibility': visibility,
+    });
     return toPublic(updated);
   },
 
@@ -2305,12 +2326,7 @@ export const userService = {
       }
       value = new Types.ObjectId(location_id);
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $set: { 'profile.selected_location_id': value } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const updated = await applyUserUpdate(user_id, { 'profile.selected_location_id': value });
     return toPublic(updated);
   },
 
@@ -2325,12 +2341,7 @@ export const userService = {
     if (!exists) {
       throw new GraphQLError('Unsupported locale', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $set: { 'profile.locale': code } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const updated = await applyUserUpdate(user_id, { 'profile.locale': code });
     // The one change a user makes on one device and expects to see on the next:
     // the language switch is exactly what `user:changed` exists for.
     return publishSession(await toPublic(updated));
@@ -2377,12 +2388,7 @@ export const userService = {
   },
 
   async updateMyPetProfile(user_id: string, input: PetProfileDTO) {
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $set: { pet_profile: input } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const updated = await applyUserUpdate(user_id, { pet_profile: input });
     return toPublic(updated);
   },
 
@@ -2567,6 +2573,7 @@ export const userService = {
 
     await welcomeNewAccount(created, 'create');
     const fresh = await UserModel.findById(created._id);
+    await userAuditService.recordCreate(String(created._id), fresh);
     return toPublic(fresh);
   },
 
@@ -2575,10 +2582,10 @@ export const userService = {
     // `{ new: true }` below hands back the AFTER value, so the status this write
     // moves away from has to be read while it still exists — without it every
     // re-save of an already-suspended account looks like a fresh suspension.
-    const before =
-      input.status === undefined
-        ? null
-        : await UserModel.findById(user_id).select('metadata.status').lean();
+    // The same before-image is what the change log is diffed against, and it is
+    // taken here rather than inside applyUserUpdate because the role write
+    // below moves fields too: one diff has to span the whole admin save.
+    const before = await UserModel.findById(user_id).lean();
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
@@ -2593,8 +2600,10 @@ export const userService = {
       });
     }
     const fresh = await UserModel.findById(user_id);
-    const statusEvent =
-      before && input.status ? accountStatusEvent(before.metadata?.status ?? '', input.status) : null;
+    await userAuditService.record({ userId: user_id, before, after: fresh });
+    const statusEvent = input.status
+      ? accountStatusEvent(before?.metadata?.status ?? '', input.status)
+      : null;
     if (statusEvent) {
       await whatsappService.send({
         event: statusEvent,
@@ -2615,12 +2624,15 @@ export const userService = {
     // Soft delete per spec — set metadata.deleted_at, mark INACTIVE. Hard
     // delete of relations is also performed so counters do not drift.
     const oid = new Types.ObjectId(user_id);
+    const before = await UserModel.findById(user_id).lean();
     const session = await UserModel.db.startSession();
     try {
       await session.withTransaction(() => softDeleteUserWrites(oid, session));
     } finally {
       await session.endSession();
     }
+    const after = await UserModel.findById(user_id).lean();
+    await userAuditService.record({ userId: user_id, before, after, action: 'DELETE' });
     return true;
   },
 
@@ -2632,6 +2644,7 @@ export const userService = {
       assignedCity: target.profile?.assigned_city ?? null,
     });
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: target, after: fresh });
     return toPublic(fresh);
   },
 
@@ -2645,6 +2658,7 @@ export const userService = {
       assignedCity: target.profile?.assigned_city ?? null,
     });
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: target, after: fresh });
     return toPublic(fresh);
   },
 
@@ -2658,6 +2672,7 @@ export const userService = {
       assignedCity: target.profile?.assigned_city ?? null,
     });
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: target, after: fresh });
     return toPublic(fresh);
   },
 
@@ -2680,6 +2695,7 @@ export const userService = {
       );
     }
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: target, after: fresh });
     return toPublic(fresh);
   },
 
@@ -2708,6 +2724,7 @@ export const userService = {
       );
     }
     const fresh = await UserModel.findById(user_id);
+    await userAuditService.record({ userId: user_id, before: target, after: fresh });
     return toPublic(fresh);
   },
 

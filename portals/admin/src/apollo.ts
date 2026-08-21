@@ -7,4 +7,7 @@ export const apolloClient = createApolloClient({
   graphqlUrl: urlConfigs.graphqlUrl,
   getToken: () => localStorage.getItem('admin_token'),
   includeDuid: false,
+  // Every write from this console is filed against the user it edits as
+  // "Admin Portal" in their change log.
+  surface: 'ADMIN_PORTAL',
 });

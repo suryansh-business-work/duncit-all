@@ -28,6 +28,17 @@ export interface RequestIdentity {
   ip?: string;
   user_agent?: string;
   duid?: string;
+  /**
+   * The surface the caller declared (`x-duncit-surface`): NATIVE, MWEB,
+   * ADMIN_PORTAL or PORTAL. Absent for anything that is not one of the four
+   * Duncit clients — a webhook, a background job, a raw API call.
+   *
+   * Declared rather than inferred from `Origin`, because a native store build
+   * sends no Origin at all and would otherwise be indistinguishable from mWeb.
+   * It names the surface, never the person: the account still comes from the
+   * verified token above, so a forged header cannot claim to be someone else.
+   */
+  surface?: string;
 }
 
 const store = new AsyncLocalStorage<RequestIdentity>();
@@ -48,6 +59,7 @@ export function identityFromRequest(req: Request): RequestIdentity {
     ip: typeof req.ip === 'string' && req.ip ? req.ip.slice(0, 60) : undefined,
     user_agent: headerValue(req.headers['user-agent']),
     duid: headerValue(req.headers['x-duid'], 100),
+    surface: headerValue(req.headers['x-duncit-surface'], 40),
   };
 }
 

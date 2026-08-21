@@ -13,7 +13,7 @@ import {
 export interface ReleaseSummaryRelease {
   id: string;
   release_id: string;
-  kind: 'HOST_PAYMENT' | 'VENUE_BILLING' | 'CLUB_ADMIN';
+  kind: 'HOST_PAYMENT' | 'VENUE_BILLING' | 'CLUB_ADMIN' | 'ECOMM_PAYMENT';
   status: string;
   amount_requested: number;
 }
@@ -27,6 +27,7 @@ const KIND_LABELS: Record<ReleaseSummaryRelease['kind'], string> = {
   HOST_PAYMENT: 'Host payout',
   VENUE_BILLING: 'Venue payout',
   CLUB_ADMIN: 'Club admin payout',
+  ECOMM_PAYMENT: 'Product sales payout',
 };
 
 /** Shown after Complete-a-Pod submit: the payout releases created + credited. */

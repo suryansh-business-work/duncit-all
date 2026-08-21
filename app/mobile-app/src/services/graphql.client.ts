@@ -2,6 +2,8 @@ import { ClientError, GraphQLClient, type Variables } from 'graphql-request';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
+import { SURFACE_HEADER } from '@duncit/user-core';
+
 import { config } from '@/constants/config';
 import { ApiError } from '@/utils/errors';
 import { getAuthToken } from '@/services/auth-token';
@@ -95,6 +97,10 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
   // counted toward unique devices or carried attribution.
   const duid = await getDuid();
   if (duid) headers['x-duid'] = duid;
+  // A store build sends no Origin, so the server cannot tell this app from
+  // mWeb without being told. Declaring it is what lets the admin user change
+  // log name Native as the source of a profile edit.
+  headers[SURFACE_HEADER] = 'NATIVE';
 
   const canRetry = isQuery(document as DocumentNode);
   let lastError: unknown;

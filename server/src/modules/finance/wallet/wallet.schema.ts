@@ -62,6 +62,51 @@ export const walletTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  """
+  Which pod's earnings funded a slice of a withdrawal.
+
+  Decided once, when the withdrawal is requested, by drawing the withdrawer's
+  un-withdrawn pod credits oldest first. It is an accounting attribution, not a
+  physical fact — a wallet holds one fungible balance — so Finance reads it as
+  "where this money came from", never as a separate payable.
+  """
+  type WithdrawalAllocation {
+    pod_id: ID!
+    "Frozen at request time, so a soft-deleted pod still renders a title."
+    pod_title: String!
+    release_id: String!
+    kind: PaymentReleaseKind!
+    "The capacity THIS pod's money was earned in, derived from the payout leg."
+    role: WithdrawerRole!
+    amount: Float!
+  }
+
+  "One pod somebody has withdrawn against — a row of the Withdrawal Payments list."
+  type PodWithdrawalGroup {
+    pod_id: ID!
+    pod_title: String!
+    "Every partner who has raised a withdrawal against this pod so far."
+    requested_from: [WithdrawerRole!]!
+    "APPROVED only when every request against this pod has been paid."
+    status: PodWithdrawalStatus!
+    "Sum of the slices attributed to this pod across those requests."
+    attributed_total: Float!
+    withdrawal_count: Int!
+    last_requested_at: String!
+  }
+
+  enum PodWithdrawalStatus {
+    PENDING
+    APPROVED
+  }
+
+  type PodWithdrawalGroupPage {
+    rows: [PodWithdrawalGroup!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type WalletWithdrawal {
     id: ID!
     withdrawal_id: String!
@@ -79,6 +124,8 @@ export const walletTypeDefs = /* GraphQL */ `
     scheduled_for: String!
     reject_reason: String!
     requested_at: String!
+    "Empty on a rejected request — the money went back, so the pods are free again."
+    allocations: [WithdrawalAllocation!]!
     reviewed_at: String
     paid_at: String
     created_at: String!
@@ -112,6 +159,19 @@ export const walletTypeDefs = /* GraphQL */ `
     myWithdrawals: [WalletWithdrawal!]!
     withdrawalRequests(status: WithdrawalStatus): [WalletWithdrawal!]!
     withdrawalRequestsTable(query: TableQueryInput): WalletWithdrawalTablePage!
+    """
+    Withdrawal Payments, grouped by pod.
+
+    A requested_from filter in the query narrows to pods that partner has
+    withdrawn against. It is applied to the allocations BEFORE grouping, so a
+    pod's totals only ever count that partner's legs — matching it against the
+    grouped row would keep pods whose other partners matched.
+    """
+    podWithdrawalGroupsTable(query: TableQueryInput): PodWithdrawalGroupPage!
+    "One pod's row from that list. Null when nothing has been withdrawn against it."
+    podWithdrawalSummary(pod_id: ID!): PodWithdrawalGroup
+    "Every withdrawal attributed to one pod — the Withdrawal Payments drill-down."
+    podWithdrawalsTable(pod_id: ID!, query: TableQueryInput): WalletWithdrawalTablePage!
     withdrawalMinimums: WithdrawalMinimums!
   }
 

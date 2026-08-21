@@ -1194,5 +1194,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       back: 'Back',
       next: 'Next',
     },
+    ticketDetail: {
+      // The details panel is a right-hand column on a desktop, where there is
+      // room for it beside the conversation. A narrow screen has no such room,
+      // so it folds away rather than eating the height the thread needs.
+      detailsShow: 'Show ticket details',
+      detailsHide: 'Hide ticket details',
+    },
   },
 };

@@ -68,7 +68,7 @@ export default function TicketUserDetails({
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
       <Stack direction="row" spacing={1.5} alignItems="center">
-        <Avatar src={user.avatar_url || undefined} sx={{ width: 48, height: 48 }} />
+        <Avatar src={user.avatar_url || undefined} sx={{ width: 40, height: 40 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 800 }} noWrap>
             {user.name}
@@ -77,17 +77,6 @@ export default function TicketUserDetails({
             Ticket raised by
           </Typography>
         </Box>
-        <Button
-          size="small"
-          variant="outlined"
-          endIcon={<OpenInNewIcon />}
-          component="a"
-          href={adminUserUrl(user.id)}
-          target="_blank"
-          rel="noreferrer"
-        >
-          View in Admin
-        </Button>
       </Stack>
 
       <Stack spacing={1} sx={{ mt: 1.5 }}>
@@ -111,6 +100,23 @@ export default function TicketUserDetails({
         />
         <DetailRow icon={<BadgeIcon fontSize="small" />} value={`User ID ${user.id}`} />
       </Stack>
+
+      {/* Below the details rather than beside the name: in the sidebar column
+          there is no width to share with a heading, and a full-width button is
+          the easier target either way. */}
+      <Button
+        size="small"
+        variant="outlined"
+        fullWidth
+        endIcon={<OpenInNewIcon />}
+        component="a"
+        href={adminUserUrl(user.id)}
+        target="_blank"
+        rel="noreferrer"
+        sx={{ mt: 2 }}
+      >
+        View in Admin
+      </Button>
     </Paper>
   );
 }

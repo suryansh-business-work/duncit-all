@@ -279,3 +279,39 @@ export const STATUS_META: Record<
   INACTIVE: { color: 'default', label: 'Inactive' },
   SUSPENDED: { color: 'error', label: 'Blocked' },
 };
+
+/** One field of one user, changed once. Mirrors the server's UserChangeLog. */
+export interface UserChangeLogRow {
+  id: string;
+  field: string;
+  field_label: string;
+  old_value: string;
+  new_value: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  actor_type: 'USER' | 'ADMIN' | 'SYSTEM';
+  actor_user_id: string | null;
+  actor_name: string;
+  source: 'NATIVE' | 'MWEB' | 'ADMIN_PORTAL' | 'PORTAL' | 'SERVER';
+  created_at: string;
+}
+
+export const USER_CHANGE_LOGS_TABLE = gql`
+  query UserChangeLogsTable($user_id: ID!, $query: TableQueryInput) {
+    userChangeLogsTable(user_id: $user_id, query: $query) {
+      total
+      rows {
+        id
+        field
+        field_label
+        old_value
+        new_value
+        action
+        actor_type
+        actor_user_id
+        actor_name
+        source
+        created_at
+      }
+    }
+  }
+`;

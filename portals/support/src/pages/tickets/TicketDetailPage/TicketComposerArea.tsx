@@ -38,7 +38,7 @@ export default function TicketComposerArea({
 
   if (status === 'CLOSED') {
     return (
-      <Alert severity="info" icon={<LockOutlinedIcon fontSize="inherit" />}>
+      <Alert severity="info" icon={<LockOutlinedIcon fontSize="inherit" />} sx={{ flexShrink: 0 }}>
         This ticket is closed and read-only. The user can reopen it within the allowed window.
       </Alert>
     );
@@ -46,7 +46,7 @@ export default function TicketComposerArea({
 
   if (status === 'RESOLVED') {
     return (
-      <Box>
+      <Box sx={{ flexShrink: 0 }}>
         <Alert severity="success" sx={{ mb: 1.5 }}>
           This ticket is resolved. Close it once the user has confirmed, or it will reopen
           automatically if they reply within the allowed window.
@@ -72,8 +72,12 @@ export default function TicketComposerArea({
   }
 
   return (
-    <Box>
-      <DuncitRichTextInput value={bodyHtml} onChange={onBodyHtml} minHeight={140} compact aiContext="support ticket reply" />
+    /* The composer never shrinks: whatever height it needs, the thread above it
+       keeps the rest. The editor starts short enough to leave the conversation
+       room and grows with what is typed, but stops at a cap and scrolls on its
+       own — a long reply must not push the conversation off the screen. */
+    <Box sx={{ flexShrink: 0, '& .ProseMirror': { maxHeight: 220, overflowY: 'auto' } }}>
+      <DuncitRichTextInput value={bodyHtml} onChange={onBodyHtml} minHeight={96} compact aiContext="support ticket reply" />
       <Stack direction="row" alignItems="flex-end" justifyContent="space-between" sx={{ mt: 1 }} spacing={1}>
         <AttachmentUploadField
           value={attachments}

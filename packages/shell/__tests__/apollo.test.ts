@@ -50,7 +50,12 @@ vi.mock('@apollo/client/link/retry', () => ({
     return { __retry: true };
   }),
 }));
-vi.mock('@duncit/user-core', () => ({ getOrCreateDuid: () => 'DUID-1' }));
+vi.mock('@duncit/user-core', () => ({
+  getOrCreateDuid: () => 'DUID-1',
+  SURFACE_HEADER: 'x-duncit-surface',
+  NO_REDIS_HEADER: 'x-no-redis',
+  resolveNoRedisFlag: () => false,
+}));
 
 import { apolloErrorLink, createApolloClient } from '../src/lib/apollo';
 
@@ -82,14 +87,24 @@ describe('createApolloClient', () => {
   it('adds Bearer + x-duid headers when a token is present', () => {
     createApolloClient({ graphqlUrl: 'u', getToken: () => 'tok' });
     const out = cap.authFn?.({}, { headers: { existing: '1' } });
-    expect(out?.headers).toEqual({ existing: '1', authorization: 'Bearer tok', 'x-duid': 'DUID-1' });
+    expect(out?.headers).toEqual({
+      existing: '1',
+      authorization: 'Bearer tok',
+      'x-duid': 'DUID-1',
+      'x-duncit-surface': 'PORTAL',
+    });
   });
 
   it('omits the auth header (no token) and the duid header (includeDuid false)', () => {
     createApolloClient({ graphqlUrl: 'u', getToken: () => null, includeDuid: false, typePolicies: { Foo: {} } });
     const out = cap.authFn?.({}, {});
-    expect(out?.headers).toEqual({});
+    expect(out?.headers).toEqual({ 'x-duncit-surface': 'PORTAL' });
     expect(cap.cacheArgs).toEqual({ typePolicies: { Foo: {} } });
+  });
+
+  it('sends the surface a caller declares (admin) instead of the PORTAL default', () => {
+    createApolloClient({ graphqlUrl: 'u', getToken: () => null, includeDuid: false, surface: 'ADMIN_PORTAL' });
+    expect(cap.authFn?.({}, {})?.headers).toEqual({ 'x-duncit-surface': 'ADMIN_PORTAL' });
   });
 
   describe('retryIf', () => {

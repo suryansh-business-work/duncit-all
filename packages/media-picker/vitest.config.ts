@@ -4,15 +4,16 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
-    include: ['__tests__/**/*.test.ts'],
+    include: ['__tests__/**/*.test.{ts,tsx}'],
+    setupFiles: ['./__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
       // lcov is what SonarQube reads (sonar.javascript.lcov.reportPaths).
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
-      // Only the pure logic is unit-tested here; the MUI/Apollo dialog itself is
-      // exercised end-to-end by the portals' Cypress flows.
-      include: ['src/utils.ts'],
+      include: ['src/**'],
+      // Pure re-export barrels and the gql document strings — nothing executable.
+      exclude: ['src/index.ts', 'src/queries.ts', 'src/**/*.d.ts', 'src/**/index.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },

@@ -9,7 +9,7 @@ import {
   type IBackoutRequest,
 } from './backoutRequest.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { coinService, coinsForBackoutRefund } from '@modules/finance/coin/coin.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -88,6 +88,28 @@ function clampReleaseSeats(requested: number | null | undefined, held: number): 
     );
   }
   return want;
+}
+
+/**
+ * The JOINED booking a backout releases from. A member whose backout is
+ * already in process is told so, rather than that they are not a member.
+ */
+async function findBackoutMembership(podId: Types.ObjectId, uid: Types.ObjectId): Promise<IPodMember> {
+  const membership = await PodMemberModel.findOne({ pod_id: podId, user_id: uid, status: 'JOINED' });
+  if (membership) return membership;
+  const inProcess = await PodMemberModel.findOne({
+    pod_id: podId,
+    user_id: uid,
+    status: 'BACKOUT_IN_PROCESS',
+  });
+  if (inProcess) {
+    throw new GraphQLError('Your backout for this pod is already in process.', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  throw new GraphQLError('You are not a member of this pod', {
+    extensions: { code: 'NOT_FOUND' },
+  });
 }
 
 /**
@@ -589,6 +611,45 @@ async function previewRefund(
   };
 }
 
+/**
+ * The cash and coin halves of one release's refund, as the request freezes
+ * them — so a later rate change cannot rewrite what the member was promised.
+ *
+ * The refund is for the seats given back, so the request records that share
+ * of what was paid — not the whole payment, which would refund a partial
+ * backout for seats the buyer is still using.
+ *
+ * Divided by the seats the PAYMENT covered, never by the seats the booking
+ * holds today. A partial release shrinks the booking, so dividing by what is
+ * left re-values every remaining seat upward: release 1 of 4, then 1 of the
+ * remaining 3, and the second seat is refunded at a third of the bill
+ * instead of a quarter. Releasing one at a time would pay out more than was
+ * ever collected. `previewRefund` uses the same divisor, so the number the
+ * buyer was shown is the number Finance is told to pay.
+ * And on the TICKET money only: product add-ons ride on the same payment
+ * but are not per-seat and are not returned on a backout — the buyer keeps
+ * the products and the product order still fulfils.
+ */
+function backoutRefundShare(payment: IPayment | null, held: number, release: number, deductionPct: number) {
+  const paidSeats = normalizeSeats((payment?.metadata as any)?.seats ?? held);
+  const productMoney = Number((payment?.metadata as any)?.product_cost_total) || 0;
+  const ticketPaid = payment ? Math.max(0, payment.total - productMoney) : 0;
+  const paymentAmount = payment ? round2((ticketPaid * release) / paidSeats) : null;
+  const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);
+  // The coin half of the same refund: this release's share of the coins the
+  // booking was paid with, less the same Backouts deduction.
+  const coinsPaidShare = payment
+    ? Math.floor(((payment.coins_redeemed ?? 0) * Math.min(release, paidSeats)) / paidSeats)
+    : 0;
+  const coinsRefund = coinsForBackoutRefund({
+    coinsPaid: payment?.coins_redeemed ?? 0,
+    releaseSeats: release,
+    paidSeats,
+    deductionPct,
+  });
+  return { paymentAmount, refundAmount, coinsPaidShare, coinsRefund };
+}
+
 export const podMemberService = {
   async getState(podDocId: string, userId: string | null) {
     const pod = await PodModel.findById(podDocId);
@@ -824,22 +885,7 @@ export const podMemberService = {
     }
 
     const uid = new Types.ObjectId(userId);
-    const membership = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
-    if (!membership) {
-      const inProcess = await PodMemberModel.findOne({
-        pod_id: pod._id,
-        user_id: uid,
-        status: 'BACKOUT_IN_PROCESS',
-      });
-      if (inProcess) {
-        throw new GraphQLError('Your backout for this pod is already in process.', {
-          extensions: { code: 'CONFLICT' },
-        });
-      }
-      throw new GraphQLError('You are not a member of this pod', {
-        extensions: { code: 'NOT_FOUND' },
-      });
-    }
+    const membership = await findBackoutMembership(pod._id, uid);
 
     const [maxAttempts, attemptsUsed, deductionPct] = await Promise.all([
       settingsService.getMaxBackoutAttempts(),
@@ -855,40 +901,14 @@ export const podMemberService = {
     const wholeBooking = release >= held;
 
     const payment = membership.payment_id ? await PaymentModel.findById(membership.payment_id) : null;
-    // The refund is for the seats given back, so the request records that share
-    // of what was paid — not the whole payment, which would refund a partial
-    // backout for seats the buyer is still using.
-    //
-    // Divided by the seats the PAYMENT covered, never by the seats the booking
-    // holds today. A partial release shrinks the booking, so dividing by what is
-    // left re-values every remaining seat upward: release 1 of 4, then 1 of the
-    // remaining 3, and the second seat is refunded at a third of the bill
-    // instead of a quarter. Releasing one at a time would pay out more than was
-    // ever collected. `previewRefund` uses the same divisor, so the number the
-    // buyer was shown is the number Finance is told to pay.
-    // And on the TICKET money only: product add-ons ride on the same payment
-    // but are not per-seat and are not returned on a backout — the buyer keeps
-    // the products and the product order still fulfils.
-    const paidSeats = normalizeSeats((payment?.metadata as any)?.seats ?? held);
-    const productMoney = Number((payment?.metadata as any)?.product_cost_total) || 0;
-    const ticketPaid = payment ? Math.max(0, payment.total - productMoney) : 0;
-    const paymentAmount = payment ? round2((ticketPaid * release) / paidSeats) : null;
+    const { paymentAmount, refundAmount, coinsPaidShare, coinsRefund } = backoutRefundShare(
+      payment,
+      held,
+      release,
+      deductionPct
+    );
     const attemptNo = attemptsUsed + 1;
     const now = new Date();
-    const refundAmount = paymentAmount == null ? null : refundAfterDeduction(paymentAmount, deductionPct);
-    // The coin half of the same refund: this release's share of the coins the
-    // booking was paid with, less the same Backouts deduction. Frozen onto the
-    // request beside refund_amount so a later rate change cannot rewrite what
-    // the member was promised.
-    const coinsPaidShare = payment
-      ? Math.floor(((payment.coins_redeemed ?? 0) * Math.min(release, paidSeats)) / paidSeats)
-      : 0;
-    const coinsRefund = coinsForBackoutRefund({
-      coinsPaid: payment?.coins_redeemed ?? 0,
-      releaseSeats: release,
-      paidSeats,
-      deductionPct,
-    });
     const request = await BackoutRequestModel.create({
       backout_no: await nextBackoutNo(),
       pod_id: pod._id,

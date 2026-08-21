@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { ExploreDateFilter, ExploreFilters, ExplorePreset, ExplorePriceFilter, ExploreSort } from './exploreFilters';
 
 interface ExploreFilterSheetProps {
@@ -14,20 +15,21 @@ interface ExploreFilterSheetProps {
   onClose: () => void;
 }
 
-const PRESETS: Array<[ExplorePreset, string]> = [['ALL', 'All'], ['TONIGHT', 'Tonight'], ['TRENDING', 'Trending'], ['NEAR', 'Near me']];
-const SORTS: Array<[ExploreSort, string]> = [['SOONEST', 'Soonest'], ['TRENDING', 'Trending'], ['PRICE_LOW', 'Price low'], ['PRICE_HIGH', 'Price high']];
-const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'All'], ['FREE', 'Free'], ['PAID', 'Paid']]; // TODO(i18n)
-const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'Any time'], ['TODAY', 'Today'], ['TOMORROW', 'Tomorrow'], ['WEEK', 'This week'], ['MONTH', 'This month']];
+const PRESETS: Array<[ExplorePreset, string]> = [['ALL', 'mweb.explore.presetAll'], ['TONIGHT', 'mweb.explore.presetTonight'], ['TRENDING', 'mweb.explore.presetTrending'], ['NEAR', 'mweb.explore.presetNearMe']];
+const SORTS: Array<[ExploreSort, string]> = [['SOONEST', 'mweb.explore.sortSoonest'], ['TRENDING', 'mweb.explore.sortTrending'], ['PRICE_LOW', 'mweb.explore.sortPriceLow'], ['PRICE_HIGH', 'mweb.explore.sortPriceHigh']];
+const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'mweb.podType.all'], ['FREE', 'mweb.podType.free'], ['PAID', 'mweb.podType.paid']];
+const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'mweb.explore.dateAnyTime'], ['TODAY', 'mweb.explore.dateToday'], ['TOMORROW', 'mweb.explore.dateTomorrow'], ['WEEK', 'mweb.explore.dateThisWeek'], ['MONTH', 'mweb.explore.dateThisMonth']];
 
 function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-      {items.map(([itemValue, label]) => {
+      {items.map(([itemValue, labelKey]) => {
         const selected = value === itemValue;
         return (
           <Chip
             key={itemValue}
-            label={label}
+            label={t(labelKey)}
             clickable
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
@@ -43,6 +45,7 @@ function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items:
 const VIBE_COLLAPSED_COUNT = 9;
 
 export default function ExploreFilterSheet({ open, filters, setFilters, categories, activeCount, resultCount, onClose }: Readonly<ExploreFilterSheetProps>) {
+  const { t } = useTranslation();
   const [showAllVibes, setShowAllVibes] = useState(false);
   const reset = () => setFilters({ preset: 'ALL', categoryId: '', price: 'ALL', date: 'ALL', sort: 'SOONEST', search: '' });
   // Keep the panel short on small screens: show a handful of vibes, overflow the
@@ -57,10 +60,10 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
       title={
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
-            Filters
+            {t('mweb.explore.filtersTitle')}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-            {activeCount} active - {resultCount} pods match
+            {t('mweb.explore.filtersSummary', { vars: { activeCount, resultCount } })}
           </Typography>
         </Box>
       }
@@ -68,10 +71,10 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
           <Button startIcon={<CloseIcon />} onClick={reset} color="inherit" disabled={activeCount === 0}>
-            Reset
+            {t('mweb.explore.reset')}
           </Button>
           <Button variant="contained" onClick={onClose} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
-            Show {resultCount} pods
+            {t('mweb.explore.showResults', { vars: { count: resultCount } })}
           </Button>
         </Stack>
       }
@@ -79,24 +82,24 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
     >
       <Stack spacing={2}>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Quick presets</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.quickPresets')}</Typography>
           <ChipRow items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Sort by</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.sortBy')}</Typography>
           <ChipRow items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Vibe</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.vibe')}</Typography>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            <Chip label="All" clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 600 }} />
+            <Chip label={t('mweb.home.vibeAll')} clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 600 }} />
             {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
               return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant={selected ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={{ height: 32, fontWeight: 600 }} />;
             })}
             {hiddenCount > 0 && (
               <Chip
-                label={showAllVibes ? 'Show less' : `+${hiddenCount} more`}
+                label={showAllVibes ? t('mweb.explore.showLess') : t('mweb.explore.moreVibes', { vars: { count: hiddenCount } })}
                 clickable
                 variant="outlined"
                 onClick={() => setShowAllVibes((v) => !v)}
@@ -106,11 +109,11 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           </Stack>
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Price</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.price')}</Typography>
           <ChipRow items={PRICES} value={filters.price} onChange={(price) => setFilters({ ...filters, price })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>When</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>{t('mweb.explore.when')}</Typography>
           <ChipRow items={DATES} value={filters.date} onChange={(date) => setFilters({ ...filters, date })} />
         </Stack>
       </Stack>

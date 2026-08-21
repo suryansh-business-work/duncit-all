@@ -1,5 +1,5 @@
 import { Children, type ReactNode } from 'react';
-import Markdown from 'react-markdown';
+import Markdown, { type Components } from 'react-markdown';
 import { Box, Link, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CodeBlock from './CodeBlock';
@@ -37,6 +37,72 @@ function withMentions(children: ReactNode): ReactNode {
   });
 }
 
+type MarkdownLinkProps = Readonly<{ href?: string; children?: ReactNode }>;
+type MarkdownCodeProps = Readonly<{ className?: string; children?: ReactNode }>;
+type MarkdownChildren = Readonly<{ children?: ReactNode }>;
+
+function MarkdownLink({ href, children }: MarkdownLinkProps) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      color="inherit"
+      underline="always"
+      sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 0.25, wordBreak: 'break-all' }}
+    >
+      {children}
+      <OpenInNewIcon sx={{ fontSize: 11 }} />
+    </Link>
+  );
+}
+
+function MarkdownCode({ className, children }: MarkdownCodeProps) {
+  const body = String(children).replace(/\n$/, '');
+  // A fenced block carries a language class; inline code does not.
+  const language = /language-(\w+)/.exec(className ?? '')?.[1];
+  if (!className && !body.includes('\n')) {
+    return (
+      <Box
+        component="code"
+        sx={{
+          px: 0.5,
+          py: 0.1,
+          borderRadius: 0.75,
+          bgcolor: 'action.hover',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontSize: '0.92em',
+        }}
+      >
+        {body}
+      </Box>
+    );
+  }
+  return <CodeBlock code={body} language={language} />;
+}
+
+// react-markdown wraps a fenced block in <pre>; CodeBlock brings its
+// own, so this one would nest a scroll container inside a scroll
+// container.
+function MarkdownPre({ children }: MarkdownChildren) {
+  return <>{children}</>;
+}
+
+function MarkdownParagraph({ children }: MarkdownChildren) {
+  return (
+    <Typography variant="body2" sx={{ fontSize: 'inherit', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {withMentions(children)}
+    </Typography>
+  );
+}
+
+const MARKDOWN_COMPONENTS: Components = {
+  a: MarkdownLink,
+  code: MarkdownCode,
+  pre: MarkdownPre,
+  p: MarkdownParagraph,
+};
+
 interface Props {
   text: string;
   fontSize: number;
@@ -64,57 +130,7 @@ export default function MessageText({ text, fontSize, onNavigate }: Readonly<Pro
 
   return (
     <Box sx={{ fontSize, '& p': { m: 0 }, '& p + p': { mt: 0.75 }, '& ul, & ol': { my: 0.5, pl: 2.5 } }}>
-      <Markdown
-        components={{
-          a: ({ href, children }) => (
-            <Link
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              color="inherit"
-              underline="always"
-              sx={{ display: 'inline-flex', alignItems: 'baseline', gap: 0.25, wordBreak: 'break-all' }}
-            >
-              {children}
-              <OpenInNewIcon sx={{ fontSize: 11 }} />
-            </Link>
-          ),
-          code: ({ className, children }) => {
-            const body = String(children).replace(/\n$/, '');
-            // A fenced block carries a language class; inline code does not.
-            const language = /language-(\w+)/.exec(className ?? '')?.[1];
-            if (!className && !body.includes('\n')) {
-              return (
-                <Box
-                  component="code"
-                  sx={{
-                    px: 0.5,
-                    py: 0.1,
-                    borderRadius: 0.75,
-                    bgcolor: 'action.hover',
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                    fontSize: '0.92em',
-                  }}
-                >
-                  {body}
-                </Box>
-              );
-            }
-            return <CodeBlock code={body} language={language} />;
-          },
-          // react-markdown wraps a fenced block in <pre>; CodeBlock brings its
-          // own, so this one would nest a scroll container inside a scroll
-          // container.
-          pre: ({ children }) => <>{children}</>,
-          p: ({ children }) => (
-            <Typography variant="body2" sx={{ fontSize: 'inherit', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {withMentions(children)}
-            </Typography>
-          ),
-        }}
-      >
-        {text}
-      </Markdown>
+      <Markdown components={MARKDOWN_COMPONENTS}>{text}</Markdown>
 
       {firstUrl && <LinkCard url={firstUrl} onNavigate={onNavigate} />}
     </Box>

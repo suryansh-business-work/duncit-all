@@ -20,10 +20,7 @@ const INTERNAL_LINK = 'a[href]';
 function internalPath(event: MouseEvent): string | null {
   if (event.defaultPrevented || event.button !== 0) return null;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
-  const anchor = (event.target as HTMLElement | null)?.closest?.(INTERNAL_LINK) as
-    | HTMLAnchorElement
-    | null
-    | undefined;
+  const anchor = (event.target as HTMLElement | null)?.closest?.<HTMLAnchorElement>(INTERNAL_LINK);
   if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return null;
   if (anchor.origin !== globalThis.location.origin) return null;
   const path = `${anchor.pathname}${anchor.search}${anchor.hash}`;

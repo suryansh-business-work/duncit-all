@@ -116,6 +116,35 @@ export default function CheckoutPage() {
     currencySymbol: breakup?.currency,
   }));
 
+  // Razorpay: create the order, settle a free one outright, otherwise hand the
+  // buyer to the hosted sheet and verify on its callback.
+  const payWithRazorpay = async (input: Record<string, unknown>) => {
+    const orderRes = await doRazorpayOrder({ variables: { input } });
+    const order = orderRes.data?.createRazorpayOrder;
+    if (!order) {
+      session.setError(t('mweb.checkout.errorStart'));
+      return;
+    }
+    if (order.free && order.payment) {
+      session.finishSuccess(order.payment);
+      return;
+    }
+    session.setSubmitting(false);
+    await openRazorpayCheckout(order as RazorpayOrderData, {
+      onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
+      // Every failure used to be reported as the buyer's own cancellation.
+      onFailure: (error) => { payment.report(error).catch(() => undefined); },
+    });
+  };
+
+  // Dummy gateway: one round trip that either pays or fails outright.
+  const payWithDummy = async (input: Record<string, unknown>, simulate_failure: boolean) => {
+    const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
+    const paid = res.data?.dummyCheckout;
+    if (paid?.status === 'SUCCESS') session.finishSuccess(paid);
+    else session.setError(t('mweb.checkout.errorFailed'));
+  };
+
   const onCheckout = async (values: CheckoutForm) => {
     session.setError(null);
     session.setSubmitting(true);
@@ -137,29 +166,11 @@ export default function CheckoutPage() {
     await session.persistMainAddress(values);
     try {
       if (finance?.razorpay_enabled) {
-        const orderRes = await doRazorpayOrder({ variables: { input } });
-        const order = orderRes.data?.createRazorpayOrder;
-        if (!order) {
-          session.setError(t('mweb.checkout.errorStart'));
-          return;
-        }
-        if (order.free && order.payment) {
-          session.finishSuccess(order.payment);
-          return;
-        }
-        session.setSubmitting(false);
-        await openRazorpayCheckout(order as RazorpayOrderData, {
-          onSuccess: (sig: RazorpaySignature) => session.verifyRazorpay(order.payment_doc_id, sig),
-          // Every failure used to be reported as the buyer's own cancellation.
-          onFailure: (error) => { payment.report(error).catch(() => undefined); },
-        });
+        await payWithRazorpay(input);
         return;
       }
       if (finance?.dummy_mode) {
-        const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
-        const payment = res.data?.dummyCheckout;
-        if (payment?.status === 'SUCCESS') session.finishSuccess(payment);
-        else session.setError(t('mweb.checkout.errorFailed'));
+        await payWithDummy(input, simulate_failure);
         return;
       }
       session.setError(t('mweb.checkout.errorNotConfigured'));

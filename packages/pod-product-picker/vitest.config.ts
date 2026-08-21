@@ -4,17 +4,16 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
-    include: ['__tests__/**/*.test.ts'],
+    include: ['__tests__/**/*.test.{ts,tsx}'],
+    setupFiles: ['./__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
       // lcov is what SonarQube reads (sonar.javascript.lcov.reportPaths).
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
-      // The picker's derivations live in @duncit/utils (pod-product-picker.ts)
-      // and are covered by that package's gate — every surface, native included,
-      // shares them. What is left here is the MUI shell, which the portals' and
-      // mWeb's Cypress flows exercise end-to-end.
-      include: ['src/format.ts'],
+      include: ['src/**'],
+      // Pure re-export barrels and the gql document strings — nothing executable.
+      exclude: ['src/index.ts', 'src/queries.ts', 'src/**/*.d.ts', 'src/**/index.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },

@@ -1,6 +1,13 @@
 import { useParams } from 'react-router-dom';
-import { PodDetailsPage } from '@duncit/pod-details';
+import { PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
 import ClubAdminAttendanceSection from './ClubAdminAttendanceSection';
+
+// Below the attendee table, because it is the ACTION on the people that
+// table lists — and because it is the one thing on this page a club admin
+// opens the pod specifically to do.
+const renderAttendanceFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) => (
+  <ClubAdminAttendanceSection podId={pod.id} />
+);
 
 /**
  * Club Admin's pod detail — the SAME page the admin portal renders, at
@@ -25,10 +32,7 @@ export default function ClubAdminPodDetailsPage() {
       backTo={clubPods}
       backLabel="Club pods"
       editTo={(podId) => `${clubPods}/pods/${podId}/edit`}
-      // Below the attendee table, because it is the ACTION on the people that
-      // table lists — and because it is the one thing on this page a club admin
-      // opens the pod specifically to do.
-      footer={(pod) => <ClubAdminAttendanceSection podId={pod.id} />}
+      footer={renderAttendanceFooter}
     />
   );
 }

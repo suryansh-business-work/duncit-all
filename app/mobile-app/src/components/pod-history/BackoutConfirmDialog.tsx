@@ -30,6 +30,65 @@ export interface BackoutConfirmDialogProps {
   refundCoins?: number;
 }
 
+interface BackoutActionsProps {
+  busy: boolean;
+  /** Seats the confirm button releases. */
+  releasing: number;
+  onClose: () => void;
+  onConfirm: (seats: number) => void;
+}
+
+/** Close + Confirm row of the sheet; both buttons go inert while busy. */
+function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<BackoutActionsProps>) {
+  const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
+  return (
+    <XStack padding={16} gap={12}>
+      <XStack
+        testID="backout-cancel"
+        role="button"
+        aria-label={t('mweb.podDetails.close')}
+        aria-disabled={busy}
+        onPress={busy ? undefined : onClose}
+        flex={1}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$borderColor"
+        opacity={busy ? 0.6 : 1}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="600" color="$color">
+          {t('mweb.podDetails.close')}
+        </Text>
+      </XStack>
+      <XStack
+        testID="backout-confirm"
+        role="button"
+        aria-label={t('mweb.podDetails.confirmBackout')}
+        aria-disabled={busy}
+        onPress={busy ? undefined : () => onConfirm(releasing)}
+        flex={2}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        gap={8}
+        borderRadius={12}
+        backgroundColor="$danger"
+        opacity={busy ? 0.7 : 1}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        {busy ? <Spinner size="small" color={onPrimary} /> : null}
+        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+}
+
 /** Backout confirmation sheet — spec copy + refund preview, and the live
  * "backout-terms" policy inline. RN twin of mWeb's BackoutConfirmDialog. */
 export function BackoutConfirmDialog({
@@ -44,8 +103,9 @@ export function BackoutConfirmDialog({
   deductionPct = 0,
   refundCoins = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
-  const { color, onPrimary } = useThemeColors();
+  const { color } = useThemeColors();
   const { t } = useTranslation();
+  const closeIfIdle = busy ? undefined : onClose;
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
   const terms = stripHtml(data?.policyBySlug?.content);
   const held = Math.max(1, Math.floor(mySeats) || 1);
@@ -73,18 +133,13 @@ export function BackoutConfirmDialog({
   });
 
   return (
-    <Modal
-      visible={open}
-      transparent
-      animationType="slide"
-      onRequestClose={busy ? undefined : onClose}
-    >
+    <Modal visible={open} transparent animationType="slide" onRequestClose={closeIfIdle}>
       <ModalThemeScope>
         <YStack flex={1} testID="backout-dialog">
           <YStack
             role="button"
             aria-label={t('mweb.podDetails.close')}
-            onPress={busy ? undefined : onClose}
+            onPress={closeIfIdle}
             position="absolute"
             top={0}
             left={0}
@@ -111,7 +166,7 @@ export function BackoutConfirmDialog({
                   testID="backout-close"
                   role="button"
                   aria-label={t('mweb.podDetails.close')}
-                  onPress={busy ? undefined : onClose}
+                  onPress={closeIfIdle}
                   width={32}
                   height={32}
                   alignItems="center"
@@ -177,49 +232,12 @@ export function BackoutConfirmDialog({
                 </Text>
               </XStack>
 
-              <XStack padding={16} gap={12}>
-                <XStack
-                  testID="backout-cancel"
-                  role="button"
-                  aria-label={t('mweb.podDetails.close')}
-                  aria-disabled={busy}
-                  onPress={busy ? undefined : onClose}
-                  flex={1}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={12}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  opacity={busy ? 0.6 : 1}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    {t('mweb.podDetails.close')}
-                  </Text>
-                </XStack>
-                <XStack
-                  testID="backout-confirm"
-                  role="button"
-                  aria-label={t('mweb.podDetails.confirmBackout')}
-                  aria-disabled={busy}
-                  onPress={busy ? undefined : () => onConfirm(releasing)}
-                  flex={2}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={8}
-                  borderRadius={12}
-                  backgroundColor="$danger"
-                  opacity={busy ? 0.7 : 1}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
-                    {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
-                  </Text>
-                </XStack>
-              </XStack>
+              <BackoutActions
+                busy={busy}
+                releasing={releasing}
+                onClose={onClose}
+                onConfirm={onConfirm}
+              />
             </SafeAreaView>
           </YStack>
         </YStack>

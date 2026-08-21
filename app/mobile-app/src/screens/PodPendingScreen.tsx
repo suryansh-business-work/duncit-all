@@ -10,6 +10,7 @@ import {
 } from '@/components/pod-pending';
 import { StackScreen } from '@/components/StackScreen';
 import { usePodPendingView } from '@/hooks/usePodPendingView';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -20,6 +21,7 @@ export function PodPendingScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'PodPending'>>();
   const podId = route.params?.podId ?? '';
   const { view, isLoading, error } = usePodPendingView(podId);
+  const { t } = useTranslation();
 
   let body: ReactNode;
   if (isLoading) {
@@ -31,7 +33,7 @@ export function PodPendingScreen() {
   } else if (error || !view) {
     body = (
       <Text testID="pod-pending-error" padding={24} color="$danger">
-        {toErrorMessage(error)}
+        {toErrorMessage(error, t('mweb.podPending.loadFailed'))}
       </Text>
     );
   } else {
@@ -47,9 +49,8 @@ export function PodPendingScreen() {
     );
   }
 
-  // TODO(i18n) — screen title ships as a literal until this feature is localized.
   return (
-    <StackScreen title="Slot Request Sent" testID="pod-pending-screen">
+    <StackScreen title={t('mweb.podPending.title')} testID="pod-pending-screen">
       {body}
     </StackScreen>
   );

@@ -342,7 +342,7 @@ describe('Suggested Ticket Prices', () => {
         symbol="₹"
       />,
     );
-    await screen.findByTestId('suggested-prices-error');
+    expect(await screen.findByTestId('suggested-prices-error')).toBeOnTheScreen();
   });
 
   it('asks for the pod size before it can suggest anything', () => {

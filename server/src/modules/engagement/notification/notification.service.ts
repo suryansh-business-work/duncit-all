@@ -122,6 +122,44 @@ async function sendExpoChunk(chunk: ExpoMessage[]): Promise<{ delivered: number;
   return { delivered, failed };
 }
 
+/** Rejects a create() payload that is missing what its scope needs (BAD_USER_INPUT). */
+function assertCreateInput(input: any) {
+  if (!input.title?.trim()) throw new GraphQLError('Title required', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (!input.body?.trim()) throw new GraphQLError('Body required', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (input.scope === 'LOCATION' && !input.location_id)
+    throw new GraphQLError('location_id required for LOCATION scope', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (input.scope === 'ZONE' && (!input.location_id || !input.zone_name))
+    throw new GraphQLError('location_id and zone_name required for ZONE scope', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (input.scope === 'USER' && (!input.target_user_ids || input.target_user_ids.length === 0))
+    throw new GraphQLError('target_user_ids required for USER scope', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (input.scope === 'AUDIENCE_LIST' && !input.audience_list_id)
+    throw new GraphQLError('audience_list_id required for AUDIENCE_LIST scope', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+}
+
+/** Shapes the Notification document for create(); targeting fields are nulled outside their scope. */
+function toNotificationCreateDoc(input: any, sentBy?: string) {
+  return {
+    title: input.title.trim(),
+    body: input.body.trim(),
+    image_url: input.image_url || null,
+    link_url: input.link_url || null,
+    // Server-raised only: CreateNotificationInput does not expose these, so an
+    // admin broadcast can never mint Accept/Reject buttons over a document.
+    action_type: input.action_type || null,
+    action_ref_id: input.action_ref_id || null,
+    action_actor_id: input.action_actor_id || null,
+    scope: input.scope,
+    silent: !!input.silent,
+    location_id: input.scope === 'LOCATION' || input.scope === 'ZONE' ? input.location_id : null,
+    zone_name: input.scope === 'ZONE' ? input.zone_name : null,
+    target_user_ids: input.scope === 'USER' ? input.target_user_ids : [],
+    audience_list_id: input.scope === 'AUDIENCE_LIST' ? input.audience_list_id : null,
+    sent_by: sentBy || null,
+  };
+}
+
 export const notificationService = {
   async ensureVapid() {
     if (vapidReady) return;
@@ -258,39 +296,11 @@ export const notificationService = {
   },
 
   async create(input: any, sentBy?: string) {
-    if (!input.title?.trim()) throw new GraphQLError('Title required', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (!input.body?.trim()) throw new GraphQLError('Body required', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (input.scope === 'LOCATION' && !input.location_id)
-      throw new GraphQLError('location_id required for LOCATION scope', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (input.scope === 'ZONE' && (!input.location_id || !input.zone_name))
-      throw new GraphQLError('location_id and zone_name required for ZONE scope', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (input.scope === 'USER' && (!input.target_user_ids || input.target_user_ids.length === 0))
-      throw new GraphQLError('target_user_ids required for USER scope', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (input.scope === 'AUDIENCE_LIST' && !input.audience_list_id)
-      throw new GraphQLError('audience_list_id required for AUDIENCE_LIST scope', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
+    assertCreateInput(input);
 
     const userIds = await this.resolveTargetUsers(input);
 
-    const doc = await NotificationModel.create({
-      title: input.title.trim(),
-      body: input.body.trim(),
-      image_url: input.image_url || null,
-      link_url: input.link_url || null,
-      // Server-raised only: CreateNotificationInput does not expose these, so an
-      // admin broadcast can never mint Accept/Reject buttons over a document.
-      action_type: input.action_type || null,
-      action_ref_id: input.action_ref_id || null,
-      action_actor_id: input.action_actor_id || null,
-      scope: input.scope,
-      silent: !!input.silent,
-      location_id: input.scope === 'LOCATION' || input.scope === 'ZONE' ? input.location_id : null,
-      zone_name: input.scope === 'ZONE' ? input.zone_name : null,
-      target_user_ids: input.scope === 'USER' ? input.target_user_ids : [],
-      audience_list_id: input.scope === 'AUDIENCE_LIST' ? input.audience_list_id : null,
-      sent_by: sentBy || null,
-    });
+    const doc = await NotificationModel.create(toNotificationCreateDoc(input, sentBy));
 
     // Determine in-app recipient list
     let inboxUserIds: string[] = userIds;

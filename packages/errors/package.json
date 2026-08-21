@@ -11,9 +11,13 @@
   "exports": { ".": "./src/index.ts" },
   "files": ["src"],
   "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/errors"
   },
   "devDependencies": {
-    "typescript": "^5.4.5"
+    "@vitest/coverage-v8": "^2.1.9",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
   }
 }

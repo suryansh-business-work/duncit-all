@@ -151,7 +151,7 @@ export async function hostAssignAutoPod(userId: string, autoPodId: string) {
   autoPodNotify.hostEnrolled(claimed).catch((error) =>
     logs.server.error('autoPod', 'notifyHostEnrolled', { error, auto_pod_id: autoPodId })
   );
-  return finishIfComplete(claimed!, userId);
+  return finishIfComplete(claimed, userId);
 }
 
 /** A club admin claims a venue-accepted Auto Pod FOR one of their clubs. */
@@ -201,7 +201,7 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
   autoPodNotify.clubEnrolled(claimed).catch((error) =>
     logs.server.error('autoPod', 'notifyClubEnrolled', { error, auto_pod_id: autoPodId })
   );
-  return finishIfComplete(claimed!, userId);
+  return finishIfComplete(claimed, userId);
 }
 
 /** All three enrolled? Then this claim is the one that takes it live. */

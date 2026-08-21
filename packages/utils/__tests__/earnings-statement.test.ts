@@ -31,6 +31,10 @@ describe('formatStatementMoney', () => {
   it('formats ₹X,XXX.XX with en-IN grouping', () => {
     expect(formatStatementMoney(29000, '₹')).toBe('₹29,000.00');
     expect(formatStatementMoney(136.83, '₹')).toBe('₹136.83');
+    // en-IN groups lakhs as 1,25,000 — en-US would print 125,000.
+    expect(formatStatementMoney(125000, '₹')).toBe('₹1,25,000.00');
+    // Always exactly two decimals, in whatever symbol the caller renders.
+    expect(formatStatementMoney(897, '$')).toBe('$897.00');
   });
 });
 
@@ -109,7 +113,16 @@ describe('buildEarningsStatement (no venue / club cut)', () => {
       'Platform Fee @5%',
       'Duncit Commission @10%',
     ]);
+    expect(platform.lines[1]).toMatchObject({
+      key: 'duncit-commission',
+      amount: 72.22,
+      deduction: true,
+    });
     expect(platform.lines[1].formula).toBe('₹722.16 × 10% (your remainder)');
+    // The relocated commission counts in Platform Charges: 38.01 + 72.22 is
+    // 110.22999999999999 in floating point — the section total must be paise-exact.
+    expect(platform.total).toBe(110.23);
+    expect(s.total_deductions).toBe(247.06);
     expect(s.reconciled).toBe(true);
   });
 
@@ -131,5 +144,212 @@ describe('buildEarningsStatement (no venue / club cut)', () => {
     expect(club.lines[0].formula).toBe('₹722.16 × 3%');
     expect(club.total).toBe(21.66);
     expect(s.reconciled).toBe(true);
+  });
+});
+
+// A preview never clamps the venue price to the pool (breakdown.math.ts,
+// clampVenueToPool=false): the shortfall flows through to the host honestly and
+// the engine charges NO commission on a non-positive remainder.
+const shortfallWaterfall: EarningsWaterfall = {
+  ...venueWaterfall,
+  venue_amount: 800,
+  host_amount: -77.84,
+  host_commission_amount: 0,
+  host_receives: -77.84,
+  host_earn_pct: -8.68,
+};
+
+const NO_COMMISSION_NOTE = 'No commission — host remainder is not positive';
+
+describe('buildEarningsStatement (non-positive host remainder)', () => {
+  it('charges no commission on a venue shortfall and passes the shortfall through whole', () => {
+    const s = buildEarningsStatement(shortfallWaterfall, { has_venue: true, symbol: '₹' });
+    const venue = s.sections.find((sec) => sec.key === 'venue')!;
+    const [slot, commission] = venue.lines;
+    expect(slot.amount).toBe(800);
+    expect(commission).toMatchObject({
+      label: 'Duncit Commission from Venue @10%',
+      amount: 0,
+      formula: NO_COMMISSION_NOTE,
+      deduction: true,
+    });
+    // The venue keeps its full price, so the deductions exceed the collection and
+    // the host's payout is the negative remainder — the statement still reconciles.
+    expect(venue.total).toBe(800);
+    expect(s.total_deductions).toBe(974.84);
+    expect(s.net_payout).toEqual({ collection: 897, total_deductions: 974.84, receives: -77.84 });
+    expect(s.reconciled).toBe(true);
+  });
+
+  it('treats an exactly-zero remainder as not positive (the engine rule is > 0)', () => {
+    // Venue price == pool: nothing is left for the host, so nothing is commissioned.
+    const s = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        venue_amount: 722.16,
+        host_amount: 0,
+        host_commission_amount: 0,
+        host_receives: 0,
+        host_earn_pct: 0,
+      },
+      { has_venue: true, symbol: '₹' },
+    );
+    const venue = s.sections.find((sec) => sec.key === 'venue')!;
+    expect(venue.lines[1].formula).toBe(NO_COMMISSION_NOTE);
+    expect(venue.lines[1].amount).toBe(0);
+    expect(s.net_payout.receives).toBe(0);
+    expect(s.total_deductions).toBe(897);
+    expect(s.reconciled).toBe(true);
+  });
+
+  it('keeps the no-commission note when the commission line sits under Platform Charges', () => {
+    // No venue, but the club takes the whole pool (the engine clamps the club cut
+    // to the pool): the host remainder is 0, so the platform-side commission is 0.
+    const s = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        venue_amount: 0,
+        club_admin_pct: 100,
+        club_admin_amount: 722.16,
+        host_amount: 0,
+        host_commission_amount: 0,
+        host_receives: 0,
+        host_earn_pct: 0,
+      },
+      { has_venue: false, symbol: '₹' },
+    );
+    expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform', 'club']);
+    const platform = s.sections.find((sec) => sec.key === 'platform')!;
+    const commission = platform.lines.find((l) => l.key === 'duncit-commission')!;
+    expect(commission).toMatchObject({
+      label: 'Duncit Commission @10%',
+      amount: 0,
+      formula: NO_COMMISSION_NOTE,
+    });
+    // Platform Charges total is the fee alone once the commission is zero.
+    expect(platform.total).toBe(38.01);
+    expect(s.reconciled).toBe(true);
+  });
+});
+
+describe('buildEarningsStatement (layout, symbol & tolerance)', () => {
+  it('orders the sections Taxes → Platform → Club → Venue when every group applies', () => {
+    const s = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        club_admin_pct: 3,
+        club_admin_amount: 21.66,
+        host_amount: 201.5,
+        host_commission_amount: 20.15,
+        host_receives: 181.35,
+      },
+      { has_venue: true, symbol: '₹' },
+    );
+    expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform', 'club', 'venue']);
+    expect(s.sections.map((sec) => sec.title)).toEqual([
+      'Taxes',
+      'Platform Charges',
+      'Club Charges',
+      'Venue Charges',
+    ]);
+  });
+
+  it('omits Club Charges entirely when the club takes no cut', () => {
+    // club_admin_amount is 0 in the canonical fixture: no empty "@0%" section,
+    // and the remaining groups keep their order around the gap.
+    expect(statement().sections.map((sec) => sec.key)).toEqual(['taxes', 'platform', 'venue']);
+  });
+
+  it('gates Club Charges on the rupee amount, not the configured rate', () => {
+    // A free pod with a 3% club cut configured: every server line is ₹0, so there
+    // is no club section (and no commission) to show, yet the statement still
+    // reconciles to a ₹0 payout.
+    const free = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        amount: 0,
+        gst_amount: 0,
+        net_amount: 0,
+        platform_fee_amount: 0,
+        pool_amount: 0,
+        club_admin_pct: 3,
+        club_admin_amount: 0,
+        venue_amount: 0,
+        host_amount: 0,
+        host_commission_amount: 0,
+        host_receives: 0,
+        host_earn_pct: 0,
+      },
+      { has_venue: false, symbol: '₹' },
+    );
+    expect(free.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform']);
+    expect(free.sections.map((sec) => sec.total)).toEqual([0, 0]);
+    expect(free.net_payout).toEqual({ collection: 0, total_deductions: 0, receives: 0 });
+    expect(free.reconciled).toBe(true);
+  });
+
+  it('renders every money figure in the caller\'s currency symbol', () => {
+    const s = buildEarningsStatement(venueWaterfall, { has_venue: true, symbol: '$' });
+    expect(s.collection).toEqual({
+      label: 'Total collection',
+      amount: 897,
+      included_gst_note: 'Includes GST $136.83 — prices are GST-inclusive',
+    });
+    const formulas = s.sections.flatMap((sec) => sec.lines.map((l) => l.formula));
+    expect(formulas).toContain('$897.00 − $136.83 GST (prices are GST-inclusive)');
+    expect(formulas).toContain('$223.16 × 10% (your remainder)');
+    expect(formulas.some((f) => f.includes('₹'))).toBe(false);
+  });
+
+  it('keys every row with a stable, unique render key that names its placement', () => {
+    // Both surfaces use these as React keys, so the list is a contract: the
+    // commission row is `venue-commission` under Venue Charges and
+    // `duncit-commission` when it falls back to Platform Charges — never the
+    // same key in two places, and every other row keeps its key either way.
+    const withVenue = buildEarningsStatement(
+      { ...venueWaterfall, club_admin_pct: 3, club_admin_amount: 21.66 },
+      { has_venue: true, symbol: '₹' },
+    );
+    expect(withVenue.sections.flatMap((sec) => sec.lines.map((l) => l.key))).toEqual([
+      'taxable',
+      'gst',
+      'platform-fee',
+      'club-admin',
+      'venue-slot',
+      'venue-commission',
+    ]);
+    const withoutVenue = buildEarningsStatement(venueWaterfall, { has_venue: false, symbol: '₹' });
+    expect(withoutVenue.sections.flatMap((sec) => sec.lines.map((l) => l.key))).toEqual([
+      'taxable',
+      'gst',
+      'platform-fee',
+      'duncit-commission',
+    ]);
+  });
+
+  it('tolerates up to 2 paise of float noise between sections and the server total', () => {
+    // Sections sum to 696.16; the server total is 897 − host_receives.
+    const within = buildEarningsStatement(
+      { ...venueWaterfall, host_receives: 200.82 },
+      { has_venue: true, symbol: '₹' },
+    );
+    expect(within.total_deductions).toBe(696.18);
+    expect(within.reconciled).toBe(true);
+
+    const beyond = buildEarningsStatement(
+      { ...venueWaterfall, host_receives: 200.81 },
+      { has_venue: true, symbol: '₹' },
+    );
+    expect(beyond.total_deductions).toBe(696.19);
+    expect(beyond.reconciled).toBe(false);
+  });
+
+  it('never reconciles a waterfall whose amount is not a number', () => {
+    const s = buildEarningsStatement(
+      { ...venueWaterfall, amount: Number.NaN },
+      { has_venue: true, symbol: '₹' },
+    );
+    expect(Number.isNaN(s.total_deductions)).toBe(true);
+    expect(s.reconciled).toBe(false);
   });
 });

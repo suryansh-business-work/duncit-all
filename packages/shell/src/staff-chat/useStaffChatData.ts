@@ -51,6 +51,18 @@ export interface Attachment {
   peaks?: number[];
 }
 
+/** The outbox without the message that just landed. */
+function withoutMessage(current: StaffMessage[], id: string): StaffMessage[] {
+  return current.filter((message) => message.id !== id);
+}
+
+/** The outbox with one message marked failed, so it stays and offers a retry. */
+function markFailed(current: StaffMessage[], id: string): StaffMessage[] {
+  return current.map((message) =>
+    message.id === id ? { ...message, pending: false, failed: true } : message
+  );
+}
+
 /**
  * Everything staff chat reads and writes.
  *
@@ -246,18 +258,14 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
         },
       })
         .then(() => {
-          setOutbox((current) => current.filter((message) => message.id !== localId));
+          setOutbox((current) => withoutMessage(current, localId));
           messagesQuery.refetch().catch(() => undefined);
           refreshAll();
         })
         .catch(() => {
           // Kept, not dropped: the words are still on screen and the retry
           // button is the only way back to them.
-          setOutbox((current) =>
-            current.map((message) =>
-              message.id === localId ? { ...message, pending: false, failed: true } : message
-            )
-          );
+          setOutbox((current) => markFailed(current, localId));
         });
     },
     [peer, meId, sendMessage, messagesQuery, refreshAll]

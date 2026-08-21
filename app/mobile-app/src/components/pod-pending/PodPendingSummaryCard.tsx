@@ -2,6 +2,7 @@ import { Text, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import type { PodPendingView } from '@/hooks/usePodPendingView';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { podScheduleLabel } from '@/utils/pod-format';
 import { pendingPodImage, podPendingStatus } from '@/utils/pod-pending';
@@ -10,20 +11,20 @@ import { InfoRow, type InfoRowProps } from './InfoRow';
 /** Pod details card on the waiting screen — featured image, title, date & time
  * slot, expected earnings, location, category and current status. */
 export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView }>) {
+  const { t } = useTranslation();
   const { pod } = view;
   const image = pendingPodImage(pod.pod_images_and_videos);
   const location = [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
-  // TODO(i18n) — row labels ship as literals until this feature is localized.
   const rows: InfoRowProps[] = [
     {
       icon: 'event',
-      label: 'Date & time',
+      label: t('mweb.podPending.dateTime'),
       value: podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time),
       testID: 'pod-pending-when',
     },
     {
       icon: 'payments',
-      label: 'Expected earnings',
+      label: t('mweb.podPending.expectedEarnings'),
       value: formatMoney(view.currency_symbol, view.expected_earnings),
       testID: 'pod-pending-earnings',
     },
@@ -31,7 +32,7 @@ export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView 
   if (location) {
     rows.push({
       icon: 'place',
-      label: 'Location',
+      label: t('mweb.podPending.location'),
       value: location,
       testID: 'pod-pending-location',
     });
@@ -39,15 +40,15 @@ export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView 
   if (view.category_name) {
     rows.push({
       icon: 'category',
-      label: 'Category',
+      label: t('mweb.podPending.category'),
       value: view.category_name,
       testID: 'pod-pending-category',
     });
   }
   rows.push({
     icon: 'info',
-    label: 'Current status',
-    value: podPendingStatus(pod.venue_approval_status),
+    label: t('mweb.podPending.currentStatus'),
+    value: podPendingStatus(pod.venue_approval_status, t),
     testID: 'pod-pending-status',
   });
 

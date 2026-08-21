@@ -62,6 +62,8 @@ const renderStatus = (pod: PodRowBase) => (
   <Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} />
 );
 
+const renderAttendance = (pod: PodRowBase) => <AttendanceChip attendance={pod.attendance} />;
+
 const dateValue = (pod: PodRowBase) =>
   formatDateTime(pod.pod_date_time) || 'Not scheduled';
 
@@ -120,7 +122,7 @@ export default function PodsTable<T extends PodRowBase>({
         headerName: 'Attendance',
         sortable: false,
         width: 150,
-        cellRenderer: (p: PodRowBase) => <AttendanceChip attendance={p.attendance} />,
+        cellRenderer: renderAttendance,
         valueGetter: (p: PodRowBase) =>
           p.attendance?.booked_seats
             ? `${p.attendance.attended_seats}/${p.attendance.booked_seats}`

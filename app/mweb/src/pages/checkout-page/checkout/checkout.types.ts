@@ -138,14 +138,11 @@ export function makeCheckoutSchema(t: Translate = fallbackT) {
 
 /**
  * Product checkout: the order is physically delivered, so the address stays
- * mandatory (the contact for the parcel comes from the saved address book).
+ * mandatory (the parcel contact comes from the saved address book). It
+ * currently applies the same rules as the pod checkout; this alias is the one
+ * place to diverge later.
  */
-export function makeProductCheckoutSchema(t: Translate = fallbackT) {
-  return makeCheckoutObject(t).superRefine((values, ctx) => {
-    addAddressIssues(values, ctx, t);
-    addOptionalFieldIssues(values, ctx, t);
-  });
-}
+export const makeProductCheckoutSchema = makeCheckoutSchema;
 
 export const checkoutSchema = makeCheckoutSchema();
 

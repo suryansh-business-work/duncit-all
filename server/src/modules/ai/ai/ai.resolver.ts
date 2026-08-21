@@ -19,8 +19,11 @@ const RICH_TEXT_ROLES = [
   'LEGAL_MANAGER',
   'CRM_MANAGER',
 ];
-const UNSAFE_RICH_TEXT =
-  /<(?:script|style|iframe|object|embed)\b|\son\w+\s*=|\shref\s*=\s*["']?\s*(?:javascript|data|vbscript):/i;
+const UNSAFE_TAG = /<(?:script|style|iframe|object|embed)\b/i;
+const UNSAFE_EVENT_HANDLER = /\son\w+\s*=/i;
+const UNSAFE_HREF_SCHEME = /\shref\s*=\s*["']?\s*(?:javascript|data|vbscript):/i;
+const isUnsafeRichText = (value: string) =>
+  UNSAFE_TAG.test(value) || UNSAFE_EVENT_HANDLER.test(value) || UNSAFE_HREF_SCHEME.test(value);
 
 const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }> = {
   CLUB: {
@@ -474,7 +477,7 @@ function improvedHtml(content: string): string {
   }
   const value = (parsed as { html?: unknown } | null)?.html;
   const html = typeof value === 'string' ? value.trim() : '';
-  if (!html || html.length > 20_000 || UNSAFE_RICH_TEXT.test(html)) throw openAiInvalidJsonError();
+  if (!html || html.length > 20_000 || isUnsafeRichText(html)) throw openAiInvalidJsonError();
   return html;
 }
 

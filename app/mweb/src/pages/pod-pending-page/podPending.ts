@@ -1,4 +1,5 @@
 import { mapSearchUrl } from '@duncit/location';
+import { fallbackT, type Translate } from '../../i18n/fallback';
 import type { PendingMedia, PodPendingVenue } from './queries';
 
 /** Pure derivations for the post-create venue-approval waiting page — kept out
@@ -23,19 +24,21 @@ export interface ApprovalBadge {
 
 /** Venue-card badge for the slot decision. The page stays reachable after the
  * venue decides, so every enum value maps to a badge. */
-// TODO(i18n) — badge labels ship as literals until this feature is localized.
-export function approvalBadge(status?: string | null): ApprovalBadge {
-  if (status === 'APPROVED') return { label: 'Approved', icon: 'check-circle', tone: 'success' };
-  if (status === 'DECLINED') return { label: 'Declined', icon: 'cancel', tone: 'error' };
-  return { label: 'Pending Approval', icon: 'schedule', tone: 'warning' };
+export function approvalBadge(status?: string | null, t: Translate = fallbackT): ApprovalBadge {
+  if (status === 'APPROVED') {
+    return { label: t('mweb.podPending.approvalApproved'), icon: 'check-circle', tone: 'success' };
+  }
+  if (status === 'DECLINED') {
+    return { label: t('mweb.podPending.approvalDeclined'), icon: 'cancel', tone: 'error' };
+  }
+  return { label: t('mweb.podPending.approvalPending'), icon: 'schedule', tone: 'warning' };
 }
 
 /** Pod-card "current status" line derived from the venue decision. */
-// TODO(i18n) — status labels ship as literals until this feature is localized.
-export function podPendingStatus(status?: string | null): string {
-  if (status === 'PENDING') return 'Awaiting venue approval';
-  if (status === 'DECLINED') return 'Venue declined your slot request';
-  return 'Live';
+export function podPendingStatus(status?: string | null, t: Translate = fallbackT): string {
+  if (status === 'PENDING') return t('mweb.podPending.statusAwaitingVenue');
+  if (status === 'DECLINED') return t('mweb.podPending.statusVenueDeclined');
+  return t('mweb.podPending.statusLive');
 }
 
 /** Google-Maps deep link — `lat,lng` when the venue is geocoded, else its name

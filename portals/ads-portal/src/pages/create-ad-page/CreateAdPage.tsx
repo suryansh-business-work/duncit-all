@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardContent, Grid, Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import {
@@ -21,6 +22,7 @@ interface SubmitAdRequestResult {
 
 export default function CreateAdPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<AdRequestFormValues>(blankAdRequestValues);
   const [formError, setFormError] = useState<string | null>(null);
   const { data: pricingData, loading: pricingLoading } = useQuery<{ adPricing: AdPricing }>(
@@ -37,8 +39,8 @@ export default function CreateAdPage() {
         variables: { input: toSubmitAdRequestInput(values) },
       });
       const created = result.data?.submitAdRequest;
-      if (!created) throw new Error('Ad request could not be submitted');
-      notifySuccess(`Ad request submitted · Trace ID ${created.trace_id}`);
+      if (!created) throw new Error(t('ads.create.submitFailed'));
+      notifySuccess(t('ads.create.submitted', { vars: { traceId: created.trace_id } }));
       navigate(`/ads/${created.id}`);
     } catch (error) {
       setFormError(parseApiError(error));
@@ -48,8 +50,8 @@ export default function CreateAdPage() {
   return (
     <Stack spacing={3}>
       <PageHeader
-        title="Create Ad"
-        subtitle="Submit an ad request — the Marketing team reviews it and confirms the final cost."
+        title={t('ads.create.title')}
+        subtitle={t('ads.create.subtitle')}
       />
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={8}>

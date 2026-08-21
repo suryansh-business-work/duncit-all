@@ -9,6 +9,7 @@ import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
 import { StatCard } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import { formatAdCost } from '../ads/ad-options';
 import type { AdsDashboardStats } from './queries';
 
@@ -17,7 +18,8 @@ type MoneyKey = 'total_approved_cost' | 'live_spend';
 
 interface StatConfig {
   key: CountKey | MoneyKey;
-  label: string;
+  /** Written out as a literal: the build gate greps for literal key strings. */
+  labelKey: string;
   icon: ReactNode;
   /** Formats the value with the dashboard currency symbol. */
   money?: boolean;
@@ -28,47 +30,47 @@ interface StatConfig {
 }
 
 const STATS: ReadonlyArray<StatConfig> = [
-  { key: 'total', label: 'Total Ads', icon: <CampaignOutlinedIcon fontSize="small" /> },
+  { key: 'total', labelKey: 'ads.stats.total', icon: <CampaignOutlinedIcon fontSize="small" /> },
   {
     key: 'pending',
-    label: 'Pending Review',
+    labelKey: 'ads.stats.pending',
     icon: <HourglassTopOutlinedIcon fontSize="small" />,
     iconColor: 'warning.main',
   },
   {
     key: 'live',
-    label: 'Live Now',
+    labelKey: 'ads.stats.live',
     icon: <SensorsOutlinedIcon fontSize="small" />,
     iconColor: 'success.main',
     valueColor: 'success.main',
   },
   {
     key: 'approved',
-    label: 'Upcoming Approved',
+    labelKey: 'ads.stats.approved',
     icon: <EventAvailableOutlinedIcon fontSize="small" />,
     iconColor: 'info.main',
   },
   {
     key: 'rejected',
-    label: 'Rejected',
+    labelKey: 'ads.stats.rejected',
     icon: <CancelOutlinedIcon fontSize="small" />,
     iconColor: 'error.main',
   },
   {
     key: 'expired',
-    label: 'Expired',
+    labelKey: 'ads.stats.expired',
     icon: <EventBusyOutlinedIcon fontSize="small" />,
     iconColor: 'text.disabled',
   },
   {
     key: 'total_approved_cost',
-    label: 'Total Approved Spend',
+    labelKey: 'ads.stats.totalApprovedCost',
     icon: <PaymentsOutlinedIcon fontSize="small" />,
     money: true,
   },
   {
     key: 'live_spend',
-    label: 'Live Spend',
+    labelKey: 'ads.stats.liveSpend',
     icon: <TrendingUpOutlinedIcon fontSize="small" />,
     iconColor: 'success.main',
     valueColor: 'success.main',
@@ -78,6 +80,7 @@ const STATS: ReadonlyArray<StatConfig> = [
 
 /** The KPI tile grid — one StatCard per dashboard bucket / spend figure. */
 export default function StatGrid({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
       {STATS.map((card) => {
@@ -86,7 +89,7 @@ export default function StatGrid({ stats }: Readonly<{ stats: AdsDashboardStats 
         return (
           <StatCard
             key={card.key}
-            label={card.label}
+            label={t(card.labelKey)}
             value={value}
             icon={card.icon}
             iconColor={card.iconColor ?? 'primary.main'}

@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { PageHeader, StatusChip } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import {
   AD_MEDIA_TYPE_OPTIONS,
   AD_POSITION_OPTIONS,
@@ -21,82 +23,85 @@ const renderStatus = (row: AdRequestRow) => (
   <StatusChip status={row.status} colorMap={AD_STATUS_COLORS} />
 );
 
-const COLUMNS: DuncitColumn<AdRequestRow>[] = [
-  {
-    field: 'trace_id',
-    headerName: 'Trace ID',
-    minWidth: 140,
-    valueGetter: (row) => row.trace_id,
-  },
-  {
-    field: 'ad_title',
-    headerName: 'Title',
-    flex: 1,
-    minWidth: 180,
-    valueGetter: (row) => row.ad_title,
-  },
-  {
-    field: 'position',
-    headerName: 'Position',
-    minWidth: 170,
-    filter: { type: 'select', options: AD_POSITION_OPTIONS },
-    valueGetter: (row) => adPositionLabel(row.position),
-  },
-  {
-    field: 'ad_type',
-    headerName: 'Type',
-    width: 100,
-    sortable: false,
-    filter: { type: 'select', options: AD_MEDIA_TYPE_OPTIONS },
-    valueGetter: (row) => adTypeLabel(row.ad_type),
-  },
-  dateColumn<AdRequestRow>({
-    field: 'start_at',
-    headerName: 'Starts',
-    hide: false,
-    width: 130,
-  }),
-  {
-    field: 'duration_days',
-    headerName: 'Days',
-    width: 90,
-    valueGetter: (row) => row.duration_days,
-  },
-  {
-    field: 'estimated_cost',
-    headerName: 'Est. Cost',
-    width: 120,
-    valueGetter: (row) => formatAdCost(row.estimated_cost, row.currency_symbol),
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    width: 120,
-    filter: { type: 'select', options: AD_STATUS_OPTIONS },
-    cellRenderer: renderStatus,
-    valueGetter: (row) => row.status,
-  },
-  dateColumn<AdRequestRow>({
-    headerName: 'Submitted',
-    hide: false,
-    width: 140,
-  }),
-];
-
 export default function MyAdsPage() {
   const client = useApolloClient();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const fetchRows = useApolloTableFetch<AdRequestRow>(client, MY_ADS_TABLE, 'myAdRequestsTable');
+
+  // Rebuilt when the catalogue changes — a column set frozen at module load
+  // would keep the language the console first rendered in.
+  const columns = useMemo<DuncitColumn<AdRequestRow>[]>(
+    () => [
+      {
+        field: 'trace_id',
+        headerName: t('ads.myAds.colTraceId'),
+        minWidth: 140,
+        valueGetter: (row) => row.trace_id,
+      },
+      {
+        field: 'ad_title',
+        headerName: t('ads.myAds.colTitle'),
+        flex: 1,
+        minWidth: 180,
+        valueGetter: (row) => row.ad_title,
+      },
+      {
+        field: 'position',
+        headerName: t('ads.myAds.colPosition'),
+        minWidth: 170,
+        filter: { type: 'select', options: AD_POSITION_OPTIONS },
+        valueGetter: (row) => adPositionLabel(row.position),
+      },
+      {
+        field: 'ad_type',
+        headerName: t('ads.myAds.colType'),
+        width: 100,
+        sortable: false,
+        filter: { type: 'select', options: AD_MEDIA_TYPE_OPTIONS },
+        valueGetter: (row) => adTypeLabel(row.ad_type),
+      },
+      dateColumn<AdRequestRow>({
+        field: 'start_at',
+        headerName: t('ads.myAds.colStarts'),
+        hide: false,
+        width: 130,
+      }),
+      {
+        field: 'duration_days',
+        headerName: t('ads.myAds.colDays'),
+        width: 90,
+        valueGetter: (row) => row.duration_days,
+      },
+      {
+        field: 'estimated_cost',
+        headerName: t('ads.myAds.colEstimatedCost'),
+        width: 120,
+        valueGetter: (row) => formatAdCost(row.estimated_cost, row.currency_symbol),
+      },
+      {
+        field: 'status',
+        headerName: t('ads.myAds.colStatus'),
+        width: 120,
+        filter: { type: 'select', options: AD_STATUS_OPTIONS },
+        cellRenderer: renderStatus,
+        valueGetter: (row) => row.status,
+      },
+      dateColumn<AdRequestRow>({
+        headerName: t('ads.myAds.colSubmitted'),
+        hide: false,
+        width: 140,
+      }),
+    ],
+    [t],
+  );
 
   return (
     <Stack spacing={3}>
-      <PageHeader
-        title="My Ads"
-        subtitle="Track your ad requests — quotes, review status and live placements."
-      />
+      <PageHeader title={t('ads.myAds.title')} subtitle={t('ads.myAds.subtitle')} />
       <DuncitTable<AdRequestRow>
         tableId="ads-my-requests"
-        columns={COLUMNS}
+        columns={columns}
         fetchRows={fetchRows}
         getRowId={getAdRowId}
         onRowClick={(row) => navigate(`/ads/${row.id}`)}
@@ -107,12 +112,12 @@ export default function MyAdsPage() {
             startIcon={<AddIcon />}
             onClick={() => navigate('/ads/new')}
           >
-            New Ad
+            {t('ads.myAds.create')}
           </Button>
         }
-        emptyText="No ad requests yet — create your first ad"
+        emptyText={t('ads.myAds.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
-        searchPlaceholder="Search trace ID or title"
+        searchPlaceholder={t('ads.myAds.search')}
       />
     </Stack>
   );

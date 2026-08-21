@@ -9,6 +9,7 @@ export {
 } from './catalogue';
 export {
   ADMIN_BUNDLE,
+  ADS_BUNDLE,
   AI_MONITORING_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,

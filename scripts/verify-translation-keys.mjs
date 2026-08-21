@@ -92,7 +92,6 @@ try {
 
 /** Everything the platform ships copy for: client bundles + the server's own. */
 const known = new Set([...shipped, ...serverKeys]);
-const shippedSet = new Set(shipped);
 
 const referenced = new Set();
 /** key -> the first file that renders it, for a diagnostic that names a site. */
@@ -103,8 +102,11 @@ for (const root of SEARCH_ROOTS) {
     if (file.startsWith(BUNDLES) || file.endsWith("bundles.ts")) continue;
     const text = readFileSync(file, "utf8");
 
+    // Every dotted literal, not only the shipped ones: count-driven copy is
+    // referenced by its PARENT (`t('ads.detail.durationDays', { count })`),
+    // and that parent is not itself a row in the bundle.
     for (const literal of matches(text, QUOTED, 2)) {
-      if (shippedSet.has(literal)) referenced.add(literal);
+      if (literal.includes(".")) referenced.add(literal);
     }
     const site = file.slice(ROOT.length + 1).replaceAll("\\", "/");
     for (const key of [
@@ -121,17 +123,25 @@ for (const root of SEARCH_ROOTS) {
 
 const problems = [];
 
-const unused = shipped.filter((key) => !referenced.has(key));
+/**
+ * Count-driven copy lives in sibling `.one` / `.other` rows: the call site
+ * writes `t('cart.items', { count })` and the TRANSLATOR appends the suffix.
+ * Neither half of this check can look for those two rows literally — one would
+ * report them as copy nothing renders, the other as a render with no fallback —
+ * so both ask about the parent instead.
+ */
+const PLURAL_SUFFIX = /\.(one|other)$/;
+const isRenderedAs = (key) =>
+  referenced.has(key) ||
+  (PLURAL_SUFFIX.test(key) && referenced.has(key.replace(PLURAL_SUFFIX, "")));
+
+const unused = shipped.filter((key) => !isRenderedAs(key));
 if (unused.length > 0) {
   problems.push(
     `${unused.length} shipped key(s) nothing renders:\n  ${unused.join("\n  ")}`,
   );
 }
 
-/**
- * Count-driven copy lives in sibling `.one` / `.other` rows, so `t('x', {count})`
- * renders a key that is deliberately absent as a leaf of its own.
- */
 const resolves = (key) =>
   known.has(key) || known.has(`${key}.one`) || known.has(`${key}.other`);
 

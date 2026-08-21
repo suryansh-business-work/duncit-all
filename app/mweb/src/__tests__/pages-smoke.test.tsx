@@ -17,7 +17,7 @@ import type { ComponentType } from 'react';
 import { MockedProvider } from '@apollo/client/testing';
 import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { schemaMockLink, serverSchema } from './schema-mock';
 
@@ -123,6 +123,30 @@ afterEach(() => {
  * seen in their loading state and their error branch never runs. A page must not
  * throw when its data FAILS either, which is what the flush makes this assert.
  */
+/**
+ * Give jsdom a viewport with a size.
+ *
+ * Every element in jsdom measures 0x0, and a virtualised grid or list asks how
+ * tall its viewport is before deciding how many rows to mount — so it mounts
+ * none, and the cell renderers, row cards and empty-vs-filled branches that are
+ * most of a console page never run at all. Handing back a plausible box is what
+ * makes the data pass below reach them.
+ *
+ * Scoped to this file: it is a lie about layout, and the suites that assert on
+ * real geometry must not inherit it.
+ */
+beforeAll(() => {
+  for (const prop of ['offsetHeight', 'clientHeight'] as const) {
+    Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, value: 800 });
+  }
+  for (const prop of ['offsetWidth', 'clientWidth'] as const) {
+    Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, value: 1200 });
+  }
+  Element.prototype.getBoundingClientRect = function box() {
+    return { x: 0, y: 0, top: 0, left: 0, right: 1200, bottom: 800, width: 1200, height: 800, toJSON: () => ({}) };
+  } as typeof Element.prototype.getBoundingClientRect;
+});
+
 const settle = async () => {
   await act(async () => {
     await new Promise((resolve) => {
@@ -145,6 +169,37 @@ const settle = async () => {
  * no-op, so the walk cannot loop. The cap keeps a page with a hundred row
  * buttons from dominating the run.
  */
+/**
+ * Types something plausible into every field on the screen.
+ *
+ * Runs before the click pass so that pressing Save actually reaches the
+ * validation branch rather than bouncing off an untouched form. The value is
+ * chosen from the input's own type, so a number field gets a number and a date
+ * field gets a date — a form is entitled to reject nonsense, and a rejection is
+ * not what this is looking for.
+ */
+const fillEverything = async () => {
+  const fields = [
+    ...document.body.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      'input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([disabled]), textarea:not([disabled])'
+    ),
+  ].slice(0, 25);
+
+  for (const field of fields) {
+    if (!field.isConnected) continue;
+    const type = (field as HTMLInputElement).type;
+    let value = 'Smoke';
+    if (type === 'number') value = '1';
+    else if (type === 'email') value = 'smoke@duncit.com';
+    else if (type === 'tel') value = '9000000000';
+    else if (type === 'date') value = '2026-08-30';
+    else if (type === 'time') value = '12:30';
+    else if (type === 'url') value = 'https://duncit.com';
+    fireEvent.change(field, { target: { value } });
+  }
+  await settle();
+};
+
 const MAX_CLICKS = 20;
 
 const pressEverything = async () => {
@@ -204,6 +259,7 @@ describe('every routed page mounts with no data behind it', () => {
     );
 
     await settle();
+    await fillEverything();
     await pressEverything();
 
     expect(document.body.innerHTML).not.toBe('');
@@ -239,6 +295,10 @@ describe('every routed page mounts with no data behind it', () => {
 
     await settle();
     await settle();
+    // With rows on the screen, the dialogs and menus a control opens are the
+    // ones a person actually sees — prefilled, and with something to act on.
+    await fillEverything();
+    await pressEverything();
 
     expect(container.innerHTML).not.toBe('');
     unmount();

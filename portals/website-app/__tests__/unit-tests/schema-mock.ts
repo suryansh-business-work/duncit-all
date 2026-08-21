@@ -154,42 +154,82 @@ function isSdlStart(source: string): boolean {
   return SDL_KEYWORD.test(rest);
 }
 
+/**
+ * Every type EXTENSION read as a plain definition.
+ *
+ * This is the whole trick. The server declares no base `type Query` anywhere —
+ * all 119 of its query blocks are `extend type Query`, one per module, and the
+ * runtime schema is assembled by the builder that understands them.
+ * `buildASTSchema` does not: it drops an extension whose base type is absent,
+ * so a plain build produces a schema with no Query type at all and every
+ * operation executed against it comes back empty. Rewriting the kind turns the
+ * extensions into definitions, and the merge below folds all 119 into one.
+ */
+const AS_DEFINITION: Record<string, string> = {
+  [Kind.OBJECT_TYPE_EXTENSION]: Kind.OBJECT_TYPE_DEFINITION,
+  [Kind.INTERFACE_TYPE_EXTENSION]: Kind.INTERFACE_TYPE_DEFINITION,
+  [Kind.INPUT_OBJECT_TYPE_EXTENSION]: Kind.INPUT_OBJECT_TYPE_DEFINITION,
+  [Kind.ENUM_TYPE_EXTENSION]: Kind.ENUM_TYPE_DEFINITION,
+  [Kind.UNION_TYPE_EXTENSION]: Kind.UNION_TYPE_DEFINITION,
+  [Kind.SCALAR_TYPE_EXTENSION]: Kind.SCALAR_TYPE_DEFINITION,
+};
+
 const MERGEABLE = new Set<string>([
   Kind.OBJECT_TYPE_DEFINITION,
   Kind.INPUT_OBJECT_TYPE_DEFINITION,
   Kind.INTERFACE_TYPE_DEFINITION,
+  Kind.ENUM_TYPE_DEFINITION,
+  Kind.UNION_TYPE_DEFINITION,
 ]);
+
+interface Named {
+  name: { value: string };
+}
 
 interface MergeableNode {
   kind: string;
   name?: { value: string };
-  fields?: { name: { value: string } }[];
+  fields?: Named[];
+  values?: Named[];
+  types?: Named[];
+}
+
+/** The list a node of this kind carries its members in. */
+function membersKey(kind: string): 'fields' | 'values' | 'types' {
+  if (kind === Kind.ENUM_TYPE_DEFINITION) return 'values';
+  if (kind === Kind.UNION_TYPE_DEFINITION) return 'types';
+  return 'fields';
 }
 
 /**
- * Fold repeated type definitions into one, the way the server's own builder
- * does — the repo defines a couple of types twice on purpose, and a plain build
- * keeps one and calls every field of the other missing.
+ * Fold every definition of a name into one — extensions included.
+ *
+ * The repo also defines a couple of types twice on purpose, and a plain build
+ * keeps one and calls every field of the other missing, so the same merge
+ * covers both cases.
  */
 function mergeDuplicateTypes(doc: DocumentNode): DocumentNode {
   const byName = new Map<string, MergeableNode>();
   const output: unknown[] = [];
   for (const def of doc.definitions) {
-    const node = def as unknown as MergeableNode;
-    if (!MERGEABLE.has(node.kind) || !node.name) {
-      output.push(def);
+    const raw = def as unknown as MergeableNode;
+    const kind = AS_DEFINITION[raw.kind] ?? raw.kind;
+    const node: MergeableNode = kind === raw.kind ? raw : { ...raw, kind };
+    if (!MERGEABLE.has(kind) || !node.name) {
+      output.push(node);
       continue;
     }
+    const key = membersKey(kind);
     const seen = byName.get(node.name.value);
     if (!seen) {
-      const copy: MergeableNode = { ...node, fields: [...(node.fields ?? [])] };
+      const copy: MergeableNode = { ...node, [key]: [...(node[key] ?? [])] };
       byName.set(node.name.value, copy);
       output.push(copy);
       continue;
     }
-    const have = new Set((seen.fields ?? []).map((f) => f.name.value));
-    for (const field of node.fields ?? []) {
-      if (!have.has(field.name.value)) seen.fields?.push(field);
+    const have = new Set((seen[key] ?? []).map((member) => member.name.value));
+    for (const member of node[key] ?? []) {
+      if (!have.has(member.name.value)) seen[key]?.push(member);
     }
   }
   return { ...doc, definitions: output } as unknown as DocumentNode;
@@ -220,7 +260,10 @@ export function serverSchema(): GraphQLSchema | null {
     }
   }
   try {
-    cached = buildASTSchema(mergeDuplicateTypes(concatAST(docs)), { assumeValidSDL: true });
+    const built = buildASTSchema(mergeDuplicateTypes(concatAST(docs)), { assumeValidSDL: true });
+    // No Query type means the extensions were dropped and every operation would
+    // come back empty — degrade loudly rather than silently answering nothing.
+    cached = built.getQueryType() ? built : null;
   } catch {
     cached = null;
   }
@@ -229,10 +272,18 @@ export function serverSchema(): GraphQLSchema | null {
 
 const ISO = '2026-08-30T12:30:00.000Z';
 
+let idCounter = 0;
+
 /** A dull, deterministic value for a leaf, chosen from the field's name. */
 function scalarValue(typeName: string, fieldName: string): unknown {
   const name = fieldName.toLowerCase();
-  if (typeName === 'ID') return (fieldName || 'id') + '-1';
+  // Unique per value: Apollo normalises by __typename + id, so a list whose
+  // items shared one id would collapse into a single row — fewer render paths
+  // run, and React reports duplicate keys.
+  if (typeName === 'ID') {
+    idCounter += 1;
+    return (fieldName || 'id') + '-' + idCounter;
+  }
   if (typeName === 'Int') return 3;
   if (typeName === 'Float') return 100.5;
   if (typeName === 'Boolean') return !name.includes('deleted') && !name.includes('disabled');

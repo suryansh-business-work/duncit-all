@@ -19,7 +19,7 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { schemaMockLink } from './schema-mock';
+import { schemaMockLink, serverSchema } from './schema-mock';
 
 type PageEntry = [pattern: string, concrete: string, load: () => Promise<Record<string, unknown>>];
 
@@ -208,6 +208,12 @@ describe('every routed page mounts with no data behind it', () => {
 
     expect(document.body.innerHTML).not.toBe('');
     unmount();
+  });
+
+  it('reads the server schema the with-data pass depends on', () => {
+    // Without it every operation would answer empty and the pass below would
+    // silently degrade into a second copy of the no-data one.
+    expect(serverSchema()?.getQueryType()).toBeTruthy();
   });
 
   /**

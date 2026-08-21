@@ -22,7 +22,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { schemaMockLink } from './schema-mock';
+import { schemaMockLink, serverSchema } from './schema-mock';
 
 vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
@@ -132,6 +132,12 @@ describe('every route mounts with no data behind it', () => {
 
     expect(document.body.innerHTML).not.toBe('');
     unmount();
+  });
+
+  it('reads the server schema the with-data pass depends on', () => {
+    // Without it every operation would answer empty and the pass below would
+    // silently degrade into a second copy of the no-data one.
+    expect(serverSchema()?.getQueryType()).toBeTruthy();
   });
 
   /**

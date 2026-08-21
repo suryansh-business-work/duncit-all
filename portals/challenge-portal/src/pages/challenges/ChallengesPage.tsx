@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import {
   CHALLENGES_TABLE,
@@ -23,6 +24,7 @@ import ChallengesTable from './ChallengesTable';
 import ChallengeFormDialog from './ChallengeFormDialog';
 
 export default function ChallengesPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function ChallengesPage() {
     <Stack spacing={2.5}>
       <Stack direction="row" spacing={1.25} alignItems="center">
         <EmojiEventsIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>Challenges</Typography>
+        <Typography variant="h5" fontWeight={800}>{t('challenge.list.title')}</Typography>
       </Stack>
 
       <ChallengesTable
@@ -63,7 +65,7 @@ export default function ChallengesPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-            New challenge
+            {t('challenge.list.create')}
           </Button>
         }
         onEdit={openEdit}
@@ -78,16 +80,16 @@ export default function ChallengesPage() {
       />
 
       <Dialog open={!!deleting} onClose={() => setDeleting(null)}>
-        <DialogTitle>Delete challenge?</DialogTitle>
+        <DialogTitle>{t('challenge.list.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Permanently delete “{deleting?.name}”. This cannot be undone.
+            {t('challenge.list.deleteBody', { vars: { name: deleting?.name ?? '' } })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleting(null)} disabled={deleteState.loading}>Cancel</Button>
+          <Button onClick={() => setDeleting(null)} disabled={deleteState.loading}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={confirmDelete} disabled={deleteState.loading}>
-            {deleteState.loading ? 'Deleting…' : 'Delete'}
+            {deleteState.loading ? t('shell.common.deleting') : t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

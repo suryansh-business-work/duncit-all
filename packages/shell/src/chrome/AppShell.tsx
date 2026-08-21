@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Drawer } from '@mui/material';
 import { tokens } from '@duncit/theme';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
+import { useTranslation } from '../i18n/useTranslation';
+import { localizeNav } from '../i18n/localize-nav';
 import PortalPageTitle from './PortalPageTitle';
 import type { AppNavItem, SearchItem } from '../types';
 import { AppHeader } from './AppHeader';
@@ -64,6 +66,10 @@ export function AppShell({
   children,
 }: Readonly<AppShellProps>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  // Resolved here so the sidebar, the header search, the breadcrumbs and the
+  // page title all read the SAME labels — see localizeNav.
+  const localizedNav = useMemo(() => localizeNav(nav, t), [nav, t]);
   const [mobileOpen, setMobileOpen] = useState(false);
   // The chat is DOCKED, so its open state belongs to the layout rather than to
   // the button: the panel is a sibling of the main content, and opening it
@@ -129,9 +135,9 @@ export function AppShell({
           '&:focus': { left: 8, top: 8 },
         }}
       >
-        Skip to main content
+        {t('shell.chrome.skipToContent')}
       </Box>
-      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label="primary navigation">
+      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label={t('shell.chrome.primaryNav')}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -141,7 +147,7 @@ export function AppShell({
         >
           <AppSidebar
             name={config.name}
-            nav={nav}
+            nav={localizedNav}
             user={user}
             footerCaption={config.footerCaption}
             onNavigate={() => setMobileOpen(false)}
@@ -152,14 +158,14 @@ export function AppShell({
           open
           sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' } }}
         >
-          <AppSidebar name={config.name} nav={nav} user={user} footerCaption={config.footerCaption} />
+          <AppSidebar name={config.name} nav={localizedNav} user={user} footerCaption={config.footerCaption} />
         </Drawer>
       </Box>
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppHeader
           title={config.fullName ?? config.name}
           name={config.name}
-          nav={nav}
+          nav={localizedNav}
           searchItems={searchItems}
           user={user}
           profileTo={profileTo}
@@ -175,12 +181,12 @@ export function AppShell({
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <BreadcrumbProvider>
               <PortalPageTitle
-                nav={nav}
+                nav={localizedNav}
                 shortName={config.name}
                 appName={config.fullName ?? config.name}
                 labelMap={breadcrumbLabelMap}
               />
-              <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
+              <AppBreadcrumbs nav={localizedNav} appName={config.name} labelMap={breadcrumbLabelMap} />
               {/* The page's own scroller. `contain` stops a wheel that reaches
                   the end of this box from carrying on into the chat beside it —
                   scroll chaining is what made the two feel welded together. */}

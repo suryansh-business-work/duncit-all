@@ -10,6 +10,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import {
   CHALLENGE_STATS,
   CREATE_CHALLENGE,
@@ -31,6 +32,7 @@ const emptyCascade: CascadeValue = { superId: '', categoryId: '', subId: '' };
 
 /** Create or edit a challenge: name, description + cascading category scope. */
 export default function ChallengeFormDialog({ open, editing, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [cascade, setCascade] = useState<CascadeValue>(emptyCascade);
@@ -73,12 +75,12 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{editing ? 'Edit challenge' : 'New challenge'}</DialogTitle>
+      <DialogTitle>{editing ? t('challenge.form.titleEdit') : t('challenge.form.titleNew')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           {error && <Alert severity="error">{error.message}</Alert>}
           <TextField
-            label="Challenge name"
+            label={t('challenge.form.nameLabel')}
             size="small"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -87,7 +89,7 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
             required
           />
           <TextField
-            label="Description"
+            label={t('challenge.form.descriptionLabel')}
             size="small"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -100,10 +102,10 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={submit} disabled={loading || !name.trim()}>
-          {loading ? 'Saving…' : 'Save'}
+          {loading ? t('shell.common.saving') : t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

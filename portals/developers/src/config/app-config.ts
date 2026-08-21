@@ -22,9 +22,9 @@ export const appConfig = {
   colorModeKey: 'developers_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'API Keys', to: '/keys', icon: 'key' },
-    { label: 'API Reference', to: '/docs', icon: 'docs' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    { label: 'API Keys', labelKey: 'developers.dashboard.apiKeysTitle', to: '/keys', icon: 'key' },
+    { label: 'API Reference', labelKey: 'developers.dashboard.apiReferenceTitle', to: '/docs', icon: 'docs' },
   ],
   modules: [],
 } satisfies AppConfig;

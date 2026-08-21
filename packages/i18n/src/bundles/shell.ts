@@ -9,6 +9,43 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
   },
   shell: {
+    /**
+     * The action words every console repeats — Cancel, Save, Delete and the
+     * "…ing" line each one shows while it waits.
+     *
+     * They live in the SHELL bundle rather than in each portal's namespace
+     * because the shell ships to all of them: a portal gets these without
+     * passing an `i18nFallback` at all, and one translator decision applies
+     * everywhere instead of 26 rows saying "Cancel" that can each be worded
+     * differently (rule 40).
+     *
+     * Only genuinely generic words belong here. Anything that names what is
+     * being saved or deleted is that portal's copy, not this.
+     */
+    common: {
+      cancel: 'Cancel',
+      save: 'Save',
+      saving: 'Saving…',
+      delete: 'Delete',
+      deleting: 'Deleting…',
+    },
+
+    /** The layout's own copy — read by assistive technology rather than seen,
+     * which is exactly why it was still English in all 26 consoles. */
+    chrome: {
+      skipToContent: 'Skip to main content',
+      primaryNav: 'primary navigation',
+    },
+
+    /**
+     * Sidebar entries every console shares. 16 of the 26 portals open on a
+     * page called "Dashboard"; naming it once here means a portal picks it up
+     * through `labelKey` without shipping a namespace of its own.
+     */
+    nav: {
+      dashboard: 'Dashboard',
+    },
+
     /** Auto Pods in the Partners portal — the same copy mWeb and native render
      * under mweb.autoPods (rule 27 keeps them identical). */
     autoPods: {
@@ -822,6 +859,13 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       savedApps: 'App {state} for {portal}',
     },
     leaderboard: {
+      // Sidebar entries. They sit beside the pages' own copy because the
+      // Admin console and the Challenge Portal both render these screens —
+      // one set of names for one set of destinations (rule 40).
+      navRoot: 'Leaderboard',
+      navBoards: 'Boards',
+      navLedger: 'Points Ledger',
+      navSettings: 'Settings & Rewards',
       boardsTitle: 'Leaderboard Boards',
       boardsSubtitle:
         'Live rankings per board. Points are awarded automatically on successful joins, completed pods and product sales.',

@@ -7,6 +7,16 @@ import type { FlatCatalogue } from '@duncit/i18n';
 /** A sidebar navigation entry. Items with `children` render as a collapsible group. */
 export interface AppNavItem {
   label: string;
+  /**
+   * Translation key for `label`. When set, the shell renders the catalogue's
+   * text instead — see `localizeNav`.
+   *
+   * `label` stays REQUIRED alongside it rather than becoming a union, because
+   * the 26 portals are being localized one at a time: a console that has not
+   * been swept yet still renders real words, and the two states cannot both
+   * exist in one field without every reader having to handle a missing label.
+   */
+  labelKey?: string;
   /** Route the item links to. Optional when the item is purely a group header. */
   to?: string;
   icon?: string;
@@ -14,6 +24,8 @@ export interface AppNavItem {
   children?: AppNavItem[];
   /** Caption line under the label — rendered only when `featured` is set. */
   caption?: string;
+  /** Translation key for `caption`, same arrangement as `labelKey`. */
+  captionKey?: string;
   /** Highlighted "featured" card treatment for a leaf (e.g. Partners' "Earn with Duncit"). */
   featured?: boolean;
 }

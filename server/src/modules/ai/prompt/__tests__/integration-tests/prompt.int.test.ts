@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { aiPromptService, getSystemPrompt } from '../../prompt.service';
-import { SYSTEM_PROMPTS, SYSTEM_PROMPT_BY_KEY } from '../../prompt.catalog';
+import { CODE_PROMPTS as SYSTEM_PROMPTS, CODE_PROMPT_BY_KEY as SYSTEM_PROMPT_BY_KEY } from '../../catalog';
 import { estimateTokens } from '@services/ai/token-estimate';
 
 describe('aiPromptService integration', () => {

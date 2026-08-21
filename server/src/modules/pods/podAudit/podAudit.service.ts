@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -116,14 +116,20 @@ export function heuristicSummary(log: Pick<IPodAuditLog, 'action' | 'changes' | 
   return log.note ? `${base} — ${log.note}` : base;
 }
 
-function buildAiUserContent(log: IPodAuditLog): string {
-  const lines = [
-    `Action: ${log.action} (by ${log.source})`,
-    `Pod: ${log.pod_title || String(log.pod_id)}`,
-    ...log.changes.map((c) => `Changed ${c.field}: "${c.from}" -> "${c.to}"`),
-  ];
-  if (log.note) lines.push(`Note: ${log.note}`);
-  return lines.join('\n');
+/**
+ * The {{placeholders}} the audit user turn is filled with. `changes` and
+ * `note` carry their own leading newline so the prompt reads correctly when
+ * either is absent — the library body cannot express a conditional line break.
+ */
+function auditPromptVariables(log: IPodAuditLog): Record<string, string> {
+  const changes = log.changes.map((c) => `\nChanged ${c.field}: "${c.from}" -> "${c.to}"`);
+  return {
+    action: log.action,
+    source: log.source,
+    pod: log.pod_title || String(log.pod_id),
+    changes: changes.join(''),
+    note: log.note ? `\nNote: ${log.note}` : '',
+  };
 }
 
 /** Parse the strict-JSON AI verdict; null on any shape mismatch. */
@@ -148,16 +154,20 @@ export async function reviewLogWithAi(log: IPodAuditLog): Promise<void> {
     const fallbackSummary = log.ai_summary || heuristicSummary(log);
     let risk = log.ai_risk === 'PENDING' ? heuristicRisk(log.action, log.changes) : log.ai_risk;
     let summary = fallbackSummary;
+    const [system, user] = await Promise.all([
+      resolvePrompt('pod.audit_review'),
+      resolvePrompt('pod.audit_review.user', auditPromptVariables(log)),
+    ]);
     const res = await openaiChat({
       task: 'moderation.pod_audit',
       detail: log.action,
-      model: 'gpt-4o-mini',
+      model: system.model,
       temperature: 0,
       max_tokens: 200,
       json: true,
       messages: [
-        { role: 'system', content: await getSystemPrompt('pod.audit_review') },
-        { role: 'user', content: buildAiUserContent(log) },
+        { role: 'system', content: system.content },
+        { role: 'user', content: user.content },
       ],
     });
     if (res.ok) {

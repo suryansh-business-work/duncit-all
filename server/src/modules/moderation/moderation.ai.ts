@@ -1,4 +1,4 @@
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 import type { OpenAiTaskKey } from '@modules/ai/openaiUsage/openaiUsage.tasks';
 import type { ModerationViolation } from './moderation.rules';
@@ -13,16 +13,27 @@ export interface ModeratePodInput {
   image_urls?: string[] | null;
 }
 
-/** Build the multimodal user turn: the text block + up to 4 image parts. */
-function buildUserContent(input: ModeratePodInput): unknown[] {
-  const lines = [
+/** The pod's moderatable text, one field per line. Goes in as {{pod_fields}}. */
+function podFields(input: ModeratePodInput): string {
+  return [
     `Title: ${input.pod_title}`,
     `Description: ${input.pod_description}`,
     input.pod_info ? `Extra info: ${input.pod_info}` : '',
     input.pod_hashtag?.length ? `Hashtags: ${input.pod_hashtag.join(', ')}` : '',
-  ].filter(Boolean);
-  const parts: unknown[] = [{ type: 'text', text: `Review this pod:\n${lines.join('\n')}` }];
-  for (const url of (input.image_urls ?? []).slice(0, 4)) {
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * The multimodal user turn: the operator-owned text block, then up to 4 image
+ * parts. The images ride alongside the prompt rather than inside it — there is
+ * no placeholder for a picture — so the library owns the wording and this owns
+ * the attachments.
+ */
+function buildUserContent(text: string, imageUrls?: string[] | null): unknown[] {
+  const parts: unknown[] = [{ type: 'text', text }];
+  for (const url of (imageUrls ?? []).slice(0, 4)) {
     if (/^https?:\/\//i.test(url)) parts.push({ type: 'image_url', image_url: { url } });
   }
   return parts;
@@ -46,31 +57,46 @@ function parseAiViolations(content: string): ModerationViolation[] {
   }
 }
 
+interface ModerationCall {
+  task: OpenAiTaskKey;
+  /** The standing instruction. */
+  systemKey: string;
+  /** The turn that hands over what is being screened. */
+  userKey: string;
+  /** Values for the user turn's {{placeholders}}. */
+  variables: Record<string, string>;
+  imageUrls?: string[] | null;
+  detail: string;
+}
+
 /**
- * Deep GPT-4o analysis of arbitrary content (text + images). Best-effort:
- * returns [] when the OpenAI key is not configured or the call fails, so an AI
- * outage never blocks creation — the deterministic regex layer still catches the
- * obvious violations. Uses the 'gpt-4o' model explicitly (NOT the OPENAI_MODEL
- * default, which is gpt-4o-mini) for the deepest analysis and vision support.
+ * Deep analysis of arbitrary content (text + images). Best-effort: returns []
+ * when the OpenAI key is not configured or the call fails, so an AI outage never
+ * blocks creation — the deterministic regex layer still catches the obvious
+ * violations.
+ *
+ * BOTH turns come from the library, and so does the model. The user turn used to
+ * be a template literal here, which meant an operator could rewrite "you are the
+ * content-safety reviewer" but not "Review this pod:" — half a prompt they could
+ * not see. The catalogue pins gpt-4o for vision; changing it in the AI portal
+ * changes it here.
  */
-async function callAiModeration(
-  task: OpenAiTaskKey,
-  promptKey: string,
-  userContent: unknown[],
-  detail: string,
-): Promise<ModerationViolation[]> {
+async function callAiModeration(call: ModerationCall): Promise<ModerationViolation[]> {
   try {
+    const [system, user] = await Promise.all([
+      resolvePrompt(call.systemKey),
+      resolvePrompt(call.userKey, call.variables),
+    ]);
     const res = await openaiChat({
-      task,
-      detail,
-      // NOT the OPENAI_MODEL default (gpt-4o-mini) — the deepest analysis, with vision.
-      model: 'gpt-4o',
+      task: call.task,
+      detail: call.detail,
+      model: system.model,
       temperature: 0,
       max_tokens: 800,
       json: true,
       messages: [
-        { role: 'system', content: await getSystemPrompt(promptKey) },
-        { role: 'user', content: userContent },
+        { role: 'system', content: system.content },
+        { role: 'user', content: buildUserContent(user.content, call.imageUrls) },
       ],
     });
     return res.ok ? parseAiViolations(res.content) : [];
@@ -80,7 +106,14 @@ async function callAiModeration(
 }
 
 export const aiModeratePod = (input: ModeratePodInput): Promise<ModerationViolation[]> =>
-  callAiModeration('moderation.pod', 'moderation.pod', buildUserContent(input), input.pod_title);
+  callAiModeration({
+    task: 'moderation.pod',
+    systemKey: 'moderation.pod',
+    userKey: 'moderation.pod.user',
+    variables: { pod_fields: podFields(input) },
+    imageUrls: input.image_urls,
+    detail: input.pod_title,
+  });
 
 /** One variant's moderatable text (labels + description). */
 export interface ModerateProductVariant {
@@ -97,26 +130,24 @@ export interface ModerateProductInput {
   image_urls?: string[] | null;
 }
 
-function buildProductUserContent(input: ModerateProductInput): unknown[] {
+/** The product's moderatable text, one line per variant. Goes in as {{product_fields}}. */
+function productFields(input: ModerateProductInput): string {
   const variantLines = (input.variants ?? []).flatMap((variant, index) => {
     const bits = [variant.option_label, variant.size_label, variant.description].filter(Boolean);
     return bits.length > 0 ? [`Variant ${index + 1}: ${bits.join(' — ')}`] : [];
   });
-  const lines = [`Product name: ${input.product_name}`, ...variantLines];
-  const parts: unknown[] = [{ type: 'text', text: `Review this product:\n${lines.join('\n')}` }];
-  for (const url of (input.image_urls ?? []).slice(0, 4)) {
-    if (/^https?:\/\//i.test(url)) parts.push({ type: 'image_url', image_url: { url } });
-  }
-  return parts;
+  return [`Product name: ${input.product_name}`, ...variantLines].join('\n');
 }
 
 export const aiModerateProduct = (input: ModerateProductInput): Promise<ModerationViolation[]> =>
-  callAiModeration(
-    'moderation.product',
-    'moderation.product',
-    buildProductUserContent(input),
-    input.product_name
-  );
+  callAiModeration({
+    task: 'moderation.product',
+    systemKey: 'moderation.product',
+    userKey: 'moderation.product.user',
+    variables: { product_fields: productFields(input) },
+    imageUrls: input.image_urls,
+    detail: input.product_name,
+  });
 
 /**
  * Fast text-only check that a meeting cancel/reschedule reason is genuine.
@@ -126,13 +157,17 @@ export const aiModerateProduct = (input: ModerateProductInput): Promise<Moderati
  */
 export async function aiValidateMeetingReason(reason: string): Promise<boolean> {
   try {
+    const system = await resolvePrompt('moderation.meeting_reason');
     const res = await openaiChat({
       task: 'moderation.meeting_reason',
+      model: system.model,
       temperature: 0,
       max_tokens: 16,
       json: true,
       messages: [
-        { role: 'system', content: await getSystemPrompt('moderation.meeting_reason') },
+        { role: 'system', content: system.content },
+        // No library entry for this user turn: it is the reason the person typed,
+        // verbatim, with no fixed wording around it to hand an operator.
         { role: 'user', content: reason },
       ],
     });

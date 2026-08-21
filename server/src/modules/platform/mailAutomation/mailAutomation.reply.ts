@@ -1,5 +1,5 @@
 import { logs } from '@observability/log';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt, type ResolvedPrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 import type { IMailAutomationAccount } from './mailAutomation.model';
 
@@ -65,13 +65,14 @@ export function renderTemplate(template: string, variables: Record<string, strin
   );
 }
 
-async function openAiChat(system: string, user: string, detail: string): Promise<string> {
+async function openAiChat(system: ResolvedPrompt, user: string, detail: string): Promise<string> {
   const res = await openaiChat({
     task: 'support.mail_reply',
     detail,
+    model: system.model,
     temperature: 0.4,
     messages: [
-      { role: 'system', content: system },
+      { role: 'system', content: system.content },
       { role: 'user', content: user },
     ],
   });
@@ -99,19 +100,19 @@ export async function composeReply(
   if (!account.ai_enabled) return { text: rendered, byAi: false };
 
   try {
-    const system = await getSystemPrompt('support.mail_auto_reply', {
+    const system = await resolvePrompt('support.mail_auto_reply', {
       ticket_no: variables.ticket_no,
       sla: variables.sla,
       mailbox: variables.mailbox,
       template: rendered,
     });
-    const user = [
-      `From: ${context.senderName || context.senderEmail} <${context.senderEmail}>`,
-      `Subject: ${context.subject}`,
-      '',
-      context.bodyText.slice(0, 4000),
-    ].join('\n');
-    const text = await openAiChat(system, user, account.email);
+    const user = await resolvePrompt('support.mail_auto_reply.user', {
+      sender_name: context.senderName || context.senderEmail,
+      sender_email: context.senderEmail,
+      subject: context.subject,
+      body: context.bodyText.slice(0, 4000),
+    });
+    const text = await openAiChat(system, user.content, account.email);
     if (!keepsReference(text, variables.ticket_no)) {
       logs.server.warn('mail-automation', 'composeReply', {
         msg: 'AI reply dropped the ticket reference; sending the operator template instead',

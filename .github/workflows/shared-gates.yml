@@ -124,3 +124,12 @@ jobs:
       # local / staging / production address is built the way it should be.
       - name: Ask Bot navigation map is consistent
         run: pnpm --filter server check:askbot
+
+      # Every AI feature reads its prompt from the library at call time, so a
+      # catalogue mistake is silent: a declared variable the body never uses
+      # sends the model a question with the fact missing, a placeholder nothing
+      # declares reaches it as literal braces, and a key dropped from the
+      # catalogue makes the boot seed delete an operator's edited row. All prose
+      # to tsc, all invisible until somebody reads a bad answer.
+      - name: AI prompt catalogue is consistent
+        run: pnpm --filter server check:prompts

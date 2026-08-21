@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import { estimateTokens } from '../../utils/estimate-tokens';
+import { estimateTokens } from '@duncit/ai-prompts';
 import {
   aiMonitoringInitialValues,
   aiMonitoringSchema,

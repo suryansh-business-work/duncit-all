@@ -1,4 +1,4 @@
-import { aiPromptService, type AiPromptInput } from './prompt.service';
+import { aiPromptService, type AiPromptFilterInput, type AiPromptInput } from './prompt.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -9,14 +9,7 @@ export const aiPromptResolvers = {
   Query: {
     aiPrompts: (
       _p: unknown,
-      args: {
-        filter?: {
-          is_active?: boolean | null;
-          category?: string | null;
-          search?: string | null;
-          is_system?: boolean | null;
-        } | null;
-      },
+      args: { filter?: AiPromptFilterInput | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, AI_RW);

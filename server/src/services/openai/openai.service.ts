@@ -1,4 +1,4 @@
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat, type OpenAiMessage } from './openai.client';
 
 /**
@@ -26,16 +26,18 @@ export const openaiService = {
     history?: OpenAiChatTurn[];
     maxTokens?: number;
   }): Promise<OpenAiChatResult> {
+    // A bespoke script from Call Prompts wins; the library entry is the default
+    // for a call that has none. Either way the model comes from the library, so
+    // the AI portal is where it changes.
+    const fallback = await resolvePrompt('crm.call_assistant');
     const messages: OpenAiMessage[] = [
-      {
-        role: 'system',
-        content: input.systemContext || (await getSystemPrompt('crm.call_assistant')),
-      },
+      { role: 'system', content: input.systemContext || fallback.content },
       ...(input.history ?? []),
     ];
     const res = await openaiChat({
       task: 'crm.call_assistant',
       messages,
+      model: fallback.model,
       temperature: 0.4,
       max_tokens: input.maxTokens ?? 220,
     });

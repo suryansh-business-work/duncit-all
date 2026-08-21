@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
 import { logs } from '@observability/log';
 import { AGENT_ACTIONS, MAX_BATCH, type AgentAction, type AgentTurn } from './agent.types';
@@ -62,14 +62,17 @@ export async function planFromMessage(
   history: AgentTurn[] | null | undefined,
   userId: string,
 ): Promise<AgentPlan> {
-  const systemContext = await getSystemPrompt('agent.console', {
+  // Only a system turn is library-owned here: the user turn is what the staff
+  // member typed, so there is no fixed wording for an operator to edit.
+  const system = await resolvePrompt('agent.console', {
     max_batch: String(MAX_BATCH),
     actions: ACTION_MENU,
   });
 
   const result = await openaiChat({
     task: 'agent.console',
-    messages: [{ role: 'system', content: systemContext }, ...toMessages(history, message)],
+    model: system.model,
+    messages: [{ role: 'system', content: system.content }, ...toMessages(history, message)],
     // The reply is a contract this file parses, not a voice — a near-zero
     // temperature keeps the model choosing from the menu instead of inventing.
     temperature: 0.1,

@@ -1,4 +1,4 @@
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 
 /** One commit that went into a build. */
@@ -100,9 +100,16 @@ async function buildPrompt(commits: ReleaseCommit[], meta: ChangelogMeta) {
       return `- ${c.subject}${bodyLine}`;
     })
     .join('\n');
-  const system = await getSystemPrompt('release.changelog', { app_name: meta.appName });
-  const user = `App: ${meta.appName}\nVersion: ${meta.version}\nRange: ${meta.rangeLabel ?? 'recent commits'}\n\nCommits:\n${lines}`;
-  return { system, user };
+  const [system, user] = await Promise.all([
+    resolvePrompt('release.changelog', { app_name: meta.appName }),
+    resolvePrompt('release.changelog.user', {
+      app_name: meta.appName,
+      version: meta.version,
+      range: meta.rangeLabel ?? 'recent commits',
+      commits: lines,
+    }),
+  ]);
+  return { system: system.content, model: system.model, user: user.content };
 }
 
 /**
@@ -117,12 +124,13 @@ export async function buildChangelog(
   const fallback = mechanicalChangelog(commits, meta);
   if (commits.length === 0) return fallback;
 
-  const { system, user } = await buildPrompt(commits, meta);
+  const { system, model, user } = await buildPrompt(commits, meta);
 
   try {
     const res = await openaiChat({
       task: 'platform.release_notes',
       detail: meta.version,
+      model,
       temperature: 0.4,
       json: true,
       messages: [

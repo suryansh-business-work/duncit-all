@@ -40,6 +40,7 @@ import { rbacService } from '@modules/access/role/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
+import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -456,6 +457,11 @@ async function bootstrap() {
   // design — the key in the query string is the whole gate, so treat a copied
   // URL as the password it is. See telemetry.router.ts.
   app.use('/telemetry', buildTelemetryFeedRouter());
+
+  // The AI Library's read-only JSON feed (the AI portal's "Copy GET API").
+  // Deliberately open: no login and no key. It publishes the platform's own
+  // prompts, code ones included 2014 see prompt.router.ts for what that costs.
+  app.use('/ai-prompts', buildAiPromptFeedRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

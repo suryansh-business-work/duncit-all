@@ -31,6 +31,9 @@ export default function JourneyTimelineDialog({
   if (!journey) return null;
 
   const paid = journey.converted_amount;
+  // The timeline stamps PAID once — it answers how FAR they got. This answers
+  // how many times they paid, which the single stamp cannot.
+  const payments = journey.conversions ?? [];
 
   return (
     <Dialog open fullWidth maxWidth="sm" onClose={onClose}>
@@ -64,6 +67,30 @@ export default function JourneyTimelineDialog({
               value={paid === null || paid === undefined ? EM_DASH : formatINR(paid)}
             />
           </Box>
+
+          {payments.length > 0 && (
+            <Box>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                Payments
+              </Typography>
+              <Stack spacing={1.5}>
+                {payments.map((payment) => (
+                  <Stack
+                    key={payment.payment_id}
+                    direction="row"
+                    spacing={1.5}
+                    alignItems="center"
+                    data-testid="conversion-row"
+                  >
+                    <Chip size="small" color="success" label={formatINR(payment.amount)} />
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDateTime(payment.at)}
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </Box>
+          )}
 
           <Box>
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>

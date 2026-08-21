@@ -40,6 +40,35 @@ const renderStep = (row: ShortLinkJourneyRow) => (
   <Chip size="small" label={stepLabel(row.furthest_step)} color={stepColor(row.furthest_step)} />
 );
 
+/**
+ * What this visitor spent in total, and how many purchases it took.
+ *
+ * The count matters: one person can buy more than once through the same link,
+ * and a bare figure reads as a single sale. Open the row to see each payment.
+ */
+const renderPaid = (row: ShortLinkJourneyRow) => {
+  const count = row.conversions?.length ?? 0;
+  if (row.converted_amount === null || row.converted_amount === undefined) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        {EM_DASH}
+      </Typography>
+    );
+  }
+  return (
+    <Box sx={{ lineHeight: 1.2 }}>
+      <Typography variant="body2" fontWeight={600} component="div">
+        {formatINR(row.converted_amount)}
+      </Typography>
+      {count > 1 && (
+        <Typography variant="caption" color="text.secondary" component="div">
+          {count} payments
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
 export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
   return [
     dateColumn<ShortLinkJourneyRow>({
@@ -73,6 +102,7 @@ export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
       field: 'converted_amount',
       headerName: 'Paid',
       width: 130,
+      cellRenderer: renderPaid,
       valueGetter: (row) =>
         row.converted_amount === null || row.converted_amount === undefined
           ? EM_DASH

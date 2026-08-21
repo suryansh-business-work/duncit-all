@@ -27,17 +27,33 @@ const RECORD_STEP = gql`
 export const storedClickId = storedShortLinkClickId;
 
 /**
+ * The landing capture, in flight.
+ *
+ * Every step report waits on this rather than reading storage directly. On the
+ * page load that FOLLOWS a link, the click id does not exist in storage yet —
+ * it arrives from `/r/v` a network round-trip later — so a step reported in
+ * the meantime (and signing in is the very first one) read null and silently
+ * dropped the account binding. That binding is what a payment is later matched
+ * against, so losing it meant the sale was never credited to the link.
+ *
+ * Seeded with whatever an earlier visit already stored, so a report on a page
+ * that never captured anything still resolves immediately.
+ */
+let capture: Promise<string | null> = Promise.resolve(storedShortLinkClickId());
+
+/**
  * Capture the landing. Runs at module scope in main.tsx BEFORE React mounts,
  * because `RequireAuth` rewrites the URL to /login?redirect=… for signed-out
  * visitors and mounting waits up to 3s on config — by then the markers are
  * gone from location.search. Resolution-only promise; nothing awaits it.
  */
 export function captureShortLinkClick(search: string): Promise<string | null> {
-  return captureShortLinkAttribution({
+  capture = captureShortLinkAttribution({
     search,
     referrer: globalThis.document?.referrer ?? '',
     serverUrl: urlConfigs.apiBaseUrl,
   });
+  return capture;
 }
 
 /**
@@ -46,9 +62,13 @@ export function captureShortLinkClick(search: string): Promise<string | null> {
  * step it has already recorded.
  */
 export function reportJourneyStep(step: JourneyStep): void {
-  const clickId = storedClickId();
-  if (!clickId) return;
-  apolloClient
-    .mutate({ mutation: RECORD_STEP, variables: { click_id: clickId, step } })
+  capture
+    .then((clickId) => {
+      if (!clickId) return null;
+      return apolloClient.mutate({
+        mutation: RECORD_STEP,
+        variables: { click_id: clickId, step },
+      });
+    })
     .catch(() => undefined);
 }

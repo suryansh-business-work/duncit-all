@@ -209,6 +209,11 @@ export const SHORT_LINK_JOURNEYS = gql`
           step
           at
         }
+        conversions {
+          payment_id
+          amount
+          at
+        }
       }
     }
   }
@@ -239,6 +244,14 @@ export interface ShortLinkJourneyRow {
   user_name?: string | null;
   user_email?: string | null;
   steps: { step: string; at: string }[];
+  conversions: ShortLinkConversion[];
+}
+
+/** One payment this click earned. A visitor who buys twice has two. */
+export interface ShortLinkConversion {
+  payment_id: string;
+  amount: number;
+  at: string;
 }
 export interface ShortLinkBreakdown {
   label: string;

@@ -22,6 +22,10 @@ export default defineConfig({
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       provider: 'v8',
+      // Vitest writes NO coverage report when a test fails (reportOnFailure defaults
+      // to false), so one red suite deleted this whole workspace's lcov and SonarQube
+      // read the silence as 0%.
+      reportOnFailure: true,
       reporter: ['text', 'html', 'json-summary', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'cypress-artifacts/coverage'),
       // Only instrument the source we own + can sensibly unit-test.

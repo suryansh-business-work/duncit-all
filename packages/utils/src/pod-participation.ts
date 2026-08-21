@@ -443,3 +443,34 @@ export function podParticipationActions(input: PodParticipationInput): {
     joinedLabelKind: podPast && !cancelled ? 'VISITED' : 'JOINED',
   };
 }
+
+/**
+ * The membership-state fields that say how many times this booking may still be
+ * given up. Named separately because four screens read them and none of them
+ * needs the rest of PodMembershipState.
+ */
+export interface PodBackoutAttempts {
+  backout_attempts_used?: number | null;
+  backout_attempts_max?: number | null;
+}
+
+/**
+ * Backout attempts this booking has left.
+ *
+ * The same subtraction Pod Details and Pod History both need, and the same one
+ * the server's own guard refuses on — a screen that works it out for itself is
+ * a screen that can offer a button every press of which fails.
+ */
+export function backoutAttemptsLeft(state?: PodBackoutAttempts | null): number {
+  return Math.max(0, (state?.backout_attempts_max ?? 0) - (state?.backout_attempts_used ?? 0));
+}
+
+/**
+ * True only once the server has ACTUALLY said the attempts are gone.
+ *
+ * Absent state means "not answered yet", not "none left": treating a pending
+ * query as exhausted greys the control out on every first paint.
+ */
+export function isBackoutMaxed(state?: PodBackoutAttempts | null): boolean {
+  return !!state && backoutAttemptsLeft(state) === 0;
+}

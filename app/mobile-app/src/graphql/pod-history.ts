@@ -81,6 +81,24 @@ export const PodHistoryCategoriesDocument = gql(`
   }
 `);
 
+/**
+ * How many Backout attempts this booking has left, from the same membership
+ * state the backout mutation itself guards on — mWeb's POD_HISTORY_BACKOUT_STATE.
+ *
+ * Asked rather than counted from `participation.backouts`: the server counts
+ * every request this user raised on this POD, and re-booking a pod after a
+ * replacement took the seat starts a fresh membership whose own list is empty.
+ */
+export const PodBackoutStateDocument = gql(`
+  query MobilePodBackoutState($pod_doc_id: ID!) {
+    podMembershipState(pod_doc_id: $pod_doc_id) {
+      pod_id
+      backout_attempts_used
+      backout_attempts_max
+    }
+  }
+`);
+
 /** Back out of a joined pod — mWeb's BACKOUT_POD_HISTORY. */
 export const BackoutPodDocument = gql(`
   mutation MobileBackoutPod($pod_doc_id: ID!, $seats: Int) {

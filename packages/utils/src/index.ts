@@ -1,10 +1,13 @@
 export { copyToClipboard } from './clipboard';
 export {
+  backoutAttemptsLeft,
   buildPodParticipationTimeline,
+  isBackoutMaxed,
   isPodPast,
   participationInputFrom,
   podParticipationActions,
   podRefundState,
+  type PodBackoutAttempts,
   type PodParticipationFields,
   type PodRefundStatus,
   type PodBackoutRequestInput,

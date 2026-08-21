@@ -3,6 +3,7 @@ import { Linking } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { isBackoutMaxed } from '@duncit/utils';
 
 import {
   BackoutConfirmDialog,
@@ -13,6 +14,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import {
   usePodBackout,
+  usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodHistory,
   usePodInvoice,
@@ -48,6 +50,10 @@ export function PodHistoryDetailsScreen() {
   const selected = items.find((item) => item.id === membershipId) ?? null;
   const title = selected?.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle');
   const { orders: productOrders, isLoading: ordersLoading } = useProductOrders(selected?.pod?.id);
+  // Attempts left, from the state the backout mutation itself guards on — the
+  // button was offered on a pod that had none, and every press of it failed.
+  const backoutAttempts = usePodBackoutAttempts(selected?.pod?.id);
+  const backoutMaxed = isBackoutMaxed(backoutAttempts);
 
   const confirmBackout = async (seats?: number) => {
     if (!selected?.pod?.id) return;
@@ -112,6 +118,7 @@ export function PodHistoryDetailsScreen() {
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <PodHistoryDetails
           item={selected}
+          backoutMaxed={backoutMaxed}
           backingOut={backingOut}
           rejoining={rejoining}
           invoiceBusy={invoiceBusy}
@@ -122,6 +129,7 @@ export function PodHistoryDetailsScreen() {
           ordersLoading={ordersLoading}
           onPodDetails={() => openPod(selected.pod?.club_slug, selected.pod?.pod_id)}
           onBackout={() => setBackoutOpen(true)}
+          onBackoutBlocked={() => setNotice(t('mweb.podDetails.backoutMaxed'))}
           onRejoin={() => setRejoinOpen(true)}
           onRefundStatus={() =>
             setNotice(

@@ -30,6 +30,9 @@ import {
 
 interface Props {
   item: PodHistoryItem;
+  /** True once the server says this pod has no Backout attempts left. Absent
+   * while that query is still open, which renders the same as "not maxed". */
+  backoutMaxed?: boolean;
   backingOut: boolean;
   rejoining: boolean;
   onBackout: () => void;
@@ -62,7 +65,7 @@ const makeSupportPath = (item: PodHistoryItem, refundStatus: PodRefundStatus, t:
   return `/support/tickets?${params.toString()}`;
 };
 
-export default function PodHistoryDetails({ item, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
+export default function PodHistoryDetails({ item, backoutMaxed = false, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
   /*
     What this booking may still be offered, and what it may claim.
 
@@ -205,6 +208,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
             podDetailsPath={podDetailsPath}
             supportPath={makeSupportPath(item, gate.refundStatus, t)}
             canBackout={gate.canBackout}
+            backoutMaxed={backoutMaxed}
             showRefundState={gate.showRefundState}
             refundLabel={refundText}
             canRejoin={canRejoin}

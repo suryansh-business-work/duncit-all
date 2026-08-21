@@ -169,8 +169,13 @@ const smokeTheme = createTheme();
  * and vitest cut the test off part-way — which does not fail loudly, it just
  * silently stops opening the dialogs that the later presses would have opened.
  * admin lost 2,673 covered lines to exactly that before the timeout was raised.
+ *
+ * Thirty seconds, and fourteen presses a wave. The ceiling has to clear the
+ * slowest page, but it also has to stay well under the 60-minute budget the
+ * coverage job gives each workspace — blowing THAT writes no lcov at all, which
+ * would cost far more than a cut-off test.
  */
-vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 const settle = async () => {
   await act(async () => {
@@ -225,7 +230,7 @@ const fillEverything = async () => {
   await settle();
 };
 
-const MAX_CLICKS = 24;
+const MAX_CLICKS = 14;
 /**
  * Two waves, because a console page is layered.
  *

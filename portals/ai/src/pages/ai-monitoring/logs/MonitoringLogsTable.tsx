@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Avatar, Box, Chip, Tooltip, Typography } from '@mui/material';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import {
   ACTION_COLOR,
   ACTION_OPTIONS,
@@ -87,11 +88,12 @@ const renderSource = (row: MonitoringLogRow) => (
 );
 
 export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<MonitoringLogRow>[]>(
     () => [
       {
         field: 'file_name',
-        headerName: 'Uploaded image',
+        headerName: t('ai.monitoringLogs.colImage'),
         flex: 1.2,
         minWidth: 220,
         sortable: false,
@@ -100,7 +102,7 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       {
         field: 'entity',
-        headerName: 'User / Entity',
+        headerName: t('ai.monitoringLogs.colUser'),
         minWidth: 180,
         sortable: false,
         cellRenderer: renderEntity,
@@ -108,12 +110,12 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       dateColumn<MonitoringLogRow>({
         field: 'created_at',
-        headerName: 'Uploaded',
+        headerName: t('ai.monitoringLogs.colUploaded'),
         width: 165,
       }),
       {
         field: 'status',
-        headerName: 'Monitoring status',
+        headerName: t('ai.monitoringLogs.colStatus'),
         width: 150,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -121,7 +123,7 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       {
         field: 'risk',
-        headerName: 'AI result',
+        headerName: t('ai.monitoringLogs.colResult'),
         width: 120,
         filter: { type: 'select', options: RESULT_OPTIONS },
         cellRenderer: renderResult,
@@ -129,7 +131,7 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       {
         field: 'summary',
-        headerName: 'Reason / comment',
+        headerName: t('ai.monitoringLogs.colReason'),
         minWidth: 240,
         flex: 1.4,
         sortable: false,
@@ -138,7 +140,7 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       {
         field: 'action',
-        headerName: 'Action taken',
+        headerName: t('ai.monitoringLogs.colAction'),
         width: 140,
         filter: { type: 'select', options: ACTION_OPTIONS },
         cellRenderer: renderAction,
@@ -146,14 +148,14 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       },
       {
         field: 'surface',
-        headerName: 'Source / module',
+        headerName: t('ai.monitoringLogs.colSource'),
         width: 160,
         filter: { type: 'select', options: SURFACE_OPTIONS },
         cellRenderer: renderSource,
         valueGetter: (row) => `${row.surface || '—'} ${row.folder || ''}`.trim(),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -162,9 +164,9 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No images have been checked yet."
+      emptyText={t('ai.monitoringLogs.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
-      searchPlaceholder="Search file, folder, comment or failure"
+      searchPlaceholder={t('ai.monitoringLogs.search')}
       refetchRef={refetchRef}
       onRowClick={onRowClick}
     />

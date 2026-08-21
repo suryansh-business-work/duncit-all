@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { Box, Chip, CircularProgress, Divider, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import CloseIcon from '@mui/icons-material/Close';
 import { usd, tokens } from '../../lib/usd';
 import { OPENAI_LOG_ONE, STATUS_COLOR, type OpenAiLogDetail } from './queries';
@@ -74,6 +75,7 @@ function TextBlock({ title, body }: Readonly<{ title: string; body: string }>) {
  * thousand characters; the point is diagnosing an answer, not archiving it.
  */
 export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ openAiUsageLog: OpenAiLogDetail | null }>(OPENAI_LOG_ONE, {
     variables: { id: logId },
     skip: !logId,
@@ -88,7 +90,7 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
           OpenAI call
         </Typography>
         {log && <Chip size="small" label={log.status} color={STATUS_COLOR[log.status] ?? 'default'} />}
-        <IconButton onClick={onClose} aria-label="Close">
+        <IconButton onClick={onClose} aria-label={t('ai.openAiLogs.close')}>
           <CloseIcon />
         </IconButton>
       </Stack>
@@ -103,8 +105,8 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
                 {log.error_message}
               </Typography>
             )}
-            <TextBlock title="Prompt sent" body={log.request_preview} />
-            <TextBlock title="Answer returned" body={log.response_preview} />
+            <TextBlock title={t('ai.openAiLogs.promptSent')} body={log.request_preview} />
+            <TextBlock title={t('ai.openAiLogs.answerReturned')} body={log.response_preview} />
           </Stack>
         )}
       </Box>

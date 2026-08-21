@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import { usd, tokens } from '../../lib/usd';
 import { STATUS_COLOR, STATUS_OPTIONS, type OpenAiLogRow } from './queries';
 
@@ -36,12 +37,14 @@ const renderTask = (row: OpenAiLogRow) => (
  * confident "$0" — the tokens were spent, the rate card just cannot say what
  * they were worth.
  */
-const renderCost = (row: OpenAiLogRow) => {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const makeRenderCost = (t: Translate) => (row: OpenAiLogRow) => {
   if (!row.priced && row.total_tokens > 0) {
     return (
-      <Tooltip title="No rate card entry for this model — add one on the Dashboard.">
+      <Tooltip title={t('ai.openAiLogs.unpricedTooltip')}>
         <Typography variant="body2" color="warning.main">
-          unpriced
+          {t('ai.openAiLogs.unpriced')}
         </Typography>
       </Tooltip>
     );
@@ -83,16 +86,18 @@ export default function OpenAiLogsTable({
   taskOptions,
   moduleOptions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const renderCost = useMemo(() => makeRenderCost(t), [t]);
   const columns = useMemo<DuncitColumn<OpenAiLogRow>[]>(
     () => [
       dateColumn<OpenAiLogRow>({
         field: 'created_at',
-        headerName: 'When',
+        headerName: t('ai.openAiLogs.colWhen'),
         width: 165,
       }),
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('ai.openAiLogs.colStatus'),
         width: 110,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -100,7 +105,7 @@ export default function OpenAiLogsTable({
       },
       {
         field: 'task',
-        headerName: 'Task',
+        headerName: t('ai.openAiLogs.colTask'),
         flex: 1,
         minWidth: 230,
         filter: { type: 'select', options: taskOptions },
@@ -109,21 +114,21 @@ export default function OpenAiLogsTable({
       },
       {
         field: 'module',
-        headerName: 'Area',
+        headerName: t('ai.openAiLogs.colArea'),
         width: 130,
         filter: { type: 'select', options: moduleOptions },
         valueGetter: (row) => row.module || '—',
       },
       {
         field: 'model',
-        headerName: 'Model',
+        headerName: t('ai.openAiLogs.colModel'),
         width: 140,
         filter: { type: 'text' },
         valueGetter: (row) => row.model || '—',
       },
       {
         field: 'total_tokens',
-        headerName: 'Tokens',
+        headerName: t('ai.openAiLogs.colTokens'),
         width: 130,
         filter: { type: 'number' },
         cellRenderer: renderTokens,
@@ -131,7 +136,7 @@ export default function OpenAiLogsTable({
       },
       {
         field: 'cost_usd',
-        headerName: 'Cost',
+        headerName: t('ai.openAiLogs.colCost'),
         width: 110,
         filter: { type: 'number' },
         cellRenderer: renderCost,
@@ -139,21 +144,21 @@ export default function OpenAiLogsTable({
       },
       {
         field: 'duration_ms',
-        headerName: 'Took',
+        headerName: t('ai.openAiLogs.colTook'),
         width: 95,
         filter: { type: 'number' },
         valueGetter: (row) => `${row.duration_ms} ms`,
       },
       {
         field: 'error_message',
-        headerName: 'Reason',
+        headerName: t('ai.openAiLogs.colReason'),
         sortable: false,
         minWidth: 220,
         cellRenderer: renderError,
         valueGetter: (row) => row.error_message || '—',
       },
     ],
-    [taskOptions, moduleOptions]
+    [taskOptions, moduleOptions, renderCost, t]
   );
 
   return (
@@ -162,9 +167,9 @@ export default function OpenAiLogsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No OpenAI calls recorded yet."
+      emptyText={t('ai.openAiLogs.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
-      searchPlaceholder="Search task, model, detail or reason"
+      searchPlaceholder={t('ai.openAiLogs.search')}
       refetchRef={refetchRef}
       onRowClick={onRowClick}
     />

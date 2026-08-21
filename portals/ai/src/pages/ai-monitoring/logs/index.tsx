@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import MonitoringLogsTable from './MonitoringLogsTable';
 import MonitoringLogDrawer from './MonitoringLogDrawer';
@@ -15,6 +16,7 @@ import { AI_MONITORING_LOGS_TABLE, type MonitoringLogRow } from '../queries';
  * exactly what "the AI review didn't run" turns out to be.
  */
 export default function AiMonitoringLogsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useApolloTableFetch<MonitoringLogRow>(
@@ -31,11 +33,10 @@ export default function AiMonitoringLogsPage() {
     <Box>
       <Stack sx={{ mb: 2 }}>
         <Typography variant="h5" fontWeight={700}>
-          Uploaded Image Logs
+          {t('ai.monitoringLogs.title')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Every AI Monitoring check, from every surface — the image, who uploaded it, what the
-          model said and what was done about it. Open a row for the full trail.
+          {t('ai.monitoringLogs.subtitle')}
         </Typography>
       </Stack>
 

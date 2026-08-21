@@ -2,12 +2,19 @@ import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import WavingHandIcon from '@mui/icons-material/WavingHand';
 import { useUserData } from '@duncit/user-context';
 import { PageHeader } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { appConfig } from '../config/app-config';
 
 export default function WelcomePage() {
   const { user } = useUserData();
-  const name = user?.first_name || user?.full_name || 'there';
+  const { t } = useTranslation();
+  const name = user?.first_name || user?.full_name || t('ai.welcome.guest');
+  // The console's name is copy, not a brand mark — "AI Portal" is a phrase a
+  // reader parses, so it is substituted from the catalogue rather than taken
+  // from appConfig, which nothing can translate.
+  const portalLabel = t('ai.welcome.portalLabel');
+  const tagline = appConfig.taglineKey ? t(appConfig.taglineKey) : appConfig.tagline;
 
   const widgets: DashboardWidget[] = [
     {
@@ -22,16 +29,15 @@ export default function WelcomePage() {
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
               <WavingHandIcon color="primary" />
               <Typography variant="h6" fontWeight={700}>
-                Hi {name}
+                {t('ai.welcome.greeting', { vars: { name } })}
               </Typography>
             </Stack>
             <Typography variant="body2" color="text.secondary">
-              This is the {appConfig.portalLabel}. Your console is set up and ready —
-              features will appear here soon.
+              {t('ai.welcome.body', { vars: { portal: portalLabel } })}
             </Typography>
             <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-              <Chip label={appConfig.portalLabel} color="primary" variant="outlined" size="small" />
-              <Chip label="Coming soon" size="small" />
+              <Chip label={portalLabel} color="primary" variant="outlined" size="small" />
+              <Chip label={t('shell.welcome.comingSoon')} size="small" />
             </Stack>
           </CardContent>
         </Card>
@@ -42,7 +48,12 @@ export default function WelcomePage() {
   return (
     <DuncitDashboard
       dashboardId="ai.overview"
-      header={<PageHeader title={`Welcome to ${appConfig.fullName}`} subtitle={appConfig.tagline} />}
+      header={
+        <PageHeader
+          title={t('ai.welcome.title', { vars: { name: appConfig.fullName } })}
+          subtitle={tagline}
+        />
+      }
       widgets={widgets}
     />
   );

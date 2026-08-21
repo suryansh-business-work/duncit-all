@@ -1,4 +1,5 @@
 import { Box, Button, Chip, Drawer, Divider, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import { InfoRow } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
 import {
@@ -22,6 +23,7 @@ interface Props {
  * log: an action taken against someone's upload has to be explainable.
  */
 export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Drawer anchor="right" open={row !== null} onClose={onClose}>
       <Box sx={{ width: { xs: '100vw', sm: 460 }, p: 2.5 }}>
@@ -62,17 +64,17 @@ export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
 
             <Divider />
 
-            <InfoRow label="User / entity" value={row.entity ?? 'Signed-out upload'} />
-            <InfoRow label="Account id" value={row.user_id ?? '—'} />
-            <InfoRow label="Uploaded" value={formatDateTime(row.created_at)} />
+            <InfoRow label={t('ai.monitoringLogs.detailUser')} value={row.entity ?? t('ai.monitoringLogs.signedOutUpload')} />
+            <InfoRow label={t('ai.monitoringLogs.detailAccountId')} value={row.user_id ?? '—'} />
+            <InfoRow label={t('ai.monitoringLogs.detailUploaded')} value={formatDateTime(row.created_at)} />
             <InfoRow
-              label="Checked"
-              value={row.checked_at ? formatDateTime(row.checked_at) : 'Not yet'}
+              label={t('ai.monitoringLogs.detailChecked')}
+              value={row.checked_at ? formatDateTime(row.checked_at) : t('ai.monitoringLogs.detailNotYet')}
             />
-            <InfoRow label="Source" value={row.surface || '—'} />
-            <InfoRow label="Module / folder" value={row.folder || '/'} />
-            <InfoRow label="Model" value={row.model || '—'} />
-            <InfoRow label="Took" value={row.duration_ms ? `${row.duration_ms} ms` : '—'} />
+            <InfoRow label={t('ai.monitoringLogs.detailSource')} value={row.surface || '—'} />
+            <InfoRow label={t('ai.monitoringLogs.detailFolder')} value={row.folder || '/'} />
+            <InfoRow label={t('ai.monitoringLogs.detailModel')} value={row.model || '—'} />
+            <InfoRow label={t('ai.monitoringLogs.detailTook')} value={row.duration_ms ? `${row.duration_ms} ms` : '—'} />
 
             <Divider />
 

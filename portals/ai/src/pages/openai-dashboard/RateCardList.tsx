@@ -1,4 +1,5 @@
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import type { ModelPrice } from './queries';
@@ -9,7 +10,14 @@ interface Props {
   onEdit: (price: ModelPrice | null) => void;
 }
 
-function RateRow({ price, onEdit }: Readonly<{ price: ModelPrice; onEdit: (p: ModelPrice) => void }>) {
+interface RateRowProps {
+  price: ModelPrice;
+  onEdit: (p: ModelPrice) => void;
+  rateLine: string;
+  editAria: string;
+}
+
+function RateRow({ price, onEdit, rateLine, editAria }: Readonly<RateRowProps>) {
   return (
     <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
       <Box sx={{ minWidth: 0 }}>
@@ -17,10 +25,10 @@ function RateRow({ price, onEdit }: Readonly<{ price: ModelPrice; onEdit: (p: Mo
           {price.model}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          in ${price.input_per_1m} · out ${price.output_per_1m} — per 1M tokens
+          {rateLine}
         </Typography>
       </Box>
-      <IconButton size="small" aria-label={`Edit rate for ${price.model}`} onClick={() => onEdit(price)}>
+      <IconButton size="small" aria-label={editAria} onClick={() => onEdit(price)}>
         <EditIcon fontSize="small" />
       </IconButton>
     </Stack>
@@ -33,14 +41,23 @@ function RateRow({ price, onEdit }: Readonly<{ price: ModelPrice; onEdit: (p: Mo
  * added — the dashboard says so above rather than leaving the total quietly short.
  */
 export default function RateCardList({ prices, onEdit }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
       <Button size="small" startIcon={<AddIcon />} onClick={() => onEdit(null)} sx={{ alignSelf: 'flex-start' }}>
-        Add a model
+        {t('ai.rateCard.addModel')}
       </Button>
       <Stack spacing={1.25} divider={<Box sx={{ borderTop: '1px solid', borderColor: 'divider' }} />}>
         {prices.map((price) => (
-          <RateRow key={price.id} price={price} onEdit={onEdit} />
+          <RateRow
+            key={price.id}
+            price={price}
+            onEdit={onEdit}
+            rateLine={t('ai.rateCard.rateLine', {
+              vars: { input: price.input_per_1m, output: price.output_per_1m },
+            })}
+            editAria={t('ai.rateCard.editAria', { vars: { model: price.model } })}
+          />
         ))}
       </Stack>
     </Stack>

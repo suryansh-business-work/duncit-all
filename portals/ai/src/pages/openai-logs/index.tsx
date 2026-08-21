@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import OpenAiLogsTable from './OpenAiLogsTable';
 import OpenAiLogDrawer from './OpenAiLogDrawer';
@@ -20,6 +21,7 @@ import {
  * are exactly what "the AI review didn't run" turns out to be.
  */
 export default function OpenAiLogsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useApolloTableFetch<OpenAiLogRow>(client, OPENAI_LOGS_TABLE, 'openAiUsageLogsTable');
@@ -47,11 +49,10 @@ export default function OpenAiLogsPage() {
     <Box>
       <Stack sx={{ mb: 2 }}>
         <Typography variant="h5" fontWeight={700}>
-          OpenAI Logs
+          {t('ai.openAiLogs.title')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Every OpenAI request the platform made — the prompt, the answer, the tokens and what it
-          cost. Rows are kept for 180 days.
+          {t('ai.openAiLogs.subtitle')}
         </Typography>
       </Stack>
 

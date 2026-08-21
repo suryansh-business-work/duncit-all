@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import { usd, tokens } from '../../lib/usd';
 import type { TaskSpend } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
@@ -43,47 +44,48 @@ const renderCost = (row: TaskSpend) => (
 
 /** Per-task spend for the selected range — the answer to "which feature is the bill". */
 export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskSpend[] }>) {
+  const { t } = useTranslation();
   const fetchRows = useMemo(() => clientTableFetch<TaskSpend>(rows, searchOf), [rows]);
 
   const columns = useMemo<DuncitColumn<TaskSpend>[]>(
     () => [
       {
         field: 'label',
-        headerName: 'Task',
+        headerName: t('ai.taskSpend.colTask'),
         flex: 1,
         minWidth: 230,
         cellRenderer: renderTask,
         valueGetter: (row) => row.label,
       },
-      { field: 'module', headerName: 'Area', width: 140, valueGetter: (row) => row.module },
+      { field: 'module', headerName: t('ai.taskSpend.colArea'), width: 140, valueGetter: (row) => row.module },
       {
         field: 'calls',
-        headerName: 'Calls',
+        headerName: t('ai.taskSpend.colCalls'),
         width: 100,
         valueGetter: (row) => formatDateTime(row.calls),
       },
       {
         field: 'failures',
-        headerName: 'Failed',
+        headerName: t('ai.taskSpend.colFailed'),
         width: 100,
         cellRenderer: renderFailures,
         valueGetter: (row) => row.failures,
       },
       {
         field: 'tokens',
-        headerName: 'Tokens',
+        headerName: t('ai.taskSpend.colTokens'),
         width: 130,
         valueGetter: (row) => tokens(row.tokens),
       },
       {
         field: 'avg_duration_ms',
-        headerName: 'Avg time',
+        headerName: t('ai.taskSpend.colAvgTime'),
         width: 110,
         valueGetter: (row) => `${row.avg_duration_ms} ms`,
       },
       {
         field: 'cost_usd',
-        headerName: 'Cost',
+        headerName: t('ai.taskSpend.colCost'),
         width: 130,
         cellRenderer: renderCost,
         valueGetter: (row) => row.cost_usd,
@@ -96,7 +98,7 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
     return (
       <Stack sx={{ p: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          No OpenAI calls in this range.
+          {t('ai.taskSpend.empty')}
         </Typography>
       </Stack>
     );
@@ -108,9 +110,9 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No OpenAI calls in this range."
+      emptyText={t('ai.taskSpend.empty')}
       defaultSort={{ field: 'cost_usd', dir: 'desc' }}
-      searchPlaceholder="Search task or area"
+      searchPlaceholder={t('ai.taskSpend.search')}
     />
   );
 }

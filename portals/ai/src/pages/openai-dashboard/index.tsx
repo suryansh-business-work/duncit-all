@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import { DuncitDashboard } from '@duncit/dashboard';
 import { buildWidgets, unpricedNotice } from './widgets';
 import RateCardDialog from './RateCardDialog';
@@ -17,6 +18,7 @@ import { OPENAI_USAGE_DASHBOARD, RANGE_OPTIONS, type ModelPrice, type UsageDashb
  * is spending, and that only exists here.
  */
 export default function OpenAiDashboardPage() {
+  const { t } = useTranslation();
   const [rangeDays, setRangeDays] = useState(7);
   // `undefined` = closed, `null` = adding a model, a row = editing that rate.
   const [editing, setEditing] = useState<ModelPrice | null | undefined>(undefined);
@@ -42,16 +44,15 @@ export default function OpenAiDashboardPage() {
       spacing={1}
     >
       <Box>
-        <Typography variant="h5">OpenAI Dashboard</Typography>
+        <Typography variant="h5">{t('ai.dashboard.title')}</Typography>
         <Typography variant="body2" color="text.secondary">
-          Every OpenAI call the platform makes, and what each task costs — moderation, support,
-          CRM, admin tools and release notes.
+          {t('ai.dashboard.subtitle')}
         </Typography>
       </Box>
       <TextField
         select
         size="small"
-        label="Range"
+        label={t('ai.dashboard.range')}
         value={rangeDays}
         onChange={(e) => setRangeDays(Number(e.target.value))}
         sx={{ minWidth: 160 }}
@@ -83,10 +84,10 @@ export default function OpenAiDashboardPage() {
         header={
           <Stack spacing={2}>
             {header}
-            {unpricedNotice(d.unpriced_models)}
+            {unpricedNotice(d.unpriced_models, t)}
           </Stack>
         }
-        widgets={buildWidgets(d, openRate)}
+        widgets={buildWidgets(d, openRate, t)}
       />
       <RateCardDialog price={editing} onClose={closeRate} onSaved={afterSave} />
     </>

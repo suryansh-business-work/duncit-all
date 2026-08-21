@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -7,15 +7,27 @@ import { z } from 'zod';
 import { notify } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { RhfTextField } from '@duncit/forms';
+import { useTranslation, type useTranslation as UseTranslation } from '@duncit/shell';
 import { UPSERT_OPENAI_MODEL_PRICE, type ModelPrice } from './queries';
 
-const schema = z.object({
-  model: z.string().trim().min(1, 'Model is required').max(80, 'Model name is too long'),
-  input_per_1m: z.coerce.number({ invalid_type_error: 'Enter a number' }).min(0, 'Cannot be negative'),
-  output_per_1m: z.coerce.number({ invalid_type_error: 'Enter a number' }).min(0, 'Cannot be negative'),
-});
+/** Validation messages are copy, so the schema is built from the active
+ *  catalogue rather than frozen at module load. */
+const buildSchema = (t: ReturnType<typeof UseTranslation>['t']) =>
+  z.object({
+    model: z
+      .string()
+      .trim()
+      .min(1, t('ai.rateCard.modelRequired'))
+      .max(80, t('ai.rateCard.modelTooLong')),
+    input_per_1m: z.coerce
+      .number({ invalid_type_error: t('ai.rateCard.enterNumber') })
+      .min(0, t('ai.rateCard.notNegative')),
+    output_per_1m: z.coerce
+      .number({ invalid_type_error: t('ai.rateCard.enterNumber') })
+      .min(0, t('ai.rateCard.notNegative')),
+  });
 
-type RateForm = z.infer<typeof schema>;
+type RateForm = z.infer<ReturnType<typeof buildSchema>>;
 
 const EMPTY: RateForm = { model: '', input_per_1m: 0, output_per_1m: 0 };
 
@@ -34,6 +46,8 @@ interface Props {
 export default function RateCardDialog({ price, onClose, onSaved }: Readonly<Props>) {
   const open = price !== undefined;
   const [upsert, { loading }] = useMutation(UPSERT_OPENAI_MODEL_PRICE);
+  const { t } = useTranslation();
+  const schema = useMemo(() => buildSchema(t), [t]);
   const { control, handleSubmit, reset } = useForm<RateForm>({
     resolver: zodResolver(schema),
     defaultValues: EMPTY,
@@ -55,7 +69,7 @@ export default function RateCardDialog({ price, onClose, onSaved }: Readonly<Pro
   const submit = handleSubmit(async (values) => {
     try {
       await upsert({ variables: { input: values } });
-      notify(`Rate saved for ${values.model}`, 'success');
+      notify(t('ai.rateCard.saved', { vars: { model: values.model } }), 'success');
       onSaved();
       onClose();
     } catch (err) {
@@ -63,38 +77,43 @@ export default function RateCardDialog({ price, onClose, onSaved }: Readonly<Pro
     }
   });
 
+  // Hoisted out of the JSX so the two states read as one lookup each (rule 26b).
+  const dialogTitle = price
+    ? t('ai.rateCard.editTitle', { vars: { model: price.model } })
+    : t('ai.rateCard.addTitle');
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>{price ? `Rate for ${price.model}` : 'Add a model rate'}</DialogTitle>
+      <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <RhfTextField
             control={control}
             name="model"
-            label="Model"
+            label={t('ai.rateCard.model')}
             disabled={!!price}
-            hint="Exactly as OpenAI names it, e.g. gpt-4o-mini"
+            hint={t('ai.rateCard.modelHint')}
           />
           <RhfTextField
             control={control}
             name="input_per_1m"
-            label="Input — USD per 1M tokens"
+            label={t('ai.rateCard.inputPer1m')}
             type="number"
           />
           <RhfTextField
             control={control}
             name="output_per_1m"
-            label="Output — USD per 1M tokens"
+            label={t('ai.rateCard.outputPer1m')}
             type="number"
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={submit} disabled={loading}>
-          Save
+          {t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

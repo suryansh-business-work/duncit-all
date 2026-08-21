@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -13,17 +13,20 @@ import {
   Typography,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import { useTranslation } from '@duncit/shell';
 import { estimateTokens } from '@duncit/ai-prompts';
 import {
   aiMonitoringInitialValues,
-  aiMonitoringSchema,
+  buildAiMonitoringSchema,
   type AiMonitoringFormProps,
   type AiMonitoringFormValues,
 } from './ai-monitoring.types';
 
-export { aiMonitoringSchema };
 
-const BLANK_HINT = 'Leave blank to use the shipped, translated wording.';
+
+/** The exact JSON the vision call must return. Named here so the warning
+ *  sentence can substitute it rather than spell it out in every language. */
+const JSON_SHAPE = '{"risk":"LOW|MEDIUM|HIGH","summary":string}';
 
 /**
  * AI Monitoring > Settings.
@@ -40,9 +43,12 @@ export default function AiMonitoringForm({
   promptKey,
   onSubmit,
 }: Readonly<AiMonitoringFormProps>) {
+  const { t } = useTranslation();
+  const blankHint = t('ai.settings.blankHint');
+  const schema = useMemo(() => buildAiMonitoringSchema(t), [t]);
   const { control, handleSubmit, watch, reset, formState } = useForm<AiMonitoringFormValues>({
     defaultValues: { ...aiMonitoringInitialValues, ...initialValues },
-    resolver: zodResolver(aiMonitoringSchema),
+    resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
@@ -63,12 +69,10 @@ export default function AiMonitoringForm({
           <CardContent>
             <Stack spacing={1.5}>
               <Typography variant="subtitle1" fontWeight={700}>
-                What people are told
+                {t('ai.settings.noticeTitle')}
               </Typography>
               <Alert severity="info">
-                These sentences render on the AI Monitoring chip and dialog beside every upload
-                field — in the native app, in mWeb and in all portals. A change here reaches all of
-                them within a minute.
+                {t('ai.settings.noticeIntro')}
               </Alert>
               <Controller
                 control={control}
@@ -82,51 +86,51 @@ export default function AiMonitoringForm({
                         name="chip_enabled"
                       />
                     }
-                    label="Show the AI Monitoring chip on upload fields"
+                    label={t('ai.settings.chipToggle')}
                   />
                 )}
               />
               <RhfTextField
                 control={control}
                 name="chip_label"
-                label="Chip label"
-                hint={BLANK_HINT}
+                label={t('ai.settings.chipLabel')}
+                hint={blankHint}
               />
               <RhfTextField
                 control={control}
                 name="dialog_title"
-                label="Dialog title"
-                hint={BLANK_HINT}
+                label={t('ai.settings.dialogTitle')}
+                hint={blankHint}
               />
               <RhfTextField
                 control={control}
                 name="dialog_intro"
-                label="Dialog intro"
+                label={t('ai.settings.dialogIntro')}
                 multiline
                 minRows={2}
-                hint={BLANK_HINT}
+                hint={blankHint}
               />
               <RhfTextField
                 control={control}
                 name="dialog_points"
-                label="Dialog bullets"
+                label={t('ai.settings.dialogPoints')}
                 multiline
                 minRows={4}
-                hint="One bullet per line. Leave blank to use the shipped, translated list."
+                hint={t('ai.settings.bulletsHint')}
               />
               <RhfTextField
                 control={control}
                 name="dialog_footnote"
-                label="Dialog footnote"
+                label={t('ai.settings.dialogFootnote')}
                 multiline
                 minRows={2}
-                hint={BLANK_HINT}
+                hint={blankHint}
               />
               <RhfTextField
                 control={control}
                 name="dismiss_label"
-                label="Dismiss button"
-                hint={BLANK_HINT}
+                label={t('ai.settings.dismissLabel')}
+                hint={blankHint}
               />
             </Stack>
           </CardContent>
@@ -136,19 +140,20 @@ export default function AiMonitoringForm({
           <CardContent>
             <Stack spacing={1.5}>
               <Typography variant="subtitle1" fontWeight={700}>
-                Image upload prompt
+                {t('ai.settings.promptTitle')}
               </Typography>
               <Alert severity="warning">
-                This is the live system prompt every uploaded image is analysed with. It is the same
-                row the Prompt Library edits ({promptKey ?? 'upload.image_scan'}) — one prompt, one
-                store — and the next upload uses whatever is saved here. It must keep returning
-                strict JSON of shape {'{"risk":"LOW|MEDIUM|HIGH","summary":string}'}, or every check
-                will record itself as unreadable.
+                {t('ai.settings.promptWarning', {
+                  vars: {
+                    key: promptKey ?? 'upload.image_scan',
+                    shape: JSON_SHAPE,
+                  },
+                })}
               </Alert>
               <RhfTextField
                 control={control}
                 name="image_prompt"
-                label="Prompt sent with every uploaded image"
+                label={t('ai.settings.promptLabel')}
                 required
                 multiline
                 minRows={10}
@@ -158,7 +163,7 @@ export default function AiMonitoringForm({
                   size="small"
                   color="primary"
                   variant="outlined"
-                  label={`≈ ${estimateTokens(prompt ?? '')} tokens`}
+                  label={t('ai.settings.tokenCount', { vars: { count: estimateTokens(prompt ?? '') } })}
                   data-testid="ai-monitoring-token-count"
                 />
                 {scanModel && <Chip size="small" variant="outlined" label={scanModel} />}
@@ -169,7 +174,7 @@ export default function AiMonitoringForm({
 
         <Stack direction="row" justifyContent="flex-end">
           <Button type="submit" variant="contained" disabled={submitting || !formState.isValid}>
-            {submitting ? 'Saving…' : 'Save settings'}
+            {submitting ? t('shell.common.saving') : t('ai.settings.submit')}
           </Button>
         </Stack>
       </Stack>

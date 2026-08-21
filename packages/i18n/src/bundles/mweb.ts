@@ -1336,6 +1336,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       podInfoHint: 'Logistics, what to bring, parking notes, etc.',
       // The optional Pod Reel — one short video, uploaded straight to ImageKit.
       podReel: 'Pod Reel',
+      // The nudge that sits above the section. A reel is optional and the
+      // card is collapsed, so the reason to bother has to be readable
+      // WITHOUT opening it — it is dropped once a reel is on the pod.
+      reelEngagementTitle: 'Want better engagement for your Pod?',
+      reelEngagementBody:
+        'Consider adding a Pod Reel to attract more users and increase visibility.',
       // Native only — its card carries a subtitle under the title.
       reelSubtitle: 'A short video shown in Explore.',
       reelHint:

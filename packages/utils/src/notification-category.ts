@@ -19,6 +19,7 @@ export type NotificationCategory =
   | 'payment'
   | 'club'
   | 'pod'
+  | 'post'
   | 'account'
   | 'general';
 
@@ -26,7 +27,7 @@ export type NotificationCategory =
  * Ordered title-keyword rules — the first category whose token appears in the
  * lowercased title wins; a title matching nothing falls back to "general". The
  * tokens are drawn from the server's notification titles (payment, meeting,
- * approval, request, achievement, support, club, pod, account producers).
+ * approval, request, achievement, support, club, pod, post, account producers).
  */
 const CATEGORY_RULES: readonly (readonly [NotificationCategory, readonly string[]])[] = [
   ['payment', ['payment', 'paid', 'refund', 'payout', 'withdraw', 'invoice', 'wallet', '₹']],
@@ -44,6 +45,9 @@ const CATEGORY_RULES: readonly (readonly [NotificationCategory, readonly string[
   ['support', ['support', 'ticket', 'sos', 'chat', 'message', 'reply', 'callback']],
   ['club', ['club', 'community']],
   ['pod', ['pod', 'slot', 'session', 'event']],
+  // After 'pod' on purpose: 'pod' is not a substring of 'post', but a title
+  // like "Pod postponed" is about the pod, not about a profile post.
+  ['post', ['post']],
   ['account', ['follower', 'follow', 'profile', 'account', 'password', 'login', 'security']],
 ];
 
@@ -73,6 +77,7 @@ export const NOTIFICATION_CATEGORY_LABEL: Record<NotificationCategory, string> =
   support: 'Support',
   club: 'Clubs',
   pod: 'Pods',
+  post: 'Posts',
   account: 'Account',
   general: 'Other',
 };

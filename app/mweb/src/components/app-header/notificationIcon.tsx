@@ -9,6 +9,7 @@ import MicIcon from '@mui/icons-material/Mic';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import PaymentIcon from '@mui/icons-material/Payment';
 import PersonIcon from '@mui/icons-material/Person';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import StarIcon from '@mui/icons-material/Star';
 import { notificationCategory, type NotificationCategory } from '@duncit/utils';
 
@@ -27,6 +28,7 @@ const ICON_BY_CATEGORY: Record<NotificationCategory, SvgIconComponent> = {
   payment: PaymentIcon,
   club: AccountBalanceIcon,
   pod: MicIcon,
+  post: PhotoLibraryIcon,
   account: PersonIcon,
   general: NotificationsActiveIcon,
 };

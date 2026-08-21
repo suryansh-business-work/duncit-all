@@ -19,6 +19,7 @@ const ICON_BY_CATEGORY: Record<NotificationCategory, MaterialIconName> = {
   payment: 'payment',
   club: 'account-balance',
   pod: 'mic',
+  post: 'photo-library',
   account: 'person',
   general: 'notifications-active',
 };

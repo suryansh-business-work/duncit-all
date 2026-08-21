@@ -24,8 +24,14 @@ interface Props {
 
 // Right-side details drawer for a single onboarding meeting (incl. survey answers).
 export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCancel }: Readonly<Props>) {
-  const cancellable = !!meeting && (meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED');
+  // A meeting is open to scheduling only while it is still pending: once it is DONE it
+  // has already happened, and CANCELLED/DENIED rows are settled the other way.
+  const pending = !!meeting && (meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED');
   const blocked = !!meeting && (meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED');
+  const showEdit = !!onEdit && pending && !blocked;
+  const showCancel = !!onCancel && pending && !blocked;
+  // Matches the row Actions menu — a meeting that already has a slot is re-scheduled.
+  const editLabel = meeting?.status === 'SCHEDULED' ? 'Reschedule' : 'Schedule';
   const catPath = meeting
     ? [meeting.super_category_name, meeting.category_name, meeting.sub_category_name].filter(Boolean).join(' › ')
     : '';
@@ -66,12 +72,12 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
           <Divider />
           {meeting.user_id && <SurveyAnswers userId={meeting.user_id} kind={meeting.kind} />}
 
-          {(onEdit || onCancel) && !blocked && (
+          {(showEdit || showCancel) && (
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {onEdit && <Button variant="contained" onClick={() => onEdit(meeting)}>Schedule</Button>}
-                {onCancel && cancellable && <Button color="error" onClick={() => onCancel(meeting)}>Cancel</Button>}
+                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>{editLabel}</Button>}
+                {showCancel && <Button color="error" onClick={() => onCancel?.(meeting)}>Cancel</Button>}
               </Stack>
             </>
           )}

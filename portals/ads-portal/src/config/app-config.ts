@@ -25,13 +25,13 @@ export const appConfig = {
   colorModeKey: 'ads_color_mode',
   accent: { light: '#ff9e9e', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     {
-      label: 'Create Ads',
+      label: 'Create Ads', labelKey: 'shell.nav.createAds',
       icon: 'campaign',
       children: [
-        { label: 'My Ads', to: '/ads', icon: 'article' },
-        { label: 'Create Ad', to: '/ads/new', icon: 'image' },
+        { label: 'My Ads', labelKey: 'shell.nav.myAds', to: '/ads', icon: 'article' },
+        { label: 'Create Ad', labelKey: 'shell.nav.createAd', to: '/ads/new', icon: 'image' },
       ],
     },
   ],

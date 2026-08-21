@@ -22,15 +22,14 @@ export const appConfig = {
   accent: { light: '#fdba74', main: '#f97316', hover: '#ea580c', active: '#c2410c' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Challenges', labelKey: 'challenge.list.title', to: '/challenges', icon: 'challenge' },
+    { label: 'Challenges', labelKey: 'shell.nav.challenges', to: '/challenges', icon: 'challenge' },
     {
-      label: 'Leaderboard',
-      labelKey: 'admin.leaderboard.navRoot',
+      label: 'Leaderboard', labelKey: 'shell.nav.leaderboard',
       icon: 'trophy',
       children: [
-        { label: 'Boards', labelKey: 'admin.leaderboard.navBoards', to: '/leaderboard', icon: 'insights' },
-        { label: 'Points Ledger', labelKey: 'admin.leaderboard.navLedger', to: '/leaderboard/points', icon: 'receipt' },
-        { label: 'Settings & Rewards', labelKey: 'admin.leaderboard.navSettings', to: '/leaderboard/settings', icon: 'tune' },
+        { label: 'Boards', labelKey: 'shell.nav.boards', to: '/leaderboard', icon: 'insights' },
+        { label: 'Points Ledger', labelKey: 'shell.nav.pointsLedger', to: '/leaderboard/points', icon: 'receipt' },
+        { label: 'Settings & Rewards', labelKey: 'shell.nav.settingsAndRewards', to: '/leaderboard/settings', icon: 'tune' },
       ],
     },
   ],

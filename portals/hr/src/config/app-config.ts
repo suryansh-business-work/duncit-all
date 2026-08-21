@@ -19,6 +19,6 @@ export const appConfig = {
   tokenKey: 'hr_token',
   colorModeKey: 'hr_color_mode',
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
-  nav: [{ label: 'Dashboard', to: '/', icon: 'dashboard' }],
+  nav: [{ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' }],
   modules: [],
 } satisfies AppConfig;

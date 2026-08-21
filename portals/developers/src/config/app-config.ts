@@ -23,8 +23,8 @@ export const appConfig = {
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    { label: 'API Keys', labelKey: 'developers.dashboard.apiKeysTitle', to: '/keys', icon: 'key' },
-    { label: 'API Reference', labelKey: 'developers.dashboard.apiReferenceTitle', to: '/docs', icon: 'docs' },
+    { label: 'API Keys', labelKey: 'shell.nav.apiKeys', to: '/keys', icon: 'key' },
+    { label: 'API Reference', labelKey: 'shell.nav.apiReference', to: '/docs', icon: 'docs' },
   ],
   modules: [],
 } satisfies AppConfig;

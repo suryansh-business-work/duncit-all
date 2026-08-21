@@ -22,8 +22,11 @@ export const appConfig = {
   name: 'Admin',
   fullName: 'Duncit Admin',
   tagline: 'Operate the Duncit platform — one place.',
+  taglineKey: 'shell.portal.admin.tagline',
   promoTitle: 'One unified portal',
+  promoTitleKey: 'shell.portal.admin.promoTitle',
   promoText: 'Every team, every metric — one place. Sign in and get moving.',
+  promoTextKey: 'shell.portal.admin.promoText',
   portalLabel: 'Admin Portal',
   loginImage:
     (import.meta.env.VITE_LOGIN_IMAGE as string | undefined) ||

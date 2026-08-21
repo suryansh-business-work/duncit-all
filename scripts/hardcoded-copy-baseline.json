@@ -507,7 +507,6 @@
   "packages/shell/src/chrome/ProfilePage.tsx": 2,
   "packages/shell/src/chrome/UserMenu.tsx": 2,
   "packages/shell/src/dashboard/AccountSummaryCard.tsx": 4,
-  "packages/shell/src/dashboard/WelcomeDashboard.tsx": 1,
   "packages/shell/src/file-manager/FileCard.tsx": 1,
   "packages/shell/src/file-manager/FileDetailsView.tsx": 11,
   "packages/shell/src/file-manager/FileInfoPanel.tsx": 9,

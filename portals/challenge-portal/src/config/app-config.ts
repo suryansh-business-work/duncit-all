@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Challenges',
   fullName: 'Duncit Challenges',
   tagline: 'Create and manage challenges across categories.',
+  taglineKey: 'shell.portal.challengePortal.tagline',
   promoTitle: 'Challenges, organized',
+  promoTitleKey: 'shell.portal.challengePortal.promoTitle',
   promoText: 'Build challenges scoped by super, category and sub-category — all in one place.',
+  promoTextKey: 'shell.portal.challengePortal.promoText',
   portalLabel: 'Challenges Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

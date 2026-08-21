@@ -14,8 +14,11 @@ export const appConfig = {
   name: 'Finance',
   fullName: 'Duncit Finance',
   tagline: 'Track payouts, invoices and financial reconciliation.',
+  taglineKey: 'shell.portal.finance.tagline',
   promoTitle: "Numbers, clarified",
+  promoTitleKey: 'shell.portal.finance.promoTitle',
   promoText: "Payouts, invoices and reconciliation — all in one place.",
+  promoTextKey: 'shell.portal.finance.promoText',
   portalLabel: 'Finance Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

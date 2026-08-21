@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Products',
   fullName: 'Duncit Products',
   tagline: 'Manage the product catalog and roadmap.',
+  taglineKey: 'shell.portal.products.tagline',
   promoTitle: 'Build what matters',
+  promoTitleKey: 'shell.portal.products.promoTitle',
   promoText: 'Catalog, inventory and roadmap from one console.',
+  promoTextKey: 'shell.portal.products.promoText',
   portalLabel: 'Products Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'AI',
   fullName: 'Duncit AI',
   tagline: 'Operate AI tools and model configuration.',
+  taglineKey: 'shell.portal.ai.tagline',
   promoTitle: "Intelligence on tap",
+  promoTitleKey: 'shell.portal.ai.promoTitle',
   promoText: "Models, prompts and AI tooling in one workspace.",
+  promoTextKey: 'shell.portal.ai.promoText',
   portalLabel: 'AI Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

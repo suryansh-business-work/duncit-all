@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Website',
   fullName: 'Duncit Website',
   tagline: 'Manage website content, pages and publishing.',
+  taglineKey: 'shell.portal.websiteApp.tagline',
   promoTitle: "Your site, managed",
+  promoTitleKey: 'shell.portal.websiteApp.promoTitle',
   promoText: "Publish content, careers and updates from one place.",
+  promoTextKey: 'shell.portal.websiteApp.promoText',
   portalLabel: 'Website Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

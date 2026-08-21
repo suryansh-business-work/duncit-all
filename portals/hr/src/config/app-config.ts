@@ -9,8 +9,11 @@ export const appConfig = {
   name: 'HR',
   fullName: 'Duncit HR',
   tagline: 'Manage people, attendance and HR operations.',
+  taglineKey: 'shell.portal.hr.tagline',
   promoTitle: 'People, organised',
+  promoTitleKey: 'shell.portal.hr.promoTitle',
   promoText: 'Directory, leave and HR operations in one console.',
+  promoTextKey: 'shell.portal.hr.promoText',
   portalLabel: 'HR Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

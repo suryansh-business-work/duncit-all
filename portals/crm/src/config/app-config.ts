@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'CRM',
   fullName: 'Duncit CRM',
   tagline: 'Capture, qualify and convert venue and host leads.',
+  taglineKey: 'shell.portal.crm.tagline',
   promoTitle: "Know every customer",
+  promoTitleKey: 'shell.portal.crm.promoTitle',
   promoText: "Leads, contacts and conversations — unified. Sign in to dive in.",
+  promoTextKey: 'shell.portal.crm.promoText',
   portalLabel: 'CRM Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

@@ -49,8 +49,16 @@ export interface SearchItem {
 
 /** A "Coming soon" module card on the portal welcome dashboard. */
 export interface AppModule {
+  /**
+   * Also the card's stable widget id. The dashboard saves each user's layout
+   * against that id, so this stays the English literal even once `titleKey` is
+   * set — a title that changed with the reader's language would hand every
+   * locale a different id and lose the layout they arranged.
+   */
   title: string;
+  titleKey?: string;
   description: string;
+  descriptionKey?: string;
   icon: string;
 }
 
@@ -61,9 +69,18 @@ export interface AppModule {
  */
 export interface AppConfig extends PortalBootConfig {
   fullName: string;
+  /**
+   * The console's own sentences — the line under the login card and the promo
+   * beside it. Each takes an optional key, same arrangement as
+   * `AppNavItem.labelKey`: the literal stays required so a console that has not
+   * been swept yet still reads correctly.
+   */
   tagline: string;
+  taglineKey?: string;
   promoTitle: string;
+  promoTitleKey?: string;
   promoText: string;
+  promoTextKey?: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];

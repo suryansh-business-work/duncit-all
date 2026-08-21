@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Support',
   fullName: 'Duncit Support',
   tagline: 'Handle customer tickets and support conversations.',
+  taglineKey: 'shell.portal.support.tagline',
   promoTitle: 'One unified desk',
+  promoTitleKey: 'shell.portal.support.promoTitle',
   promoText: 'Every ticket, every conversation — one place. Sign in and get moving.',
+  promoTextKey: 'shell.portal.support.promoText',
   portalLabel: 'Support Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

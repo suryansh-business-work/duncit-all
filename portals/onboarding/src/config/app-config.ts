@@ -9,8 +9,11 @@ export const appConfig = {
   name: 'Onboarding',
   fullName: 'Duncit Onboarding',
   tagline: 'Manage onboarding journeys, verification and approvals.',
+  taglineKey: 'shell.portal.onboarding.tagline',
   promoTitle: 'Onboard with ease',
+  promoTitleKey: 'shell.portal.onboarding.promoTitle',
   promoText: 'Welcome, verify and activate new members and partners.',
+  promoTextKey: 'shell.portal.onboarding.promoText',
   portalLabel: 'Onboarding Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

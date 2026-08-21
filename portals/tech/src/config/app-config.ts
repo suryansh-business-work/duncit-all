@@ -11,8 +11,11 @@ export const appConfig = {
   name: 'Tech',
   fullName: 'Duncit Tech',
   tagline: 'Manage platform configuration and environment variables.',
+  taglineKey: 'shell.portal.tech.tagline',
   promoTitle: 'Ship with control',
+  promoTitleKey: 'shell.portal.tech.promoTitle',
   promoText: 'Environment, feature flags and platform config in one console.',
+  promoTextKey: 'shell.portal.tech.promoText',
   portalLabel: 'Tech Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

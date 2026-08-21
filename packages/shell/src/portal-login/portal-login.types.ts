@@ -19,6 +19,13 @@ export interface PortalLoginAppConfig {
   tagline: string;
   promoTitle: string;
   promoText: string;
+  /**
+   * Optional catalogue keys for the three sentences above. The page resolves
+   * them; the literals stay as the fallback for a console not yet swept.
+   */
+  taglineKey?: string;
+  promoTitleKey?: string;
+  promoTextKey?: string;
   /** Full-bleed background image URL. */
   loginImage: string;
 }

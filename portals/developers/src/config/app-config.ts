@@ -10,9 +10,12 @@ export const appConfig = {
   name: 'Developers',
   fullName: 'Duncit Developers',
   tagline: 'API keys and venue APIs — availability, slots and bookings.',
+  taglineKey: 'shell.portal.developers.tagline',
   promoTitle: 'Build on Duncit',
+  promoTitleKey: 'shell.portal.developers.promoTitle',
   promoText:
     'Generate API keys and integrate venue discovery, slot availability and slot booking into your own products.',
+  promoTextKey: 'shell.portal.developers.promoText',
   portalLabel: 'Developers Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

@@ -32,6 +32,105 @@ export const SHELL_BUNDLE: NestedCatalogue = {
 
     /** The layout's own copy — read by assistive technology rather than seen,
      * which is exactly why it was still English in all 26 consoles. */
+    /** The welcome dashboard every console opens on. */
+    welcome: {
+      greeting: 'Welcome back, {name}',
+      modulesHeading: '{name} modules',
+      comingSoon: 'Coming soon',
+    },
+
+    /**
+     * Each console's own sentences on its login screen — the tagline under
+     * the card and the promo beside it.
+     *
+     * Keyed by portal here rather than in 16 separate namespaces because the
+     * login screen is shell chrome: a portal reaches these through
+     * AppConfig.taglineKey / promoTitleKey / promoTextKey with no
+     * i18nFallback of its own.
+     */
+    portal: {
+      admin: {
+        tagline: 'Operate the Duncit platform — one place.',
+        promoTitle: 'One unified portal',
+        promoText: 'Every team, every metric — one place. Sign in and get moving.',
+      },
+      adsPortal: {
+        tagline: 'Plan campaigns, manage creatives and track ad performance.',
+        promoTitle: 'Campaigns that convert',
+        promoText: 'Plan, launch and measure ad campaigns from one console.',
+      },
+      ai: {
+        tagline: 'Operate AI tools and model configuration.',
+        promoTitle: 'Intelligence on tap',
+        promoText: 'Models, prompts and AI tooling in one workspace.',
+      },
+      challengePortal: {
+        tagline: 'Create and manage challenges across categories.',
+        promoTitle: 'Challenges, organized',
+        promoText: 'Build challenges scoped by super, category and sub-category — all in one place.',
+      },
+      crm: {
+        tagline: 'Capture, qualify and convert venue and host leads.',
+        promoTitle: 'Know every customer',
+        promoText: 'Leads, contacts and conversations — unified. Sign in to dive in.',
+      },
+      developers: {
+        tagline: 'API keys and venue APIs — availability, slots and bookings.',
+        promoTitle: 'Build on Duncit',
+        promoText: 'Generate API keys and integrate venue discovery, slot availability and slot booking into your own products.',
+      },
+      employee: {
+        tagline: 'Your profile, requests and workplace tools.',
+        promoTitle: 'Your workday, simpler',
+        promoText: 'Profile, payslips and requests in one place.',
+      },
+      finance: {
+        tagline: 'Track payouts, invoices and financial reconciliation.',
+        promoTitle: 'Numbers, clarified',
+        promoText: 'Payouts, invoices and reconciliation — all in one place.',
+      },
+      hr: {
+        tagline: 'Manage people, attendance and HR operations.',
+        promoTitle: 'People, organised',
+        promoText: 'Directory, leave and HR operations in one console.',
+      },
+      legal: {
+        tagline: 'Manage contracts, policies and compliance.',
+        promoTitle: 'Compliance, organized',
+        promoText: 'Policies, agreements and legal records — one place.',
+      },
+      marketing: {
+        tagline: 'Plan campaigns and brand content.',
+        promoTitle: 'Reach, amplified',
+        promoText: 'Campaigns, notifications and audiences — one place.',
+      },
+      onboarding: {
+        tagline: 'Manage onboarding journeys, verification and approvals.',
+        promoTitle: 'Onboard with ease',
+        promoText: 'Welcome, verify and activate new members and partners.',
+      },
+      products: {
+        tagline: 'Manage the product catalog and roadmap.',
+        promoTitle: 'Build what matters',
+        promoText: 'Catalog, inventory and roadmap from one console.',
+      },
+      support: {
+        tagline: 'Handle customer tickets and support conversations.',
+        promoTitle: 'One unified desk',
+        promoText: 'Every ticket, every conversation — one place. Sign in and get moving.',
+      },
+      tech: {
+        tagline: 'Manage platform configuration and environment variables.',
+        promoTitle: 'Ship with control',
+        promoText: 'Environment, feature flags and platform config in one console.',
+      },
+      websiteApp: {
+        tagline: 'Manage website content, pages and publishing.',
+        promoTitle: 'Your site, managed',
+        promoText: 'Publish content, careers and updates from one place.',
+      },
+    },
+
     chrome: {
       skipToContent: 'Skip to main content',
       primaryNav: 'primary navigation',

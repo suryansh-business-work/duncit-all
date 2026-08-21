@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Marketing',
   fullName: 'Duncit Marketing',
   tagline: 'Plan campaigns and brand content.',
+  taglineKey: 'shell.portal.marketing.tagline',
   promoTitle: "Reach, amplified",
+  promoTitleKey: 'shell.portal.marketing.promoTitle',
   promoText: "Campaigns, notifications and audiences — one place.",
+  promoTextKey: 'shell.portal.marketing.promoText',
   portalLabel: 'Marketing Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

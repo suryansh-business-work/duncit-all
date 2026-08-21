@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Legal',
   fullName: 'Duncit Legal',
   tagline: 'Manage contracts, policies and compliance.',
+  taglineKey: 'shell.portal.legal.tagline',
   promoTitle: "Compliance, organized",
+  promoTitleKey: 'shell.portal.legal.promoTitle',
   promoText: "Policies, agreements and legal records — one place.",
+  promoTextKey: 'shell.portal.legal.promoText',
   portalLabel: 'Legal Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useColorMode } from '@duncit/theme';
 import { parseApiError } from '@duncit/utils';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
+import { useTranslation } from '../i18n/useTranslation';
 import { useBranding } from '../hooks/useBranding';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../lib/redirect';
 import OtpLoginPanel from './OtpLoginPanel';
@@ -62,6 +63,7 @@ export default function PortalLoginPage({
   parseError,
   configOverrides,
 }: Readonly<PortalLoginPageProps>) {
+  const { t } = useTranslation();
   const loginDocument = useMemo(
     () => buildLoginMutation(mutationName, extraUserFields),
     [mutationName, extraUserFields],
@@ -144,12 +146,17 @@ export default function PortalLoginPage({
     }
   };
 
+  // The login screen renders before there is a session, so the copy comes from
+  // the bundled fallback until the public catalogue query answers — which is
+  // exactly what rule 38 wants the fallback to be for.
+  const text = (key: string | undefined, literal: string) => (key ? t(key) : literal);
+
   const config: LoginScreenConfig = {
     brandName: appConfig.fullName,
     portalName: appConfig.name,
-    tagline: appConfig.tagline,
-    promoTitle: appConfig.promoTitle,
-    promoText: appConfig.promoText,
+    tagline: text(appConfig.taglineKey, appConfig.tagline),
+    promoTitle: text(appConfig.promoTitleKey, appConfig.promoTitle),
+    promoText: text(appConfig.promoTextKey, appConfig.promoText),
     bgImage: appConfig.loginImage,
     logoUrl,
     onLogoError,

@@ -9,8 +9,11 @@ export const appConfig = {
   name: 'Employee',
   fullName: 'Duncit Employee',
   tagline: 'Your profile, requests and workplace tools.',
+  taglineKey: 'shell.portal.employee.tagline',
   promoTitle: 'Your workday, simpler',
+  promoTitleKey: 'shell.portal.employee.promoTitle',
   promoText: 'Profile, payslips and requests in one place.',
+  promoTextKey: 'shell.portal.employee.promoText',
   portalLabel: 'Employee Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

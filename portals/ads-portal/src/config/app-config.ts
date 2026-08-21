@@ -14,8 +14,11 @@ export const appConfig = {
   name: 'Ads',
   fullName: 'Duncit Ads',
   tagline: 'Plan campaigns, manage creatives and track ad performance.',
+  taglineKey: 'shell.portal.adsPortal.tagline',
   promoTitle: "Campaigns that convert",
+  promoTitleKey: 'shell.portal.adsPortal.promoTitle',
   promoText: "Plan, launch and measure ad campaigns from one console.",
+  promoTextKey: 'shell.portal.adsPortal.promoText',
   portalLabel: 'Ads Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

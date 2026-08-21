@@ -2,6 +2,7 @@ import * as Linking from 'expo-linking';
 import { parse } from 'graphql';
 import { getItem, setItem } from './secure-storage';
 import { graphqlRequest } from './graphql.client';
+import { getAuthToken } from './auth-token';
 import { config } from '../constants/config';
 import { navigationRef } from '../navigation/navigationRef';
 
@@ -94,12 +95,24 @@ export async function captureFromUrl(url: string | null): Promise<string | null>
 }
 
 /**
+ * The landing capture, in flight.
+ *
+ * Steps wait on this rather than reading the store directly. The app link that
+ * opens the app and the session it already holds arrive on the same tick, so a
+ * step read from storage right then — and being signed in is the very first
+ * one — found nothing and dropped the account binding. A payment is matched to
+ * a click through that binding, which is why a purchase made in the app after
+ * following a link was never credited to it.
+ */
+let capture: Promise<string | null> = storedClickId();
+
+/**
  * Report that the visitor reached a step. Fire-and-forget, authenticated when
  * a session exists — the authenticated call is what binds the click to the
  * account. The server keeps a step's first timestamp, so repeats are no-ops.
  */
 export function reportJourneyStep(step: JourneyStep): void {
-  storedClickId()
+  capture
     .then((clickId) => {
       if (!clickId) return null;
       return graphqlRequest<
@@ -118,17 +131,37 @@ export function reportJourneyForCurrentRoute(): void {
 }
 
 /**
+ * Capture a landing URL and, if a session already exists, bind the click it
+ * resolved to that account straight away.
+ *
+ * RootNavigator reports SIGNED_UP when the token CHANGES, which covers the
+ * visitor who follows a link and then signs in. It cannot cover the far more
+ * common case: an already-signed-in user opening a link. The token never
+ * moves, so nothing there fires, and the click stayed anonymous — which is
+ * exactly why their payment was never credited back to the link.
+ */
+function captureAndBind(url: string | null): Promise<string | null> {
+  capture = captureFromUrl(url);
+  capture
+    .then(async (clickId) => {
+      if (clickId && (await getAuthToken())) reportJourneyStep('SIGNED_UP');
+    })
+    .catch(() => undefined);
+  return capture;
+}
+
+/**
  * Root wiring: capture the URL the app was opened with, and every URL it
  * receives while running. Returns the unsubscribe for the listener.
  */
 export function initShortLinkAttribution(): () => void {
   // getInitialURL itself can reject; captureFromUrl cannot (every failure
   // path inside resolves), so the listener call carries no dead .catch.
-  Linking.getInitialURL()
-    .then((url) => captureFromUrl(url))
-    .catch(() => undefined);
+  capture = Linking.getInitialURL()
+    .then((url) => captureAndBind(url))
+    .catch(() => null);
   const subscription = Linking.addEventListener('url', (event) => {
-    captureFromUrl(event.url);
+    captureAndBind(event.url);
   });
   return () => subscription.remove();
 }

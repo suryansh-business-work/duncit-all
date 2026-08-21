@@ -434,10 +434,8 @@ export type AiProductDescribeInput = {
 };
 
 /**
- * A reusable prompt in the AI Prompt Library. `token_count` is derived from
- * `content` on every read, so it stays in sync with edits. A row with a
- * `key` is a SYSTEM prompt: it powers a shipped AI feature, is seeded from the
- * server catalog and cannot be deleted — only its body is operator-owned.
+ * A prompt in the AI Library. `token_count` is derived from `content` on
+ * every read, so it stays in sync with edits.
  */
 export type AiPrompt = {
   __typename?: 'AiPrompt';
@@ -448,22 +446,68 @@ export type AiPrompt = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
-  is_system: Scalars['Boolean']['output'];
-  /** Stable catalog id of a system prompt; null for operator-created prompts. */
+  /** Stable catalogue id of a code prompt; null for portal-authored ones. */
   key?: Maybe<Scalars['String']['output']>;
+  kind: AiPromptKind;
   name: Scalars['String']['output'];
+  role: AiPromptRole;
+  /** Model this prompt is sent to; empty means the configured default. */
   target_model: Scalars['String']['output'];
+  /** Usage-log task keys this prompt bills to, for joining spend back to it. */
+  tasks: Array<Scalars['String']['output']>;
   token_count: Scalars['Int']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
-  /** Placeholder names the feature fills in at call time, without the braces. */
-  variables: Array<Scalars['String']['output']>;
+  usage: Array<AiPromptUsage>;
+  variables: Array<AiPromptVariable>;
 };
 
 export type AiPromptFilter = {
   category?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
-  is_system?: InputMaybe<Scalars['Boolean']['input']>;
+  kind?: InputMaybe<AiPromptKind>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Which half of the AI Library a prompt belongs to. */
+export type AiPromptKind =
+  /** Authored in the AI portal. Owned by nobody in code, fully editable, and served by the public GET feed. */
+  | 'AI'
+  /** Declared in the server catalogue and read back by a call site on every request. Editing its body changes what the product sends to the model. Cannot be created or deleted from a portal — only reset. */
+  | 'CODE';
+
+/**
+ * Which turn of the conversation a prompt is. A CODE feature ships up to two: the
+ * standing SYSTEM instruction and the per-call USER payload.
+ */
+export type AiPromptRole =
+  | 'SYSTEM'
+  | 'USER';
+
+/** Where a code prompt is wired in — read-only, it describes the call site. */
+export type AiPromptUsage = {
+  __typename?: 'AiPromptUsage';
+  /** Repo-relative file that sends it. */
+  file: Scalars['String']['output'];
+  /** The surface a person is looking at when it runs. */
+  surface: Scalars['String']['output'];
+  /** What they did to trigger it. */
+  trigger: Scalars['String']['output'];
+};
+
+/**
+ * One `{{placeholder}}` the call site fills in at request time. A CODE prompt
+ * declares these in the catalogue; an AI prompt has them read out of its body.
+ */
+export type AiPromptVariable = {
+  __typename?: 'AiPromptVariable';
+  description: Scalars['String']['output'];
+  /** Stand-in the portal's preview renders with. */
+  example: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** Placeholder name, without the braces. */
+  name: Scalars['String']['output'];
+  /** Dropping a required placeholder breaks the feature silently, so the editor refuses to save a body that lost one. */
+  required: Scalars['Boolean']['output'];
 };
 
 export type AiRichTextImproveInput = {
@@ -2984,6 +3028,51 @@ export type ContactSubmitResult = {
   ok: Scalars['Boolean']['output'];
 };
 
+export type ContentReport = {
+  __typename?: 'ContentReport';
+  club_id?: Maybe<Scalars['ID']['output']>;
+  created_at: Scalars['String']['output'];
+  /** The reporter's own words. Always present when the reason is OTHER. */
+  details: Scalars['String']['output'];
+  handled_by_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  reason: ReportReason;
+  /** Permanent, globally unique handle (RPT-000001). Never edited, never reused. */
+  report_no: Scalars['String']['output'];
+  reporter_name: Scalars['String']['output'];
+  /** What Legal did about it. Staff-only. */
+  resolution: Scalars['String']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  status: ReportStatus;
+  target_caption: Scalars['String']['output'];
+  target_id: Scalars['ID']['output'];
+  target_owner_name: Scalars['String']['output'];
+  /**
+   * What the reporter was looking at, copied at report time.
+   *
+   * A story is gone in 24 hours and a reported post is the first thing its
+   * author deletes, so the row would otherwise point at nothing by the time
+   * anyone reviewed it.
+   */
+  target_preview_url: Scalars['String']['output'];
+  target_type: ReportTargetType;
+  updated_at: Scalars['String']['output'];
+};
+
+export type ContentReportStats = {
+  __typename?: 'ContentReportStats';
+  by_status: Array<ReportStatusCount>;
+  total: Scalars['Int']['output'];
+};
+
+export type ContentReportTablePage = {
+  __typename?: 'ContentReportTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ContentReport>;
+  total: Scalars['Int']['output'];
+};
+
 export type Contract = {
   __typename?: 'Contract';
   content: Scalars['String']['output'];
@@ -3106,6 +3195,8 @@ export type CreateAiPromptInput = {
   content: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Feed address for this prompt, slugged from the name when left out. Cannot be changed later. */
+  key?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   target_model?: InputMaybe<Scalars['String']['input']>;
 };
@@ -7576,6 +7667,7 @@ export type Mutation = {
   completePodSettlement: PodSettlementResult;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
+  /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
   createAiPrompt: AiPrompt;
   /** Bind an approved template to a campaign name, which is what a send addresses. */
   createAisensyCampaign: AisensyCampaignDraft;
@@ -7666,7 +7758,7 @@ export type Mutation = {
   deleteAdRequest: Scalars['Boolean']['output'];
   /**  Admin-only: delete an adjustment. Returns the recomputed score.  */
   deleteAdjustment: HealthScore;
-  /** Deleting a system prompt is refused — reset it instead. */
+  /** Deleting a code prompt is refused — reset it instead. */
   deleteAiPrompt: Scalars['Boolean']['output'];
   /** Remove a template. There is no edit — replacing one means delete and resubmit. */
   deleteAisensyTemplate: Scalars['Boolean']['output'];
@@ -8044,6 +8136,14 @@ export type Mutation = {
    * announced every build twice would be ignored within a week.
    */
   reportAppBuild: AppBuild;
+  /**
+   * Report a story. Open to any signed-in viewer — that is the point of it.
+   *
+   * The snapshot (media, caption, author, club) is taken server-side from the
+   * story itself, so a reporter cannot file a row describing something the
+   * story never showed.
+   */
+  reportStory: ContentReport;
   /** Auth-required: email a confirmation OTP before self-serve account deletion. */
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
@@ -8074,7 +8174,7 @@ export type Mutation = {
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
-  /** Restore a system prompt's shipped default body. */
+  /** Restore a code prompt's shipped default body. */
   resetAiPrompt: AiPrompt;
   /**
    * Forget the caller's arrangement of one dashboard so it falls back to the
@@ -8360,6 +8460,7 @@ export type Mutation = {
   updateAdPricing: AdPricing;
   /** AI Portal: save the chip/dialog copy and the image-analysis prompt. */
   updateAiMonitoringSettings: AiMonitoringSettings;
+  /** On a code prompt only the body, note and target model are applied — the rest belongs to the catalogue. */
   updateAiPrompt: AiPrompt;
   updateAppBuildSettings: AppBuildSettings;
   updateAppPopup: AppPopup;
@@ -8378,6 +8479,7 @@ export type Mutation = {
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
+  updateContentReportStatus: ContentReport;
   updateContract: Contract;
   updateCoupon: Coupon;
   updateCrmCallPrompt: CrmCallPrompt;
@@ -10291,6 +10393,13 @@ export type MutationReportAppBuildArgs = {
 };
 
 
+export type MutationReportStoryArgs = {
+  details?: InputMaybe<Scalars['String']['input']>;
+  post_doc_id: Scalars['ID']['input'];
+  reason: ReportReason;
+};
+
+
 export type MutationRequestBouncerCallbackArgs = {
   input: RequestCallbackInput;
 };
@@ -11248,6 +11357,12 @@ export type MutationUpdateCommsProviderArgs = {
 export type MutationUpdateContactStatusArgs = {
   contact_id: Scalars['ID']['input'];
   status: ContactStatus;
+};
+
+
+export type MutationUpdateContentReportStatusArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateContentReportStatusInput;
 };
 
 
@@ -13550,6 +13665,27 @@ export type PodProductRequestInput = {
   quantity: Scalars['Int']['input'];
 };
 
+/**
+ * The status a pod ROW shows in the Club Admin's pods table.
+ *
+ * Not PodLifecycle: that one asks where a pod sits in time, this one names the
+ * Status chip, which mixes the booking cycle with the pod's own flags. The six
+ * values partition the table exactly — see pod.rowStatus for the precedence.
+ */
+export type PodRowStatus =
+  /** Live and published. */
+  | 'ACTIVE'
+  /** Waiting on the venue owner's answer to the slot request. */
+  | 'AWAITING_VENUE'
+  /** Soft-deleted. */
+  | 'CANCELLED'
+  /** Settled by finance. */
+  | 'COMPLETED'
+  /** Live but not published. */
+  | 'DRAFT'
+  /** The venue owner declined the slot request. */
+  | 'VENUE_REJECTED';
+
 export type PodSettlement = {
   __typename?: 'PodSettlement';
   /** Seats a host scanned in at the door. The settlement basis. */
@@ -13891,6 +14027,13 @@ export type Post = {
   __typename?: 'Post';
   author?: Maybe<User>;
   author_id: Scalars['ID']['output'];
+  /**
+   * May the signed-in viewer delete this? The author always can; a CLUB
+   * story additionally answers to that club's admins, because it was
+   * published under the club's name. Server-owned so the two apps cannot
+   * disagree about who is allowed to press it.
+   */
+  can_delete: Scalars['Boolean']['output'];
   caption: Scalars['String']['output'];
   club_id?: Maybe<Scalars['ID']['output']>;
   comments: Array<PostComment>;
@@ -14564,6 +14707,10 @@ export type Query = {
    * EVERY stage — including pods awaiting the venue owner's approval and
    * cancelled ones — so a club admin can open and edit a pod wherever it sits
    * in the booking cycle. Pass club_id to narrow to one of their clubs.
+   *
+   * The status argument narrows to one bucket of the table's Status column. It
+   * is an argument rather than a column filter because the chip is derived from
+   * four fields at once, so it cannot ride the table engine's field allowlist.
    */
   clubAdminPodsTable: PodTablePage;
   clubAdminProfile?: Maybe<ClubAdminProfile>;
@@ -14602,6 +14749,10 @@ export type Query = {
   communicationLogs: CommunicationLogPage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
+  contentReport?: Maybe<ContentReport>;
+  contentReportStats: ContentReportStats;
+  /** Legal-only queue of everything users have reported. */
+  contentReportsTable: ContentReportTablePage;
   contract?: Maybe<Contract>;
   contractsTable: ContractTablePage;
   coupon?: Maybe<Coupon>;
@@ -15760,6 +15911,7 @@ export type QueryClubAdminPodPaymentsArgs = {
 export type QueryClubAdminPodsTableArgs = {
   club_id?: InputMaybe<Scalars['ID']['input']>;
   query?: InputMaybe<TableQueryInput>;
+  status?: InputMaybe<PodRowStatus>;
 };
 
 
@@ -15860,6 +16012,16 @@ export type QueryContactSubmissionsArgs = {
 
 
 export type QueryContactSubmissionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryContentReportArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryContentReportsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -17880,6 +18042,45 @@ export type ReportProblemConfig = {
   message_min_length: Scalars['Int']['output'];
 };
 
+/** Why the reporter says it should not be there. */
+export type ReportReason =
+  | 'HARASSMENT'
+  | 'HATE'
+  | 'MISINFORMATION'
+  | 'NUDITY'
+  | 'OTHER'
+  | 'SCAM'
+  | 'SPAM'
+  | 'VIOLENCE';
+
+/** Where the Legal team has taken it. */
+export type ReportStatus =
+  | 'ACTIONED'
+  | 'DISMISSED'
+  | 'IN_REVIEW'
+  | 'RECEIVED';
+
+export type ReportStatusCount = {
+  __typename?: 'ReportStatusCount';
+  count: Scalars['Int']['output'];
+  status: ReportStatus;
+};
+
+/**
+ * What was reported.
+ *
+ * A story is the only surface that raises one today; the type exists so the
+ * next surface files into the same record and the same Legal queue rather than
+ * growing a second reports table.
+ */
+export type ReportTargetType =
+  | 'CLUB'
+  | 'POD'
+  | 'POST'
+  | 'PRODUCT'
+  | 'PROFILE'
+  | 'STORY';
+
 export type RequestCallbackInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -18202,6 +18403,14 @@ export type ShortLinkClickTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One payment credited to a click. */
+export type ShortLinkConversion = {
+  __typename?: 'ShortLinkConversion';
+  amount: Scalars['Float']['output'];
+  at: Scalars['String']['output'];
+  payment_id: Scalars['ID']['output'];
+};
+
 export type ShortLinkDailyPoint = {
   __typename?: 'ShortLinkDailyPoint';
   count: Scalars['Int']['output'];
@@ -18241,6 +18450,9 @@ export type ShortLinkJourney = {
   city?: Maybe<Scalars['String']['output']>;
   click_id: Scalars['String']['output'];
   clicked_at: Scalars['String']['output'];
+  /** Every payment this click earned, oldest first. */
+  conversions: Array<ShortLinkConversion>;
+  /** Everything this visitor spent, across every payment. */
   converted_amount?: Maybe<Scalars['Float']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   device_type: Scalars['String']['output'];
@@ -19868,6 +20080,11 @@ export type UpdateCommsProviderInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   is_default?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateContentReportStatusInput = {
+  resolution?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ReportStatus>;
 };
 
 export type UpdateContractInput = {

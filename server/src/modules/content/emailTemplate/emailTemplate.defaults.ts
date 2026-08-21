@@ -94,6 +94,21 @@ function note(helpKey: string): string {
     </mj-section>`;
 }
 
+/** The record's own details under the callout, as label/value lines. */
+function detailRows(rows: readonly { labelKey: string; valueVar: string }[]): string {
+  const lines = rows
+    .map(
+      (row) =>
+        `        <mj-text color="#555555"><span style="color:#888888">{{t:${row.labelKey}}}</span> <strong>{{${row.valueVar}}}</strong></mj-text>`
+    )
+    .join('\n');
+  return `    <mj-section background-color="#ffffff" padding="8px 20px">
+      <mj-column>
+${lines}
+      </mj-column>
+    </mj-section>`;
+}
+
 /**
  * Account and listing status emails share one shape. The entity's label and
  * the two lines of copy are all that differ, so keeping the layout here avoids
@@ -283,7 +298,45 @@ const POLICY_ACCEPTANCE: TemplateDefault = {
   ),
 };
 
+/**
+ * The attendee's own copy of a mark the host is paid on.
+ *
+ * Attendance stopped being a private note the host keeps the moment it started
+ * deciding the payout, so the person it is about is told in writing — with the
+ * booking named, so a mark made in error can be pointed at and contested before
+ * completion freezes it. Every path that marks somebody present sends this one
+ * email: the door scan, the host's manual mark, the Club Admin override and the
+ * admin check-in all funnel through `notifyAttendanceMarked`.
+ */
+const ATTENDANCE_MARKED: TemplateDefault = {
+  slug: 'attendance-marked',
+  name: 'Attendance Marked',
+  description:
+    'The attendee, when a door scan, a host’s manual mark, a Club Admin override or an admin check-in records them present at a pod.',
+  subject: 'Attendance marked — {{pod_title}}',
+  mjml: shell(
+    'email.attendanceMarked.title',
+    [
+      intro('email.attendanceMarked.title', 'email.attendanceMarked.body', 'name'),
+      callout(LIVE, 'email.attendanceMarked.podLabel', 'pod_title'),
+      detailRows([
+        { labelKey: 'email.attendanceMarked.markedAtLabel', valueVar: 'marked_at' },
+        { labelKey: 'email.attendanceMarked.placeLabel', valueVar: 'place_line' },
+        { labelKey: 'email.attendanceMarked.ticketLabel', valueVar: 'ticket_code' },
+        { labelKey: 'email.attendanceMarked.seatsLabel', valueVar: 'seats_count' },
+      ]),
+      `    <mj-section background-color="#ffffff" padding="8px 20px 24px 20px">
+      <mj-column>
+        <mj-button href="{{booking_url}}">{{t:email.attendanceMarked.cta}}</mj-button>
+        <mj-text font-size="13px" color="#888888">{{t:email.attendanceMarked.disputeNote}}</mj-text>
+      </mj-column>
+    </mj-section>`,
+    ].join('\n')
+  ),
+};
+
 export const TEMPLATE_DEFAULTS: TemplateDefault[] = [
+  ATTENDANCE_MARKED,
   PORTAL_ACCESS_APPROVED,
   PORTAL_ACCESS_DECLINED,
   POLICY_ACCEPTANCE,

@@ -160,6 +160,13 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     at: String!
   }
 
+  "One payment credited to a click."
+  type ShortLinkConversion {
+    payment_id: ID!
+    amount: Float!
+    at: String!
+  }
+
   "One click, who it turned into, and how far it got."
   type ShortLinkJourney {
     id: ID!
@@ -170,11 +177,14 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     city: String
     device_type: String!
     furthest_step: ShortLinkJourneyStep!
+    "Everything this visitor spent, across every payment."
     converted_amount: Float
     user_id: ID
     user_name: String
     user_email: String
     steps: [ShortLinkJourneyEntry!]!
+    "Every payment this click earned, oldest first."
+    conversions: [ShortLinkConversion!]!
   }
 
   type ShortLinkJourneyTablePage {

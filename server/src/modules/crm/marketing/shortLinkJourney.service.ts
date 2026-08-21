@@ -65,6 +65,11 @@ async function toJourneyRow(doc: IShortLinkClick) {
     user_name: name,
     user_email: user?.auth?.email ?? null,
     steps: doc.journey.map((entry) => ({ step: entry.step, at: entry.at.toISOString() })),
+    conversions: doc.conversions.map((entry) => ({
+      payment_id: entry.payment_id.toHexString(),
+      amount: entry.amount,
+      at: entry.at.toISOString(),
+    })),
   };
 }
 
@@ -119,11 +124,29 @@ export const shortLinkJourneyService = {
       .exec();
     if (!click) return false;
 
+    // A row written before `conversions` existed carries its one payment in
+    // the retired slot. Fold it in before appending, or the total would count
+    // a payment the list does not show.
+    if (click.conversions.length === 0 && click.converted_payment_id) {
+      click.conversions.push({
+        payment_id: click.converted_payment_id,
+        amount: click.converted_amount ?? 0,
+        at: click.journey.find((entry) => entry.step === 'PAID')?.at ?? click.updated_at,
+      });
+    }
+
+    // The finalize pipeline retries a step that failed half-way, so the same
+    // payment must never be counted twice.
+    const paymentId = new Types.ObjectId(input.paymentId);
+    if (click.conversions.some((entry) => entry.payment_id.equals(paymentId))) return true;
+
     if (!click.journey.some((entry) => entry.step === 'PAID')) {
       click.journey.push({ step: 'PAID', at });
     }
-    click.converted_amount = input.amount;
-    click.converted_payment_id = new Types.ObjectId(input.paymentId);
+    // Appended and accumulated, never replaced: a buyer's second purchase adds
+    // to what this click earned instead of erasing the first one's record.
+    click.conversions.push({ payment_id: paymentId, amount: input.amount, at });
+    click.converted_amount = (click.converted_amount ?? 0) + input.amount;
     await click.save();
     return true;
   },

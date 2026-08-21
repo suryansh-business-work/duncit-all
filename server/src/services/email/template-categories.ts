@@ -48,6 +48,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
 
   // Something changed on their account or booking.
   notification: [
+    'attendance-marked',
     'brand-activated',
     'brand-deactivated',
     'host-activated',
@@ -117,6 +118,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'admin-access-granted': "You're receiving this because your Duncit account was granted admin access.",
   'admin-access-revoked': "You're receiving this because your Duncit admin access changed.",
   'admin-credentials': "You're receiving this because you use Duncit.",
+  'attendance-marked': '{{t:email.attendanceMarked.footer}}',
   'contact-received': "You're receiving this because you contacted us.",
   'email-verification-otp': "You're receiving this because you use Duncit.",
   'event-ticket': "You're receiving this because you booked a Duncit event.",

@@ -254,5 +254,6 @@ export const makeShortLinkJourneyRow = (
     { step: 'SIGNED_UP', at: '2026-07-31T09:02:00.000Z' },
     { step: 'PAID', at: '2026-07-31T09:09:00.000Z' },
   ],
+  conversions: [{ payment_id: 'p1', amount: 1500, at: '2026-07-31T09:09:00.000Z' }],
   ...over,
 });

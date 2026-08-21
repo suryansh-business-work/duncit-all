@@ -22,6 +22,13 @@ export interface IJourneyEntry {
   at: Date;
 }
 
+/** One payment credited to a click. */
+export interface IClickConversion {
+  payment_id: Types.ObjectId;
+  amount: number;
+  at: Date;
+}
+
 /**
  * One row per click on a short link.
  *
@@ -61,8 +68,21 @@ export interface IShortLinkClick extends Document {
    * the first time rather than the last page they reloaded.
    */
   journey: IJourneyEntry[];
-  /** Set when a payment is attributed back to this click. */
+  /**
+   * Every payment credited to this click, oldest first.
+   *
+   * A visitor who followed a link once can buy more than once — a pod today, a
+   * product next week — and each sale is its own entry, so a later payment
+   * never overwrites the record of an earlier one.
+   */
+  conversions: IClickConversion[];
+  /** What this visitor has spent in total: the sum of `conversions`. */
   converted_amount?: number | null;
+  /**
+   * LEGACY. The single payment a click could carry before `conversions`
+   * existed. Never written any more; still read when tracing a payment made
+   * before this field was superseded back to the link that earned it.
+   */
   converted_payment_id?: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
@@ -96,6 +116,17 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
       ],
       default: [],
     },
+    conversions: {
+      type: [
+        {
+          _id: false,
+          payment_id: { type: Schema.Types.ObjectId, required: true },
+          amount: { type: Number, required: true },
+          at: { type: Date, required: true },
+        },
+      ],
+      default: [],
+    },
     converted_amount: { type: Number, default: null },
     converted_payment_id: { type: Schema.Types.ObjectId, default: null },
   },
@@ -104,5 +135,8 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
 
 // The detail page always reads one link's clicks newest-first.
 shortLinkClickSchema.index({ short_link_id: 1, clicked_at: -1 });
+// The payment detail page asks the reverse question — which link earned THIS
+// payment — once per view, so the lookup must not scan every click ever made.
+shortLinkClickSchema.index({ 'conversions.payment_id': 1 });
 
 export const ShortLinkClickModel = model<IShortLinkClick>('ShortLinkClick', shortLinkClickSchema);

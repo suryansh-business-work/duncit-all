@@ -521,7 +521,14 @@ async function loadAuditReads(payment: IPayment): Promise<AuditReads> {
     // The coin ledger keys on the payment's BUSINESS id, not its document id.
     CoinTransactionModel.find({ payment_id: payment.payment_id }).sort({ created_at: 1 }),
     payment.coupon_code ? CouponModel.findOne({ code: payment.coupon_code }) : null,
-    ShortLinkClickModel.findOne({ converted_payment_id: payment._id }).select('code click_id'),
+    // `converted_payment_id` is the retired single-payment slot: payments made
+    // before a click could hold more than one still live there, and only there.
+    ShortLinkClickModel.findOne({
+      $or: [
+        { 'conversions.payment_id': payment._id },
+        { converted_payment_id: payment._id },
+      ],
+    }).select('code click_id'),
     // The live economics, not what they were when the payment landed: a board
     // switched off retro-greys its rows, which is the honest reading — an award
     // that was never written cannot be produced later either.

@@ -16,6 +16,7 @@ import {
 import { getSocketUrl } from './lib/socket-url';
 import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
+import { endRejectedSession, requireAuthForShortLinkLanding } from './lib/session-guard';
 import { installAttributionLinkDecorator } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
@@ -69,7 +70,12 @@ const isAuthed = () => !!localStorage.getItem('token');
 
 const loadUser = async () => {
   const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
-  return data?.me ?? null;
+  const me = data?.me ?? null;
+  // The provider only asks with a token attached, so a null answer is the
+  // server refusing it — a deleted, blocked or no-longer-verifiable session
+  // that would otherwise go on rendering the signed-in shell off the cache.
+  if (!me) endRejectedSession();
+  return me;
 };
 
 // Real-time: a profile change made in a portal or on the phone lands in this
@@ -104,6 +110,10 @@ configureLogs(
 // the URL to /login?redirect=… for signed-out visitors, and mounting waits up to
 // 3s on config below — by then the parameter is gone from location.search.
 captureShortLinkClick(globalThis.window.location.search);
+// …then send the visitor to sign in, because a short link is measured by the
+// account it produces. Runs AFTER the capture so the click id is already on
+// its way: this only rewrites the URL, it does not reload.
+requireAuthForShortLinkLanding();
 // Re-attach the stored tags to every outbound duncit link at click time —
 // storage does not cross origins, so the URL is the only vehicle to a
 // website, another surface, or the native app.

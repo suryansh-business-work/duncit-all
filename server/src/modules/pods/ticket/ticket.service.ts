@@ -334,6 +334,25 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
       target_user_ids: [String(ticket.user_id)],
     });
     const [user, { appUrl }] = await Promise.all([ticketRecipient(ticket), getUrlConfigs()]);
+    // The written record. The in-app note is read once and scrolls away, and
+    // WhatsApp only reaches an opted-in number — but the pod's payout is split
+    // on exactly who is marked, so the person it is about needs something they
+    // can go back to while there is still time to say it is wrong.
+    await sendEmail({
+      to: ticket.snapshot?.user_email,
+      subject: `Attendance marked — ${ticket.snapshot?.pod_title ?? 'your pod'}`,
+      template: 'attendance-marked',
+      category: 'notification',
+      vars: {
+        name: ticket.snapshot?.user_name ?? 'there',
+        pod_title: ticket.snapshot?.pod_title ?? 'Your pod',
+        marked_at: dateLabel(ticket.checked_in_at?.toISOString()),
+        place_line: placeLabel(ticket) || '—',
+        ticket_code: ticket.ticket_code,
+        seats_count: String(ticket.seats ?? 1),
+        booking_url: bookingLinkUrl(appUrl, String(ticket.membership_id)),
+      },
+    });
     await whatsappService.send({
       event: 'USER_POD_ATTENDANCE',
       entityId: String(ticket._id),

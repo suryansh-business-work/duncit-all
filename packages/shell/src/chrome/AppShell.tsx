@@ -4,7 +4,7 @@ import { Box, CircularProgress, Drawer } from '@mui/material';
 import { tokens } from '@duncit/theme';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import { useTranslation } from '../i18n/useTranslation';
-import { localizeNav } from '../i18n/localize-nav';
+import { localizeNav, localizeSearchItems } from '../i18n/localize-nav';
 import PortalPageTitle from './PortalPageTitle';
 import type { AppNavItem, SearchItem } from '../types';
 import { AppHeader } from './AppHeader';
@@ -70,6 +70,7 @@ export function AppShell({
   // Resolved here so the sidebar, the header search, the breadcrumbs and the
   // page title all read the SAME labels — see localizeNav.
   const localizedNav = useMemo(() => localizeNav(nav, t), [nav, t]);
+  const localizedSearch = useMemo(() => localizeSearchItems(searchItems, t), [searchItems, t]);
   const [mobileOpen, setMobileOpen] = useState(false);
   // The chat is DOCKED, so its open state belongs to the layout rather than to
   // the button: the panel is a sibling of the main content, and opening it
@@ -166,7 +167,7 @@ export function AppShell({
           title={config.fullName ?? config.name}
           name={config.name}
           nav={localizedNav}
-          searchItems={searchItems}
+          searchItems={localizedSearch}
           user={user}
           profileTo={profileTo}
           onLogout={onLogout}

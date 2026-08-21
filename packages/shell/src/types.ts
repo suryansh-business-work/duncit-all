@@ -33,9 +33,18 @@ export interface AppNavItem {
 /** One entry of the header-wide global search. */
 export interface SearchItem {
   label: string;
+  /** Translation key for `label`, same arrangement as `AppNavItem.labelKey`. */
+  labelKey?: string;
   to: string;
+  /**
+   * Extra terms that match this entry. Deliberately NOT keyed: they are what
+   * someone types, not what they read, and a reader searching in their own
+   * language is served by the translated `label` matching first.
+   */
   keywords?: string[];
   section?: string;
+  /** Translation key for `section` — the group heading in the results list. */
+  sectionKey?: string;
 }
 
 /** A "Coming soon" module card on the portal welcome dashboard. */

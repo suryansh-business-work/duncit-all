@@ -180,6 +180,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       podPlans: 'Pod Plans',
       podProfit: 'Pod Profit',
       pods: 'Pods',
+      podsDashboard: 'Pods Dashboard',
       podSettings: 'Pod Settings',
       podShopSlider: 'Pod Shop Slider',
       pointsLedger: 'Points Ledger',

@@ -1,6 +1,6 @@
 import type { Translator } from '@duncit/i18n';
 
-import type { AppNavItem } from '../types';
+import type { AppNavItem, SearchItem } from '../types';
 
 /**
  * Resolve a nav tree's `labelKey`/`captionKey` into plain `label`/`caption`,
@@ -22,5 +22,26 @@ export function localizeNav(items: AppNavItem[], t: Translator['t']): AppNavItem
     label: item.labelKey ? t(item.labelKey) : item.label,
     caption: item.captionKey ? t(item.captionKey) : item.caption,
     ...(item.children ? { children: localizeNav(item.children, t) } : {}),
+  }));
+}
+
+/**
+ * The same resolution for the header search's own entries.
+ *
+ * Only the Admin console supplies its own list — every other portal has the
+ * header derive one from `nav`, which `localizeNav` has already translated. So
+ * this exists for that one case, and it has to: without it Admin would be the
+ * single console whose search still answered in English after everything else
+ * had been swept.
+ */
+export function localizeSearchItems(
+  items: SearchItem[] | undefined,
+  t: Translator['t'],
+): SearchItem[] | undefined {
+  if (!items) return items;
+  return items.map((item) => ({
+    ...item,
+    label: item.labelKey ? t(item.labelKey) : item.label,
+    section: item.sectionKey ? t(item.sectionKey) : item.section,
   }));
 }

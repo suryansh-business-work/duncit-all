@@ -27,6 +27,12 @@ export interface HostPodActionLabels {
    * owns the navigation and a console without that route simply omits it.
    */
   seeAttendance: string;
+  /**
+   * "Slot Request Status" — only rendered when the surface passes
+   * `onSlotRequest`. Like `seeAttendance` it opens a PAGE, so a console without
+   * that route simply omits the item.
+   */
+  slotRequest: string;
   /** The completion dialog's single scanner button, under the roster. */
   attendanceScanCta: string;
   /** The rating link in the pod's action menu. */
@@ -65,6 +71,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('mweb.podClubAdmin.menuItem'),
     seeAttendance: t('mweb.attendance.menuItem'),
+    slotRequest: t('mweb.podPending.menuItem'),
     attendanceScanCta: t('mweb.attendance.scanCta'),
     feedbackLink: t('mweb.podFeedback.feedbackLink'),
     shareLink: t('mweb.podFeedback.shareLink'),
@@ -100,6 +107,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
   return {
     clubAdmin: t('shell.podClubAdmin.menuItem'),
     seeAttendance: t('shell.attendance.menuItem'),
+    slotRequest: t('shell.podPending.menuItem'),
     attendanceScanCta: t('shell.attendance.scanCta'),
     feedbackLink: t('shell.podFeedback.feedbackLink'),
     shareLink: t('shell.podFeedback.shareLink'),

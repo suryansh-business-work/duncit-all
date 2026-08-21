@@ -3,6 +3,7 @@ import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from 
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -21,6 +22,12 @@ interface Props {
    * `onClubAdmin`, the item only appears where the surface has that route.
    */
   onSeeAttendance?: () => void;
+  /**
+   * Opens the pod's "Slot Request Sent" page — where the venue's decision on
+   * this pod's slot is shown, and can be re-checked. A PAGE like
+   * `onSeeAttendance`, so it only appears where the surface has that route.
+   */
+  onSlotRequest?: () => void;
   onEdit: () => void;
   onOpenFeedback: () => void;
   onShareFeedback: () => void;
@@ -46,6 +53,7 @@ export default function HostPodActionsMenu({
   onScan,
   onComplete,
   onSeeAttendance,
+  onSlotRequest,
   onEdit,
   onOpenFeedback,
   onShareFeedback,
@@ -94,6 +102,14 @@ export default function HostPodActionsMenu({
               <FactCheckIcon fontSize="small" color="success" />
             </ListItemIcon>
             <ListItemText primary={labels.seeAttendance} />
+          </MenuItem>
+        )}
+        {onSlotRequest && (
+          <MenuItem onClick={pick(onSlotRequest)}>
+            <ListItemIcon>
+              <PendingActionsIcon fontSize="small" color="warning" />
+            </ListItemIcon>
+            <ListItemText primary={labels.slotRequest} />
           </MenuItem>
         )}
         <MenuItem onClick={pick(onComplete)}>

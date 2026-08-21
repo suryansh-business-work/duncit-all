@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
+  /** Opens the pod's "Slot Request Sent" screen — the venue decision, re-checkable. */
+  onSlotRequest: () => void;
   onComplete: () => void;
   onEdit: () => void;
   onOpenFeedback: () => void;
@@ -29,6 +31,7 @@ export function PodActionsSheet({
   onClose,
   onScan,
   onSeeAttendance,
+  onSlotRequest,
   onComplete,
   onEdit,
   onOpenFeedback,
@@ -38,7 +41,7 @@ export function PodActionsSheet({
   onClubAdmin,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink, danger, primary, success } = useThemeColors();
+  const { color: ink, danger, primary, success, warning } = useThemeColors();
 
   return (
     // Eight rows are ~430px before any chrome — enough to be clipped in
@@ -65,6 +68,13 @@ export function PodActionsSheet({
           label={t('mweb.attendance.menuItem')}
           tint={success}
           onPress={onSeeAttendance}
+        />
+        <ActionRow
+          testID="pod-action-slot-request"
+          icon="pending-actions"
+          label={t('mweb.podPending.menuItem')}
+          tint={warning}
+          onPress={onSlotRequest}
         />
         <ActionRow
           testID="pod-action-complete"

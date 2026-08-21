@@ -252,6 +252,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     podClubAdmin: {
       menuItem: 'Pod Club Admin',
     },
+    /**
+     * Same shape as `podClubAdmin` above — only the menu label lives here. The
+     * slot-request page itself is an mWeb/native surface, so a portal resolves
+     * the label and simply omits the item when it has no such route.
+     */
+    podPending: {
+      menuItem: 'Slot Request Status',
+    },
     /** The per-pod "AI Monitoring" pill on the Admin + Partners pods tables —
      * one copy here because the same pill opens the same activity dialog in
      * both consoles. */

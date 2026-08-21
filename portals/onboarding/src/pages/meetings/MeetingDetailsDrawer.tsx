@@ -24,14 +24,14 @@ interface Props {
 
 // Right-side details drawer for a single onboarding meeting (incl. survey answers).
 export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCancel }: Readonly<Props>) {
-  // A meeting is open to scheduling only while it is still pending: once it is DONE it
-  // has already happened, and CANCELLED/DENIED rows are settled the other way.
-  const pending = !!meeting && (meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED');
   const blocked = !!meeting && (meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED');
-  const showEdit = !!onEdit && pending && !blocked;
-  const showCancel = !!onCancel && pending && !blocked;
-  // Matches the row Actions menu — a meeting that already has a slot is re-scheduled.
-  const editLabel = meeting?.status === 'SCHEDULED' ? 'Reschedule' : 'Schedule';
+  // The drawer is a details view, so it only offers the ONE action the request is
+  // still waiting on. A meeting is waiting to be scheduled while it is REQUESTED;
+  // once it holds a slot (SCHEDULED) or has already happened (DONE) there is
+  // nothing to schedule here — rescheduling stays on the row's Actions menu.
+  const showEdit = !!onEdit && meeting?.status === 'REQUESTED' && !blocked;
+  const showCancel =
+    !!onCancel && !blocked && (meeting?.status === 'REQUESTED' || meeting?.status === 'SCHEDULED');
   const catPath = meeting
     ? [meeting.super_category_name, meeting.category_name, meeting.sub_category_name].filter(Boolean).join(' › ')
     : '';
@@ -76,7 +76,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>{editLabel}</Button>}
+                {showEdit && <Button variant="contained" onClick={() => onEdit?.(meeting)}>Schedule</Button>}
                 {showCancel && <Button color="error" onClick={() => onCancel?.(meeting)}>Cancel</Button>}
               </Stack>
             </>

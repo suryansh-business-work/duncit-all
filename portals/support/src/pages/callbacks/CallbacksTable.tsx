@@ -1,16 +1,19 @@
-import type { MutableRefObject } from 'react';
+import { useMemo, type MutableRefObject } from 'react';
 import { Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { CallbackRequest } from '../../graphql/bouncer';
 import { relativeTime } from '../../lib/supportTable';
 import { CALLBACK_STATUS_COLORS } from '../../lib/statusMaps';
+import { useTranslation } from '@duncit/shell';
 
 // "Resolved" is the user-facing label for the backend CLOSED status.
-const STATUS_OPTIONS: ReadonlyArray<{ value: CallbackRequest['status']; label: string }> = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'CONTACTED', label: 'Contacted' },
-  { value: 'CLOSED', label: 'Resolved' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusOptions = (t: Translate): ReadonlyArray<{ value: CallbackRequest['status']; label: string }> => [
+  { value: 'PENDING', label: t('support.callbacks.statusPending') },
+  { value: 'CONTACTED', label: t('support.callbacks.statusContacted') },
+  { value: 'CLOSED', label: t('support.callbacks.statusResolved') },
 ];
 
 const getCallbackRowId = (req: CallbackRequest) => req.id;
@@ -33,17 +36,17 @@ const renderStatus = (req: CallbackRequest) => (
 
 // Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
 // filter maps onto the bouncerCallbackRequests query's `status` arg.
-const COLUMNS: DuncitColumn<CallbackRequest>[] = [
+const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
   {
     field: 'ticket_no',
-    headerName: 'ID',
+    headerName: t('support.callbacks.colId'),
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (req) => req.ticket_no,
   },
   {
     field: 'user',
-    headerName: 'User',
+    headerName: t('support.callbacks.colUser'),
     sortable: false,
     minWidth: 140,
     cellRenderer: renderUser,
@@ -51,13 +54,13 @@ const COLUMNS: DuncitColumn<CallbackRequest>[] = [
   },
   {
     field: 'contact_phone',
-    headerName: 'Phone',
+    headerName: t('shell.common.phone'),
     minWidth: 150,
     valueGetter: (req) => req.contact_phone || '—',
   },
   {
     field: 'pod',
-    headerName: 'Pod',
+    headerName: t('support.callbacks.colPod'),
     sortable: false,
     flex: 1,
     minWidth: 180,
@@ -65,15 +68,15 @@ const COLUMNS: DuncitColumn<CallbackRequest>[] = [
   },
   {
     field: 'status',
-    headerName: 'Status',
+    headerName: t('shell.common.status'),
     width: 150,
-    filter: { type: 'select', options: STATUS_OPTIONS },
+    filter: { type: 'select', options: statusOptions(t) },
     cellRenderer: renderStatus,
     valueGetter: (req) => req.status,
   },
   {
     field: 'created_at',
-    headerName: 'Requested',
+    headerName: t('support.callbacks.colRequested'),
     minWidth: 160,
     valueGetter: (req) => relativeTime(req.created_at),
   },
@@ -86,14 +89,16 @@ interface Props {
 }
 
 export default function CallbacksTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const columns = useMemo(() => buildColumns(t), [t]);
   return (
     <DuncitTable<CallbackRequest>
       tableId="support-callbacks"
-      columns={COLUMNS}
+      columns={columns}
       fetchRows={fetchRows}
       getRowId={getCallbackRowId}
       onRowClick={onRowClick}
-      emptyText="No Callback Requests Found"
+      emptyText={t('support.callbacks.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search reason or phone"
       refetchRef={refetchRef}

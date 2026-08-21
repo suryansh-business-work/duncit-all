@@ -16,6 +16,7 @@ import {
 import { TICKETS, type TicketPage } from '../graphql/tickets';
 import { SUPPORT_CHAT_SESSIONS, type SupportChatSessionPage } from '../graphql/supportChat';
 import { useSupportSocket } from '../lib/useSupportSocket';
+import { useTranslation } from '@duncit/shell';
 
 interface SupportStatCardProps {
   label: string;
@@ -44,6 +45,7 @@ function SupportStatCard({ label, count, icon, color, to }: Readonly<SupportStat
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const sos = useQuery<{ bouncerSosAlerts: SosAlertPage }>(BOUNCER_SOS_ALERTS, {
     variables: { status: 'ACTIVE', page_size: 1 },
     fetchPolicy: 'cache-and-network',
@@ -84,7 +86,7 @@ export default function DashboardPage() {
         minH: 2,
         content: (
           <SupportStatCard
-            label="Active SOS alerts"
+            label={t('support.dashboard.activeSos')}
             count={sos.data?.bouncerSosAlerts.total ?? 0}
             icon={<WarningAmberIcon fontSize="large" />}
             color="error.main"
@@ -100,7 +102,7 @@ export default function DashboardPage() {
         minH: 2,
         content: (
           <SupportStatCard
-            label="Pending callbacks"
+            label={t('support.dashboard.pendingCallbacks')}
             count={callbacks.data?.bouncerCallbackRequests.total ?? 0}
             icon={<PhoneCallbackIcon fontSize="large" />}
             color="warning.main"
@@ -116,7 +118,7 @@ export default function DashboardPage() {
         minH: 2,
         content: (
           <SupportStatCard
-            label="Open tickets"
+            label={t('support.dashboard.openTickets')}
             count={tickets.data?.tickets.total ?? 0}
             icon={<ConfirmationNumberIcon fontSize="large" />}
             color="primary.main"
@@ -132,7 +134,7 @@ export default function DashboardPage() {
         minH: 2,
         content: (
           <SupportStatCard
-            label="Open chats"
+            label={t('support.dashboard.openChats')}
             count={chats.data?.supportChatSessions.total ?? 0}
             icon={<ForumIcon fontSize="large" />}
             color="success.main"
@@ -149,8 +151,8 @@ export default function DashboardPage() {
       dashboardId="support.overview"
       header={
         <PageHeader
-          title="Support Dashboard"
-          subtitle="Live overview of safety alerts, callbacks, tickets and chats awaiting your team."
+          title={t('support.dashboard.title')}
+          subtitle={t('support.dashboard.subtitle')}
         />
       }
       widgets={widgets}

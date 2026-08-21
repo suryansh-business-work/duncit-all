@@ -8,8 +8,10 @@ import { BOUNCER_SOS_ALERTS, type SosAlertPage } from '../../graphql/bouncer';
 import { useSupportSocket } from '../../lib/useSupportSocket';
 import { supportListVars } from '../../lib/supportTable';
 import SosTable from './SosTable';
+import { useTranslation } from '@duncit/shell';
 
 export default function SosListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -34,8 +36,8 @@ export default function SosListPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="SOS Alerts"
-        subtitle="Live safety alerts raised by users. Open one to acknowledge or resolve it."
+        title={t('support.sos.title')}
+        subtitle={t('support.sos.subtitle')}
       />
       <SosTable
         fetchRows={fetchRows}

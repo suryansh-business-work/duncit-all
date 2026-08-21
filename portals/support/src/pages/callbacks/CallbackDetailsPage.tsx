@@ -22,8 +22,10 @@ import {
   type CallbackRequest,
 } from '../../graphql/bouncer';
 import { CALLBACK_STATUS_COLORS } from '../../lib/statusMaps';
+import { useTranslation } from '@duncit/shell';
 
 export default function CallbackDetailsPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery<{ bouncerCallbackRequest: CallbackRequest | null }>(
@@ -106,7 +108,7 @@ export default function CallbackDetailsPage() {
                   <TextField
                     size="small"
                     type="number"
-                    label="Call duration (min)"
+                    label={t('support.callbacks.duration')}
                     value={durationMin}
                     onChange={(e) => setDurationMin(e.target.value)}
                     sx={{ width: 160 }}
@@ -115,7 +117,7 @@ export default function CallbackDetailsPage() {
                   <TextField
                     size="small"
                     fullWidth
-                    label="Conclusion"
+                    label={t('support.callbacks.conclusion')}
                     value={conclusion}
                     onChange={(e) => setConclusion(e.target.value)}
                   />
@@ -156,7 +158,7 @@ export default function CallbackDetailsPage() {
 
   return (
     <Stack spacing={2}>
-      <BackHeader onBack={() => navigate('/callbacks')} title="Callback Request" titleWeight={800} />
+      <BackHeader onBack={() => navigate('/callbacks')} title={t('support.callbacks.detailTitle')} titleWeight={800} />
 
       {content}
     </Stack>

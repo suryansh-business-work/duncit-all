@@ -1,15 +1,18 @@
-import type { MutableRefObject } from 'react';
+import { useMemo, type MutableRefObject } from 'react';
 import { Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SosAlert } from '../../graphql/bouncer';
 import { relativeTime } from '../../lib/supportTable';
 import { SOS_STATUS_COLORS } from '../../lib/statusMaps';
+import { useTranslation } from '@duncit/shell';
 
-const STATUS_OPTIONS: ReadonlyArray<{ value: SosAlert['status']; label: string }> = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'ACKNOWLEDGED', label: 'Acknowledged' },
-  { value: 'RESOLVED', label: 'Resolved' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusOptions = (t: Translate): ReadonlyArray<{ value: SosAlert['status']; label: string }> => [
+  { value: 'ACTIVE', label: t('support.sos.statusActive') },
+  { value: 'ACKNOWLEDGED', label: t('support.sos.statusAcknowledged') },
+  { value: 'RESOLVED', label: t('support.sos.statusResolved') },
 ];
 
 const getSosRowId = (a: SosAlert) => a.id;
@@ -33,40 +36,40 @@ const podValue = (a: SosAlert) =>
 
 // Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
 // filter maps onto the bouncerSosAlerts query's `status` arg.
-const COLUMNS: DuncitColumn<SosAlert>[] = [
+const buildColumns = (t: Translate): DuncitColumn<SosAlert>[] => [
   {
     field: 'ticket_no',
-    headerName: 'ID',
+    headerName: t('support.sos.colId'),
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (a) => a.ticket_no,
   },
   {
     field: 'user',
-    headerName: 'User',
+    headerName: t('support.sos.colUser'),
     sortable: false,
     minWidth: 140,
     cellRenderer: renderUser,
     valueGetter: (a) => a.user.name,
   },
-  { field: 'pod', headerName: 'Pod', sortable: false, flex: 1, minWidth: 180, valueGetter: podValue },
+  { field: 'pod', headerName: t('support.sos.colPod'), sortable: false, flex: 1, minWidth: 180, valueGetter: podValue },
   {
     field: 'contact_phone',
-    headerName: 'Phone',
+    headerName: t('shell.common.phone'),
     minWidth: 150,
     valueGetter: (a) => a.contact_phone || '—',
   },
   {
     field: 'status',
-    headerName: 'Status',
+    headerName: t('shell.common.status'),
     width: 150,
-    filter: { type: 'select', options: STATUS_OPTIONS },
+    filter: { type: 'select', options: statusOptions(t) },
     cellRenderer: renderStatus,
     valueGetter: (a) => a.status,
   },
   {
     field: 'created_at',
-    headerName: 'Raised',
+    headerName: t('support.sos.colRaised'),
     minWidth: 160,
     valueGetter: (a) => relativeTime(a.created_at),
   },
@@ -79,14 +82,16 @@ interface Props {
 }
 
 export default function SosTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const columns = useMemo(() => buildColumns(t), [t]);
   return (
     <DuncitTable<SosAlert>
       tableId="support-sos"
-      columns={COLUMNS}
+      columns={columns}
       fetchRows={fetchRows}
       getRowId={getSosRowId}
       onRowClick={onRowClick}
-      emptyText="No SOS Alerts Found"
+      emptyText={t('support.sos.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search message or phone"
       refetchRef={refetchRef}

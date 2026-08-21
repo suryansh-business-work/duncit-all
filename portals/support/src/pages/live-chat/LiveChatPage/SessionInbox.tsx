@@ -3,6 +3,7 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import type { SupportChatSession, SupportChatStatus } from '../../../graphql/supportChat';
 import SessionList from '../SessionList';
 import SessionFilter from './SessionFilter';
+import { useTranslation } from '@duncit/shell';
 
 const LIST_WIDTH = 220;
 
@@ -44,6 +45,7 @@ export default function SessionInbox({
   onPageSizeChange,
   onCreateUser,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -59,7 +61,7 @@ export default function SessionInbox({
         <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
           Chat with Us
         </Typography>
-        <IconButton size="small" aria-label="Create user account" onClick={onCreateUser}>
+        <IconButton size="small" aria-label={t('support.createUser.title')} onClick={onCreateUser}>
           <PersonAddAlt1Icon fontSize="small" />
         </IconButton>
       </Stack>
@@ -68,7 +70,7 @@ export default function SessionInbox({
         <TextField
           size="small"
           fullWidth
-          label="Search"
+          label={t('support.chat.search')}
           value={searchInput}
           onChange={(e) => onSearchChange(e.target.value)}
         />

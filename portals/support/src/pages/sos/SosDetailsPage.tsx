@@ -22,6 +22,7 @@ import {
   type SosAlert,
 } from '../../graphql/bouncer';
 import { SOS_STATUS_COLORS } from '../../lib/statusMaps';
+import { useTranslation } from '@duncit/shell';
 
 type SosAlertContactsProps = {
   alert: SosAlert;
@@ -133,6 +134,7 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
 }
 
 export default function SosDetailsPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery<{ bouncerSosAlert: SosAlert | null }>(
@@ -180,7 +182,7 @@ export default function SosDetailsPage() {
 
   return (
     <Stack spacing={2}>
-      <BackHeader onBack={() => navigate('/sos')} title="SOS Alert" titleWeight={800} />
+      <BackHeader onBack={() => navigate('/sos')} title={t('support.sos.detailTitle')} titleWeight={800} />
 
       {content}
     </Stack>

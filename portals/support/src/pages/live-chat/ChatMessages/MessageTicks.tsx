@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { useTranslation } from '@duncit/shell';
 
 export type TickState = 'pending' | 'sent' | 'seen';
 
@@ -20,22 +21,23 @@ const ICON_SX = { fontSize: 14, ml: 0.25, verticalAlign: 'middle' } as const;
 
 /** Renders the delivery/read tick for an agent's own bubble. */
 export default function MessageTicks({ state }: Readonly<{ state: TickState }>) {
+  const { t } = useTranslation();
   if (state === 'pending') {
     return (
-      <Box component="span" aria-label="Sending" title="Sending">
+      <Box component="span" aria-label={t('support.chat.sending')} title={t('support.chat.sending')}>
         <ScheduleIcon sx={{ ...ICON_SX, opacity: 0.7 }} />
       </Box>
     );
   }
   if (state === 'seen') {
     return (
-      <Box component="span" aria-label="Seen" title="Seen">
+      <Box component="span" aria-label={t('support.chat.seen')} title={t('support.chat.seen')}>
         <DoneAllIcon sx={{ ...ICON_SX, color: '#34b7f1' }} />
       </Box>
     );
   }
   return (
-    <Box component="span" aria-label="Delivered" title="Delivered">
+    <Box component="span" aria-label={t('support.chat.delivered')} title={t('support.chat.delivered')}>
       <DoneIcon sx={{ ...ICON_SX, opacity: 0.7 }} />
     </Box>
   );

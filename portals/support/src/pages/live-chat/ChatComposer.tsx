@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Button, Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   text: string;
@@ -16,6 +17,7 @@ interface Props {
 /** Message composer — text + image attachments + send (Enter submits). Signals
  * typing (throttled) so the user sees the "Support is typing…" indicator. */
 export default function ChatComposer({ text, attachments, sending, onText, onAttachments, onSend, onTyping }: Readonly<Props>) {
+  const { t } = useTranslation();
   const lastTyping = useRef(0);
   const handleChange = (value: string) => {
     onText(value);
@@ -31,7 +33,7 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
         value={attachments}
         onChange={onAttachments}
         folder="/support/chat"
-        label="Attach"
+        label={t('support.chat.attach')}
         max={3}
         accept={ATTACHMENT_ACCEPT_ALL}
         maxBytes={100 * 1024 * 1024}
@@ -41,7 +43,7 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
         <TextField
           size="small"
           fullWidth
-          placeholder="Type a message…"
+          placeholder={t('support.chat.placeholder')}
           value={text}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={(e) => {

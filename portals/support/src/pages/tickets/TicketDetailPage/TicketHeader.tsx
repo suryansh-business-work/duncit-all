@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { BackHeader } from '@duncit/ui';
 import TranscriptMenu from '../../../components/TranscriptMenu';
 import type { Ticket, TicketPriority, TicketStatus, TranscriptFormat } from '../../../graphql/tickets';
+import { useTranslation } from '@duncit/shell';
 
 const STATUSES: TicketStatus[] = ['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'];
 const PRIORITIES: TicketPriority[] = ['HIGH', 'MEDIUM', 'LOW'];
@@ -24,6 +25,7 @@ interface Props {
 
 /** Ticket detail header: subject + ticket no + status/priority setters + resolve / re-open + export. */
 export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onResolve, onReopen, onDownload, onEmail }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [confirmResolve, setConfirmResolve] = useState(false);
   const isResolved = RESOLVED.has(ticket.status);
 
@@ -42,14 +44,14 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
         actions={
           <>
             {isResolved ? (
-              <Tooltip title="Re-open ticket">
-                <IconButton size="small" color="primary" aria-label="Re-open ticket" onClick={onReopen}>
+              <Tooltip title={t('support.tickets.reopen')}>
+                <IconButton size="small" color="primary" aria-label={t('support.tickets.reopen')} onClick={onReopen}>
                   <ReplayIcon />
                 </IconButton>
               </Tooltip>
             ) : (
-              <Tooltip title="Mark resolved">
-                <IconButton size="small" color="success" aria-label="Mark resolved" onClick={() => setConfirmResolve(true)}>
+              <Tooltip title={t('support.tickets.markResolved')}>
+                <IconButton size="small" color="success" aria-label={t('support.tickets.markResolved')} onClick={() => setConfirmResolve(true)}>
                   <CheckCircleIcon />
                 </IconButton>
               </Tooltip>
@@ -60,7 +62,7 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
             <TextField
               select
               size="small"
-              label="Priority"
+              label={t('support.tickets.priority')}
               value={ticket.priority}
               onChange={(e) => onPriority(e.target.value as TicketPriority)}
               sx={{ minWidth: 120 }}
@@ -75,7 +77,7 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
             <TextField
               select
               size="small"
-              label="Status"
+              label={t('shell.common.status')}
               value={ticket.status}
               onChange={(e) => onStatus(e.target.value as TicketStatus)}
               sx={{ minWidth: 130 }}
@@ -92,9 +94,9 @@ export default function TicketHeader({ ticket, onBack, onStatus, onPriority, onR
 
       <ConfirmDialog
         open={confirmResolve}
-        title="Mark this ticket resolved?"
-        message="The ticket will be marked resolved and the user can leave feedback. You can re-open it later if needed."
-        confirmLabel="Mark resolved"
+        title={t('support.tickets.resolveTitle')}
+        message={t('support.tickets.resolveBody')}
+        confirmLabel={t('support.tickets.markResolved')}
         confirmColor="success"
         titleSx={{ fontWeight: 800 }}
         onConfirm={() => {

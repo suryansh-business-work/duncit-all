@@ -11,6 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import { SUPPORT_CREATE_USER } from '../../graphql/supportChat';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -21,6 +22,7 @@ const EMPTY = { first_name: '', last_name: '', email: '', phone_extension: '', p
 
 /** Lets a support agent create a user account on a caller's behalf. */
 export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY);
   const [done, setDone] = useState('');
   const [createUser, { loading, error }] = useMutation(SUPPORT_CREATE_USER);
@@ -57,23 +59,23 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 800 }}>Create user account</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800 }}>{t('support.createUser.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
           {done && <Alert severity="success">Account created for {done}.</Alert>}
           {error && <Alert severity="error">{error.message}</Alert>}
-          <TextField label="First name" size="small" value={form.first_name} onChange={set('first_name')} required />
-          <TextField label="Last name" size="small" value={form.last_name} onChange={set('last_name')} />
-          <TextField label="Email" size="small" type="email" value={form.email} onChange={set('email')} required />
+          <TextField label={t('shell.profile.firstName')} size="small" value={form.first_name} onChange={set('first_name')} required />
+          <TextField label={t('shell.profile.lastName')} size="small" value={form.last_name} onChange={set('last_name')} />
+          <TextField label={t('shell.common.email')} size="small" type="email" value={form.email} onChange={set('email')} required />
           <Stack direction="row" spacing={1}>
-            <TextField label="Ext" size="small" sx={{ width: 90 }} value={form.phone_extension} onChange={set('phone_extension')} />
-            <TextField label="Phone (optional)" size="small" fullWidth value={form.phone_number} onChange={set('phone_number')} />
+            <TextField label={t('support.createUser.ext')} size="small" sx={{ width: 90 }} value={form.phone_extension} onChange={set('phone_extension')} />
+            <TextField label={t('support.createUser.phoneOptional')} size="small" fullWidth value={form.phone_number} onChange={set('phone_number')} />
           </Stack>
-          <TextField label="Temporary password" size="small" type="password" value={form.password} onChange={set('password')} required helperText="Min 8 characters — share it with the user securely." />
+          <TextField label={t('support.createUser.tempPassword')} size="small" type="password" value={form.password} onChange={set('password')} required helperText={t('support.createUser.tempPasswordHint')} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>Close</Button>
+        <Button onClick={close}>{t('shell.common.close')}</Button>
         <Button
           variant="contained"
           onClick={submit}

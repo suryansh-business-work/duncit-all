@@ -88,6 +88,7 @@ export {
   policyAcceptanceMethodLabel,
   resolveLocale,
   SHELL_BUNDLE,
+  SUPPORT_BUNDLE,
   SURFACE_BUNDLES,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,

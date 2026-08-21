@@ -6,6 +6,7 @@ import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-pick
 import { ConfirmDialog } from '@duncit/dialogs';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
 import type { TicketStatus } from '../../../graphql/tickets';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   status: TicketStatus;
@@ -34,6 +35,7 @@ export default function TicketComposerArea({
   onSend,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [confirmClose, setConfirmClose] = useState(false);
 
   if (status === 'CLOSED') {
@@ -56,9 +58,9 @@ export default function TicketComposerArea({
         </Button>
         <ConfirmDialog
           open={confirmClose}
-          title="Close this support ticket?"
-          message="Are you sure you want to close this support ticket? It will become permanently read-only — the user can reopen it within the allowed window."
-          confirmLabel="Close ticket"
+          title={t('support.tickets.closeTitle')}
+          message={t('support.tickets.closeBody')}
+          confirmLabel={t('support.tickets.closeTicket')}
           confirmColor="error"
           titleSx={{ fontWeight: 800 }}
           onConfirm={() => {
@@ -83,7 +85,7 @@ export default function TicketComposerArea({
           value={attachments}
           onChange={onAttachments}
           folder="/support/tickets"
-          label="Attach"
+          label={t('support.chat.attach')}
           accept={ATTACHMENT_ACCEPT_ALL}
           maxBytes={100 * 1024 * 1024}
           allowDocuments

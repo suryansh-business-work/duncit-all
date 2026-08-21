@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { SupportChatSession } from '../../graphql/supportChat';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   sessions: SupportChatSession[];
@@ -25,6 +26,7 @@ interface Props {
 /** The left-hand "Chat with Us" session list. Unassigned or freshly arrived
  * sessions are tinted + tagged NEW so agents can jump on them instantly. */
 export default function SessionList({ sessions, loading, selectedId, freshIds, emptyLabel, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (loading && !sessions.length) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
@@ -68,8 +70,8 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
             primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
             secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
           />
-          {s.status === 'CLOSED' && <Chip size="small" color="success" label="Resolved" sx={{ ml: 0.5, mt: 0.25 }} />}
-          {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label="NEW" sx={{ ml: 0.5, mt: 0.25 }} />}
+          {s.status === 'CLOSED' && <Chip size="small" color="success" label={t('support.chat.filterResolved')} sx={{ ml: 0.5, mt: 0.25 }} />}
+          {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label={t('support.chat.newSession')} sx={{ ml: 0.5, mt: 0.25 }} />}
         </ListItemButton>
       ))}
     </List>

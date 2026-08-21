@@ -16,6 +16,7 @@ import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
 import { SHELL_BUNDLE } from './bundles/shell';
+import { SUPPORT_BUNDLE } from './bundles/support';
 import { WEBSITE_BUNDLE } from './bundles/website';
 import { WEBSITE_APP_BUNDLE } from './bundles/website-app';
 import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
@@ -59,6 +60,7 @@ export {
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
   SHELL_BUNDLE,
+  SUPPORT_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -83,6 +85,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   podProduct: POD_PRODUCT_BUNDLE,
   policyAcceptance: POLICY_ACCEPTANCE_BUNDLE,
   shell: SHELL_BUNDLE,
+  support: SUPPORT_BUNDLE,
   website: WEBSITE_BUNDLE,
   websiteApp: WEBSITE_APP_BUNDLE,
   whatsapp: WHATSAPP_BUNDLE,

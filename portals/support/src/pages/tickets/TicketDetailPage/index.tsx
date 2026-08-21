@@ -16,8 +16,10 @@ import TicketThread from './TicketThread';
 import TicketComposerArea from './TicketComposerArea';
 import TicketInfoPanel from './TicketInfoPanel';
 import { useTicketActions } from './useTicketActions';
+import { useTranslation } from '@duncit/shell';
 
 export default function TicketDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery<{ ticket: Ticket | null }>(TICKET, {
@@ -115,7 +117,7 @@ export default function TicketDetailPage() {
           onEmail={actions.email}
         />
       ) : (
-        <BackHeader onBack={() => navigate('/tickets')} title="Ticket" titleWeight={800} />
+        <BackHeader onBack={() => navigate('/tickets')} title={t('support.tickets.detailTitle')} titleWeight={800} />
       )}
       {renderBody()}
       <Snackbar open={Boolean(actions.notice)} autoHideDuration={4000} onClose={actions.clearNotice} message={actions.notice} />

@@ -24,6 +24,7 @@ import {
   type ReportProblemCategory,
   type ReportProblemConfig,
 } from '../../graphql/reported-problems';
+import { useTranslation } from '@duncit/shell';
 
 const renameCategory = (prev: ReportProblemCategory[], index: number, label: string) =>
   prev.map((c, i) => (i === index ? { ...c, label } : c));
@@ -42,6 +43,7 @@ const removeCategory = (prev: ReportProblemCategory[], index: number) =>
  * open — the app reads this config rather than its own constants.
  */
 export default function ReportProblemSettingsPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ reportProblemConfig: ReportProblemConfig }>(
     REPORT_PROBLEM_CONFIG,
     { fetchPolicy: 'cache-and-network' }
@@ -107,8 +109,8 @@ export default function ReportProblemSettingsPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Configure Report a Problem"
-        subtitle="The categories and prompt the app shows when someone reports a problem."
+        title={t('support.problemSettings.title')}
+        subtitle={t('support.problemSettings.subtitle')}
       />
 
       {error && <Alert severity="error">{error.message}</Alert>}
@@ -150,7 +152,7 @@ export default function ReportProblemSettingsPage() {
                         }
                       />
                     }
-                    label="Shown"
+                    label={t('support.problemSettings.shown')}
                   />
                   <IconButton
                     color="error"
@@ -166,7 +168,7 @@ export default function ReportProblemSettingsPage() {
             <Stack direction="row" spacing={1.5} alignItems="center">
               <TextField
                 size="small"
-                label="New category"
+                label={t('support.problemSettings.newCategory')}
                 value={newChip}
                 onChange={(event) => setNewChip(event.target.value)}
                 onKeyDown={(event) => {
@@ -189,14 +191,14 @@ export default function ReportProblemSettingsPage() {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
               <TextField
                 size="small"
-                label="Question"
+                label={t('support.problemSettings.question')}
                 value={messageLabel}
                 onChange={(event) => setMessageLabel(event.target.value)}
                 fullWidth
               />
               <TextField
                 size="small"
-                label="Helper text"
+                label={t('support.problemSettings.helperText')}
                 value={messageHint}
                 onChange={(event) => setMessageHint(event.target.value)}
                 fullWidth
@@ -204,7 +206,7 @@ export default function ReportProblemSettingsPage() {
               <TextField
                 size="small"
                 type="number"
-                label="Minimum characters"
+                label={t('support.problemSettings.minCharacters')}
                 value={minLength}
                 onChange={(event) => setMinLength(Number(event.target.value) || 1)}
                 sx={{ minWidth: 180 }}
@@ -224,12 +226,12 @@ export default function ReportProblemSettingsPage() {
                     onChange={(event) => setAllowMedia(event.target.checked)}
                   />
                 }
-                label="Let reporters attach screenshots"
+                label={t('support.problemSettings.allowScreenshots')}
               />
               <TextField
                 size="small"
                 type="number"
-                label="Max screenshots"
+                label={t('support.problemSettings.maxScreenshots')}
                 value={maxMedia}
                 disabled={!allowMedia}
                 onChange={(event) => setMaxMedia(Number(event.target.value) || 1)}

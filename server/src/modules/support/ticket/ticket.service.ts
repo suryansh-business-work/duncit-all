@@ -176,6 +176,62 @@ async function actorMeta(userId: string, role: 'USER' | 'AGENT') {
   };
 }
 
+/**
+ * Who may reply: an agent always; a user only on their own ticket, and a user
+ * reply re-opens a resolved/closed ticket only within the 3-day window.
+ */
+function assertCanReply(doc: ITicket, actorId: string, isAgent: boolean) {
+  if (isAgent) return;
+  if (String(doc.user_id) !== String(actorId)) {
+    fail('FORBIDDEN', 'Cannot reply to another user’s ticket');
+  }
+  if ((doc.status === 'RESOLVED' || doc.status === 'CLOSED') && reopenExpired(doc.resolved_at)) {
+    fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
+  }
+}
+
+/**
+ * An agent reply moves an OPEN ticket to PENDING (waiting on the user);
+ * a user reply re-opens a pending/resolved/closed ticket so they can keep
+ * the conversation going (Bug 3: question a resolved/closed ticket).
+ */
+function applyReplyStatus(doc: ITicket, isAgent: boolean) {
+  if (isAgent && doc.status === 'OPEN') {
+    doc.status = 'PENDING';
+  } else if (!isAgent && USER_REOPENS.has(doc.status)) {
+    doc.status = 'OPEN';
+    doc.resolved_at = null;
+  }
+}
+
+/**
+ * An EMAIL ticket's sender is holding a mail thread, maybe with no app at
+ * all — so an agent's words must also reach their inbox, sent from the
+ * SAME connected mailbox the message arrived in, threaded onto the same
+ * conversation (see platform/mailAutomation/mailAutomation.outbound). The
+ * reply is already saved: a failed send becomes a SYSTEM note on the
+ * ticket rather than a thrown error, so the agent sees the truth and a
+ * retry cannot double-post what they wrote.
+ */
+async function emailAgentReply(doc: ITicket, actorId: string, bodyText: string) {
+  const { sendAgentTicketReply } = await import(
+    '@modules/platform/mailAutomation/mailAutomation.outbound'
+  );
+  const outcome = await sendAgentTicketReply(String(doc._id), bodyText);
+  if (outcome.sent) return;
+  doc.messages.push({
+    author_id: new Types.ObjectId(actorId),
+    author_role: 'SYSTEM',
+    body_html: '',
+    body_text:
+      `This reply was saved to the ticket but could NOT be emailed to ` +
+      `${doc.guest_email || 'the sender'}: ${outcome.reason}`,
+    attachments: [],
+  } as any);
+  doc.last_message_at = new Date();
+  await doc.save();
+}
+
 export const ticketService = {
   async createTicket(
     userId: string,
@@ -232,13 +288,7 @@ export const ticketService = {
     if (!bodyText) fail('BAD_USER_INPUT', 'Reply text is required');
     const doc = await TicketModel.findById(input.ticket_id);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
-    if (!isAgent && String(doc!.user_id) !== String(actorId)) {
-      fail('FORBIDDEN', 'Cannot reply to another user’s ticket');
-    }
-    // A user reply re-opens a resolved/closed ticket, but only within the 3-day window.
-    if (!isAgent && (doc!.status === 'RESOLVED' || doc!.status === 'CLOSED') && reopenExpired(doc!.resolved_at)) {
-      fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
-    }
+    assertCanReply(doc, actorId, isAgent);
 
     const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
     doc!.messages.push({
@@ -248,42 +298,12 @@ export const ticketService = {
       attachments: input.attachments ?? [],
     } as any);
     doc!.last_message_at = new Date();
-    // An agent reply moves an OPEN ticket to PENDING (waiting on the user);
-    // a user reply re-opens a pending/resolved/closed ticket so they can keep
-    // the conversation going (Bug 3: question a resolved/closed ticket).
-    if (isAgent && doc!.status === 'OPEN') {
-      doc!.status = 'PENDING';
-    } else if (!isAgent && USER_REOPENS.has(doc!.status)) {
-      doc!.status = 'OPEN';
-      doc!.resolved_at = null;
-    }
+    applyReplyStatus(doc, isAgent);
     await doc.save();
 
-    // An EMAIL ticket's sender is holding a mail thread, maybe with no app at
-    // all — so an agent's words must also reach their inbox, sent from the
-    // SAME connected mailbox the message arrived in, threaded onto the same
-    // conversation (see platform/mailAutomation/mailAutomation.outbound). The
-    // reply above is already saved: a failed send becomes a SYSTEM note on the
-    // ticket rather than a thrown error, so the agent sees the truth and a
-    // retry cannot double-post what they wrote.
+    // The reply above is already saved; the mail send records its own outcome.
     if (isAgent && doc!.source === 'EMAIL') {
-      const { sendAgentTicketReply } = await import(
-        '@modules/platform/mailAutomation/mailAutomation.outbound'
-      );
-      const outcome = await sendAgentTicketReply(String(doc!._id), bodyText);
-      if (!outcome.sent) {
-        doc!.messages.push({
-          author_id: new Types.ObjectId(actorId),
-          author_role: 'SYSTEM',
-          body_html: '',
-          body_text:
-            `This reply was saved to the ticket but could NOT be emailed to ` +
-            `${doc!.guest_email || 'the sender'}: ${outcome.reason}`,
-          attachments: [],
-        } as any);
-        doc!.last_message_at = new Date();
-        await doc!.save();
-      }
+      await emailAgentReply(doc, actorId, bodyText);
     }
 
     const pub = await toPub(doc);

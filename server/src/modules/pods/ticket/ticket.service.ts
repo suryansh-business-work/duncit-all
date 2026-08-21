@@ -358,6 +358,71 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
   }
 }
 
+/**
+ * The second half of a host's scan, once the ticket is known to be tonight's
+ * and not cancelled: sync the seat count from the booking, collect the rest of
+ * the group if the ticket admits more than one, then mark attendance (or, for
+ * a ticket already marked, just say so). Hoisted out of `hostScan` so the
+ * door's rejections and the admission each read as one step.
+ */
+async function completeHostScan(t: ITicket, hostUserId: string, companions: unknown) {
+  const [user, membership] = await Promise.all([
+    UserModel.findById(t.user_id),
+    PodMemberModel.findById(t.membership_id),
+  ]);
+  const alreadyCheckedIn = t.status === 'CHECKED_IN';
+  // The booking is the source of truth for how many it covers; the ticket is a
+  // snapshot. Re-sync so a ticket can never tell the door "admits 3" while the
+  // membership says 2.
+  const seats = membership?.seats ?? t.seats ?? 1;
+  if (t.seats !== seats) {
+    t.seats = seats;
+    await t.save();
+  }
+  const attendee = user ? toScannedAttendee(user, membership) : null;
+
+  // Ask for the rest of the group BEFORE marking anyone present. The attendee
+  // still comes back so the host can see who they are talking to while they
+  // collect the names.
+  if (!alreadyCheckedIn) {
+    const stillNeeded = await recordCompanions(membership, seats, companions);
+    if (stillNeeded > 0) {
+      return {
+        ok: false,
+        message: `This ticket admits ${seats} — add the other ${stillNeeded} ${stillNeeded === 1 ? 'person' : 'people'} to mark attendance`,
+        already_checked_in: false,
+        requires_companions: true,
+        companions_required: stillNeeded,
+        ticket: toPub(t),
+        attendee,
+        companions: (membership?.companions ?? []).map(toPubCompanion),
+      };
+    }
+    // The scan IS the proof, so it carries no OTP verification — but it is
+    // still stamped with its method, so the roster can say how each person
+    // came to be marked.
+    await markTicketPresent(t, hostUserId, 'HOST_SCAN');
+    await notifyAttendanceMarked(t);
+  }
+
+  const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+  // A multi-seat ticket admits a group, so the host is told the number —
+  // one scan, several people through the door.
+  const party = seats > 1 ? ` · admits ${seats}` : '';
+  return {
+    ok: true,
+    message: alreadyCheckedIn
+      ? `Already marked present${at}${party}`
+      : `Attendance marked${party}`,
+    already_checked_in: alreadyCheckedIn,
+    requires_companions: false,
+    companions_required: 0,
+    ticket: toPub(t),
+    attendee,
+    companions: (membership?.companions ?? []).map(toPubCompanion),
+  };
+}
+
 export const ticketService = {
   toPub,
 
@@ -611,62 +676,7 @@ export const ticketService = {
     if (t.status === 'CANCELLED') {
       return { ok: false, message: 'Ticket cancelled', already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: toPub(t), attendee: null };
     }
-
-    const [user, membership] = await Promise.all([
-      UserModel.findById(t.user_id),
-      PodMemberModel.findById(t.membership_id),
-    ]);
-    const alreadyCheckedIn = t.status === 'CHECKED_IN';
-    // The booking is the source of truth for how many it covers; the ticket is a
-    // snapshot. Re-sync so a ticket can never tell the door "admits 3" while the
-    // membership says 2.
-    const seats = membership?.seats ?? t.seats ?? 1;
-    if (t.seats !== seats) {
-      t.seats = seats;
-      await t.save();
-    }
-    const attendee = user ? toScannedAttendee(user, membership) : null;
-
-    // Ask for the rest of the group BEFORE marking anyone present. The attendee
-    // still comes back so the host can see who they are talking to while they
-    // collect the names.
-    if (!alreadyCheckedIn) {
-      const stillNeeded = await recordCompanions(membership, seats, companions);
-      if (stillNeeded > 0) {
-        return {
-          ok: false,
-          message: `This ticket admits ${seats} — add the other ${stillNeeded} ${stillNeeded === 1 ? 'person' : 'people'} to mark attendance`,
-          already_checked_in: false,
-          requires_companions: true,
-          companions_required: stillNeeded,
-          ticket: toPub(t),
-          attendee,
-          companions: (membership?.companions ?? []).map(toPubCompanion),
-        };
-      }
-      // The scan IS the proof, so it carries no OTP verification — but it is
-      // still stamped with its method, so the roster can say how each person
-      // came to be marked.
-      await markTicketPresent(t, hostUserId, 'HOST_SCAN');
-      await notifyAttendanceMarked(t);
-    }
-
-    const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
-    // A multi-seat ticket admits a group, so the host is told the number —
-    // one scan, several people through the door.
-    const party = seats > 1 ? ` · admits ${seats}` : '';
-    return {
-      ok: true,
-      message: alreadyCheckedIn
-        ? `Already marked present${at}${party}`
-        : `Attendance marked${party}`,
-      already_checked_in: alreadyCheckedIn,
-      requires_companions: false,
-      companions_required: 0,
-      ticket: toPub(t),
-      attendee,
-      companions: (membership?.companions ?? []).map(toPubCompanion),
-    };
+    return completeHostScan(t, hostUserId, companions);
   },
 
   /** Mark a ticket checked-in (by scanned token or by id). Idempotent. */

@@ -4,6 +4,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import EmailIcon from '@mui/icons-material/Email';
 import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { useTranslation } from '../../i18n/useTranslation';
 import InfoRow, { type InfoRowProps } from './InfoRow';
 import { mailtoUrl, telUrl, whatsappUrl } from './podPending';
 
@@ -25,16 +26,16 @@ const ICON = { fontSize: 18 } as const;
  * rule 27). */
 export default function ClubAdminCard({
   admin,
-  caption = 'Need Help? Contact the Club Admin',
+  caption,
 }: Readonly<{ admin: ClubAdminContact; caption?: string }>) {
+  const { t } = useTranslation();
   const waUrl = whatsappUrl(admin.whatsapp ?? '');
 
-  // TODO(i18n) — row labels ship as literals until this feature is localized.
   const rows: InfoRowProps[] = [];
   if (admin.phone) {
     rows.push({
       icon: <PhoneIcon sx={ICON} />,
-      label: 'Phone',
+      label: t('mweb.podPending.phone'),
       value: admin.phone,
       testId: 'club-admin-phone',
     });
@@ -42,7 +43,7 @@ export default function ClubAdminCard({
   if (admin.whatsapp) {
     rows.push({
       icon: <ChatIcon sx={ICON} />,
-      label: 'WhatsApp',
+      label: t('mweb.podPending.whatsapp'),
       value: admin.whatsapp,
       testId: 'club-admin-whatsapp',
     });
@@ -50,7 +51,7 @@ export default function ClubAdminCard({
   if (admin.email) {
     rows.push({
       icon: <EmailIcon sx={ICON} />,
-      label: 'Email',
+      label: t('mweb.podPending.email'),
       value: admin.email,
       testId: 'club-admin-email',
     });
@@ -60,7 +61,7 @@ export default function ClubAdminCard({
     <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="club-admin-card">
       <Stack spacing={1.25}>
         <Typography variant="caption" fontWeight={600} color="text.secondary">
-          {caption}
+          {caption ?? t('mweb.podPending.clubAdminCaption')}
         </Typography>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <Avatar
@@ -78,7 +79,6 @@ export default function ClubAdminCard({
         {rows.map((row) => (
           <InfoRow key={row.label} {...row} />
         ))}
-        {/* TODO(i18n) — action labels ship as literals until this feature is localized. */}
         <Stack direction="row" spacing={2} flexWrap="wrap">
           {admin.phone && (
             <Button
@@ -88,7 +88,7 @@ export default function ClubAdminCard({
               data-testid="club-admin-call"
               sx={{ fontWeight: 600 }}
             >
-              Call
+              {t('mweb.podPending.actionCall')}
             </Button>
           )}
           {waUrl && (
@@ -101,7 +101,7 @@ export default function ClubAdminCard({
               data-testid="club-admin-message"
               sx={{ fontWeight: 600 }}
             >
-              Message
+              {t('mweb.podPending.actionMessage')}
             </Button>
           )}
           {admin.email && (
@@ -112,7 +112,7 @@ export default function ClubAdminCard({
               data-testid="club-admin-email-action"
               sx={{ fontWeight: 600 }}
             >
-              Email
+              {t('mweb.podPending.actionEmail')}
             </Button>
           )}
         </Stack>

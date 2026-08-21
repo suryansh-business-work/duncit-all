@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { type Translate } from '@/i18n/fallback';
 import {
   podProductBlurb,
   podProductImage,
@@ -19,6 +20,54 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
+/** Card frame per selection state — one lookup instead of a ternary per prop. */
+const selectedFrame = {
+  borderWidth: 2,
+  borderColor: '$primary',
+  backgroundColor: 'rgba(99,102,241,0.08)',
+} as const;
+
+const idleFrame = {
+  borderWidth: 1,
+  borderColor: '$borderColor',
+  backgroundColor: 'transparent',
+} as const;
+
+/** Product thumbnail, or the placeholder icon when the product has no image. */
+function ProductThumb({ image, muted }: Readonly<{ image: string | null; muted: string }>) {
+  return (
+    <YStack
+      width={64}
+      height={64}
+      borderRadius={10}
+      overflow="hidden"
+      backgroundColor="$borderColor"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {image ? (
+        <Image
+          source={{ uri: image }}
+          style={{ width: '100%', height: '100%' }}
+          contentFit="cover"
+        />
+      ) : (
+        <MaterialIcons name="image-not-supported" size={20} color={muted} />
+      )}
+    </YStack>
+  );
+}
+
+/** The stock line under the price: already added > out of stock > units left. */
+function statusLabelFor(
+  t: Translate,
+  { added, outOfStock, stock }: Readonly<{ added: boolean; outOfStock: boolean; stock: number }>,
+): string {
+  if (added) return t('podProduct.alreadyAdded');
+  if (outOfStock) return t('podProduct.outOfStock');
+  return t('podProduct.unitsLeft', { vars: { count: stock } });
+}
+
 /** One product in the native picker list. The whole card is the select control,
  * so a host picks by tapping the name card. mWeb twin (ProductCard). */
 export function ProductPickerCard({ product, selected, added, onSelect }: Readonly<Props>) {
@@ -29,10 +78,9 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
   const disabled = added || outOfStock;
   const image = podProductImage(product);
   const blurb = podProductBlurb(product);
-
-  let statusLabel = t('podProduct.unitsLeft', { vars: { count: stock } });
-  if (added) statusLabel = t('podProduct.alreadyAdded');
-  else if (outOfStock) statusLabel = t('podProduct.outOfStock');
+  const statusLabel = statusLabelFor(t, { added, outOfStock, stock });
+  const frame = selected ? selectedFrame : idleFrame;
+  const handlePress = disabled ? undefined : () => onSelect(product.id);
 
   return (
     <XStack
@@ -41,35 +89,15 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
       aria-label={product.product_name}
       aria-pressed={selected}
       aria-disabled={disabled}
-      onPress={disabled ? undefined : () => onSelect(product.id)}
+      onPress={handlePress}
       gap={10}
       padding={10}
       borderRadius={12}
-      borderWidth={selected ? 2 : 1}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor={selected ? 'rgba(99,102,241,0.08)' : 'transparent'}
+      {...frame}
       opacity={disabled ? 0.55 : 1}
       pressStyle={{ opacity: 0.8 }}
     >
-      <YStack
-        width={64}
-        height={64}
-        borderRadius={10}
-        overflow="hidden"
-        backgroundColor="$borderColor"
-        alignItems="center"
-        justifyContent="center"
-      >
-        {image ? (
-          <Image
-            source={{ uri: image }}
-            style={{ width: '100%', height: '100%' }}
-            contentFit="cover"
-          />
-        ) : (
-          <MaterialIcons name="image-not-supported" size={20} color={muted} />
-        )}
-      </YStack>
+      <ProductThumb image={image} muted={muted} />
 
       <YStack flex={1} gap={2}>
         <Text fontSize={14} fontWeight="700" color="$color" numberOfLines={2}>

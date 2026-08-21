@@ -53,6 +53,27 @@ const BASE_COLUMNS: DuncitColumn<AisensyTemplate>[] = [
   },
 ];
 
+interface RowActionDeps {
+  busy: boolean;
+  onDelete: (template: AisensyTemplate) => void;
+}
+
+const buildColumns = ({
+  busy,
+  onDelete,
+}: Readonly<RowActionDeps>): DuncitColumn<AisensyTemplate>[] => [
+  ...BASE_COLUMNS,
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 100,
+    sortable: false,
+    cellRenderer: (template) => (
+      <TemplateRowActions template={template} busy={busy} onDelete={onDelete} />
+    ),
+  },
+];
+
 const factsFor = (template: AisensyTemplate): AisensyFact[] => [
   { label: 'Category', value: template.category || EMPTY },
   { label: 'Language', value: template.language || EMPTY },
@@ -107,26 +128,16 @@ export default function AisensyTemplates() {
     [confirm, t, drafts.removeTemplate]
   );
 
-  const columns = useMemo<DuncitColumn<AisensyTemplate>[]>(
-    () => [
-      ...BASE_COLUMNS,
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 100,
-        sortable: false,
-        cellRenderer: (template) => (
-          <TemplateRowActions
-            template={template}
-            busy={drafts.deletingTemplate}
-            onDelete={(row) => {
-              askDelete(row).catch(() => undefined);
-            }}
-          />
-        ),
-      },
-    ],
-    [askDelete, drafts.deletingTemplate]
+  const onDelete = useCallback(
+    (row: AisensyTemplate) => {
+      askDelete(row).catch(() => undefined);
+    },
+    [askDelete]
+  );
+
+  const columns = useMemo(
+    () => buildColumns({ busy: drafts.deletingTemplate, onDelete }),
+    [drafts.deletingTemplate, onDelete]
   );
 
   const selected = templates.find((template) => templateRowId(template) === openId) ?? null;

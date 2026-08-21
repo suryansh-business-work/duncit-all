@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Paper } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import MessageReactions from '../MessageReactions';
 import BubbleBadges from './BubbleBadges';
 import BubbleBody from './BubbleBody';
@@ -35,6 +36,47 @@ export interface MessageBubbleProps {
   onRetry?: (message: StaffMessage) => void;
   onNavigate?: (path: string) => void;
 }
+
+/** The row that holds the bubble: which side, the selection tint and the arrival motion. */
+const rowSx = (
+  mine: boolean,
+  selected: boolean | undefined,
+  selectable: boolean,
+): SxProps<Theme> => ({
+  display: 'flex',
+  justifyContent: mine ? 'flex-end' : 'flex-start',
+  bgcolor: selected ? 'action.selected' : 'transparent',
+  borderRadius: 1,
+  cursor: selectable ? 'pointer' : 'default',
+  // Arriving messages settle in rather than appearing, so the eye follows
+  // the movement instead of hunting for what changed.
+  animation: 'staffChatIn 160ms ease-out',
+  '@keyframes staffChatIn': {
+    from: { opacity: 0, transform: 'translateY(4px)' },
+    to: { opacity: 1, transform: 'none' },
+  },
+  '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+});
+
+/** The bubble itself: density padding, own-vs-other palette and the hover/focus tools. */
+const bubbleSx = (
+  own: boolean,
+  compact: boolean,
+  bubbleColor: ChatSettings['bubbleColor'],
+): SxProps<Theme> => ({
+  px: compact ? 1 : 1.25,
+  py: compact ? 0.4 : 0.75,
+  maxWidth: '85%',
+  borderRadius: 2,
+  bgcolor: own ? `${bubbleColor}.main` : 'background.paper',
+  color: own ? `${bubbleColor}.contrastText` : 'text.primary',
+  borderColor: own ? `${bubbleColor}.main` : 'divider',
+  '& .staff-bubble-tools, & .staff-reaction-picker': { visibility: 'hidden' },
+  '&:hover .staff-bubble-tools, &:focus-within .staff-bubble-tools': { visibility: 'visible' },
+  '&:hover .staff-reaction-picker, &:focus-within .staff-reaction-picker': {
+    visibility: 'visible',
+  },
+});
 
 /**
  * One line of the conversation.
@@ -84,39 +126,9 @@ export default function MessageBubble({
   return (
     <Box
       onClick={onSelect ? () => onSelect(message.id) : undefined}
-      sx={{
-        display: 'flex',
-        justifyContent: mine ? 'flex-end' : 'flex-start',
-        bgcolor: selected ? 'action.selected' : 'transparent',
-        borderRadius: 1,
-        cursor: onSelect ? 'pointer' : 'default',
-        // Arriving messages settle in rather than appearing, so the eye follows
-        // the movement instead of hunting for what changed.
-        animation: 'staffChatIn 160ms ease-out',
-        '@keyframes staffChatIn': {
-          from: { opacity: 0, transform: 'translateY(4px)' },
-          to: { opacity: 1, transform: 'none' },
-        },
-        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-      }}
+      sx={rowSx(mine, selected, Boolean(onSelect))}
     >
-      <Paper
-        variant="outlined"
-        sx={{
-          px: compact ? 1 : 1.25,
-          py: compact ? 0.4 : 0.75,
-          maxWidth: '85%',
-          borderRadius: 2,
-          bgcolor: own ? `${settings.bubbleColor}.main` : 'background.paper',
-          color: own ? `${settings.bubbleColor}.contrastText` : 'text.primary',
-          borderColor: own ? `${settings.bubbleColor}.main` : 'divider',
-          '& .staff-bubble-tools, & .staff-reaction-picker': { visibility: 'hidden' },
-          '&:hover .staff-bubble-tools, &:focus-within .staff-bubble-tools': { visibility: 'visible' },
-          '&:hover .staff-reaction-picker, &:focus-within .staff-reaction-picker': {
-            visibility: 'visible',
-          },
-        }}
-      >
+      <Paper variant="outlined" sx={bubbleSx(own, compact, settings.bubbleColor)}>
         {!deleted && (
           <BubbleBadges message={message} own={own} nameOf={nameOf} repliedTo={repliedTo} />
         )}

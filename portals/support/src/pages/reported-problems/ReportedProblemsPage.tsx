@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Chip, Stack, Typography } from '@mui/material';
 import { PageHeader, StatusChip } from '@duncit/ui';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, type DateFormatter } from '@duncit/app-settings';
 import { REPORTED_PROBLEMS_TABLE, type FeedbackReportRow } from '../../graphql/reported-problems';
 
 const STATUS_COLORS = {
@@ -18,6 +18,96 @@ const STATUS_OPTIONS = Object.keys(STATUS_COLORS).map((value) => ({
   value,
   label: value.replaceAll('_', ' '),
 }));
+
+type CellProps = Readonly<{ row: FeedbackReportRow }>;
+
+function CategoryCell({ row }: CellProps) {
+  return <Chip size="small" label={row.category} variant="outlined" />;
+}
+
+function MessageCell({ row }: CellProps) {
+  return (
+    <Typography variant="body2" noWrap title={row.message}>
+      {row.message}
+    </Typography>
+  );
+}
+
+function ReporterCell({ row }: CellProps) {
+  return (
+    <Stack sx={{ minWidth: 0, lineHeight: 1.2 }}>
+      <Typography variant="body2" noWrap>
+        {row.user_name || 'Unknown'}
+      </Typography>
+      <Typography variant="caption" color="text.secondary" noWrap>
+        {row.user_email}
+      </Typography>
+    </Stack>
+  );
+}
+
+function StatusCell({ row }: CellProps) {
+  return <StatusChip status={row.status} colorMap={STATUS_COLORS} />;
+}
+
+// A report that never reached Slack is not a broken report — it is one
+// nobody was told about, which is a different thing to chase.
+function SlackCell({ row }: CellProps) {
+  if (row.slack_error) {
+    return <Chip size="small" color="warning" variant="outlined" label="Not sent" title={row.slack_error} />;
+  }
+  return <Chip size="small" color="success" variant="outlined" label="Sent" />;
+}
+
+function buildColumns(formatDateTime: DateFormatter['formatDateTime']): DuncitColumn<FeedbackReportRow>[] {
+  return [
+    { field: 'report_no', headerName: 'Report ID', filter: { type: 'text' }, width: 160 },
+    {
+      field: 'category',
+      headerName: 'Category',
+      filter: { type: 'text' },
+      width: 130,
+      cellRenderer: (r) => <CategoryCell row={r} />,
+    },
+    {
+      field: 'message',
+      headerName: 'What happened',
+      sortable: false,
+      flex: 1,
+      minWidth: 260,
+      cellRenderer: (r) => <MessageCell row={r} />,
+    },
+    {
+      field: 'user_name',
+      headerName: 'Reported by',
+      filter: { type: 'text' },
+      minWidth: 190,
+      cellRenderer: (r) => <ReporterCell row={r} />,
+    },
+    { field: 'platform', headerName: 'From', filter: { type: 'text' }, width: 110 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      filter: { type: 'select', options: STATUS_OPTIONS },
+      width: 140,
+      cellRenderer: (r) => <StatusCell row={r} />,
+    },
+    {
+      field: 'slack_error',
+      headerName: 'Slack',
+      sortable: false,
+      width: 120,
+      cellRenderer: (r) => <SlackCell row={r} />,
+    },
+    {
+      field: 'created_at',
+      headerName: 'Reported',
+      filter: { type: 'date' },
+      width: 180,
+      valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
+    },
+  ];
+}
 
 /**
  * Every problem reported from the app through "Report a Problem".
@@ -38,76 +128,7 @@ export default function ReportedProblemsPage() {
     'reportedProblemsTable'
   );
 
-  const columns = useMemo<DuncitColumn<FeedbackReportRow>[]>(
-    () => [
-      { field: 'report_no', headerName: 'Report ID', filter: { type: 'text' }, width: 160 },
-      {
-        field: 'category',
-        headerName: 'Category',
-        filter: { type: 'text' },
-        width: 130,
-        cellRenderer: (r) => <Chip size="small" label={r.category} variant="outlined" />,
-      },
-      {
-        field: 'message',
-        headerName: 'What happened',
-        sortable: false,
-        flex: 1,
-        minWidth: 260,
-        cellRenderer: (r) => (
-          <Typography variant="body2" noWrap title={r.message}>
-            {r.message}
-          </Typography>
-        ),
-      },
-      {
-        field: 'user_name',
-        headerName: 'Reported by',
-        filter: { type: 'text' },
-        minWidth: 190,
-        cellRenderer: (r) => (
-          <Stack sx={{ minWidth: 0, lineHeight: 1.2 }}>
-            <Typography variant="body2" noWrap>
-              {r.user_name || 'Unknown'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {r.user_email}
-            </Typography>
-          </Stack>
-        ),
-      },
-      { field: 'platform', headerName: 'From', filter: { type: 'text' }, width: 110 },
-      {
-        field: 'status',
-        headerName: 'Status',
-        filter: { type: 'select', options: STATUS_OPTIONS },
-        width: 140,
-        cellRenderer: (r) => <StatusChip status={r.status} colorMap={STATUS_COLORS} />,
-      },
-      {
-        // A report that never reached Slack is not a broken report — it is one
-        // nobody was told about, which is a different thing to chase.
-        field: 'slack_error',
-        headerName: 'Slack',
-        sortable: false,
-        width: 120,
-        cellRenderer: (r) =>
-          r.slack_error ? (
-            <Chip size="small" color="warning" variant="outlined" label="Not sent" title={r.slack_error} />
-          ) : (
-            <Chip size="small" color="success" variant="outlined" label="Sent" />
-          ),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Reported',
-        filter: { type: 'date' },
-        width: 180,
-        valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
-      },
-    ],
-    [formatDateTime]
-  );
+  const columns = useMemo(() => buildColumns(formatDateTime), [formatDateTime]);
 
   return (
     <Stack spacing={2}>

@@ -30,6 +30,39 @@ const stepperBox = {
   pressStyle: { opacity: 0.7 },
 } as const;
 
+interface StepperButtonProps {
+  testID: string;
+  label: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  enabled: boolean;
+  onPress: () => void;
+  color: string;
+}
+
+/** One stepper button; inert (no onPress, dimmed) when `enabled` is false. */
+function StepperButton({
+  testID,
+  label,
+  icon,
+  enabled,
+  onPress,
+  color,
+}: Readonly<StepperButtonProps>) {
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      aria-disabled={!enabled}
+      onPress={enabled ? onPress : undefined}
+      opacity={enabled ? 1 : 0.4}
+      {...stepperBox}
+    >
+      <MaterialIcons name={icon} size={18} color={color} />
+    </XStack>
+  );
+}
+
 /**
  * The picker's sticky footer: quantity and the Add action.
  *
@@ -51,6 +84,7 @@ export function ProductQuantityBar({
   const step = (delta: number) => onQuantityChange(clampPodProductQty(quantity + delta, product));
   const canDecrease = !!product && quantity > 1;
   const canIncrease = !!product && !atMax;
+  const ink = product ? '$color' : '$muted';
 
   return (
     <YStack
@@ -85,41 +119,35 @@ export function ProductQuantityBar({
       )}
 
       <XStack alignItems="center" gap={10}>
-        <Text fontSize={13} color={product ? '$color' : '$muted'}>
+        <Text fontSize={13} color={ink}>
           {t('podProduct.quantity')}
         </Text>
-        <XStack
+        <StepperButton
           testID="product-qty-dec"
-          role="button"
-          aria-label={t('podProduct.decreaseQty')}
-          aria-disabled={!canDecrease}
-          onPress={canDecrease ? () => step(-1) : undefined}
-          opacity={canDecrease ? 1 : 0.4}
-          {...stepperBox}
-        >
-          <MaterialIcons name="remove" size={18} color={color} />
-        </XStack>
+          label={t('podProduct.decreaseQty')}
+          icon="remove"
+          enabled={canDecrease}
+          onPress={() => step(-1)}
+          color={color}
+        />
         <Text
           testID="product-qty"
           fontSize={15}
           fontWeight="700"
-          color={product ? '$color' : '$muted'}
+          color={ink}
           minWidth={28}
           textAlign="center"
         >
           {quantity}
         </Text>
-        <XStack
+        <StepperButton
           testID="product-qty-inc"
-          role="button"
-          aria-label={t('podProduct.increaseQty')}
-          aria-disabled={!canIncrease}
-          onPress={canIncrease ? () => step(1) : undefined}
-          opacity={canIncrease ? 1 : 0.4}
-          {...stepperBox}
-        >
-          <MaterialIcons name="add" size={18} color={color} />
-        </XStack>
+          label={t('podProduct.increaseQty')}
+          icon="add"
+          enabled={canIncrease}
+          onPress={() => step(1)}
+          color={color}
+        />
         <XStack flex={1} />
         {product && atMax ? (
           <Text fontSize={11.5} color="$muted">

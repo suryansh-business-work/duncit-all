@@ -5,6 +5,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { useBookingDetail } from '@/hooks/useBookingDetail';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -17,6 +18,7 @@ export function BookingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const bookingId = route.params?.bookingId ?? '';
   const { booking, isLoading, error } = useBookingDetail(bookingId);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!booking) return;
@@ -37,14 +39,13 @@ export function BookingScreen() {
   } else {
     body = (
       <Text testID="booking-error" padding={24} color="$danger">
-        {toErrorMessage(error, 'This booking could not be found.')}
+        {toErrorMessage(error, t('mweb.booking.notFound'))}
       </Text>
     );
   }
 
-  // TODO(i18n) — screen title ships as a literal until this feature is localized.
   return (
-    <StackScreen title="Your Booking" testID="booking-screen">
+    <StackScreen title={t('mweb.booking.title')} testID="booking-screen">
       {body}
     </StackScreen>
   );

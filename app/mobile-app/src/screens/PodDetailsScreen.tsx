@@ -21,7 +21,13 @@ import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDia
 import { KeepSpotDialog } from '@/components/pod-history/KeepSpotDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useDetailNav } from '@/hooks/useDetailNav';
-import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
+import {
+  usePodActions,
+  usePodDetails,
+  useResolvedPodId,
+  type PodDetail,
+  type PodMembershipState,
+} from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,61 +37,26 @@ import { toErrorMessage } from '@/utils/errors';
 import { JoinFreePodDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
+import type { CartLineMeta } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** Pod details — hero gallery + overview card + schedule/map + social bar + pod
- * shop + the accordion stack. Mirrors mWeb's PodDetailsPage. */
-export function PodDetailsScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const goBack = useGoBack();
+/** Booking, backout and share actions for the loaded pod — the state the
+ * booking bar and its dialogs share. RN twin of mWeb's usePodDetailActions. */
+function usePodDetailActions(pod: PodDetail | null, refetch: () => Promise<void>) {
   const { t } = useTranslation();
-  const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
-  // Doc id from in-app nav, or resolved from a shared /club/:clubSlug/pod/:podSlug link.
-  const { podId, resolving } = useResolvedPodId(route.params);
-  const {
-    pod,
-    venue,
-    location,
-    viewerId,
-    viewerPhoto,
-    savedInitially,
-    membershipState,
-    people,
-    spotFills,
-    seatsByUser,
-    categoryCrumbs,
-    isLoading,
-    refetch,
-  } = usePodDetails(podId);
-  const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
-    pod,
-    savedInitially,
-  );
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
-  const { selectedProducts, selectedProductTotal, setSelectedProducts, setVariantQuantity } =
-    usePodProductSelection(podId, pod);
-  const showProducts = useFeatureFlag('is_product_visible');
-  const finance = usePublicFinance();
-  const { openClub } = useDetailNav();
   // Seats the booking will take — set by the picker in the bottom bar and
   // carried into Checkout, which re-prices the ticket by it.
   const [seats, setSeats] = useState(1);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [keepSpotOpen, setKeepSpotOpen] = useState(false);
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [commentDelta, setCommentDelta] = useState(0);
   const [joiningFree, setJoiningFree] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const isFree = pod?.pod_type === 'FREE';
-  // The booking bar floats over the scroll, and its height changes with the
-  // viewer's state (host / member / backout / the taller book bar), so the
-  // space reserved below the content is measured rather than guessed.
-  const { height: bookingBarHeight, onLayout: onBookingBarLayout } = useMeasuredHeight();
 
   /**
    * A free pod is joined outright — no checkout.
@@ -117,40 +88,6 @@ export function PodDetailsScreen() {
       setJoiningFree(false);
     }
   };
-  // The viewer hosts THIS pod (pod-specific, independent of their active studio
-  // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
-  const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);
-  const commentCount = (pod?.comment_count ?? 0) + commentDelta;
-  const backoutAttemptsLeft = Math.max(
-    0,
-    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
-  );
-
-  // Mirror like changes to the Explore feed banner so the two stay in sync
-  // (bug 16). Skip the first settled render so we only push real user actions.
-  const didMirrorLike = useRef(false);
-  useEffect(() => {
-    if (!pod) return;
-    if (!didMirrorLike.current) {
-      didMirrorLike.current = true;
-      return;
-    }
-    useExploreStore.getState().setLike(pod.id, { liked_by_me: liked, like_count: likeCount });
-  }, [pod, liked, likeCount]);
-
-  // Re-pull membership when the screen regains focus (e.g. after a successful
-  // checkout) so the bar flips to "Pod Booked" without a manual reload. The hook
-  // already fetched on mount, so skip the first focus.
-  const didFocus = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (!didFocus.current) {
-        didFocus.current = true;
-        return;
-      }
-      refetch();
-    }, [refetch]),
-  );
 
   const onConfirmBackout = async (seats?: number) => {
     /* istanbul ignore next -- the dialog only mounts when `pod` exists */
@@ -185,7 +122,7 @@ export function PodDetailsScreen() {
     setKeepSpotOpen(true);
   };
 
-  const share = async () => {
+  const onShare = async () => {
     /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
@@ -200,6 +137,203 @@ export function PodDetailsScreen() {
     }
   };
 
+  return {
+    seats,
+    setSeats,
+    joinError,
+    onJoinFree,
+    backoutOpen,
+    setBackoutOpen,
+    backingOut,
+    onConfirmBackout,
+    keepSpotOpen,
+    setKeepSpotOpen,
+    keepSpotError,
+    openKeepSpot,
+    onConfirmKeepSpot,
+    restoringSpot,
+    onShare,
+  };
+}
+
+type PodDetailActions = ReturnType<typeof usePodDetailActions>;
+
+/** Mirror like changes to the Explore feed banner so the two stay in sync
+ * (bug 16). Skip the first settled render so we only push real user actions. */
+function useMirrorLikeToExplore(pod: PodDetail | null, liked: boolean, likeCount: number) {
+  const didMirrorLike = useRef(false);
+  useEffect(() => {
+    if (!pod) return;
+    if (!didMirrorLike.current) {
+      didMirrorLike.current = true;
+      return;
+    }
+    useExploreStore.getState().setLike(pod.id, { liked_by_me: liked, like_count: likeCount });
+  }, [pod, liked, likeCount]);
+}
+
+/** Re-pull membership when the screen regains focus (e.g. after a successful
+ * checkout) so the bar flips to "Pod Booked" without a manual reload. The hook
+ * already fetched on mount, so skip the first focus. */
+function useRefetchOnFocus(refetch: () => Promise<void>) {
+  const didFocus = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!didFocus.current) {
+        didFocus.current = true;
+        return;
+      }
+      refetch();
+    }, [refetch]),
+  );
+}
+
+interface PodShopSectionProps {
+  pod: PodDetail;
+  /** The `is_product_visible` feature flag. */
+  showProducts: boolean;
+  selectedProducts: Record<string, number>;
+  onSelectionChange: (next: Record<string, number>) => void;
+  selectedTotal: number;
+  onVariantQuantity: (meta: CartLineMeta, quantity: number) => void;
+}
+
+/** The Pod Shop — only when products are gated on and the pod lists some. A
+ * variant picked in the detail sheet becomes a cart line for this pod. */
+function PodShopSection({
+  pod,
+  showProducts,
+  selectedProducts,
+  onSelectionChange,
+  selectedTotal,
+  onVariantQuantity,
+}: Readonly<PodShopSectionProps>) {
+  if (!showProducts || !pod.product_requests?.length) return null;
+  return (
+    <Reveal index={3}>
+      <PodShop
+        pod={pod}
+        selectedProducts={selectedProducts}
+        onSelectionChange={onSelectionChange}
+        selectedTotal={selectedTotal}
+        onVariantQuantity={(row, variant, quantity) =>
+          onVariantQuantity(
+            {
+              pod_id: pod.id,
+              pod_title: pod.pod_title,
+              club_slug: pod.club_slug,
+              product_id: row.product_id,
+              variant_id: variant.id,
+              variant_label: variant.label,
+              product_name: row.product_name,
+              image_url: variant.image_url || row.image_url,
+              unit_cost: variant.unit_cost,
+              max_quantity: variant.max,
+              free_delivery_above: row.free_delivery_above ?? null,
+            },
+            quantity,
+          )
+        }
+        readOnly={pod.products_enabled === false}
+      />
+    </Reveal>
+  );
+}
+
+interface PodBackoutDialogsProps {
+  actions: PodDetailActions;
+  membershipState: PodMembershipState | null;
+  onViewTerms: () => void;
+}
+
+/** The Backout and Keep-My-Spot dialogs, with their refund and attempt figures
+ * read off the viewer's membership state. */
+function PodBackoutDialogs({
+  actions,
+  membershipState,
+  onViewTerms,
+}: Readonly<PodBackoutDialogsProps>) {
+  const backoutAttemptsLeft = Math.max(
+    0,
+    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
+  );
+  return (
+    <>
+      <BackoutConfirmDialog
+        open={actions.backoutOpen}
+        busy={actions.backingOut}
+        onClose={() => actions.setBackoutOpen(false)}
+        onConfirm={actions.onConfirmBackout}
+        refundAmount={membershipState?.backout_refund_amount ?? null}
+        refundPerSeat={membershipState?.backout_refund_per_seat ?? null}
+        mySeats={membershipState?.my_seats ?? 1}
+        deductionPct={membershipState?.backout_deduction_pct ?? 0}
+        refundCoins={membershipState?.backout_refund_coins ?? 0}
+        onViewTerms={onViewTerms}
+      />
+      <KeepSpotDialog
+        open={actions.keepSpotOpen}
+        busy={actions.restoringSpot}
+        attemptsLeft={backoutAttemptsLeft}
+        error={actions.keepSpotError}
+        onClose={() => actions.setKeepSpotOpen(false)}
+        onConfirm={actions.onConfirmKeepSpot}
+      />
+    </>
+  );
+}
+
+/** Pod details — hero gallery + overview card + schedule/map + social bar + pod
+ * shop + the accordion stack. Mirrors mWeb's PodDetailsPage. */
+export function PodDetailsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const goBack = useGoBack();
+  const { t } = useTranslation();
+  const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
+  // Doc id from in-app nav, or resolved from a shared /club/:clubSlug/pod/:podSlug link.
+  const { podId, resolving } = useResolvedPodId(route.params);
+  const {
+    pod,
+    venue,
+    location,
+    viewerId,
+    viewerPhoto,
+    savedInitially,
+    membershipState,
+    people,
+    spotFills,
+    seatsByUser,
+    categoryCrumbs,
+    isLoading,
+    refetch,
+  } = usePodDetails(podId);
+  const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
+    pod,
+    savedInitially,
+  );
+  const actions = usePodDetailActions(pod, refetch);
+  const { selectedProducts, selectedProductTotal, setSelectedProducts, setVariantQuantity } =
+    usePodProductSelection(podId, pod);
+  const showProducts = useFeatureFlag('is_product_visible');
+  const finance = usePublicFinance();
+  const { openClub } = useDetailNav();
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentDelta, setCommentDelta] = useState(0);
+  const isFree = pod?.pod_type === 'FREE';
+  // The booking bar floats over the scroll, and its height changes with the
+  // viewer's state (host / member / backout / the taller book bar), so the
+  // space reserved below the content is measured rather than guessed.
+  const { height: bookingBarHeight, onLayout: onBookingBarLayout } = useMeasuredHeight();
+
+  // The viewer hosts THIS pod (pod-specific, independent of their active studio
+  // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
+  const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);
+  const commentCount = (pod?.comment_count ?? 0) + commentDelta;
+  const saveIcon = saved ? 'bookmark' : 'bookmark-border';
+
+  useMirrorLikeToExplore(pod, liked, likeCount);
+  useRefetchOnFocus(refetch);
+
   let podBody: ReactNode;
   if (resolving || (isLoading && !pod)) {
     podBody = <DetailSkeleton testID="pod-details-loading" />;
@@ -209,12 +343,12 @@ export function PodDetailsScreen() {
         <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
           <HeroButton
             testID="pod-save"
-            icon={saved ? 'bookmark' : 'bookmark-border'}
+            icon={saveIcon}
             active={saved}
             loading={savePending}
             onPress={toggleSave}
           />
-          <HeroButton testID="pod-share" icon="share" onPress={share} />
+          <HeroButton testID="pod-share" icon="share" onPress={actions.onShare} />
         </DetailHero>
         <Reveal index={0}>
           <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
@@ -237,35 +371,14 @@ export function PodDetailsScreen() {
             onOpenComments={() => setCommentsOpen(true)}
           />
         </Reveal>
-        {showProducts && pod.product_requests?.length ? (
-          <Reveal index={3}>
-            <PodShop
-              pod={pod}
-              selectedProducts={selectedProducts}
-              onSelectionChange={setSelectedProducts}
-              selectedTotal={selectedProductTotal}
-              onVariantQuantity={(row, variant, quantity) =>
-                setVariantQuantity(
-                  {
-                    pod_id: pod.id,
-                    pod_title: pod.pod_title,
-                    club_slug: pod.club_slug,
-                    product_id: row.product_id,
-                    variant_id: variant.id,
-                    variant_label: variant.label,
-                    product_name: row.product_name,
-                    image_url: variant.image_url || row.image_url,
-                    unit_cost: variant.unit_cost,
-                    max_quantity: variant.max,
-                    free_delivery_above: row.free_delivery_above ?? null,
-                  },
-                  quantity,
-                )
-              }
-              readOnly={pod.products_enabled === false}
-            />
-          </Reveal>
-        ) : null}
+        <PodShopSection
+          pod={pod}
+          showProducts={showProducts}
+          selectedProducts={selectedProducts}
+          onSelectionChange={setSelectedProducts}
+          selectedTotal={selectedProductTotal}
+          onVariantQuantity={setVariantQuantity}
+        />
         <Reveal index={4}>
           <PodAccordions
             pod={pod}
@@ -325,7 +438,7 @@ export function PodDetailsScreen() {
         {podBody}
       </SafeAreaView>
 
-      {joinError ? (
+      {actions.joinError ? (
         <Text
           testID="pod-join-error"
           fontSize={12.5}
@@ -334,74 +447,52 @@ export function PodDetailsScreen() {
           paddingHorizontal={16}
           paddingBottom={6}
         >
-          {joinError}
+          {actions.joinError}
         </Text>
       ) : null}
 
       {pod ? (
-        <PodBookingBar
-          onLayout={onBookingBarLayout}
-          pod={pod}
-          isFree={isFree}
-          isHost={isPodHost}
-          membershipState={membershipState}
-          seats={seats}
-          onSeatsChange={setSeats}
-          onCheckout={
-            isFree
-              ? () => void onJoinFree()
-              : () => navigation.navigate('Checkout', { podId: pod.id, seats })
-          }
-          onBackout={() => setBackoutOpen(true)}
-          onKeepSpot={openKeepSpot}
-          onGoToDashboard={() => {
-            useStudioModeStore.getState().setMode('HOST');
-            navigation.navigate('HostManage');
-          }}
-        />
-      ) : null}
-
-      {pod ? (
-        <PodCommentsSheet
-          podId={pod.id}
-          open={commentsOpen}
-          viewerId={viewerId}
-          viewerPhoto={viewerPhoto}
-          onClose={() => setCommentsOpen(false)}
-          onCountChange={(delta) => {
-            setCommentDelta((prev) => prev + delta);
-            useExploreStore.getState().bumpComment(pod.id, delta);
-          }}
-        />
-      ) : null}
-
-      {pod ? (
-        <BackoutConfirmDialog
-          open={backoutOpen}
-          busy={backingOut}
-          onClose={() => setBackoutOpen(false)}
-          onConfirm={onConfirmBackout}
-          refundAmount={membershipState?.backout_refund_amount ?? null}
-          refundPerSeat={membershipState?.backout_refund_per_seat ?? null}
-          mySeats={membershipState?.my_seats ?? 1}
-          deductionPct={membershipState?.backout_deduction_pct ?? 0}
-          refundCoins={membershipState?.backout_refund_coins ?? 0}
-          onViewTerms={() => {
-            setBackoutOpen(false);
-            navigation.navigate('Policy', { slug: 'backout-terms' });
-          }}
-        />
-      ) : null}
-
-      {pod ? (
-        <KeepSpotDialog
-          open={keepSpotOpen}
-          busy={restoringSpot}
-          attemptsLeft={backoutAttemptsLeft}
-          error={keepSpotError}
-          onClose={() => setKeepSpotOpen(false)}
-          onConfirm={onConfirmKeepSpot}
-        />
+        <>
+          <PodBookingBar
+            onLayout={onBookingBarLayout}
+            pod={pod}
+            isFree={isFree}
+            isHost={isPodHost}
+            membershipState={membershipState}
+            seats={actions.seats}
+            onSeatsChange={actions.setSeats}
+            onCheckout={
+              isFree
+                ? () => void actions.onJoinFree()
+                : () => navigation.navigate('Checkout', { podId: pod.id, seats: actions.seats })
+            }
+            onBackout={() => actions.setBackoutOpen(true)}
+            onKeepSpot={actions.openKeepSpot}
+            onGoToDashboard={() => {
+              useStudioModeStore.getState().setMode('HOST');
+              navigation.navigate('HostManage');
+            }}
+          />
+          <PodCommentsSheet
+            podId={pod.id}
+            open={commentsOpen}
+            viewerId={viewerId}
+            viewerPhoto={viewerPhoto}
+            onClose={() => setCommentsOpen(false)}
+            onCountChange={(delta) => {
+              setCommentDelta((prev) => prev + delta);
+              useExploreStore.getState().bumpComment(pod.id, delta);
+            }}
+          />
+          <PodBackoutDialogs
+            actions={actions}
+            membershipState={membershipState}
+            onViewTerms={() => {
+              actions.setBackoutOpen(false);
+              navigation.navigate('Policy', { slug: 'backout-terms' });
+            }}
+          />
+        </>
       ) : null}
     </YStack>
   );

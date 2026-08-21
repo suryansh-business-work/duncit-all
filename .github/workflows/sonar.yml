@@ -64,19 +64,42 @@ jobs:
   # writes (sonar.javascript.lcov.reportPaths). Without these the gate sees 0%
   # and fails new_coverage no matter how good the suites are.
   #
-  # These two jobs run IN PARALLEL and hand their lcov to the analyze job as
-  # artifacts. Previously everything was sequential in one job, so the mobile
-  # suite waited on all 23 workspaces for no reason.
+  # ONE JOB PER BIG WORKSPACE, in a matrix. The history of this step is a
+  # history of time boxes that were too coarse: one recursive run (a hang sank
+  # everything), then five groups (all 17 portals shared one 25-minute budget),
+  # then one workspace at a time with 8 minutes each (mweb's 190 suites and the
+  # server's jest run need far more than that). Each matrix entry now has its
+  # own runner, its own 75-minute budget and its own artifact, so the biggest
+  # suites finish in parallel and a failure in one can only ever cost itself.
+  # The small workspaces still run sequentially inside their group, each
+  # time-boxed, because none of them is big enough to be worth a runner.
   # ---------------------------------------------------------------------------
   coverage-workspaces:
-    name: Coverage — workspaces
+    name: Coverage — ${{ matrix.group.name }}
     runs-on: ubuntu-latest
-    # 71 workspaces at up to 8 minutes each is a worst case nobody hits; the
-    # cap exists so a pathological run still reaches the upload step, because a
-    # job that times out never uploads and the coverage is lost.
-    timeout-minutes: 150
+    timeout-minutes: 75
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          # Big suites: a runner each. Filters are pnpm --filter selectors.
+          - { name: server, filters: './server' }
+          - { name: mweb, filters: './app/mweb' }
+          - { name: admin, filters: './portals/admin' }
+          - { name: crm, filters: './portals/crm' }
+          - { name: partners-app, filters: './portals/partners-app' }
+          - { name: tech, filters: './portals/tech' }
+          - { name: finance, filters: './portals/finance' }
+          - { name: marketing, filters: './portals/marketing' }
+          - { name: onboarding, filters: './portals/onboarding' }
+          - { name: products, filters: './portals/products' }
+          # Everything else, grouped. Listed explicitly (not "./portals/**")
+          # so a big portal is never accidentally run twice or squeezed in here.
+          - { name: packages, filters: './packages/**' }
+          - { name: small-portals, filters: './portals/support ./portals/ads-portal ./portals/ai ./portals/challenge-portal ./portals/developers ./portals/employee ./portals/hr ./portals/legal ./portals/website-app' }
+          - { name: websites, filters: './website/**' }
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.4.0
@@ -89,32 +112,31 @@ jobs:
       # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
       # in, which does not happen here. The lcov is written either way, and the
       # quality gate — not a local threshold — is what judges us.
-      #
-      # ONE WORKSPACE AT A TIME, each with its own time box. Grouping them was
-      # still too coarse: "./portals/**" put all 17 portals inside a single 25
-      # minute budget, so when it ran out the whole group was killed and admin,
-      # crm, mweb and shell reported 0.0% while covering 41-100% locally. A
-      # workspace can now only ever cost itself.
       - name: Run coverage
         continue-on-error: true
         run: |
           set +e
-          # The workspace list comes from pnpm itself, so a new package is
-          # picked up without editing this file.
-          mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json |
+          # Resolve the group's filters to workspace names through pnpm itself,
+          # so a new package under ./packages is picked up with no edit here.
+          args=()
+          for f in ${{ matrix.group.filters }}; do args+=(--filter "$f"); done
+          mapfile -t WORKSPACES < <(pnpm list -r --depth -1 --json "${args[@]}" |
             node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
               for (const w of JSON.parse(s)) if (w.path && w.name) console.log(w.name);
             })')
-          echo "found ${#WORKSPACES[@]} workspace(s)"
+          echo "group ${{ matrix.group.name }}: ${#WORKSPACES[@]} workspace(s): ${WORKSPACES[*]}"
           failed=()
           for ws in "${WORKSPACES[@]}"; do
-            timeout 8m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
+            # Each workspace is time-boxed so one hang cannot eat the group.
+            timeout 60m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
             code=$?
             if [ $code -ne 0 ]; then
               failed+=("$ws($code)")
               echo "::group::coverage FAILED $ws (exit $code)"
-              tail -40 "/tmp/cov-$$.log"
+              tail -60 "/tmp/cov-$$.log"
               echo "::endgroup::"
+            else
+              echo "ok   $ws"
             fi
           done
           if [ ${#failed[@]} -gt 0 ]; then
@@ -133,7 +155,7 @@ jobs:
           ls -la lcov-out
       - uses: actions/upload-artifact@v6
         with:
-          name: lcov-workspaces
+          name: lcov-${{ matrix.group.name }}
           path: lcov-out
           # warn, not error: a partial set of reports is still worth scanning,
           # and the analyze job verifies the count and fails loudly if it is
@@ -143,6 +165,7 @@ jobs:
   coverage-mobile:
     name: Coverage — mobile app
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
@@ -153,17 +176,47 @@ jobs:
           cache: npm
           cache-dependency-path: app/mobile-app/package-lock.json
       # Standalone (npm, outside the pnpm workspace).
+      #
+      # SonarQube was reporting 17.7% for the app while a full local run of the
+      # same suite covers 82% of lines — the lcov this job uploaded was partial.
+      # Jest with 400+ React Native suites on a 2-core / 7 GB runner is exactly
+      # where workers run out of heap and the run ends early with whatever
+      # coverage it had. So: a bounded heap, a worker memory limit so a leaking
+      # worker is recycled instead of killed, and an observability step that
+      # prints what was actually produced — a partial report must never again be
+      # indistinguishable from a complete one.
       - name: Run coverage
         continue-on-error: true
         working-directory: app/mobile-app
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: |
           npm ci
-          npm run test:coverage
+          npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB 2>&1 | tee jest-coverage.log | tail -120
+      - name: Coverage produced
+        working-directory: app/mobile-app
+        run: |
+          echo "--- jest summary ---"
+          grep -E '^(Test Suites|Tests|Statements|Branches|Functions|Lines)\s*:' jest-coverage.log || echo "(no summary lines — the run did not finish)"
+          if [ -f coverage/lcov.info ]; then
+            node -e '
+              const fs=require("fs");let sf=0,lf=0,lh=0;
+              for(const l of fs.readFileSync("coverage/lcov.info","utf8").split(/\r?\n/)){
+                if(l.startsWith("SF:"))sf++;else if(l.startsWith("LF:"))lf+=+l.slice(3);else if(l.startsWith("LH:"))lh+=+l.slice(3);
+              }
+              console.log("lcov: files="+sf+" lines="+lh+"/"+lf+" = "+(lf?(100*lh/lf).toFixed(1):"0")+"%");
+              if(sf<600) console.log("::warning::mobile lcov instruments only "+sf+" files — a full run instruments ~900. The upload is PARTIAL.");
+            '
+          else
+            echo "::error::app/mobile-app/coverage/lcov.info was not written — the jest run died before reporting."
+          fi
       - uses: actions/upload-artifact@v6
         with:
-          name: lcov-mobile
+          name: mobile-lcov
           path: app/mobile-app/coverage/lcov.info
-          if-no-files-found: error
+          # warn, not error: analyze verifies the overall report count and a
+          # partial app report is still worth scanning.
+          if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
   # The scan itself. Needs the full history (fetch-depth: 0) for accurate
@@ -181,18 +234,22 @@ jobs:
         with:
           fetch-depth: 0 # shallow clones hurt new-code relevancy
 
+      # One artifact per matrix group (lcov-server, lcov-mweb, …), merged into
+      # one directory. The mobile artifact is named mobile-lcov on purpose so
+      # this glob does not also sweep it in.
       - name: Download workspace lcov
         continue-on-error: true
         uses: actions/download-artifact@v6
         with:
-          name: lcov-workspaces
+          pattern: lcov-*
+          merge-multiple: true
           path: lcov-out
 
       - name: Download mobile lcov
         continue-on-error: true
         uses: actions/download-artifact@v6
         with:
-          name: lcov-mobile
+          name: mobile-lcov
           path: app/mobile-app/coverage
 
       # Put each lcov back where sonar.javascript.lcov.reportPaths expects it.

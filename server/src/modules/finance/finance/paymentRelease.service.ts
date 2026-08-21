@@ -429,35 +429,39 @@ async function sendProductInvoices(doc: IPaymentRelease) {
   }
 }
 
-// Side effects of an APPROVED release — the wallet leg of every payout. Each
-// kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
-// the club's admin user. Idempotent per release_id in the wallet service.
-async function applyApproval(doc: IPaymentRelease) {
-  // Approval is the moment the pod is officially completed (first release wins).
+// Approval is the moment the pod is officially completed (first release wins).
+// When this approval is the one that stamps it, the unsold stock is released
+// and the monitored trail gets its COMPLETE entry.
+async function completePodOnApproval(doc: IPaymentRelease) {
   const stamped = await PodModel.updateOne(
     { _id: doc.pod_id, completed_at: null },
     { $set: { completed_at: new Date() } }
   );
-  if (stamped.modifiedCount > 0) {
-    // Completion frees the pod's unsold reserved stock back to the brand.
-    const { podService } = await import('@modules/pods/pod/pod.service');
-    await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
-      logs.server.warn('paymentRelease', 'applyApproval', { error: e, msg: 'stock release failed' });
-    });
-    // A pod completed by a finance approval (rather than a host submission)
-    // must still leave a COMPLETE entry in the monitored trail.
-    const pod = await PodModel.findById(doc.pod_id).setOptions({ includeDeleted: true });
-    if (pod) {
-      const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
-      await podAuditService.record({
-        pod,
-        action: 'COMPLETE',
-        source: 'SYSTEM',
-        actorUserId: doc.reviewed_by ? String(doc.reviewed_by) : null,
-        note: `Pod completed by ${doc.kind} payout approval (${doc.release_id})`,
-      });
-    }
-  }
+  if (stamped.modifiedCount === 0) return;
+  // Completion frees the pod's unsold reserved stock back to the brand.
+  const { podService } = await import('@modules/pods/pod/pod.service');
+  await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
+    logs.server.warn('paymentRelease', 'applyApproval', { error: e, msg: 'stock release failed' });
+  });
+  // A pod completed by a finance approval (rather than a host submission)
+  // must still leave a COMPLETE entry in the monitored trail.
+  const pod = await PodModel.findById(doc.pod_id).setOptions({ includeDeleted: true });
+  if (!pod) return;
+  const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
+  await podAuditService.record({
+    pod,
+    action: 'COMPLETE',
+    source: 'SYSTEM',
+    actorUserId: doc.reviewed_by ? String(doc.reviewed_by) : null,
+    note: `Pod completed by ${doc.kind} payout approval (${doc.release_id})`,
+  });
+}
+
+// Side effects of an APPROVED release — the wallet leg of every payout. Each
+// kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
+// the club's admin user. Idempotent per release_id in the wallet service.
+async function applyApproval(doc: IPaymentRelease) {
+  await completePodOnApproval(doc);
   const payout = releasePayout(doc);
   const { walletService } = await import('@modules/finance/wallet/wallet.service');
 

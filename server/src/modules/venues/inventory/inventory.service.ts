@@ -807,6 +807,42 @@ async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: 
   await sendProductOwnerWhatsApp(doc, 'ECOMM_STOCK_LOW', afterAvailable);
 }
 
+/** Validate and apply the reviewer's commission override; a missing value
+ * leaves the listing's current commission untouched. */
+function applyReviewCommission(doc: IInventoryProduct, commissionPct: number | null | undefined) {
+  if (commissionPct === undefined || commissionPct === null) return;
+  const commission = Number(commissionPct);
+  if (!Number.isFinite(commission) || commission < 5 || commission > 50) {
+    throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  doc.commission_pct = commission;
+}
+
+/** Tell the partner the review outcome — they previously had to poll their
+ * table. Best-effort: a notify hiccup never fails the review. */
+async function notifyListingReviewOutcome(doc: IInventoryProduct, approved: boolean) {
+  const reviewTitle = approved ? 'Product approved 🎉' : 'Product listing declined';
+  const declineSuffix = doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.';
+  const reviewBody = approved
+    ? `${doc.product_name} is approved and can now be stocked into pods.`
+    : `${doc.product_name} was declined${declineSuffix}`;
+  await notificationService
+    .create({
+      scope: 'USER',
+      target_user_ids: [String(doc.listing_submitted_by_id)],
+      title: reviewTitle,
+      body: reviewBody,
+      silent: false,
+    })
+    .catch((error) => {
+      logs.server.error('inventory', 'reviewProductListing', {
+        error,
+        msg: 'review notify failed',
+        product_id: String(doc._id),
+      });
+    });
+}
+
 export const inventoryService = {
   async generateSku() {
     return generateUniqueSku();
@@ -1266,13 +1302,7 @@ export const inventoryService = {
       throw new GraphQLError('This product is not a partner listing', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const info = userInfo(user);
-    if (commissionPct !== undefined && commissionPct !== null) {
-      const commission = Number(commissionPct);
-      if (!Number.isFinite(commission) || commission < 5 || commission > 50) {
-        throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-      doc.commission_pct = commission;
-    }
+    applyReviewCommission(doc, commissionPct);
     const approved = status === 'APPROVED';
     doc.listing_review_status = approved ? 'APPROVED' : 'DENIED';
     doc.listing_review_notes = cleanText(notes, 1000);
@@ -1285,27 +1315,7 @@ export const inventoryService = {
     doc.last_updated_by_id = info.id;
     await doc.save();
     await logActivity(doc._id, user, approved ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
-    // Tell the partner the outcome — they previously had to poll their table.
-    const reviewTitle = approved ? 'Product approved 🎉' : 'Product listing declined';
-    const declineSuffix = doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.';
-    const reviewBody = approved
-      ? `${doc.product_name} is approved and can now be stocked into pods.`
-      : `${doc.product_name} was declined${declineSuffix}`;
-    await notificationService
-      .create({
-        scope: 'USER',
-        target_user_ids: [String(doc.listing_submitted_by_id)],
-        title: reviewTitle,
-        body: reviewBody,
-        silent: false,
-      })
-      .catch((error) => {
-        logs.server.error('inventory', 'reviewProductListing', {
-          error,
-          msg: 'review notify failed',
-          product_id: String(doc._id),
-        });
-      });
+    await notifyListingReviewOutcome(doc, approved);
     // Only an approval puts the product on the shelf; a decline is not a
     // product added.
     if (approved) await sendProductOwnerWhatsApp(doc, 'ECOMM_PRODUCT_ADDED', doc.inventory_count);

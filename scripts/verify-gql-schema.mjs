@@ -93,9 +93,21 @@ function templatesIn(source) {
   }
   return found;
 }
-/** A template that opens with one of these is SDL, not an operation. */
-const SDL_START = /^\s*(?:"""[\s\S]*?"""\s*|"[^"\n]*"\s*|#[^\n]*\n\s*)*(type|extend|enum|input|interface|union|scalar|directive|schema)\b/;
+/** One piece of leading trivia: a description (block or single-line) or a comment. */
+const LEADING_TRIVIA = /^\s*(?:"""[\s\S]*?"""|"[^"\n]*"|#[^\n]*\n)/;
+/** A template that opens with one of these (after any trivia) is SDL, not an operation. */
+const SDL_KEYWORD = /^\s*(?:type|extend|enum|input|interface|union|scalar|directive|schema)\b/;
 const OPERATION_START = /^\s*(query|mutation|subscription|fragment)\b/;
+
+/** True when the template is SDL: strip leading descriptions/comments, then look for a keyword. */
+function isSdlStart(source) {
+  let rest = source;
+  let trivia;
+  while ((trivia = LEADING_TRIVIA.exec(rest)) !== null) {
+    rest = rest.slice(trivia[0].length);
+  }
+  return SDL_KEYWORD.test(rest);
+}
 
 function walk(dir, out = []) {
   let entries;
@@ -146,7 +158,7 @@ function collectSchemaAst() {
     const constants = readConstants(source);
     for (const template of templatesIn(source)) {
       const sdl = resolveConstants(template, constants);
-      if (!SDL_START.test(sdl) || sdl.includes('${')) continue;
+      if (!isSdlStart(sdl) || sdl.includes('${')) continue;
       try {
         docs.push(parse(sdl));
       } catch {

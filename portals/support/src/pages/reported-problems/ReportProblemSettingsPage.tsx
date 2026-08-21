@@ -25,6 +25,15 @@ import {
   type ReportProblemConfig,
 } from '../../graphql/reported-problems';
 
+const renameCategory = (prev: ReportProblemCategory[], index: number, label: string) =>
+  prev.map((c, i) => (i === index ? { ...c, label } : c));
+
+const toggleCategory = (prev: ReportProblemCategory[], index: number, is_active: boolean) =>
+  prev.map((c, i) => (i === index ? { ...c, is_active } : c));
+
+const removeCategory = (prev: ReportProblemCategory[], index: number) =>
+  prev.filter((_, i) => i !== index);
+
 /**
  * What the app renders on Report a Problem.
  *
@@ -127,9 +136,7 @@ export default function ReportProblemSettingsPage() {
                     size="small"
                     value={category.label}
                     onChange={(event) =>
-                      setCategories((prev) =>
-                        prev.map((c, i) => (i === index ? { ...c, label: event.target.value } : c))
-                      )
+                      setCategories((prev) => renameCategory(prev, index, event.target.value))
                     }
                     sx={{ flex: 1 }}
                   />
@@ -139,11 +146,7 @@ export default function ReportProblemSettingsPage() {
                       <Switch
                         checked={category.is_active}
                         onChange={(event) =>
-                          setCategories((prev) =>
-                            prev.map((c, i) =>
-                              i === index ? { ...c, is_active: event.target.checked } : c
-                            )
-                          )
+                          setCategories((prev) => toggleCategory(prev, index, event.target.checked))
                         }
                       />
                     }
@@ -152,7 +155,7 @@ export default function ReportProblemSettingsPage() {
                   <IconButton
                     color="error"
                     aria-label={`Remove ${category.label}`}
-                    onClick={() => setCategories((prev) => prev.filter((_, i) => i !== index))}
+                    onClick={() => setCategories((prev) => removeCategory(prev, index))}
                   >
                     <DeleteIcon />
                   </IconButton>

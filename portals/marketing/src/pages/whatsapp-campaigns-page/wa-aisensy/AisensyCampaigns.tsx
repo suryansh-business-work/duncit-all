@@ -65,6 +65,27 @@ interface Props {
   onTest: (campaign: CampaignRow) => void;
 }
 
+type RowActionHandlers = Pick<Props, 'onSend' | 'onTest'>;
+
+const buildColumns = ({
+  onSend,
+  onTest,
+}: Readonly<RowActionHandlers>): DuncitColumn<CampaignRow>[] => [
+  { field: 'name', headerName: 'Campaign', flex: 1, minWidth: 220 },
+  { field: 'type', headerName: 'Type', width: 150 },
+  { field: 'status', headerName: 'Status', width: 120, cellRenderer: renderStatus },
+  { field: 'template_name', headerName: 'Template', flex: 1, minWidth: 180 },
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 110,
+    sortable: false,
+    cellRenderer: (campaign) => (
+      <CampaignRowActions campaign={campaign} onSend={onSend} onTest={onTest} />
+    ),
+  },
+];
+
 /** The campaigns that can be sent, and where a send begins: you send the
  * campaign you are looking at, not one picked again from a dropdown. */
 export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Props>) {
@@ -87,24 +108,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
     [templates, campaigns]
   );
 
-  const columns = useMemo<DuncitColumn<CampaignRow>[]>(
-    () => [
-      { field: 'name', headerName: 'Campaign', flex: 1, minWidth: 220 },
-      { field: 'type', headerName: 'Type', width: 150 },
-      { field: 'status', headerName: 'Status', width: 120, cellRenderer: renderStatus },
-      { field: 'template_name', headerName: 'Template', flex: 1, minWidth: 180 },
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 110,
-        sortable: false,
-        cellRenderer: (campaign) => (
-          <CampaignRowActions campaign={campaign} onSend={onSend} onTest={onTest} />
-        ),
-      },
-    ],
-    [onSend, onTest]
-  );
+  const columns = useMemo(() => buildColumns({ onSend, onTest }), [onSend, onTest]);
 
   const fetchRows = useMemo(() => clientTableFetch(rows, campaignSearchText), [rows]);
 

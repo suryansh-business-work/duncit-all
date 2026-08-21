@@ -385,6 +385,37 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       savePod: 'Save pod',
       savedPod: 'Remove from saved',
     },
+    // The Explore filter sheet — presets, sort, vibe, price and date chips plus
+    // the sheet's own chrome. mWeb only: the native Explore tab is a reels feed
+    // with no filter sheet, so rule 27 has no twin to pair here. The price chips
+    // read mweb.podType.*, and the Vibe row's "All" chip reads mweb.home.vibeAll
+    // — it is the same chip Home renders.
+    explore: {
+      filtersTitle: 'Filters',
+      filtersSummary: '{activeCount} active - {resultCount} pods match',
+      reset: 'Reset',
+      showResults: 'Show {count} pods',
+      quickPresets: 'Quick presets',
+      presetAll: 'All',
+      presetTonight: 'Tonight',
+      presetTrending: 'Trending',
+      presetNearMe: 'Near me',
+      sortBy: 'Sort by',
+      sortSoonest: 'Soonest',
+      sortTrending: 'Trending',
+      sortPriceLow: 'Price low',
+      sortPriceHigh: 'Price high',
+      vibe: 'Vibe',
+      showLess: 'Show less',
+      moreVibes: '+{count} more',
+      price: 'Price',
+      when: 'When',
+      dateAnyTime: 'Any time',
+      dateToday: 'Today',
+      dateTomorrow: 'Tomorrow',
+      dateThisWeek: 'This week',
+      dateThisMonth: 'This month',
+    },
     // The bar offering the app. Shown only when the OS did not already hand
     // the link over — a verified App Link never reaches this code at all.
     openInApp: {
@@ -400,6 +431,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       download: 'Ticket & invoice',
       downloading: 'Downloading…',
     },
+    // The booking deep link (`/booking/:bookingId`) — the receipt email's
+    // "View Booking" target. It resolves the booking and forwards to its pod,
+    // so the only copy is the screen title and what it says when it cannot.
+    booking: {
+      // Native only — the mWeb page forwards with no heading of its own.
+      title: 'Your Booking',
+      notFound: 'This booking could not be found.',
+      // mWeb only — native forwards to the pod screen either way.
+      podUnavailable: 'This pod is no longer available to view.',
+    },
     nav: {
       home: 'Home',
       explore: 'Explore',
@@ -414,6 +455,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       outOfStock: 'Out of stock',
       includeOutOfStock: 'Include out of stock',
       searchPlaceholder: 'Search products or brands…',
+    },
+    // The pod-type words, shared wherever a pod is labelled or filtered by
+    // whether it charges: the Home and Explore price chips, the Create Pod
+    // option list, the Host Studio row chip and podTypeLabel. One set rather
+    // than a copy per screen. (Step 4's PodTypeCards still read the older
+    // mweb.createPod.podTypeFree/podTypePaid pair.)
+    podType: {
+      all: 'All',
+      free: 'Free',
+      paid: 'Paid',
     },
     // The pod page: hero, overview, schedule, the accordion stack, the booking
     // bar in every state it has, the backout/keep-spot dialogs and the comments
@@ -480,8 +531,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       meetingLinkAfterJoin: 'Meeting link will be visible after joining this pod.',
       where: 'Where',
       venueDetails: 'Venue details',
-      // Native only — mWeb formats the schedule through the browser's own
-      // locale formatter, which has an em dash for a missing date.
+      // Native's pod page and both twins' pod-pending summary — mWeb's own pod
+      // page formats the schedule through the browser's locale formatter,
+      // which has an em dash for a missing date.
       datePending: 'Date pending',
       // mWeb only — the native map is a plain embed with no chrome of its own.
       mapPreview: 'Map preview',
@@ -1529,6 +1581,43 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         imageRequired: 'Add at least one image URL',
         termsRequired: 'Accept the Organizer Terms to publish',
       },
+    },
+    // The waiting screen a host lands on after creating a pod whose venue slot
+    // request is still PENDING — banner, pod summary, the venue's contact card
+    // and the club-admin help card. mWeb and native render the SAME journey
+    // (rule 27), so every key here serves both unless its comment says which.
+    podPending: {
+      // Native only — the stack screen's title; the mWeb page has no heading.
+      title: 'Slot Request Sent',
+      bannerTitle: 'Your Pod will go live once the venue accepts your slot request.',
+      bannerBody:
+        "We've sent your slot request to the venue. You'll be notified as soon as the venue approves or declines your request.",
+      loadFailed: 'This pod could not be loaded.',
+      // The pod summary card's rows. A missing date reads mweb.podDetails.datePending.
+      dateTime: 'Date & time',
+      expectedEarnings: 'Expected earnings',
+      location: 'Location',
+      category: 'Category',
+      currentStatus: 'Current status',
+      statusAwaitingVenue: 'Awaiting venue approval',
+      statusVenueDeclined: 'Venue declined your slot request',
+      statusLive: 'Live',
+      // The venue card — the slot-decision badge and the venue's contact rows.
+      approvalPending: 'Pending Approval',
+      approvalApproved: 'Approved',
+      approvalDeclined: 'Declined',
+      contactPerson: 'Contact person',
+      phone: 'Phone',
+      whatsapp: 'WhatsApp',
+      email: 'Email',
+      address: 'Address',
+      approvalStatus: 'Approval status',
+      actionViewOnMap: 'View on Map',
+      // The club-admin help card — its caption and the contact actions under it.
+      clubAdminCaption: 'Need Help? Contact the Club Admin',
+      actionCall: 'Call',
+      actionMessage: 'Message',
+      actionEmail: 'Email',
     },
     // The Follow button's three states. REQUESTED only ever appears on a
     // private profile, whose owner must accept before a follow exists.

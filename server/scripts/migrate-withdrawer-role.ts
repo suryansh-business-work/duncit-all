@@ -69,8 +69,9 @@ async function main(): Promise<void> {
     // model's default and the read-side fallback already show for these rows.
     const role = roleOf.get(String(w.user_id)) ?? 'HOST';
     counts[role] = (counts[role] ?? 0) + 1;
-    if (!byRole.has(role)) byRole.set(role, []);
-    byRole.get(role)!.push(w._id);
+    const ids = byRole.get(role) ?? [];
+    ids.push(w._id);
+    byRole.set(role, ids);
   }
 
   for (const [role, ids] of byRole) {

@@ -15,8 +15,25 @@ import CheckIcon from '@mui/icons-material/Check';
  *
  * One pass, alternation ordered so a keyword inside a string stays a string.
  */
-const TOKENS =
-  /(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`)|(\b\d+(?:\.\d+)?\b)|\b(const|let|var|function|return|if|else|for|while|class|new|await|async|import|export|from|type|interface|public|private|select|from|where|join|insert|update|delete|def|end|null|true|false)\b/g;
+// Comments: `// …`, `# …` and block `/* … */` (the block form may span lines).
+const COMMENT = /\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\//;
+// Strings: single/double quotes stay on one line, template literals may span lines; escapes are skipped.
+const STRING = /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/;
+// Numbers: integers and decimals.
+const NUMBER = /\b\d+(?:\.\d+)?\b/;
+// Keywords: the handful shared by the languages anybody here pastes (JS/TS, SQL, Ruby/Python).
+const KEYWORDS = [
+  'const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'class', 'new',
+  'await', 'async', 'import', 'export', 'from', 'type', 'interface', 'public', 'private',
+  'select', 'from', 'where', 'join', 'insert', 'update', 'delete', 'def', 'end', 'null',
+  'true', 'false',
+];
+
+// Capture groups 1–4 are, in order, the four kinds above — `paint` maps them onto COLOR.
+const TOKENS = new RegExp(
+  `(${COMMENT.source})|(${STRING.source})|(${NUMBER.source})|\\b(${KEYWORDS.join('|')})\\b`,
+  'g',
+);
 
 const COLOR = ['text.disabled', 'success.main', 'warning.main', 'primary.main'] as const;
 

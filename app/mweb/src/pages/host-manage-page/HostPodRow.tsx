@@ -9,6 +9,7 @@ import {
   type HostPodMenuHandlers,
 } from '@duncit/host-pod-actions';
 import { formatDateTime } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function formatDate(value?: string | null) {
   return formatDateTime(value) || '—';
@@ -32,6 +33,7 @@ export default function HostPodRow({
   onClubAdmin,
   onSeeAttendance,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
   const rejected = isVenueRejected(pod.venue_approval_status);
   const free = pod.pod_type === 'FREE';
@@ -66,8 +68,7 @@ export default function HostPodRow({
         {approvalChip && <Chip size="small" label={approvalChip.label} color={approvalChip.color} />}
         <Chip
           size="small"
-          // TODO(i18n)
-          label={free ? 'Free' : 'Paid'}
+          label={free ? t('mweb.podType.free') : t('mweb.podType.paid')}
           color={free ? 'success' : 'primary'}
           variant="outlined"
         />

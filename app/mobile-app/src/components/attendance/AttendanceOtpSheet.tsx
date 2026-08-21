@@ -1,6 +1,11 @@
 import { Controller } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
-import { OTP_MEDIUMS, type PodAttendanceLabels, type PodAttendanceRow } from '@duncit/utils';
+import {
+  OTP_MEDIUMS,
+  type OtpMedium,
+  type PodAttendanceLabels,
+  type PodAttendanceRow,
+} from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { FormTextField } from '@/components/FormTextField';
@@ -13,6 +18,19 @@ interface Props {
   labels: PodAttendanceLabels;
   onClose: () => void;
   onVerified: (challengeId: string) => void;
+}
+
+/**
+ * Hoisted so the medium pick sits at nesting 0 (Sonar S2004): a selected
+ * medium is removed, an unselected one is appended.
+ */
+function toggleMedium(
+  current: readonly OtpMedium[],
+  medium: OtpMedium,
+  checked: boolean,
+): OtpMedium[] {
+  if (checked) return current.filter((m) => m !== medium);
+  return [...current, medium];
 }
 
 /**
@@ -111,9 +129,7 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
                     selected={field.value.includes(medium)}
                     onPress={() =>
                       field.onChange(
-                        field.value.includes(medium)
-                          ? field.value.filter((m: string) => m !== medium)
-                          : [...field.value, medium],
+                        toggleMedium(field.value, medium, field.value.includes(medium)),
                       )
                     }
                   />

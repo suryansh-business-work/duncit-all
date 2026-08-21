@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import ClubAdminCard from './ClubAdminCard';
 import PendingBanner from './PendingBanner';
 import PodPendingSummaryCard from './PodPendingSummaryCard';
@@ -12,6 +13,7 @@ import { HOST_POD_PENDING_VIEW, type PodPendingView } from './queries';
  * PENDING — banner + pod summary + venue contact + club-admin help cards.
  * mWeb twin of the native PodPendingScreen (rule 27). */
 export default function PodPendingPage() {
+  const { t } = useTranslation();
   const { podId } = useParams<{ podId: string }>();
   const { data, loading, error } = useQuery(HOST_POD_PENDING_VIEW, {
     variables: { pod_doc_id: podId },
@@ -30,8 +32,7 @@ export default function PodPendingPage() {
   } else if (error || !view) {
     body = (
       <Alert severity="error" data-testid="pod-pending-error">
-        {/* TODO(i18n) — fallback copy ships as a literal until this feature is localized. */}
-        {error?.message ?? 'This pod could not be loaded.'}
+        {error?.message ?? t('mweb.podPending.loadFailed')}
       </Alert>
     );
   } else {

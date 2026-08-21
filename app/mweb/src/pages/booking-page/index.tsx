@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client';
 import { Navigate, useParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress } from '@mui/material';
 import { podUrl } from '../../utils/seoUrls';
+import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
 import { BOOKING_DETAIL, type BookingDetail } from './queries';
 
@@ -14,6 +15,7 @@ import { BOOKING_DETAIL, type BookingDetail } from './queries';
  * mWeb twin of the native BookingScreen (rule 27).
  */
 export default function BookingPage() {
+  const { t } = useTranslation();
   const { bookingId = '' } = useParams<{ bookingId: string }>();
   const { data, loading, error } = useQuery<{ bookingDetail: BookingDetail }>(BOOKING_DETAIL, {
     variables: { booking_id: bookingId },
@@ -31,8 +33,7 @@ export default function BookingPage() {
     if (target === '/') {
       return (
         <Alert severity="warning" data-testid="booking-error">
-          {/* TODO(i18n) — ships as a literal until this feature is localized. */}
-          This pod is no longer available to view.
+          {t('mweb.booking.podUnavailable')}
         </Alert>
       );
     }
@@ -48,8 +49,7 @@ export default function BookingPage() {
   if (!loading) {
     return (
       <Alert severity="warning" data-testid="booking-error">
-        {/* TODO(i18n) — ships as a literal until this feature is localized. */}
-        This booking could not be found.
+        {t('mweb.booking.notFound')}
       </Alert>
     );
   }

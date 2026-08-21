@@ -9,6 +9,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { useTranslation } from '../../i18n/useTranslation';
 import InfoRow, { type InfoRowProps } from './InfoRow';
 import { approvalBadge, type ApprovalIcon, venueMapUrl } from './podPending';
 import type { PodPendingVenue } from './queries';
@@ -29,15 +30,15 @@ interface Props {
 /** Venue details card — slot-decision badge, the venue's contact details and a
  * "View on Map" deep link. Native twin (rule 27). */
 export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
-  const badge = approvalBadge(status);
+  const { t } = useTranslation();
+  const badge = approvalBadge(status, t);
   const mapUrl = venueMapUrl(venue);
 
-  // TODO(i18n) — row labels ship as literals until this feature is localized.
   const rows: InfoRowProps[] = [];
   if (venue.contact_person) {
     rows.push({
       icon: <PersonIcon sx={ICON} />,
-      label: 'Contact person',
+      label: t('mweb.podPending.contactPerson'),
       value: venue.contact_person,
       testId: 'venue-pending-contact',
     });
@@ -45,7 +46,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   if (venue.phone) {
     rows.push({
       icon: <PhoneIcon sx={ICON} />,
-      label: 'Phone',
+      label: t('mweb.podPending.phone'),
       value: venue.phone,
       testId: 'venue-pending-phone',
     });
@@ -53,7 +54,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   if (venue.email) {
     rows.push({
       icon: <EmailIcon sx={ICON} />,
-      label: 'Email',
+      label: t('mweb.podPending.email'),
       value: venue.email,
       testId: 'venue-pending-email',
     });
@@ -61,14 +62,14 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   if (venue.address) {
     rows.push({
       icon: <PlaceIcon sx={ICON} />,
-      label: 'Address',
+      label: t('mweb.podPending.address'),
       value: venue.address,
       testId: 'venue-pending-address',
     });
   }
   rows.push({
     icon: <FactCheckIcon sx={ICON} />,
-    label: 'Approval status',
+    label: t('mweb.podPending.approvalStatus'),
     value: badge.label,
     testId: 'venue-pending-approval',
   });
@@ -94,7 +95,6 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
           <InfoRow key={row.label} {...row} />
         ))}
         {mapUrl && (
-          // TODO(i18n) — action label ships as a literal until this feature is localized.
           <Button
             href={mapUrl}
             target="_blank"
@@ -104,7 +104,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             data-testid="venue-pending-map"
             sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
           >
-            View on Map
+            {t('mweb.podPending.actionViewOnMap')}
           </Button>
         )}
       </Stack>

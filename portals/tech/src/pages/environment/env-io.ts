@@ -71,16 +71,18 @@ const asStringList = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 
 /**
- * A config object back into pairs. Values are stringified because the API
+ * A config object back into pairs. Values are serialized because the API
  * takes strings and the server coerces them per field — a port written as the
- * number 587 in a hand-edited file must not be rejected for it.
+ * number 587 in a hand-edited file must not be rejected for it. `config` is
+ * parsed JSON, so a non-string here is a number, boolean, object or array, and
+ * JSON.stringify renders each exactly as the file spelled it.
  */
 function toPairs(config: unknown): Array<{ key: string; value: string }> {
   if (!isRecord(config)) return [];
   const pairs: Array<{ key: string; value: string }> = [];
   for (const [key, value] of Object.entries(config)) {
     if (value === null || value === undefined) continue;
-    pairs.push({ key, value: typeof value === 'object' ? JSON.stringify(value) : String(value) });
+    pairs.push({ key, value: typeof value === 'string' ? value : JSON.stringify(value) });
   }
   return pairs;
 }

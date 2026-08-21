@@ -3,6 +3,7 @@ import { semantic } from '@duncit/auth-tokens';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodPendingView } from '@/hooks/usePodPendingView';
+import { useTranslation } from '@/hooks/useTranslation';
 import { approvalBadge, venueMapUrl, type ApprovalTone } from '@/utils/pod-pending';
 import { ActionLink } from './ActionLink';
 import { InfoRow, type InfoRowProps } from './InfoRow';
@@ -21,36 +22,46 @@ export function VenuePendingCard({
   venue,
   status,
 }: Readonly<{ venue: PendingVenue; status: string }>) {
-  const badge = approvalBadge(status);
+  const { t } = useTranslation();
+  const badge = approvalBadge(status, t);
   const badgeColor = TONE_COLORS[badge.tone];
   const mapUrl = venueMapUrl(venue);
-  // TODO(i18n) — row labels ship as literals until this feature is localized.
   const rows: InfoRowProps[] = [];
   if (venue.contact_person) {
     rows.push({
       icon: 'person',
-      label: 'Contact person',
+      label: t('mweb.podPending.contactPerson'),
       value: venue.contact_person,
       testID: 'venue-pending-contact',
     });
   }
   if (venue.phone) {
-    rows.push({ icon: 'phone', label: 'Phone', value: venue.phone, testID: 'venue-pending-phone' });
+    rows.push({
+      icon: 'phone',
+      label: t('mweb.podPending.phone'),
+      value: venue.phone,
+      testID: 'venue-pending-phone',
+    });
   }
   if (venue.email) {
-    rows.push({ icon: 'email', label: 'Email', value: venue.email, testID: 'venue-pending-email' });
+    rows.push({
+      icon: 'email',
+      label: t('mweb.podPending.email'),
+      value: venue.email,
+      testID: 'venue-pending-email',
+    });
   }
   if (venue.address) {
     rows.push({
       icon: 'place',
-      label: 'Address',
+      label: t('mweb.podPending.address'),
       value: venue.address,
       testID: 'venue-pending-address',
     });
   }
   rows.push({
     icon: 'fact-check',
-    label: 'Approval status',
+    label: t('mweb.podPending.approvalStatus'),
     value: badge.label,
     testID: 'venue-pending-approval',
   });
@@ -88,8 +99,12 @@ export function VenuePendingCard({
         <InfoRow key={row.label} {...row} />
       ))}
       {mapUrl ? (
-        // TODO(i18n) — action label ships as a literal until this feature is localized.
-        <ActionLink testID="venue-pending-map" icon="map" label="View on Map" url={mapUrl} />
+        <ActionLink
+          testID="venue-pending-map"
+          icon="map"
+          label={t('mweb.podPending.actionViewOnMap')}
+          url={mapUrl}
+        />
       ) : null}
     </YStack>
   );

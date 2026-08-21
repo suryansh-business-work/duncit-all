@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { mailtoUrl, telUrl, whatsappUrl } from '@/utils/pod-pending';
 import { ActionLink } from './ActionLink';
 import { InfoRow, type InfoRowProps } from './InfoRow';
@@ -22,25 +23,35 @@ export interface ClubAdminContact {
  * tracked anywhere in the system, so no such row is rendered. */
 export function ClubAdminCard({
   admin,
-  caption = 'Need Help? Contact the Club Admin',
+  caption,
 }: Readonly<{ admin: ClubAdminContact; caption?: string }>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   const waUrl = whatsappUrl(admin.whatsapp ?? '');
-  // TODO(i18n) — row labels ship as literals until this feature is localized.
   const rows: InfoRowProps[] = [];
   if (admin.phone) {
-    rows.push({ icon: 'phone', label: 'Phone', value: admin.phone, testID: 'club-admin-phone' });
+    rows.push({
+      icon: 'phone',
+      label: t('mweb.podPending.phone'),
+      value: admin.phone,
+      testID: 'club-admin-phone',
+    });
   }
   if (admin.whatsapp) {
     rows.push({
       icon: 'chat',
-      label: 'WhatsApp',
+      label: t('mweb.podPending.whatsapp'),
       value: admin.whatsapp,
       testID: 'club-admin-whatsapp',
     });
   }
   if (admin.email) {
-    rows.push({ icon: 'email', label: 'Email', value: admin.email, testID: 'club-admin-email' });
+    rows.push({
+      icon: 'email',
+      label: t('mweb.podPending.email'),
+      value: admin.email,
+      testID: 'club-admin-email',
+    });
   }
 
   return (
@@ -54,7 +65,7 @@ export function ClubAdminCard({
       backgroundColor="$surface"
     >
       <Text fontSize={12} fontWeight="600" color="$muted">
-        {caption}
+        {caption ?? t('mweb.podPending.clubAdminCaption')}
       </Text>
       <XStack alignItems="center" gap={10}>
         {admin.profile_photo ? (
@@ -85,18 +96,27 @@ export function ClubAdminCard({
         <InfoRow key={row.label} {...row} />
       ))}
       <XStack gap={18} flexWrap="wrap">
-        {/* TODO(i18n) — action labels ship as literals until this feature is localized. */}
         {admin.phone ? (
-          <ActionLink testID="club-admin-call" icon="call" label="Call" url={telUrl(admin.phone)} />
+          <ActionLink
+            testID="club-admin-call"
+            icon="call"
+            label={t('mweb.podPending.actionCall')}
+            url={telUrl(admin.phone)}
+          />
         ) : null}
         {waUrl ? (
-          <ActionLink testID="club-admin-message" icon="chat" label="Message" url={waUrl} />
+          <ActionLink
+            testID="club-admin-message"
+            icon="chat"
+            label={t('mweb.podPending.actionMessage')}
+            url={waUrl}
+          />
         ) : null}
         {admin.email ? (
           <ActionLink
             testID="club-admin-email-action"
             icon="email"
-            label="Email"
+            label={t('mweb.podPending.actionEmail')}
             url={mailtoUrl(admin.email)}
           />
         ) : null}

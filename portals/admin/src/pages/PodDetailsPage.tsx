@@ -1,5 +1,11 @@
-import { PodDetailsPage as SharedPodDetails } from '@duncit/pod-details';
+import { PodDetailsPage as SharedPodDetails, type PodDetailsViewProps } from '@duncit/pod-details';
 import PodCouponsSection from './pod-coupons/PodCouponsSection';
+
+/** The footer the shared view calls with the pod it loaded — hoisted to module
+ * scope so React keeps one component identity across renders (S6478). */
+const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) => (
+  <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
+);
 
 /** Admin's pod detail — the shared view at ADMIN scope (its default).
  *
@@ -9,9 +15,5 @@ import PodCouponsSection from './pod-coupons/PodCouponsSection';
  * of ONE pod belong on that pod, so the section is injected as the footer
  * rather than widening the shared view. */
 export default function AdminPodDetailsPage() {
-  return (
-    <SharedPodDetails
-      footer={(pod) => <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />}
-    />
-  );
+  return <SharedPodDetails footer={renderCouponsFooter} />;
 }

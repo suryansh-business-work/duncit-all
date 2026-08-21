@@ -15,6 +15,7 @@ import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { sendEmail } from '@services/email/email.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -843,6 +844,50 @@ async function notifyListingReviewOutcome(doc: IInventoryProduct, approved: bool
     });
 }
 
+/**
+ * Tell the listing's owner their product was switched off or back on. A pause
+ * takes the product out of the shop, the brand storefront and the pod product
+ * picker, so it can never be a silent change — and both portals that flip it
+ * (the partner's own toggle and the staff one) come through here, so neither
+ * can be the one that forgets.
+ *
+ * A Duncit-catalogue product has no partner owner, so there is nobody to write
+ * to. Best-effort otherwise: a mail hiccup must not fail the toggle itself.
+ */
+async function notifyProductActiveChange(doc: IInventoryProduct, active: boolean) {
+  const ownerId = doc.listing_submitted_by_id;
+  if (!ownerId || !Types.ObjectId.isValid(ownerId)) return;
+  const owner = await UserModel.findById(ownerId)
+    .select('profile.first_name profile.last_name auth.email')
+    .lean();
+  if (!owner) return;
+  const name =
+    `${owner.profile?.first_name ?? ''} ${owner.profile?.last_name ?? ''}`.trim() ||
+    (doc.listing_submitted_by_name ?? '');
+  const slug = active ? 'product-activated' : 'product-deactivated';
+  try {
+    // Sent whether or not the account carries an address: sendEmail records a
+    // FAILED row for an empty recipient, so a product pulled from the shop with
+    // nobody told shows up in Emails > Logs instead of leaving no trace at all.
+    await sendEmail({
+      to: owner.auth?.email ?? '',
+      subject: active
+        ? `${doc.product_name} is active on Duncit again`
+        : `${doc.product_name} has been deactivated`,
+      template: slug,
+      category: 'notification',
+      vars: { name, product_name: doc.product_name ?? '' },
+    });
+  } catch (error) {
+    logs.server.warn('inventory', 'notifyProductActiveChange', {
+      error,
+      slug,
+      msg: `email failed for ${slug}`,
+      product_id: String(doc._id),
+    });
+  }
+}
+
 export const inventoryService = {
   async generateSku() {
     return generateUniqueSku();
@@ -1271,6 +1316,9 @@ export const inventoryService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
+    // Read before the flip: a toggle pressed twice on the same value is not a
+    // change, and must not mail the owner again.
+    const changed = doc.is_active !== active;
     doc.is_active = active;
     doc.last_updated_by_id = userInfo(user).id;
     await doc.save();
@@ -1281,6 +1329,7 @@ export const inventoryService = {
       ['is_active'],
       active ? 'Partner reactivated listing' : 'Partner temporarily deactivated listing'
     );
+    if (changed) await notifyProductActiveChange(doc, active);
     return inventoryProductToPub(doc);
   },
 
@@ -1528,6 +1577,7 @@ export const inventoryService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
+    const changed = doc.is_active !== active;
     doc.is_active = active;
     doc.last_updated_by_id = userInfo(user).id;
     await doc.save();
@@ -1538,6 +1588,7 @@ export const inventoryService = {
       ['is_active'],
       active ? 'Product activated' : 'Product temporarily deactivated'
     );
+    if (changed) await notifyProductActiveChange(doc, active);
     return inventoryProductToPub(doc);
   },
 

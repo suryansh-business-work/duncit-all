@@ -1,34 +1,38 @@
 import { gql } from '@apollo/client';
 
-export interface AiPrompt {
-  id: string;
-  /** Catalog id of a system prompt (null for operator-created ones). */
-  key?: string | null;
-  is_system: boolean;
-  name: string;
-  description?: string | null;
-  content: string;
-  category: string;
-  target_model: string;
-  variables: string[];
-  token_count: number;
-  is_active: boolean;
-  created_at?: string | null;
-  updated_at?: string | null;
-}
-
+/**
+ * The Prompt Library's GraphQL surface.
+ *
+ * The selection is written out rather than interpolated from a shared
+ * constant: only one query needs it, and an interpolated fragment in a `gql`
+ * template is a known way to take a portal down at module load if the chunk
+ * ever grows a brace of its own.
+ */
 export const AI_PROMPTS = gql`
   query AiPrompts($filter: AiPromptFilter) {
     aiPrompts(filter: $filter) {
       id
       key
-      is_system
+      kind
+      role
       name
       description
       content
       category
       target_model
-      variables
+      variables {
+        name
+        label
+        description
+        required
+        example
+      }
+      tasks
+      usage {
+        file
+        surface
+        trigger
+      }
       token_count
       is_active
       created_at

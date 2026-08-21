@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { hasPortalAccess } from '@modules/portals/portal.gate';
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
@@ -136,10 +136,13 @@ export async function chat(args: AskBotChatArgs, userId: string | null, req: Req
   const message = text(args.message).slice(0, MAX_MESSAGE);
   if (!message) throw badRequest('A question is required');
 
-  const systemContext = await getSystemPrompt(bot.prompt_key, { navigation_map: navigationMap() });
+  // Only a system turn is library-owned here: the user turn is the person's own
+  // question, so there is no fixed wording for an operator to edit.
+  const system = await resolvePrompt(bot.prompt_key, { navigation_map: navigationMap() });
   const result = await openaiChat({
     task: 'askbot.navigation',
-    messages: [{ role: 'system', content: systemContext }, ...toMessages(args.history, message)],
+    model: system.model,
+    messages: [{ role: 'system', content: system.content }, ...toMessages(args.history, message)],
     // The reply is a contract the resolver parses, not a voice — near-zero
     // temperature keeps the model copying paths instead of paraphrasing them.
     temperature: 0.1,

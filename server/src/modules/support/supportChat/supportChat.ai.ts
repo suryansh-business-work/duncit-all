@@ -1,5 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 
 /**
@@ -33,15 +33,16 @@ export async function aiSupportReply(history: SupportAiTurn[]): Promise<SupportA
   if (history.length === 0) return HANDOFF;
 
   try {
+    // The user turns here are the member's own messages, so only the standing
+    // instruction (and the model it runs on) is library-owned.
+    const system = await resolvePrompt('support.assistant');
     const res = await openaiChat({
       task: 'support.assistant',
+      model: system.model,
       temperature: 0.3,
       max_tokens: 300,
       json: true,
-      messages: [
-        { role: 'system', content: await getSystemPrompt('support.assistant') },
-        ...history,
-      ],
+      messages: [{ role: 'system', content: system.content }, ...history],
     });
     if (!res.ok) return HANDOFF;
     const parsed = JSON.parse(res.content) as { reply?: unknown; handoff?: unknown };

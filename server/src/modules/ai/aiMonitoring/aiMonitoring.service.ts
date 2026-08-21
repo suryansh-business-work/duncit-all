@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { AiPromptModel } from '@modules/ai/prompt/prompt.model';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
-import { SYSTEM_PROMPT_BY_KEY } from '@modules/ai/prompt/prompt.catalog';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
+import { CODE_PROMPT_BY_KEY } from '@modules/ai/prompt/catalog';
 import { openaiChat, type OpenAiChatResult } from '@services/openai/openai.client';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { uploadSettingService } from '@modules/platform/uploadSetting/uploadSetting.service';
@@ -25,6 +25,8 @@ import {
  * and `reviewImageWithAi` reads this key.
  */
 export const IMAGE_SCAN_PROMPT_KEY = 'upload.image_scan';
+/** The turn that names the folder, so the same picture is judged in context. */
+export const IMAGE_SCAN_USER_PROMPT_KEY = 'upload.image_scan.user';
 
 /** The model the image check runs on — cheap, fast and vision-capable. */
 const SCAN_MODEL = 'gpt-4o-mini';
@@ -73,23 +75,27 @@ export const aiMonitoringSettingService = {
   /**
    * The AI portal's Settings page: the copy plus the live image prompt.
    *
-   * The catalog default stands in when the library row has not been seeded yet
-   * — the same body `getSystemPrompt` would use for the next scan. Handing back
-   * an empty box would show an operator a blank prompt for a check that is
+   * The catalogue default stands in when the library row has not been seeded
+   * yet — the same body `resolvePrompt` would use for the next scan. Handing
+   * back an empty box would show an operator a blank prompt for a check that is
    * running, and make them retype it to save anything else on the page.
+   *
+   * The model is read the same way: the scan sends whatever the library row
+   * names, so a page reporting the constant would report the wrong thing the
+   * moment somebody changed the model in the Prompt Library.
    */
   async adminSettings() {
     const [config, prompt] = await Promise.all([
       this.publicConfig(),
       AiPromptModel.findOne({ key: IMAGE_SCAN_PROMPT_KEY }).lean(),
     ]);
-    const catalogDefault = SYSTEM_PROMPT_BY_KEY.get(IMAGE_SCAN_PROMPT_KEY)?.content ?? '';
+    const catalogDefault = CODE_PROMPT_BY_KEY.get(IMAGE_SCAN_PROMPT_KEY)?.content ?? '';
     return {
       ...config,
       image_prompt: (prompt?.content ?? '').trim() || catalogDefault,
       image_prompt_id: prompt ? String(prompt._id) : null,
       image_prompt_key: IMAGE_SCAN_PROMPT_KEY,
-      image_scan_model: SCAN_MODEL,
+      image_scan_model: (prompt?.target_model ?? '').trim() || SCAN_MODEL,
     };
   },
 
@@ -202,6 +208,8 @@ function outcomeFromResponse(res: OpenAiChatResult): ScanOutcome {
  */
 export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
   const startedAt = Date.now();
+  // The row must report the model that actually ran, which the library owns.
+  let scanModel = SCAN_MODEL;
   let outcome: ScanOutcome = {
     risk: 'PENDING',
     status: 'FAILED',
@@ -209,19 +217,28 @@ export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
     error: '',
   };
   try {
+    // Both turns and the model come from the library, so an operator can retune
+    // the whole scan from the AI portal — including the folder line, which is the
+    // only context the model gets for judging the same picture differently in
+    // /pods/covers than in /verification.
+    const [system, user] = await Promise.all([
+      resolvePrompt(IMAGE_SCAN_PROMPT_KEY),
+      resolvePrompt(IMAGE_SCAN_USER_PROMPT_KEY, { folder: log.folder || '/' }),
+    ]);
+    scanModel = system.model || SCAN_MODEL;
     const res = await openaiChat({
       task: 'moderation.image_scan',
       detail: log.file_name || log.folder || '',
-      model: SCAN_MODEL,
+      model: scanModel,
       temperature: 0,
       max_tokens: 200,
       json: true,
       messages: [
-        { role: 'system', content: await getSystemPrompt(IMAGE_SCAN_PROMPT_KEY) },
+        { role: 'system', content: system.content },
         {
           role: 'user',
           content: [
-            { type: 'text', text: `Folder: ${log.folder || '/'} — review this uploaded image.` },
+            { type: 'text', text: user.content },
             { type: 'image_url', image_url: { url: log.url } },
           ],
         },
@@ -237,7 +254,7 @@ export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
     log.summary = outcome.summary;
     log.error = outcome.error;
     log.action = actionForResult(outcome.risk);
-    log.ai_model = SCAN_MODEL;
+    log.ai_model = scanModel;
     log.duration_ms = Date.now() - startedAt;
     log.checked_at = new Date();
     await log.save();

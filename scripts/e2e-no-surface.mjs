@@ -22,6 +22,10 @@ const NO_E2E_SURFACE = new Map([
   // by shared-gates.yml) and exercised end-to-end through the 17 portals + mWeb
   // that consume them.
   ['@duncit/ad-request-form', 'library — rendered end-to-end by ads-portal + partners-app'],
+  [
+    '@duncit/ai-prompts',
+    'library — the AI Library page is rendered end-to-end by the ai portal suite',
+  ],
   ['@duncit/app-settings', 'library — rendered end-to-end by every portal shell'],
   ['@duncit/auth-tokens', 'zero-dep token helpers, no DOM'],
   ['@duncit/availability-calendar', 'library — rendered end-to-end by admin + partners-app'],

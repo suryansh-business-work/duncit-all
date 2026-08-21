@@ -42,8 +42,9 @@ export const appConfig = {
   ],
   modules: [
     {
-      title: 'Prompt Library',
-      description: 'Curate reusable AI prompts and track their token size.',
+      title: 'AI Library',
+      description:
+        'Code prompts every AI feature reads at call time, plus your own AI prompts served by the public GET API.',
       icon: 'library',
     },
     {

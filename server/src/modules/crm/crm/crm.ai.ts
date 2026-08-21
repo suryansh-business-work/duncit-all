@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt, type ResolvedPrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
 import { openAiGraphQLError, openAiInvalidJsonError } from '@services/openai/openai.errors';
 import * as C from './crm.constants';
@@ -74,14 +74,19 @@ const SHAPES: Record<CrmAiEntity, string> = {
 };
 
 /** Shared OpenAI JSON call: posts the messages, returns validated JSON content. */
-async function chatJson(systemContent: string, userContent: string, detail: string): Promise<string> {
+async function chatJson(
+  system: ResolvedPrompt,
+  userContent: string,
+  detail: string
+): Promise<string> {
   const res = await openaiChat({
     task: 'crm.lead_parse',
     detail,
+    model: system.model,
     temperature: 0.1,
     json: true,
     messages: [
-      { role: 'system', content: systemContent },
+      { role: 'system', content: system.content },
       { role: 'user', content: userContent },
     ],
   });
@@ -100,8 +105,12 @@ export interface ChatMessage {
 }
 
 /** OpenAI chat returning free-form text/HTML (no JSON mode). */
-async function chatText(messages: OpenAiMessage[], detail: string): Promise<string> {
-  const res = await openaiChat({ task: 'crm.lead_chat', detail, temperature: 0.3, messages });
+async function chatText(
+  messages: OpenAiMessage[],
+  detail: string,
+  model: string
+): Promise<string> {
+  const res = await openaiChat({ task: 'crm.lead_chat', detail, model, temperature: 0.3, messages });
   if (!res.ok) throw openAiGraphQLError(res);
   return res.content;
 }
@@ -147,13 +156,17 @@ async function buildLeadContext(entity: CrmAiEntity, leadId: string): Promise<st
 export async function leadAiChat(entity: CrmAiEntity, leadId: string, messages: ChatMessage[]): Promise<string> {
   if (!messages?.length) throw new GraphQLError('A message is required', { extensions: { code: 'BAD_USER_INPUT' } });
   const context = await buildLeadContext(entity, leadId);
-  const system = await getSystemPrompt('crm.lead_chat', {
+  const system = await resolvePrompt('crm.lead_chat', {
     lead_kind: entity === 'VENUE_LEAD' ? 'venue' : 'host',
     context,
   });
   return chatText(
-    [{ role: 'system', content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
-    `${entity} ${leadId}`
+    [
+      { role: 'system', content: system.content },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ],
+    `${entity} ${leadId}`,
+    system.model
   );
 }
 
@@ -161,8 +174,11 @@ export async function parseCrmLeadText(entity: CrmAiEntity, text: string): Promi
   if (!text?.trim()) {
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const system = await getSystemPrompt('crm.parse_lead', { shape: SHAPES[entity] });
-  return chatJson(system, `Parse the following ${entity} description:\n\n${text.slice(0, 6000)}`, `${entity} (one)`);
+  const [system, user] = await Promise.all([
+    resolvePrompt('crm.parse_lead', { shape: SHAPES[entity] }),
+    resolvePrompt('crm.parse_lead.user', { entity, text: text.slice(0, 6000) }),
+  ]);
+  return chatJson(system, user.content, `${entity} (one)`);
 }
 
 /**
@@ -174,6 +190,9 @@ export async function parseCrmLeadsText(entity: CrmAiEntity, text: string): Prom
   if (!text?.trim()) {
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const system = await getSystemPrompt('crm.parse_leads', { shape: SHAPES[entity] });
-  return chatJson(system, `Extract every ${entity} from the following text:\n\n${text.slice(0, 8000)}`, `${entity} (bulk)`);
+  const [system, user] = await Promise.all([
+    resolvePrompt('crm.parse_leads', { shape: SHAPES[entity] }),
+    resolvePrompt('crm.parse_leads.user', { entity, text: text.slice(0, 8000) }),
+  ]);
+  return chatJson(system, user.content, `${entity} (bulk)`);
 }

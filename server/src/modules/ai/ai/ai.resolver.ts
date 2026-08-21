@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
+import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { openaiChat } from '@services/openai/openai.client';
 import { openAiGraphQLError, openAiInvalidJsonError } from '@services/openai/openai.errors';
 import { buildFillReference, resolveClubReferences } from './ai-fill-context';
@@ -120,7 +120,7 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
  * rather than blanking the field it belongs to. */
 function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
   const { fields, notes } = SCHEMAS[entity];
-  return getSystemPrompt('generate.dummy_data', {
+  return resolvePrompt('generate.dummy_data', {
     fields,
     notes,
     user_prompt: userPrompt?.trim().slice(0, 500) ?? '',
@@ -132,9 +132,6 @@ function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
  * lookup that fails must not cost the admin the fill, which is mostly copy. */
 async function buildUserMessage(entity: Entity, prompt?: string | null): Promise<string> {
   const topic = prompt?.trim();
-  const ask = topic
-    ? `Generate dummy ${entity.toLowerCase()} data for: ${topic}`
-    : `Generate dummy ${entity.toLowerCase()} data.`;
   const reference = await buildFillReference(entity).catch((err) => {
     logs.server.warn('ai.resolver', 'buildFillReference', {
       error: err,
@@ -142,18 +139,30 @@ async function buildUserMessage(entity: Entity, prompt?: string | null): Promise
     });
     return '';
   });
-  return reference ? `${ask}\n\n${reference}` : ask;
+  const { content } = await resolvePrompt('generate.dummy_data.user', {
+    entity: entity.toLowerCase(),
+    // Both clauses carry their own leading separator, because a library body
+    // cannot say "and only then a blank line".
+    topic: topic ? ` for: ${topic}` : '',
+    reference: reference ? `\n\n${reference}` : '',
+  });
+  return content;
 }
 
 export async function generateDummy(entity: Entity, prompt?: string | null): Promise<string> {
+  const [system, user] = await Promise.all([
+    buildSystemPrompt(entity, prompt),
+    buildUserMessage(entity, prompt),
+  ]);
   const res = await openaiChat({
     task: 'ai.dummy_data',
     detail: entity,
+    model: system.model,
     temperature: 0.9,
     json: true,
     messages: [
-      { role: 'system', content: await buildSystemPrompt(entity, prompt) },
-      { role: 'user', content: await buildUserMessage(entity, prompt) },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user },
     ],
   });
   if (!res.ok) throw openAiGraphQLError(res);
@@ -292,17 +301,19 @@ async function generateProductDescription(input: DescribeProductInput): Promise<
     .filter(Boolean)
     .join('\n');
 
+  const [system, user] = await Promise.all([
+    resolvePrompt('generate.product_copy'),
+    resolvePrompt('generate.product_copy.user', { context }),
+  ]);
   const res = await openaiChat({
     task: 'ai.product_copy',
     detail: input.product_name,
+    model: system.model,
     temperature: 0.7,
     json: true,
     messages: [
-      { role: 'system', content: await getSystemPrompt('generate.product_copy') },
-      {
-        role: 'user',
-        content: `Write marketing copy for this product.\n\n${context}`,
-      },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user.content },
     ],
   });
   if (!res.ok) throw openAiGraphQLError(res);
@@ -356,17 +367,19 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
+  const [system, user] = await Promise.all([
+    resolvePrompt('generate.city_zones'),
+    resolvePrompt('generate.city_zones.user', { country, state, city }),
+  ]);
   const res = await openaiChat({
     task: 'ai.location_areas',
     detail: `${city}, ${state}`,
+    model: system.model,
     temperature: 0.2,
     json: true,
     messages: [
-      { role: 'system', content: await getSystemPrompt('generate.city_zones') },
-      {
-        role: 'user',
-        content: `Country: ${country}\nState: ${state}\nCity: ${city}`,
-      },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user.content },
     ],
   });
   if (!res.ok) throw openAiGraphQLError(res);
@@ -422,15 +435,20 @@ async function adminAiChat(prompt: string) {
     adminUserContext(prompt),
     analyticsService.dashboardTotals(null).catch(() => null),
   ]);
+  const [system, user] = await Promise.all([
+    resolvePrompt('admin.assistant'),
+    resolvePrompt('admin.assistant.user', {
+      question: prompt.trim(),
+      context_json: JSON.stringify({ platform_stats: platform, users: context }, null, 2),
+    }),
+  ]);
   const res = await openaiChat({
     task: 'ai.admin_chat',
+    model: system.model,
     temperature: 0.2,
     messages: [
-      { role: 'system', content: await getSystemPrompt('admin.assistant') },
-      {
-        role: 'user',
-        content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ platform_stats: platform, users: context }, null, 2)}`,
-      },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user.content },
     ],
   });
   // An empty answer was never an error here — the assistant says so instead.
@@ -444,17 +462,22 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
   if (!prompt) {
     throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
+  const [system, user] = await Promise.all([
+    resolvePrompt('generate.email_mjml'),
+    resolvePrompt('generate.email_mjml.user', {
+      instruction: prompt,
+      current_mjml: (input.current_mjml || '').slice(0, 12000),
+    }),
+  ]);
   const res = await openaiChat({
     task: 'ai.email_mjml',
     detail: prompt.slice(0, 120),
+    model: system.model,
     temperature: 0.35,
     json: true,
     messages: [
-      { role: 'system', content: await getSystemPrompt('generate.email_mjml') },
-      {
-        role: 'user',
-        content: `Instruction: ${prompt}\n\nExisting MJML:\n${(input.current_mjml || '').slice(0, 12000)}`,
-      },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user.content },
     ],
   });
   if (!res.ok) throw openAiGraphQLError(res);
@@ -489,15 +512,23 @@ async function improveRichText(input: AiRichTextImproveInput): Promise<string> {
     });
   }
   const context = (input.context ?? '').trim().slice(0, 200);
-  const contextLine = context ? `Context: ${context}\n\n` : '';
+  const [system, user] = await Promise.all([
+    resolvePrompt('generate.rich_text'),
+    resolvePrompt('generate.rich_text.user', {
+      // The clause carries its own blank line, so dropping it leaves no gap.
+      context: context ? `Context: ${context}\n\n` : '',
+      html,
+    }),
+  ]);
   const res = await openaiChat({
     task: 'ai.rich_text',
     detail: context || 'rich text',
+    model: system.model,
     temperature: 0.3,
     json: true,
     messages: [
-      { role: 'system', content: await getSystemPrompt('generate.rich_text') },
-      { role: 'user', content: `${contextLine}Improve this HTML:\n${html}` },
+      { role: 'system', content: system.content },
+      { role: 'user', content: user.content },
     ],
   });
   if (!res.ok) throw openAiGraphQLError(res);

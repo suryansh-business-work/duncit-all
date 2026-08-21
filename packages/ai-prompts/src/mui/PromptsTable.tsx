@@ -9,9 +9,11 @@ import {
   type DuncitColumn,
   type TableFetch,
 } from '@duncit/table';
-import type { AiPrompt } from './queries';
+import { PROMPT_COPY } from '../copy';
+import type { AiPrompt, PromptKind } from '../types';
 
 interface Props {
+  kind: PromptKind;
   fetchRows: TableFetch<AiPrompt>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
@@ -22,19 +24,18 @@ interface Props {
 
 const getPromptRowId = (p: AiPrompt) => p.id;
 
-const SYSTEM_DELETE_HINT = 'System prompts power a shipped feature — reset instead of deleting';
-
 const renderName = (p: AiPrompt) => (
-  <Box sx={{ lineHeight: 1.2 }}>
+  <Box sx={{ lineHeight: 1.3, py: 0.5 }}>
     <Stack direction="row" alignItems="center" spacing={0.75}>
       <Typography variant="body2" fontWeight={700} component="div">
         {p.name}
       </Typography>
-      {p.is_system && (
-        <Tooltip title={`Used by the app as "${p.key}"`}>
-          <Chip size="small" color="secondary" variant="outlined" label="System" />
-        </Tooltip>
-      )}
+      <Chip
+        size="small"
+        variant="outlined"
+        color={p.role === 'USER' ? 'info' : 'secondary'}
+        label={PROMPT_COPY.roles[p.role]}
+      />
     </Stack>
     {p.description && (
       <Typography variant="caption" color="text.secondary" component="div">
@@ -44,10 +45,20 @@ const renderName = (p: AiPrompt) => (
   </Box>
 );
 
-/** Reset-to-default action, shown only on system rows (which cannot be deleted). */
-function ResetAction({ prompt, onReset }: Readonly<{ prompt: AiPrompt; onReset: (p: AiPrompt) => void }>) {
+/** The feed address. Monospaced because it is copied into a URL, not read as prose. */
+const renderKey = (p: AiPrompt) => (
+  <Typography variant="caption" fontFamily="monospace" color="text.secondary">
+    {p.key}
+  </Typography>
+);
+
+/** Reset-to-default, on code rows only — they are the ones with a default to go back to. */
+function ResetAction({
+  prompt,
+  onReset,
+}: Readonly<{ prompt: AiPrompt; onReset: (p: AiPrompt) => void }>) {
   return (
-    <Tooltip title="Restore the shipped default">
+    <Tooltip title={PROMPT_COPY.resetHint}>
       <IconButton size="small" aria-label={`Reset ${prompt.name}`} onClick={() => onReset(prompt)}>
         <RestartAltIcon fontSize="small" />
       </IconButton>
@@ -59,7 +70,7 @@ const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" la
 
 const renderModel = (p: AiPrompt) => (
   <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.disabled'}>
-    {p.target_model || '—'}
+    {p.target_model || 'Default'}
   </Typography>
 );
 
@@ -69,8 +80,13 @@ const renderTokens = (p: AiPrompt) => (
   </Tooltip>
 );
 
-/** Prompt Library table — name/category/model/token size/status with row actions. */
-export default function PromptsTable({
+/**
+ * One table, both kinds. The columns differ only in what a code row cannot do:
+ * it has no delete (its call site would go on reading a row that is gone) and
+ * it alone offers a reset.
+ */
+export function PromptsTable({
+  kind,
   fetchRows,
   refetchRef,
   toolbarActions,
@@ -78,21 +94,28 @@ export default function PromptsTable({
   onDelete,
   onReset,
 }: Readonly<Props>) {
+  const code = kind === 'CODE';
   const columns = useMemo<DuncitColumn<AiPrompt>[]>(
     () => [
       {
         field: 'name',
         headerName: 'Name',
         flex: 1,
-        minWidth: 220,
+        minWidth: 240,
         cellRenderer: renderName,
         valueGetter: (p) => p.name,
       },
       {
+        field: 'key',
+        headerName: 'Key',
+        minWidth: 190,
+        cellRenderer: renderKey,
+        valueGetter: (p) => p.key ?? '',
+      },
+      {
         field: 'category',
         headerName: 'Category',
-        minWidth: 140,
-        filter: { type: 'text' },
+        minWidth: 130,
         cellRenderer: renderCategory,
         valueGetter: (p) => p.category,
       },
@@ -101,13 +124,12 @@ export default function PromptsTable({
         headerName: 'Model',
         width: 150,
         cellRenderer: renderModel,
-        valueGetter: (p) => p.target_model || '—',
+        valueGetter: (p) => p.target_model || 'Default',
       },
       {
         field: 'token_count',
         headerName: 'Tokens',
         width: 110,
-        filter: { type: 'number' },
         cellRenderer: renderTokens,
         valueGetter: (p) => p.token_count,
       },
@@ -117,27 +139,27 @@ export default function PromptsTable({
         width: 140,
         onEdit,
         onDelete,
-        renderExtra: (p) => (p.is_system ? <ResetAction prompt={p} onReset={onReset} /> : null),
+        renderExtra: (p) => (code ? <ResetAction prompt={p} onReset={onReset} /> : null),
         edit: { ariaLabel: (p) => `Edit ${p.name}` },
         delete: {
           ariaLabel: (p) => `Delete ${p.name}`,
-          disabled: (p) => p.is_system,
-          disabledTitle: SYSTEM_DELETE_HINT,
+          disabled: () => code,
+          disabledTitle: PROMPT_COPY.codeDeleteHint,
         },
       }),
     ],
-    [onEdit, onDelete, onReset],
+    [code, onEdit, onDelete, onReset],
   );
 
   return (
     <DuncitTable<AiPrompt>
-      tableId="ai-prompts"
+      tableId={`ai-prompts-${kind.toLowerCase()}`}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPromptRowId}
       toolbarActions={toolbarActions}
-      emptyText={'No prompts yet. Click "Add prompt" to create your first one.'}
-      searchPlaceholder="Search by name, category or content…"
+      emptyText={code ? PROMPT_COPY.emptyCode : PROMPT_COPY.emptyAi}
+      searchPlaceholder={PROMPT_COPY.searchPlaceholder}
       refetchRef={refetchRef}
     />
   );

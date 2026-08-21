@@ -47,6 +47,7 @@ COPY packages/theme/package.json ./packages/theme/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/ai-monitoring/package.json ./packages/ai-monitoring/
+COPY packages/ai-prompts/package.json ./packages/ai-prompts/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/tabs/package.json ./packages/tabs/
 COPY packages/dashboard/package.json ./packages/dashboard/

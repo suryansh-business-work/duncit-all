@@ -108,6 +108,9 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.brandDeactivated.title": "Your brand has been deactivated",
   "email.brandDeactivated.body":
     "Your brand and its products are hidden from the Duncit marketplace for now, and no new products can be listed while it stays that way.",
+  "email.productActivated.title": "Your product is live again",
+  "email.productActivated.body":
+    "Your product is back in the Duncit shop and in the pod product picker — shoppers can find it again, and hosts can stock it into their pods.",
   "email.productDeactivated.title": "Your product has been deactivated",
   "email.productDeactivated.body":
     "Your product is temporarily hidden from the Duncit marketplace and pod product picker. Existing orders are not affected.",

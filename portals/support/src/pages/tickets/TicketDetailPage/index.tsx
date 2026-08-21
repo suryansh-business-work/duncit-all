@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Chip, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
-import { BackHeader, StatusChip } from '@duncit/ui';
+import { Box, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
+import { BackHeader } from '@duncit/ui';
 import { htmlToText } from '@duncit/rich-text';
 import {
   MARK_TICKET_READ,
@@ -11,11 +11,10 @@ import {
   type Ticket,
 } from '../../../graphql/tickets';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
-import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
 import TicketHeader from './TicketHeader';
 import TicketThread from './TicketThread';
 import TicketComposerArea from './TicketComposerArea';
-import TicketUserDetails from './TicketUserDetails';
+import TicketInfoPanel from './TicketInfoPanel';
 import { useTicketActions } from './useTicketActions';
 
 export default function TicketDetailPage() {
@@ -70,40 +69,40 @@ export default function TicketDetailPage() {
         </Typography>
       );
     }
+    /* The details sit first in the DOM so a narrow screen stacks them above the
+       thread; `row-reverse` then puts them to its right once there is a second
+       column to hold them. The conversation owns every pixel neither the header
+       nor the composer needs — it is what the agent is here to read. */
     return (
-      <>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-          <StatusChip status={ticket.status} colorMap={TICKET_STATUS_COLORS} />
-          <StatusChip
-            status={ticket.priority}
-            colorMap={TICKET_PRIORITY_COLORS}
-            label={`${ticket.priority} priority`}
+      <Stack
+        direction={{ xs: 'column', lg: 'row-reverse' }}
+        spacing={2}
+        sx={{ flex: 1, minHeight: 0 }}
+      >
+        <TicketInfoPanel ticket={ticket} />
+
+        <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+          <TicketThread ticket={ticket} />
+
+          <Divider />
+
+          <TicketComposerArea
+            status={ticket.status}
+            bodyHtml={bodyHtml}
+            attachments={attachments}
+            replying={replying}
+            onBodyHtml={setBodyHtml}
+            onAttachments={setAttachments}
+            onSend={send}
+            onClose={actions.close}
           />
-          <Chip size="small" variant="outlined" label={ticket.category} />
         </Stack>
-
-        <TicketUserDetails user={ticket.user} guestEmail={ticket.guest_email} />
-
-        <TicketThread ticket={ticket} />
-
-        <Divider />
-
-        <TicketComposerArea
-          status={ticket.status}
-          bodyHtml={bodyHtml}
-          attachments={attachments}
-          replying={replying}
-          onBodyHtml={setBodyHtml}
-          onAttachments={setAttachments}
-          onSend={send}
-          onClose={actions.close}
-        />
-      </>
+      </Stack>
     );
   };
 
   return (
-    <Stack spacing={2} sx={{ height: '100%' }}>
+    <Stack spacing={2} sx={{ height: '100%', minHeight: 0 }}>
       {ticket ? (
         <TicketHeader
           ticket={ticket}

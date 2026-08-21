@@ -8,10 +8,12 @@ import {
   UPDATE_POD_SHOP_SLIDER,
   type SliderMedia,
 } from './pod-shop-slider/queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Settings › Pod Shop Slider. Curates the global image/video slider shown at
  * the top of the platform-wide Pod Shop on the mobile app and mWeb. */
 export default function PodShopSliderPage() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery(POD_SHOP_SLIDER, {
     fetchPolicy: 'cache-and-network',
   });
@@ -51,7 +53,7 @@ export default function PodShopSliderPage() {
       });
       notifySuccess('Pod Shop slider updated');
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : 'Could not save the slider');
+      notifyError(e instanceof Error ? e.message : t('products.settings.sliderSaveFailed'));
     }
   };
 

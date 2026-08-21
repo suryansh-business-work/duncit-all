@@ -7,6 +7,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { describeAttachment } from '@duncit/media-picker';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import type { SliderMedia } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   media: SliderMedia[];
@@ -17,6 +18,7 @@ interface Props {
  * media picker (device upload / Pexels), classifies each URL by kind, and lets
  * the admin reorder (arrows) and remove. The array order IS the slide order. */
 export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handlePicked = (url: string) => {
@@ -51,7 +53,7 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">Slider media (images &amp; videos)</Typography>
+        <Typography variant="subtitle2">{t('products.settings.sliderMedia')}</Typography>
         <Button
           size="small"
           startIcon={<AddPhotoAlternateIcon />}
@@ -112,11 +114,11 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
               <Typography variant="caption" sx={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
                 {item.type} · {item.url}
               </Typography>
-              <Tooltip title="Move up">
+              <Tooltip title={t('products.settings.moveUp')}>
                 <span>
                   <IconButton
                     size="small"
-                    aria-label="Move up"
+                    aria-label={t('products.settings.moveUp')}
                     disabled={index === 0}
                     onClick={() => move(index, -1)}
                   >
@@ -124,11 +126,11 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title="Move down">
+              <Tooltip title={t('products.settings.moveDown')}>
                 <span>
                   <IconButton
                     size="small"
-                    aria-label="Move down"
+                    aria-label={t('products.settings.moveDown')}
                     disabled={index === media.length - 1}
                     onClick={() => move(index, 1)}
                   >
@@ -136,8 +138,8 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title="Remove">
-                <IconButton size="small" aria-label="Remove" onClick={() => remove(item.url)}>
+              <Tooltip title={t('products.settings.remove')}>
+                <IconButton size="small" aria-label={t('products.settings.remove')} onClick={() => remove(item.url)}>
                   <DeleteOutlineIcon fontSize="inherit" />
                 </IconButton>
               </Tooltip>
@@ -145,33 +147,33 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TextField
                   size="small"
-                  label="Heading"
+                  label={t('products.settings.heading')}
                   value={item.heading ?? ''}
                   onChange={(e) => update(index, { heading: e.target.value })}
                   fullWidth
-                  placeholder="Gear Up Your Game"
+                  placeholder={t('products.settings.headingPlaceholder')}
                 />
                 <TextField
                   size="small"
-                  label="Subheading"
+                  label={t('products.settings.subheading')}
                   value={item.subheading ?? ''}
                   onChange={(e) => update(index, { subheading: e.target.value })}
                   fullWidth
-                  placeholder="Top picks for every champion."
+                  placeholder={t('products.settings.subheadingPlaceholder')}
                 />
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TextField
                   size="small"
-                  label="CTA label"
+                  label={t('products.settings.ctaLabel')}
                   value={item.cta_label ?? ''}
                   onChange={(e) => update(index, { cta_label: e.target.value })}
                   fullWidth
-                  placeholder="Shop Now"
+                  placeholder={t('products.settings.ctaPlaceholder')}
                 />
                 <TextField
                   size="small"
-                  label="CTA link (URL or /path)"
+                  label={t('products.settings.ctaLink')}
                   value={item.cta_url ?? ''}
                   onChange={(e) => update(index, { cta_url: e.target.value })}
                   fullWidth
@@ -186,7 +188,7 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder="/pod-shop-slider"
-        title="Add slider media (image or video)"
+        title={t('products.settings.addSliderMedia')}
         onPicked={handlePicked}
       />
     </Box>

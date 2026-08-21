@@ -9,6 +9,7 @@ import {
 import InventoryAnalyticsChart from './InventoryAnalyticsChart';
 import StockMovementTimeline from './StockMovementTimeline';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface ActivityLog {
   id: string;
@@ -51,6 +52,7 @@ export default function ActivityLogsSection({
   loading,
   isNew,
 }: Readonly<ActivityLogsSectionProps>) {
+  const { t } = useTranslation();
   if (isNew) {
     return (
       <Alert severity="info">
@@ -79,7 +81,7 @@ export default function ActivityLogsSection({
           Activity logs
         </Typography>
         {logs.length === 0 ? (
-          <Alert severity="info">No activity logged yet.</Alert>
+          <Alert severity="info">{t('products.activity.noActivity')}</Alert>
         ) : (
           <Stack spacing={1}>
             {logs.map((log) => (

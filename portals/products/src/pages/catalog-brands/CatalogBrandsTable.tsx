@@ -7,6 +7,7 @@ import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from '../ecomm/brandStatus';
 import type { CatalogBrandRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<CatalogBrandRow>;
@@ -58,6 +59,7 @@ const renderActive = (b: CatalogBrandRow) => (
 );
 
 export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<CatalogBrandRow>[]>(() => {
     // Row click opens Manage, so both actions must stop the click bubbling.
@@ -88,7 +90,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },
       {
         field: 'brand_name',
-        headerName: 'Brand',
+        headerName: t('products.brandForm.section'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderBrand,
@@ -96,27 +98,27 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       },
       {
         field: 'city',
-        headerName: 'Location',
+        headerName: t('products.brands.colLocation'),
         filter: { type: 'text' },
         minWidth: 150,
         valueGetter: locationValue,
       },
       {
         field: 'approved_product_count',
-        headerName: 'Approved products',
+        headerName: t('products.brands.colApprovedProducts'),
         sortable: false,
         width: 150,
       },
       {
         field: 'product_commission_pct',
-        headerName: 'Commission',
+        headerName: t('products.brands.colCommission'),
         filter: { type: 'number' },
         width: 130,
         valueGetter: commissionValue,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: BRAND_STATUS_OPTIONS },
         width: 130,
         cellRenderer: renderStatus,
@@ -124,7 +126,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       },
       {
         field: 'is_active',
-        headerName: 'Active',
+        headerName: t('products.brands.colActive'),
         filter: { type: 'boolean' },
         width: 110,
         cellRenderer: renderActive,
@@ -132,7 +134,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
@@ -140,7 +142,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 220,
         cellRenderer: renderActions,
@@ -155,7 +157,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onManage}
-      emptyText="No brands found for this filter."
+      emptyText={t('products.brands.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search brand, contact or city"
     />

@@ -85,6 +85,7 @@ export {
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRODUCTS_BUNDLE,
   policyAcceptanceMethodLabel,
   resolveLocale,
   SHELL_BUNDLE,

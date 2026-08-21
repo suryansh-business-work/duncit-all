@@ -5,6 +5,7 @@ import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import { REQUEST_STATUS_COLOR, type ProductListingRow } from './requestsQueries';
 import { DELIVERY_TARGET_OPTIONS, deliveryTargetLabel } from './deliveryTarget';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<ProductListingRow>;
@@ -61,17 +62,18 @@ export default function ProductsReviewTable({
   refetchRef,
   onReview,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<ProductListingRow>[]>(() => {
     const renderReview = (r: ProductListingRow) => (
       <Button size="small" variant="outlined" onClick={() => onReview(r)}>
-        Review
+        {t('products.review.action')}
       </Button>
     );
     return [
       {
         field: 'product_name',
-        headerName: 'Product',
+        headerName: t('products.brandProducts.colProduct'),
         flex: 1,
         minWidth: 240,
         cellRenderer: renderProduct,
@@ -79,7 +81,7 @@ export default function ProductsReviewTable({
       },
       {
         field: 'delivery_target',
-        headerName: 'Delivery',
+        headerName: t('products.review.colDelivery'),
         filter: { type: 'select', options: DELIVERY_OPTIONS },
         width: 140,
         cellRenderer: renderDelivery,
@@ -87,13 +89,13 @@ export default function ProductsReviewTable({
       },
       {
         field: 'inventory_count',
-        headerName: 'Inventory',
+        headerName: t('products.review.colInventory'),
         width: 150,
         valueGetter: inventoryValue,
       },
       {
         field: 'commission_pct',
-        headerName: 'Commission',
+        headerName: t('products.brands.colCommission'),
         filter: { type: 'number' },
         width: 150,
         cellRenderer: renderCommission,
@@ -101,7 +103,7 @@ export default function ProductsReviewTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         sortable: false,
         width: 120,
         cellRenderer: renderStatus,
@@ -109,13 +111,13 @@ export default function ProductsReviewTable({
       },
       {
         field: 'created_at',
-        headerName: 'Submitted',
+        headerName: t('products.review.colSubmitted'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
         valueGetter: (r) => (r.created_at ? formatDate(r.created_at) : '—'),
       },
-      { field: 'review', headerName: 'Review', sortable: false, width: 110, cellRenderer: renderReview },
+      { field: 'review', headerName: t('products.review.action'), sortable: false, width: 110, cellRenderer: renderReview },
     ];
   }, [onReview, formatDate]);
 
@@ -125,7 +127,7 @@ export default function ProductsReviewTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No product requests found for this filter."
+      emptyText={t('products.review.productsEmpty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search product, SKU, brand or submitter"
       refetchRef={refetchRef}

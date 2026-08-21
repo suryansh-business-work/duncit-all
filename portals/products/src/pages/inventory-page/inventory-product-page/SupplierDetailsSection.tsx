@@ -2,8 +2,10 @@ import { Grid } from '@mui/material';
 import { useFormContext } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 export default function SupplierDetailsSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
   return (
     <Grid container spacing={2}>
@@ -11,7 +13,7 @@ export default function SupplierDetailsSection() {
         <RhfTextField
           control={control}
           name="vendor_name"
-          label="Vendor / supplier name"
+          label={t('products.supplier.vendorName')}
           hint="Who supplies this product?"
         />
       </Grid>
@@ -19,7 +21,7 @@ export default function SupplierDetailsSection() {
         <RhfTextField
           control={control}
           name="supplier_contact"
-          label="Supplier contact"
+          label={t('products.supplier.contact')}
           hint="Phone or email — used by ops to reorder"
         />
       </Grid>

@@ -3,11 +3,13 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
 import { RhfTextField } from '@duncit/forms';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 const rupee = <InputAdornment position="start">₹</InputAdornment>;
 const percent = <InputAdornment position="end">%</InputAdornment>;
 
 export default function PricingTaxSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
   const sellingPrice = useWatch({ control, name: 'selling_price' });
   const discountPercent = useWatch({ control, name: 'discount_percent' });
@@ -23,7 +25,7 @@ export default function PricingTaxSection() {
           control={control}
           required
           name="unit_cost"
-          label="Unit cost"
+          label={t('products.pricing.unitCost')}
           hint="Reference cost for internal accounting"
           InputProps={{ startAdornment: rupee }}
         />
@@ -33,7 +35,7 @@ export default function PricingTaxSection() {
           control={control}
           required
           name="purchase_price"
-          label="Purchase price"
+          label={t('products.pricing.purchasePrice')}
           hint="What you pay the supplier"
           InputProps={{ startAdornment: rupee }}
         />
@@ -43,7 +45,7 @@ export default function PricingTaxSection() {
           control={control}
           required
           name="selling_price"
-          label="Selling price"
+          label={t('products.pricing.sellingPrice')}
           hint="Listed price before tax / discount"
           InputProps={{ startAdornment: rupee }}
         />
@@ -53,7 +55,7 @@ export default function PricingTaxSection() {
           control={control}
           required
           name="tax_percent"
-          label="Tax / GST %"
+          label={t('products.pricing.taxGst')}
           hint="0, 5, 12, 18 or 28"
           InputProps={{ endAdornment: percent }}
         />
@@ -63,7 +65,7 @@ export default function PricingTaxSection() {
           control={control}
           required
           name="discount_percent"
-          label="Discount %"
+          label={t('products.pricing.discount')}
           hint="0 if no promotion"
           InputProps={{ endAdornment: percent }}
         />
@@ -72,7 +74,7 @@ export default function PricingTaxSection() {
         <RhfTextField
           control={control}
           name="weight_volume"
-          label="Weight / Volume"
+          label={t('products.pricing.weightVolume')}
           hint='Free-form, e.g. "500 ml", "1 kg"'
         />
       </Grid>

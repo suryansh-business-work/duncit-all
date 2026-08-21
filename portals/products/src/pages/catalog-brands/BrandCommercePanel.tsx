@@ -8,6 +8,7 @@ import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { brandCommissionSchema, type BrandCommissionFormValues } from './brand-form';
 import { SET_BRAND_COMMISSION, SET_ECOMM_BRAND_ACTIVE, type CatalogBrandDetail } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   brand: CatalogBrandDetail;
@@ -21,6 +22,7 @@ const DEACTIVATE_MESSAGE =
 
 /** Brand-level commercial controls: Duncit's commission cut and marketplace visibility. */
 export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [setCommission, commissionState] = useMutation(SET_BRAND_COMMISSION);
   const [setActive, activeState] = useMutation(SET_ECOMM_BRAND_ACTIVE);
@@ -81,7 +83,7 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
               <RhfTextField
                 control={control}
                 name="product_commission_pct"
-                label="Commission %"
+                label={t('products.brands.commission')}
                 size="small"
                 sx={{ maxWidth: 220 }}
                 hint="Duncit's cut on this brand's product sales. 0 inherits the per-product rate."

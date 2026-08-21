@@ -5,6 +5,7 @@ import { StatusChip } from '@duncit/ui';
 import { ALL_STATUSES, STATUS_COLOR, humaniseStatus } from './constants';
 import { useDateFormat } from '@duncit/app-settings';
 import type { ProductOrderRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<ProductOrderRow>;
@@ -45,6 +46,7 @@ const renderStatus = (o: ProductOrderRow) => (
 );
 
 export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const columns = useMemo<DuncitColumn<ProductOrderRow>[]>(() => {
     const renderOrder = (o: ProductOrderRow) => (
@@ -60,7 +62,7 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
     return [
       {
         field: 'order_no',
-        headerName: 'Order',
+        headerName: t('products.orders.colOrder'),
         filter: { type: 'text' },
         minWidth: 170,
         cellRenderer: renderOrder,
@@ -68,7 +70,7 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       },
       {
         field: 'buyer_name',
-        headerName: 'Buyer',
+        headerName: t('products.orders.colBuyer'),
         flex: 1,
         minWidth: 180,
         cellRenderer: renderBuyer,
@@ -76,14 +78,14 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       },
       {
         field: 'pod',
-        headerName: 'Pod',
+        headerName: t('products.orders.colPod'),
         sortable: false,
         minWidth: 160,
         valueGetter: (o) => o.pod?.pod_title ?? '—',
       },
       {
         field: 'fulfilment_method',
-        headerName: 'Method',
+        headerName: t('products.orders.colMethod'),
         filter: { type: 'select', options: METHOD_OPTIONS },
         width: 110,
         cellRenderer: renderMethod,
@@ -91,7 +93,7 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       },
       {
         field: 'fulfilment_status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         minWidth: 160,
         cellRenderer: renderStatus,
@@ -105,21 +107,21 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       },
       {
         field: 'total',
-        headerName: 'Total',
+        headerName: t('products.orders.colTotal'),
         filter: { type: 'number' },
         width: 110,
         valueGetter: (o) => `${o.currency_symbol}${o.total}`,
       },
       {
         field: 'buyer_email',
-        headerName: 'Buyer email',
+        headerName: t('products.orders.colBuyerEmail'),
         filter: { type: 'text' },
         hide: true,
         minWidth: 180,
       },
       {
         field: 'created_at',
-        headerName: 'Placed',
+        headerName: t('products.orders.colPlaced'),
         filter: { type: 'date' },
         hide: true,
         width: 150,
@@ -135,7 +137,7 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onView}
-      emptyText="No orders match these filters."
+      emptyText={t('products.orders.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search order no, buyer or AWB"
       refetchRef={refetchRef}

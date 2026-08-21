@@ -17,6 +17,7 @@ import {
   pickupLocationSchema,
   type PickupLocationFormValues,
 } from './pickup-location.types';
+import { useTranslation } from '@duncit/shell';
 
 export { pickupLocationSchema };
 
@@ -31,12 +32,14 @@ interface Props {
 
 export default function PickupLocationForm({
   open,
-  title = 'Pickup location',
+  title,
   initialValues,
   saving,
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const heading = title ?? t('products.pickup.formTitle');
   const { control, handleSubmit, reset } = useForm<PickupLocationFormValues>({
     defaultValues: initialValues ?? pickupLocationInitialValues,
     resolver: zodResolver(pickupLocationSchema),
@@ -53,39 +56,39 @@ export default function PickupLocationForm({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>{heading}</DialogTitle>
       <form noValidate onSubmit={submit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <RhfTextField control={control} name="nickname" label="Nickname" required hint="e.g. Main warehouse" />
+              <RhfTextField control={control} name="nickname" label={t('products.pickup.nickname')} required hint="e.g. Main warehouse" />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="contact_name" label="Contact name" required hint=" " />
+              <RhfTextField control={control} name="contact_name" label={t('products.pickup.contactName')} required hint=" " />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="phone" label="Phone" required hint="10-digit mobile number" />
+              <RhfTextField control={control} name="phone" label={t('shell.common.phone')} required hint="10-digit mobile number" />
             </Grid>
             <Grid item xs={12}>
-              <RhfTextField control={control} name="email" label="Email" type="email" required hint=" " />
+              <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" required hint=" " />
             </Grid>
             <Grid item xs={12}>
-              <RhfTextField control={control} name="address_line1" label="Address line 1" required hint=" " />
+              <RhfTextField control={control} name="address_line1" label={t('products.pickup.addressLine1')} required hint=" " />
             </Grid>
             <Grid item xs={12}>
-              <RhfTextField control={control} name="address_line2" label="Address line 2" hint="Optional" />
+              <RhfTextField control={control} name="address_line2" label={t('products.pickup.addressLine2')} hint="Optional" />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="city" label="City" required hint=" " />
+              <RhfTextField control={control} name="city" label={t('products.pickup.city')} required hint=" " />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="state" label="State" required hint=" " />
+              <RhfTextField control={control} name="state" label={t('products.pickup.state')} required hint=" " />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="pincode" label="Pincode" required hint="6-digit PIN" />
+              <RhfTextField control={control} name="pincode" label={t('products.pickup.pincode')} required hint="6-digit PIN" />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <RhfTextField control={control} name="country" label="Country" required hint=" " />
+              <RhfTextField control={control} name="country" label={t('products.pickup.country')} required hint=" " />
             </Grid>
             <Grid item xs={12}>
               <Controller
@@ -96,7 +99,7 @@ export default function PickupLocationForm({
                     control={
                       <Checkbox checked={!!field.value} onChange={(_, value) => field.onChange(value)} />
                     }
-                    label="Set as the default pickup location"
+                    label={t('products.pickup.setDefault')}
                   />
                 )}
               />

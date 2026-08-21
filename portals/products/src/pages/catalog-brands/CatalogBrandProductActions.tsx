@@ -6,6 +6,7 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import type { CatalogBrandProductRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   product: CatalogBrandProductRow;
@@ -28,6 +29,7 @@ export default function CatalogBrandProductActions({
   onToggleActive,
   onDuplicate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const archived = product.status === 'ARCHIVED';
   const paused = product.is_active === false;
   const lifecycleLabel = archived ? 'Restore' : 'Archive';
@@ -40,10 +42,10 @@ export default function CatalogBrandProductActions({
 
   return (
     <Stack direction="row" justifyContent="flex-end" component="span">
-      <Tooltip title="Edit">
+      <Tooltip title={t('shell.common.edit')}>
         <IconButton
           size="small"
-          aria-label="Edit"
+          aria-label={t('shell.common.edit')}
           onClick={(event) => {
             event.stopPropagation();
             onEdit(product);
@@ -79,10 +81,10 @@ export default function CatalogBrandProductActions({
           {lifecycleIcon}
         </IconButton>
       </Tooltip>
-      <Tooltip title="Duplicate">
+      <Tooltip title={t('products.brandProducts.duplicate')}>
         <IconButton
           size="small"
-          aria-label="Duplicate"
+          aria-label={t('products.brandProducts.duplicate')}
           onClick={(event) => {
             event.stopPropagation();
             onDuplicate(product);

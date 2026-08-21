@@ -15,6 +15,7 @@ import { MWEB_BUNDLE } from './bundles/mweb';
 import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
+import { PRODUCTS_BUNDLE } from './bundles/products';
 import { SHELL_BUNDLE } from './bundles/shell';
 import { SUPPORT_BUNDLE } from './bundles/support';
 import { WEBSITE_BUNDLE } from './bundles/website';
@@ -59,6 +60,7 @@ export {
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRODUCTS_BUNDLE,
   SHELL_BUNDLE,
   SUPPORT_BUNDLE,
   WEBSITE_APP_BUNDLE,
@@ -84,6 +86,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   partners: PARTNERS_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,
   policyAcceptance: POLICY_ACCEPTANCE_BUNDLE,
+  products: PRODUCTS_BUNDLE,
   shell: SHELL_BUNDLE,
   support: SUPPORT_BUNDLE,
   website: WEBSITE_BUNDLE,

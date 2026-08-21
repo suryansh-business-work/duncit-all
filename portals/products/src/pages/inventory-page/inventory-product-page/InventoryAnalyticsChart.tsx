@@ -10,6 +10,7 @@ import {
 } from 'chart.js';
 import { Box, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from '@duncit/shell';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -26,6 +27,7 @@ interface InventoryAnalyticsChartProps {
 }
 
 export default function InventoryAnalyticsChart({ points, loading }: Readonly<InventoryAnalyticsChartProps>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const inColor = alpha(theme.palette.success.main, 0.7);
   const outColor = alpha(theme.palette.error.main, 0.7);
@@ -55,7 +57,7 @@ export default function InventoryAnalyticsChart({ points, loading }: Readonly<In
         labels,
         datasets: [
           { label: 'In', data: ins, backgroundColor: inColor },
-          { label: 'Out', data: outs, backgroundColor: outColor },
+          { label: t('products.stock.out'), data: outs, backgroundColor: outColor },
         ],
       },
       options: {
@@ -73,7 +75,7 @@ export default function InventoryAnalyticsChart({ points, loading }: Readonly<In
   }, []);
 
   if (loading && points.length === 0) {
-    return <Typography variant="body2" color="text.secondary">Loading analytics…</Typography>;
+    return <Typography variant="body2" color="text.secondary">{t('products.activity.loadingAnalytics')}</Typography>;
   }
   if (points.every((p) => p.in_qty === 0 && p.out_qty === 0)) {
     return (

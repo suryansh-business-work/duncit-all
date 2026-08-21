@@ -10,16 +10,20 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
 import WarehouseSelect from './WarehouseSelect';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 type SwitchName = 'pod_available' | 'host_request_allowed' | 'delivery_available';
 
-const SWITCHES: { name: SwitchName; label: string }[] = [
-  { name: 'pod_available', label: 'Available in pods' },
-  { name: 'host_request_allowed', label: 'Hosts can request this' },
-  { name: 'delivery_available', label: 'Delivery available' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const switches = (t: Translate): { name: SwitchName; label: string }[] => [
+  { name: 'pod_available', label: t('products.delivery.availableInPods') },
+  { name: 'host_request_allowed', label: t('products.delivery.hostsCanRequest') },
+  { name: 'delivery_available', label: t('products.delivery.deliveryAvailable') },
 ];
 
 export default function DeliveryAvailabilitySection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
   const deliveryAvailable = useWatch({ control, name: 'delivery_available' });
   const ownership = useWatch({ control, name: 'ownership' });
@@ -31,7 +35,7 @@ export default function DeliveryAvailabilitySection() {
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
         <Stack spacing={1}>
-          {SWITCHES.map((sw) => (
+          {switches(t).map((sw) => (
             <Controller
               key={sw.name}
               control={control}
@@ -55,7 +59,7 @@ export default function DeliveryAvailabilitySection() {
         <RhfNumberField
           control={control}
           name="delivery_charge"
-          label="Delivery charge"
+          label={t('products.delivery.charge')}
           disabled={!deliveryAvailable}
           hint={chargeHint}
           InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
@@ -76,16 +80,16 @@ export default function DeliveryAvailabilitySection() {
         </Typography>
       </Grid>
       <Grid item xs={6} md={3}>
-        <RhfNumberField control={control} name="length_cm" label="Length" hint="cm" />
+        <RhfNumberField control={control} name="length_cm" label={t('products.delivery.length')} hint="cm" />
       </Grid>
       <Grid item xs={6} md={3}>
-        <RhfNumberField control={control} name="breadth_cm" label="Breadth" hint="cm" />
+        <RhfNumberField control={control} name="breadth_cm" label={t('products.delivery.breadth')} hint="cm" />
       </Grid>
       <Grid item xs={6} md={3}>
-        <RhfNumberField control={control} name="height_cm" label="Height" hint="cm" />
+        <RhfNumberField control={control} name="height_cm" label={t('products.delivery.height')} hint="cm" />
       </Grid>
       <Grid item xs={6} md={3}>
-        <RhfNumberField control={control} name="weight_kg" label="Weight" hint="kg" />
+        <RhfNumberField control={control} name="weight_kg" label={t('products.delivery.weight')} hint="kg" />
       </Grid>
     </Grid>
   );

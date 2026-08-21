@@ -12,6 +12,7 @@ import StockColorChip from './inventory-product-page/StockColorChip';
 import { STATUS_CHIP_COLOR, STATUS_OPTIONS } from './inventory-product-page/constants';
 import { useDateFormat } from '@duncit/app-settings';
 import type { InventoryProductRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<InventoryProductRow>;
@@ -76,6 +77,7 @@ export default function InventoryTable({
   onToggleActive,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<InventoryProductRow>[]>(() => {
     const renderActions = (p: InventoryProductRow) => {
@@ -83,7 +85,7 @@ export default function InventoryTable({
       const pauseLabel = paused ? 'Reactivate' : 'Temporarily deactivate';
       return (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(p)}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -95,12 +97,12 @@ export default function InventoryTable({
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title="Archive">
+        <Tooltip title={t('products.inventory.archive')}>
           <IconButton size="small" onClick={() => onArchive(p)}>
             <ArchiveIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Delete permanently">
+        <Tooltip title={t('products.inventory.deletePermanently')}>
           <IconButton size="small" color="error" onClick={() => onDelete(p)}>
             <DeleteForeverIcon fontSize="small" />
           </IconButton>
@@ -112,7 +114,7 @@ export default function InventoryTable({
       { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
       {
         field: 'product_name',
-        headerName: 'Product',
+        headerName: t('products.inventory.colProduct'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderProduct,
@@ -121,23 +123,23 @@ export default function InventoryTable({
       { field: 'sku', headerName: 'SKU', filter: { type: 'text' }, width: 140 },
       {
         field: 'selling_price',
-        headerName: 'Selling price',
+        headerName: t('products.pricing.sellingPrice'),
         filter: { type: 'number' },
         width: 130,
         valueGetter: priceValue,
       },
       {
         field: 'inventory_count',
-        headerName: 'Stock',
+        headerName: t('products.inventory.colStock'),
         filter: { type: 'number' },
         width: 150,
         cellRenderer: renderStock,
         valueGetter: (p) => p.inventory_count,
       },
-      { field: 'available_count', headerName: 'Available', sortable: false, width: 100 },
+      { field: 'available_count', headerName: t('products.inventory.colAvailable'), sortable: false, width: 100 },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         width: 130,
         cellRenderer: renderStatus,
@@ -145,23 +147,23 @@ export default function InventoryTable({
       },
       {
         field: 'is_active',
-        headerName: 'Active',
+        headerName: t('products.inventory.colActive'),
         sortable: false,
         filter: { type: 'boolean' },
         width: 110,
         cellRenderer: renderActive,
         valueGetter: activeValue,
       },
-      { field: 'brand_name', headerName: 'Brand', filter: { type: 'text' }, hide: true, minWidth: 140 },
+      { field: 'brand_name', headerName: t('products.inventory.colBrand'), filter: { type: 'text' }, hide: true, minWidth: 140 },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('products.inventory.created'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
         valueGetter: (p) => (p.created_at ? formatDate(p.created_at) : '—'),
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
     ];
   }, [onEdit, onArchive, onToggleActive, onDelete, formatDate]);
 

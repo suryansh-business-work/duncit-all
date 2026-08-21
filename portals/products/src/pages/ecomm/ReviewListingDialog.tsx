@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { REVIEW_PRODUCT_LISTING, type ProductListingRow } from './requestsQueries';
 import ListingReviewDetails from './ListingReviewDetails';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   row: ProductListingRow | null;
@@ -22,6 +23,7 @@ interface Props {
 /** Approve/deny a partner product listing — the per-row inline form moved into
  * a dialog so rows fit the shared table's fixed height. */
 export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState('');
   const [commission, setCommission] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
           {error && <Alert severity="error">{error}</Alert>}
           <TextField
             size="small"
-            label="Admin note"
+            label={t('products.review.adminNote')}
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             multiline
@@ -74,7 +76,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
           />
           <TextField
             size="small"
-            label="Commission %"
+            label={t('products.brands.commission')}
             type="number"
             value={commission}
             onChange={(event) => setCommission(event.target.value)}

@@ -1,5 +1,6 @@
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface StockMovement {
   id: string;
@@ -26,11 +27,12 @@ const movementColor: Record<string, 'success' | 'warning' | 'error' | 'default' 
 };
 
 export default function StockMovementTimeline({ movements, loading }: Readonly<StockMovementTimelineProps>) {
+  const { t } = useTranslation();
   if (loading && movements.length === 0) {
-    return <Typography variant="body2" color="text.secondary">Loading movements…</Typography>;
+    return <Typography variant="body2" color="text.secondary">{t('products.activity.loadingMovements')}</Typography>;
   }
   if (movements.length === 0) {
-    return <Alert severity="info">No stock movements yet. Adjusting stock will start the timeline.</Alert>;
+    return <Alert severity="info">{t('products.activity.noMovements')}</Alert>;
   }
   return (
     <Stack spacing={1.5}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -16,16 +16,20 @@ import MediaBrandingSection from './MediaBrandingSection';
 import PricingTaxSection from './PricingTaxSection';
 import SupplierDetailsSection from './SupplierDetailsSection';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
-const SECTIONS = [
-  { id: 'basic', label: 'Basic info' },
-  { id: 'pricing', label: 'Pricing & tax' },
-  { id: 'inventory', label: 'Inventory management' },
-  { id: 'supplier', label: 'Supplier details' },
-  { id: 'delivery', label: 'Delivery & availability' },
-  { id: 'media', label: 'Media & branding' },
-  { id: 'advanced', label: 'Advanced settings' },
-  { id: 'activity', label: 'Activity & analytics' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Section headings are copy, so the list is built from the active catalogue. */
+const buildSections = (t: Translate) => [
+  { id: 'basic', label: t('products.sections.basicInfo') },
+  { id: 'pricing', label: t('products.sections.pricingTax') },
+  { id: 'inventory', label: t('products.sections.inventoryManagement') },
+  { id: 'supplier', label: t('products.sections.supplierDetails') },
+  { id: 'delivery', label: t('products.sections.deliveryAvailability') },
+  { id: 'media', label: t('products.sections.mediaBranding') },
+  { id: 'advanced', label: t('products.sections.advancedSettings') },
+  { id: 'activity', label: t('products.sections.activityAnalytics') },
 ];
 
 /** Supplier details is Duncit procurement metadata — a brand-owned product is
@@ -51,10 +55,12 @@ export default function ProductAccordion({
   activityLoading,
   onError,
 }: Readonly<ProductAccordionProps>) {
+  const { t } = useTranslation();
+  const allSections = useMemo(() => buildSections(t), [t]);
   const [expanded, setExpanded] = useState<string>('basic');
   const { control } = useFormContext<InventoryProductFormValues>();
   const ownership = useWatch({ control, name: 'ownership' });
-  const sections = ownership === 'BRAND' ? SECTIONS.filter(isNotSupplier) : SECTIONS;
+  const sections = ownership === 'BRAND' ? allSections.filter(isNotSupplier) : allSections;
   return (
     <>
       {sections.map((sec) => (

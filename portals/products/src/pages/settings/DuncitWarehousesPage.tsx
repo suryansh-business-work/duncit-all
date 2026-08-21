@@ -1,10 +1,12 @@
 import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import PickupLocationsPanel from '../ecomm/PickupLocationsPanel';
+import { useTranslation } from '@duncit/shell';
 
 /** Settings › Duncit Warehouse Locations. Manages the Duncit-owned
  * (owner_kind DUNCIT) warehouses that first-party products ship from and that
  * ShipRocket uses as the pickup origin for delivery rates + shipments. */
 export default function DuncitWarehousesPage() {
+  const { t } = useTranslation();
   return (
     <Stack spacing={3}>
       <Box>
@@ -21,7 +23,7 @@ export default function DuncitWarehousesPage() {
         <CardContent>
           <PickupLocationsPanel
             owner={{ owner_kind: 'DUNCIT', brandId: null }}
-            title="Duncit warehouses"
+            title={t('products.settings.duncitWarehouses')}
             emptyHint="No Duncit warehouses yet. Add one so products have a shipping origin."
           />
           <Divider sx={{ mt: 2 }} />

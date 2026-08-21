@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import type { ProductListingRow } from './requestsQueries';
 import { deliveryTargetLabel } from './deliveryTarget';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   row: ProductListingRow;
@@ -20,6 +21,7 @@ interface Props {
  * description, option definitions and the full per-variant matrix — approvals
  * must never be blind to what will actually go on sale. */
 export default function ListingReviewDetails({ row }: Readonly<Props>) {
+  const { t } = useTranslation();
   const fallbackImages = row.image_url ? [row.image_url] : [];
   const images = row.images?.length ? row.images : fallbackImages;
   const hasVariants = (row.variants ?? []).length > 0;
@@ -66,15 +68,15 @@ export default function ListingReviewDetails({ row }: Readonly<Props>) {
 
       {hasVariants && (
         <Box sx={{ overflowX: 'auto' }}>
-          <Table size="small" aria-label="Variants">
+          <Table size="small" aria-label={t('products.review.variants')}>
             <TableHead>
               <TableRow>
-                <TableCell>Variant</TableCell>
+                <TableCell>{t('products.review.variant')}</TableCell>
                 <TableCell>SKU</TableCell>
-                <TableCell align="right">Price</TableCell>
-                <TableCell align="right">Stock</TableCell>
-                <TableCell align="right">Weight</TableCell>
-                <TableCell>Images</TableCell>
+                <TableCell align="right">{t('products.brandProducts.colPrice')}</TableCell>
+                <TableCell align="right">{t('products.review.stock')}</TableCell>
+                <TableCell align="right">{t('products.review.weight')}</TableCell>
+                <TableCell>{t('products.review.images')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

@@ -19,8 +19,10 @@ import BrandProductsTable from './BrandProductsTable';
 import BrandPickupPanel from './BrandPickupPanel';
 import { BRAND_STATUS_COLOR } from './brandStatus';
 import { ECOMM_BRAND } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export default function BrandReviewDetailPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { brandId = '' } = useParams<{ brandId: string }>();
 
@@ -79,7 +81,7 @@ export default function BrandReviewDetailPage() {
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
               <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-                Approved products
+                {t('products.brands.colApprovedProducts')}
               </Typography>
               <BrandProductsTable brandId={brandId} />
             </CardContent>
@@ -96,7 +98,7 @@ export default function BrandReviewDetailPage() {
           </Card>
         </>
       ) : (
-        <Alert severity="warning">Brand not found.</Alert>
+        <Alert severity="warning">{t('products.brands.notFound')}</Alert>
       )}
     </Stack>
   );

@@ -15,6 +15,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface ImagesFieldProps {
   images: string[];
@@ -23,6 +24,7 @@ interface ImagesFieldProps {
 }
 
 export default function ImagesField({ images, coverUrl, onChange }: Readonly<ImagesFieldProps>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handlePicked = (url: string) => {
@@ -43,7 +45,7 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">Product images</Typography>
+        <Typography variant="subtitle2">{t('products.media.productImages')}</Typography>
         <Button
           size="small"
           startIcon={<AddPhotoAlternateIcon />}
@@ -101,7 +103,7 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
                       {isCover ? <StarIcon fontSize="inherit" /> : <StarBorderIcon fontSize="inherit" />}
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Remove">
+                  <Tooltip title={t('products.media.remove')}>
                     <IconButton size="small" sx={{ color: (theme) => theme.palette.common.white }} onClick={() => remove(url)}>
                       <DeleteOutlineIcon fontSize="inherit" />
                     </IconButton>
@@ -116,7 +118,7 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         folder="/inventory"
-        title="Upload product image"
+        title={t('products.media.uploadImage')}
         onPicked={handlePicked}
       />
     </Box>

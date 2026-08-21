@@ -20,6 +20,7 @@ import {
 import { productEditPath, productListLabel, productListPath } from './productPaths';
 import { STATUS_CHIP_COLOR } from './constants';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface ProductPageHeaderProps {
   isNew: boolean;
@@ -40,6 +41,7 @@ export default function ProductPageHeader({
   onToast,
   onRefetch,
 }: Readonly<ProductPageHeaderProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [archiveProduct] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
   const [restoreProduct] = useMutation(RESTORE_INVENTORY_PRODUCT);
@@ -124,7 +126,7 @@ export default function ProductPageHeader({
                   }
                 }}
               >
-                Archive
+                {t('products.inventory.archive')}
               </Button>
             )}
           </Stack>

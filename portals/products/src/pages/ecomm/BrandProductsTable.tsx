@@ -5,6 +5,7 @@ import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/tab
 import { formatMoney } from '@duncit/utils';
 import { useDateFormat } from '@duncit/app-settings';
 import { MARKETPLACE_BRAND_PRODUCTS_TABLE, type BrandProductRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   brandId: string;
@@ -28,6 +29,7 @@ const renderDimensions = (p: BrandProductRow) => (
 );
 
 export default function BrandProductsTable({ brandId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const { formatDate } = useDateFormat();
@@ -52,32 +54,32 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<BrandProductRow>[]>(
     () => [
       { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
-      { field: 'product_name', headerName: 'Product', flex: 1, minWidth: 200 },
+      { field: 'product_name', headerName: t('products.brandProducts.colProduct'), flex: 1, minWidth: 200 },
       { field: 'sku', headerName: 'SKU', width: 140 },
       {
         field: 'selling_price',
-        headerName: 'Price',
+        headerName: t('products.brandProducts.colPrice'),
         filter: { type: 'number' },
         width: 120,
         valueGetter: priceValue,
       },
       {
         field: 'available',
-        headerName: 'Available',
+        headerName: t('products.brandProducts.colAvailable'),
         sortable: false,
         width: 100,
         valueGetter: (p) => p.available_count ?? p.inventory_count,
       },
       {
         field: 'commission_pct',
-        headerName: 'Commission',
+        headerName: t('products.brands.colCommission'),
         filter: { type: 'number' },
         width: 120,
         valueGetter: (p) => `${p.commission_pct}%`,
       },
       {
         field: 'dimensions',
-        headerName: 'Dimensions',
+        headerName: t('products.brandProducts.colDimensions'),
         sortable: false,
         minWidth: 180,
         cellRenderer: renderDimensions,
@@ -85,7 +87,7 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
       },
       {
         field: 'created_at',
-        headerName: 'Added',
+        headerName: t('products.brandProducts.colAdded'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
@@ -101,7 +103,7 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="This brand has no approved products yet."
+      emptyText={t('products.brandProducts.emptyApproved')}
       defaultSort={{ field: 'product_name', dir: 'asc' }}
       searchPlaceholder="Search product or SKU"
       refetchRef={refetchRef}

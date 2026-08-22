@@ -90,10 +90,11 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
     />
     <button type="submit" class="newsletter-button">{button}</button>
 
-    {/* One field and one tap is the whole appeal of this form, so on the
-        inline footer row the check waits until somebody has actually started
-        typing an address. */}
-    <Captcha graphqlUrl={graphqlUrl} copy={captcha} defer={!card} class="newsletter-captcha" />
+    {/* One field and one tap is the whole appeal of this form, so the check
+        waits until somebody has actually started typing an address. It also
+        keeps a marketing page from minting a challenge for every visitor who
+        scrolls past the form and never subscribes. */}
+    <Captcha graphqlUrl={graphqlUrl} copy={captcha} defer class="newsletter-captcha" />
 
     {
       consent && (

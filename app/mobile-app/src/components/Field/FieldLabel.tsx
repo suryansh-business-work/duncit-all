@@ -1,5 +1,28 @@
 import { Text } from 'tamagui';
 
+export interface RequiredMarkProps {
+  /** When true a red `*` is rendered; nothing otherwise. */
+  required?: boolean;
+  /** Base test id: the mark gets `${testID}-required`. */
+  testID?: string;
+}
+
+/**
+ * The red required `*`, on its own so a field that draws its own label line —
+ * the grievance form, whose captions mirror mWeb's smaller MUI labels — marks
+ * itself with the same marker instead of repeating it (rule 34). Nested inside
+ * a label `Text` it inherits that label's size and weight and overrides only
+ * the colour.
+ */
+export function RequiredMark({ required, testID }: Readonly<RequiredMarkProps>) {
+  if (!required) return null;
+  return (
+    <Text color="$danger" testID={testID ? `${testID}-required` : undefined}>
+      {' *'}
+    </Text>
+  );
+}
+
 export interface FieldLabelProps {
   /** The field label text. */
   label: string;
@@ -24,11 +47,7 @@ export function FieldLabel({ label, required, testID }: Readonly<FieldLabelProps
       testID={testID ? `${testID}-label` : undefined}
     >
       {label}
-      {required ? (
-        <Text color="$danger" testID={testID ? `${testID}-required` : undefined}>
-          {' *'}
-        </Text>
-      ) : null}
+      <RequiredMark required={required} testID={testID} />
     </Text>
   );
 }

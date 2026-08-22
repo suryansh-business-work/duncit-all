@@ -59,9 +59,9 @@ export function GrievanceForm({
       backgroundColor="$surface"
     >
       <GrievanceTicketField control={control} options={tickets} loading={ticketsLoading} />
-      <GrievanceField control={control} name="name" label={t('grievance.field.name')} />
-      <GrievanceField control={control} name="email" label={t('grievance.field.email')} />
-      <GrievanceField control={control} name="phone" label={t('grievance.field.phone')} />
+      <GrievanceField control={control} name="name" label={t('grievance.field.name')} required />
+      <GrievanceField control={control} name="email" label={t('grievance.field.email')} required />
+      <GrievanceField control={control} name="phone" label={t('grievance.field.phone')} required />
       <GrievanceField
         control={control}
         name="address"
@@ -69,12 +69,18 @@ export function GrievanceForm({
         hint={t('grievance.optional')}
         multiline
       />
-      <GrievanceField control={control} name="subject" label={t('grievance.field.subject')} />
+      <GrievanceField
+        control={control}
+        name="subject"
+        label={t('grievance.field.subject')}
+        required
+      />
       <GrievanceField
         control={control}
         name="description"
         label={t('grievance.field.description')}
         hint={t('grievance.descriptionHint')}
+        required
         multiline
       />
       {errorMessage ? (

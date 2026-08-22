@@ -650,9 +650,15 @@ importers:
 
   packages/availability-calendar:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
     devDependencies:
       '@mui/icons-material':
         specifier: ^5.15.18

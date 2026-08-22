@@ -11,7 +11,9 @@ interface Props {
   date: Date | null;
   slots: VenueSlotRow[];
   onClose: () => void;
-  onCreate: (input: NewSlotInput) => Promise<void>;
+  /** `overwrite` is true only after the partner confirmed replacing whatever
+   *  is already published for that space and time. */
+  onCreate: (input: NewSlotInput, overwrite: boolean) => Promise<void>;
   onToggleBlock: (slot: VenueSlotRow) => Promise<void>;
   onDelete: (slotId: string) => Promise<void>;
   /** True when this date is a venue leave/holiday — adding slots is disabled. */

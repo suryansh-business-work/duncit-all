@@ -449,9 +449,26 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       price: 'Price (₹)',
       repeatOnDays: 'Repeat on days',
       saveAsTemplate: 'Save as template',
+      slotAvailability: 'Slot availability',
+      slotAvailabilityHint:
+        'Pick a date to add or manage time slots. Hosts will only see your Available slots when creating a pod.',
+      backToVenues: 'Back to venues',
+      approvalRequired:
+        'Availability is only editable once your venue is approved (current status: {status}).',
+      venueNamed: 'Venue · {name}',
       startDate: 'Start date',
       stopOnOptional: 'Stop on (optional)',
       templateName: 'Template name',
+      // What a recurring run does when a generated slot lands on a time the
+      // space is already published for. Skip is the default; Overwrite is
+      // destructive, so its warning is part of the choice, not a footnote.
+      whenSlotsOverlap: 'When a slot already exists',
+      overlapSkip: 'Keep the existing slot',
+      overlapSkipHint: 'Slots that clash with one already published are not created.',
+      overlapReplace: 'Overwrite the existing slot',
+      overlapReplaceHint: 'The existing slot is deleted and the new one takes its place.',
+      overlapReplaceWarning:
+        'Overwriting permanently deletes the slots already published for the same space and time, together with their price and notes. Booked slots and pending booking requests are never deleted — new slots clashing with one are skipped instead.',
       venueNotFoundOrItIsn: "Venue not found, or it isn't yours.",
       venueRules: 'Venue rules',
       venueRulesSaved: 'Venue rules saved.',

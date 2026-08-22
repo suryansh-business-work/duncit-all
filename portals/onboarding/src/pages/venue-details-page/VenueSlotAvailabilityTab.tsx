@@ -60,8 +60,14 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
   }, [data, selectedDate]);
 
-  const handleCreate = async (input: NewSlotInput) => {
-    await createSlots({ variables: { input: { venue_id: venueId, slots: [input] } } });
+  // REPLACE only ever arrives after the drawer's overwrite warning; FAIL keeps
+  // an accidental clash a refusal rather than a silent deletion.
+  const handleCreate = async (input: NewSlotInput, overwrite: boolean) => {
+    await createSlots({
+      variables: {
+        input: { venue_id: venueId, slots: [input], on_conflict: overwrite ? 'REPLACE' : 'FAIL' },
+      },
+    });
     await refetch();
   };
   const handleToggleBlock = async (slot: VenueSlotRow) => {

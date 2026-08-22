@@ -1,18 +1,10 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { addDays, isAfter, isBefore, set as setTimeOnDate, startOfDay } from 'date-fns';
+import { ConfirmDialog } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/app-settings';
+import AddSlotFields, { type SlotDraft } from './AddSlotFields';
+import { isSlotConflictError } from '../conflict';
 import { wholeDayWindow } from '../slot-window';
 import type { NewSlotInput, VenueSpace } from '../types';
 
@@ -22,6 +14,17 @@ const NO_SPACE = ' ';
 
 // Mirror the server cap: availability can be published at most this far ahead.
 const MAX_FUTURE_DAYS = 60;
+
+const emptyDraft = (date: Date): SlotDraft => ({
+  wholeDay: false,
+  startDate: date,
+  endDate: date,
+  startTime: null,
+  endTime: null,
+  price: '',
+  notes: '',
+  spaceLabel: NO_SPACE,
+});
 
 function combineDateAndTime(date: Date, time: Date): Date {
   return setTimeOnDate(date, {
@@ -37,7 +40,12 @@ interface Props {
   date: Date;
   isHoliday: boolean;
   spaces: VenueSpace[];
-  onCreate: (input: NewSlotInput) => Promise<void>;
+  /**
+   * `overwrite` asks the server to delete whatever is already published for
+   * that space and time and put this slot in its place. It is only ever true
+   * after the partner confirmed the warning that says so.
+   */
+  onCreate: (input: NewSlotInput, overwrite: boolean) => Promise<void>;
 }
 
 /**
@@ -45,42 +53,36 @@ interface Props {
  * date & time. Same-date = a single-day slot; a later end date = ONE continuous
  * multi-day (activity) booking. Whole-day hides the clocks and books the
  * entire date range.
+ *
+ * A clash with an already-published slot is the one failure the partner can act
+ * on, so it is not merely reported: the rejected payload is kept and offered
+ * back as an overwrite, behind a confirmation naming what that deletes.
  */
 export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Readonly<Props>) {
-  const [wholeDay, setWholeDay] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(date);
-  const [endDate, setEndDate] = useState<Date | null>(date);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
-  const [price, setPrice] = useState('');
-  const [notes, setNotes] = useState('');
-  const [spaceLabel, setSpaceLabel] = useState(NO_SPACE);
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState<SlotDraft>(() => emptyDraft(date));
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  // The rejected payload, kept so the partner can re-send it as an overwrite
+  // without re-typing the slot. Null whenever the last failure was not a clash.
+  const [clashing, setClashing] = useState<NewSlotInput | null>(null);
+  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
 
-  const hasSpaces = spaces.length > 0;
+  const patch = (p: Partial<SlotDraft>) => setDraft((d) => ({ ...d, ...p }));
   // Default to the first space so the common case is one tap, not two.
-  const activeSpace = hasSpaces
-    ? (spaces.find((s) => s.label === spaceLabel) ?? spaces[0])
-    : undefined;
+  const activeSpace =
+    spaces.length > 0 ? (spaces.find((s) => s.label === draft.spaceLabel) ?? spaces[0]) : undefined;
   const maxDate = addDays(new Date(), MAX_FUTURE_DAYS);
-  const isMultiDay =
-    !!startDate && !!endDate && startOfDay(endDate).getTime() > startOfDay(startDate).getTime();
 
   const reset = () => {
-    setWholeDay(false);
-    setStartDate(date);
-    setEndDate(date);
-    setStartTime(null);
-    setEndTime(null);
-    setPrice('');
-    setNotes('');
-    setSpaceLabel(NO_SPACE);
+    setDraft(emptyDraft(date));
     setError(null);
+    setClashing(null);
   };
 
   /** The concrete window, or an error message when the form is incomplete. */
   const resolveWindow = (): { start: Date; end: Date } | string => {
+    const { startDate, endDate, startTime, endTime, wholeDay } = draft;
     if (!startDate || !endDate) return 'Pick the start and end date.';
     if (isBefore(startOfDay(endDate), startOfDay(startDate))) {
       return 'End date must be on or after the start date.';
@@ -93,8 +95,24 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
     };
   };
 
+  /** One send for both attempts — the first try and the confirmed overwrite —
+   *  so the overwrite re-sends the exact payload the server rejected. */
+  const send = async (payload: NewSlotInput, overwrite: boolean) => {
+    setCreating(true);
+    try {
+      await onCreate(payload, overwrite);
+      reset();
+    } catch (e) {
+      setClashing(isSlotConflictError(e) && !overwrite ? payload : null);
+      setError(e instanceof Error ? e.message : 'Could not create slot');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleAdd = async () => {
     setError(null);
+    setClashing(null);
     const window = resolveWindow();
     if (typeof window === 'string') {
       setError(window);
@@ -105,7 +123,7 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
       setError('End must be after start.');
       return;
     }
-    if (!wholeDay && isAfter(new Date(), start)) {
+    if (!draft.wholeDay && isAfter(new Date(), start)) {
       setError('Start time must be in the future.');
       return;
     }
@@ -113,24 +131,31 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
       setError(`Slots can only be scheduled up to ${MAX_FUTURE_DAYS} days ahead.`);
       return;
     }
-    setCreating(true);
-    try {
-      await onCreate({
+    await send(
+      {
         start_at: start.toISOString(),
         end_at: end.toISOString(),
-        whole_day: wholeDay,
-        price: Math.max(0, Math.round(Number(price) || 0)),
-        notes,
+        whole_day: draft.wholeDay,
+        price: Math.max(0, Math.round(Number(draft.price) || 0)),
+        notes: draft.notes,
         space_label: activeSpace?.label ?? '',
         capacity: activeSpace?.capacity ?? 0,
-      });
-      reset();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create slot');
-    } finally {
-      setCreating(false);
-    }
+      },
+      false,
+    );
   };
+
+  const handleOverwrite = async () => {
+    setConfirmOverwrite(false);
+    if (clashing) await send(clashing, true);
+  };
+
+  // Hoisted out of the Alert's props so the conditional sits at nesting 0.
+  const overwriteAction = clashing ? (
+    <Button color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
+      {t('shell.availability.overwriteAction')}
+    </Button>
+  ) : undefined;
 
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
@@ -143,82 +168,33 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
         </Alert>
       )}
       <Stack spacing={1.5} sx={{ mt: 1, display: isHoliday ? 'none' : 'flex' }}>
-        <FormControlLabel
-          control={<Switch checked={wholeDay} onChange={(e) => setWholeDay(e.target.checked)} />}
-          label={
-            <Box>
-              <Typography variant="body2" fontWeight={800}>
-                Whole day
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Book the entire date(s) — no time selection needed.
-              </Typography>
-            </Box>
-          }
+        <AddSlotFields
+          draft={draft}
+          patch={patch}
+          spaces={spaces}
+          activeSpace={activeSpace}
+          maxDate={maxDate}
         />
-        {hasSpaces && (
-          <TextField
-            select
-            size="small"
-            label="Space"
-            value={activeSpace?.label ?? ''}
-            onChange={(e) => setSpaceLabel(e.target.value)}
-            helperText="Each space is booked separately — two spaces can share the same time."
-          >
-            {spaces.map((space) => (
-              <MenuItem key={space.label} value={space.label}>
-                {space.label || 'Whole venue'}
-                {space.capacity > 0 ? ` · holds ${space.capacity}` : ''}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
-        <Stack direction="row" spacing={1}>
-          <DatePicker
-            label="Start date"
-            value={startDate}
-            onChange={setStartDate}
-            minDate={new Date()}
-            maxDate={maxDate}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-          />
-          {!wholeDay && (
-            <TimePicker label="Start time" value={startTime} onChange={setStartTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-          )}
-        </Stack>
-        <Stack direction="row" spacing={1}>
-          <DatePicker
-            label="End date"
-            value={endDate}
-            onChange={setEndDate}
-            minDate={startDate ?? new Date()}
-            maxDate={maxDate}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-          />
-          {!wholeDay && (
-            <TimePicker label="End time" value={endTime} onChange={setEndTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-          )}
-        </Stack>
-        {isMultiDay && (
-          <Alert severity="info">
-            This creates one continuous multi-day booking (e.g. a multi-day activity or event).
+        {error && (
+          <Alert severity="error" onClose={() => setError(null)} action={overwriteAction}>
+            {error}
           </Alert>
         )}
-        <TextField
-          size="small"
-          type="number"
-          label="Price (₹)"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          inputProps={{ min: 0, step: 50 }}
-          helperText="Leave 0 for a free slot"
-        />
-        <TextField size="small" label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} inputProps={{ maxLength: 280 }} />
-        {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
         <Button variant="contained" disabled={creating} onClick={handleAdd}>
           {creating ? 'Adding…' : 'Add slot'}
         </Button>
       </Stack>
+
+      <ConfirmDialog
+        open={confirmOverwrite}
+        destructive
+        title={t('shell.availability.overwriteTitle')}
+        message={t('shell.availability.overwriteMessage')}
+        confirmLabel={t('shell.availability.overwriteConfirm')}
+        cancelLabel={t('shell.common.cancel')}
+        onConfirm={handleOverwrite}
+        onClose={() => setConfirmOverwrite(false)}
+      />
     </Box>
   );
 }

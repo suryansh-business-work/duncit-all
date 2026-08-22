@@ -1,41 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  IconButton,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import EventRepeatIcon from '@mui/icons-material/EventRepeat';
-import TodayIcon from '@mui/icons-material/Today';
-import {
-  addDays,
-  addMonths,
-  endOfDay,
-  endOfMonth,
-  endOfWeek,
-  format,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Alert, Card, CardContent, CircularProgress, Stack } from '@mui/material';
+import { addDays, format, startOfDay } from 'date-fns';
 import {
   AvailabilityCalendar,
   DayDrawer,
   slotCoversDay,
   type CalendarView,
   type NewSlotInput,
+  type VenueSpace,
 } from '@duncit/availability-calendar';
 import {
   CREATE_VENUE_SLOTS,
@@ -44,24 +18,14 @@ import {
   VENUE_SLOTS,
   type VenueSlotRow,
 } from './queries';
+import AvailabilityBlocked from './AvailabilityBlocked';
+import AvailabilityHeader from './AvailabilityHeader';
+import CalendarLegend from './CalendarLegend';
+import CalendarToolbar from './CalendarToolbar';
+import { periodLabel, shiftAnchor, viewRange } from './calendar-period';
 import RecurringAvailabilityDialog from './recurring/RecurringAvailabilityDialog';
 import { MY_VENUES } from '../register-venue-page/queries';
-import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
-
-function viewRange(view: CalendarView, anchor: Date) {
-  if (view === 'day') return { from: startOfDay(anchor), to: endOfDay(anchor) };
-  if (view === 'week') {
-    return { from: startOfWeek(anchor, { weekStartsOn: 0 }), to: endOfWeek(anchor, { weekStartsOn: 0 }) };
-  }
-  return { from: startOfMonth(anchor), to: endOfMonth(anchor) };
-}
-
-function periodLabel(view: CalendarView, anchor: Date, range: { from: Date; to: Date }) {
-  if (view === 'day') return formatDate(anchor);
-  if (view === 'week') return `${format(range.from, 'dd MMM')} – ${format(range.to, 'dd MMM')}`;
-  return format(anchor, 'MMMM yyyy');
-}
 
 export default function VenueAvailabilityPage() {
   const { t } = useTranslation();
@@ -78,6 +42,11 @@ export default function VenueAvailabilityPage() {
   const venue = (venuesData?.myVenues ?? []).find((v: any) => v.id === venueId);
   const isApproved = venue?.status === 'APPROVED';
   const venueHolidays: string[] = venue?.settings?.holidays ?? [];
+  // The venue's bookable spaces ("Court 1", …), which both the day drawer and
+  // the recurring dialog price separately. Memoized because the recurring
+  // dialog re-seeds its space rows whenever this value changes — a fresh `[]`
+  // every render would wipe the owner's prices as they typed them.
+  const capacityItems: VenueSpace[] = useMemo(() => venue?.capacity_items ?? [], [venue]);
 
   const range = useMemo(() => viewRange(view, anchor), [view, anchor]);
   const { data, loading, error, refetch } = useQuery<{ venueSlots: VenueSlotRow[] }>(VENUE_SLOTS, {
@@ -90,8 +59,14 @@ export default function VenueAvailabilityPage() {
   const [updateSlot] = useMutation(UPDATE_VENUE_SLOT);
   const [deleteSlot] = useMutation(DELETE_VENUE_SLOT);
 
-  const handleCreate = async (input: NewSlotInput) => {
-    await createSlots({ variables: { input: { venue_id: venueId, slots: [input] } } });
+  // REPLACE only ever arrives after the drawer's overwrite warning; FAIL keeps
+  // an accidental clash a refusal rather than a silent deletion.
+  const handleCreate = async (input: NewSlotInput, overwrite: boolean) => {
+    await createSlots({
+      variables: {
+        input: { venue_id: venueId, slots: [input], on_conflict: overwrite ? 'REPLACE' : 'FAIL' },
+      },
+    });
     await refetch();
   };
   const handleToggleBlock = async (slot: VenueSlotRow) => {
@@ -110,107 +85,65 @@ export default function VenueAvailabilityPage() {
 
   const shift = (dir: 1 | -1) => {
     if (dir === 1 && !canGoNext) return;
-    if (view === 'month') setAnchor(addMonths(anchor, dir));
-    else if (view === 'week') setAnchor(addDays(anchor, dir * 7));
-    else setAnchor(addDays(anchor, dir));
+    setAnchor(shiftAnchor(view, anchor, dir));
   };
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
     if (!selectedDate) return [];
     // slotCoversDay, not isSameDay(start): a multi-day (activity) booking must
     // appear in the drawer of every day it spans.
+    //
+    // Space first, then time: a venue with ten courts publishes ten slots for
+    // the same hour, and chronological order interleaves them into a list where
+    // no court's own day is readable. A venue with no named spaces sorts by
+    // time exactly as before, because every space_label is ''.
     return (data?.venueSlots ?? [])
       .filter((s) => slotCoversDay(s, selectedDate))
-      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+      .sort((a, b) => {
+        const bySpace = (a.space_label ?? '').localeCompare(b.space_label ?? '');
+        if (bySpace !== 0) return bySpace;
+        return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
+      });
   }, [data, selectedDate]);
 
   if (!venue && venuesData) {
     return (
-      <Stack spacing={2} sx={{ width: '100%' }}>
-        <Alert severity="error">{t('partners.venueAvailabilityPage.venueNotFoundOrItIsn')}</Alert>
-        <Button component={RouterLink} to="/register-venue" variant="outlined">
-          Back to venues
-        </Button>
-      </Stack>
+      <AvailabilityBlocked
+        severity="error"
+        message={t('partners.venueAvailabilityPage.venueNotFoundOrItIsn')}
+      />
     );
   }
 
   if (!isApproved && venue) {
     return (
-      <Stack spacing={2} sx={{ width: '100%' }}>
-        <Alert severity="warning">
-          Availability is only editable once your venue is approved (current status: {venue.status}).
-        </Alert>
-        <Button component={RouterLink} to="/register-venue" variant="outlined">
-          Back to venues
-        </Button>
-      </Stack>
+      <AvailabilityBlocked
+        severity="warning"
+        message={t('partners.venueAvailabilityPage.approvalRequired', {
+          vars: { status: venue.status },
+        })}
+      />
     );
   }
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/register-venue')} aria-label={t('partners.venueAvailabilityPage.back')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
-            Venue · {venue?.venue_name ?? '…'}
-          </Typography>
-          <Typography variant="h4" fontWeight={950} sx={{ lineHeight: 1.1 }}>
-            Slot availability
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Pick a date to add or manage time slots. Hosts will only see your Available slots when creating a pod.
-          </Typography>
-        </Box>
-      </Stack>
+      <AvailabilityHeader
+        venueName={venue?.venue_name}
+        onBack={() => navigate('/register-venue')}
+      />
 
       <Card variant="outlined">
         <CardContent>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            alignItems={{ xs: 'stretch', md: 'center' }}
-            justifyContent="space-between"
-            spacing={1.5}
-            sx={{ mb: 2 }}
-          >
-            <ToggleButtonGroup
-              size="small"
-              exclusive
-              value={view}
-              onChange={(_e, next) => next && setView(next)}
-              aria-label={t('partners.venueAvailabilityPage.calendarView')}
-            >
-              <ToggleButton value="day">Day</ToggleButton>
-              <ToggleButton value="week">Week</ToggleButton>
-              <ToggleButton value="month">{t('partners.venueAvailabilityPage.month')}</ToggleButton>
-            </ToggleButtonGroup>
-
-            <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
-              <IconButton onClick={() => shift(-1)} aria-label={t('partners.venueAvailabilityPage.previous')}>
-                <ChevronLeftIcon />
-              </IconButton>
-              <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 160, textAlign: 'center' }}>
-                {periodLabel(view, anchor, range)}
-              </Typography>
-              <IconButton onClick={() => shift(1)} aria-label={t('partners.venueAvailabilityPage.next')} disabled={!canGoNext}>
-                <ChevronRightIcon />
-              </IconButton>
-              <Button size="small" startIcon={<TodayIcon />} onClick={() => setAnchor(new Date())}>
-                Today
-              </Button>
-            </Stack>
-
-            <Button
-              variant="outlined"
-              startIcon={<EventRepeatIcon />}
-              onClick={() => setRecurringOpen(true)}
-            >
-              Recurring availability
-            </Button>
-          </Stack>
+          <CalendarToolbar
+            view={view}
+            onView={setView}
+            periodLabel={periodLabel(view, anchor, range)}
+            onShift={shift}
+            canGoNext={canGoNext}
+            onToday={() => setAnchor(new Date())}
+            onRecurring={() => setRecurringOpen(true)}
+          />
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
           {loading && !data ? (
@@ -229,13 +162,7 @@ export default function VenueAvailabilityPage() {
             />
           )}
 
-          <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
-            <Legend color="success.light" label={t('partners.venueAvailabilityPage.aAvailable')} />
-            <Legend color="info.light" label={t('partners.venueAvailabilityPage.pPendingApproval')} />
-            <Legend color="warning.light" label={t('partners.venueAvailabilityPage.bBooked')} />
-            <Legend color="grey.300" label={t('partners.venueAvailabilityPage.blocked')} />
-            <Legend color="error.light" label={t('partners.venueAvailabilityPage.leaveHoliday')} />
-          </Stack>
+          <CalendarLegend />
         </CardContent>
       </Card>
 
@@ -248,7 +175,7 @@ export default function VenueAvailabilityPage() {
         onToggleBlock={handleToggleBlock}
         onDelete={handleDelete}
         isHoliday={Boolean(selectedDate && venueHolidays.includes(format(selectedDate, 'yyyy-MM-dd')))}
-        spaces={venue?.capacity_items ?? []}
+        spaces={capacityItems}
       />
 
       <RecurringAvailabilityDialog
@@ -256,23 +183,12 @@ export default function VenueAvailabilityPage() {
         onClose={() => setRecurringOpen(false)}
         venueId={venueId}
         settings={venue?.settings}
-        capacityItems={venue?.capacity_items ?? []}
+        capacityItems={capacityItems}
         venueCapacity={venue?.capacity ?? 0}
         onDone={async () => {
           await refetch();
         }}
       />
-    </Stack>
-  );
-}
-
-function Legend({ color, label }: Readonly<{ color: string; label: string }>) {
-  return (
-    <Stack direction="row" spacing={0.75} alignItems="center">
-      <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: color }} />
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
     </Stack>
   );
 }

@@ -102,6 +102,27 @@ const venueSlotRules = (venue: Pick<IVenue, 'settings'> | null): SlotRules => ({
   holidays: new Set(venue?.settings?.holidays ?? []),
 });
 
+/**
+ * How a new slot that collides with an existing one in the SAME space is
+ * resolved. FAIL is the default so no caller loses data by omission.
+ */
+export type SlotConflictMode = 'FAIL' | 'SKIP' | 'REPLACE';
+
+/** The bulk-create payload both the owner and the admin mutation carry. */
+interface BulkCreateInput {
+  venue_id: string;
+  slots: Array<{
+    start_at: string;
+    end_at: string;
+    whole_day?: boolean;
+    notes?: string;
+    price?: number;
+    space_label?: string;
+    capacity?: number;
+  }>;
+  on_conflict?: SlotConflictMode;
+}
+
 // A slot may span multiple days (a whole-date-range / multi-day activity
 // booking), but never more than the advance window itself.
 const MAX_SLOT_SPAN_DAYS = 60;
@@ -174,26 +195,111 @@ async function loadSlot(slotId: string) {
   return slot!;
 }
 
+/** A slot that is BOOKED, or holds a PENDING request, is never overwritten —
+ * the pod behind it has to be cancelled or decided first. */
+const UNREPLACEABLE: ReadonlySet<VenueSlotStatus> = new Set(['BOOKED', 'PENDING']);
+
+interface PreparedSlot {
+  start: Date;
+  end: Date;
+  whole_day: boolean;
+  notes: string;
+  price: number;
+  space_label: string;
+  capacity: number;
+}
+
+/** The one definition of "these two clash": same space, overlapping windows.
+ * Different spaces may share a time window, so they never clash. */
+function collides(p: PreparedSlot, e: Pick<IVenueSlot, 'start_at' | 'end_at' | 'space_label'>) {
+  return (e.space_label ?? '') === p.space_label && e.start_at < p.end && e.end_at > p.start;
+}
+
+/** Every existing slot that could clash with the batch — one query across the
+ * batch's whole span rather than one per slot. */
+async function loadPotentialClashes(venueId: string, prepared: PreparedSlot[]) {
+  const earliest = new Date(Math.min(...prepared.map((p) => p.start.getTime())));
+  const latest = new Date(Math.max(...prepared.map((p) => p.end.getTime())));
+  return VenueSlotModel.find({
+    venue_id: new Types.ObjectId(venueId),
+    start_at: { $lt: latest },
+    end_at: { $gt: earliest },
+  }).select('start_at end_at space_label status');
+}
+
+interface ConflictPlan {
+  /** The slots that survive the caller's conflict mode. */
+  create: PreparedSlot[];
+  /** Existing slots to delete before inserting (REPLACE only). */
+  replaceIds: unknown[];
+  /** True when a booked slot or a pending request held one of the new windows. */
+  blockedByBooked: boolean;
+}
+
+/** Splits the batch into what to create and what to delete first, per mode. */
+async function planConflicts(
+  venueId: string,
+  prepared: PreparedSlot[],
+  mode: SlotConflictMode
+): Promise<ConflictPlan> {
+  const existing = await loadPotentialClashes(venueId, prepared);
+  if (mode === 'FAIL') {
+    for (const p of prepared) {
+      const clash = existing.find((e) => collides(p, e));
+      if (clash) {
+        fail(
+          'CONFLICT',
+          `Overlaps with existing slot ${clash.start_at.toISOString()} – ${clash.end_at.toISOString()}`
+        );
+      }
+    }
+    return { create: prepared, replaceIds: [], blockedByBooked: false };
+  }
+  const locked = existing.filter((e) => UNREPLACEABLE.has(e.status));
+  // SKIP yields to every existing slot; REPLACE only to the ones it may not delete.
+  const blocking = mode === 'REPLACE' ? locked : existing;
+  const create = prepared.filter((p) => !blocking.some((e) => collides(p, e)));
+  const replaceIds =
+    mode === 'REPLACE'
+      ? existing
+          .filter((e) => !UNREPLACEABLE.has(e.status) && create.some((p) => collides(p, e)))
+          .map((e) => e._id)
+      : [];
+  return { create, replaceIds, blockedByBooked: prepared.some((p) => locked.some((e) => collides(p, e))) };
+}
+
+/** Two slots of ONE batch may never claim the same space at the same time —
+ * that is a caller bug, not a data conflict, so no mode forgives it. */
+function assertNoSelfOverlap(slots: PreparedSlot[]) {
+  const bySpace = new Map<string, PreparedSlot[]>();
+  for (const p of slots) {
+    const group = bySpace.get(p.space_label) ?? [];
+    group.push(p);
+    bySpace.set(p.space_label, group);
+  }
+  for (const group of bySpace.values()) {
+    const sorted = [...group].sort((a, b) => a.start.getTime() - b.start.getTime());
+    for (let i = 1; i < sorted.length; i += 1) {
+      if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
+        fail('CONFLICT', 'Two of the new slots overlap with each other');
+      }
+    }
+  }
+}
+
 // Core create/update/delete shared by the owner-scoped methods (partner editing
 // their own venue) and the admin methods (onboarding editing any venue). The
 // caller is responsible for the ownership/role check before invoking these.
 async function createSlotsCore(
   venueId: string,
   ownerUserId: string,
-  slots: Array<{
-    start_at: string;
-    end_at: string;
-    whole_day?: boolean;
-    notes?: string;
-    price?: number;
-    space_label?: string;
-    capacity?: number;
-  }>,
-  rules: SlotRules
+  slots: BulkCreateInput['slots'],
+  rules: SlotRules,
+  mode: SlotConflictMode = 'FAIL'
 ) {
   if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
 
-  const prepared = slots.map((s) => {
+  const prepared: PreparedSlot[] = slots.map((s) => {
     const start = parseDate(s.start_at, 'start_at');
     const end = parseDate(s.end_at, 'end_at');
     validateSlotWindow(start, end, rules);
@@ -208,35 +314,22 @@ async function createSlotsCore(
     };
   });
 
-  // Reject when any new slot collides with an existing one in the SAME space
-  // (any status) — different spaces may share a time window.
-  for (const p of prepared) {
-    const overlap = await findOverlap(venueId, p.start, p.end, p.space_label);
-    if (overlap) {
-      fail(
-        'CONFLICT',
-        `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
-      );
-    }
+  const plan = await planConflicts(venueId, prepared, mode);
+  if (plan.create.length === 0) {
+    fail(
+      'CONFLICT',
+      plan.blockedByBooked
+        ? 'Every new slot overlaps a booked slot or a pending request, which cannot be replaced.'
+        : 'Every matching slot already exists — nothing to add.'
+    );
   }
-  // Reject overlaps within the batch itself, per space.
-  const bySpace = new Map<string, typeof prepared>();
-  for (const p of prepared) {
-    const group = bySpace.get(p.space_label) ?? [];
-    group.push(p);
-    bySpace.set(p.space_label, group);
-  }
-  for (const group of bySpace.values()) {
-    const sorted = [...group].sort((a, b) => a.start.getTime() - b.start.getTime());
-    for (let i = 1; i < sorted.length; i += 1) {
-      if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
-        fail('CONFLICT', 'Two of the new slots overlap with each other');
-      }
-    }
+  assertNoSelfOverlap(plan.create);
+  if (plan.replaceIds.length > 0) {
+    await VenueSlotModel.deleteMany({ _id: { $in: plan.replaceIds } });
   }
 
   const docs = await VenueSlotModel.insertMany(
-    prepared.map((p) => ({
+    plan.create.map((p) => ({
       venue_id: new Types.ObjectId(venueId),
       owner_user_id: new Types.ObjectId(ownerUserId),
       start_at: p.start,
@@ -626,26 +719,23 @@ export const venueSlotService = {
     return withVenueAndPod(open);
   },
 
-  async create(
-    userId: string,
-    input: {
-      venue_id: string;
-      slots: Array<{ start_at: string; end_at: string; whole_day?: boolean; notes?: string; price?: number; space_label?: string; capacity?: number }>;
-    }
-  ) {
+  async create(userId: string, input: BulkCreateInput) {
     const venue = await ensureOwnedVenue(userId, input.venue_id);
-    return createSlotsCore(input.venue_id, userId, input.slots, venueSlotRules(venue));
+    return createSlotsCore(input.venue_id, userId, input.slots, venueSlotRules(venue), input.on_conflict);
   },
 
   // Admin create — slots are owned by the venue's actual owner, not the editor.
-  async adminCreate(input: {
-    venue_id: string;
-    slots: Array<{ start_at: string; end_at: string; whole_day?: boolean; notes?: string; price?: number; space_label?: string; capacity?: number }>;
-  }) {
+  async adminCreate(input: BulkCreateInput) {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
-    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots, venueSlotRules(venue));
+    return createSlotsCore(
+      input.venue_id,
+      String(venue!.owner_user_id),
+      input.slots,
+      venueSlotRules(venue),
+      input.on_conflict
+    );
   },
 
   /** Insert generated slots, silently DROPPING any that fall in the past,

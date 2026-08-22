@@ -44,9 +44,14 @@ jest.mock('@modules/access/user/user.model', () => ({
 jest.mock('../../../../config/url-configs', () => ({
   getMailConfigs: jest.fn().mockResolvedValue({ from: 'noreply@test', host: '', port: 587 }),
   // Every send now also reads the values a header/footer fragment needs.
-  getUrlConfigs: jest
-    .fn()
-    .mockResolvedValue({ supportEmail: 'support@test', websiteUrl: 'https://test' }),
+  // `appUrl` is one of them: the footer's unsubscribe link is built from it, and
+  // leaving it out made every send die on `appUrl.replace(...)` inside the try —
+  // which surfaced only as a FAILED log row, never as a rendered email.
+  getUrlConfigs: jest.fn().mockResolvedValue({
+    supportEmail: 'support@test',
+    websiteUrl: 'https://test',
+    appUrl: 'https://app.test',
+  }),
 }));
 
 jest.mock('nodemailer', () => ({
@@ -57,6 +62,30 @@ jest.mock('nodemailer', () => ({
 // the json transport, which is exactly the no-network path this test wants.
 jest.mock('@modules/platform/envEntry/envEntry.service', () => ({
   envEntryService: { resolveRuntime: jest.fn().mockResolvedValue(null) },
+}));
+
+// Two opt-out gates now sit in front of the renderer: the per-CATEGORY one that
+// every templated email passes through, and the CHANNEL one that only
+// `authentication` pays for. Unmocked they answer undefined, so every send
+// short-circuited as SKIPPED and the renderer was never reached at all.
+jest.mock('@modules/content/mailPreference/mailPreference.service', () => ({
+  mailPreferenceService: {
+    // The single-recipient gate (sendEmail)…
+    allows: jest.fn().mockResolvedValue(true),
+    // …and the list gate sendHtmlEmail uses for a bulk audience.
+    allowedRecipients: jest.fn(async (list: string[]) => ({
+      allowed: [...list],
+      suppressed: [],
+    })),
+  },
+}));
+jest.mock('@modules/access/commPreference/commPreference.service', () => ({
+  commPreferenceService: { allowsEmailOtp: jest.fn().mockResolvedValue(true) },
+}));
+// Every outcome is journalled; the row itself is the email-log contract suite's
+// subject, not this one's.
+jest.mock('@modules/content/emailLog/emailLog.service', () => ({
+  emailLogService: { record: jest.fn().mockResolvedValue(undefined) },
 }));
 
 const LEGACY = 'https://duncit.com/duncit-logo.svg';

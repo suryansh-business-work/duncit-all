@@ -10,8 +10,19 @@ jest.mock('../../slack.service', () => ({
   },
 }));
 
+// Feedback is FILED as a support report first and announced to Slack second, so
+// the resolver delegates here rather than calling slackService.sendFeedback.
+// The module is imported dynamically inside the resolver to keep slack free of
+// a load-time dependency on support, which the mock has to stand in for.
+jest.mock('@modules/support/feedback/feedback.service', () => ({
+  feedbackService: {
+    submit: jest.fn().mockResolvedValue({ report_no: 'FB-1', slack_ts: '9' }),
+  },
+}));
+
 import { slackResolvers } from '../../slack.resolver';
 import { slackService } from '../../slack.service';
+import { feedbackService } from '@modules/support/feedback/feedback.service';
 
 const ctx = (roles: string[] | null): GraphQLContext =>
   ({ user: roles ? { id: 'u1', roles } : null }) as unknown as GraphQLContext;
@@ -37,16 +48,29 @@ describe('slackResolvers', () => {
     expect(slackService.send).not.toHaveBeenCalled();
   });
 
-  it('lets any signed-in user submit feedback, stamping the token identity', async () => {
+  it('files feedback for any signed-in user, stamping the token identity', async () => {
     const input = { category: 'Bug', message: 'broken' };
-    await slackResolvers.Mutation.submitAppFeedback({}, { input }, ctx(['USER']));
-    expect(slackService.sendFeedback).toHaveBeenCalledWith({ id: 'u1', roles: ['USER'] }, input);
+    const result = await slackResolvers.Mutation.submitAppFeedback({}, { input }, ctx(['USER']));
+    // The identity comes off the token, never off the input.
+    expect(feedbackService.submit).toHaveBeenCalledWith({ id: 'u1', roles: ['USER'] }, input);
+    // `ok` means FILED, and the reporter is handed the report number back.
+    expect(result).toEqual({ ok: true, channel: 'FB-1', ts: '9' });
+  });
+
+  it('still reports a filed report when Slack never answered with a timestamp', async () => {
+    (feedbackService.submit as jest.Mock).mockResolvedValueOnce({ report_no: 'FB-2' });
+    const result = await slackResolvers.Mutation.submitAppFeedback(
+      {},
+      { input: { message: 'x' } },
+      ctx(['USER']),
+    );
+    expect(result).toEqual({ ok: true, channel: 'FB-2', ts: '' });
   });
 
   it('rejects feedback from an unauthenticated caller', () => {
     expect(() => slackResolvers.Mutation.submitAppFeedback({}, { input: {} }, ctx(null))).toThrow(
       GraphQLError,
     );
-    expect(slackService.sendFeedback).not.toHaveBeenCalled();
+    expect(feedbackService.submit).not.toHaveBeenCalled();
   });
 });

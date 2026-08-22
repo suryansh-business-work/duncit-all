@@ -22,6 +22,11 @@ jest.mock('../../inventoryStockMovement.model', () => ({
   InventoryStockMovementModel: { create: jest.fn(), find: jest.fn() },
 }));
 jest.mock('@modules/access/user/user.model', () => ({ UserModel: { findById: jest.fn() } }));
+// An approved listing now tells its owner over WhatsApp. Unmocked, the real
+// transport runs and the test dies on the 5s timeout instead of asserting.
+jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({
+  whatsappService: { send: jest.fn().mockResolvedValue(undefined) },
+}));
 jest.mock('@modules/access/user/relations', () => ({ UserRoleModel: { find: jest.fn() } }));
 jest.mock('@modules/venues/ecommBrand/ecommBrand.model', () => ({
   EcommBrandModel: { findById: jest.fn(), find: jest.fn() },
@@ -302,7 +307,7 @@ describe('inventoryService.submitProductListing', () => {
       pod_available: false,
       host_request_allowed: false,
       listing_review_status: 'PENDING',
-      listing_submitted_by_id: 'u-partner-1',
+      listing_submitted_by_id: PARTNER.id,
       listing_submitted_by_name: 'brand@duncit.com',
       supplier_contact: 'brand@duncit.com',
       delivery_target: 'SHIPROCKET',
@@ -503,7 +508,7 @@ describe('inventoryService.updateMyProductListing', () => {
 
     expect(productModel.findOne).toHaveBeenCalledWith({
       _id: 'p1',
-      listing_submitted_by_id: 'u-partner-1',
+      listing_submitted_by_id: PARTNER.id,
     });
     expect(doc).toMatchObject({
       listing_review_status: 'PENDING',
@@ -515,7 +520,7 @@ describe('inventoryService.updateMyProductListing', () => {
       host_request_allowed: false,
       inventory_count: 20,
       unit_cost: 550,
-      last_updated_by_name: 'brand@duncit.com',
+      last_updated_by_id: PARTNER.id,
     });
     expect(pub.inventory_count).toBe(20);
     // The stock change is journalled as an ADJUST movement.
@@ -634,7 +639,7 @@ describe('inventoryService.updateMyProductListingQuantity', () => {
     expect(notifyCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         scope: 'USER',
-        target_user_ids: ['u-partner-1'],
+        target_user_ids: [PARTNER.id],
         title: 'Low stock alert',
         body: 'Duncit Tee is low on stock — 4 left (alert at 5).',
       })
@@ -762,7 +767,7 @@ describe('inventoryService.reviewProductListing', () => {
       is_active: true,
       pod_available: true,
       host_request_allowed: true,
-      listing_reviewed_by_name: 'ops@duncit.com',
+      listing_reviewed_by_id: REVIEWER.id,
     });
     expect(pub.listing_review_status).toBe('APPROVED');
     expect(activityModel.create).toHaveBeenCalledWith(

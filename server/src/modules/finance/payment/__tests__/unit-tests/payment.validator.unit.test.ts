@@ -27,23 +27,35 @@ const productInput = (over: Record<string, any> = {}) => ({
   ...over,
 });
 
-describe('checkout validators — only the email is mandatory', () => {
-  it('accepts a pod checkout with no phone and no billing address', async () => {
+// The phone stayed optional, but the billing address did not: "Fix checkout
+// booking conflicts and billing validation" (25c8d6dfb) made every payment
+// carry a real invoice address, on the pod flow as well as the product one, and
+// updated both checkout forms to collect it. These cases used to assert the
+// intermediate rule where only the email was mandatory.
+describe('checkout validators — an email and a billing address are mandatory', () => {
+  it('accepts a pod checkout with no phone', async () => {
     const parsed = await dummyCheckoutSchema.validate(
-      podInput({
-        contact_phone_extension: '',
-        contact_phone_number: '',
-        billing: undefined,
-      }),
+      podInput({ contact_phone_extension: '', contact_phone_number: '' }),
     );
     expect(parsed.contact_email).toBe('riya@duncit.com');
   });
 
-  it('accepts a pod checkout whose billing address parts are all blank', async () => {
-    const parsed = await dummyCheckoutSchema.validate(
-      podInput({ billing: { line1: '', city: '', state: '', pincode: '' } }),
+  it('rejects a pod checkout with no billing address, and one left blank', async () => {
+    await expect(dummyCheckoutSchema.validate(podInput({ billing: undefined }))).rejects.toThrow(
+      /billing address/i,
     );
-    expect(parsed.billing?.line1).toBe('');
+    await expect(
+      dummyCheckoutSchema.validate(
+        podInput({ billing: { line1: '', city: '', state: '', pincode: '' } }),
+      ),
+    ).rejects.toThrow(/billing address/i);
+  });
+
+  it('accepts the legacy one-line billing address older clients still send', async () => {
+    const parsed = await dummyCheckoutSchema.validate(
+      podInput({ billing: undefined, billing_address: '12 Main Street, Pune 411001' }),
+    );
+    expect(parsed.billing_address).toBe('12 Main Street, Pune 411001');
   });
 
   it('still rejects a pod checkout without an email', async () => {

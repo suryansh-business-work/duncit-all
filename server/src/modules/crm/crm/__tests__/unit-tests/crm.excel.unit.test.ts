@@ -26,6 +26,17 @@ import {
 const venues = VenueLeadModel as unknown as Record<string, jest.Mock>;
 const hosts = HostLeadModel as unknown as Record<string, jest.Mock>;
 
+/**
+ * A truncated .xlsx — the ZIP local-file header and nothing after it, which is
+ * what a cut-off upload actually looks like.
+ *
+ * The obvious fixture, the literal 'not-a-workbook', stopped reaching the parse
+ * failure: xlsx happily reads arbitrary text as a one-sheet CSV, so the test
+ * was asserting a branch it no longer entered. A half-written workbook is both
+ * realistic and reliably rejected ("Unsupported ZIP file").
+ */
+const TRUNCATED_XLSX = Buffer.from([0x50, 0x4b, 0x03, 0x04]).toString('base64');
+
 /** `find().sort().lean()` and `findOne().select().lean()` as one chain. */
 const chain = (value: unknown) => ({
   sort: () => chain(value),
@@ -178,7 +189,7 @@ describe('inspectImport', () => {
 
   it('refuses an empty upload and an unreadable one', () => {
     expect(() => inspectImport('')).toThrow('No file content provided');
-    expect(() => inspectImport('not-a-workbook')).toThrow('Could not read the uploaded file');
+    expect(() => inspectImport(TRUNCATED_XLSX)).toThrow('Could not read the uploaded file');
   });
 });
 
@@ -345,8 +356,8 @@ describe('importLeads', () => {
 
   it('refuses an empty upload and an unreadable one', async () => {
     await expect(importLeads('VENUE_LEAD', '')).rejects.toThrow('No file content provided');
-    await expect(importLeads('VENUE_LEAD', 'not-a-workbook')).rejects.toThrow(
-      'Could not read the uploaded Excel file'
+    await expect(importLeads('VENUE_LEAD', TRUNCATED_XLSX)).rejects.toThrow(
+      'Could not read the uploaded Excel file',
     );
   });
 });

@@ -254,6 +254,13 @@ jobs:
   analyze:
     name: Build and analyze
     runs-on: ubuntu-latest
+    # Without this the job inherits GitHub's 6-hour default, and a scanner
+    # that wedges on the bridge server holds the concurrency group for that
+    # whole time — every queued scan behind it starves and the gate keeps
+    # serving a stale analysis. A healthy scan of this monorepo lands well
+    # inside 90 minutes, so anything past that is hung, not slow: fail it and
+    # let the next queued commit have the runner.
+    timeout-minutes: 90
     needs: [probe, coverage-workspaces, coverage-mobile]
     # `always()` so a skipped/failed coverage job still lets the scan run —
     # a scan without coverage beats no scan at all.

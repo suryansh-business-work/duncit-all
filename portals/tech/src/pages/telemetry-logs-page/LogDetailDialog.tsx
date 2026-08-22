@@ -13,8 +13,7 @@ import {
 import { DetailBlock, DetailField } from '../../components/DetailField';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { type TelemetryLogRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 /** Everything one persisted log knows about itself, in four readable groups. */
 interface Props {

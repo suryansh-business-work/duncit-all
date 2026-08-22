@@ -102,7 +102,7 @@ export default function IconPickerField({
           {...params}
           label={fieldLabel}
           helperText={
-            isKnown ? `Material icon: ${value}` : helperText
+            isKnown ? `Material icon: ${value}` : hint
           }
           InputProps={{
             ...params.InputProps,

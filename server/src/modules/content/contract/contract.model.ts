@@ -1,4 +1,5 @@
 import mongoose, { Schema, Types, type Document } from 'mongoose';
+import { signatorySchema, type ISignatory } from '@modules/content/signing/signing.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 /** Where a contract is in its life. Draft until it is in force; archived at the end. */
@@ -22,6 +23,18 @@ export interface IContract extends Document {
   counterparty: string;
   effective_from: Date | null;
   effective_to: Date | null;
+  /**
+   * Everyone who must sign, and their signature once they have.
+   *
+   * Empty means nobody has been asked yet. The same sub-schema legal documents
+   * carry, so a signature means the same thing on both (rule 34).
+   */
+  signatories: Types.DocumentArray<ISignatory>;
+  /**
+   * Set when the last outstanding signatory signs. Its presence IS the lock: a
+   * signed contract that can still be edited is not a signed contract.
+   */
+  signed_at: Date | null;
   created_by: Types.ObjectId | null;
   updated_by: Types.ObjectId | null;
   created_at: Date;
@@ -38,6 +51,8 @@ const contractSchema = new Schema<IContract>(
     counterparty: { type: String, default: '', trim: true, maxlength: 200 },
     effective_from: { type: Date, default: null },
     effective_to: { type: Date, default: null },
+    signatories: { type: [signatorySchema], default: [] },
+    signed_at: { type: Date, default: null, index: true },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },

@@ -2,10 +2,12 @@
 import type { UseFormReturn } from 'react-hook-form';
 import type { PodPickerProduct } from '@duncit/utils';
 
+import { fallbackT } from '@/i18n/fallback';
+
 /** The only pod types — FREE is virtual-only, physical pods are always PAID. */
 export const POD_TYPES = [
-  { value: 'FREE', label: 'Free' }, // TODO(i18n)
-  { value: 'PAID', label: 'Paid' }, // TODO(i18n)
+  { value: 'FREE', label: fallbackT('mweb.createPod.free') },
+  { value: 'PAID', label: fallbackT('mweb.common.paid') },
 ] as const;
 
 export interface PodProductRequest {

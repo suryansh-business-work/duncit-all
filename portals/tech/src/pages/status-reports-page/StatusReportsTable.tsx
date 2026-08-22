@@ -15,6 +15,48 @@ import {
 
 const getRowId = (row: StatusReportRow) => row.id;
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+// The cells live out here rather than inside the component so a re-render does
+// not hand the table a brand-new component type for every column (S6478). The
+// two that read copy take `t` through a factory, which keeps the column
+// definition a plain reference instead of an inline arrow.
+const renderWhen = (row: StatusReportRow) => (
+  <Typography variant="body2" color="text.secondary">
+    {formatDateTime(row.created_at)}
+  </Typography>
+);
+
+const renderStatus = (t: Translate) => (row: StatusReportRow) => (
+  <Chip size="small" color={STATUS_COLOR[row.status]} label={statusLabel(t, row.status)} />
+);
+
+const renderImpact = (t: Translate) => (row: StatusReportRow) => (
+  <Chip
+    size="small"
+    variant="outlined"
+    color={IMPACT_COLOR[row.impact]}
+    label={impactLabel(t, row.impact)}
+  />
+);
+
+const renderEnvironment = (row: StatusReportRow) => (
+  <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
+);
+
+/** The reporter's name, with the address it came from as the tooltip. */
+const renderReporter = (row: StatusReportRow) => (
+  <Typography variant="body2" noWrap title={row.email}>
+    {row.name}
+  </Typography>
+);
+
+const renderMessage = (row: StatusReportRow) => (
+  <Typography variant="body2" noWrap title={row.message}>
+    {row.message}
+  </Typography>
+);
+
 interface Props {
   fetchRows: TableFetch<StatusReportRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
@@ -30,34 +72,21 @@ export default function StatusReportsTable({ fetchRows, refetchRef, onOpen }: Re
         field: 'created_at',
         headerName: t('tech.common.when'),
         width: 175,
-        cellRenderer: (row) => (
-          <Typography variant="body2" color="text.secondary">
-            {formatDateTime(row.created_at)}
-          </Typography>
-        ),
+        cellRenderer: renderWhen,
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
         width: 130,
         filter: { type: 'select', options: statusOptions(t) },
-        cellRenderer: (row) => (
-          <Chip size="small" color={STATUS_COLOR[row.status]} label={statusLabel(t, row.status)} />
-        ),
+        cellRenderer: renderStatus(t),
       },
       {
         field: 'impact',
         headerName: t('tech.statusReports.impact'),
         width: 190,
         filter: { type: 'select', options: impactOptions(t) },
-        cellRenderer: (row) => (
-          <Chip
-            size="small"
-            variant="outlined"
-            color={IMPACT_COLOR[row.impact]}
-            label={impactLabel(t, row.impact)}
-          />
-        ),
+        cellRenderer: renderImpact(t),
       },
       {
         field: 'service_name',
@@ -70,19 +99,13 @@ export default function StatusReportsTable({ fetchRows, refetchRef, onOpen }: Re
         headerName: t('tech.common.env'),
         width: 120,
         filter: { type: 'select', options: envOptions(t) },
-        cellRenderer: (row) => (
-          <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
-        ),
+        cellRenderer: renderEnvironment,
       },
       {
         field: 'name',
         headerName: t('tech.statusReports.reporter'),
         width: 170,
-        cellRenderer: (row) => (
-          <Typography variant="body2" noWrap title={row.email}>
-            {row.name}
-          </Typography>
-        ),
+        cellRenderer: renderReporter,
       },
       {
         field: 'message',
@@ -90,11 +113,7 @@ export default function StatusReportsTable({ fetchRows, refetchRef, onOpen }: Re
         flex: 1,
         minWidth: 240,
         sortable: false,
-        cellRenderer: (row) => (
-          <Typography variant="body2" noWrap title={row.message}>
-            {row.message}
-          </Typography>
-        ),
+        cellRenderer: renderMessage,
       },
     ],
     [t]

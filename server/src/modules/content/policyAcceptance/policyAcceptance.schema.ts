@@ -52,6 +52,55 @@ export const policyAcceptanceTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  The accepting account as it reads TODAY.
+
+  Resolved rather than copied, so a renamed or closed account reads correctly —
+  and null when the account has been erased entirely, which the row itself
+  survives.
+  """
+  type PolicyAcceptanceAccount {
+    id: ID!
+    name: String!
+    email: String!
+    "Blank when no phone was ever collected — signup stopped asking."
+    phone: String!
+    status: String!
+    "True when the account has been deleted. Its acceptance rows remain."
+    is_deleted: Boolean!
+    created_at: String!
+  }
+
+  """
+  Everything behind ONE row of the acceptance log.
+
+  A row on its own carries a sha256 and a user id. This is what turns those
+  into an answer: who they are now, what the policy says now, the exact wording
+  they agreed to, every wording it has had, their own trail through this policy,
+  and what else they have accepted.
+  """
+  type PolicyAcceptanceDetail {
+    "The row that was opened."
+    acceptance: PolicyAcceptance!
+    "Null when the account has been erased."
+    account: PolicyAcceptanceAccount
+    "Null when the policy has been deleted — the row still reads correctly."
+    policy: Policy
+    """
+    The wording behind this row's content_hash.
+
+    Null when the policy predates version history, which is honest: the hash is
+    on the record, the words behind it are not on file.
+    """
+    accepted_version: PolicyVersion
+    "Every wording the policy has had, oldest first."
+    versions: [PolicyVersion!]!
+    "This account's other acceptances of THIS policy, newest first."
+    policy_history: [PolicyAcceptance!]!
+    "Everything else this account has accepted, newest first. Capped at 50."
+    user_acceptances: [PolicyAcceptance!]!
+  }
+
   extend type Query {
     """
     The policies a new account must accept, in display order.
@@ -67,6 +116,8 @@ export const policyAcceptanceTypeDefs = /* GraphQL */ `
     myPendingPolicies: [Policy!]!
     "Legal: who accepted what, and when. Newest first."
     policyAcceptancesTable(query: TableQueryInput): PolicyAcceptanceTablePage!
+    "Legal: everything behind one row of that log."
+    policyAcceptanceDetail(acceptance_id: ID!): PolicyAcceptanceDetail!
   }
 
   extend type Mutation {

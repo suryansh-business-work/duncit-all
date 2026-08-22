@@ -36,7 +36,6 @@ function TopBugRow({ bug }: Readonly<{ bug: TopBug }>) {
 }
 
 function TopBugsList({ bugs }: Readonly<{ bugs: readonly TopBug[] }>) {
-  const { t } = useTranslation();
   if (bugs.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">

@@ -9,6 +9,8 @@ interface Props {
   /** Admin-configured date + time, so "When" reads the same clock as every
    * other screen in the platform. */
   formatDateTime: DateFormatter['formatDateTime'];
+  /** Open the full record behind a row. */
+  onOpen: (row: PolicyAcceptance) => void;
 }
 
 const getAcceptanceRowId = (row: PolicyAcceptance) => row.id;
@@ -18,7 +20,11 @@ const getAcceptanceRowId = (row: PolicyAcceptance) => row.id;
  * arrives with is "what has just been accepted", and read-only throughout: an
  * acceptance is a record of something a person did, so nothing here edits one.
  */
-export default function PolicyAcceptanceLogsTable({ fetchRows, formatDateTime }: Readonly<Props>) {
+export default function PolicyAcceptanceLogsTable({
+  fetchRows,
+  formatDateTime,
+  onOpen,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   // Memoised: DuncitTable rebuilds its AG Grid column defs whenever this array
   // changes identity, which would drop the admin's column widths every render.
@@ -33,6 +39,7 @@ export default function PolicyAcceptanceLogsTable({ fetchRows, formatDateTime }:
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getAcceptanceRowId}
+      onRowClick={onOpen}
       emptyText={t('legalAcceptanceLogs.empty')}
       defaultSort={{ field: 'accepted_at', dir: 'desc' }}
       searchPlaceholder={t('legalAcceptanceLogs.search')}

@@ -143,13 +143,13 @@ async function closeTarget(id: string, target: Target | null, total: number): Pr
 async function openTarget(
   db: mongo.Db,
   name: string,
-  indexes: mongo.Document[],
+  indexes: mongo.IndexDescription[],
 ): Promise<Target> {
   const existing = await db.listCollections({ name }, { nameOnly: true }).toArray();
   if (existing.length > 0) await db.collection(name).drop();
   const collection = db.collection(name);
   if (indexes.length > 0) {
-    await collection.createIndexes(indexes as unknown as mongo.IndexDescription[]);
+    await collection.createIndexes(indexes);
   }
   return { name, collection, batch: [], documents: 0 };
 }

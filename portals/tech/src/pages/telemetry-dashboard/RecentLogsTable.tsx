@@ -3,8 +3,7 @@ import { useApolloClient } from '@apollo/client';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { TELEMETRY_LOGS_TABLE, levelColor, type LogRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const getLogRowId = (l: LogRow) => l.id;
 

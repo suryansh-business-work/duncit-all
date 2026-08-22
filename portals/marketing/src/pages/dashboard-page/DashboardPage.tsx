@@ -8,7 +8,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { PageHeader } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { formatINR, parseApiError } from '@duncit/utils';
 import ClicksOverTime from '../short-links-page/detail/ClicksOverTime';
 import BreakdownCard from '../short-links-page/detail/BreakdownCard';
@@ -16,7 +16,6 @@ import KpiCard from './KpiCard';
 import TopLinksCard from './TopLinksCard';
 import CampaignPerformanceCard from './CampaignPerformanceCard';
 import { MARKETING_DASHBOARD, type MarketingDashboard } from './queries';
-import { useTranslation } from '@duncit/app-settings';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 

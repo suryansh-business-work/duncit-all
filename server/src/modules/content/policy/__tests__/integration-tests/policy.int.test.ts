@@ -3,7 +3,7 @@ import { PolicyModel } from '../../policy.model';
 
 describe('policyService integration', () => {
   it('creates, fetches by id and slug, and normalises the slug', async () => {
-    const created = await policyService.create({ title: 'Privacy Policy', slug: 'Privacy Policy' });
+    const created = await policyService.create(null, { title: 'Privacy Policy', slug: 'Privacy Policy' });
     expect(created.slug).toBe('privacy-policy');
 
     expect((await policyService.getById(created.id))?.title).toBe('Privacy Policy');
@@ -11,13 +11,13 @@ describe('policyService integration', () => {
   });
 
   it('prevents duplicate slugs', async () => {
-    await policyService.create({ title: 'Terms', slug: 'terms' });
-    await expect(policyService.create({ title: 'Terms 2', slug: 'terms' })).rejects.toThrow(/already exists/i);
+    await policyService.create(null, { title: 'Terms', slug: 'terms' });
+    await expect(policyService.create(null, { title: 'Terms 2', slug: 'terms' })).rejects.toThrow(/already exists/i);
   });
 
   it('filters by active flag and search, and lists public only when active', async () => {
-    await policyService.create({ title: 'Active', slug: 'active', is_active: true });
-    await policyService.create({ title: 'Hidden', slug: 'hidden', is_active: false });
+    await policyService.create(null, { title: 'Active', slug: 'active', is_active: true });
+    await policyService.create(null, { title: 'Hidden', slug: 'hidden', is_active: false });
 
     expect(await policyService.list({ is_active: false })).toHaveLength(1);
     expect(await policyService.list({ search: 'active' })).toHaveLength(1);
@@ -25,8 +25,8 @@ describe('policyService integration', () => {
   });
 
   it('updates and removes a policy', async () => {
-    const p = await policyService.create({ title: 'Refund', slug: 'refund' });
-    const updated = await policyService.update(p.id, { title: 'Refund Policy', is_active: false });
+    const p = await policyService.create(null, { title: 'Refund', slug: 'refund' });
+    const updated = await policyService.update(null, p.id, { title: 'Refund Policy', is_active: false });
     expect(updated.title).toBe('Refund Policy');
     expect(updated.is_active).toBe(false);
 
@@ -35,9 +35,9 @@ describe('policyService integration', () => {
   });
 
   it('serves the policiesTable page with search, filter, sort and paging', async () => {
-    await policyService.create({ title: 'Privacy', slug: 'privacy', sort_order: 2 });
-    await policyService.create({ title: 'Terms', slug: 'terms', sort_order: 1 });
-    await policyService.create({ title: 'Refunds', slug: 'refunds', sort_order: 3, is_active: false });
+    await policyService.create(null, { title: 'Privacy', slug: 'privacy', sort_order: 2 });
+    await policyService.create(null, { title: 'Terms', slug: 'terms', sort_order: 1 });
+    await policyService.create(null, { title: 'Refunds', slug: 'refunds', sort_order: 3, is_active: false });
 
     // Plain envelope with the default sort (sort_order asc, like the list) and clamp defaults.
     const all = await policyService.table();

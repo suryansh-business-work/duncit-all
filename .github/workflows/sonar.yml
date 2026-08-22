@@ -133,7 +133,24 @@ jobs:
             if [ $code -ne 0 ]; then
               failed+=("$ws($code)")
               echo "::group::coverage FAILED $ws (exit $code)"
-              tail -60 "/tmp/cov-$$.log"
+              # A suite that DIES contributes no coverage for everything it
+              # would have exercised, so the list of failing suites IS the
+              # coverage gap. `tail` alone showed only the last handful of
+              # stack traces and hid which files died — which made a workspace
+              # full of broken suites look identical to one that merely missed
+              # its own threshold. jest and vitest both print "FAIL <path>", so
+              # one grep serves every workspace.
+              # Colour codes come off first. vitest emits them even down a
+              # pipe, and an anchored grep can never match through them.
+              plain="/tmp/cov-plain-$$.log"
+              sed 's/\x1b\[[0-9;]*m//g' "/tmp/cov-$$.log" > "$plain"
+              echo "--- failing suites ---"
+              grep -a 'FAIL' "$plain" | sed 's/^[[:space:]]*//' | cut -c1-160 | sort -u | head -200
+              echo "--- error headlines ---"
+              grep -aE 'Error:|Error :|Invariant|Unable to find|Cannot find|not a function|No QueryClient|not wrapped' "$plain" |
+                sed 's/^[[:space:]]*//' | cut -c1-160 | sort | uniq -c | sort -rn | head -40
+              echo "--- totals / thresholds ---"
+              grep -aE 'Test Suites:|Tests:|Test Files|does not meet|ERROR: Coverage' "$plain" | tail -20
               echo "::endgroup::"
             else
               echo "ok   $ws"

@@ -22,6 +22,11 @@ export const contractResolvers = {
       requireRole(ctx, LEGAL_ROLES);
       return contractService.getById(args.id);
     },
+    contractPdfBase64: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      const pdf = await contractService.pdf(args.id);
+      return pdf.toString('base64');
+    },
   },
   Mutation: {
     createContract: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -31,6 +36,18 @@ export const contractResolvers = {
     updateContract: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, LEGAL_ROLES);
       return contractService.update(user.id, args.id, args.input);
+    },
+    signContract: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, LEGAL_ROLES);
+      return contractService.sign(user.id, args.id, args.input);
+    },
+    shareContract: (
+      _p: unknown,
+      args: { id: string; to: string; message?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, LEGAL_ROLES);
+      return contractService.share(user.id, args.id, args.to, args.message ?? '');
     },
     archiveContract: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, LEGAL_ROLES);

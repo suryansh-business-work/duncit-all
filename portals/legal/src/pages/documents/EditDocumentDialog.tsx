@@ -7,15 +7,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   IconButton,
   Stack,
-  Switch,
   TextField,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { UPDATE_LEGAL_DOCUMENT, type LegalDocumentListItem } from '../../graphql/documents';
+import DocumentActiveSwitch from './DocumentActiveSwitch';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -59,7 +58,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
       return;
     }
     try {
-      await save({ variables: { id: doc?.id, input: { name: trimmed, is_active: active } } });
+      await save({ variables: { id: doc?.id, input: { name: trimmed } } });
       onSaved();
       onClose();
     } catch (e) {
@@ -108,18 +107,19 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
             helperText={trimmed ? ' ' : 'The name this document is listed and searched by.'}
           />
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={active}
-                onChange={(e) => setActive(e.target.checked)}
-                disabled={locked}
-              />
-            }
-            label={active ? 'Active' : 'Inactive'}
+          {/* The SAME switch the table renders, writing through its own
+              mutation — so it still works on a signed document, where the
+              title above it is locked. One control, one behaviour (rule 34). */}
+          <DocumentActiveSwitch
+            documentId={doc?.id ?? ''}
+            isActive={active}
+            onChanged={() => {
+              setActive((current) => !current);
+              onSaved();
+            }}
           />
           <Typography variant="caption" color="text.secondary">
-            Turning this off hides the document from the app without deleting it.
+            {t('legal.documents.activeHint')}
           </Typography>
         </Stack>
       </DialogContent>

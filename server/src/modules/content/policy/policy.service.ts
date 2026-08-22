@@ -1,5 +1,10 @@
 import { GraphQLError } from 'graphql';
-import { PolicyModel, type IPolicy } from './policy.model';
+import { Types } from 'mongoose';
+import { PolicyModel, type IPolicy, type IPolicyVersion } from './policy.model';
+import { policyContentHash } from '@modules/content/policyAcceptance/policyAcceptance.model';
+import { policyNotifyService } from './policy.notify';
+import { userDisplayMap } from '@modules/access/user/user.display';
+import { logs } from '@observability/log';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import {
   applyTableQueryInMemory,
@@ -9,6 +14,9 @@ import {
 } from '@utils/table-query';
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** How many earlier wordings one policy keeps, so history never grows unbounded. */
+const MAX_VERSIONS = 50;
 
 /** Exported so the acceptance module can return the very same Policy shape
  * rather than growing a second, drifting copy of it. */
@@ -22,9 +30,86 @@ export const toPub = (p: IPolicy) => ({
   is_active: p.is_active,
   requires_signup_acceptance: p.requires_signup_acceptance !== false,
   sort_order: p.sort_order,
+  // The live wording counts as a version, so a policy nobody has edited reads
+  // as "1 version" rather than none — which is what it is.
+  version_count: (p.versions?.length ?? 0) + 1,
+  content_hash: policyContentHash(p.content || ''),
+  last_notified_at: p.last_notified_at ? p.last_notified_at.toISOString() : null,
+  last_notified_count: p.last_notified_count ?? 0,
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });
+
+/**
+ * Every wording this policy has ever had, oldest first, numbered from 1.
+ *
+ * The stored array holds only SUPERSEDED wordings — a snapshot is written just
+ * before an edit overwrites it — so the live document is appended here as the
+ * newest entry. Building the list in one place is what lets an acceptance row
+ * be matched back to the exact words behind its `content_hash`: the log records
+ * the hash and nothing else, and a history missing its newest entry would fail
+ * to resolve precisely the acceptances that matter most.
+ */
+export function policyVersionHistory(p: IPolicy) {
+  const stored = [...(p.versions ?? [])].sort(
+    (a, b) => (a.created_at?.getTime?.() ?? 0) - (b.created_at?.getTime?.() ?? 0)
+  );
+  const entries = stored.map((v: IPolicyVersion, index) => ({
+    id: v._id.toString(),
+    version_no: index + 1,
+    title: v.title ?? '',
+    slug: v.slug ?? '',
+    policy_type: v.policy_type ?? '',
+    content: v.content ?? '',
+    content_hash: v.content_hash || policyContentHash(v.content ?? ''),
+    updated_by: v.updated_by ? v.updated_by.toString() : null,
+    created_at: v.created_at?.toISOString?.() ?? '',
+    is_current: false,
+  }));
+  entries.push({
+    id: p._id.toString(),
+    version_no: entries.length + 1,
+    title: p.title,
+    slug: p.slug,
+    policy_type: p.policy_type || '',
+    content: p.content || '',
+    content_hash: policyContentHash(p.content || ''),
+    updated_by: p.updated_by ? p.updated_by.toString() : null,
+    created_at: p.updated_at?.toISOString?.() ?? '',
+    is_current: true,
+  });
+  return entries;
+}
+
+/**
+ * Freeze the current wording before an edit replaces it.
+ *
+ * The hash is computed here rather than read back later, so a version written
+ * today still matches an acceptance row written years ago even if the way the
+ * hash is derived is ever changed.
+ *
+ * `updated_by` is the policy's OWN current value, not the person doing the
+ * edit: the snapshot is the wording being replaced, so the name on it has to be
+ * whoever wrote THAT — naming the replacer would credit every version to the
+ * person who came after it.
+ */
+function snapshot(doc: IPolicy) {
+  doc.versions.push({
+    title: doc.title,
+    slug: doc.slug,
+    policy_type: doc.policy_type,
+    content: doc.content,
+    content_hash: policyContentHash(doc.content || ''),
+    updated_by: doc.updated_by ?? null,
+  } as any);
+  if (doc.versions.length > MAX_VERSIONS) {
+    doc.versions.splice(0, doc.versions.length - MAX_VERSIONS);
+  }
+}
+
+/** The acting user as an id the model can store, or null for an unknown caller. */
+const actorId = (userId: string | null): Types.ObjectId | null =>
+  userId && Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null;
 
 function normaliseSlug(input: string): string {
   return String(input || '')
@@ -41,6 +126,20 @@ function assertSlug(slug: string) {
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
+}
+
+/** Rename a policy's slug, refusing one another policy already answers to. */
+async function applySlug(doc: IPolicy, raw: string): Promise<void> {
+  const slug = normaliseSlug(raw);
+  assertSlug(slug);
+  if (slug === doc.slug) return;
+  const exists = await PolicyModel.findOne({ slug, _id: { $ne: doc._id } });
+  if (exists) {
+    throw new GraphQLError('A policy with this slug already exists', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  doc.slug = slug;
 }
 
 /** Allowlists for the shared table engine (policiesTable — DUNCIT TABLE CONTRACT v1). */
@@ -169,7 +268,7 @@ export const policyService = {
     return doc ? toPub(doc) : null;
   },
 
-  async create(input: any) {
+  async create(userId: string | null, input: any) {
     if (!input.title?.trim())
       throw new GraphQLError('Title is required', { extensions: { code: 'BAD_USER_INPUT' } });
     const slug = normaliseSlug(input.slug);
@@ -184,6 +283,8 @@ export const policyService = {
       title: input.title.trim(),
       policy_type: (input.policy_type ?? '').trim(),
       content: input.content ?? '',
+      // Whoever wrote the first wording, so version 1 has an author too.
+      updated_by: actorId(userId),
       is_active: input.is_active ?? true,
       requires_signup_acceptance: input.requires_signup_acceptance ?? true,
       sort_order: input.sort_order ?? 0,
@@ -191,21 +292,27 @@ export const policyService = {
     return toPub(doc);
   },
 
-  async update(id: string, input: any) {
+  /**
+   * Apply an edit, keeping the wording it replaced.
+   *
+   * A snapshot is written on EVERY save rather than only on a content change:
+   * a retitled policy is a different policy to somebody reading the log, and
+   * deciding after the fact which fields were "material enough" to record is
+   * how a history ends up with gaps nobody can explain.
+   *
+   * `notify_accepted_users` emails everyone who has already accepted it. It is
+   * a deliberate tick, never inferred from the edit — a typo fix in a heading
+   * is not a reason to mail a hundred thousand people — and it only fires when
+   * the WORDING actually changed, because a notice about an unchanged policy
+   * is a notice nobody can act on.
+   */
+  async update(userId: string | null, id: string, input: any) {
     const doc = await PolicyModel.findById(id);
     if (!doc) throw new GraphQLError('Policy not found', { extensions: { code: 'NOT_FOUND' } });
-    if (input.slug !== undefined) {
-      const slug = normaliseSlug(input.slug);
-      assertSlug(slug);
-      if (slug !== doc.slug) {
-        const exists = await PolicyModel.findOne({ slug, _id: { $ne: doc._id } });
-        if (exists)
-          throw new GraphQLError('A policy with this slug already exists', {
-            extensions: { code: 'CONFLICT' },
-          });
-        doc.slug = slug;
-      }
-    }
+    const hashBefore = policyContentHash(doc.content || '');
+    snapshot(doc);
+    doc.updated_by = actorId(userId);
+    if (input.slug !== undefined) await applySlug(doc, input.slug);
     if (input.title !== undefined) {
       if (!input.title.trim())
         throw new GraphQLError('Title is required', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -219,7 +326,82 @@ export const policyService = {
     }
     if (input.sort_order !== undefined) doc.sort_order = Number(input.sort_order) || 0;
     await doc.save();
+
+    const wordingChanged = policyContentHash(doc.content || '') !== hashBefore;
+    if (input.notify_accepted_users && wordingChanged) {
+      await this.notifyAcceptedUsers(doc, String(input.notify_summary ?? '').trim());
+    }
     return toPub(doc);
+  },
+
+  /**
+   * Send the "this policy changed" notice, and record that it went out.
+   *
+   * Awaited rather than fired and forgotten: the portal reports how many people
+   * were told, and a count the caller never sees is a count nobody can trust.
+   * The individual sends inside are already best-effort, so a dead mailbox
+   * costs one log row and not the save that has just landed.
+   */
+  async notifyAcceptedUsers(doc: IPolicy, summary: string): Promise<number> {
+    let notified = 0;
+    try {
+      notified = await policyNotifyService.notifyAccepted(doc, summary);
+    } catch (error) {
+      logs.server.error('policy.service', 'notifyAcceptedUsers', {
+        error,
+        msg: 'policy update notice failed',
+        policyId: doc._id.toString(),
+      });
+      return 0;
+    }
+    doc.last_notified_at = new Date();
+    doc.last_notified_count = notified;
+    doc.last_notified_hash = policyContentHash(doc.content || '');
+    await doc.save();
+    return notified;
+  },
+
+  /** How many accounts a change notice would reach right now. */
+  notifyRecipientCount(id: string): Promise<number> {
+    return policyNotifyService.recipientCount(id);
+  },
+
+  /**
+   * Send the notice on its own, without editing anything.
+   *
+   * The same mail the update checkbox sends, reachable when Legal decides
+   * afterwards that people should have been told — or when the first attempt
+   * went out while the mailbox was misconfigured.
+   */
+  async notifyPolicyAcceptedUsers(id: string, summary: string): Promise<number> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid policy id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await PolicyModel.findById(id);
+    if (!doc) throw new GraphQLError('Policy not found', { extensions: { code: 'NOT_FOUND' } });
+    return this.notifyAcceptedUsers(doc, summary);
+  },
+
+  /**
+   * One policy's full wording history, oldest first.
+   *
+   * Editor names are resolved at read time in one projected query, the same way
+   * the acceptance log resolves the accepting account: a name copied onto a
+   * snapshot years ago is a name that stopped being true the day they changed
+   * it.
+   */
+  async versions(id: string) {
+    if (!Types.ObjectId.isValid(id)) return [];
+    const doc = await PolicyModel.findById(id);
+    if (!doc) return [];
+    const entries = policyVersionHistory(doc);
+    const names = await userDisplayMap(
+      entries.map((entry) => entry.updated_by ?? '').filter(Boolean)
+    );
+    return entries.map((entry) => ({
+      ...entry,
+      updated_by_name: entry.updated_by ? (names.get(entry.updated_by)?.name ?? '') : '',
+    }));
   },
 
 

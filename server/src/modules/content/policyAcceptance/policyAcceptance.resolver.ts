@@ -21,6 +21,14 @@ export const policyAcceptanceResolvers = {
       requireRole(ctx, LEGAL_RW);
       return policyAcceptanceService.table(args.query);
     },
+    policyAcceptanceDetail: (
+      _p: unknown,
+      args: { acceptance_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, LEGAL_RW);
+      return policyAcceptanceService.detail(args.acceptance_id);
+    },
   },
   Mutation: {
     acceptPolicies: (

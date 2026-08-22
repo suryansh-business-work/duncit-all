@@ -3,7 +3,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { humanizeType, type ApprovalRequest } from './helpers';
-import { useTranslation } from '@duncit/shell';
 
 const renderSubject = (row: ApprovalRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>

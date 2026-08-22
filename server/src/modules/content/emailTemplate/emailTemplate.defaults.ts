@@ -335,10 +335,45 @@ const ATTENDANCE_MARKED: TemplateDefault = {
   ),
 };
 
+/**
+ * The notice sent when Legal changes a policy somebody has already accepted.
+ *
+ * It carries the LINK rather than the new wording: a policy is the whole
+ * document or it is nothing, and pasting a paragraph of it into an email is how
+ * a reader ends up agreeing to a summary. `summary` is Legal's own optional
+ * note on what changed — API data, not copy, which is why it is unkeyed.
+ */
+const POLICY_UPDATED: TemplateDefault = {
+  slug: 'policy-updated',
+  name: 'Policy Updated',
+  description:
+    'Everyone who has accepted a policy, when Legal publishes new wording for it.',
+  subject: 'We’ve updated the {{policy_title}}',
+  mjml: shell(
+    'email.policyUpdated.title',
+    [
+      intro('email.policyUpdated.heading', 'email.policyUpdated.intro', 'name'),
+      callout(PAUSED, 'email.policyUpdated.policyLabel', 'policy_title'),
+      detailRows([
+        { labelKey: 'email.policyUpdated.updatedLabel', valueVar: 'updated_at' },
+        { labelKey: 'email.policyUpdated.summaryLabel', valueVar: 'summary' },
+      ]),
+      `    <mj-section background-color="#ffffff" padding="8px 20px 24px 20px">
+      <mj-column>
+        <mj-button href="{{policy_url}}">{{t:email.policyUpdated.cta}}</mj-button>
+        <mj-text font-size="13px" color="#888888" align="center">{{policy_url}}</mj-text>
+        <mj-text font-size="13px" color="#888888">{{t:email.policyUpdated.reaccept}}</mj-text>
+      </mj-column>
+    </mj-section>`,
+    ].join('\n')
+  ),
+};
+
 export const TEMPLATE_DEFAULTS: TemplateDefault[] = [
   ATTENDANCE_MARKED,
   PORTAL_ACCESS_APPROVED,
   PORTAL_ACCESS_DECLINED,
   POLICY_ACCEPTANCE,
+  POLICY_UPDATED,
   ...STATUS_TEMPLATES,
 ];

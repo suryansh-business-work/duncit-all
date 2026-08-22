@@ -3,7 +3,6 @@ import type { UseFormReturn } from 'react-hook-form';
 import type { PodPickerProduct } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 
-// TODO(i18n) — labels
 export const podTypes = (t: Translate) => [
   { value: 'FREE', label: t('mweb.createPod.free') },
   { value: 'PAID', label: t('mweb.common.paid') },

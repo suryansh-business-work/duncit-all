@@ -36,6 +36,25 @@ export function resetTableControls(): void {
 
 export const tableQueryToGql = (q: unknown) => ({ query: q });
 
+/**
+ * The column builders come from the REAL package rather than a copy.
+ *
+ * This file is aliased over '@duncit/table', so any export it omits reaches a
+ * component as `undefined` — which is exactly how `dateColumn` became "is not
+ * a function" and took fifteen suites down with it. They are pure builders
+ * over MUI and date-fns with no AG-Grid behind them, so there is nothing to
+ * stub; a re-export also cannot drift behind the package again, which a
+ * hand-written copy already had.
+ */
+export {
+  EM_DASH,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  entityIdColumn,
+  formatDateCell,
+} from '../../../../../packages/table/src/cells';
+
 export const useApolloTableFetch =
   <T,>(_client: unknown, _query: unknown, _key: string) =>
   (_state: unknown): Promise<{ rows: T[]; total: number }> =>

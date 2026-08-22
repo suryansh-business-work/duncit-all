@@ -24,8 +24,7 @@ import { QueryGuard } from '@duncit/ui';
 import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
 import PublicApiKeyCard from './PublicApiKeyCard';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const DEFAULTS: TelemetrySettingsForm = {
   signoz_enabled: true,

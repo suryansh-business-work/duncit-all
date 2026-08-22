@@ -22,8 +22,7 @@ import {
   type MeetingStatus,
   type OnboardingMeeting,
 } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const STATUSES: MeetingStatus[] = ['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED'];
 const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');

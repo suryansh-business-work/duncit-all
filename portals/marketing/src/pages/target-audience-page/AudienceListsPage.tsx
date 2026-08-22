@@ -4,13 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { getAudienceListColumns } from './audience-list-columns';
 import { AUDIENCE_LISTS_TABLE, DELETE_AUDIENCE_LIST } from './queries';
 import type { AudienceListRow } from './helpers';
-import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: AudienceListRow) => row.id;
 

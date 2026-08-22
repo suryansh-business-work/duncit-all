@@ -134,12 +134,14 @@ async function backupableCollections(db: mongo.Db): Promise<string[]> {
 }
 
 /** Index definitions minus the server-generated fields Mongo rejects on create. */
-function toIndexSpec(index: mongo.Document): mongo.Document {
+function toIndexSpec(index: mongo.Document): mongo.IndexDescription {
   const spec: Record<string, unknown> = { ...index };
   delete spec.v;
   delete spec.ns;
   delete spec.background;
-  return spec;
+  // `key` is restated so the result satisfies IndexDescription without a cast —
+  // every index Mongo reports carries one.
+  return { ...spec, key: index.key };
 }
 
 function touch(id: string, fields: Record<string, unknown> = {}): Promise<unknown> {

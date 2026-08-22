@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { requiredText } from '@duncit/forms';
 import type { AppPopupRow } from '../queries';
-import { useTranslation } from '@duncit/app-settings';
 import { fallbackT, type Translate } from '@duncit/shell';
 
 /** A saved Target Audience list, offered as a popup audience. */

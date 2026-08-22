@@ -4,8 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const getBugRowId = (b: BugRow) => b.id;
 

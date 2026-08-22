@@ -24,7 +24,7 @@ const RECORD_STEP = gql`
 `;
 
 /** The click this browser is attributed to, from an earlier landing. */
-export const storedClickId = storedShortLinkClickId;
+export { storedShortLinkClickId as storedClickId } from '@duncit/utils';
 
 /**
  * The landing capture, in flight.

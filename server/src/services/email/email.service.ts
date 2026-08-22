@@ -579,6 +579,37 @@ export function sendPolicyAcceptanceEmail(opts: {
   });
 }
 
+/**
+ * Tell somebody a policy they already accepted has been rewritten.
+ *
+ * `legal`, which is a REQUIRED category: a notice that the terms somebody
+ * agreed to have changed is an obligation, not a preference, so it never
+ * reaches the opt-out gate. `summary` is Legal's own note and may be empty —
+ * the template renders the label either way rather than hiding a row.
+ */
+export function sendPolicyUpdatedEmail(opts: {
+  to: string;
+  name: string;
+  policy_title: string;
+  summary: string;
+  policy_url: string;
+  updated_at: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `We've updated the ${opts.policy_title}`,
+    template: 'policy-updated',
+    category: 'legal',
+    vars: {
+      name: opts.name,
+      policy_title: opts.policy_title,
+      summary: opts.summary,
+      policy_url: opts.policy_url,
+      updated_at: opts.updated_at,
+    },
+  });
+}
+
 export function sendAdminCredentialsEmail(opts: {
   to: string;
   name: string;

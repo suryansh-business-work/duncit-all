@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { signatorySchema, type ISignatory } from '@modules/content/signing/signing.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export interface ILegalDocumentVersion {
@@ -22,45 +23,17 @@ const versionSchema = new Schema<ILegalDocumentVersion>(
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );
 
-/** How a signature was captured. The portal offers whichever ones are enabled. */
-export type SignatureMethod = 'DRAW' | 'TYPE' | 'UPLOAD';
-export const SIGNATURE_METHODS: SignatureMethod[] = ['DRAW', 'TYPE', 'UPLOAD'];
-
 /**
- * One person who must sign, and their signature once they have.
- *
- * An ARRAY from the first commit even though one admin signs today: "all
- * required signatories have signed" is the rule the lock hangs off, and a
- * single stored signature would have to be torn out to add a counter-party.
- * A row with no `signed_at` is somebody still owed.
+ * The signature block now lives in `@modules/content/signing`, because
+ * contracts sign through exactly the same rules (rule 34). Re-exported here so
+ * nothing that already imported it from this file has to move.
  */
-export interface ILegalDocumentSignatory {
-  _id: Types.ObjectId;
-  user_id: Types.ObjectId | null;
-  full_name: string;
-  designation: string;
-  email: string;
-  initials: string;
-  /** The signature itself — a data URL (drawn/typed) or an uploaded image URL. */
-  signature_image: string;
-  signature_method: SignatureMethod | null;
-  signed_at: Date | null;
-  created_at: Date;
-}
-
-const signatorySchema = new Schema<ILegalDocumentSignatory>(
-  {
-    user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    full_name: { type: String, default: '', trim: true, maxlength: 160 },
-    designation: { type: String, default: '', trim: true, maxlength: 160 },
-    email: { type: String, default: '', trim: true, lowercase: true, maxlength: 254 },
-    initials: { type: String, default: '', trim: true, maxlength: 12 },
-    signature_image: { type: String, default: '' },
-    signature_method: { type: String, enum: [...SIGNATURE_METHODS, null], default: null },
-    signed_at: { type: Date, default: null },
-  },
-  { timestamps: { createdAt: 'created_at', updatedAt: false } }
-);
+export {
+  SIGNATURE_METHODS,
+  signatorySchema,
+  type SignatureMethod,
+  type ISignatory as ILegalDocumentSignatory,
+} from '@modules/content/signing/signing.model';
 
 export interface ILegalDocument extends Document {
   /**
@@ -76,7 +49,7 @@ export interface ILegalDocument extends Document {
   /** Off hides the document from the app without deleting it. */
   is_active: boolean;
   /** Everyone who must sign. Empty means nobody has been asked yet. */
-  signatories: Types.DocumentArray<ILegalDocumentSignatory>;
+  signatories: Types.DocumentArray<ISignatory>;
   /**
    * Set when the last outstanding signatory signs. Its presence IS the lock:
    * a signed contract that can still be edited is not a signed contract.

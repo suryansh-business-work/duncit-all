@@ -2,6 +2,18 @@ import { vi } from 'vitest';
 
 /** Stubs for @duncit/shell chrome + factories used by the finance portal. */
 
+/**
+ * Translation is the real thing.
+ *
+ * The shell hook is built to work with no provider above it — it falls back to
+ * every shipped namespace — so a finance page rendered in a test still reads
+ * "Invoice Management" rather than `finance.invoice.title`. A stub returning
+ * the key would fail every copy assertion, and leaving it out made `t` itself
+ * undefined.
+ */
+export { useTranslation } from '../../../../../packages/shell/src/i18n/useTranslation';
+export { fallbackT } from '../../../../../packages/shell/src/i18n/fallback';
+
 export const AppIcon = ({ name }: any) => <span data-testid="app-icon">{name}</span>;
 
 export const WelcomeDashboard = ({ name, tagline, children }: any) => (

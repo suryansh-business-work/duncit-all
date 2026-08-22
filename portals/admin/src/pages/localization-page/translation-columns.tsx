@@ -1,7 +1,6 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import { valueFor, type LocaleRow, type TranslationRow } from './queries';
-import { useTranslation } from '@duncit/shell';
 
 interface ColumnArgs {
   /** Headings are copy — the page hands its translator down. */

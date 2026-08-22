@@ -22,6 +22,7 @@ jest.mock('../../inventoryStockMovement.model', () => ({
   InventoryStockMovementModel: { create: jest.fn(), find: jest.fn() },
 }));
 jest.mock('@modules/access/user/user.model', () => ({ UserModel: { findById: jest.fn() } }));
+jest.mock('@modules/access/user/relations', () => ({ UserRoleModel: { find: jest.fn() } }));
 jest.mock('@modules/venues/ecommBrand/ecommBrand.model', () => ({
   EcommBrandModel: { findById: jest.fn(), find: jest.fn() },
 }));
@@ -47,6 +48,7 @@ jest.mock('@observability/log', () => ({
 
 import type { AuthUser } from '@context';
 import { UserModel } from '@modules/access/user/user.model';
+import { UserRoleModel } from '@modules/access/user/relations';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -63,6 +65,7 @@ const productModel = InventoryProductModel as unknown as Record<string, jest.Moc
 const activityModel = InventoryActivityLogModel as unknown as Record<string, jest.Mock>;
 const movementModel = InventoryStockMovementModel as unknown as Record<string, jest.Mock>;
 const userModel = UserModel as unknown as Record<string, jest.Mock>;
+const roleModel = UserRoleModel as unknown as Record<string, jest.Mock>;
 const brandModel = EcommBrandModel as unknown as Record<string, jest.Mock>;
 const warehouseModel = BrandPickupLocationModel as unknown as Record<string, jest.Mock>;
 const podModel = PodModel as unknown as Record<string, jest.Mock>;
@@ -76,8 +79,8 @@ const CATEGORY_ID = '65c000000000000000000003';
 const SUB_ID = '65c000000000000000000004';
 const WAREHOUSE_ID = '65c000000000000000000005';
 
-const PARTNER = { id: 'u-partner-1', email: 'brand@duncit.com' } as unknown as AuthUser;
-const REVIEWER = { id: 'u-admin-1', email: 'ops@duncit.com' } as unknown as AuthUser;
+const PARTNER = { id: '65c000000000000000000011', email: 'brand@duncit.com' } as unknown as AuthUser;
+const REVIEWER = { id: '65c000000000000000000012', email: 'ops@duncit.com' } as unknown as AuthUser;
 
 /** Chainable query stub: every terminal step resolves to `result`. */
 const query = (result: unknown) => {
@@ -133,9 +136,17 @@ const listingInput = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-/** Let requireEcommManager through (or not) for the next call. */
-const withRoles = (roles: string[]) =>
+/**
+ * Let requireEcommManager through (or not) for the next call.
+ *
+ * Roles resolve from the user_roles relation first and fall back to the
+ * metadata cache only for an account with no rows yet, so both are driven —
+ * mocking the cache alone left the gate reading an empty relation.
+ */
+const withRoles = (roles: string[]) => {
+  roleModel.find.mockReturnValue(query(roles.map((role) => ({ role }))));
   userModel.findById.mockReturnValue(query({ metadata: { role_keys: roles } }));
+};
 
 beforeEach(() => {
   withRoles(['ECOMM_MANAGER']);
@@ -162,7 +173,8 @@ describe('the Ecomm Manager gate', () => {
     expect(productModel.create).not.toHaveBeenCalled();
   });
 
-  it('treats a user document with no role metadata as role-less', async () => {
+  it('treats a user with neither relation rows nor role metadata as role-less', async () => {
+    roleModel.find.mockReturnValue(query([]));
     userModel.findById.mockReturnValue(query(null));
     await expect(inventoryService.submitProductListing(listingInput(), PARTNER)).rejects.toThrow(
       /Ecomm Manager/

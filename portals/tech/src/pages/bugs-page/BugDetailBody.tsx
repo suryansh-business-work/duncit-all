@@ -3,8 +3,7 @@ import { DetailBlock, DetailField as Field } from '../../components/DetailField'
 import { userLabel } from '../../components/telemetry-identity';
 import { affectedSummary, type BugRow } from './queries';
 import BugOccurrences from './BugOccurrences';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 /**
  * Everything one bug knows about itself.

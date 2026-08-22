@@ -25,6 +25,18 @@ export const policyResolvers = {
     },
     policy: (_p: unknown, args: { policy_doc_id: string }) =>
       policyService.getById(args.policy_doc_id),
+    policyVersions: (_p: unknown, args: { policy_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return policyService.versions(args.policy_doc_id);
+    },
+    policyNotifyRecipientCount: (
+      _p: unknown,
+      args: { policy_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return policyService.notifyRecipientCount(args.policy_doc_id);
+    },
     policyBySlug: (_p: unknown, args: { slug: string }) => policyService.getBySlug(args.slug),
     publicPolicies: () => policyService.publicList(),
     policyPdfBase64: async (_p: unknown, args: { slug: string }) => {
@@ -43,16 +55,30 @@ export const policyResolvers = {
   },
   Mutation: {
     createPolicy: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
-      return policyService.create(args.input);
+      const actor = requireRole(ctx, ADMIN_RW);
+      return policyService.create(actor.id, args.input);
     },
     updatePolicy: (
       _p: unknown,
       args: { policy_doc_id: string; input: any },
       ctx: GraphQLContext
     ) => {
+      // The acting user is passed down so the version snapshot records WHO
+      // replaced the wording — a history that cannot name an editor answers
+      // half the question an auditor is asking.
+      const actor = requireRole(ctx, ADMIN_RW);
+      return policyService.update(actor.id, args.policy_doc_id, args.input);
+    },
+    notifyPolicyAcceptedUsers: async (
+      _p: unknown,
+      args: { policy_doc_id: string; summary?: string | null },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, ADMIN_RW);
-      return policyService.update(args.policy_doc_id, args.input);
+      return policyService.notifyPolicyAcceptedUsers(
+        args.policy_doc_id,
+        String(args.summary ?? '').trim()
+      );
     },
     deletePolicy: (_p: unknown, args: { policy_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);

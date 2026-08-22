@@ -91,7 +91,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   service: [],
 
   // A legal record: something they raised, or something they agreed to.
-  legal: ['grievance-received', 'policy-acceptance'],
+  legal: ['grievance-received', 'policy-acceptance', 'policy-updated'],
 };
 
 export const TEMPLATE_CATEGORIES: Record<string, EmailCategory> = Object.fromEntries(
@@ -154,6 +154,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'pod-refund': "You're receiving this because you paid for this pod on Duncit.",
   'pod-updated': "You're receiving this because you joined this pod on Duncit.",
   'policy-acceptance': '{{t:email.policyAcceptance.footer}}',
+  'policy-updated': '{{t:email.policyUpdated.footer}}',
   'venue-slot-request': "{{t:email.venueSlotRequest.footer}}",
   welcome: "You're receiving this because you use Duncit.",
 };

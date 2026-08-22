@@ -43,7 +43,7 @@ export interface ArchiveHeader {
 
 export type ArchiveEntry =
   | { kind: 'header'; header: ArchiveHeader }
-  | { kind: 'collection'; name: string; indexes: mongo.Document[] }
+  | { kind: 'collection'; name: string; indexes: mongo.IndexDescription[] }
   | { kind: 'document'; doc: mongo.Document };
 
 /** Frame one BSON payload: its byte length, then the payload. */
@@ -56,7 +56,7 @@ function frame(value: Frame): Buffer {
 
 export interface ArchiveWriter {
   /** Begin a collection. Every document written after this belongs to it. */
-  startCollection(name: string, indexes: mongo.Document[]): Promise<void>;
+  startCollection(name: string, indexes: mongo.IndexDescription[]): Promise<void>;
   writeDocument(doc: mongo.Document): Promise<void>;
   /** Flush and close. Resolves once the bytes are on disk. */
   finish(): Promise<void>;
@@ -128,7 +128,7 @@ function toEntry(value: Frame): ArchiveEntry | null {
       kind: 'header',
       header: {
         version: Number(value.v ?? 0),
-        database: String(value.database ?? ''),
+        database: typeof value.database === 'string' ? value.database : '',
         created_at: value.created_at instanceof Date ? value.created_at : new Date(0),
       },
     };
@@ -136,8 +136,8 @@ function toEntry(value: Frame): ArchiveEntry | null {
   if (value.k === 'coll') {
     return {
       kind: 'collection',
-      name: String(value.name ?? ''),
-      indexes: Array.isArray(value.indexes) ? (value.indexes as mongo.Document[]) : [],
+      name: typeof value.name === 'string' ? value.name : '',
+      indexes: Array.isArray(value.indexes) ? (value.indexes as mongo.IndexDescription[]) : [],
     };
   }
   if (value.k === 'doc') return { kind: 'document', doc: value.d as mongo.Document };

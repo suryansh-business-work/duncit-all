@@ -328,7 +328,7 @@ describe('startWhatsappScheduler', () => {
       stop();
       // Nothing thrown out of the loop is the whole assertion — the interval
       // must survive Mongo, AiSensy and a bad document alike.
-      expect(true).toBe(true);
+      expect(stop).toBeInstanceOf(Function);
     } finally {
       process.env.NODE_ENV = previous;
     }

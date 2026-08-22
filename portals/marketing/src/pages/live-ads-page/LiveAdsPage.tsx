@@ -3,14 +3,13 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
 import { useApolloTableFetch } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import LiveAdsTable from './LiveAdsTable';
 import LiveAdDetailsDialog from './LiveAdDetailsDialog';
 import { DELETE_AD_REQUEST, LIVE_ADS_TABLE, STOP_AD_REQUEST } from './queries';
 import type { AdRequestRow } from '../ads-approvals-page/helpers';
-import { useTranslation } from '@duncit/app-settings';
 
 type Pending = { row: AdRequestRow; action: 'stop' | 'delete' } | null;
 

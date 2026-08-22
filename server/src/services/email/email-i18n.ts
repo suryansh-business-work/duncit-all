@@ -91,6 +91,23 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.policyAcceptance.footer":
     "You're receiving this because you accepted these policies when you created your Duncit account.",
 
+  // A policy somebody already accepted has been rewritten (template:
+  // policy-updated, authored in Tech > Emails > Templates — rule 28, no local
+  // MJML). Category `legal`, so it cannot be unsubscribed from: telling people
+  // the terms they agreed to have changed is not a marketing preference.
+  "email.policyUpdated.title": "A policy you accepted has changed",
+  "email.policyUpdated.heading": "We've updated a policy you accepted",
+  "email.policyUpdated.intro":
+    "You agreed to this policy earlier, and its wording has since changed. Nothing is required of you right now — this is so you know, and so you can read the new version whenever you like.",
+  "email.policyUpdated.policyLabel": "Policy",
+  "email.policyUpdated.updatedLabel": "Updated",
+  "email.policyUpdated.summaryLabel": "What changed",
+  "email.policyUpdated.cta": "Read the updated policy",
+  "email.policyUpdated.reaccept":
+    "The next time you sign in we may ask you to accept the new version. Your account and everything in it are unaffected either way.",
+  "email.policyUpdated.footer":
+    "You're receiving this because you accepted this policy on Duncit. Notices about policies you have agreed to cannot be switched off.",
+
   "email.unsubscribe.title": "Your email preferences were updated",
   "email.unsubscribe.heading": "We've updated what we send you",
   "email.unsubscribe.intro":

@@ -27,7 +27,7 @@ export function aiMonitoringFallbackCopy(t: AiMonitoringTranslate): AiMonitoring
 /** Trimmed override, or the fallback when the admin left the field blank. */
 const pick = (override: string | null | undefined, fallback: string): string => {
   const trimmed = override?.trim();
-  return trimmed ? trimmed : fallback;
+  return trimmed || fallback;
 };
 
 /**

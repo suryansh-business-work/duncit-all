@@ -190,15 +190,19 @@ function assertCanReply(doc: ITicket, actorId: string, isAgent: boolean) {
   }
 }
 
-/**
- * An agent reply moves an OPEN ticket to PENDING (waiting on the user);
- * a user reply re-opens a pending/resolved/closed ticket so they can keep
- * the conversation going (Bug 3: question a resolved/closed ticket).
- */
-function applyReplyStatus(doc: ITicket, isAgent: boolean) {
-  if (isAgent && doc.status === 'OPEN') {
+/** An agent reply moves an OPEN ticket to PENDING — it is waiting on the user. */
+function applyAgentReplyStatus(doc: ITicket) {
+  if (doc.status === 'OPEN') {
     doc.status = 'PENDING';
-  } else if (!isAgent && USER_REOPENS.has(doc.status)) {
+  }
+}
+
+/**
+ * A user reply re-opens a pending/resolved/closed ticket so they can keep the
+ * conversation going (Bug 3: question a resolved/closed ticket).
+ */
+function applyUserReplyStatus(doc: ITicket) {
+  if (USER_REOPENS.has(doc.status)) {
     doc.status = 'OPEN';
     doc.resolved_at = null;
   }
@@ -298,7 +302,11 @@ export const ticketService = {
       attachments: input.attachments ?? [],
     } as any);
     doc!.last_message_at = new Date();
-    applyReplyStatus(doc, isAgent);
+    if (isAgent) {
+      applyAgentReplyStatus(doc);
+    } else {
+      applyUserReplyStatus(doc);
+    }
     await doc.save();
 
     // The reply above is already saved; the mail send records its own outcome.

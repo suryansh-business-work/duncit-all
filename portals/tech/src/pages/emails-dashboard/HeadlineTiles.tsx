@@ -6,8 +6,7 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import DoDisturbOnIcon from '@mui/icons-material/DoDisturbOn';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import type { EmailLogDashboardData } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const TILE_SX = { flex: 1, minWidth: 200 };
 

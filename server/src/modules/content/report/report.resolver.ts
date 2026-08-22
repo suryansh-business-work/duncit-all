@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { userDisplayOf } from '@modules/access/user/user.display';
@@ -6,14 +8,18 @@ import { reportService } from './report.service';
 
 const LEGAL_ROLES = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
 
+/** How the report table stores a user reference. */
+type ReportedId = Types.ObjectId | string | null;
+
 /** An id the table stored resolved to a display name, or '' when there is none. */
-const nameOf = async (id: unknown) => (id ? (await userDisplayOf(String(id))).name : '');
+const nameOf = async (id: Types.ObjectId | string | null | undefined) =>
+  id ? (await userDisplayOf(id.toString())).name : '';
 
 export const contentReportResolvers = {
   ContentReport: {
-    reporter_name: (parent: { reporter_id?: unknown }) => nameOf(parent.reporter_id),
-    target_owner_name: (parent: { target_owner_id?: unknown }) => nameOf(parent.target_owner_id),
-    handled_by_name: (parent: { handled_by?: unknown }) => nameOf(parent.handled_by),
+    reporter_name: (parent: { reporter_id?: ReportedId }) => nameOf(parent.reporter_id),
+    target_owner_name: (parent: { target_owner_id?: ReportedId }) => nameOf(parent.target_owner_id),
+    handled_by_name: (parent: { handled_by?: ReportedId }) => nameOf(parent.handled_by),
   },
   Query: {
     contentReportsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { BackHeader } from '@duncit/ui';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import ShortLinkSummary from './detail/ShortLinkSummary';
@@ -28,7 +28,6 @@ import {
   type ShortLinkRow,
   type ShortLinkStats,
 } from './queries';
-import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: ShortLinkClickRow) => row.id;
 const getJourneyRowId = (row: ShortLinkJourneyRow) => row.id;

@@ -17,6 +17,7 @@ import { CLONE_LEGAL_DOCUMENT, DELETE_LEGAL_DOCUMENT, LEGAL_DOCUMENT,
 import { toPrintableHtml } from '../../lib/printableHtml';
 import { copyToClipboard, printHtml, safeFileName } from '../../lib/docActions';
 import { DocumentEditor } from './DocumentDetailPage/DocumentEditor';
+import DocumentActiveSwitch from './DocumentActiveSwitch';
 
 export default function DocumentDetailPage() {
   const { t } = useTranslation();
@@ -114,6 +115,11 @@ export default function DocumentDetailPage() {
       <>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip size="small" color="primary" label={doc.document_type} />
+          <DocumentActiveSwitch
+            documentId={doc.id}
+            isActive={doc.is_active}
+            onChanged={() => refetch()}
+          />
           <Typography variant="body2" color="text.secondary">
             Updated by {doc.updated_by_name || '—'} · v{doc.version_count}
           </Typography>

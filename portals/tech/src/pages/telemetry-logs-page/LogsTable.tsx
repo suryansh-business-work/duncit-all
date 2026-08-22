@@ -8,8 +8,7 @@ import {
 } from '@duncit/table';
 import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { type TelemetryLevel, type TelemetryLogRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: TelemetryLogRow) => row.id;
 

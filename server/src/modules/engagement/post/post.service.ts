@@ -198,10 +198,13 @@ export const postService = {
    * read as "not an admin" rather than throw NOT_FOUND and fail the whole
    * story rail.
    */
-  async viewerIsClubAdmin(clubId: unknown, viewerId: string | null | undefined) {
-    if (!clubId || !viewerId || !Types.ObjectId.isValid(String(clubId))) return false;
+  async viewerIsClubAdmin(
+    clubId: Types.ObjectId | string | null | undefined,
+    viewerId: string | null | undefined,
+  ) {
+    if (!clubId || !viewerId || !Types.ObjectId.isValid(clubId)) return false;
     try {
-      return await isClubAdmin(new Types.ObjectId(String(clubId)), viewerId);
+      return await isClubAdmin(new Types.ObjectId(clubId), viewerId);
     } catch {
       return false;
     }
@@ -272,8 +275,9 @@ export const postService = {
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    const targetType: 'STORY' | 'POST' = doc.kind === 'STORY' ? 'STORY' : 'POST';
     return {
-      target_type: (doc.kind === 'STORY' ? 'STORY' : 'POST') as 'STORY' | 'POST',
+      target_type: targetType,
       target_id: String(doc._id),
       target_owner_id: String(doc.author_id),
       club_id: doc.club_id ? String(doc.club_id) : null,

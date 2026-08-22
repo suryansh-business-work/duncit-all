@@ -134,7 +134,7 @@ type TargetResolver = (ref: string, base: string) => Promise<ShareDestination | 
 const podResolver: TargetResolver = async (ref, base) => {
   const pod = await findPod(ref);
   if (!pod) return null;
-  return { url: await podUrl(pod, base), label: label('Pod', (pod as any).pod_title) };
+  return { url: await podUrl(pod, base), label: label('Pod', pod.pod_title) };
 };
 
 /** The map link for the pod venue — an external destination, built here from
@@ -147,7 +147,7 @@ const podLocationResolver: TargetResolver = async (ref) => {
   if (!query) return null;
   return {
     url: `${MAPS_SEARCH}${encodeURIComponent(query)}`,
-    label: label('Location', (pod as any).pod_title),
+    label: label('Location', pod.pod_title),
   };
 };
 
@@ -155,8 +155,8 @@ const podFeedbackResolver: TargetResolver = async (ref, base) => {
   const pod = await findPod(ref);
   if (!pod) return null;
   return {
-    url: `${base}/pod/${String((pod as any)._id)}/feedback`,
-    label: label('Pod rating', (pod as any).pod_title),
+    url: `${base}/pod/${String(pod._id)}/feedback`,
+    label: label('Pod rating', pod.pod_title),
   };
 };
 

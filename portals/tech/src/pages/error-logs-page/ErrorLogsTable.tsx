@@ -3,8 +3,7 @@ import { Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: ErrorLogRow) => row.id;
 

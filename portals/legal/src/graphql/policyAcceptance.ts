@@ -65,3 +65,116 @@ export const POLICY_ACCEPTANCE_METHODS: PolicyAcceptanceMethod[] = [
   'GOOGLE_SIGNUP',
   'ACCOUNT',
 ];
+
+/** One wording a policy has had. The live one comes back flagged `is_current`. */
+export interface PolicyVersionRow {
+  id: string;
+  version_no: number;
+  title: string;
+  slug: string;
+  policy_type: string;
+  content: string;
+  content_hash: string;
+  updated_by_name: string;
+  created_at: string;
+  is_current: boolean;
+}
+
+/** The accepting account as it reads today. Null once the account is erased. */
+export interface PolicyAcceptanceAccount {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: string;
+  is_deleted: boolean;
+  created_at: string;
+}
+
+/**
+ * Everything behind one row of the log.
+ *
+ * `policy` and `accepted_version` are both nullable and both meaningful: a
+ * policy can be hard-deleted, and a wording can predate version history. The
+ * dialog says so rather than rendering a blank panel.
+ */
+export interface PolicyAcceptanceDetail {
+  acceptance: PolicyAcceptance;
+  account: PolicyAcceptanceAccount | null;
+  policy: {
+    id: string;
+    policy_no: string;
+    title: string;
+    slug: string;
+    policy_type: string;
+    is_active: boolean;
+    version_count: number;
+    content_hash: string;
+    updated_at: string;
+  } | null;
+  accepted_version: PolicyVersionRow | null;
+  versions: PolicyVersionRow[];
+  policy_history: PolicyAcceptance[];
+  user_acceptances: PolicyAcceptance[];
+}
+
+const ACCEPTANCE_ROW_FIELDS = `
+  id
+  user_id
+  user_name
+  user_email
+  policy_id
+  policy_no
+  policy_slug
+  policy_title
+  content_hash
+  policy_updated_at
+  method
+  surface
+  accepted_at
+`;
+
+const VERSION_FIELDS = `
+  id
+  version_no
+  title
+  slug
+  policy_type
+  content
+  content_hash
+  updated_by_name
+  created_at
+  is_current
+`;
+
+export const POLICY_ACCEPTANCE_DETAIL = gql`
+  query LegalPolicyAcceptanceDetail($acceptanceId: ID!) {
+    policyAcceptanceDetail(acceptance_id: $acceptanceId) {
+      acceptance { ${ACCEPTANCE_ROW_FIELDS} }
+      account {
+        id
+        name
+        email
+        phone
+        status
+        is_deleted
+        created_at
+      }
+      policy {
+        id
+        policy_no
+        title
+        slug
+        policy_type
+        is_active
+        version_count
+        content_hash
+        updated_at
+      }
+      accepted_version { ${VERSION_FIELDS} }
+      versions { ${VERSION_FIELDS} }
+      policy_history { ${ACCEPTANCE_ROW_FIELDS} }
+      user_acceptances { ${ACCEPTANCE_ROW_FIELDS} }
+    }
+  }
+`;

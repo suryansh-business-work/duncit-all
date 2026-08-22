@@ -4,7 +4,7 @@
   "minTokens": 90,
   "maxLines": 3000,
   "maxSize": "500kb",
-  "gitignore": true,
+  "gitignore": false,
   "absolute": false,
   "silent": true,
   "format": [

@@ -308,6 +308,15 @@ workspaces grew, and the largest clone pairs behind the growth, with file and
 line ranges. One sticky comment per PR, rewritten on each push rather than
 stacked.
 
+**The measurement is staged, not read off your working tree.** The detector runs
+against a temp copy built from `git ls-files` (tracked plus untracked-not-ignored,
+which is exactly what a fresh checkout holds) with every file rewritten to LF.
+Both halves matter: with `core.autocrlf=true` a Windows checkout is CRLF, every line
+carries an extra token, and fragments fall either side of the token threshold
+differently than they do on the Linux runner — the first run of this gate
+measured 10,397 lines locally and 10,606 on CI for the very same commit. A
+checked-in baseline is worthless if it only holds on one OS.
+
 **What it does not look at:** tests, `e2e`, `__tests__`, `*.stories.*`,
 generated code, `packages/docs-demos` (worked examples repeat by design), the
 vendored `portals/crm/open-wa-server`, and the Ask Bot page catalogue — a data

@@ -7,9 +7,15 @@
  * script, a docs refresh) without re-implementing the attribution rules below.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 /**
  * Trees that ship product code. `app/mobile-app` is not a pnpm workspace member
@@ -45,18 +51,70 @@ export function areaOf(file) {
 
 const posix = (p) => p.replaceAll("\\", "/");
 
+const SOURCE_EXT = /\.(tsx?|jsx?|mjs|cjs)$/;
+
+/**
+ * The corpus, staged into a temp tree with LF endings.
+ *
+ * Two things made a Windows run and a CI run disagree by ~200 lines on the same
+ * commit, and a checked-in baseline is worthless if it only holds on one OS:
+ *
+ *  - `core.autocrlf=true` gives the Windows working tree CRLF, so every line
+ *    carries an extra token and fragments land either side of `minTokens`
+ *    differently than they do on the runner's LF checkout.
+ *  - the working tree carries whatever is uncommitted, which on a repo several
+ *    sessions write to at once is never the same set twice.
+ *
+ * Asking git for the file list (tracked + untracked-but-not-ignored, exactly
+ * what a fresh checkout has) and rewriting each one with LF removes both.
+ */
+function stageCorpus(root) {
+  const dir = mkdtempSync(join(tmpdir(), "jscpd-src-"));
+  const listed = execFileSync(
+    "git",
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...SCAN_PATHS],
+    { cwd: root, maxBuffer: 1 << 28 },
+  ).toString("utf8");
+
+  for (const rel of listed.split("\0")) {
+    if (!rel || !SOURCE_EXT.test(rel)) continue;
+    let source;
+    try {
+      source = readFileSync(join(root, rel), "utf8");
+    } catch {
+      continue; // listed but deleted in the working tree
+    }
+    const dest = join(dir, rel);
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(dest, source.replaceAll("\r\n", "\n"), "utf8");
+  }
+  return dir;
+}
+
 function runJscpd(root) {
+  const corpus = stageCorpus(root);
   const out = mkdtempSync(join(tmpdir(), "jscpd-"));
   const bin = resolve(root, "node_modules/jscpd/bin/jscpd");
   try {
     execFileSync(
       process.execPath,
-      [bin, ...SCAN_PATHS, "--reporters", "json", "--output", out, "--silent"],
-      { cwd: root, stdio: ["ignore", "ignore", "inherit"], maxBuffer: 1 << 28 },
+      [
+        bin,
+        ...SCAN_PATHS,
+        "--config",
+        resolve(root, ".jscpd.json"),
+        "--reporters",
+        "json",
+        "--output",
+        out,
+        "--silent",
+      ],
+      { cwd: corpus, stdio: ["ignore", "ignore", "inherit"], maxBuffer: 1 << 28 },
     );
     return JSON.parse(readFileSync(join(out, "jscpd-report.json"), "utf8"));
   } finally {
     rmSync(out, { recursive: true, force: true });
+    rmSync(corpus, { recursive: true, force: true });
   }
 }
 

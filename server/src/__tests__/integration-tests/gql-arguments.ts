@@ -33,7 +33,7 @@ import {
 
 /** A 24-hex string is a valid ID, a valid String, and a valid ObjectId — one
  * literal that satisfies every id-shaped argument in the schema. */
-const OBJECT_ID = '000000000000000000000001';
+export const OBJECT_ID = '000000000000000000000001';
 
 const literal = (value: unknown): string => JSON.stringify(value);
 

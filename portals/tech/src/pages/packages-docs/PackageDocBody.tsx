@@ -1,6 +1,9 @@
+import { isValidElement, type ReactNode } from 'react';
 import { Box, Divider, Link, Typography } from '@mui/material';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import MonacoBlock from './editor/MonacoBlock';
+import { fenceTag, monacoLanguage } from './editor/monaco-language';
 
 /**
  * The package's markdown, in MUI.
@@ -18,16 +21,23 @@ const CODE_SX = {
   fontSize: '0.85em',
 };
 
-const BLOCK_SX = {
-  m: 0,
-  my: 2,
-  p: 1.5,
-  borderRadius: 1,
-  bgcolor: 'action.hover',
-  fontSize: 13,
-  lineHeight: 1.6,
-  overflowX: 'auto',
-};
+/**
+ * A fenced block arrives as `<pre><code class="language-ts">…`. Reading the tag
+ * and the text off that child is what lets the block open as an editor instead
+ * of a `<pre>` — the whole reason the docs contract asks every fence to be
+ * tagged.
+ */
+interface FenceParts {
+  code: string;
+  className: string;
+}
+
+function fenceOf(children: ReactNode): FenceParts {
+  const child = Array.isArray(children) ? children[0] : children;
+  if (!isValidElement(child)) return { code: String(children ?? ''), className: '' };
+  const props = child.props as { className?: string; children?: ReactNode };
+  return { code: String(props.children ?? ''), className: props.className ?? '' };
+}
 
 const CELL_SX = { border: 1, borderColor: 'divider', px: 1.25, py: 0.75, textAlign: 'left' };
 
@@ -75,18 +85,23 @@ const COMPONENTS: Components = {
       {children}
     </Box>
   ),
-  // A fenced block arrives as <pre><code>; the inline case is <code> alone.
-  pre: ({ children }) => <Box component="pre" sx={BLOCK_SX}>{children}</Box>,
-  code: ({ children, className }) =>
-    className ? (
-      <Box component="code" sx={{ fontFamily: 'monospace' }} className={className}>
-        {children}
-      </Box>
-    ) : (
-      <Box component="code" sx={CODE_SX}>
-        {children}
-      </Box>
-    ),
+  // Every fenced block IS an editor. `pre` never renders its child, so the
+  // `code` override below is only ever reached by inline code.
+  pre: ({ children }) => {
+    const { code, className } = fenceOf(children);
+    return (
+      <MonacoBlock
+        code={code.replace(/\n$/, '')}
+        language={monacoLanguage(className)}
+        badge={fenceTag(className)}
+      />
+    );
+  },
+  code: ({ children }) => (
+    <Box component="code" sx={CODE_SX}>
+      {children}
+    </Box>
+  ),
   table: ({ children }) => (
     <Box sx={{ overflowX: 'auto', my: 2 }}>
       <Box component="table" sx={{ borderCollapse: 'collapse', width: '100%', fontSize: 13 }}>

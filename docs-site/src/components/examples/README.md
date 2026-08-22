@@ -22,3 +22,21 @@ Rules for a file in here:
   `to`/`backTo`; the examples use `onBack`/`onClick` so there is no router
   context to mount.
 - Keep it short. The whole file is printed on the page.
+
+## The other home, and which one to use
+
+Runnable examples now have a second, larger home: **`packages/docs-demos`**, whose
+demo modules the **Tech portal** renders under Package Documentation → Live demos.
+Every one of the 49 shared packages has one there; this folder has seven, and only
+`@duncit/dialogs`, `@duncit/theme` and `@duncit/ui` still import from it.
+
+They exist for two different renderers — these are Astro islands mounted by
+`<Preview>`, those are React modules loaded by a portal — but they answer the same
+question, so **write new examples in `packages/docs-demos/src/demos/<pkg>.tsx`** and
+leave this folder to the three pages that already use it. A demo there gets editable
+mock data and its own source for free (see rule 42 in `AGENTS.md`).
+
+Folding these seven into that package is a pending cleanup, not a new decision: the
+reason given above for not putting examples inside a package — that a package cannot
+resolve its own name from inside its own folder — does not apply to `docs-demos`,
+which is a different package and imports `@duncit/ui` exactly as a portal does.

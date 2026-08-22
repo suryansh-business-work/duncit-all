@@ -435,4 +435,49 @@ keep the screen tidy.
   `src/components/attendance/` and `src/screens/PodAttendanceScreen/`. Rule 40
   again: share the logic, never the UI.
 
+
+42. Package docs AND demos (ENFORCED) — **a change to a shared package is not
+finished until the page that documents it changes with it.** Every
+`packages/<name>` ships TWO things beside its code, and both are read by
+Tech portal → **Package Documentation**:
+
+- `packages/<name>/docs/index.mdx` — the prose, plus the frontmatter `exports`
+  list that rule 40 tells you to scan before writing any helper. The portal
+  renders every fenced block as a real Monaco editor, so a reader can type into
+  the snippet that showed them a signature; tag EVERY fence with its language or
+  it opens as plain text.
+- `packages/docs-demos/src/demos/<name>.tsx` — a RUNNABLE demo. The portal's
+  **Live demos** tab mounts it on mock data the reader can edit, and re-renders
+  as they edit it. This is what stops a documented signature drifting from the
+  real one: a demo calls the actual export, so a changed signature fails
+  `tsc`, on the same push that changed it.
+
+**What to update when you touch a package:**
+
+| You changed | Update |
+| --- | --- |
+| Added / renamed / removed an export | `exports` frontmatter, the reference table, and the demo that used it |
+| A signature | The demo — it will already be failing typecheck. Fix the demo, never loosen the type |
+| Behaviour | The demo's `note`, which is the line telling a reader what to look at |
+| Added a package | `docs/index.mdx`, a demo file, the dep in `packages/docs-demos/package.json`, AND the COPY line in `portals/tech/Dockerfile` |
+
+**How a demo shows itself.** `render(mock)` mounts the real component — that is
+the answer for anything with a UI. `compute(mock)` calls the real exports and
+names each result — that is the answer for the framework-free packages, whose
+whole surface is functions. A demo may carry both. A package that can be neither
+mounted nor called from a React portal (`@duncit/brand` is Astro-only) still
+ships `mock` and its source, so no package opens to a blank panel.
+
+**Never hand-write the `code` shown beside a demo.** The source on the page is
+the demo file itself, imported with `?raw` — a snippet copied into a string is
+the exact drift this whole thing exists to remove.
+
+**Mock data is real duncit data**: pod ids (`DUN-POD-4821`), INR amounts, actual
+statuses, real category names. Never `foo`/`bar` — a reader copies whatever they
+see.
+
+After adding or renaming a demo run `node scripts/generate-demo-registry.mjs`;
+CI runs it with `--check` and fails on a registry that does not match the files
+on disk, exactly as `generate-shipped-keys.mjs` does for localization.
+
 Only Use staging for push no branch creation for any branch

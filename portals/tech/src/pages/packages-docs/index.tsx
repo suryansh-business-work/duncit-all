@@ -3,10 +3,18 @@ import { useSearchParams } from 'react-router-dom';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
 import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
+import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import PackageDocBody from './PackageDocBody';
 import PackageDocHeader from './PackageDocHeader';
+import PackageDemos from './demos/PackageDemos';
 import { PACKAGE_DOCS } from './package-docs';
 import { useTranslation } from '@duncit/app-settings';
+
+/** Prose, and the same package actually running. Selection lives in the URL. */
+const VIEWS = [
+  { value: 'docs', label: 'Documentation' },
+  { value: 'demos', label: 'Live demos' },
+] as const;
 
 /**
  * Every shared package's documentation, inside the portal.
@@ -23,6 +31,7 @@ export default function PackagesDocsPage() {
   // right there, and picking a favourite would only be a guess.
   const wanted = useSearchParams()[0].get('pkg');
   const [selected, setSelected] = useState(() => wanted ?? PACKAGE_DOCS[0]?.slug ?? '');
+  const view = useTabParam({ items: VIEWS, fallback: 'docs' });
 
   const doc = PACKAGE_DOCS.find((p) => p.slug === selected) ?? PACKAGE_DOCS[0];
 
@@ -34,7 +43,8 @@ export default function PackagesDocsPage() {
         </Typography>
         <Typography variant="caption" color="text.secondary">
           Read from each package&apos;s own <code>docs/index.mdx</code>, so it says what the
-          code says. {PACKAGE_DOCS.length} packages documented.
+          code says — and every package runs, on mock data you can edit.{' '}
+          {PACKAGE_DOCS.length} packages documented.
         </Typography>
       </Box>
 
@@ -58,7 +68,14 @@ export default function PackagesDocsPage() {
             sx={{ flex: 1, minWidth: 0, overflowY: 'auto', p: 3 }}
           >
             <PackageDocHeader doc={doc} />
-            <PackageDocBody markdown={doc.body} />
+            <DuncitTabs {...view} sx={{ mt: 2, borderBottom: 1, borderColor: 'divider' }} />
+            <Box sx={{ mt: 2 }}>
+              {view.value === 'docs' ? (
+                <PackageDocBody markdown={doc.body} />
+              ) : (
+                <PackageDemos slug={doc.slug} />
+              )}
+            </Box>
           </Paper>
         ) : (
           <Alert severity="info" sx={{ flex: 1 }}>

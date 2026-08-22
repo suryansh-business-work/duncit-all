@@ -1,0 +1,105 @@
+---
+name: '@duncit/docs-demos'
+summary: 'One runnable demo per shared package — realistic mock data, the live component or the real exports run over it, and the exact source. What the Tech portal renders under Live demos.'
+category: 'testing'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/tech'
+exports:
+  - 'defineDemo'
+  - 'defineDemos'
+  - 'loadPackageDemos'
+  - 'loadPackageDemoSource'
+  - 'DEMO_SLUGS'
+---
+
+Documentation that only describes a package goes stale quietly. Prose says a helper
+returns one thing while the code returns another, and nothing anywhere fails — the
+mistake is only found by whoever trusts the page. Every package here already documents
+its exports with sample data, but that data was written into fenced blocks: it looked
+right and it never ran.
+
+This package makes the examples run. Each shared package gets one demo module holding
+realistic duncit mock data — real pod ids, INR amounts, actual statuses — and either the
+REAL component mounted on it or the REAL exports called over it. The Tech portal renders
+those under **Package Documentation → Live demos**, with the mock data in an editor
+beside the result, so a reader can push a value to the edge case they came to check
+instead of taking the page's word for it.
+
+## Use it
+
+A demo module is one file per package, named after the package folder:
+
+```tsx
+// packages/docs-demos/src/demos/utils.tsx
+import { payableSpots, formatMoney } from '@duncit/utils';
+import { defineDemo, defineDemos } from '../types';
+
+interface SpotsMock {
+  total_spots: number;
+  price_per_spot: number;
+}
+
+export default defineDemos('utils', [
+  defineDemo<SpotsMock>({
+    id: 'host-free-spot',
+    title: 'The host sits in the pod and never pays',
+    note: 'Change total_spots — every money figure bills one seat fewer.',
+    mock: { total_spots: 8, price_per_spot: 450 },
+    compute: (mock) => ({
+      'payableSpots(total_spots)': payableSpots(mock.total_spots),
+      'Pod earns': formatMoney(payableSpots(mock.total_spots) * mock.price_per_spot),
+    }),
+  }),
+]);
+```
+
+Then regenerate the registry, which is the index both readers load from:
+
+```bash
+node scripts/generate-demo-registry.mjs
+```
+
+## A package shows itself in one of two ways
+
+| Field | For | What the portal renders |
+| --- | --- | --- |
+| `render(mock)` | anything with a UI | The real component, mounted on the mock |
+| `compute(mock)` | the framework-free packages | A table of what the real exports returned |
+
+A demo may carry both — `@duncit/theme` renders MUI controls under its factory AND lists
+the tokens behind them. A package that can be neither mounted nor called from a React
+portal (`@duncit/brand` is Astro-only) still ships `mock` and its source, so no package
+opens to a blank panel.
+
+## The reference
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `defineDemo` | `<M>(demo: PackageDemo<M>) => PackageDemo` | Authors one demo with its mock's real type, then erases it for the registry |
+| `defineDemos` | `(slug, demos) => PackageDemoModule` | The module's default export; `slug` must match the file name |
+| `loadPackageDemos` | `(slug) => Promise<PackageDemoModule \| null>` | Lazy — one package's chunk, not all 48 |
+| `loadPackageDemoSource` | `(slug) => Promise<string>` | The demo file's own text, via `?raw` |
+| `DEMO_SLUGS` | `string[]` | Every package that ships a demo |
+
+## The traps
+
+**The mock is editable, so a demo WILL be handed data it cannot render.** That is the
+point of a sandbox, and it is why the portal wraps each live view in an error boundary
+and each `compute` in a try/catch. Write demos that fail loudly on nonsense rather than
+defensively hiding it.
+
+**`code` is never hand-written.** The source shown beside a demo is the demo file itself,
+imported with `?raw`. A snippet copied into a string is the exact drift this package
+exists to remove.
+
+**A demo imports its package the way a consumer does** — `import { StatCard } from
+'@duncit/ui'`. That is why the demos live here rather than inside each package: a package
+cannot resolve its own name from inside its own folder, so an example written there would
+have to use a relative path no reader could copy.
+
+**Adding a package means adding a demo.** A shared package with no demo shows an empty
+Live demos tab, which is worse than no tab at all. The registry generator has a
+`--check` mode for exactly this reason.

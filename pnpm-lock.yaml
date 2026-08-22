@@ -1154,6 +1154,196 @@ importers:
         specifier: 1.6.1
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
+  packages/docs-demos:
+    dependencies:
+      '@apollo/client':
+        specifier: '>=3'
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/ad-request-form':
+        specifier: workspace:*
+        version: link:../ad-request-form
+      '@duncit/ai-monitoring':
+        specifier: workspace:*
+        version: link:../ai-monitoring
+      '@duncit/ai-prompts':
+        specifier: workspace:*
+        version: link:../ai-prompts
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
+      '@duncit/auth-tokens':
+        specifier: workspace:*
+        version: link:../auth-tokens
+      '@duncit/auto-pods':
+        specifier: workspace:*
+        version: link:../auto-pods
+      '@duncit/availability-calendar':
+        specifier: workspace:*
+        version: link:../availability-calendar
+      '@duncit/breadcrumb':
+        specifier: workspace:*
+        version: link:../breadcrumb
+      '@duncit/captcha':
+        specifier: workspace:*
+        version: link:../captcha
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../category
+      '@duncit/club-form':
+        specifier: workspace:*
+        version: link:../club-form
+      '@duncit/communication':
+        specifier: workspace:*
+        version: link:../communication
+      '@duncit/coupons':
+        specifier: workspace:*
+        version: link:../coupons
+      '@duncit/dashboard':
+        specifier: workspace:*
+        version: link:../dashboard
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../datetime
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
+      '@duncit/dialogs-native':
+        specifier: workspace:*
+        version: link:../dialogs-native
+      '@duncit/earn':
+        specifier: workspace:*
+        version: link:../earn
+      '@duncit/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@duncit/fallback-icons':
+        specifier: workspace:*
+        version: link:../fallback-icons
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
+      '@duncit/geo':
+        specifier: workspace:*
+        version: link:../geo
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../gql-types
+      '@duncit/host-pod-actions':
+        specifier: workspace:*
+        version: link:../host-pod-actions
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../location
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../media-picker
+      '@duncit/onboarding':
+        specifier: workspace:*
+        version: link:../onboarding
+      '@duncit/pod-details':
+        specifier: workspace:*
+        version: link:../pod-details
+      '@duncit/pod-form':
+        specifier: workspace:*
+        version: link:../pod-form
+      '@duncit/pod-product-picker':
+        specifier: workspace:*
+        version: link:../pod-product-picker
+      '@duncit/portal-pod-form':
+        specifier: workspace:*
+        version: link:../portal-pod-form
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../regex
+      '@duncit/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../shell
+      '@duncit/slack':
+        specifier: workspace:*
+        version: link:../slack
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../slots
+      '@duncit/table':
+        specifier: workspace:*
+        version: link:../table
+      '@duncit/tabs':
+        specifier: workspace:*
+        version: link:../tabs
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@duncit/tours':
+        specifier: workspace:*
+        version: link:../tours
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../user-context
+      '@duncit/user-core':
+        specifier: workspace:*
+        version: link:../user-core
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@duncit/virtual-scroll':
+        specifier: workspace:*
+        version: link:../virtual-scroll
+      '@hookform/resolvers':
+        specifier: '>=3'
+        version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
+      '@mui/icons-material':
+        specifier: '>=5'
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: '>=5'
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: '>=6'
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      date-fns:
+        specifier: '>=2'
+        version: 2.30.0
+      graphql:
+        specifier: '>=16'
+        version: 16.14.0
+      react:
+        specifier: '>=18'
+        version: 18.3.1
+      react-dom:
+        specifier: '>=18'
+        version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: '>=7'
+        version: 7.77.0(react@18.3.1)
+      react-router-dom:
+        specifier: '>=6'
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      zod:
+        specifier: '>=3'
+        version: 3.25.76
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   packages/earn:
     dependencies:
       '@duncit/app-settings':
@@ -4671,6 +4861,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/docs-demos':
+        specifier: workspace:*
+        version: link:../../packages/docs-demos
       '@duncit/errors':
         specifier: workspace:*
         version: link:../../packages/errors

@@ -16,6 +16,7 @@ import {
   type JobApplication,
   type JobApplicationStatus,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   application: JobApplication | null;
@@ -37,6 +38,7 @@ function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode 
 }
 
 export default function ApplicationDetailsDialog({ application, onClose, onUpdateStatus }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!application) return null;
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
@@ -48,14 +50,14 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.25}>
-          <Row label="Name" value={application.name} />
-          <Row label="Email" value={<Link href={`mailto:${application.email}`}>{application.email}</Link>} />
+          <Row label={t('shell.common.name')} value={application.name} />
+          <Row label={t('shell.common.email')} value={<Link href={`mailto:${application.email}`}>{application.email}</Link>} />
           <Row
-            label="Phone"
+            label={t('shell.common.phone')}
             value={application.phone ? <Link href={`tel:${application.phone}`}>{application.phone}</Link> : ''}
           />
           <Row
-            label="Resume"
+            label={t('websiteApp.jobs.resume')}
             value={
               application.resume_url ? (
                 <Link href={application.resume_url} target="_blank" rel="noreferrer">
@@ -67,7 +69,7 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
             }
           />
           <Row
-            label="Portfolio"
+            label={t('websiteApp.jobs.portfolio')}
             value={
               application.portfolio_url ? (
                 <Link href={application.portfolio_url} target="_blank" rel="noreferrer">
@@ -78,11 +80,11 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
               )
             }
           />
-          <Row label="Note" value={application.cover_note} />
+          <Row label={t('websiteApp.jobs.note')} value={application.cover_note} />
           <TextField
             select
             size="small"
-            label="Status"
+            label={t('shell.common.status')}
             value={application.status}
             onChange={(e) => onUpdateStatus(application.id, e.target.value as JobApplicationStatus)}
             sx={{ maxWidth: 220, mt: 1 }}
@@ -96,7 +98,7 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

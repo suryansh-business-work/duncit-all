@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Link, Stack, TextField, Typography } from '@mui/material';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 
 export interface VerificationAddress {
   line1?: string | null;
@@ -103,6 +104,7 @@ const NoReview = () => (
 /** Per-row Approve/Reject controls with a local reject-reason input. State lives
  * in the cell so typing never rebuilds the parent table's column defs. */
 export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const reviewable = item.type === 'IDENTITY' || item.type === 'ADDRESS';
   // EMAIL is verified by the app, so it was never ours to decide.
@@ -115,7 +117,7 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
     <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center" component="span">
       <TextField
         size="small"
-        placeholder="Reject reason"
+        placeholder={t('admin.verification.rejectReason')}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         sx={{ width: 160 }}

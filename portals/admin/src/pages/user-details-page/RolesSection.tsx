@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   user: any;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function RolesSection({ user, roleByKey, onManageRoles }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
@@ -32,7 +34,7 @@ export default function RolesSection({ user, roleByKey, onManageRoles }: Readonl
           </Button>
         </Stack>
         {(user.roles ?? []).length === 0 ? (
-          <Alert severity="warning">No roles assigned.</Alert>
+          <Alert severity="warning">{t('admin.roles.empty')}</Alert>
         ) : (
           <Stack direction="row" sx={{ gap: 1 }} flexWrap="wrap">
             {user.roles.map((r: string) => (

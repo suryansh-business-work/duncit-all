@@ -16,6 +16,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import MediaPickerField from '../../components/MediaPickerField';
 import { STATUS_META, type EditForm } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   user: any;
@@ -27,16 +28,17 @@ interface Props {
 const empty = '—';
 
 export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const statusMeta = STATUS_META[form.status];
   const rows = [
-    { label: 'Email', value: user.email ?? empty },
-    { label: 'Phone', value: `${user.phone_extension || ''} ${user.phone_number || ''}`.trim() || empty },
-    { label: 'City', value: user.city || empty },
-    { label: 'Zone', value: user.zone || empty },
-    { label: 'Assigned City', value: user.assigned_city || empty },
-    { label: 'Assigned Zones', value: (user.assigned_zones ?? []).join(', ') || empty },
-    { label: 'Created', value: user.created_at ? formatDateTime(user.created_at) : empty },
-    { label: 'Updated', value: user.updated_at ? formatDateTime(user.updated_at) : empty },
+    { label: t('shell.common.email'), value: user.email ?? empty },
+    { label: t('shell.common.phone'), value: `${user.phone_extension || ''} ${user.phone_number || ''}`.trim() || empty },
+    { label: t('admin.profile.city'), value: user.city || empty },
+    { label: t('admin.profile.zone'), value: user.zone || empty },
+    { label: t('admin.profile.assignedCity'), value: user.assigned_city || empty },
+    { label: t('admin.profile.assignedZones'), value: (user.assigned_zones ?? []).join(', ') || empty },
+    { label: t('shell.common.created'), value: user.created_at ? formatDateTime(user.created_at) : empty },
+    { label: t('shell.common.updated'), value: user.updated_at ? formatDateTime(user.updated_at) : empty },
   ];
 
   return (
@@ -48,7 +50,7 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
               {(form.first_name?.[0] ?? '?').toUpperCase()}
             </Avatar>
             <MediaPickerField
-              label="Profile photo"
+              label={t('admin.profile.photo')}
               value={form.profile_photo}
               onChange={onPhotoChange}
               folder="/users"
@@ -62,14 +64,14 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Chip size="small" label={statusMeta.label} color={statusMeta.color} />
                 {user.is_email_verified && (
-                  <Tooltip title="Email verified">
-                    <Chip size="small" icon={<VerifiedIcon />} label="Verified" color="success" variant="outlined" />
+                  <Tooltip title={t('admin.profile.emailVerified')}>
+                    <Chip size="small" icon={<VerifiedIcon />} label={t('admin.profile.verified')} color="success" variant="outlined" />
                   </Tooltip>
                 )}
               </Stack>
             </Stack>
             <Divider />
-            <Table size="small" aria-label="user basic information">
+            <Table size="small" aria-label={t('admin.profile.basicInfo')}>
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.label}>

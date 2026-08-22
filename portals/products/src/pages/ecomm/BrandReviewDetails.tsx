@@ -1,6 +1,7 @@
 import { Box, Chip, Link, Stack } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
 import type { EcommBrandRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   brand: EcommBrandRow;
@@ -11,6 +12,7 @@ const DASH = '—';
 /** Everything the partner submitted, laid out for the reviewer — the brand
  * sibling of ListingReviewDetails, so both inboxes read the same way. */
 export default function BrandReviewDetails({ brand }: Readonly<Props>) {
+  const { t } = useTranslation();
   const contact = [brand.contact_person, brand.contact_email, brand.contact_phone]
     .filter(Boolean)
     .join(' · ');
@@ -35,13 +37,13 @@ export default function BrandReviewDetails({ brand }: Readonly<Props>) {
           sx={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 1.5 }}
         />
       )}
-      <InfoRow label="Brand id" value={brand.brand_no || DASH} />
-      <InfoRow label="Tagline" value={brand.tagline || DASH} />
-      <InfoRow label="Description" value={brand.description || DASH} />
-      <InfoRow label="Categories" value={categories || DASH} />
-      <InfoRow label="Contact" value={contact || DASH} />
-      <InfoRow label="Location" value={location || DASH} />
-      <InfoRow label="Business & legal" value={business || DASH} />
+      <InfoRow label={t('products.review.brandId')} value={brand.brand_no || DASH} />
+      <InfoRow label={t('products.brandForm.tagline')} value={brand.tagline || DASH} />
+      <InfoRow label={t('shell.common.description')} value={brand.description || DASH} />
+      <InfoRow label={t('products.review.categories')} value={categories || DASH} />
+      <InfoRow label={t('products.brandForm.contactSection')} value={contact || DASH} />
+      <InfoRow label={t('products.brands.colLocation')} value={location || DASH} />
+      <InfoRow label={t('products.brandForm.businessSection')} value={business || DASH} />
 
       {(brand.website_url || brand.instagram_url) && (
         <Stack direction="row" spacing={2} flexWrap="wrap">
@@ -60,7 +62,7 @@ export default function BrandReviewDetails({ brand }: Readonly<Props>) {
 
       {documents.length > 0 && (
         <InfoRow
-          label="Documents"
+          label={t('products.review.documents')}
           value={
             <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1}>
               {documents.map((doc) => (

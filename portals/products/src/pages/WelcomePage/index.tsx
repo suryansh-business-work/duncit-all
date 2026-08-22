@@ -10,10 +10,12 @@ import { PRODUCT_ORDERS } from '../orders/queries';
 import { formatMoney } from '@duncit/utils';
 import StatTile from './StatTile';
 import { computeDashboard } from './dashboard-metrics';
+import { useTranslation } from '@duncit/shell';
 
 /** Products portal dashboard — real KPIs aggregated from inventory, orders and
  * brands, arranged on the shared dashboard grid. */
 export default function WelcomePage() {
+  const { t } = useTranslation();
   const { user } = useUserData();
   const name = user?.first_name || user?.full_name || 'there';
 
@@ -52,7 +54,7 @@ export default function WelcomePage() {
     tile('products', 0, 0, (
       <StatTile
         icon="inventory"
-        label="Products"
+        label={t('products.welcome.products')}
         value={stats.totalProducts}
         hint={`${formatMoney(stats.stockValue)} stock value`}
       />
@@ -60,7 +62,7 @@ export default function WelcomePage() {
     tile('revenue', 3, 0, (
       <StatTile
         icon="payments"
-        label="Revenue"
+        label={t('products.welcome.revenue')}
         value={formatMoney(stats.revenue)}
         hint={`${stats.totalOrders} orders`}
       />
@@ -68,7 +70,7 @@ export default function WelcomePage() {
     tile('to-fulfil', 6, 0, (
       <StatTile
         icon="local_shipping"
-        label="To fulfil"
+        label={t('products.welcome.toFulfil')}
         value={stats.pendingFulfilment}
         hint="orders awaiting dispatch"
         color={stats.pendingFulfilment > 0 ? 'warning.main' : 'text.primary'}
@@ -77,7 +79,7 @@ export default function WelcomePage() {
     tile('stock-at-risk', 9, 0, (
       <StatTile
         icon="warning"
-        label="Stock at risk"
+        label={t('products.welcome.stockAtRisk')}
         value={stockAtRisk}
         hint={`${stats.outOfStock} out, ${stats.lowStock} low`}
         color={stockAtRisk > 0 ? 'error.main' : 'success.main'}
@@ -86,7 +88,7 @@ export default function WelcomePage() {
     tile('brands', 0, 2, (
       <StatTile
         icon="storefront"
-        label="Brands"
+        label={t('products.welcome.brands')}
         value={stats.activeBrands}
         hint={`${stats.brandProducts} approved products`}
       />
@@ -94,14 +96,14 @@ export default function WelcomePage() {
     tile('avg-order-value', 3, 2, (
       <StatTile
         icon="trending_up"
-        label="Avg order value"
+        label={t('products.welcome.avgOrderValue')}
         value={formatMoney(stats.totalOrders ? stats.revenue / stats.totalOrders : 0)}
         hint="across all orders"
       />
     )),
     {
       id: 'at-a-glance',
-      title: 'At a glance',
+      title: t('products.welcome.atAGlance'),
       // A single chip row under the header — h3 is mostly empty space.
       fitContent: true,
       defaultLayout: { x: 0, y: 4, w: 12, h: 3 },

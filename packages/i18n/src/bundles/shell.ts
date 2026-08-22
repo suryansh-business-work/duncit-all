@@ -9,6 +9,424 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
   },
   shell: {
+    /**
+     * The action words every console repeats — Cancel, Save, Delete and the
+     * "…ing" line each one shows while it waits.
+     *
+     * They live in the SHELL bundle rather than in each portal's namespace
+     * because the shell ships to all of them: a portal gets these without
+     * passing an `i18nFallback` at all, and one translator decision applies
+     * everywhere instead of 26 rows saying "Cancel" that can each be worded
+     * differently (rule 40).
+     *
+     * Only genuinely generic words belong here. Anything that names what is
+     * being saved or deleted is that portal's copy, not this.
+     */
+    common: {
+      cancel: 'Cancel',
+      save: 'Save',
+      saving: 'Saving…',
+      delete: 'Delete',
+      deleting: 'Deleting…',
+      close: 'Close',
+      view: 'View',
+      edit: 'Edit',
+      copy: 'Copy',
+
+      // Column headings a console repeats table after table. Only the ones
+      // that carry no context of their own live here — anything that names
+      // WHAT is being listed belongs to that portal.
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      status: 'Status',
+      actions: 'Actions',
+      created: 'Created',
+      order: 'Order',
+      title: 'Title',
+      description: 'Description',
+      updated: 'Updated',
+    },
+
+    /** The layout's own copy — read by assistive technology rather than seen,
+     * which is exactly why it was still English in all 26 consoles. */
+    /** The welcome dashboard every console opens on. */
+    welcome: {
+      greeting: 'Welcome back, {name}',
+      modulesHeading: '{name} modules',
+      comingSoon: 'Coming soon',
+    },
+
+    /**
+     * Each console's own sentences on its login screen — the tagline under
+     * the card and the promo beside it.
+     *
+     * Keyed by portal here rather than in 16 separate namespaces because the
+     * login screen is shell chrome: a portal reaches these through
+     * AppConfig.taglineKey / promoTitleKey / promoTextKey with no
+     * i18nFallback of its own.
+     */
+    portal: {
+      admin: {
+        tagline: 'Operate the Duncit platform — one place.',
+        promoTitle: 'One unified portal',
+        promoText: 'Every team, every metric — one place. Sign in and get moving.',
+      },
+      adsPortal: {
+        tagline: 'Plan campaigns, manage creatives and track ad performance.',
+        promoTitle: 'Campaigns that convert',
+        promoText: 'Plan, launch and measure ad campaigns from one console.',
+      },
+      ai: {
+        tagline: 'Operate AI tools and model configuration.',
+        promoTitle: 'Intelligence on tap',
+        promoText: 'Models, prompts and AI tooling in one workspace.',
+      },
+      challengePortal: {
+        tagline: 'Create and manage challenges across categories.',
+        promoTitle: 'Challenges, organized',
+        promoText: 'Build challenges scoped by super, category and sub-category — all in one place.',
+      },
+      crm: {
+        tagline: 'Capture, qualify and convert venue and host leads.',
+        promoTitle: 'Know every customer',
+        promoText: 'Leads, contacts and conversations — unified. Sign in to dive in.',
+      },
+      developers: {
+        tagline: 'API keys and venue APIs — availability, slots and bookings.',
+        promoTitle: 'Build on Duncit',
+        promoText: 'Generate API keys and integrate venue discovery, slot availability and slot booking into your own products.',
+      },
+      employee: {
+        tagline: 'Your profile, requests and workplace tools.',
+        promoTitle: 'Your workday, simpler',
+        promoText: 'Profile, payslips and requests in one place.',
+      },
+      finance: {
+        tagline: 'Track payouts, invoices and financial reconciliation.',
+        promoTitle: 'Numbers, clarified',
+        promoText: 'Payouts, invoices and reconciliation — all in one place.',
+      },
+      hr: {
+        tagline: 'Manage people, attendance and HR operations.',
+        promoTitle: 'People, organised',
+        promoText: 'Directory, leave and HR operations in one console.',
+      },
+      legal: {
+        tagline: 'Manage contracts, policies and compliance.',
+        promoTitle: 'Compliance, organized',
+        promoText: 'Policies, agreements and legal records — one place.',
+      },
+      marketing: {
+        tagline: 'Plan campaigns and brand content.',
+        promoTitle: 'Reach, amplified',
+        promoText: 'Campaigns, notifications and audiences — one place.',
+      },
+      onboarding: {
+        tagline: 'Manage onboarding journeys, verification and approvals.',
+        promoTitle: 'Onboard with ease',
+        promoText: 'Welcome, verify and activate new members and partners.',
+      },
+      products: {
+        tagline: 'Manage the product catalog and roadmap.',
+        promoTitle: 'Build what matters',
+        promoText: 'Catalog, inventory and roadmap from one console.',
+      },
+      support: {
+        tagline: 'Handle customer tickets and support conversations.',
+        promoTitle: 'One unified desk',
+        promoText: 'Every ticket, every conversation — one place. Sign in and get moving.',
+      },
+      tech: {
+        tagline: 'Manage platform configuration and environment variables.',
+        promoTitle: 'Ship with control',
+        promoText: 'Environment, feature flags and platform config in one console.',
+      },
+      websiteApp: {
+        tagline: 'Manage website content, pages and publishing.',
+        promoTitle: 'Your site, managed',
+        promoText: 'Publish content, careers and updates from one place.',
+      },
+    },
+
+    chrome: {
+      skipToContent: 'Skip to main content',
+      primaryNav: 'primary navigation',
+      openNav: 'open navigation',
+      openSearch: 'open search',
+      closeSearch: 'close search',
+      search: 'Search',
+      apps: 'Apps',
+      openApps: 'open apps',
+      toggleColorMode: 'toggle color mode',
+      goHome: 'Go to home',
+      searchMenu: 'Search menu…',
+      account: 'Account',
+      accountMenu: 'account menu',
+    },
+
+    /** The signed-in account card on every portal welcome dashboard. */
+    /** The e-mail sign-in panel on the portal login screen. */
+    login: {
+      emailAddress: 'e-mail address',
+    },
+
+    /** Emoji picker category headings + the chat launcher. */
+    emoji: {
+      reactions: 'Reactions',
+      faces: 'Faces',
+      work: 'Work',
+    },
+
+    account: {
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      memberSince: 'Member since',
+    },
+
+    /** The shared file browser, opened from the header apps drawer. */
+    fileManager: {
+      title: 'File Manager',
+      close: 'Close file manager',
+      search: 'Search by file name',
+      type: 'Type',
+      sort: 'Sort',
+      reload: 'Reload',
+      reloadFiles: 'Reload files',
+      copyLink: 'Copy link',
+      prevFile: 'Previous selected file',
+      nextFile: 'Next selected file',
+      closeDetails: 'Close file details',
+      fileName: 'File name',
+      renameHint: 'Renaming purges the CDN copy so the link updates.',
+      tags: 'Tags',
+      tagsHint: 'Type and press Enter. Tags are searchable in ImageKit.',
+      info: 'Info',
+      edit: 'Edit',
+      renameFailed: 'Rename failed',
+      tagsFailed: 'Could not save tags',
+      linkCopied: 'Link copied',
+      deleted: 'Deleted {name}',
+      deleteNothing: 'Nothing was deleted',
+      noMatches: 'Nothing matches “{query}”.',
+      emptyUploads: 'Nothing uploaded yet.',
+      upload: 'Upload',
+      uploading: 'Uploading…',
+      infoName: 'Name',
+      infoPath: 'Path',
+      infoType: 'Type',
+      infoSize: 'Size',
+      infoDimensions: 'Dimensions',
+      infoUploaded: 'Uploaded',
+      infoUpdated: 'Updated',
+      infoFileId: 'File ID',
+      infoVersion: 'Version',
+    },
+
+    /**
+     * EVERY console sidebar entry, for all 17 portals that define a nav.
+     *
+     * They live in the SHELL bundle because the shell is what renders the
+     * sidebar — and because the alternative is 17 namespaces holding the same
+     * words: "Dashboard" alone appears in 22 places, "Settings" in 7. One
+     * namespace means a portal needs no i18nFallback of its own to have a
+     * translated sidebar, and one translator decision applies everywhere.
+     *
+     * A portal points at these with AppNavItem.labelKey; the shell resolves
+     * the tree once (see localizeNav) so the sidebar, the header search, the
+     * breadcrumbs and the page title cannot disagree.
+     */
+    nav: {
+      ads: 'Ads',
+      adsApproval: 'Ads Approval',
+      adsSettings: 'Ads Settings',
+      aiCallPrompts: 'AI Call Prompts',
+      aiLibrary: 'AI Library',
+      aiMonitoring: 'AI Monitoring',
+      allPods: 'All Pods',
+      allUsers: 'All Users',
+      amenitiesManagement: 'Amenities management',
+      android: 'Android',
+      apiKeys: 'API Keys',
+      apiReference: 'API Reference',
+      appBuilds: 'App Builds',
+      appPopups: 'App Popups',
+      approvals: 'Approvals',
+      authentication: 'Authentication',
+      autoPods: 'Auto Pods',
+      badges: 'Badges',
+      blog: 'Blog',
+      boards: 'Boards',
+      branding: 'Branding',
+      brandRequest: 'Brand Request',
+      brands: 'Brands',
+      brandsAndProductsReview: 'Brands & Products Review',
+      brandsReview: 'Brands Review',
+      bugs: 'Bugs',
+      businessIdentity: 'Business Identity',
+      calculators: 'Calculators',
+      calendar: 'Calendar',
+      callbackRequests: 'Callback Requests',
+      campaigns: 'Campaigns',
+      cancelAndRefunds: 'Cancel & Refunds',
+      cards: 'Cards',
+      career: 'Career',
+      catalog: 'Catalog',
+      categories: 'Categories',
+      challenges: 'Challenges',
+      chatWithUs: 'Chat with Us',
+      clubAdminMeetings: 'Club Admin Meetings',
+      clubs: 'Clubs',
+      coinSettings: 'Coin Settings',
+      contactSubmission: 'Contact Submission',
+      contracts: 'Contracts',
+      coupons: 'Coupons',
+      createAd: 'Create Ad',
+      createAds: 'Create Ads',
+      dashboard: 'Dashboard',
+      data: 'Data',
+      dataClone: 'Data Clone',
+      defaultDeductions: 'Default Deductions',
+      docker: 'Docker',
+      documents: 'Documents',
+      duncitCoin: 'Duncit Coin',
+      duncitExpenses: 'Duncit Expenses',
+      duncitProducts: 'Duncit Products',
+      duncitWarehouseLocations: 'Duncit Warehouse Locations',
+      dynamicFields: 'Dynamic Fields',
+      earnWithDuncit: 'Earn with Duncit',
+      eCommerceBrandMeetings: 'E-Commerce Brand Meetings',
+      ecommLeads: 'Ecomm Leads',
+      ecommRequests: 'Ecomm Requests',
+      email: 'Email',
+      emails: 'Emails',
+      emailTemplates: 'Email Templates',
+      engagement: 'Engagement',
+      environmentVariables: 'Environment Variables',
+      errorLogs: 'Error Logs',
+      eventSuitabilityManagement: 'Event Suitability management',
+      eventTickets: 'Event Tickets',
+      faqs: 'FAQs',
+      faqSubmission: 'FAQ Submission',
+      featureFlags: 'Feature Flags',
+      fragments: 'Fragments',
+      fulfilment: 'Fulfilment',
+      giftCards: 'Gift Cards',
+      grievance: 'Grievance',
+      grievanceInfo: 'Grievance Info',
+      grievanceTickets: 'Grievance Tickets',
+      hostAdditionalRequests: 'Host Additional Requests',
+      hostCancel: 'Host Cancel',
+      hostInvoice: 'Host Invoice',
+      hostLeads: 'Host Leads',
+      hostListOrSell: 'Host, list or sell',
+      hostMeetings: 'Host Meetings',
+      info: 'Info',
+      invoices: 'Invoices',
+      ios: 'iOS',
+      jobApplications: 'Job Applications',
+      leaderboard: 'Leaderboard',
+      leads: 'Leads',
+      liveAds: 'Live Ads',
+      locales: 'Locales',
+      localization: 'Localization',
+      locations: 'Locations',
+      logs: 'Logs',
+      logsSettings: 'Logs Settings',
+      mailAutomation: 'Mail Automation',
+      mailPreferences: 'Mail Preferences',
+      maintenance: 'Maintenance',
+      meetingAvailability: 'Meeting Availability',
+      meetingSchedule: 'Meeting Schedule',
+      membership: 'Membership',
+      mobileApp: 'Mobile App',
+      mwebUploadSetting: 'mWeb Upload Setting',
+      myAds: 'My Ads',
+      navigation: 'Navigation',
+      newsletterSubmission: 'Newsletter Submission',
+      newsroom: 'Newsroom',
+      notifications: 'Notifications',
+      onboardedClubAdmins: 'Onboarded Club Admins',
+      onboardedECommerceBrands: 'Onboarded E-Commerce Brands',
+      onboardedHosts: 'Onboarded Hosts',
+      onboardedVenues: 'Onboarded Venues',
+      onboarding: 'Onboarding',
+      openai: 'OpenAI',
+      orders: 'Orders',
+      packageDocumentation: 'Package Documentation',
+      partnerFaqs: 'Partner FAQs',
+      partners: 'Partners',
+      paymentLogs: 'Payment Logs',
+      paymentRelease: 'Payment Release',
+      payoutCycles: 'Payout Cycles',
+      plans: 'Plans',
+      podFinance: 'Pod Finance',
+      podIdeas: 'Pod Ideas',
+      podMonitoringAi: 'Pod Monitoring (AI)',
+      podPlans: 'Pod Plans',
+      podProfit: 'Pod Profit',
+      pods: 'Pods',
+      podsDashboard: 'Pods Dashboard',
+      podSettings: 'Pod Settings',
+      podShopSlider: 'Pod Shop Slider',
+      pointsLedger: 'Points Ledger',
+      policies: 'Policies',
+      policyAcceptanceLogs: 'Policy Acceptance Logs',
+      portalAccess: 'Portal Access',
+      portalAppSetting: 'Portal App Setting',
+      portalsUploadSetting: 'Portals Upload Setting',
+      problems: 'Problems',
+      productInvoice: 'Product Invoice',
+      productRequest: 'Product Request',
+      productsReviews: 'Products Reviews',
+      referrals: 'Referrals',
+      reminders: 'Reminders',
+      reportByUser: 'Report By User',
+      reportedProblems: 'Reported Problems',
+      roles: 'Roles',
+      server: 'Server',
+      servicesOffered: 'Services Offered',
+      settings: 'Settings',
+      settingsAndRewards: 'Settings & Rewards',
+      shortLinks: 'Short Links',
+      slack: 'Slack',
+      somethingForYou: 'Something for you',
+      sosAlerts: 'SOS Alerts',
+      startupDashboard: 'Startup Dashboard',
+      staticContent: 'Static Content',
+      subscribers: 'Subscribers',
+      support: 'Support',
+      surveys: 'Surveys',
+      system: 'System',
+      targetAudience: 'Target Audience',
+      telemetry: 'Telemetry',
+      templates: 'Templates',
+      terminal: 'Terminal',
+      tickets: 'Tickets',
+      tools: 'Tools',
+      transactions: 'Transactions',
+      translations: 'Translations',
+      uploadSettings: 'Upload Settings',
+      userBackoutRefunds: 'User Backout Refunds',
+      userLeads: 'User Leads',
+      userManagement: 'User Management',
+      venueCancel: 'Venue Cancel',
+      venueInvoice: 'Venue Invoice',
+      venueLeads: 'Venue Leads',
+      venueMeetings: 'Venue Meetings',
+      venues: 'Venues',
+      verification: 'Verification',
+      warehouseApproval: 'Warehouse Approval',
+      welcome: 'Welcome',
+      whatsapp: 'WhatsApp',
+      whatsappLeadGenerator: 'WhatsApp Lead Generator',
+      whatsappLeads: 'WhatsApp Leads',
+      withdrawal: 'Withdrawal',
+      withdrawalPayments: 'Withdrawal Payments',
+      withdrawalSettings: 'Withdrawal Settings',
+    },
+
     /** Auto Pods in the Partners portal — the same copy mWeb and native render
      * under mweb.autoPods (rule 27 keeps them identical). */
     autoPods: {
@@ -104,6 +522,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // is unrepresentable, so whichever bundle merged last would silently
       // overwrite the other surface's copy.
       languageHint: 'Choose the language for this portal.',
+      firstName: 'First name',
+      lastName: 'Last name',
+      languageSaveFailed: 'Could not save your language',
     },
     /** The apps drawer's Jump to Portal dialog — shell chrome, so one copy for all consoles. */
     jumpToPortal: {
@@ -436,6 +857,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         dropToAttach: 'Drop to attach',
         replyingTo: 'Replying to {name}',
         cancelReply: 'Cancel reply',
+      searchPlace: 'Search a place',
+      sendLocation: 'Send my location',
         attachment: 'Attachment',
       },
       actions: {

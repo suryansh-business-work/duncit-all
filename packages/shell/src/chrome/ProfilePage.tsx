@@ -141,8 +141,8 @@ export function ProfilePage() {
 
         {editing ? (
           <Stack spacing={2}>
-            <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth size="small" />
-            <TextField label="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" />
+            <TextField label={t('shell.profile.firstName')} value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth size="small" />
+            <TextField label={t('shell.profile.lastName')} value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" />
             {error && <Alert severity="error">{error.message}</Alert>}
             <Stack direction="row" spacing={1.5}>
               <Button variant="contained" onClick={submit} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>

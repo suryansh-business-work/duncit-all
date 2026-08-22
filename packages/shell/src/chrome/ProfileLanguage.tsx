@@ -37,7 +37,7 @@ export function ProfileLanguage() {
       await save({ variables: { locale: code } });
       setSaved(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save your language');
+      setError(e instanceof Error ? e.message : t('shell.profile.languageSaveFailed'));
     }
   };
 

@@ -4,6 +4,7 @@ import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typograph
 import { parseApiError } from '@duncit/utils';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { AppIcon } from '../chrome/AppIcon';
+import { useTranslation } from '../i18n/useTranslation';
 import type { AppModule } from '../types';
 import { AccountSummaryCard } from './AccountSummaryCard';
 
@@ -25,21 +26,28 @@ const DASHBOARD_ME = gql`
 
 /** One "coming soon" module tile. Each is its own widget, so a console can be
  *  rearranged around the module its team actually waits on. */
-function ModuleCard({ module }: Readonly<{ module: AppModule }>) {
+interface ModuleCardProps {
+  icon: string;
+  title: string;
+  description: string;
+  comingSoon: string;
+}
+
+function ModuleCard({ icon, title, description, comingSoon }: Readonly<ModuleCardProps>) {
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
         <Stack spacing={1}>
           <Box sx={{ color: 'primary.main' }}>
-            <AppIcon name={module.icon} />
+            <AppIcon name={icon} />
           </Box>
           <Typography variant="subtitle2" fontWeight={700}>
-            {module.title}
+            {title}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {module.description}
+            {description}
           </Typography>
-          <Chip label="Coming soon" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
+          <Chip label={comingSoon} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
         </Stack>
       </CardContent>
     </Card>
@@ -85,6 +93,7 @@ export function WelcomeDashboard({
   modules,
   children,
 }: WelcomeDashboardProps) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
   const me = data?.me;
 
@@ -139,7 +148,7 @@ export function WelcomeDashboard({
       minH: 1,
       content: (
         <Typography variant="subtitle1" fontWeight={700}>
-          {name} modules
+          {t('shell.welcome.modulesHeading', { vars: { name } })}
         </Typography>
       ),
     });
@@ -152,7 +161,14 @@ export function WelcomeDashboard({
         defaultLayout: { x: (index % 4) * 3, y: row + Math.floor(index / 4) * 3, w: 3, h: 3 },
         minW: 2,
         minH: 2,
-        content: <ModuleCard module={module} />,
+        content: (
+          <ModuleCard
+            icon={module.icon}
+            title={module.titleKey ? t(module.titleKey) : module.title}
+            description={module.descriptionKey ? t(module.descriptionKey) : module.description}
+            comingSoon={t('shell.welcome.comingSoon')}
+          />
+        ),
       });
     }
   }
@@ -163,7 +179,7 @@ export function WelcomeDashboard({
       header={
         <Box>
           <Typography variant="h5" fontWeight={800}>
-            Welcome back, {firstName}
+            {t('shell.welcome.greeting', { vars: { name: firstName } })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {tagline}

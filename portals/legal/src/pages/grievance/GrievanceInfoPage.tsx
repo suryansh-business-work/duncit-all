@@ -15,8 +15,10 @@ import {
   GrievanceOfficerForm,
   type GrievanceOfficerFormValues,
 } from './grievance-officer-form';
+import { useTranslation } from '@duncit/shell';
 
 export default function GrievanceInfoPage() {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat({ timeZoneAware: true });
   const { data, refetch } = useQuery<{ grievanceOfficer: GrievanceOfficer }>(GRIEVANCE_OFFICER, {
     fetchPolicy: 'network-only',
@@ -58,8 +60,8 @@ export default function GrievanceInfoPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Grievance Info"
-        subtitle="The Grievance Officer we publish. These details appear in the app, on the website and in every grievance acknowledgement."
+        title={t('legal.grievance.infoTitle')}
+        subtitle={t('legal.grievance.infoSubtitle')}
       />
 
       {!published && (

@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'CRM',
   fullName: 'Duncit CRM',
   tagline: 'Capture, qualify and convert venue and host leads.',
+  taglineKey: 'shell.portal.crm.tagline',
   promoTitle: "Know every customer",
+  promoTitleKey: 'shell.portal.crm.promoTitle',
   promoText: "Leads, contacts and conversations — unified. Sign in to dive in.",
+  promoTextKey: 'shell.portal.crm.promoText',
   portalLabel: 'CRM Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -21,63 +24,63 @@ export const appConfig = {
   colorModeKey: 'crm_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     {
-      label: 'Leads',
+      label: 'Leads', labelKey: 'shell.nav.leads',
       icon: 'groups',
       children: [
-        { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
-        { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
-        { label: 'Ecomm Leads', to: '/ecomm-leads', icon: 'inventory' },
+        { label: 'Venue Leads', labelKey: 'shell.nav.venueLeads', to: '/venue-leads', icon: 'location' },
+        { label: 'Host Leads', labelKey: 'shell.nav.hostLeads', to: '/host-leads', icon: 'groups' },
+        { label: 'Ecomm Leads', labelKey: 'shell.nav.ecommLeads', to: '/ecomm-leads', icon: 'inventory' },
         {
-          label: 'User Leads',
+          label: 'User Leads', labelKey: 'shell.nav.userLeads',
           icon: 'user-search',
-          children: [{ label: 'WhatsApp Leads', to: '/user-leads', icon: 'whatsapp' }],
+          children: [{ label: 'WhatsApp Leads', labelKey: 'shell.nav.whatsappLeads', to: '/user-leads', icon: 'whatsapp' }],
         },
       ],
     },
     {
-      label: 'Tools',
+      label: 'Tools', labelKey: 'shell.nav.tools',
       icon: 'tools',
       children: [
-        { label: 'WhatsApp Lead Generator', to: '/tools/whatsapp', icon: 'whatsapp' },
+        { label: 'WhatsApp Lead Generator', labelKey: 'shell.nav.whatsappLeadGenerator', to: '/tools/whatsapp', icon: 'whatsapp' },
       ],
     },
-    { label: 'Reminders', to: '/reminders', icon: 'calendar' },
+    { label: 'Reminders', labelKey: 'shell.nav.reminders', to: '/reminders', icon: 'calendar' },
     {
-      label: 'Data',
+      label: 'Data', labelKey: 'shell.nav.data',
       icon: 'analytics',
       children: [
-        { label: 'Services Offered', to: '/data/services-offered', icon: 'contacts' },
+        { label: 'Services Offered', labelKey: 'shell.nav.servicesOffered', to: '/data/services-offered', icon: 'contacts' },
         {
-          label: 'Venues',
+          label: 'Venues', labelKey: 'shell.nav.venues',
           icon: 'location',
           children: [
-            { label: 'Amenities management', to: '/data/venues/amenities', icon: 'analytics' },
-            { label: 'Event Suitability management', to: '/data/venues/event-suitability', icon: 'analytics' },
+            { label: 'Amenities management', labelKey: 'shell.nav.amenitiesManagement', to: '/data/venues/amenities', icon: 'analytics' },
+            { label: 'Event Suitability management', labelKey: 'shell.nav.eventSuitabilityManagement', to: '/data/venues/event-suitability', icon: 'analytics' },
           ],
         },
       ],
     },
     {
-      label: 'Email Templates',
+      label: 'Email Templates', labelKey: 'shell.nav.emailTemplates',
       icon: 'email',
       children: [
-        { label: 'Templates', to: '/email-templates', icon: 'email' },
+        { label: 'Templates', labelKey: 'shell.nav.templates', to: '/email-templates', icon: 'email' },
       ],
     },
     {
-      label: 'AI Call Prompts',
+      label: 'AI Call Prompts', labelKey: 'shell.nav.aiCallPrompts',
       icon: 'ai',
       children: [
-        { label: 'Static Content', to: '/call-prompts', icon: 'phone' },
+        { label: 'Static Content', labelKey: 'shell.nav.staticContent', to: '/call-prompts', icon: 'phone' },
       ],
     },
     {
-      label: 'Settings',
+      label: 'Settings', labelKey: 'shell.nav.settings',
       icon: 'analytics',
       children: [
-        { label: 'Dynamic Fields', to: '/settings/dynamic-fields', icon: 'analytics' },
+        { label: 'Dynamic Fields', labelKey: 'shell.nav.dynamicFields', to: '/settings/dynamic-fields', icon: 'analytics' },
       ],
     },
   ],

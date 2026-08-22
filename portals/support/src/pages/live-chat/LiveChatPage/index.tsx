@@ -16,18 +16,22 @@ import { useTabParam } from '@duncit/tabs';
 import { useSupportSocket, type ChatTypingPayload } from '../../../lib/useSupportSocket';
 import CreateUserDialog from '../CreateUserDialog';
 import SessionInbox from './SessionInbox';
-import { SESSION_FILTERS } from './SessionFilter';
+import { sessionFilters } from './SessionFilter';
 import ChatPane from './ChatPane';
+import { useTranslation } from '@duncit/shell';
 import { useChatActions } from './useChatActions';
 
-function typingLabelFor(p: ChatTypingPayload, fallbackName: string): string {
-  if (p.role === 'AGENT') return 'Support is typing…';
-  return `${p.name || fallbackName} is typing…`;
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+function typingLabelFor(p: ChatTypingPayload, fallbackName: string, t: Translate): string {
+  if (p.role === 'AGENT') return t('support.chat.agentTyping');
+  return t('support.chat.userTyping', { vars: { name: p.name || fallbackName } });
 }
 
 export default function LiveChatPage() {
+  const { t } = useTranslation();
   const sessionTabs = useTabParam<SupportChatStatus>({
-    items: SESSION_FILTERS,
+    items: sessionFilters(t),
     fallback: 'OPEN',
   });
   const statusFilter = sessionTabs.value;
@@ -95,7 +99,7 @@ export default function LiveChatPage() {
     onChatTyping: (p: ChatTypingPayload) => {
       if (p.session_id !== selectedIdRef.current) return;
       const selected = sessions.find((s) => s.id === p.session_id);
-      setTypingLabel(typingLabelFor(p, selected?.user.name ?? 'User'));
+      setTypingLabel(typingLabelFor(p, selected?.user.name ?? t('support.chat.fallbackUser'), t));
       if (typingTimer.current) clearTimeout(typingTimer.current);
       typingTimer.current = setTimeout(() => setTypingLabel(null), 2500);
     },

@@ -1,17 +1,25 @@
 import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { ADMIN_BUNDLE } from './bundles/admin';
+import { ADS_BUNDLE } from './bundles/ads';
+import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
+import { CHALLENGE_BUNDLE } from './bundles/challenge';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
+import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
+import { LEGAL_BUNDLE } from './bundles/legal';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { MWEB_BUNDLE } from './bundles/mweb';
 import { PARTNERS_BUNDLE } from './bundles/partners';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
+import { PRODUCTS_BUNDLE } from './bundles/products';
 import { SHELL_BUNDLE } from './bundles/shell';
+import { SUPPORT_BUNDLE } from './bundles/support';
 import { WEBSITE_BUNDLE } from './bundles/website';
+import { WEBSITE_APP_BUNDLE } from './bundles/website-app';
 import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
 
 /**
@@ -37,17 +45,25 @@ import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
  */
 export {
   ADMIN_BUNDLE,
+  ADS_BUNDLE,
+  AI_BUNDLE,
   AI_MONITORING_BUNDLE,
+  CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  DEVELOPERS_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
+  LEGAL_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   MWEB_BUNDLE,
   PARTNERS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRODUCTS_BUNDLE,
   SHELL_BUNDLE,
+  SUPPORT_BUNDLE,
+  WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
 };
@@ -55,18 +71,26 @@ export {
 /** Every client bundle, by the surface that ships it. */
 export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   admin: ADMIN_BUNDLE,
+  ads: ADS_BUNDLE,
+  ai: AI_BUNDLE,
   aiMonitoring: AI_MONITORING_BUNDLE,
+  challenge: CHALLENGE_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
+  developers: DEVELOPERS_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
+  legal: LEGAL_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   mweb: MWEB_BUNDLE,
   partners: PARTNERS_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,
   policyAcceptance: POLICY_ACCEPTANCE_BUNDLE,
+  products: PRODUCTS_BUNDLE,
   shell: SHELL_BUNDLE,
+  support: SUPPORT_BUNDLE,
   website: WEBSITE_BUNDLE,
+  websiteApp: WEBSITE_APP_BUNDLE,
   whatsapp: WHATSAPP_BUNDLE,
 };
 

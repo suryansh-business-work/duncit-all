@@ -7,6 +7,16 @@ import type { FlatCatalogue } from '@duncit/i18n';
 /** A sidebar navigation entry. Items with `children` render as a collapsible group. */
 export interface AppNavItem {
   label: string;
+  /**
+   * Translation key for `label`. When set, the shell renders the catalogue's
+   * text instead — see `localizeNav`.
+   *
+   * `label` stays REQUIRED alongside it rather than becoming a union, because
+   * the 26 portals are being localized one at a time: a console that has not
+   * been swept yet still renders real words, and the two states cannot both
+   * exist in one field without every reader having to handle a missing label.
+   */
+  labelKey?: string;
   /** Route the item links to. Optional when the item is purely a group header. */
   to?: string;
   icon?: string;
@@ -14,6 +24,8 @@ export interface AppNavItem {
   children?: AppNavItem[];
   /** Caption line under the label — rendered only when `featured` is set. */
   caption?: string;
+  /** Translation key for `caption`, same arrangement as `labelKey`. */
+  captionKey?: string;
   /** Highlighted "featured" card treatment for a leaf (e.g. Partners' "Earn with Duncit"). */
   featured?: boolean;
 }
@@ -21,15 +33,32 @@ export interface AppNavItem {
 /** One entry of the header-wide global search. */
 export interface SearchItem {
   label: string;
+  /** Translation key for `label`, same arrangement as `AppNavItem.labelKey`. */
+  labelKey?: string;
   to: string;
+  /**
+   * Extra terms that match this entry. Deliberately NOT keyed: they are what
+   * someone types, not what they read, and a reader searching in their own
+   * language is served by the translated `label` matching first.
+   */
   keywords?: string[];
   section?: string;
+  /** Translation key for `section` — the group heading in the results list. */
+  sectionKey?: string;
 }
 
 /** A "Coming soon" module card on the portal welcome dashboard. */
 export interface AppModule {
+  /**
+   * Also the card's stable widget id. The dashboard saves each user's layout
+   * against that id, so this stays the English literal even once `titleKey` is
+   * set — a title that changed with the reader's language would hand every
+   * locale a different id and lose the layout they arranged.
+   */
   title: string;
+  titleKey?: string;
   description: string;
+  descriptionKey?: string;
   icon: string;
 }
 
@@ -40,9 +69,18 @@ export interface AppModule {
  */
 export interface AppConfig extends PortalBootConfig {
   fullName: string;
+  /**
+   * The console's own sentences — the line under the login card and the promo
+   * beside it. Each takes an optional key, same arrangement as
+   * `AppNavItem.labelKey`: the literal stays required so a console that has not
+   * been swept yet still reads correctly.
+   */
   tagline: string;
+  taglineKey?: string;
   promoTitle: string;
+  promoTitleKey?: string;
   promoText: string;
+  promoTextKey?: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];

@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTranslation } from '@duncit/shell';
 
 const SEND_CREDENTIALS = gql`
   mutation SeedSuperAdmin {
@@ -40,6 +41,7 @@ const genCaptcha = () =>
  * (button is disabled while in-flight and permanently after a successful send).
  */
 export default function SendAdminCredentials() {
+  const { t } = useTranslation();
   const [run, { loading, data, error }] = useMutation(SEND_CREDENTIALS);
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState(genCaptcha);
@@ -92,7 +94,7 @@ export default function SendAdminCredentials() {
       </Typography>
 
       <Dialog open={open} onClose={loading ? undefined : () => setOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Confirm you're human</DialogTitle>
+        <DialogTitle>{t('admin.captcha.confirm')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             <Typography variant="body2" color="text.secondary">
@@ -117,14 +119,14 @@ export default function SendAdminCredentials() {
               >
                 {code}
               </Box>
-              <Tooltip title="New code">
-                <IconButton onClick={refresh} disabled={loading} aria-label="refresh captcha">
+              <Tooltip title={t('admin.captcha.newCode')}>
+                <IconButton onClick={refresh} disabled={loading} aria-label={t('admin.captcha.refresh')}>
                   <RefreshIcon />
                 </IconButton>
               </Tooltip>
             </Stack>
             <TextField
-              label="Captcha"
+              label={t('admin.captcha.label')}
               value={entry}
               onChange={(e) => setEntry(e.target.value)}
               error={!!captchaError}

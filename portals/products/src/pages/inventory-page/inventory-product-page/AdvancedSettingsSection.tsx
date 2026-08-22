@@ -15,12 +15,14 @@ import QrPreview from './QrPreview';
 import { STATUS_OPTIONS, VISIBILITY_OPTIONS } from './constants';
 import { GENERATE_INVENTORY_SKU } from './productQueries';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface AdvancedSettingsSectionProps {
   onError: (msg: string) => void;
 }
 
 export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSettingsSectionProps>) {
+  const { t } = useTranslation();
   const { control, setValue } = useFormContext<InventoryProductFormValues>();
   const [generateSku, { loading: generating }] = useMutation(GENERATE_INVENTORY_SKU);
   const sku = useWatch({ control, name: 'sku' });
@@ -60,7 +62,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Tooltip title="Generate new SKU">
+                    <Tooltip title={t('products.advanced.generateSku')}>
                       <Button size="small" onClick={onGenerate} disabled={generating}>
                         <AutorenewIcon fontSize="small" />
                       </Button>
@@ -76,7 +78,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
         <RhfTextField
           control={control}
           name="barcode"
-          label="Barcode value"
+          label={t('products.advanced.barcodeValue')}
           hint="Optional · printed/scanned at checkout"
         />
       </Grid>
@@ -85,7 +87,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           select
           control={control}
           name="status"
-          label="Status"
+          label={t('shell.common.status')}
           hint="Drafts are hidden from pod creation"
         >
           {STATUS_OPTIONS.map((o) => (
@@ -100,7 +102,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           select
           control={control}
           name="visibility"
-          label="Visibility"
+          label={t('products.advanced.visibility')}
           hint="Internal products are admin-only"
         >
           {VISIBILITY_OPTIONS.map((o) => (
@@ -116,7 +118,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
           spacing={2}
           alignItems={{ sm: 'flex-start' }}
         >
-          <QrPreview value={barcode || sku} caption="QR for SKU/barcode" />
+          <QrPreview value={barcode || sku} caption={t('products.advanced.qrForSku')} />
         </Stack>
       </Grid>
     </Grid>

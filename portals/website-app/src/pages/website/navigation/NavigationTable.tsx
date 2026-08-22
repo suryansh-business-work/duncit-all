@@ -5,6 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { NAV_AREAS, type WebsiteNavItem } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<WebsiteNavItem>;
@@ -33,15 +34,16 @@ export default function NavigationTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
 
   const columns = useMemo<DuncitColumn<WebsiteNavItem>[]>(() => {
     const renderActions = (item: WebsiteNavItem) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <IconButton size="small" aria-label="edit" onClick={() => onEdit(item)}>
+        <IconButton size="small" aria-label={t('shell.common.edit')} onClick={() => onEdit(item)}>
           <EditIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" color="error" aria-label="delete" onClick={() => onDelete(item)}>
+        <IconButton size="small" color="error" aria-label={t('shell.common.delete')} onClick={() => onDelete(item)}>
           <DeleteOutlineIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -49,23 +51,23 @@ export default function NavigationTable({
     return [
       {
         field: 'area',
-        headerName: 'Area',
+        headerName: t('websiteApp.navigation.colArea'),
         filter: { type: 'select', options: AREA_OPTIONS },
         width: 110,
       },
       {
         field: 'group_label',
-        headerName: 'Group',
+        headerName: t('websiteApp.navigation.colGroup'),
         filter: { type: 'text' },
         minWidth: 130,
         valueGetter: (item) => item.group_label || '—',
       },
-      { field: 'label', headerName: 'Label', flex: 1, minWidth: 150 },
-      { field: 'url', headerName: 'URL', flex: 1, minWidth: 200 },
-      { field: 'sort_order', headerName: 'Order', width: 90 },
+      { field: 'label', headerName: t('websiteApp.navigation.colLabel'), flex: 1, minWidth: 150 },
+      { field: 'url', headerName: t('websiteApp.navigation.url'), flex: 1, minWidth: 200 },
+      { field: 'sort_order', headerName: t('shell.common.order'), width: 90 },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'boolean' },
         width: 110,
         cellRenderer: renderStatus,
@@ -73,7 +75,7 @@ export default function NavigationTable({
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         hide: true,
         width: 150,
@@ -81,7 +83,7 @@ export default function NavigationTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 110,
         cellRenderer: renderActions,
@@ -96,7 +98,7 @@ export default function NavigationTable({
       fetchRows={fetchRows}
       getRowId={getNavRowId}
       toolbarActions={toolbarActions}
-      emptyText="No links for this site yet."
+      emptyText={t('websiteApp.navigation.empty')}
       defaultSort={{ field: 'area', dir: 'asc' }}
       searchPlaceholder="Search label, group or URL"
       refetchRef={refetchRef}

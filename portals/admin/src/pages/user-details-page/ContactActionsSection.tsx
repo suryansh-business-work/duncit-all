@@ -15,15 +15,18 @@ import {
   type ContactActionRow,
 } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   userId: string;
   refreshToken: number;
 }
 
-const TYPE_OPTIONS = [
-  { value: 'CALL', label: 'Call' },
-  { value: 'EMAIL', label: 'Email' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const typeOptions = (t: Translate) => [
+  { value: 'CALL', label: t('admin.contact.call') },
+  { value: 'EMAIL', label: t('shell.common.email') },
 ];
 
 const getActionRowId = (a: ContactActionRow) => a.id;
@@ -60,6 +63,7 @@ const whenValue = (a: ContactActionRow) => {
 };
 
 export default function ContactActionsSection({ userId, refreshToken }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [deleteAction] = useMutation(DELETE_USER_CONTACT_ACTION);
@@ -92,7 +96,7 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
     };
     const renderActions = (a: ContactActionRow) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <IconButton size="small" color="error" onClick={() => remove(a)} aria-label="delete contact log">
+        <IconButton size="small" color="error" onClick={() => remove(a)} aria-label={t('admin.contact.deleteLog')}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -100,17 +104,17 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
     return [
       {
         field: 'type',
-        headerName: 'Type',
-        filter: { type: 'select', options: TYPE_OPTIONS },
+        headerName: t('admin.roles.type'),
+        filter: { type: 'select', options: typeOptions(t) },
         width: 110,
         cellRenderer: renderType,
         valueGetter: (a) => a.type,
       },
-      { field: 'target', headerName: 'Target', flex: 1, minWidth: 160 },
-      { field: 'status', headerName: 'Status', filter: { type: 'text' }, minWidth: 130 },
+      { field: 'target', headerName: t('admin.contact.target'), flex: 1, minWidth: 160 },
+      { field: 'status', headerName: t('shell.common.status'), filter: { type: 'text' }, minWidth: 130 },
       {
         field: 'notes',
-        headerName: 'Notes',
+        headerName: t('admin.contact.notes'),
         flex: 2,
         minWidth: 240,
         cellRenderer: renderNotes,
@@ -118,19 +122,19 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       },
       {
         field: 'created_at',
-        headerName: 'When',
+        headerName: t('admin.contact.when'),
         filter: { type: 'date' },
         minWidth: 190,
         valueGetter: whenValue,
       },
       {
         field: 'duration_seconds',
-        headerName: 'Duration (s)',
+        headerName: t('admin.contact.durationS'),
         filter: { type: 'number' },
         hide: true,
         width: 120,
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 90, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 90, cellRenderer: renderActions },
     ];
   }, [deleteAction]);
 
@@ -149,7 +153,7 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getActionRowId}
-        emptyText="No contact logs yet."
+        emptyText={t('admin.contact.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search target, subject or notes"
         refetchRef={refetchRef}

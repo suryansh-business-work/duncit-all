@@ -2,27 +2,35 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import KeyIcon from '@mui/icons-material/Key';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { useTranslation } from '@duncit/shell';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 
+/**
+ * The tiles carry KEYS rather than sentences, so the copy lives in the shipped
+ * bundle with the rest of the portal's (rule 38). They are written out as
+ * literals rather than derived from `id`, because the build gate greps for
+ * literal key strings and a composed one reads as copy nothing renders.
+ */
 const TILES = [
   {
     id: 'api-keys',
     to: '/keys',
     icon: <KeyIcon fontSize="large" color="primary" />,
-    title: 'API Keys',
-    text: 'Generate and revoke the keys your integrations authenticate with.',
+    titleKey: 'developers.dashboard.apiKeysTitle',
+    textKey: 'developers.dashboard.apiKeysText',
   },
   {
     id: 'api-reference',
     to: '/docs',
     icon: <MenuBookIcon fontSize="large" color="primary" />,
-    title: 'API Reference',
-    text: 'Venue discovery, slot availability and slot booking endpoints — with a live Try-It console.',
+    titleKey: 'developers.dashboard.apiReferenceTitle',
+    textKey: 'developers.dashboard.apiReferenceText',
   },
 ];
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const widgets: DashboardWidget[] = TILES.map((tile, index) => ({
     id: tile.id,
@@ -37,10 +45,10 @@ export default function DashboardPage() {
             <Stack spacing={1}>
               {tile.icon}
               <Typography variant="subtitle1" fontWeight={900}>
-                {tile.title}
+                {t(tile.titleKey)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {tile.text}
+                {t(tile.textKey)}
               </Typography>
             </Stack>
           </CardContent>
@@ -55,10 +63,10 @@ export default function DashboardPage() {
       header={
         <Box>
           <Typography variant="h5" fontWeight={900}>
-            Developers
+            {t('developers.dashboard.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Build on Duncit — venue APIs for slots, availability and bookings.
+            {t('developers.dashboard.subtitle')}
           </Typography>
         </Box>
       }

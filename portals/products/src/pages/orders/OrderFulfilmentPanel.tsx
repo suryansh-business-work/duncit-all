@@ -27,6 +27,7 @@ import {
   humaniseStatus,
   type FulfilmentStatus,
 } from './constants';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   order: any;
@@ -45,6 +46,7 @@ export default function OrderFulfilmentPanel({
   onCreateShipment,
   onRefreshTracking,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState<FulfilmentStatus>(order.fulfilment_status);
   const [note, setNote] = useState('');
   const isShip = order.fulfilment_method === 'SHIP';
@@ -67,7 +69,7 @@ export default function OrderFulfilmentPanel({
           disabled={busy}
         >
           <ToggleButton value="SHIP">Ship</ToggleButton>
-          <ToggleButton value="PICKUP">Pickup</ToggleButton>
+          <ToggleButton value="PICKUP">{t('products.orders.pickup')}</ToggleButton>
         </ToggleButtonGroup>
 
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mt: 2.5 }}>
@@ -84,7 +86,7 @@ export default function OrderFulfilmentPanel({
           <TextField
             select
             size="small"
-            label="Set status to"
+            label={t('products.orders.setStatusTo')}
             value={target}
             onChange={(event) => setTarget(event.target.value as FulfilmentStatus)}
           >
@@ -96,7 +98,7 @@ export default function OrderFulfilmentPanel({
           </TextField>
           <TextField
             size="small"
-            label="Note (optional)"
+            label={t('products.orders.note')}
             value={note}
             onChange={(event) => setNote(event.target.value)}
           />

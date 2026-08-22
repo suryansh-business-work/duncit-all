@@ -11,6 +11,7 @@ import {
 import { REQUEST_STATUS_COLOR } from '../ecomm/requestsQueries';
 import CatalogBrandProductActions from './CatalogBrandProductActions';
 import type { CatalogBrandProductRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<CatalogBrandProductRow>;
@@ -77,6 +78,7 @@ export default function CatalogBrandProductsTable({
   onToggleActive,
   onDuplicate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
 
   const columns = useMemo<DuncitColumn<CatalogBrandProductRow>[]>(() => {
@@ -94,7 +96,7 @@ export default function CatalogBrandProductsTable({
       { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
       {
         field: 'product_name',
-        headerName: 'Product',
+        headerName: t('products.brandProducts.colProduct'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderProduct,
@@ -103,21 +105,21 @@ export default function CatalogBrandProductsTable({
       { field: 'sku', headerName: 'SKU', filter: { type: 'text' }, width: 140 },
       {
         field: 'selling_price',
-        headerName: 'Price',
+        headerName: t('products.brandProducts.colPrice'),
         filter: { type: 'number' },
         width: 120,
         valueGetter: priceValue,
       },
       {
         field: 'available',
-        headerName: 'Available',
+        headerName: t('products.brandProducts.colAvailable'),
         sortable: false,
         width: 110,
         valueGetter: (p) => p.available_count,
       },
       {
         field: 'listing_review_status',
-        headerName: 'Listing review',
+        headerName: t('products.brandProducts.colListingReview'),
         sortable: false,
         width: 140,
         cellRenderer: renderListingStatus,
@@ -125,14 +127,14 @@ export default function CatalogBrandProductsTable({
       },
       {
         field: 'commission_pct',
-        headerName: 'Commission',
+        headerName: t('products.brands.colCommission'),
         sortable: false,
         width: 120,
         valueGetter: (p) => `${p.commission_pct}%`,
       },
       {
         field: 'is_active',
-        headerName: 'Active',
+        headerName: t('products.brands.colActive'),
         sortable: false,
         filter: { type: 'boolean' },
         width: 110,
@@ -141,7 +143,7 @@ export default function CatalogBrandProductsTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         hide: true,
         width: 130,
@@ -150,7 +152,7 @@ export default function CatalogBrandProductsTable({
       },
       {
         field: 'created_at',
-        headerName: 'Added',
+        headerName: t('products.brandProducts.colAdded'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
@@ -158,7 +160,7 @@ export default function CatalogBrandProductsTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 170,
         cellRenderer: renderActions,
@@ -173,7 +175,7 @@ export default function CatalogBrandProductsTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onEdit}
-      emptyText="This brand has no products yet."
+      emptyText={t('products.brandProducts.empty')}
       defaultSort={{ field: 'product_name', dir: 'asc' }}
       searchPlaceholder="Search product, SKU or tags"
       refetchRef={refetchRef}

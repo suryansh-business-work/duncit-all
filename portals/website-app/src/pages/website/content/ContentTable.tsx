@@ -6,6 +6,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import type { WebsiteContentItem } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   tableId: string;
@@ -50,15 +51,16 @@ export default function ContentTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
 
   const columns = useMemo<DuncitColumn<WebsiteContentItem>[]>(() => {
     const renderActions = (item: WebsiteContentItem) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <IconButton size="small" onClick={() => onEdit(item)} aria-label="edit">
+        <IconButton size="small" onClick={() => onEdit(item)} aria-label={t('shell.common.edit')}>
           <EditIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" color="error" onClick={() => onDelete(item)} aria-label="delete">
+        <IconButton size="small" color="error" onClick={() => onDelete(item)} aria-label={t('shell.common.delete')}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -66,7 +68,7 @@ export default function ContentTable({
     return [
       {
         field: 'title',
-        headerName: 'Entry',
+        headerName: t('websiteApp.content.colEntry'),
         flex: 1,
         minWidth: 240,
         cellRenderer: renderEntry,
@@ -74,14 +76,14 @@ export default function ContentTable({
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: t('websiteApp.content.colCategory'),
         filter: { type: 'text' },
         minWidth: 130,
         valueGetter: (item) => item.category || '—',
       },
       {
         field: 'is_published',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'boolean' },
         width: 120,
         cellRenderer: renderStatus,
@@ -89,15 +91,15 @@ export default function ContentTable({
       },
       {
         field: 'published_at',
-        headerName: 'Published',
+        headerName: t('websiteApp.content.colPublished'),
         filter: { type: 'date' },
         width: 150,
         valueGetter: (item) => (item.published_at ? formatDate(item.published_at) : '—'),
       },
-      { field: 'sort_order', headerName: 'Order', hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('shell.common.order'), hide: true, width: 90 },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         hide: true,
         width: 150,
@@ -105,7 +107,7 @@ export default function ContentTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 110,
         cellRenderer: renderActions,
@@ -120,7 +122,7 @@ export default function ContentTable({
       fetchRows={fetchRows}
       getRowId={getContentRowId}
       toolbarActions={toolbarActions}
-      emptyText="No entries yet."
+      emptyText={t('websiteApp.content.empty')}
       defaultSort={{ field: 'sort_order', dir: 'asc' }}
       searchPlaceholder="Search title, slug or category"
       refetchRef={refetchRef}

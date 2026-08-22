@@ -7,6 +7,7 @@ import DrawIcon from '@mui/icons-material/Draw';
 import EditIcon from '@mui/icons-material/Edit';
 import { formatDistanceToNow } from 'date-fns';
 import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import type { LegalDocumentListItem } from '../../graphql/documents';
 
 interface Props {
@@ -64,13 +65,16 @@ const lastUpdatedValue = (d: LegalDocumentListItem) =>
 // sort document_no/name/is_active/document_type/updated_by_name/created_at/updated_at;
 // filter document_no/document_type/updated_by_name (text), is_active (boolean),
 // created_at/updated_at (date).
-const COLUMNS: DuncitColumn<LegalDocumentListItem>[] = [
-  entityIdColumn<LegalDocumentListItem>({ field: 'document_no', headerName: 'Document ID' }),
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 220, cellRenderer: renderName },
-  { field: 'document_type', headerName: 'Type', minWidth: 200, filter: { type: 'text' } },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Headings are copy, so the base columns are built per translator. */
+const baseColumns = (t: Translate): DuncitColumn<LegalDocumentListItem>[] => [
+  entityIdColumn<LegalDocumentListItem>({ field: 'document_no', headerName: t('legal.documents.colId') }),
+  { field: 'name', headerName: t('legal.documents.colName'), flex: 1, minWidth: 220, cellRenderer: renderName },
+  { field: 'document_type', headerName: t('legal.documents.colType'), minWidth: 200, filter: { type: 'text' } },
   {
     field: 'is_active',
-    headerName: 'Active',
+    headerName: t('legal.documents.colActive'),
     width: 110,
     filter: { type: 'boolean' },
     cellRenderer: renderActive,
@@ -78,21 +82,21 @@ const COLUMNS: DuncitColumn<LegalDocumentListItem>[] = [
   },
   {
     field: 'updated_by_name',
-    headerName: 'Updated by',
+    headerName: t('legal.documents.colUpdatedBy'),
     minWidth: 140,
     filter: { type: 'text' },
     valueGetter: updatedByValue,
   },
-  { field: 'version_count', headerName: 'Versions', sortable: false, width: 100 },
+  { field: 'version_count', headerName: t('legal.documents.colVersions'), sortable: false, width: 100 },
   {
     field: 'updated_at',
-    headerName: 'Last updated',
+    headerName: t('legal.documents.colLastUpdated'),
     minWidth: 150,
     filter: { type: 'date' },
     valueGetter: lastUpdatedValue,
   },
   // Hidden by default — carries the allowlisted created-date filter.
-  { field: 'created_at', headerName: 'Created', hide: true, filter: { type: 'date' }, minWidth: 150 },
+  { field: 'created_at', headerName: t('shell.common.created'), hide: true, filter: { type: 'date' }, minWidth: 150 },
 ];
 
 export default function DocumentsTable({
@@ -103,6 +107,7 @@ export default function DocumentsTable({
   onEdit,
   onSign,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<LegalDocumentListItem>[]>(() => {
     // Stop the row's own click on both: opening the document underneath a
     // dialog would leave two things open on one press.
@@ -113,7 +118,7 @@ export default function DocumentsTable({
             <IconButton
               size="small"
               disabled={d.is_locked}
-              aria-label="Edit"
+              aria-label={t('shell.common.edit')}
               onClick={(event) => {
                 event.stopPropagation();
                 onEdit(d);
@@ -126,7 +131,7 @@ export default function DocumentsTable({
         <Tooltip title={d.signing_status === 'SIGNED' ? 'View signed contract' : 'Sign'}>
           <IconButton
             size="small"
-            aria-label="Sign"
+            aria-label={t('legal.documents.sign')}
             onClick={(event) => {
               event.stopPropagation();
               onSign(d);
@@ -139,10 +144,10 @@ export default function DocumentsTable({
     );
 
     return [
-      ...COLUMNS,
+      ...baseColumns(t),
       {
         field: 'signing_status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 120,
         sortable: false,
         cellRenderer: renderStatus,
@@ -150,13 +155,13 @@ export default function DocumentsTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 120,
         cellRenderer: renderActions,
       },
     ];
-  }, [onEdit, onSign]);
+  }, [onEdit, onSign, t]);
 
   return (
     <DuncitTable<LegalDocumentListItem>
@@ -166,7 +171,7 @@ export default function DocumentsTable({
       getRowId={getDocumentRowId}
       onRowClick={onOpen}
       toolbarActions={toolbarActions}
-      emptyText="No documents yet."
+      emptyText={t('legal.documents.empty')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
       searchPlaceholder="Search document ID, name, type or description"
       refetchRef={refetchRef}

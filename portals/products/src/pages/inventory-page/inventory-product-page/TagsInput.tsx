@@ -1,4 +1,5 @@
 import { Autocomplete, Chip, TextField } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface TagsInputProps {
   value: string[];
@@ -11,10 +12,13 @@ interface TagsInputProps {
 export default function TagsInput({
   value,
   onChange,
-  label = 'Tags',
-  helperText = 'Press Enter to add a tag',
+  label,
+  helperText,
   max = 20,
 }: Readonly<TagsInputProps>) {
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('products.media.tags');
+  const hint = helperText ?? t('products.media.tagsHint');
   return (
     <Autocomplete
       multiple
@@ -33,7 +37,7 @@ export default function TagsInput({
         ))
       }
       renderInput={(params) => (
-        <TextField {...params} label={label} helperText={helperText} />
+        <TextField {...params} label={fieldLabel} helperText={hint} />
       )}
     />
   );

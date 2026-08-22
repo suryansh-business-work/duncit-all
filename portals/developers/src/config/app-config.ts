@@ -10,9 +10,12 @@ export const appConfig = {
   name: 'Developers',
   fullName: 'Duncit Developers',
   tagline: 'API keys and venue APIs — availability, slots and bookings.',
+  taglineKey: 'shell.portal.developers.tagline',
   promoTitle: 'Build on Duncit',
+  promoTitleKey: 'shell.portal.developers.promoTitle',
   promoText:
     'Generate API keys and integrate venue discovery, slot availability and slot booking into your own products.',
+  promoTextKey: 'shell.portal.developers.promoText',
   portalLabel: 'Developers Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -22,9 +25,9 @@ export const appConfig = {
   colorModeKey: 'developers_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'API Keys', to: '/keys', icon: 'key' },
-    { label: 'API Reference', to: '/docs', icon: 'docs' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    { label: 'API Keys', labelKey: 'shell.nav.apiKeys', to: '/keys', icon: 'key' },
+    { label: 'API Reference', labelKey: 'shell.nav.apiReference', to: '/docs', icon: 'docs' },
   ],
   modules: [],
 } satisfies AppConfig;

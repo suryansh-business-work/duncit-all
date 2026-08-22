@@ -23,6 +23,7 @@ import PhoneExtensionField from '../../components/PhoneExtensionField';
 import DateField from '../../components/DateField';
 import { type CreateForm, genPassword } from './helpers';
 import { createUserSchema } from './create-user.form';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -47,6 +48,7 @@ export default function CreateUserDialog({
   onSubmit,
   roles,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset, setValue } = useForm<CreateForm>({
     defaultValues: form,
     resolver: zodResolver(createUserSchema),
@@ -61,7 +63,7 @@ export default function CreateUserDialog({
 
   const pwdAdornment = (
     <InputAdornment position="end">
-      <Tooltip title="Generate">
+      <Tooltip title={t('admin.users.generate')}>
         <IconButton size="small" onClick={() => setValue('password', genPassword(), { shouldValidate: true })}>
           <CasinoIcon fontSize="small" />
         </IconButton>
@@ -78,9 +80,9 @@ export default function CreateUserDialog({
         <DialogTitle>Create User</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="first_name" label="First name" required /></Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="last_name" label="Last name" required /></Grid>
-            <Grid item xs={12}><RhfTextField control={control} name="email" type="email" label="Email" hint="Welcome email is sent if provided." /></Grid>
+            <Grid item xs={12} sm={6}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required /></Grid>
+            <Grid item xs={12} sm={6}><RhfTextField control={control} name="last_name" label={t('shell.profile.lastName')} required /></Grid>
+            <Grid item xs={12}><RhfTextField control={control} name="email" type="email" label={t('shell.common.email')} hint="Welcome email is sent if provided." /></Grid>
             <Grid item xs={4} sm={3}>
               <Controller
                 control={control}
@@ -90,18 +92,18 @@ export default function CreateUserDialog({
                 )}
               />
             </Grid>
-            <Grid item xs={8} sm={9}><RhfTextField control={control} name="phone_number" label="Phone number" required /></Grid>
+            <Grid item xs={8} sm={9}><RhfTextField control={control} name="phone_number" label={t('admin.users.phoneNumber')} required /></Grid>
             <Grid item xs={12}>
               <Controller
                 control={control}
                 name="dob"
                 render={({ field, fieldState }) => (
-                  <DateField label="Date of birth" value={field.value} onChange={field.onChange} error={!!fieldState.error} helperText={fieldState.error?.message ?? ' '} maxDate={new Date()} required />
+                  <DateField label={t('admin.users.dateOfBirth')} value={field.value} onChange={field.onChange} error={!!fieldState.error} helperText={fieldState.error?.message ?? ' '} maxDate={new Date()} required />
                 )}
               />
             </Grid>
             <Grid item xs={12}>
-              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} label="Temporary password" required hint="Minimum 8 characters." InputProps={{ endAdornment: pwdAdornment }} />
+              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} label={t('admin.users.temporaryPassword')} required hint="Minimum 8 characters." InputProps={{ endAdornment: pwdAdornment }} />
             </Grid>
             <Grid item xs={12}>
               <Controller
@@ -109,7 +111,7 @@ export default function CreateUserDialog({
                 name="roles"
                 render={({ field, fieldState }) => (
                   <TextField
-                    label="Roles"
+                    label={t('admin.roles.title')}
                     select
                     fullWidth
                     required
@@ -125,8 +127,8 @@ export default function CreateUserDialog({
                 )}
               />
             </Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="city" label="City" /></Grid>
-            <Grid item xs={12} sm={6}><RhfTextField control={control} name="zone" label="Zone" /></Grid>
+            <Grid item xs={12} sm={6}><RhfTextField control={control} name="city" label={t('admin.profile.city')} /></Grid>
+            <Grid item xs={12} sm={6}><RhfTextField control={control} name="zone" label={t('admin.profile.zone')} /></Grid>
             {opError && <Grid item xs={12}><Alert severity="error">{opError}</Alert></Grid>}
           </Grid>
         </DialogContent>

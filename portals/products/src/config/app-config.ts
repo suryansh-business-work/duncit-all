@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Products',
   fullName: 'Duncit Products',
   tagline: 'Manage the product catalog and roadmap.',
+  taglineKey: 'shell.portal.products.tagline',
   promoTitle: 'Build what matters',
+  promoTitleKey: 'shell.portal.products.promoTitle',
   promoText: 'Catalog, inventory and roadmap from one console.',
+  promoTextKey: 'shell.portal.products.promoText',
   portalLabel: 'Products Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -21,43 +24,43 @@ export const appConfig = {
   colorModeKey: 'products_color_mode',
   accent: { light: '#fdba74', main: '#ea580c', hover: '#c2410c', active: '#9a3412' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     {
-      label: 'Catalog',
+      label: 'Catalog', labelKey: 'shell.nav.catalog',
       icon: 'inventory',
       children: [
-        { label: 'Duncit Products', to: '/inventory', icon: 'inventory' },
-        { label: 'Brands', to: '/catalog/brands', icon: 'storefront' },
+        { label: 'Duncit Products', labelKey: 'shell.nav.duncitProducts', to: '/inventory', icon: 'inventory' },
+        { label: 'Brands', labelKey: 'shell.nav.brands', to: '/catalog/brands', icon: 'storefront' },
       ],
     },
     {
-      label: 'Brands & Products Review',
+      label: 'Brands & Products Review', labelKey: 'shell.nav.brandsAndProductsReview',
       icon: 'storefront',
       children: [
-        { label: 'Brands Review', to: '/ecomm/brands', icon: 'storefront' },
-        { label: 'Products Reviews', to: '/ecomm/product-requests', icon: 'rule' },
+        { label: 'Brands Review', labelKey: 'shell.nav.brandsReview', to: '/ecomm/brands', icon: 'storefront' },
+        { label: 'Products Reviews', labelKey: 'shell.nav.productsReviews', to: '/ecomm/product-requests', icon: 'rule' },
       ],
     },
     {
-      label: 'Ecomm Requests',
+      label: 'Ecomm Requests', labelKey: 'shell.nav.ecommRequests',
       icon: 'inventory',
       children: [
-        { label: 'Brand Request', to: '/ecomm/brand-request', icon: 'storefront' },
-        { label: 'Product Request', to: '/ecomm/product-request', icon: 'inventory' },
+        { label: 'Brand Request', labelKey: 'shell.nav.brandRequest', to: '/ecomm/brand-request', icon: 'storefront' },
+        { label: 'Product Request', labelKey: 'shell.nav.productRequest', to: '/ecomm/product-request', icon: 'inventory' },
       ],
     },
-    { label: 'Warehouse Approval', to: '/warehouse-approval', icon: 'warehouse' },
+    { label: 'Warehouse Approval', labelKey: 'shell.nav.warehouseApproval', to: '/warehouse-approval', icon: 'warehouse' },
     {
-      label: 'Fulfilment',
+      label: 'Fulfilment', labelKey: 'shell.nav.fulfilment',
       icon: 'local_shipping',
-      children: [{ label: 'Orders', to: '/orders', icon: 'local_shipping' }],
+      children: [{ label: 'Orders', labelKey: 'shell.nav.orders', to: '/orders', icon: 'local_shipping' }],
     },
     {
-      label: 'Settings',
+      label: 'Settings', labelKey: 'shell.nav.settings',
       icon: 'settings',
       children: [
-        { label: 'Duncit Warehouse Locations', to: '/settings/warehouses', icon: 'warehouse' },
-        { label: 'Pod Shop Slider', to: '/settings/pod-shop-slider', icon: 'view_carousel' },
+        { label: 'Duncit Warehouse Locations', labelKey: 'shell.nav.duncitWarehouseLocations', to: '/settings/warehouses', icon: 'warehouse' },
+        { label: 'Pod Shop Slider', labelKey: 'shell.nav.podShopSlider', to: '/settings/pod-shop-slider', icon: 'view_carousel' },
       ],
     },
   ],

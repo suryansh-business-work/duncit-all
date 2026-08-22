@@ -30,7 +30,7 @@ const makeUser = (over: Partial<UserRow> = {}): UserRow => ({
   ...over,
 });
 
-const buildColumns = () => getUsersColumns({ formatDate, formatDateTime, roleOptions: ROLE_OPTIONS });
+const buildColumns = () => getUsersColumns({ formatDate, formatDateTime, roleOptions: ROLE_OPTIONS, t: (key: string) => key });
 
 const columnBy = (field: string) => {
   const col = buildColumns().find((c) => c.field === field);
@@ -227,7 +227,7 @@ describe('getUsersColumns / cell renderers', () => {
 
   it('never calls the date formatters for a user that never signed in', () => {
     const spy = vi.fn((s: string) => `D(${s})`);
-    const col = getUsersColumns({ formatDate: spy, formatDateTime, roleOptions: ROLE_OPTIONS }).find(
+    const col = getUsersColumns({ formatDate: spy, formatDateTime, roleOptions: ROLE_OPTIONS, t: (key: string) => key }).find(
       (c) => c.field === 'last_login_provider',
     );
     render(<>{col?.cellRenderer?.(makeUser({ last_login_at: null }))}</>);

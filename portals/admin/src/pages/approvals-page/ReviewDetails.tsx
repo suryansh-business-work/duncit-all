@@ -1,6 +1,7 @@
 import { Alert, Chip, Divider, Stack, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import type { ApprovalRequest } from './helpers';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   request: ApprovalRequest;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function ReviewDetails({ request, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isReviewed = request.status !== 'PENDING';
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
@@ -27,7 +29,7 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
 
       <Divider textAlign="left">
         <Typography variant="overline" color="text.secondary">
-          Details
+          {t('admin.verification.details')}
         </Typography>
       </Divider>
 

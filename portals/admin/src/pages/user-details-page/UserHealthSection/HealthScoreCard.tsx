@@ -11,6 +11,7 @@ import {
   type AdminHealthAdjustment,
   type AdminHealthScore,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const BAND_COLOR: Record<AdminHealthScore['band'], 'error' | 'warning' | 'success'> = {
   RED: 'error',
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdminHealthAdjustment | null>(null);
@@ -38,8 +40,8 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
 
   const onDelete = async (adjustment: AdminHealthAdjustment) => {
     const ok = await confirm({
-      title: 'Delete adjustment',
-      message: 'This removes the adjustment and recomputes the score. This cannot be undone.',
+      title: t('admin.health.deleteAdjustment'),
+      message: t('admin.health.deleteBody'),
       confirmLabel: 'Delete',
       destructive: true,
     });

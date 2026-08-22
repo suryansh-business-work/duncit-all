@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 import AppsIcon from '@mui/icons-material/Apps';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -57,6 +58,7 @@ export function AppHeader({
   appsEnabled = true,
 }: Readonly<AppHeaderProps>) {
   const colorMode = useColorMode();
+  const { t } = useTranslation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   // Only people who can sign into a staff console have coworkers to chat with,
@@ -69,7 +71,7 @@ export function AppHeader({
       <Toolbar sx={{ minHeight: `${tokens.size.headerHeight}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
         {mobileSearchOpen ? (
           <>
-            <IconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label="close search">
+            <IconButton size="small" edge="start" onClick={() => setMobileSearchOpen(false)} aria-label={t('shell.chrome.closeSearch')}>
               <ArrowBackIcon fontSize="small" />
             </IconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -88,7 +90,7 @@ export function AppHeader({
               size="small"
               edge="start"
               onClick={onOpenMobileNav}
-              aria-label="open navigation"
+              aria-label={t('shell.chrome.openNav')}
               sx={{ display: { md: 'none' } }}
             >
               <MenuIcon />
@@ -105,7 +107,7 @@ export function AppHeader({
             <IconButton
               size="small"
               onClick={() => setMobileSearchOpen(true)}
-              aria-label="open search"
+              aria-label={t('shell.chrome.openSearch')}
               sx={{ display: { sm: 'none' } }}
             >
               <SearchIcon fontSize="small" />
@@ -114,14 +116,14 @@ export function AppHeader({
               <StaffChatButton meId={user?.user_id} open={chatOpen} onToggle={onToggleChat} />
             )}
             {appsEnabled && (
-              <Tooltip title="Apps">
-                <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
+              <Tooltip title={t('shell.chrome.apps')}>
+                <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label={t('shell.chrome.openApps')}>
                   <AppsIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
+              <IconButton size="small" onClick={colorMode.toggle} aria-label={t('shell.chrome.toggleColorMode')}>
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               </IconButton>
             </Tooltip>

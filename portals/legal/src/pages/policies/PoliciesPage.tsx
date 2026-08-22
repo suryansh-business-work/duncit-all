@@ -9,8 +9,10 @@ import { CREATE_POLICY, DELETE_POLICY, POLICIES_TABLE, UPDATE_POLICY, type Polic
 import { slugify } from '../../lib/slug';
 import PoliciesTable from './PoliciesTable';
 import PolicyFormDialog, { EMPTY_POLICY_FORM, type PolicyFormState } from './PolicyFormDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function PoliciesPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
@@ -73,9 +75,9 @@ export default function PoliciesPage() {
 
   const submit = async () => {
     setError(null);
-    if (!form.title.trim()) return setError('Title is required');
+    if (!form.title.trim()) return setError(t('legal.policies.titleRequired'));
     const slug = slugify(form.slug || form.title);
-    if (!slug) return setError('Slug is required');
+    if (!slug) return setError(t('legal.policies.slugRequired'));
     const input = {
       slug,
       title: form.title.trim(),
@@ -110,7 +112,7 @@ export default function PoliciesPage() {
 
   return (
     <Stack spacing={2}>
-      <PageHeader title="Policies" subtitle="Website & app policies — managed in one place." />
+      <PageHeader title={t('legal.policies.title')} subtitle={t('legal.policies.subtitle')} />
 
       <PoliciesTable
         fetchRows={fetchRows}
@@ -139,9 +141,9 @@ export default function PoliciesPage() {
 
       <ConfirmDialog
         open={!!delTarget}
-        title="Delete policy?"
+        title={t('legal.policies.deleteTitle')}
         message={`This permanently deletes “${delTarget?.title}”.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         onConfirm={doDelete}
         onClose={() => setDelTarget(null)}

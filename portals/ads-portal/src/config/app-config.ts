@@ -14,8 +14,11 @@ export const appConfig = {
   name: 'Ads',
   fullName: 'Duncit Ads',
   tagline: 'Plan campaigns, manage creatives and track ad performance.',
+  taglineKey: 'shell.portal.adsPortal.tagline',
   promoTitle: "Campaigns that convert",
+  promoTitleKey: 'shell.portal.adsPortal.promoTitle',
   promoText: "Plan, launch and measure ad campaigns from one console.",
+  promoTextKey: 'shell.portal.adsPortal.promoText',
   portalLabel: 'Ads Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -25,13 +28,13 @@ export const appConfig = {
   colorModeKey: 'ads_color_mode',
   accent: { light: '#ff9e9e', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     {
-      label: 'Create Ads',
+      label: 'Create Ads', labelKey: 'shell.nav.createAds',
       icon: 'campaign',
       children: [
-        { label: 'My Ads', to: '/ads', icon: 'article' },
-        { label: 'Create Ad', to: '/ads/new', icon: 'image' },
+        { label: 'My Ads', labelKey: 'shell.nav.myAds', to: '/ads', icon: 'article' },
+        { label: 'Create Ad', labelKey: 'shell.nav.createAd', to: '/ads/new', icon: 'image' },
       ],
     },
   ],

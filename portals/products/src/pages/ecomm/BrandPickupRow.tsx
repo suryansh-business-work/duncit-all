@@ -15,14 +15,17 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { useTranslation } from '@duncit/shell';
 
 /** The partner-facing gate, decided on the Warehouse Approval page. Distinct
  * from ShipRocket registration below: this one is what lets them list products. */
-const REVIEW_CHIP: Record<string, { label: string; color: 'success' | 'warning' | 'error' }> = {
-  APPROVED: { label: 'Approved', color: 'success' },
-  PENDING: { label: 'Awaiting approval', color: 'warning' },
-  REJECTED: { label: 'Rejected', color: 'error' },
-};
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const reviewChip = (t: Translate): Record<string, { label: string; color: 'success' | 'warning' | 'error' }> => ({
+  APPROVED: { label: t('products.pickup.approved'), color: 'success' },
+  PENDING: { label: t('products.pickup.awaitingApproval'), color: 'warning' },
+  REJECTED: { label: t('products.pickup.rejected'), color: 'error' },
+});
 
 interface Props {
   location: any;
@@ -41,7 +44,8 @@ export default function BrandPickupRow({
   onSetDefault,
   onRegister,
 }: Readonly<Props>) {
-  const review = REVIEW_CHIP[location.review_status] ?? REVIEW_CHIP.PENDING;
+  const { t } = useTranslation();
+  const review = reviewChip(t)[location.review_status] ?? reviewChip(t).PENDING;
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -51,12 +55,12 @@ export default function BrandPickupRow({
               <Typography variant="subtitle2" fontWeight={700} noWrap>
                 {location.nickname}
               </Typography>
-              {location.is_default && <Chip size="small" color="primary" label="Default" />}
+              {location.is_default && <Chip size="small" color="primary" label={t('products.pickup.default')} />}
               <Chip size="small" color={review.color} label={review.label} />
               {location.shiprocket_registered ? (
-                <Chip size="small" color="success" variant="outlined" label="ShipRocket ready" />
+                <Chip size="small" color="success" variant="outlined" label={t('products.pickup.shiprocketReady')} />
               ) : (
-                <Chip size="small" color="warning" variant="outlined" label="Not registered" />
+                <Chip size="small" color="warning" variant="outlined" label={t('products.pickup.notRegistered')} />
               )}
             </Stack>
             <Typography variant="body2" color="text.secondary">
@@ -76,12 +80,12 @@ export default function BrandPickupRow({
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Edit">
+            <Tooltip title={t('shell.common.edit')}>
               <IconButton size="small" disabled={busy} onClick={onEdit}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title={t('shell.common.delete')}>
               <IconButton size="small" color="error" disabled={busy} onClick={onDelete}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>

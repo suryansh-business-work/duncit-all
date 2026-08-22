@@ -9,6 +9,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { Ticket } from '../../../graphql/tickets';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 /** The Admin portal's user-details URL, derived from the current support origin
  * (support.duncit.com → admin.duncit.com) with a prod fallback for dev. */
@@ -34,6 +35,7 @@ function DetailRow({
   empty,
   verified,
 }: Readonly<{ icon: ReactNode; value?: string | null; empty?: string; verified?: boolean }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ color: 'text.secondary' }}>
       {icon}
@@ -45,7 +47,7 @@ function DetailRow({
         {value || empty}
       </Typography>
       {verified && value ? (
-        <Chip size="small" color="success" variant="outlined" icon={<VerifiedIcon />} label="Verified" />
+        <Chip size="small" color="success" variant="outlined" icon={<VerifiedIcon />} label={t('support.tickets.verified')} />
       ) : null}
     </Stack>
   );

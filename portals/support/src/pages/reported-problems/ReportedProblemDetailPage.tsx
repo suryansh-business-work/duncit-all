@@ -19,6 +19,7 @@ import {
   SET_REPORT_STATUS,
   type FeedbackReportRow,
 } from '../../graphql/reported-problems';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLORS = {
   OPEN: 'warning',
@@ -31,6 +32,7 @@ const STATUSES = Object.keys(STATUS_COLORS);
 
 /** One reported problem in full, with its screenshots and triage state. */
 export default function ReportedProblemDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
@@ -58,7 +60,7 @@ export default function ReportedProblemDetailPage() {
         return (
         <Stack spacing={2.5}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
-            <BackButton onClick={() => navigate('/reported-problems')}>Reported Problems</BackButton>
+            <BackButton onClick={() => navigate('/reported-problems')}>{t('support.problems.title')}</BackButton>
             <Typography variant="h5" fontWeight={900}>
               {r.report_no}
             </Typography>
@@ -83,7 +85,7 @@ export default function ReportedProblemDetailPage() {
                 {r.media_urls.length > 0 && (
                   <>
                     <Divider />
-                    <Typography variant="subtitle2">Screenshots</Typography>
+                    <Typography variant="subtitle2">{t('support.problems.screenshots')}</Typography>
                     <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
                       {r.media_urls.map((url) => (
                         <Box
@@ -97,7 +99,7 @@ export default function ReportedProblemDetailPage() {
                           <Box
                             component="img"
                             src={url}
-                            alt="Reported screenshot"
+                            alt={t('support.problems.reportedScreenshot')}
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         </Box>
@@ -111,14 +113,14 @@ export default function ReportedProblemDetailPage() {
                     reads these days later, by which time the account may have
                     changed phone, city or roles — so these are the stored
                     snapshot, not a live lookup. */}
-                <Typography variant="subtitle2">Reporter</Typography>
-                <InfoRow label="Name" value={r.user_name || 'Unknown'} />
-                <InfoRow label="Email" value={r.user_email || '—'} />
-                <InfoRow label="Phone" value={r.reporter_phone || '—'} />
-                <InfoRow label="City" value={r.reporter_city || '—'} />
-                <InfoRow label="Language" value={r.reporter_locale || '—'} />
+                <Typography variant="subtitle2">{t('support.problems.reporter')}</Typography>
+                <InfoRow label={t('shell.common.name')} value={r.user_name || t('support.problems.unknownReporter')} />
+                <InfoRow label={t('shell.common.email')} value={r.user_email || '—'} />
+                <InfoRow label={t('shell.common.phone')} value={r.reporter_phone || '—'} />
+                <InfoRow label={t('support.problems.city')} value={r.reporter_city || '—'} />
+                <InfoRow label={t('support.problems.language')} value={r.reporter_locale || '—'} />
                 <InfoRow
-                  label="Roles"
+                  label={t('support.problems.roles')}
                   value={r.reporter_roles.length > 0 ? r.reporter_roles.join(', ') : '—'}
                 />
                 {/* The id, not a link: Support has no user directory of its own
@@ -126,16 +128,16 @@ export default function ReportedProblemDetailPage() {
                     nowhere is worse than the id you can search with. Empty for
                     a report that arrived by email from an address with no
                     account — there is genuinely nobody to look up. */}
-                <InfoRow label="User ID" value={r.user_id || 'No account'} />
+                <InfoRow label={t('support.problems.userId')} value={r.user_id || t('support.problems.noAccount')} />
 
                 <Divider />
-                <Typography variant="subtitle2">Where it happened</Typography>
-                <InfoRow label="Surface" value={r.platform || '—'} />
-                <InfoRow label="App version" value={r.app_version || '—'} />
-                <InfoRow label="Device / OS" value={r.device_os || '—'} />
-                <InfoRow label="Model / screen" value={r.device_model || '—'} />
-                <InfoRow label="Screen" value={r.source_screen || '—'} />
-                <InfoRow label="Reported at" value={formatDateTime(r.created_at)} />
+                <Typography variant="subtitle2">{t('support.problems.whereItHappened')}</Typography>
+                <InfoRow label={t('support.problems.surface')} value={r.platform || '—'} />
+                <InfoRow label={t('support.problems.appVersion')} value={r.app_version || '—'} />
+                <InfoRow label={t('support.problems.deviceOs')} value={r.device_os || '—'} />
+                <InfoRow label={t('support.problems.modelScreen')} value={r.device_model || '—'} />
+                <InfoRow label={t('support.problems.screen')} value={r.source_screen || '—'} />
+                <InfoRow label={t('support.problems.reportedAt')} value={formatDateTime(r.created_at)} />
                 {/* Surfaced rather than hidden: an un-announced report is one
                     nobody was told about, not one that failed to save. */}
                 {r.slack_error && (
@@ -146,7 +148,7 @@ export default function ReportedProblemDetailPage() {
 
                 <TextField
                   select
-                  label="Status"
+                  label={t('shell.common.status')}
                   size="small"
                   value={r.status}
                   disabled={statusState.loading}

@@ -36,6 +36,10 @@ export default defineConfig({
       // istanbul output (json) is merged with the Cypress E2E coverage by nyc
       // so component-level defensive branches the E2E flows can't reach still count.
       provider: 'istanbul',
+      // Vitest writes NO coverage report when a test fails (reportOnFailure defaults
+      // to false), so one red suite deleted this whole workspace's lcov and SonarQube
+      // read the silence as 0%.
+      reportOnFailure: true,
       all: true,
       reporter: ['text', 'text-summary', 'json', 'lcov'],
       reportsDirectory: './coverage/vitest',

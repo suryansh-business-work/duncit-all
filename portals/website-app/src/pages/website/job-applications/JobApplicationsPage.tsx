@@ -13,6 +13,7 @@ import {
   UPDATE_JOB_APPLICATION_STATUS,
   type JobApplication,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getApplicationRowId = (row: JobApplication) => row.id;
 
@@ -27,6 +28,7 @@ const renderStatus = (row: JobApplication) => (
 
 /** Careers-page applications ("Open roles" submissions) — triage inbox. */
 export default function JobApplicationsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateStatus] = useMutation(UPDATE_JOB_APPLICATION_STATUS, {
@@ -39,23 +41,23 @@ export default function JobApplicationsPage() {
 
   const columns = useMemo<DuncitColumn<JobApplication>[]>(() => {
     const renderActions = (row: JobApplication) => (
-      <IconButton size="small" onClick={() => setOpen(row)} aria-label="view">
+      <IconButton size="small" onClick={() => setOpen(row)} aria-label={t('shell.common.view')}>
         <VisibilityIcon fontSize="small" />
       </IconButton>
     );
     return [
       {
         field: 'role_title',
-        headerName: 'Role',
+        headerName: t('websiteApp.jobs.colRole'),
         filter: { type: 'text' },
         flex: 1,
         minWidth: 160,
       },
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 150 },
-      { field: 'email', headerName: 'Email', flex: 1, minWidth: 200 },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 150 },
+      { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 200 },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_OPTIONS },
         width: 140,
         cellRenderer: renderStatus,
@@ -63,7 +65,7 @@ export default function JobApplicationsPage() {
       },
       {
         field: 'created_at',
-        headerName: 'Received',
+        headerName: t('websiteApp.jobs.colReceived'),
         filter: { type: 'date' },
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
@@ -89,7 +91,7 @@ export default function JobApplicationsPage() {
         fetchRows={fetchRows}
         getRowId={getApplicationRowId}
         onRowClick={setOpen}
-        emptyText="No applications."
+        emptyText={t('websiteApp.jobs.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder="Search role, name or email"
         refetchRef={refetchRef}

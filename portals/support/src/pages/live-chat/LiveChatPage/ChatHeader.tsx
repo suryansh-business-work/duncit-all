@@ -5,6 +5,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import { ConfirmDialog } from '@duncit/dialogs';
 import TranscriptMenu from '../../../components/TranscriptMenu';
 import type { SupportChatSession, TranscriptFormat } from '../../../graphql/supportChat';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   session: SupportChatSession;
@@ -17,6 +18,7 @@ interface Props {
 
 /** Live-chat thread header: user identity + resolve / re-open actions + export. */
 export default function ChatHeader({ session, onResolve, onReopen, onDownload, onEmail, busy }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [confirmResolve, setConfirmResolve] = useState(false);
   const isResolved = session.status === 'CLOSED';
 
@@ -55,9 +57,9 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
 
       <ConfirmDialog
         open={confirmResolve}
-        title="Mark this chat resolved?"
-        message="The conversation will be closed and the user will be asked to leave feedback. You can re-open it later if needed."
-        confirmLabel="Mark resolved"
+        title={t('support.chat.resolveTitle')}
+        message={t('support.chat.resolveBody')}
+        confirmLabel={t('support.chat.markResolved')}
         confirmColor="success"
         titleSx={{ fontWeight: 800 }}
         onConfirm={() => {

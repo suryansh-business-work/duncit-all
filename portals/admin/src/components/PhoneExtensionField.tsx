@@ -1,5 +1,6 @@
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import { COUNTRIES, findCountryByDial, type Country } from '../utils/countries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: string;
@@ -17,13 +18,15 @@ export default function PhoneExtensionField({
   value,
   onChange,
   name = 'phone_extension',
-  label = 'Code',
+  label,
   size = 'small',
   fullWidth = false,
   error,
   helperText,
   disabled,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('admin.captcha.code');
   const selected = findCountryByDial(value) ?? null;
   return (
     <Autocomplete<Country>
@@ -53,7 +56,7 @@ export default function PhoneExtensionField({
         <TextField
           {...params}
           name={name}
-          label={label}
+          label={fieldLabel}
           size={size}
           error={error}
           helperText={helperText}

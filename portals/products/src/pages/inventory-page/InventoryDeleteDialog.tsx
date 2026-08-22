@@ -23,6 +23,7 @@ import {
   PERMANENT_DELETE_INVENTORY_PRODUCT,
 } from './inventory-product-page/productQueries';
 import { DELETE_PRODUCT } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export type InventoryDeleteIntent = 'archive' | 'delete';
 
@@ -41,6 +42,7 @@ export default function InventoryDeleteDialog({
   onClose,
   onDone,
 }: Readonly<InventoryDeleteDialogProps>) {
+  const { t } = useTranslation();
   const [loadLinkedPods, linkedPodsResult] = useLazyQuery(INVENTORY_LINKED_PODS, {
     fetchPolicy: 'network-only',
   });
@@ -112,7 +114,7 @@ export default function InventoryDeleteDialog({
         </Typography>
       </Alert>
     ) : (
-      <Alert severity="info">No pods reference this product.</Alert>
+      <Alert severity="info">{t('products.inventory.noPodsReference')}</Alert>
     );
 
   return (

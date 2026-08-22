@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { formatTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -43,6 +44,7 @@ function actionColor(action: string): 'success' | 'info' | 'warning' | 'default'
 }
 
 export default function ActivityJourneyChart({ events }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const { hourly, topPages, steps } = useMemo(() => {
     const hours = Array.from({ length: 24 }, (_, hour) => ({
@@ -78,7 +80,7 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
     labels: hourly.map((item) => item.label),
     datasets: [
       {
-        label: 'Events',
+        label: t('admin.activity.events'),
         data: hourly.map((item) => item.count),
         borderColor: theme.palette.primary.main,
         backgroundColor: alpha(theme.palette.primary.main, 0.14),
@@ -112,13 +114,13 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
     <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Activity over the day</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('admin.activity.overTheDay')}</Typography>
           <Box sx={{ height: 190 }}>
             <Line data={chartData} options={options} />
           </Box>
         </Box>
         <Box sx={{ width: { xs: '100%', md: 260 }, minWidth: 0 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Top pages</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('admin.activity.topPages')}</Typography>
           <Stack spacing={1}>
             {topPages.map((item) => (
               <Box key={item.page}>

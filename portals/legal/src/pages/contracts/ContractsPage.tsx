@@ -16,11 +16,13 @@ import {
 } from '../../graphql/contracts';
 import ContractsTable from './ContractsTable';
 import ContractFormDialog, { EMPTY_CONTRACT_FORM, type ContractFormState } from './ContractFormDialog';
+import { useTranslation } from '@duncit/shell';
 
 /** `<input type="date">` wants YYYY-MM-DD; the API speaks ISO. */
 const toDateInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : '');
 
 export default function ContractsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   // Admin-configured format and time zone, so a contract's "last updated" reads
@@ -75,7 +77,7 @@ export default function ContractsPage() {
   const submit = async () => {
     setError(null);
     if (!form.title.trim()) {
-      setError('Title is required');
+      setError(t('legal.contracts.titleRequired'));
       return;
     }
     const input = {
@@ -116,8 +118,8 @@ export default function ContractsPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Contracts"
-        subtitle="Manage all legal contracts in one place. Create, organize, and maintain contracts efficiently."
+        title={t('legal.contracts.title')}
+        subtitle={t('legal.contracts.subtitle')}
       />
 
       <ContractsTable
@@ -150,9 +152,9 @@ export default function ContractsPage() {
 
       <ConfirmDialog
         open={!!archiveTarget}
-        title="Archive contract?"
-        message={`“${archiveTarget?.title ?? ''}” moves to Archived. It stays in the table and keeps its Contract ID — nothing is deleted.`}
-        confirmLabel="Archive"
+        title={t('legal.contracts.archiveTitle')}
+        message={t('legal.contracts.archiveMessage', { vars: { title: archiveTarget?.title ?? '' } })}
+        confirmLabel={t('legal.contracts.archive')}
         confirmColor="warning"
         loading={archiving}
         onClose={() => setArchiveTarget(null)}

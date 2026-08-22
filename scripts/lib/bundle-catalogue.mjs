@@ -3,10 +3,18 @@
  * plain Node.
  *
  * The package is raw TypeScript with `main: ./src/index.ts` and no build step,
- * so a `.mjs` script cannot import it. The files are only plain object
- * literals, so brace depth plus the `name:` before each brace reconstructs
- * every path without pulling in a TS parser (which would mean a new dependency
- * for two scripts).
+ * so a `.mjs` script cannot import it. The bundle files are nothing but a type
+ * import and one object literal, so the literal is EVALUATED rather than
+ * pattern-matched — no TS parser dependency, and no format the reader can be
+ * out of step with.
+ *
+ * It used to walk the file line by line, tracking brace depth. That silently
+ * lost every entry written as a one-line nested object —
+ * `pod: { description: '…' }` matched neither the "opens a block" pattern nor
+ * the "is a leaf" one — and the self-check missed it too, because the same line
+ * did not look like a string entry to that either. 68 of mWeb's SSR page-title
+ * and OG-description keys were invisible: never gate-checked, and never seeded
+ * into Localization, so they could not be translated in any language.
  *
  * The catalogue is one file per namespace so parallel localization work does
  * not collide in a single file, which is why callers read the FOLDER rather
@@ -24,82 +32,52 @@ import { join } from "node:path";
 /** Where the per-namespace bundle files live, relative to the repo root. */
 export const BUNDLE_DIR = "packages/i18n/src/bundles";
 
-/** Turns a backslash escape into the character it stands for. */
-function unescapeChar(char) {
-  if (char === "n") return "\n";
-  if (char === "t") return "\t";
-  return char ?? "";
-}
-
-/**
- * Reads a quoted literal, given the opening quote and everything after it.
- * Stops at the first unescaped matching quote, so a value containing an
- * apostrophe (`\'`) survives intact.
- */
-function readLiteral(quote, rest) {
-  let out = "";
-  for (let i = 0; i < rest.length; i += 1) {
-    const char = rest[i];
-    if (char === "\\") {
-      out += unescapeChar(rest[i + 1]);
-      i += 1;
-      continue;
+/** Flatten a nested catalogue to dot-paths, dropping non-string leaves exactly
+ * as `flattenCatalogue` does in the package itself. */
+function flattenInto(node, prefix, entries) {
+  for (const [key, value] of Object.entries(node)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === "string") entries.push({ key: path, value });
+    else if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenInto(value, path, entries);
     }
-    if (char === quote) break;
-    out += char;
   }
-  return out;
 }
 
 /**
- * Every leaf of the nested catalogues, as `{ key: 'a.b.c', value: 'Text' }`.
+ * Every leaf of a bundle file, as `{ key: 'a.b.c', value: 'Text' }`.
  *
- * Throws when the parse does not account for every string entry in the file:
- * without that check a future formatting change silently shrinks the result and
- * both callers carry on reporting success over a smaller set.
+ * The file is reduced to its object literal and evaluated. A bundle that grows
+ * an import, a computed value or a second export stops matching that shape and
+ * throws HERE, rather than quietly contributing fewer keys than it contains —
+ * which is the failure this replaced.
  */
 export function bundleEntries(source) {
-  const entries = [];
-  const path = [];
-  // Prettier wraps a long entry as `key:` / newline / `'value',`. Join those
-  // back onto one line first — otherwise the leaf matches nothing and the key
-  // is skipped WITHOUT a diagnostic. (`key: {` keeps its brace on the same
-  // line, so objects are unaffected.)
-  const joined = source.replace(/:[ \t]*\r?\n[ \t]*/g, ": ");
+  const literal = source
+    // The sole import is `import type { NestedCatalogue } from '../catalogue'`,
+    // erased at compile time and meaningless to the evaluator.
+    .replace(/^[ \t]*import[ \t]+type[^;]*;[ \t]*$/gm, "")
+    .replace(/^[ \t]*export const \w+[ \t]*:[ \t]*NestedCatalogue[ \t]*=/m, "return");
 
-  for (const raw of joined.split("\n")) {
-    const line = raw.trim();
-    if (line.startsWith("//") || line.startsWith("*") || line.startsWith("/*"))
-      continue;
-
-    const open =
-      /^(?:export const \w+: NestedCatalogue = )?(?:'([^']+)'|(\w+)):?\s*\{$/.exec(
-        line,
-      );
-    if (open) {
-      path.push(open[1] ?? open[2]);
-      continue;
-    }
-    if (line.startsWith("}")) {
-      path.pop();
-      continue;
-    }
-    const leaf = /^(?:'([^']+)'|(\w+)):\s*(['"`])([\s\S]*)$/.exec(line);
-    if (leaf) {
-      entries.push({
-        key: [...path, leaf[1] ?? leaf[2]].join("."),
-        value: readLiteral(leaf[3], leaf[4]),
-      });
-    }
-  }
-
-  const literals = joined.match(/^[ \t]*(?:'[^']+'|\w+):[ \t]*['"`]/gm) ?? [];
-  if (literals.length !== entries.length) {
+  if (!/^[ \t]*return[ \t]*\{/m.test(literal)) {
     throw new Error(
-      `parsed ${entries.length} keys but the bundle has ${literals.length} string entries — ` +
-        `the parser is out of step with the file's format`,
+      "no `export const X: NestedCatalogue = {` in the file — the bundle format changed",
     );
   }
+
+  let catalogue;
+  try {
+    // The input is this repo's own source, not user data.
+    catalogue = new Function(literal)();
+  } catch (error) {
+    throw new Error(`could not evaluate the bundle literal: ${error.message}`);
+  }
+  if (!catalogue || typeof catalogue !== "object") {
+    throw new Error("the bundle did not evaluate to an object");
+  }
+
+  const entries = [];
+  flattenInto(catalogue, "", entries);
   return entries;
 }
 
@@ -155,16 +133,42 @@ export function catalogueKeys(repoRoot) {
 /** The server's own fallback bundle — its MJML email copy (CLAUDE.md rule 38). */
 export const EMAIL_BUNDLE_FILE = "server/src/services/email/email-i18n.ts";
 
+/** Turns a backslash escape into the character it stands for. */
+function unescapeChar(char) {
+  if (char === "n") return "\n";
+  if (char === "t") return "\t";
+  return char ?? "";
+}
+
+/**
+ * Reads a quoted literal, given the opening quote and everything after it.
+ * Stops at the first unescaped matching quote, so a value containing an
+ * apostrophe (`\'`) survives intact.
+ */
+function readLiteral(quote, rest) {
+  let out = "";
+  for (let i = 0; i < rest.length; i += 1) {
+    const char = rest[i];
+    if (char === "\\") {
+      out += unescapeChar(rest[i + 1]);
+      i += 1;
+      continue;
+    }
+    if (char === quote) break;
+    out += char;
+  }
+  return out;
+}
+
 /**
  * The leaves of a FLAT `Record<string, string>` literal, e.g. the server's
  * EMAIL_FALLBACK.
  *
- * The nested reader above cannot do this one: its keys are dotted and
- * double-quoted (`"email.common.greeting"`), and the file around the object has
- * braces of its own — so the object body is sliced out first and read line by
- * line. Throws rather than returning a short list, for the same reason
- * `bundleEntries` does: a silent shrink here means a caller uploads fewer keys
- * and still reports success.
+ * This one is still read line by line rather than evaluated: the file around it
+ * is a module with imports and code of its own, so there is no literal to slice
+ * out and run. It is safe from the nesting bug that forced `bundleEntries` to
+ * change, because the shape is flat by construction — every key is one dotted,
+ * double-quoted string — and the count check below still catches a shrink.
  */
 export function flatRecordEntries(source, name) {
   const declared = source.indexOf(`const ${name}`);

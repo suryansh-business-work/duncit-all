@@ -17,6 +17,7 @@ import {
   SET_INVENTORY_PRODUCT_ACTIVE,
   type CatalogBrandProductRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const ARCHIVE_MESSAGE =
   'Archiving hides this product from active lists and the pod product picker. You can restore it here anytime.';
@@ -31,6 +32,7 @@ const RESUME_MESSAGE = 'The product becomes visible and purchasable in the shop 
  * reviewing those listings stays in Brands & Products Review.
  */
 export default function CatalogBrandProductsPage() {
+  const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const client = useApolloClient();
@@ -137,7 +139,7 @@ export default function CatalogBrandProductsPage() {
       </Typography>
 
       {!brandQuery.loading && !brand && (
-        <Alert severity="warning">Brand not found — check the link you followed.</Alert>
+        <Alert severity="warning">{t('products.brands.notFoundLink')}</Alert>
       )}
 
       <CatalogBrandProductsTable

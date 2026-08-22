@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { Policy } from '../../graphql/policies';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<Policy>;
@@ -35,6 +36,7 @@ export default function PoliciesTable({
   onEdit,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Only server-allowlisted fields are sortable/filterable (POLICY_TABLE_CONFIG):
   // sort policy_no/title/slug/policy_type/sort_order/is_active/created_at/updated_at; filter
   // is_active (boolean), policy_no + slug + policy_type (text), sort_order (number),
@@ -51,28 +53,28 @@ export default function PoliciesTable({
       </Stack>
     );
     return [
-      entityIdColumn<Policy>({ field: 'policy_no', headerName: 'Policy ID' }),
-      { field: 'title', headerName: 'Title', flex: 1, minWidth: 200, cellRenderer: renderTitle },
-      { field: 'slug', headerName: 'Slug', minWidth: 180, filter: { type: 'text' } },
+      entityIdColumn<Policy>({ field: 'policy_no', headerName: t('legal.policies.colId') }),
+      { field: 'title', headerName: t('shell.common.title'), flex: 1, minWidth: 200, cellRenderer: renderTitle },
+      { field: 'slug', headerName: t('legal.policies.colSlug'), minWidth: 180, filter: { type: 'text' } },
       {
         field: 'policy_type',
-        headerName: 'Policy type',
+        headerName: t('legal.policies.colPolicyType'),
         minWidth: 180,
         filter: { type: 'text' },
         valueGetter: (p) => p.policy_type || '—',
       },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 110,
         filter: { type: 'boolean' },
         cellRenderer: renderStatus,
         valueGetter: statusValue,
       },
-      { field: 'sort_order', headerName: 'Sort', width: 90, filter: { type: 'number' } },
+      { field: 'sort_order', headerName: t('legal.policies.colSort'), width: 90, filter: { type: 'number' } },
       // Hidden by default — carries the allowlisted updated-date filter.
-      { field: 'updated_at', headerName: 'Updated', hide: true, filter: { type: 'date' }, minWidth: 150 },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 160, cellRenderer: renderActions },
+      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, filter: { type: 'date' }, minWidth: 150 },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 160, cellRenderer: renderActions },
     ];
   }, [onEdit, onRemove]);
 
@@ -83,7 +85,7 @@ export default function PoliciesTable({
       fetchRows={fetchRows}
       getRowId={getPolicyRowId}
       toolbarActions={toolbarActions}
-      emptyText="No policies yet."
+      emptyText={t('legal.policies.empty')}
       defaultSort={{ field: 'sort_order', dir: 'asc' }}
       searchPlaceholder="Search policy ID, title or slug"
       refetchRef={refetchRef}

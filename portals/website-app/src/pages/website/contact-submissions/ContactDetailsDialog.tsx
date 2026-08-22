@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
 import { CONTACT_STATUSES, type ContactStatus, type ContactSubmission } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   submission: ContactSubmission | null;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const [status, setStatus] = useState<ContactStatus>('NEW');
 
@@ -33,7 +35,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{submission.subject || '(no subject)'}</DialogTitle>
+      <DialogTitle>{submission.subject || t('websiteApp.contact.noSubject')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
@@ -68,7 +70,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
           )}
           <TextField
             select
-            label="Status"
+            label={t('shell.common.status')}
             value={status}
             onChange={(e) => setStatus(e.target.value as ContactStatus)}
           >
@@ -81,7 +83,7 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Button
           variant="contained"
           onClick={() => {

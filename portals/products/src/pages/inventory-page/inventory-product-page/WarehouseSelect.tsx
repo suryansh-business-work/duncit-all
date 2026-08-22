@@ -4,12 +4,14 @@ import { MenuItem, TextField } from '@mui/material';
 import { useController, useFormContext } from 'react-hook-form';
 import { BRAND_PICKUP_LOCATIONS } from '../../ecomm/queries';
 import type { InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 const DUNCIT_OWNER = { owner_kind: 'DUNCIT', brand_doc_id: null };
 
 /** Required warehouse (Duncit pickup location) picker for the product form. The
  * chosen warehouse is the product's ShipRocket rate + shipment origin. */
 export default function WarehouseSelect() {
+  const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
   const { field, fieldState } = useController({ control, name: 'pickup_location_id' });
   const { data, loading } = useQuery(BRAND_PICKUP_LOCATIONS, {
@@ -37,7 +39,7 @@ export default function WarehouseSelect() {
       select
       fullWidth
       required
-      label="Warehouse"
+      label={t('products.media.warehouse')}
       value={field.value}
       onChange={(event) => field.onChange(event.target.value)}
       onBlur={field.onBlur}

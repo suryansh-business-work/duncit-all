@@ -192,6 +192,13 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
           npm ci
+          # src/generated/ is gitignored, so `@/generated/graphql` does not exist
+          # in a fresh checkout. Without this, 274 of the 417 suites died with
+          # "Could not locate module @/generated/graphql" and the app reported
+          # 16.5% — a figure about the checkout, not the tests. apps-ci.yml runs
+          # the same step for the same reason; the schema is read from the
+          # server sources in the checkout, so no running server is needed.
+          npm run codegen
           npx jest --coverage --ci --maxWorkers=2 --workerIdleMemoryLimit=1536MB 2>&1 | tee jest-coverage.log | tail -120
       - name: Coverage produced
         working-directory: app/mobile-app

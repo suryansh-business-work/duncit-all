@@ -15,6 +15,7 @@ import {
   TextField,
 } from '@mui/material';
 import { NAV_AREAS, NAV_SITES, type WebsiteNavItem } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const navItemSchema = z.object({
   site: z.enum(['MAIN', 'PARTNERS', 'ADS', 'EARNWITH']),
@@ -55,6 +56,7 @@ interface Props {
 
 /** Create/edit one navigation link for a marketing website. */
 export default function NavItemDialog({ open, item, defaultSite, onClose, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const form = useForm<NavItemValues>({
     resolver: zodResolver(navItemSchema),
     defaultValues: blankValues,
@@ -114,7 +116,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Group / column heading"
+                label={t('websiteApp.navigation.groupHeading')}
                 size="small"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message ?? 'e.g. About, Community, Support — groups links together'}
@@ -127,7 +129,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Label"
+                label={t('websiteApp.navigation.label')}
                 size="small"
                 required
                 error={!!fieldState.error}
@@ -141,7 +143,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="URL"
+                label={t('websiteApp.navigation.url')}
                 size="small"
                 required
                 error={!!fieldState.error}
@@ -156,7 +158,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  label="Sort order"
+                  label={t('websiteApp.navigation.sortOrder')}
                   type="number"
                   size="small"
                   sx={{ maxWidth: 160 }}
@@ -171,7 +173,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
               render={({ field }) => (
                 <FormControlLabel
                   control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-                  label="Active"
+                  label={t('websiteApp.navigation.active')}
                 />
               )}
             />
@@ -179,7 +181,7 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={() => {

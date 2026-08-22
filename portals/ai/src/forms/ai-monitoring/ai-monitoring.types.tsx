@@ -1,43 +1,50 @@
 import { z } from 'zod';
+import type { useTranslation } from '@duncit/shell';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 /**
  * Validation for AI Monitoring > Settings.
+ *
+ * Built from the active catalogue rather than frozen at module load: every
+ * message here is copy a reader sees under a field.
  *
  * Every copy field is optional: blank means "use the shipped localized
  * fallback", which is a real choice an operator makes, not an empty form. Only
  * the image prompt is required — a blank prompt would leave the vision call
  * with no instructions at all.
  */
-export const aiMonitoringSchema = z.object({
+export const buildAiMonitoringSchema = (t: Translate) =>
+  z.object({
   chip_enabled: z.boolean().default(true),
-  chip_label: z.string().trim().max(80, 'Keep the chip label under 80 characters').default(''),
-  dialog_title: z.string().trim().max(160, 'Keep the title under 160 characters').default(''),
+  chip_label: z.string().trim().max(80, t('ai.validation.chipLabelMax')).default(''),
+  dialog_title: z.string().trim().max(160, t('ai.validation.titleMax')).default(''),
   dialog_intro: z
     .string()
     .trim()
-    .max(1000, 'Keep the intro under 1000 characters')
+    .max(1000, t('ai.validation.introMax'))
     .default(''),
   dialog_points: z
     .string()
     .trim()
-    .max(3600, 'That is too many bullets — keep the list under 3600 characters')
+    .max(3600, t('ai.validation.bulletsMax'))
     .default('')
     .refine(
       (value) => value.split('\n').filter((line) => line.trim()).length <= 12,
-      'Twelve bullets is the maximum a reader will take in',
+      t('ai.validation.bulletsCount'),
     ),
   dialog_footnote: z
     .string()
     .trim()
-    .max(500, 'Keep the footnote under 500 characters')
+    .max(500, t('ai.validation.footnoteMax'))
     .default(''),
-  dismiss_label: z.string().trim().max(60, 'Keep the button label under 60 characters').default(''),
+  dismiss_label: z.string().trim().max(60, t('ai.validation.dismissMax')).default(''),
   image_prompt: z
     .string()
     .trim()
-    .min(1, 'The image prompt is required')
-    .min(20, 'Give the model at least 20 characters of instruction')
-    .max(20000, 'Prompt is too long (max 20000 characters)'),
+    .min(1, t('ai.validation.promptRequired'))
+    .min(20, t('ai.validation.promptMin'))
+    .max(20000, t('ai.validation.promptMax')),
 });
 
 export interface AiMonitoringFormValues {

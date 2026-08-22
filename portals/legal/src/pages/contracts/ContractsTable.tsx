@@ -16,6 +16,7 @@ import {
   type Contract,
   type ContractStatus,
 } from '../../graphql/contracts';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<Contract>;
@@ -68,15 +69,16 @@ export default function ContractsTable({
   onEdit,
   onArchive,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<Contract>[]>(() => {
     const renderActions = (c: Contract) => (
       <>
-        <Tooltip title="View">
+        <Tooltip title={t('shell.common.view')}>
           <IconButton size="small" onClick={() => onView(c)}>
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(c)}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -101,10 +103,10 @@ export default function ContractsTable({
     // (CONTRACT_TABLE_CONFIG): sort contract_no/title/status/counterparty/
     // created_at/updated_at; filter the same as text, status as a select.
     return [
-      entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' }),
+      entityIdColumn<Contract>({ field: 'contract_no', headerName: t('legal.contracts.colId') }),
       {
         field: 'title',
-        headerName: 'Title',
+        headerName: t('shell.common.title'),
         flex: 1,
         minWidth: 220,
         filter: { type: 'text' },
@@ -112,27 +114,27 @@ export default function ContractsTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         filter: { type: 'select', options: CONTRACT_STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (c) => contractStatusLabel(c.status),
       },
-      { field: 'counterparty', headerName: 'Counterparty', minWidth: 180, filter: { type: 'text' } },
+      { field: 'counterparty', headerName: t('legal.contracts.colCounterparty'), minWidth: 180, filter: { type: 'text' } },
       dateColumn<Contract>({
         field: 'updated_at',
-        headerName: 'Last updated',
+        headerName: t('legal.contracts.colLastUpdated'),
         hide: false,
         minWidth: 180,
         formatDate: formatDateTime,
       }),
       dateColumn<Contract>({
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         minWidth: 180,
         formatDate: formatDateTime,
       }),
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 140, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 140, cellRenderer: renderActions },
     ];
   }, [formatDateTime, onView, onEdit, onArchive]);
 
@@ -143,7 +145,7 @@ export default function ContractsTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       toolbarActions={toolbarActions}
-      emptyText="No contracts yet. Add one to get started."
+      emptyText={t('legal.contracts.empty')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
       searchPlaceholder="Search contract ID, title or counterparty"
       refetchRef={refetchRef}

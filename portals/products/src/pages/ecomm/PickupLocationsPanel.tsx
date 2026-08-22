@@ -18,6 +18,7 @@ import {
   type PickupLocationFormValues,
   type PickupOwnerKind,
 } from './pickup-location-form';
+import { useTranslation } from '@duncit/shell';
 
 export interface PickupOwner {
   owner_kind: PickupOwnerKind;
@@ -36,9 +37,12 @@ interface Props {
  * the only difference is the `owner` passed to the query + save input. */
 export default function PickupLocationsPanel({
   owner,
-  title = 'Pickup / warehouse locations',
-  emptyHint = 'No pickup locations yet. Add one to enable SHIP fulfilment.',
+  title,
+  emptyHint,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const heading = title ?? t('products.pickup.panelTitle');
+  const noneYet = emptyHint ?? t('products.pickup.emptyHint');
   const brandDocId = owner.brandId ?? null;
   const variables = { owner_kind: owner.owner_kind, brand_doc_id: brandDocId };
   const { data, loading, error, refetch } = useQuery(BRAND_PICKUP_LOCATIONS, {
@@ -63,7 +67,7 @@ export default function PickupLocationsPanel({
       notifySuccess(label);
     } catch (actionError) {
       /* v8 ignore next -- Apollo rejects with an Error; the non-Error fallback is defensive */
-      notifyError(actionError instanceof Error ? actionError.message : 'Action failed');
+      notifyError(actionError instanceof Error ? actionError.message : t('products.pickup.actionFailed'));
     }
   };
 
@@ -81,14 +85,14 @@ export default function PickupLocationsPanel({
     await save({ variables: { id: editing?.id ?? null, input } });
     await refetch(variables);
     setDialogOpen(false);
-    notifySuccess('Pickup location saved');
+    notifySuccess(t('products.pickup.saved'));
   };
 
   return (
     <Stack spacing={1.5}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="subtitle1" fontWeight={700}>
-          {title}
+          {heading}
         </Typography>
         <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
           Add location
@@ -103,14 +107,14 @@ export default function PickupLocationsPanel({
         </Box>
       ) : (
         <Stack spacing={1.25}>
-          {locations.length === 0 && <Alert severity="info">{emptyHint}</Alert>}
+          {locations.length === 0 && <Alert severity="info">{noneYet}</Alert>}
           {locations.map((location: any) => (
             <BrandPickupRow
               key={location.id}
               location={location}
               busy={busy}
               onEdit={() => openEdit(location)}
-              onDelete={() => runAction('Pickup location deleted', () => remove({ variables: { id: location.id } }))}
+              onDelete={() => runAction(t('products.pickup.deleted'), () => remove({ variables: { id: location.id } }))}
               onSetDefault={() =>
                 runAction('Default pickup location updated', () => setDefault({ variables: { id: location.id } }))
               }

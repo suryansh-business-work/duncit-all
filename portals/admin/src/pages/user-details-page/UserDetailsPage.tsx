@@ -24,8 +24,10 @@ import UserVerificationsSection from './UserVerificationsSection';
 import UserSurveysSection from './UserSurveysSection';
 import UserChangeLogsSection from './UserChangeLogsSection';
 import { useUserDetailsState } from './useUserDetailsState';
+import { useTranslation } from '@duncit/shell';
 
 export default function UserDetailsPage() {
+  const { t } = useTranslation();
   const { user_id } = useParams();
   const [toast, setToast] = useState<string | null>(null);
   const [contactType, setContactType] = useState<'CALL' | 'EMAIL' | null>(null);
@@ -40,7 +42,7 @@ export default function UserDetailsPage() {
     );
   }
   if (s.error) return <Alert severity="error">{s.error.message}</Alert>;
-  if (!s.user || !s.form) return <Alert severity="warning">User not found.</Alert>;
+  if (!s.user || !s.form) return <Alert severity="warning">{t('admin.users.notFound')}</Alert>;
 
   const userId = s.user.user_id || user_id || '';
 
@@ -67,7 +69,7 @@ export default function UserDetailsPage() {
         tabs={[
           {
             value: 'profile',
-            label: 'Profile',
+            label: t('admin.profile.tab'),
             content: (
             <Card sx={{ height: '100%' }}>
               <ProfileForm
@@ -79,29 +81,29 @@ export default function UserDetailsPage() {
             </Card>
             ),
           },
-          { value: 'interests', label: 'Interests', content: <UserInterestsSection user={s.user} /> },
+          { value: 'interests', label: t('admin.tabs.interests'), content: <UserInterestsSection user={s.user} /> },
           {
             value: 'access',
-            label: 'Access',
+            label: t('admin.tabs.access'),
             content: (
               <Stack spacing={2}>
                 <RolesSection user={s.user} roleByKey={s.roleByKey} onManageRoles={s.openRoles} />
               </Stack>
             ),
           },
-          { value: 'badges', label: 'Badges', content: <UserBadgesSection userId={userId} /> },
-          { value: 'verification', label: 'Verification', content: <UserVerificationsSection userId={userId} /> },
-          { value: 'surveys', label: 'Surveys', content: <UserSurveysSection userId={userId} /> },
-          { value: 'health', label: 'Health', content: <UserHealthSection userId={userId} /> },
-          { value: 'activity', label: 'Activity', content: <UserActivitySection userId={userId} /> },
+          { value: 'badges', label: t('admin.tabs.badges'), content: <UserBadgesSection userId={userId} /> },
+          { value: 'verification', label: t('admin.tabs.verification'), content: <UserVerificationsSection userId={userId} /> },
+          { value: 'surveys', label: t('admin.tabs.surveys'), content: <UserSurveysSection userId={userId} /> },
+          { value: 'health', label: t('admin.tabs.health'), content: <UserHealthSection userId={userId} /> },
+          { value: 'activity', label: t('admin.tabs.activity'), content: <UserActivitySection userId={userId} /> },
           {
             value: 'contact-logs',
-            label: 'Call & Email Logs',
+            label: t('admin.tabs.callEmailLogs'),
             content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,
           },
           {
             value: 'change-logs',
-            label: 'User Change Logs',
+            label: t('admin.profile.changeLogs'),
             content: <UserChangeLogsSection userId={userId} />,
           },
         ]}
@@ -113,7 +115,7 @@ export default function UserDetailsPage() {
         user={s.user}
         onClose={() => setContactType(null)}
         onSaved={() => {
-          setToast('Contact log saved');
+          setToast(t('admin.contact.saved'));
           setContactRefresh((value) => value + 1);
         }}
       />

@@ -13,6 +13,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { formatBytes } from '@duncit/media-picker';
 import type { MediaItem } from './queries';
 import { thumbUrl } from './transform';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   file: MediaItem;
@@ -32,6 +33,7 @@ const isImage = (file: MediaItem) => file.fileType === 'image';
  * clicks deep is what sends people back to hunting in ImageKit's own console.
  */
 export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined" sx={{ position: 'relative', height: '100%' }}>
       <Checkbox
@@ -49,7 +51,7 @@ export default function FileCard({ file, selected, onToggle, onOpen, onCopy }: R
           p: 0.25,
         }}
       />
-      <Tooltip title="Copy link">
+      <Tooltip title={t('shell.fileManager.copyLink')}>
         <IconButton
           size="small"
           onClick={() => onCopy(file)}

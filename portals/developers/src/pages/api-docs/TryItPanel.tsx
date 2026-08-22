@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { useTranslation } from '@duncit/shell';
 import { API_BASE, buildPath, type ApiEndpoint } from './apiReference';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 /** Live Try-It console for one endpoint: fill params, run the real request. */
 export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<number | null>(null);
@@ -41,7 +43,7 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         setResponse(text);
       }
     } catch (e: any) {
-      setError(e?.message ?? 'Request failed');
+      setError(e?.message ?? t('developers.tryIt.failed'));
     } finally {
       setBusy(false);
     }
@@ -55,8 +57,10 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         <TextField
           key={param.name}
           size="small"
+          // The parameter's name and location are what the caller must send —
+          // identifiers, not copy, so they stay verbatim in every language.
           label={`${param.name} (${param.where})`}
-          helperText={param.description}
+          helperText={t(param.descriptionKey)}
           value={values[param.name] ?? ''}
           onChange={(e) => setValues((prev) => ({ ...prev, [param.name]: e.target.value }))}
           fullWidth
@@ -70,18 +74,18 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         disabled={busy || !apiKey.trim() || missingRequired}
         sx={{ alignSelf: 'flex-start' }}
       >
-        {busy ? 'Running…' : 'Send request'}
+        {busy ? t('developers.tryIt.sending') : t('developers.tryIt.send')}
       </Button>
       {!apiKey.trim() && (
         <Typography variant="caption" color="text.secondary">
-          Paste an API key above to send live requests.
+          {t('developers.tryIt.needKey')}
         </Typography>
       )}
       {error && <Alert severity="error">{error}</Alert>}
       {status !== null && (
         <Box>
           <Typography variant="caption" fontWeight={900} color={status < 400 ? 'success.main' : 'error.main'}>
-            HTTP {status}
+            {t('developers.tryIt.status', { vars: { status } })}
           </Typography>
           <Box
             component="pre"

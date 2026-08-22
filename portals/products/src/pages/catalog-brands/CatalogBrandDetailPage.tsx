@@ -9,6 +9,7 @@ import BrandCommercePanel from './BrandCommercePanel';
 import BrandSummaryCard from './BrandSummaryCard';
 import { BrandForm, toFormValues, toSubmitInput, type BrandFormValues } from './brand-form';
 import { ADMIN_UPDATE_ECOMM_BRAND, CATALOG_BRAND, type CatalogBrandDetail } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Catalog > Brands > manage one brand. Editing, commission and marketplace
@@ -16,6 +17,7 @@ import { ADMIN_UPDATE_ECOMM_BRAND, CATALOG_BRAND, type CatalogBrandDetail } from
  * Brands Review inbox, which BrandSummaryCard links to.
  */
 export default function CatalogBrandDetailPage() {
+  const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const [error, setError] = useState<string | null>(null);
 
@@ -52,8 +54,8 @@ export default function CatalogBrandDetailPage() {
   if (!brand) {
     return (
       <Stack spacing={2}>
-        <BackHeader title="Brand" eyebrow="Catalog · Brands" backTo="/catalog/brands" />
-        <Alert severity="warning">Brand not found.</Alert>
+        <BackHeader title={t('products.brandForm.section')} eyebrow="Catalog · Brands" backTo="/catalog/brands" />
+        <Alert severity="warning">{t('products.brands.notFound')}</Alert>
       </Stack>
     );
   }

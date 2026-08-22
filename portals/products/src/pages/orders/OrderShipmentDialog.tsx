@@ -13,6 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { BRAND_PICKUP_LOCATIONS } from '../ecomm/queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ function derivePickupOwner(order: any) {
 }
 
 export default function OrderShipmentDialog({ open, order, submitting, onClose, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const variables = derivePickupOwner(order);
   const { data, loading } = useQuery(BRAND_PICKUP_LOCATIONS, {
     variables,
@@ -51,7 +53,7 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create ShipRocket shipment</DialogTitle>
+      <DialogTitle>{t('products.orders.createShipment')}</DialogTitle>
       <DialogContent dividers>
         <DialogContentText sx={{ mb: 2 }}>
           Pick the warehouse the courier should collect this order from.
@@ -62,7 +64,7 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
           <TextField
             select
             fullWidth
-            label="Pickup location"
+            label={t('products.pickup.location')}
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
             helperText={locations.length === 0 ? 'No pickup locations found for this owner.' : ' '}

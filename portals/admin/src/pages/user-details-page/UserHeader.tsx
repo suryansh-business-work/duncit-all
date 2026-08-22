@@ -8,6 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CallIcon from '@mui/icons-material/Call';
 import EmailIcon from '@mui/icons-material/Email';
 import type { EditForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   user: any;
@@ -28,6 +29,7 @@ export default function UserHeader({
   onEmailClick,
   onDeleteClick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <BackHeader
@@ -37,7 +39,7 @@ export default function UserHeader({
       eyebrow={
         <Typography variant="caption" color="text.secondary">
           <Link component={RouterLink} to="/users" underline="hover" color="inherit">
-            Users
+            {t('admin.users.title')}
           </Link>{' '}
           / Details
         </Typography>
@@ -46,10 +48,10 @@ export default function UserHeader({
       actions={
         <Stack direction="row" spacing={1}>
         <Button size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
-          Call
+          {t('admin.contact.call')}
         </Button>
         <Button size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick}>
-          Email
+          {t('shell.common.email')}
         </Button>
         {status !== 'ACTIVE' && (
           <Button
@@ -105,7 +107,7 @@ export default function UserHeader({
           disabled={busy}
           onClick={onDeleteClick}
         >
-          Delete
+          {t('shell.common.delete')}
         </Button>
         </Stack>
       }

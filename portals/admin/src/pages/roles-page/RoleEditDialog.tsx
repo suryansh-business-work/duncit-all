@@ -9,6 +9,7 @@ import {
   TextField,
 } from '@mui/material';
 import type { RoleEdit } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -29,29 +30,30 @@ export default function RoleEditDialog({
   onClose,
   onSave,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing.id ? 'Edit Role' : 'New Role'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
-            label="Key"
+            label={t('admin.roles.key')}
             value={editing.key}
             onChange={(e) => setEditing((p) => ({ ...p, key: e.target.value }))}
             disabled={!!editing.id}
-            helperText="Uppercase, e.g. CITY_ADMIN"
+            helperText={t('admin.roles.keyHint')}
             fullWidth
             required
           />
           <TextField
-            label="Name"
+            label={t('shell.common.name')}
             value={editing.name}
             onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
             fullWidth
             required
           />
           <TextField
-            label="Description"
+            label={t('shell.common.description')}
             value={editing.description}
             onChange={(e) => setEditing((p) => ({ ...p, description: e.target.value }))}
             fullWidth

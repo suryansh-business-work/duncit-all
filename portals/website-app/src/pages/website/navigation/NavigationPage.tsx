@@ -18,10 +18,12 @@ import {
   CREATE_NAV_ITEM, DELETE_NAV_ITEM, NAV_SITES, UPDATE_NAV_ITEM, WEBSITE_NAV_TABLE,
   type WebsiteNavItem, type WebsiteNavSite,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Marketing-website navigation manager — the sites bake these links in at
  * build time (a redeploy picks up changes). */
 export default function NavigationPage() {
+  const { t } = useTranslation();
   const tabs = useTabParam<WebsiteNavSite>({ items: NAV_SITES, fallback: 'MAIN' });
   const site = tabs.value;
   const client = useApolloClient();
@@ -98,14 +100,14 @@ export default function NavigationPage() {
       />
 
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete this link?</DialogTitle>
+        <DialogTitle>{t('websiteApp.navigation.deleteTitle')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             "{confirmDelete?.label}" will disappear from {confirmDelete?.site} on the next deploy.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)}>Cancel</Button>
+          <Button onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</Button>
           <Button
             color="error"
             variant="contained"

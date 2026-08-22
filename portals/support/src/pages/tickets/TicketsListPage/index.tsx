@@ -10,14 +10,16 @@ import { useSupportSocket } from '../../../lib/useSupportSocket';
 import { supportListVars } from '../../../lib/supportTable';
 import TicketsTable from './TicketsTable';
 import NewTicketDialog from './NewTicketDialog';
+import { useTranslation } from '@duncit/shell';
 
-const SORT_OPTIONS: ReadonlyArray<{ value: TicketPriority; label: string }> = [
-  { value: 'HIGH', label: 'High' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'LOW', label: 'Low' },
+const SORT_OPTIONS: ReadonlyArray<{ value: TicketPriority; labelKey: string }> = [
+  { value: 'HIGH', labelKey: 'support.tickets.priorityHigh' },
+  { value: 'MEDIUM', labelKey: 'support.tickets.priorityMedium' },
+  { value: 'LOW', labelKey: 'support.tickets.priorityLow' },
 ];
 
 export default function TicketsListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -52,8 +54,8 @@ export default function TicketsListPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Tickets"
-        subtitle="Support tickets from users. Open one to reply, or raise a new ticket."
+        title={t('support.tickets.title')}
+        subtitle={t('support.tickets.subtitle')}
       />
 
       <TicketsTable
@@ -65,19 +67,19 @@ export default function TicketsListPage() {
             <TextField
               select
               size="small"
-              label="Sort"
+              label={t('support.tickets.sort')}
               value={priorityFirst}
               onChange={(e) => setPriorityFirst(e.target.value as TicketPriority)}
               sx={{ minWidth: 120 }}
             >
               {SORT_OPTIONS.map((o) => (
                 <MenuItem key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </MenuItem>
               ))}
             </TextField>
             <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
-              New Ticket
+              {t('support.tickets.create')}
             </Button>
           </>
         }

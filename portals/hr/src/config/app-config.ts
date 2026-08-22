@@ -9,8 +9,11 @@ export const appConfig = {
   name: 'HR',
   fullName: 'Duncit HR',
   tagline: 'Manage people, attendance and HR operations.',
+  taglineKey: 'shell.portal.hr.tagline',
   promoTitle: 'People, organised',
+  promoTitleKey: 'shell.portal.hr.promoTitle',
   promoText: 'Directory, leave and HR operations in one console.',
+  promoTextKey: 'shell.portal.hr.promoText',
   portalLabel: 'HR Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -19,6 +22,6 @@ export const appConfig = {
   tokenKey: 'hr_token',
   colorModeKey: 'hr_color_mode',
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
-  nav: [{ label: 'Dashboard', to: '/', icon: 'dashboard' }],
+  nav: [{ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' }],
   modules: [],
 } satisfies AppConfig;

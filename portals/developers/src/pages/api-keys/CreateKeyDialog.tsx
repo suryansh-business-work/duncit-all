@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -26,6 +27,7 @@ interface Props {
 
 /** Create-key dialog: name → create → one-time raw key reveal with copy. */
 export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -44,15 +46,23 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
     setCopied(true);
   };
 
+  // Hoisted out of the JSX so the dialog's two states each read as one lookup
+  // rather than a ternary buried in a prop (rule 26b).
+  const title = rawKey
+    ? t('developers.createKey.titleCreated')
+    : t('developers.createKey.titleNew');
+  const closeLabel = rawKey ? t('developers.createKey.done') : t('developers.createKey.cancel');
+  const submitLabel = busy
+    ? t('developers.createKey.submitting')
+    : t('developers.createKey.submit');
+
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 900 }}>{rawKey ? 'API key created' : 'Create API key'}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 900 }}>{title}</DialogTitle>
       <DialogContent>
         {rawKey ? (
           <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-            <Alert severity="warning">
-              Copy this key now — it is shown only once and cannot be recovered.
-            </Alert>
+            <Alert severity="warning">{t('developers.createKey.warning')}</Alert>
             <TextField
               value={rawKey}
               fullWidth
@@ -61,7 +71,7 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
                 sx: { fontFamily: 'monospace' },
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton aria-label="Copy API key" onClick={copy}>
+                    <IconButton aria-label={t('developers.createKey.copyAria')} onClick={copy}>
                       <ContentCopyIcon fontSize="small" />
                     </IconButton>
                   </InputAdornment>
@@ -70,15 +80,15 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
             />
             {copied && (
               <Typography variant="caption" color="success.main" fontWeight={800}>
-                Copied to clipboard
+                {t('developers.createKey.copied')}
               </Typography>
             )}
           </Stack>
         ) : (
           <Stack spacing={1.5} sx={{ mt: 0.5 }}>
             <TextField
-              label="Key name"
-              placeholder="e.g. Staging integration"
+              label={t('developers.createKey.nameLabel')}
+              placeholder={t('developers.createKey.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
@@ -90,14 +100,14 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>{rawKey ? 'Done' : 'Cancel'}</Button>
+        <Button onClick={close}>{closeLabel}</Button>
         {!rawKey && (
           <Button
             variant="contained"
             disabled={!name.trim() || busy}
             onClick={() => onCreate(name.trim())}
           >
-            {busy ? 'Creating…' : 'Create key'}
+            {submitLabel}
           </Button>
         )}
       </DialogActions>

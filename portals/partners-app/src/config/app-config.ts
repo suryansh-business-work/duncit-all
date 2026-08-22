@@ -32,16 +32,16 @@ export const appConfig: AppConfig = {
   nav: [
     // Account-level — same section as mWeb/native's Manage Account list, which
     // also places it right before FAQs.
-    { label: 'Verification', to: '/verification', icon: 'verified-user' },
-    { label: 'FAQs', to: '/faqs', icon: 'help' },
-    { label: 'Support', to: '/support', icon: 'support' },
-    { label: 'Policies', to: '/policies', icon: 'policy' },
+    { label: 'Verification', labelKey: 'shell.nav.verification', to: '/verification', icon: 'verified-user' },
+    { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
+    { label: 'Support', labelKey: 'shell.nav.support', to: '/support', icon: 'support' },
+    { label: 'Policies', labelKey: 'shell.nav.policies', to: '/policies', icon: 'policy' },
     // Featured invitation into the other earn journeys — the same entry
     // mWeb/native show in their profile grids, styled as a highlighted card.
     // Last on purpose: it closes the sidebar for everyone, partner or not yet.
     {
-      label: 'Earn with Duncit',
-      caption: 'Host, list or sell',
+      label: 'Earn with Duncit', labelKey: 'shell.nav.earnWithDuncit',
+      caption: 'Host, list or sell', captionKey: 'shell.nav.hostListOrSell',
       to: '/earn',
       icon: 'volunteer-activism',
       featured: true,

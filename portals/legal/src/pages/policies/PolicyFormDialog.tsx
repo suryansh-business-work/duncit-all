@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import PolicyTypeSelect from '../../components/PolicyTypeSelect';
+import { useTranslation } from '@duncit/shell';
 
 export interface PolicyFormState {
   slug: string;
@@ -59,6 +60,7 @@ export default function PolicyFormDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md">
       <DialogTitle>{isNew ? 'New Policy' : `Edit · ${editingTitle}`}</DialogTitle>
@@ -66,14 +68,14 @@ export default function PolicyFormDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField label="Title" value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus />
+            <TextField label={t('shell.common.title')} value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus />
             <TextField
-              label="Slug"
+              label={t('legal.policies.slug')}
               value={form.slug}
               onChange={(e) => onChange({ slug: e.target.value })}
               required
               fullWidth
-              helperText="lowercase letters, numbers and dashes"
+              helperText={t('legal.policies.slugHint')}
             />
           </Stack>
           <PolicyTypeSelect
@@ -82,7 +84,7 @@ export default function PolicyFormDialog({
           />
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
-              label="Sort order"
+              label={t('legal.policies.sortOrder')}
               type="number"
               value={form.sort_order}
               onChange={(e) => onChange({ sort_order: Number(e.target.value) })}
@@ -95,7 +97,7 @@ export default function PolicyFormDialog({
             />
           </Stack>
           <Box>
-            <Typography variant="caption" color="text.secondary">Content</Typography>
+            <Typography variant="caption" color="text.secondary">{t('legal.policies.content')}</Typography>
             <DuncitRichTextInput
               value={form.content}
               onChange={(value) => onChange({ content: value })}
@@ -106,7 +108,7 @@ export default function PolicyFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button onClick={onClose} disabled={saving}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={onSubmit} disabled={saving}>
           {isNew ? 'Create' : 'Save changes'}
         </Button>

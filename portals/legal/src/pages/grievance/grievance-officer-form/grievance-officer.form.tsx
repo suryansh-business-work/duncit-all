@@ -8,6 +8,7 @@ import {
   grievanceOfficerSchema,
   type GrievanceOfficerFormValues,
 } from './grievance-officer.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   initialValues: GrievanceOfficerFormValues;
@@ -32,6 +33,7 @@ export default function GrievanceOfficerForm({
   updatedAt,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset, formState } = useForm<GrievanceOfficerFormValues>({
     resolver: zodResolver(grievanceOfficerSchema),
     defaultValues: EMPTY_GRIEVANCE_OFFICER,
@@ -54,28 +56,28 @@ export default function GrievanceOfficerForm({
             <RhfTextField
               control={control}
               name="name"
-              label="Name"
+              label={t('shell.common.name')}
               required
-              placeholder="e.g. Priya Sharma"
+              placeholder={t('legal.grievance.officerNamePlaceholder')}
             />
             <RhfTextField
               control={control}
               name="email"
-              label="Email"
+              label={t('shell.common.email')}
               required
               placeholder="grievance@duncit.com"
             />
             <RhfTextField
               control={control}
               name="phone"
-              label="Phone"
+              label={t('shell.common.phone')}
               required
               placeholder="+91 98765 43210"
             />
             <RhfTextField
               control={control}
               name="address"
-              label="Address"
+              label={t('legal.grievance.address')}
               multiline
               minRows={3}
               hint="Optional — published only if you fill it in."

@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'AI',
   fullName: 'Duncit AI',
   tagline: 'Operate AI tools and model configuration.',
+  taglineKey: 'shell.portal.ai.tagline',
   promoTitle: "Intelligence on tap",
+  promoTitleKey: 'shell.portal.ai.promoTitle',
   promoText: "Models, prompts and AI tooling in one workspace.",
+  promoTextKey: 'shell.portal.ai.promoText',
   portalLabel: 'AI Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -21,22 +24,22 @@ export const appConfig = {
   colorModeKey: 'ai_color_mode',
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
-    { label: 'AI Library', to: '/library', icon: 'library' },
+    { label: 'Welcome', labelKey: 'shell.nav.welcome', to: '/', icon: 'dashboard' },
+    { label: 'AI Library', labelKey: 'shell.nav.aiLibrary', to: '/library', icon: 'library' },
     {
-      label: 'OpenAI',
+      label: 'OpenAI', labelKey: 'shell.nav.openai',
       icon: 'ai',
       children: [
-        { label: 'Dashboard', to: '/openai', icon: 'analytics' },
-        { label: 'Logs', to: '/openai/logs', icon: 'article' },
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/openai', icon: 'analytics' },
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/openai/logs', icon: 'article' },
       ],
     },
     {
-      label: 'AI Monitoring',
+      label: 'AI Monitoring', labelKey: 'shell.nav.aiMonitoring',
       icon: 'shield',
       children: [
-        { label: 'Logs', to: '/monitoring', icon: 'image' },
-        { label: 'Settings', to: '/monitoring/settings', icon: 'settings' },
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/monitoring', icon: 'image' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/monitoring/settings', icon: 'settings' },
       ],
     },
   ],

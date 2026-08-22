@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Stack, Typography } from '@mui/material';
@@ -9,6 +9,7 @@ import {
   MAX_PRODUCT_CATEGORIES,
   type BrandFormValues,
 } from './brand.types';
+import { useTranslation } from '@duncit/shell';
 
 export { brandSchema };
 
@@ -28,59 +29,63 @@ interface BrandFieldGroup {
 }
 
 /** Every field of the server `EcommBrandInput`, grouped the way the brand was captured. */
-const BRAND_FIELD_GROUPS: BrandFieldGroup[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Group headings, field labels and hints are copy, so the layout is built
+ *  from the active catalogue rather than frozen at module load. */
+const brandFieldGroups = (t: Translate): BrandFieldGroup[] => [
   {
-    title: 'Brand',
+    title: t('products.brandForm.section'),
     fields: [
-      { name: 'brand_name', label: 'Brand name', required: true, hint: 'Shown in the marketplace' },
-      { name: 'tagline', label: 'Tagline' },
-      { name: 'description', label: 'Description', multiline: true, full: true },
+      { name: 'brand_name', label: t('products.brandForm.brandName'), required: true, hint: 'Shown in the marketplace' },
+      { name: 'tagline', label: t('products.brandForm.tagline') },
+      { name: 'description', label: t('shell.common.description'), multiline: true, full: true },
       {
         name: 'product_categories',
-        label: 'Product categories',
+        label: t('products.brandForm.categories'),
         full: true,
         hint: `Comma separated, up to ${MAX_PRODUCT_CATEGORIES}`,
       },
-      { name: 'logo_url', label: 'Logo URL' },
-      { name: 'cover_image_url', label: 'Cover image URL' },
-      { name: 'website_url', label: 'Website URL' },
-      { name: 'instagram_url', label: 'Instagram URL' },
+      { name: 'logo_url', label: t('products.brandForm.logoUrl') },
+      { name: 'cover_image_url', label: t('products.brandForm.coverUrl') },
+      { name: 'website_url', label: t('products.brandForm.websiteUrl') },
+      { name: 'instagram_url', label: t('products.brandForm.instagramUrl') },
     ],
   },
   {
-    title: 'Contact',
+    title: t('products.brandForm.contactSection'),
     fields: [
-      { name: 'contact_person', label: 'Contact person' },
-      { name: 'contact_email', label: 'Contact email' },
-      { name: 'contact_phone', label: 'Contact phone', hint: '6-15 digits' },
+      { name: 'contact_person', label: t('products.brandForm.contactPerson') },
+      { name: 'contact_email', label: t('products.brandForm.contactEmail') },
+      { name: 'contact_phone', label: t('products.brandForm.contactPhone'), hint: '6-15 digits' },
     ],
   },
   {
-    title: 'Business & legal',
+    title: t('products.brandForm.businessSection'),
     fields: [
-      { name: 'registered_business_name', label: 'Registered business name' },
-      { name: 'established_year', label: 'Established year', hint: '4-digit year' },
+      { name: 'registered_business_name', label: t('products.brandForm.registeredName') },
+      { name: 'established_year', label: t('products.brandForm.establishedYear'), hint: '4-digit year' },
       { name: 'gstin', label: 'GSTIN' },
       { name: 'pan', label: 'PAN' },
     ],
   },
   {
-    title: 'Address',
+    title: t('products.brandForm.address'),
     fields: [
-      { name: 'address_line1', label: 'Address line 1', full: true },
-      { name: 'city', label: 'City' },
-      { name: 'state', label: 'State' },
-      { name: 'postal_code', label: 'Postal code' },
-      { name: 'country', label: 'Country' },
+      { name: 'address_line1', label: t('products.brandForm.addressLine1'), full: true },
+      { name: 'city', label: t('products.brandForm.city') },
+      { name: 'state', label: t('products.brandForm.state') },
+      { name: 'postal_code', label: t('products.brandForm.postalCode') },
+      { name: 'country', label: t('products.brandForm.country') },
     ],
   },
   {
-    title: 'Payout',
+    title: t('products.brandForm.payoutSection'),
     fields: [
-      { name: 'account_holder_name', label: 'Account holder name' },
-      { name: 'account_number', label: 'Account number' },
-      { name: 'ifsc_code', label: 'IFSC code' },
-      { name: 'upi_id', label: 'UPI ID' },
+      { name: 'account_holder_name', label: t('products.brandForm.accountHolder') },
+      { name: 'account_number', label: t('products.brandForm.accountNumber') },
+      { name: 'ifsc_code', label: t('products.brandForm.ifsc') },
+      { name: 'upi_id', label: t('products.brandForm.upi') },
     ],
   },
 ];
@@ -127,6 +132,8 @@ interface Props {
  * the owner the E-commerce Manager role and belongs to Brands Review.
  */
 export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const groups = useMemo(() => brandFieldGroups(t), [t]);
   const { control, handleSubmit, reset } = useForm<BrandFormValues>({
     defaultValues: initialValues ?? brandInitialValues,
     resolver: zodResolver(brandSchema),
@@ -144,7 +151,7 @@ export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<
   return (
     <form noValidate onSubmit={submit}>
       <Stack spacing={3}>
-        {BRAND_FIELD_GROUPS.map((group) => (
+        {groups.map((group) => (
           <Stack key={group.title} spacing={1}>
             <Typography variant="subtitle2" fontWeight={700}>
               {group.title}

@@ -1,5 +1,6 @@
 import { Autocomplete, TextField } from '@mui/material';
 import { POLICY_TYPE_OPTIONS, type PolicyTypeOption } from '../config/policyTypes';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: string;
@@ -18,9 +19,11 @@ interface Props {
 export default function PolicyTypeSelect({
   value,
   onChange,
-  label = 'Policy Type',
+  label,
   required,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('legal.policyTypeSelect.label');
   const selected = POLICY_TYPE_OPTIONS.find((o) => o.label === value) ?? null;
   return (
     <Autocomplete<PolicyTypeOption, false, false, true>
@@ -38,8 +41,8 @@ export default function PolicyTypeSelect({
       renderInput={(params) => (
         <TextField
           {...params}
-          label={label}
-          placeholder="Search policy type…"
+          label={fieldLabel}
+          placeholder={t('legal.policyTypeSelect.search')}
           required={required}
         />
       )}

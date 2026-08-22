@@ -8,8 +8,10 @@ import { PageHeader } from '@duncit/ui';
 import { GRIEVANCE_TICKETS_TABLE, type GrievanceTicket } from '../../graphql/grievance';
 import GrievanceTicketsTable from './GrievanceTicketsTable';
 import GrievanceDetailDialog from './GrievanceDetailDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function GrievanceTicketsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   // Admin-configured format and time zone, so "Received" reads the same here
@@ -27,8 +29,8 @@ export default function GrievanceTicketsPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Grievance Tickets"
-        subtitle="Every grievance raised from the app, the website and this portal — each with its own reference number."
+        title={t('legal.grievance.ticketsTitle')}
+        subtitle={t('legal.grievance.ticketsSubtitle')}
       />
 
       <GrievanceTicketsTable

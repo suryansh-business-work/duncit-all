@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   order: any;
@@ -24,6 +25,7 @@ function Field({ label, value }: Readonly<{ label: string; value: string }>) {
 }
 
 export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
   const address = order.shipping_address;
   const symbol = order.currency_symbol;
   const addressText = address
@@ -39,22 +41,22 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
       <CardContent>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-            <Field label="Buyer" value={order.buyer_name} />
+            <Field label={t('products.orders.colBuyer')} value={order.buyer_name} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Contact" value={contactText} />
+            <Field label={t('products.orders.contact')} value={contactText} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Pod" value={order.pod?.pod_title ?? '—'} />
+            <Field label={t('products.orders.colPod')} value={order.pod?.pod_title ?? '—'} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Pod date" value={podDateTime ?? '—'} />
+            <Field label={t('products.orders.podDate')} value={podDateTime ?? '—'} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Payment ref" value={order.payment_ref} />
+            <Field label={t('products.orders.paymentRef')} value={order.payment_ref} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Ship to" value={addressText} />
+            <Field label={t('products.orders.shipTo')} value={addressText} />
           </Grid>
         </Grid>
 
@@ -67,7 +69,7 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
               <TableCell>Item</TableCell>
               <TableCell align="right">Qty</TableCell>
               <TableCell align="right">Unit</TableCell>
-              <TableCell align="right">Gross</TableCell>
+              <TableCell align="right">{t('products.orders.gross')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

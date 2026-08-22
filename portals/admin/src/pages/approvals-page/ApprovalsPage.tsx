@@ -9,8 +9,10 @@ import { type ApprovalRequest, type ApprovalStatus } from './helpers';
 import ApprovalsToolbar from './ApprovalsToolbar';
 import ApprovalsTable from './ApprovalsTable';
 import ReviewDialog from './ReviewDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function ApprovalsPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'' | ApprovalStatus>('PENDING');
   const [active, setActive] = useState<ApprovalRequest | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export default function ApprovalsPage() {
       await approveMut({ variables: { id } });
       finish('Request approved');
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to approve');
+      setOpError(e instanceof Error ? e.message : t('admin.approvals.approveFailed'));
     } finally {
       setSaving(false);
     }
@@ -71,7 +73,7 @@ export default function ApprovalsPage() {
       await denyMut({ variables: { id, notes: notes || undefined } });
       finish('Request denied');
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to deny');
+      setOpError(e instanceof Error ? e.message : t('admin.approvals.denyFailed'));
     } finally {
       setSaving(false);
     }

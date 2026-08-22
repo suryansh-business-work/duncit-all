@@ -7,6 +7,7 @@ import { StatusChip } from '@duncit/ui';
 import { BRAND_STATUS_COLOR } from './brandStatus';
 import { useDateFormat } from '@duncit/app-settings';
 import type { EcommBrandRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
@@ -37,11 +38,13 @@ const renderBrand = (b: EcommBrandRow) => (
 const locationValue = (b: EcommBrandRow) =>
   [b.city, b.state].filter(Boolean).join(', ') || '—';
 
-const renderPickup = (b: EcommBrandRow) =>
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const renderPickup = (b: EcommBrandRow, t: Translate) =>
   b.default_pickup_location_id ? (
-    <Chip size="small" color="success" variant="outlined" icon={<CheckCircleIcon />} label="Registered" />
+    <Chip size="small" color="success" variant="outlined" icon={<CheckCircleIcon />} label={t('products.pickup.registered')} />
   ) : (
-    <Chip size="small" color="warning" variant="outlined" icon={<ErrorOutlineIcon />} label="No default" />
+    <Chip size="small" color="warning" variant="outlined" icon={<ErrorOutlineIcon />} label={t('products.pickup.noDefault')} />
   );
 
 const pickupValue = (b: EcommBrandRow) =>
@@ -57,6 +60,7 @@ export default function BrandsReviewTable({
   onView,
   onReview,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     // Rows open the brand, so the action must not also trigger the row click.
@@ -69,14 +73,14 @@ export default function BrandsReviewTable({
           onReview(b);
         }}
       >
-        Review
+        {t('products.review.action')}
       </Button>
     );
     return [
       { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },
       {
         field: 'brand_name',
-        headerName: 'Brand',
+        headerName: t('products.brands.colBrand'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderBrand,
@@ -84,23 +88,23 @@ export default function BrandsReviewTable({
       },
       {
         field: 'city',
-        headerName: 'Location',
+        headerName: t('products.brands.colLocation'),
         filter: { type: 'text' },
         minWidth: 150,
         valueGetter: locationValue,
       },
       {
         field: 'approved_product_count',
-        headerName: 'Approved products',
+        headerName: t('products.brands.colApprovedProducts'),
         sortable: false,
         width: 150,
       },
       {
         field: 'pickup',
-        headerName: 'Pickup',
+        headerName: t('products.review.colPickup'),
         sortable: false,
         width: 130,
-        cellRenderer: renderPickup,
+        cellRenderer: (row: EcommBrandRow) => renderPickup(row, t),
         valueGetter: pickupValue,
       },
       {
@@ -108,27 +112,27 @@ export default function BrandsReviewTable({
         // appended AFTER the column filters, so a column filter here would be
         // silently overridden on every tab but ALL. Mirrors ProductsReviewTable.
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         cellRenderer: renderStatus,
         valueGetter: (b) => b.status,
       },
       {
         field: 'submitted_at',
-        headerName: 'Submitted',
+        headerName: t('products.review.colSubmitted'),
         filter: { type: 'date' },
         width: 130,
         valueGetter: (b) => (b.submitted_at ? formatDate(b.submitted_at) : '—'),
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         hide: true,
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
       },
-      { field: 'review', headerName: 'Review', sortable: false, width: 110, cellRenderer: renderReview },
+      { field: 'review', headerName: t('products.review.action'), sortable: false, width: 110, cellRenderer: renderReview },
     ];
   }, [onReview, formatDate]);
 
@@ -139,7 +143,7 @@ export default function BrandsReviewTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onView}
-      emptyText="No brands found for this filter."
+      emptyText={t('products.review.brandsEmpty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search brand, contact or city"
       refetchRef={refetchRef}

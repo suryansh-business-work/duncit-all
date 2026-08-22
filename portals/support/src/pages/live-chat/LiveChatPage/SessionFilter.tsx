@@ -1,10 +1,16 @@
 import { DuncitTabs, type DuncitTabItem } from '@duncit/tabs';
 import type { SupportChatStatus } from '../../../graphql/supportChat';
 
-/** The strip, as data — LiveChatPage reads the same list to validate the URL. */
-export const SESSION_FILTERS: DuncitTabItem<SupportChatStatus>[] = [
-  { value: 'OPEN', label: 'Open' },
-  { value: 'CLOSED', label: 'Resolved' },
+import { useTranslation } from '@duncit/shell';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** The strip, as data — LiveChatPage reads the same list to validate the URL.
+ *  Labels are copy, so the list is built from the active catalogue; the
+ *  VALUES are what the URL is checked against and never change. */
+export const sessionFilters = (t: Translate): DuncitTabItem<SupportChatStatus>[] => [
+  { value: 'OPEN', label: t('support.chat.filterOpen') },
+  { value: 'CLOSED', label: t('support.chat.filterResolved') },
 ];
 
 interface Props {
@@ -15,9 +21,10 @@ interface Props {
 /** OPEN / RESOLVED filter for the session list so agents can re-open resolved
  * chats, read feedback and export them (B1). */
 export default function SessionFilter({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <DuncitTabs
-      items={SESSION_FILTERS}
+      items={sessionFilters(t)}
       value={value}
       onChange={onChange}
       variant="fullWidth"

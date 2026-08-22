@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import {
   DuncitTable,
   actionsColumn,
@@ -54,15 +55,18 @@ export default function ChallengesTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const superOptions = useLevelOptions('SUPER');
   const categoryOptions = useLevelOptions('CATEGORY');
   const subOptions = useLevelOptions('SUB');
 
+  // The headers come from the active catalogue, so `t` belongs in the deps —
+  // without it the table would keep the language it first rendered in.
   const columns = useMemo<DuncitColumn<Challenge>[]>(() => {
     return [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: t('challenge.table.colName'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderName,
@@ -70,21 +74,21 @@ export default function ChallengesTable({
       },
       {
         field: 'super_category_id',
-        headerName: 'Super category',
+        headerName: t('challenge.table.colSuperCategory'),
         minWidth: 150,
         filter: { type: 'select', options: superOptions },
         valueGetter: (c) => dash(c.super_category_name),
       },
       {
         field: 'category_id',
-        headerName: 'Category',
+        headerName: t('challenge.table.colCategory'),
         minWidth: 150,
         filter: { type: 'select', options: categoryOptions },
         valueGetter: (c) => dash(c.category_name),
       },
       {
         field: 'sub_category_id',
-        headerName: 'Sub-category',
+        headerName: t('challenge.table.colSubCategory'),
         minWidth: 150,
         filter: { type: 'select', options: subOptions },
         valueGetter: (c) => dash(c.sub_category_name),
@@ -94,11 +98,11 @@ export default function ChallengesTable({
       actionsColumn<Challenge>({
         onEdit,
         onDelete,
-        edit: { ariaLabel: 'Edit challenge' },
-        delete: { ariaLabel: 'Delete challenge' },
+        edit: { ariaLabel: t('challenge.table.editAria') },
+        delete: { ariaLabel: t('challenge.table.deleteAria') },
       }),
     ];
-  }, [onEdit, onDelete, superOptions, categoryOptions, subOptions]);
+  }, [onEdit, onDelete, superOptions, categoryOptions, subOptions, t]);
 
   return (
     <DuncitTable<Challenge>
@@ -107,9 +111,9 @@ export default function ChallengesTable({
       fetchRows={fetchRows}
       getRowId={getChallengeRowId}
       toolbarActions={toolbarActions}
-      emptyText="No challenges yet. Create one with “New challenge”."
+      emptyText={t('challenge.table.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
-      searchPlaceholder="Search challenges by name…"
+      searchPlaceholder={t('challenge.table.search')}
       refetchRef={refetchRef}
     />
   );

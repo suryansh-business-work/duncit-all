@@ -2,12 +2,14 @@ import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from '@duncit/shell';
 import { useApolloTableFetch } from '@duncit/table';
 import CreateKeyDialog from './CreateKeyDialog';
 import ApiKeysTable from './ApiKeysTable';
 import { CREATE_API_KEY, MY_API_KEYS_TABLE, REVOKE_API_KEY, type ApiKeyRow } from './queries';
 
 export default function ApiKeysPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createKey, createState] = useMutation(CREATE_API_KEY);
@@ -43,10 +45,10 @@ export default function ApiKeysPage() {
     <Stack spacing={2}>
       <Box>
         <Typography variant="h5" fontWeight={900}>
-          API Keys
+          {t('developers.apiKeys.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Authenticate /api/v1 requests with the x-api-key header.
+          {t('developers.apiKeys.subtitle')}
         </Typography>
       </Box>
 
@@ -62,7 +64,7 @@ export default function ApiKeysPage() {
             startIcon={<AddIcon />}
             onClick={() => setDialogOpen(true)}
           >
-            Create key
+            {t('developers.apiKeys.create')}
           </Button>
         }
         onRevoke={onRevoke}

@@ -19,6 +19,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { AdminCategoryValue } from '@duncit/category';
 import { PORTAL_ACCESS, type PortalAccess } from '../../constants/portalAccess';
 import HostCategoriesSection, { type HostProfileSummary } from './HostCategoriesSection';
+import { useTranslation } from '@duncit/shell';
 
 const cleanHost = (u: string) => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -35,14 +36,18 @@ interface Props {
   setHostCategories: (next: AdminCategoryValue[]) => void;
 }
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
 function PortalCard({
   portal,
+  t,
   selectedRoles,
   toggleRole,
 }: Readonly<{
   portal: PortalAccess;
   selectedRoles: Set<string>;
   toggleRole: (key: string) => void;
+  t: Translate;
 }>) {
   const links = portal.links ?? [{ label: '', url: portal.url }];
   return (
@@ -94,7 +99,7 @@ function PortalCard({
                   <Typography variant="body2" fontWeight={600}>
                     {r.name}
                     {r.required && (
-                      <Chip size="small" label="Default" color="info" sx={{ ml: 0.75, height: 18 }} />
+                      <Chip size="small" label={t('admin.roles.default')} color="info" sx={{ ml: 0.75, height: 18 }} />
                     )}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -121,11 +126,12 @@ export default function RolesDialog({
   hostCategories,
   setHostCategories,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Categories only mean anything for a host, so the section appears with the role.
   const isHost = selectedRoles.has('HOST');
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Portal Access</DialogTitle>
+      <DialogTitle>{t('admin.roles.portalAccess')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           Choose which portals this user can access. Granting a portal gives full access to it.
@@ -137,6 +143,7 @@ export default function RolesDialog({
               portal={p}
               selectedRoles={selectedRoles}
               toggleRole={toggleRole}
+            t={t}
             />
           ))}
         </Stack>

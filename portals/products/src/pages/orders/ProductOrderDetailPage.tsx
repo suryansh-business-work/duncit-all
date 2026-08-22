@@ -27,8 +27,10 @@ import {
   SET_PRODUCT_ORDER_FULFILMENT_METHOD,
 } from './queries';
 import { useDateFormat } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 export default function ProductOrderDetailPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { orderId = '' } = useParams<{ orderId: string }>();
   const { formatDateTime } = useDateFormat();
@@ -56,7 +58,7 @@ export default function ProductOrderDetailPage() {
       setToast(label);
     } catch (actionError) {
       /* v8 ignore next -- Apollo rejects with an Error; the non-Error fallback is defensive */
-      setError(actionError instanceof Error ? actionError.message : 'Action failed');
+      setError(actionError instanceof Error ? actionError.message : t('products.orders.actionFailed'));
     }
   };
 
@@ -78,7 +80,7 @@ export default function ProductOrderDetailPage() {
   if (!order) {
     return (
       <Stack spacing={2} sx={{ py: 4 }}>
-        <Alert severity="warning">Order not found.</Alert>
+        <Alert severity="warning">{t('products.orders.notFound')}</Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ alignSelf: 'flex-start' }}>
           Back to orders
         </Button>

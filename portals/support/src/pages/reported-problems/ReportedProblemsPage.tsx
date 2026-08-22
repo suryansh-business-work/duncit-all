@@ -6,6 +6,7 @@ import { PageHeader, StatusChip } from '@duncit/ui';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { useDateFormat, type DateFormatter } from '@duncit/app-settings';
 import { REPORTED_PROBLEMS_TABLE, type FeedbackReportRow } from '../../graphql/reported-problems';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLORS = {
   OPEN: 'warning',
@@ -53,25 +54,28 @@ function StatusCell({ row }: CellProps) {
 // A report that never reached Slack is not a broken report — it is one
 // nobody was told about, which is a different thing to chase.
 function SlackCell({ row }: CellProps) {
+  const { t } = useTranslation();
   if (row.slack_error) {
-    return <Chip size="small" color="warning" variant="outlined" label="Not sent" title={row.slack_error} />;
+    return <Chip size="small" color="warning" variant="outlined" label={t('support.problems.slackNotSent')} title={row.slack_error} />;
   }
-  return <Chip size="small" color="success" variant="outlined" label="Sent" />;
+  return <Chip size="small" color="success" variant="outlined" label={t('support.problems.slackSent')} />;
 }
 
-function buildColumns(formatDateTime: DateFormatter['formatDateTime']): DuncitColumn<FeedbackReportRow>[] {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+function buildColumns(formatDateTime: DateFormatter['formatDateTime'], t: Translate): DuncitColumn<FeedbackReportRow>[] {
   return [
-    { field: 'report_no', headerName: 'Report ID', filter: { type: 'text' }, width: 160 },
+    { field: 'report_no', headerName: t('support.problems.colId'), filter: { type: 'text' }, width: 160 },
     {
       field: 'category',
-      headerName: 'Category',
+      headerName: t('support.problems.colCategory'),
       filter: { type: 'text' },
       width: 130,
       cellRenderer: (r) => <CategoryCell row={r} />,
     },
     {
       field: 'message',
-      headerName: 'What happened',
+      headerName: t('support.problems.colWhatHappened'),
       sortable: false,
       flex: 1,
       minWidth: 260,
@@ -79,29 +83,29 @@ function buildColumns(formatDateTime: DateFormatter['formatDateTime']): DuncitCo
     },
     {
       field: 'user_name',
-      headerName: 'Reported by',
+      headerName: t('support.problems.colReportedBy'),
       filter: { type: 'text' },
       minWidth: 190,
       cellRenderer: (r) => <ReporterCell row={r} />,
     },
-    { field: 'platform', headerName: 'From', filter: { type: 'text' }, width: 110 },
+    { field: 'platform', headerName: t('support.problems.colFrom'), filter: { type: 'text' }, width: 110 },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       filter: { type: 'select', options: STATUS_OPTIONS },
       width: 140,
       cellRenderer: (r) => <StatusCell row={r} />,
     },
     {
       field: 'slack_error',
-      headerName: 'Slack',
+      headerName: t('support.problems.colSlack'),
       sortable: false,
       width: 120,
       cellRenderer: (r) => <SlackCell row={r} />,
     },
     {
       field: 'created_at',
-      headerName: 'Reported',
+      headerName: t('support.problems.colReported'),
       filter: { type: 'date' },
       width: 180,
       valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
@@ -117,6 +121,7 @@ function buildColumns(formatDateTime: DateFormatter['formatDateTime']): DuncitCo
  * reporter's message away and there was nothing for Support to read.
  */
 export default function ReportedProblemsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
@@ -128,11 +133,11 @@ export default function ReportedProblemsPage() {
     'reportedProblemsTable'
   );
 
-  const columns = useMemo(() => buildColumns(formatDateTime), [formatDateTime]);
+  const columns = useMemo(() => buildColumns(formatDateTime, t), [formatDateTime, t]);
 
   return (
     <Stack spacing={2}>
-      <PageHeader title="Reported Problems" subtitle="Problem reports filed from the app." />
+      <PageHeader title={t('support.problems.title')} subtitle={t('support.problems.subtitle')} />
       <DuncitTable<FeedbackReportRow>
         tableId="support-reported-problems"
         columns={columns}
@@ -140,7 +145,7 @@ export default function ReportedProblemsPage() {
         refetchRef={refetchRef}
         getRowId={(r) => r.id}
         onRowClick={(r) => navigate(`/reported-problems/${r.id}`)}
-        emptyText="No problems have been reported yet."
+        emptyText={t('support.problems.empty')}
       />
     </Stack>
   );

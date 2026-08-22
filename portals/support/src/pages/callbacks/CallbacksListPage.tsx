@@ -8,8 +8,10 @@ import { BOUNCER_CALLBACK_REQUESTS, type CallbackRequestPage } from '../../graph
 import { useSupportSocket } from '../../lib/useSupportSocket';
 import { supportListVars } from '../../lib/supportTable';
 import CallbacksTable from './CallbacksTable';
+import { useTranslation } from '@duncit/shell';
 
 export default function CallbacksListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -34,8 +36,8 @@ export default function CallbacksListPage() {
   return (
     <Stack spacing={2}>
       <PageHeader
-        title="Callback Requests"
-        subtitle="Users who asked for a call back. Open one to mark it contacted or close it."
+        title={t('support.callbacks.title')}
+        subtitle={t('support.callbacks.subtitle')}
       />
       <CallbacksTable
         fetchRows={fetchRows}

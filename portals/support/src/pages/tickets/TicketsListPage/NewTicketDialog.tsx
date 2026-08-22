@@ -15,6 +15,7 @@ import {
 import { CREATE_TICKET, type TicketCategory } from '../../../graphql/tickets';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
+import { useTranslation } from '@duncit/shell';
 
 const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState<TicketCategory>('GENERAL');
   const [bodyHtml, setBodyHtml] = useState('');
@@ -54,13 +56,13 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>New Ticket</DialogTitle>
+      <DialogTitle>{t('support.tickets.create')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
-          <TextField label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required />
+          <TextField label={t('support.tickets.subject')} value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required />
           <TextField
             select
-            label="Category"
+            label={t('support.tickets.category')}
             value={category}
             onChange={(e) => setCategory(e.target.value as TicketCategory)}
             fullWidth
@@ -88,7 +90,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" disabled={creating || !subject.trim() || !htmlToText(bodyHtml)} onClick={submit}>
           Create
         </Button>

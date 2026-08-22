@@ -6,6 +6,7 @@ import { useMutation, useQuery, type DocumentNode } from '@apollo/client';
 import { Button, Divider, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import ChangeRequestList from './ChangeRequestList';
 import { MY_ECOMM_CHANGE_REQUESTS, SUBMIT_ECOMM_CHANGE } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export interface RequestField {
   name: string;
@@ -47,6 +48,7 @@ function buildDiff(fields: RequestField[], entity: any, form: Record<string, str
 /** A generic "edit-as-request" page: pick a brand/product, edit fields (each with
  * an approval hint), and submit the change for admin review (Task B item 2). */
 export default function EcommRequestPage({ config }: Readonly<{ config: EcommRequestConfig }>) {
+  const { t } = useTranslation();
   const { data } = useQuery(config.entitiesQuery, { fetchPolicy: 'cache-and-network' });
   const entities: any[] = data?.[config.entitiesKey] ?? [];
   const [selectedId, setSelectedId] = useState('');
@@ -115,7 +117,7 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
           label={`Choose a ${config.kind === 'BRAND' ? 'brand' : 'product'}`}
           value={selectedId}
           onChange={(event) => setSelectedId(event.target.value)}
-          helperText="Its current values pre-fill the form below."
+          helperText={t('products.requests.prefillNote')}
           fullWidth
         >
           <MenuItem value="">

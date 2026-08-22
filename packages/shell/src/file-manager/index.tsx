@@ -19,6 +19,7 @@ import FileDetailsView from './FileDetailsView';
 import FileManagerToolbar from './FileManagerToolbar';
 import { PAGE_SIZE, type MediaItem } from './queries';
 import { useFileManager } from './useFileManager';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** The roles the server lets change or destroy a file. Reading is anyone. */
 const WRITE_ROLES = new Set(['SUPER_ADMIN', 'TECH_MANAGER']);
@@ -57,6 +58,7 @@ interface Props {
 }
 
 export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
+  const { t } = useTranslation();
   const manager = useFileManager(open);
   const [active, setActive] = useState<MediaItem | null>(null);
   const [toast, setToast] = useState<{ text: string; kind: 'success' | 'error' } | null>(null);
@@ -72,7 +74,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
   const copy = (url: string) => {
     manager
       .copy(url)
-      .then(() => say('Link copied'))
+      .then(() => say(t('shell.fileManager.linkCopied')))
       .catch((err: Error) => say(err.message, 'error'));
   };
 
@@ -94,7 +96,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
     setActive(null);
     manager
       .removeOne(file.fileId)
-      .then((gone) => say(gone > 0 ? `Deleted ${file.name}` : 'Nothing was deleted', gone > 0 ? 'success' : 'error'))
+      .then((gone) => say(gone > 0 ? t('shell.fileManager.deleted', { vars: { name: file.name } }) : t('shell.fileManager.deleteNothing'), gone > 0 ? 'success' : 'error'))
       .catch((err: Error) => say(err.message, 'error'));
   };
 
@@ -102,12 +104,12 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" scroll="paper">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h6">File Manager</Typography>
+          <Typography variant="h6">{t('shell.fileManager.title')}</Typography>
           <Typography variant="caption" color="text.secondary">
             Every file uploaded to ImageKit. Upload, find one, copy its link at any size.
           </Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label="Close file manager">
+        <IconButton onClick={onClose} aria-label={t('shell.fileManager.close')}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -138,7 +140,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
 
         {manager.files.length === 0 && !manager.loading ? (
           <Typography variant="body2" color="text.secondary" sx={{ py: 6, textAlign: 'center' }}>
-            {manager.search ? `Nothing matches “${manager.search}”.` : 'Nothing uploaded yet.'}
+            {manager.search ? t('shell.fileManager.noMatches', { vars: { query: manager.search } }) : t('shell.fileManager.emptyUploads')}
           </Typography>
         ) : (
           <Box

@@ -1,5 +1,6 @@
 import { Autocomplete, TextField } from '@mui/material';
 import { DOCUMENT_TYPE_OPTIONS, type DocumentTypeOption } from '../config/documentTypes';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: string;
@@ -9,7 +10,9 @@ interface Props {
 }
 
 /** Grouped, searchable picker over the canonical legal document-type list. */
-export default function DocumentTypeSelect({ value, onChange, label = 'Document Type', required }: Readonly<Props>) {
+export default function DocumentTypeSelect({ value, onChange, label, required }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('legal.docTypeSelect.label');
   const selected = DOCUMENT_TYPE_OPTIONS.find((o) => o.label === value) ?? null;
   return (
     <Autocomplete<DocumentTypeOption>
@@ -21,7 +24,7 @@ export default function DocumentTypeSelect({ value, onChange, label = 'Document 
       onChange={(_e, v) => onChange(v?.label ?? '')}
       fullWidth
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder="Search document type…" required={required} />
+        <TextField {...params} label={fieldLabel} placeholder={t('legal.docTypeSelect.search')} required={required} />
       )}
     />
   );

@@ -23,6 +23,7 @@ import {
 import ActivityJourneyDialog from './ActivityJourneyDialog';
 import { useConfirm } from '@duncit/dialogs';
 import DateField from '../../components/DateField';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   userId: string;
@@ -54,6 +55,7 @@ function buildYearData(year: number, days: any[]) {
 }
 
 export default function UserActivitySection({ userId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [year, setYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState('');
   const [journeyDate, setJourneyDate] = useState('');
@@ -82,7 +84,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
 
   const removeYear = async () => {
     const ok = await confirm({
-      title: 'Delete activity',
+      title: t('admin.activity.deleteActivity'),
       message: `Delete all ${year} activity for this user?`,
       destructive: true,
       confirmLabel: 'Delete',
@@ -98,7 +100,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
             <Box>
-              <Typography variant="subtitle1">App Visit Activity</Typography>
+              <Typography variant="subtitle1">{t('admin.activity.appVisit')}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {activity?.total_visits ?? 0} visits recorded in {year}.
               </Typography>
@@ -106,7 +108,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
             <TextField
               select
               size="small"
-              label="Year"
+              label={t('admin.activity.year')}
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
               sx={{ minWidth: 140 }}
@@ -142,7 +144,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <DateField
               size="small"
-              label="Delete day"
+              label={t('admin.activity.deleteDay')}
               value={selectedDate}
               onChange={(iso) => setSelectedDate(iso)}
               maxDate={new Date()}

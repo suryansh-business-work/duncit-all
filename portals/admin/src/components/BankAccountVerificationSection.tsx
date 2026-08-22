@@ -3,6 +3,7 @@ import {
   BANK_PAYOUT_METHODS,
   type BankAccountValues,
 } from '../forms/validation/bankAccount';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: BankAccountValues;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function BankAccountVerificationSection({ value, onChange, errorFor }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (patch: Partial<BankAccountValues>) => onChange({ ...value, ...patch });
   const isUpi = value.payout_method === 'UPI';
   const showBankRails = value.payout_method === 'IMPS' || value.payout_method === 'NEFT';
@@ -19,7 +21,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
     <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
       <TextField
         select
-        label="Payout method"
+        label={t('admin.bank.payoutMethod')}
         size="small"
         value={value.payout_method}
         onChange={(event) => set({ payout_method: event.target.value as BankAccountValues['payout_method'] })}
@@ -32,7 +34,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
         ))}
       </TextField>
       <TextField
-        label="Account holder name"
+        label={t('admin.bank.accountHolder')}
         size="small"
         value={value.account_holder_name}
         onChange={(event) => set({ account_holder_name: event.target.value })}
@@ -42,7 +44,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
       />
       {isUpi && (
         <TextField
-          label="UPI ID"
+          label={t('admin.bank.upi')}
           size="small"
           value={value.upi_id}
           onChange={(event) => set({ upi_id: event.target.value })}
@@ -54,7 +56,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
       {showBankRails && (
         <>
           <TextField
-            label="Account number"
+            label={t('admin.bank.accountNumber')}
             size="small"
             value={value.account_number}
             onChange={(event) => set({ account_number: event.target.value })}
@@ -63,7 +65,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
             required
           />
           <TextField
-            label="IFSC code"
+            label={t('admin.bank.ifsc')}
             size="small"
             value={value.ifsc_code}
             onChange={(event) => set({ ifsc_code: event.target.value.toUpperCase() })}

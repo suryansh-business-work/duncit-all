@@ -17,9 +17,11 @@ import {
   type WebsitePageType,
 } from './queries';
 import type { WebsiteContentInput } from './website-content';
+import { useTranslation } from '@duncit/shell';
 
 /** Reusable content manager bound to a single website page type. */
 export default function ContentManager({ type }: Readonly<{ type: WebsitePageType }>) {
+  const { t } = useTranslation();
   const labels = CONTENT_LABELS[type];
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -73,10 +75,10 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
 
   const remove = async (item: WebsiteContentItem) => {
     const ok = await confirm({
-      title: 'Delete entry',
-      message: `Delete "${item.title}"?`,
+      title: t('websiteApp.content.deleteTitle'),
+      message: t('websiteApp.content.deleteMessage', { vars: { title: item.title } }),
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {

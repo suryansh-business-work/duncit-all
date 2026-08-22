@@ -17,6 +17,7 @@ import {
 import { USER_CLICKSTREAM } from './queries';
 import ActivityJourneyChart from './ActivityJourneyChart';
 import { formatTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -37,6 +38,7 @@ function metadataSummary(value: string) {
 const pageLabel = (event: any) => String(event.title || event.path || 'Untitled page');
 
 export default function ActivityJourneyDialog({ open, userId, date, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [pageFilter, setPageFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const { data, loading, error } = useQuery(USER_CLICKSTREAM, {
@@ -63,20 +65,20 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
   );
 
   const emptyOrJourney = events.length === 0 ? (
-    <Alert severity="info">No clickstream events recorded for this day.</Alert>
+    <Alert severity="info">{t('admin.activity.noClickstream')}</Alert>
   ) : (
     <Stack spacing={1.5}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <TextField select size="small" label="Page" value={pageFilter} onChange={(event) => setPageFilter(event.target.value)} sx={{ minWidth: 220 }}>
-          <MenuItem value="">All pages</MenuItem>
+        <TextField select size="small" label={t('admin.activity.page')} value={pageFilter} onChange={(event) => setPageFilter(event.target.value)} sx={{ minWidth: 220 }}>
+          <MenuItem value="">{t('admin.activity.allPages')}</MenuItem>
           {pageOptions.map((page) => <MenuItem key={page} value={page}>{page}</MenuItem>)}
         </TextField>
-        <TextField select size="small" label="Action" value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} sx={{ minWidth: 180 }}>
-          <MenuItem value="">All actions</MenuItem>
+        <TextField select size="small" label={t('admin.activity.action')} value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} sx={{ minWidth: 180 }}>
+          <MenuItem value="">{t('admin.activity.allActions')}</MenuItem>
           {actionOptions.map((action) => <MenuItem key={action} value={action}>{action}</MenuItem>)}
         </TextField>
       </Stack>
-      {visibleEvents.length === 0 && <Alert severity="info">No events match the selected filters.</Alert>}
+      {visibleEvents.length === 0 && <Alert severity="info">{t('admin.activity.noEventsMatch')}</Alert>}
       {visibleEvents.length > 0 && <ActivityJourneyChart events={visibleEvents} />}
       {visibleEvents.map((event: any) => {
         const title = event.target_label || event.target_text || event.title || event.path;

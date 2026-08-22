@@ -20,6 +20,7 @@ import {
   type WarehouseApprovalRow,
 } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'DENIED', 'ALL'];
 const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
@@ -36,6 +37,7 @@ const fmtDate = (iso: string | null) => {
 /** Products portal: partner warehouses awaiting approval before they can be used
  * for shipping. Approve makes a warehouse live; Deny keeps it blocked. */
 export default function WarehouseApprovalPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('PENDING');
   const { data, loading, error, refetch } = useQuery(WAREHOUSE_APPROVAL_REQUESTS, {
     variables: { status: status === 'ALL' ? null : status },
@@ -83,7 +85,7 @@ export default function WarehouseApprovalPage() {
         </Stack>
       ) : null}
       {!loading && rows.length === 0 ? (
-        <Alert severity="info">No warehouse requests.</Alert>
+        <Alert severity="info">{t('products.settings.warehouseRequestsEmpty')}</Alert>
       ) : null}
 
       <Stack spacing={1.5}>

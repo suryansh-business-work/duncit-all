@@ -7,6 +7,7 @@ import type {
 import ChatComposer from '../ChatComposer';
 import ChatHeader from './ChatHeader';
 import ChatThread from './ChatThread';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   selected?: SupportChatSession;
@@ -44,6 +45,7 @@ export default function ChatPane({
   onSend,
   onTyping,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       {selected ? (
@@ -71,7 +73,7 @@ export default function ChatPane({
         </>
       ) : (
         <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
-          <Typography variant="body2">Select a session to open the chat.</Typography>
+          <Typography variant="body2">{t('support.chat.selectSession')}</Typography>
         </Box>
       )}
     </Box>

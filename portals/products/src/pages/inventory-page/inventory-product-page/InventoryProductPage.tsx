@@ -25,8 +25,10 @@ import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../queries';
 import { productListLabel, productListPath } from './productPaths';
 import { productSchema } from './schema';
 import { toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
+import { useTranslation } from '@duncit/shell';
 
 export default function InventoryProductPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // `brandId` is present only on /catalog/brands/:brandId/products/:id/edit,
   // where the editor belongs to one brand's catalogue instead of Duncit's.
@@ -87,13 +89,13 @@ export default function InventoryProductPage() {
       const input = toSubmitInput(values);
       if (id) {
         await updateProduct({ variables: { id, input } });
-        setToast('Saved');
+        setToast(t('products.inventory.saved'));
         await productQuery.refetch();
         methods.reset(values);
       } else {
         const res = await createProduct({ variables: { input } });
         const newId = res.data?.createInventoryProduct?.id;
-        setToast('Created');
+        setToast(t('products.inventory.created'));
         if (newId) navigate(`/inventory/${newId}/edit`, { replace: true });
       }
     } catch (err: any) {
@@ -112,7 +114,7 @@ export default function InventoryProductPage() {
   if (!isNew && !productQuery.loading && !productQuery.data?.inventoryProduct) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="warning">Product not found.</Alert>
+        <Alert severity="warning">{t('products.inventory.notFound')}</Alert>
         <Button sx={{ mt: 2 }} startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
           {backLabel}
         </Button>

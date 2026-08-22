@@ -13,6 +13,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { FILE_TYPE_OPTIONS, SORT_OPTIONS } from './queries';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   search: string;
@@ -43,6 +44,7 @@ export default function FileManagerToolbar({
   onDeleteSelected,
   onRefresh,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const input = useRef<HTMLInputElement>(null);
 
   return (
@@ -51,7 +53,7 @@ export default function FileManagerToolbar({
         size="small"
         value={search}
         onChange={(event) => onSearch(event.target.value)}
-        placeholder="Search by file name"
+        placeholder={t('shell.fileManager.search')}
         sx={{ flex: 1, minWidth: 220 }}
         InputProps={{
           startAdornment: (
@@ -64,7 +66,7 @@ export default function FileManagerToolbar({
       <TextField
         select
         size="small"
-        label="Type"
+        label={t('shell.fileManager.type')}
         value={fileType}
         onChange={(event) => onFileType(event.target.value)}
         sx={{ minWidth: 140 }}
@@ -78,7 +80,7 @@ export default function FileManagerToolbar({
       <TextField
         select
         size="small"
-        label="Sort"
+        label={t('shell.fileManager.sort')}
         value={sort}
         onChange={(event) => onSort(event.target.value)}
         sx={{ minWidth: 160 }}
@@ -90,8 +92,8 @@ export default function FileManagerToolbar({
         ))}
       </TextField>
 
-      <Tooltip title="Reload">
-        <IconButton size="small" onClick={onRefresh} aria-label="Reload files">
+      <Tooltip title={t('shell.fileManager.reload')}>
+        <IconButton size="small" onClick={onRefresh} aria-label={t('shell.fileManager.reloadFiles')}>
           <RefreshIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -115,7 +117,7 @@ export default function FileManagerToolbar({
         onClick={() => input.current?.click()}
         disabled={uploading}
       >
-        {uploading ? 'Uploading…' : 'Upload'}
+        {uploading ? t('shell.fileManager.uploading') : t('shell.fileManager.upload')}
       </Button>
       {/* Any file, several at once — the point of a file manager rather than an
           image picker. The accept list stays open for the same reason. */}

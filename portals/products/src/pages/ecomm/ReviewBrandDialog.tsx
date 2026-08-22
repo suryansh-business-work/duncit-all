@@ -17,6 +17,7 @@ import { StatusChip } from '@duncit/ui';
 import BrandReviewDetails from './BrandReviewDetails';
 import { BRAND_STATUS_COLOR } from './brandStatus';
 import { APPROVE_ECOMM_BRAND, REJECT_ECOMM_BRAND, type EcommBrandRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 type Decision = 'APPROVE' | 'REJECT';
 
@@ -28,28 +29,30 @@ interface Props {
 
 /** Approving grants a role and reactivating a rejection is a partner action, so
  * both decisions confirm first (@duncit/dialogs, no window.confirm). */
-const CONFIRM_COPY: Record<
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const confirmCopy = (t: Translate): Record<
   Decision,
   { title: string; message: string; label: string; color: 'success' | 'error' }
-> = {
+> => ({
   APPROVE: {
-    title: 'Approve this brand?',
-    message:
-      'The brand goes live in the marketplace and its owner is granted the E-commerce Manager role. That role is only removed from Access, not from here.',
-    label: 'Yes, approve',
+    title: t('products.review.approveTitle'),
+    message: t('products.review.approveBody'),
+    label: t('products.review.approveConfirm'),
     color: 'success',
   },
   REJECT: {
-    title: 'Reject this brand?',
-    message: 'The partner sees your notes and can edit the brand and submit it again.',
-    label: 'Yes, reject',
+    title: t('products.review.rejectTitle'),
+    message: t('products.review.rejectBody'),
+    label: t('products.review.rejectConfirm'),
     color: 'error',
   },
-};
+});
 
 /** Approve/reject a partner brand submission — the brand sibling of
  * ReviewListingDialog so both review inboxes behave identically. */
 export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
   const [pending, setPending] = useState<Decision | null>(null);
@@ -66,7 +69,7 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
   }, [brand]);
 
   const trimmedNotes = notes.trim();
-  const confirmCopy = CONFIRM_COPY[pending ?? 'APPROVE'];
+  const confirm = confirmCopy(t)[pending ?? 'APPROVE'];
   // Neither mutation checks the current status server-side, so say so when the
   // brand is not the one thing this inbox exists for: a pending submission.
   const openStatus = brand?.status ?? null;
@@ -121,19 +124,19 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
             {error && <Alert severity="error">{error}</Alert>}
             <TextField
               size="small"
-              label="Reviewer notes"
+              label={t('products.review.reviewerNotes')}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               multiline
               minRows={2}
-              helperText="Required to reject — the partner reads this."
+              helperText={t('products.review.reviewerNotesHint')}
             />
             <TextField
               size="small"
-              label="Tags"
+              label={t('products.review.tags')}
               value={tagsText}
               onChange={(event) => setTagsText(event.target.value)}
-              helperText="Comma separated. Saved on approval only."
+              helperText={t('products.review.tagsHint')}
             />
           </Stack>
         </DialogContent>
@@ -163,11 +166,11 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
 
       <ConfirmDialog
         open={!!pending}
-        title={confirmCopy.title}
-        message={confirmCopy.message}
-        confirmLabel={confirmCopy.label}
-        cancelLabel="Back"
-        confirmColor={confirmCopy.color}
+        title={confirm.title}
+        message={confirm.message}
+        confirmLabel={confirm.label}
+        cancelLabel={t('products.review.back')}
+        confirmColor={confirm.color}
         loading={loading}
         busyLabel="Working…"
         onClose={() => setPending(null)}

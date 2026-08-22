@@ -2,6 +2,7 @@ import { Alert, Button, Card, CardContent, IconButton, Stack, Typography } from 
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import { useTranslation } from '@duncit/shell';
 
 export interface HostProfileSummary {
   id: string;
@@ -29,6 +30,7 @@ export const isCompleteRow = (row: AdminCategoryValue) =>
  * record. Uses the one common cascade (`@duncit/category`), same as the club form.
  */
 export default function HostCategoriesSection({ hostProfile, rows, setRows }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!hostProfile) {
     return (
       <Alert severity="info" sx={{ mt: 2 }} data-testid="host-categories-no-profile">
@@ -68,7 +70,7 @@ export default function HostCategoriesSection({ hostProfile, rows, setRows }: Re
                 direction="row"
               />
               <IconButton
-                aria-label="Remove category"
+                aria-label={t('admin.roles.removeCategory')}
                 color="error"
                 onClick={() => remove(index)}
                 sx={{ mt: 1 }}

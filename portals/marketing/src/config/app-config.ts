@@ -10,8 +10,11 @@ export const appConfig = {
   name: 'Marketing',
   fullName: 'Duncit Marketing',
   tagline: 'Plan campaigns and brand content.',
+  taglineKey: 'shell.portal.marketing.tagline',
   promoTitle: "Reach, amplified",
+  promoTitleKey: 'shell.portal.marketing.promoTitle',
   promoText: "Campaigns, notifications and audiences — one place.",
+  promoTextKey: 'shell.portal.marketing.promoText',
   portalLabel: 'Marketing Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -21,38 +24,38 @@ export const appConfig = {
   colorModeKey: 'marketing_color_mode',
   accent: { light: '#fda4af', main: '#e11d48', hover: '#be123c', active: '#9f1239' },
   nav: [
-    { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Target Audience', to: '/audience', icon: 'personSearch' },
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Target Audience', labelKey: 'shell.nav.targetAudience', to: '/audience', icon: 'personSearch' },
     {
       // Everything you send lives here: email and push are two ways of
       // reaching the same audience, not two separate parts of the console.
-      label: 'Campaigns',
+      label: 'Campaigns', labelKey: 'shell.nav.campaigns',
       icon: 'contactMail',
       children: [
-        { label: 'Email', to: '/campaigns/email', icon: 'email' },
-        { label: 'WhatsApp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
-        { label: 'Notifications', to: '/notifications', icon: 'notifications' },
-        { label: 'App Popups', to: '/app-popups', icon: 'image' },
+        { label: 'Email', labelKey: 'shell.nav.email', to: '/campaigns/email', icon: 'email' },
+        { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
+        { label: 'Notifications', labelKey: 'shell.nav.notifications', to: '/notifications', icon: 'notifications' },
+        { label: 'App Popups', labelKey: 'shell.nav.appPopups', to: '/app-popups', icon: 'image' },
         // Under Campaigns, not under a reporting section: an opt-out is what a
         // campaign costs, and the number is only useful next to the send that
         // caused it.
-        { label: 'Mail Preferences', to: '/campaigns/mail-preferences', icon: 'markEmailRead' },
+        { label: 'Mail Preferences', labelKey: 'shell.nav.mailPreferences', to: '/campaigns/mail-preferences', icon: 'markEmailRead' },
       ],
     },
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
-    { label: 'Short Links', to: '/short-links', icon: 'link' },
+    { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },
     // A discount code is a promotion, so it belongs to whoever runs promotions.
     // It sits beside Campaigns rather than inside one: a code is as likely to be
     // handed out at an event or printed on a poster as it is to be emailed.
-    { label: 'Coupons', to: '/coupons', icon: 'percent' },
+    { label: 'Coupons', labelKey: 'shell.nav.coupons', to: '/coupons', icon: 'percent' },
     {
-      label: 'Ads',
+      label: 'Ads', labelKey: 'shell.nav.ads',
       icon: 'campaign',
       children: [
-        { label: 'Ads Approval', to: '/ads-approvals', icon: 'campaign' },
-        { label: 'Live Ads', to: '/live-ads', icon: 'insights' },
-        { label: 'Ads Settings', to: '/ads-settings', icon: 'settings' },
+        { label: 'Ads Approval', labelKey: 'shell.nav.adsApproval', to: '/ads-approvals', icon: 'campaign' },
+        { label: 'Live Ads', labelKey: 'shell.nav.liveAds', to: '/live-ads', icon: 'insights' },
+        { label: 'Ads Settings', labelKey: 'shell.nav.adsSettings', to: '/ads-settings', icon: 'settings' },
       ],
     },
   ],

@@ -30,8 +30,10 @@ import {
   type LegalDocumentListItem,
   type SignatureMethod,
 } from '../../graphql/documents';
+import { useTranslation } from '@duncit/shell';
 
-const STEPS = ['Preview', 'Signature', 'Done'];
+/** Step labels are copy, so the list is built from the active catalogue. */
+const STEP_KEYS = ['legal.sign.stepPreview', 'legal.sign.stepSignature', 'legal.sign.stepDone'];
 
 /** Turn the base64 the server sends into something the browser can show and save. */
 const toPdfUrl = (base64: string) => `data:application/pdf;base64,${base64}`;
@@ -51,6 +53,7 @@ interface Props {
  * do what the browser already does well.
  */
 export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<Props>) {
+  const { t } = useTranslation();
   const open = !!doc;
   const alreadySigned = doc?.signing_status === 'SIGNED';
   const [step, setStep] = useState(0);
@@ -165,9 +168,9 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
 
       <DialogContent dividers>
         <Stepper activeStep={step} sx={{ mb: 2 }}>
-          {STEPS.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+          {STEP_KEYS.map((stepKey) => (
+            <Step key={stepKey}>
+              <StepLabel>{t(stepKey)}</StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -210,7 +213,7 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Full name"
+                label={t('legal.sign.fullName')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -218,7 +221,7 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
                 autoFocus
               />
               <TextField
-                label="Designation"
+                label={t('legal.sign.designation')}
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
                 required
@@ -227,16 +230,16 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Initials"
+                label={t('legal.sign.initials')}
                 value={initials}
                 onChange={(e) => setInitials(e.target.value.slice(0, 12))}
                 required
                 sx={{ width: { sm: 160 } }}
               />
               <TextField
-                label="Signing date"
+                label={t('legal.sign.signingDate')}
                 value={signingDate.toDateString()}
-                helperText="Set by the server when you sign"
+                helperText={t('legal.sign.signingDateHint')}
                 disabled
                 fullWidth
               />
@@ -264,7 +267,7 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Send to"
+                label={t('legal.sign.sendTo')}
                 value={shareTo}
                 onChange={(e) => setShareTo(e.target.value)}
                 placeholder="name@company.com"
@@ -281,7 +284,7 @@ export default function SignContractDialog({ doc, onClose, onSigned }: Readonly<
               </Button>
             </Stack>
             <TextField
-              label="Message (optional)"
+              label={t('legal.sign.message')}
               value={shareMessage}
               onChange={(e) => setShareMessage(e.target.value)}
               multiline

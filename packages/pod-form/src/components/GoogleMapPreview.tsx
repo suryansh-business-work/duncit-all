@@ -1,5 +1,6 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   title?: string;
@@ -9,7 +10,9 @@ interface Props {
 }
 
 /** Read-only Google Maps embed/link preview for a venue's address. */
-export default function GoogleMapPreview({ title = 'Map preview', parts, lat, lng }: Readonly<Props>) {
+export default function GoogleMapPreview({ title, parts, lat, lng }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const heading = title ?? t('podForm.mapPreview.title');
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
   const query =
     lat != null && lng != null
@@ -30,15 +33,15 @@ export default function GoogleMapPreview({ title = 'Map preview', parts, lat, ln
   return (
     <Box sx={{ mt: 1 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">{title}</Typography>
+        <Typography variant="subtitle2">{heading}</Typography>
         <Button size="small" href={mapUrl} target="_blank" rel="noreferrer" startIcon={<OpenInNewIcon />}>
-          Open Map
+          {t('podForm.mapPreview.openMap')}
         </Button>
       </Stack>
       {src ? (
         <Box
           component="iframe"
-          title={title}
+          title={heading}
           src={src}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
@@ -46,7 +49,7 @@ export default function GoogleMapPreview({ title = 'Map preview', parts, lat, ln
         />
       ) : (
         <Typography variant="body2" color="text.secondary">
-          Add VITE_GOOGLE_MAP_API to preview the map here.
+          {t('podForm.mapPreview.keyMissing')}
         </Typography>
       )}
     </Box>

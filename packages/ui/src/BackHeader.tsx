@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useTranslation } from './i18n/useTranslation';
 import { mergeSx } from './mergeSx';
 
 export interface BackButtonProps {
@@ -40,7 +41,7 @@ export interface BackHeaderProps {
   onBack?: () => void;
   /** Router link target — alternative to onBack. */
   backTo?: string;
-  /** Default 'Back'. */
+  /** Defaults to the shared `Back` copy in the reader's language. */
   backAriaLabel?: string;
   /** IconButton size. Default 'small'. */
   backSize?: 'small' | 'medium';
@@ -94,7 +95,7 @@ export function BackHeader({
   actions,
   onBack,
   backTo,
-  backAriaLabel = 'Back',
+  backAriaLabel,
   backSize = 'small',
   backSx,
   titleVariant = 'h5',
@@ -103,9 +104,16 @@ export function BackHeader({
   titleSx,
   sx,
 }: Readonly<BackHeaderProps>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" alignItems="center" sx={mergeSx({ gap: 1 }, sx)}>
-      <BackIcon onBack={onBack} backTo={backTo} backSize={backSize} backSx={backSx} ariaLabel={backAriaLabel} />
+      <BackIcon
+        onBack={onBack}
+        backTo={backTo}
+        backSize={backSize}
+        backSx={backSx}
+        ariaLabel={backAriaLabel ?? t('ui.backHeader.back')}
+      />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Eyebrow eyebrow={eyebrow} eyebrowWeight={eyebrowWeight} />
         <Typography variant={titleVariant} fontWeight={titleWeight} noWrap={titleNoWrap} sx={titleSx}>

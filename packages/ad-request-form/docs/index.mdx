@@ -12,10 +12,10 @@ exports:
   - 'AdRequestForm'
   - 'EstimateCard'
   - 'AdMediaField'
-  - 'adRequestSchema'
+  - 'buildAdRequestSchema'
   - 'blankAdRequestValues'
   - 'toSubmitAdRequestInput'
-  - 'AD_POSITION_OPTIONS'
+  - 'adPositionOptions'
   - 'AD_PRICING_KEY_BY_POSITION'
   - 'AD_STATUS_COLORS'
   - 'adPositionLabel'
@@ -181,13 +181,16 @@ Whole amounts render with no decimals, fractional with two — that split is the
 ### Labels
 
 ```js
-adPositionLabel('EXPLORE_SCROLL');   // 'Explore Scroll'
-adPositionLabel('NEWSLETTER');       // 'NEWSLETTER'  ← unknown values pass through unchanged
-adTypeLabel('VIDEO');                // 'Video'
+adPositionLabel('EXPLORE_SCROLL', t);   // 'Explore Scroll'
+adPositionLabel('NEWSLETTER', t);       // 'NEWSLETTER'  ← unknown values pass through unchanged
+adTypeLabel('VIDEO', t);                // 'Video'
 ```
 
+Every label comes from the catalogue, so each of these takes the console's translator —
+`useTranslation().t` inside a component, `adRequestT` outside one (rule 38).
+
 `adPositionLabel` never throws on an unrecognised placement; it returns the raw enum. If a portal
-starts displaying SCREAMING_SNAKE in the UI, that is a placement missing from `AD_POSITION_OPTIONS`.
+starts displaying SCREAMING_SNAKE in the UI, that is a placement missing from `adPositionOptions`.
 
 ### `AD_STATUS_COLORS`
 
@@ -197,7 +200,7 @@ starts displaying SCREAMING_SNAKE in the UI, that is a placement missing from `A
 
 Typed `StatusColorMap` from `@duncit/ui`, so it drops straight into the shared status chip.
 
-### `adRequestSchema.safeParse(...)` on a bad request
+### `buildAdRequestSchema(t).safeParse(...)` on a bad request
 
 Parsing the sample with `ad_title: 'Ad'`, `media_url: ''`, `start_at: '2020-01-01T00:00:00.000Z'`,
 `duration_days: 45`, `redirect_url: 'duncit.com/shop'`:
@@ -252,16 +255,17 @@ the last line of defence after the resolver, not a validation entry point.
 
 | Export | Signature / value | Meaning |
 | --- | --- | --- |
-| `adRequestSchema` | `ZodObject` | The contract; mirrors the server's `SubmitAdRequestInput` rules. |
+| `buildAdRequestSchema` | `(t: Translate) => ZodObject` | The contract; mirrors the server's `SubmitAdRequestInput` rules. Its messages come from `adRequest.errors.*`. |
 | `blankAdRequestValues` | `() => AdRequestFormValues` | Factory — `start_at` is "now", so never a shared constant. |
 | `toSubmitAdRequestInput` | `(values) => SubmitAdRequestInput` | Re-parses, then maps; **throws** on invalid input. |
-| `AD_MEDIA_TYPE_OPTIONS` | `[{ value, label }]` | `IMAGE`, `VIDEO`. |
-| `AD_POSITION_OPTIONS` | `[{ value, label }]` | The nine placements, in menu order. |
-| `AD_STATUS_OPTIONS` | `[{ value, label }]` | `PENDING`, `APPROVED`, `LIVE`, `REJECTED`, `EXPIRED`. |
+| `adMediaTypeOptions` | `(t) => [{ value, label }]` | `IMAGE`, `VIDEO`. |
+| `adPositionOptions` | `(t) => [{ value, label }]` | The nine placements, in menu order. |
+| `adStatusOptions` | `(t) => [{ value, label }]` | `PENDING`, `APPROVED`, `LIVE`, `REJECTED`, `EXPIRED`. |
 | `AD_PRICING_KEY_BY_POSITION` | `Record<AdPosition, AdPricingRateKey>` | Placement → pricing field. Use it; do not lower-case the enum. |
 | `AD_STATUS_COLORS` | `StatusColorMap` | Status → MUI chip colour. |
-| `adPositionLabel` | `(position: string) => string` | Label, or the raw value if unknown. |
-| `adTypeLabel` | `(type: string) => string` | Label, or the raw value if unknown. |
+| `adPositionLabel` | `(position: string, t: Translate) => string` | Label, or the raw value if unknown. |
+| `adTypeLabel` | `(type: string, t: Translate) => string` | Label, or the raw value if unknown. |
+| `adRequestT` | `Translate` | A provider-free translator for code that runs outside React. |
 | `formatAdCost` | `(value: number, symbol: string) => string` | `formatMoney` with the whole/fractional decimals rule. |
 
 ### Schema rules, in full
@@ -302,7 +306,7 @@ that as state and feeds `EstimateCard`. Do not try to render the estimate inside
 the Partner dialog lays them out side by side in its own `Grid`, and the Ads page makes the
 estimate `position: sticky`.
 
-`toSubmitAdRequestInput` re-runs `adRequestSchema.parse` before mapping. That is deliberate:
+`toSubmitAdRequestInput` re-runs the schema's `parse` before mapping. That is deliberate:
 it normalises `start_at` to an ISO string and drops empty `redirect_url` / `target_audience`
 rather than sending `''`, which the server would treat as a supplied value.
 
@@ -324,7 +328,7 @@ The Marketing portal (Ads approvals + Ads pricing settings) still carries its ow
 the same nine labels. It predates this package and has not been migrated. It is a real drift
 risk — adding a placement here without editing that file leaves the pricing settings page
 unable to price it. If you add a placement, change both, or better, migrate Marketing onto
-`AD_POSITION_OPTIONS` + `AD_PRICING_KEY_BY_POSITION` in the same change.
+`adPositionOptions` + `AD_PRICING_KEY_BY_POSITION` in the same change.
 
 `AD_STATUS_COLORS` is typed `StatusColorMap` from `@duncit/ui`, so it drops straight into the
 shared status chip — do not hand-map statuses to MUI colours at the call site.

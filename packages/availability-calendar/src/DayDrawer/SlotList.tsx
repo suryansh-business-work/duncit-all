@@ -18,8 +18,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { isSameDay } from 'date-fns';
 import type { VenueSlotRow } from '../types';
 import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
+import { useTranslation } from '@duncit/app-settings';
 
-const priceLabel = (price: number) => (price > 0 ? `₹${price}` : 'Free');
+/** The translator this list and its label helper read their copy from. */
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const priceLabel = (price: number, t: Translate) =>
+  price > 0 ? `₹${price}` : t('shell.availability.free');
 
 const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'info' | 'warning' | 'default'> = {
   AVAILABLE: 'success',
@@ -33,18 +38,28 @@ const LOCKED_STATUSES = new Set<VenueSlotRow['status']>(['BOOKED', 'PENDING']);
 
 /** "10:00 AM – 06:00 PM", or the date-aware / whole-day variants for slots
  * that span days or book the entire date(s). */
-export function slotWhenLabel(slot: Pick<VenueSlotRow, 'start_at' | 'end_at' | 'whole_day'>): string {
+export function slotWhenLabel(
+  slot: Pick<VenueSlotRow, 'start_at' | 'end_at' | 'whole_day'>,
+  t: Translate,
+): string {
   const start = new Date(slot.start_at);
   const end = new Date(slot.end_at);
   // The end instant is exclusive: ending exactly at midnight claims no extra day.
   const multiDay = !isSameDay(start, new Date(end.getTime() - 1));
   if (slot.whole_day) {
-    return multiDay ? `Whole day · ${formatDate(start)} – ${formatDate(end)}` : 'Whole day';
+    if (!multiDay) return t('shell.slots.wholeDay');
+    return t('shell.availability.wholeDayRange', {
+      vars: { from: formatDate(start), to: formatDate(end) },
+    });
   }
   if (multiDay) {
-    return `${formatDateTime(start)} – ${formatDateTime(end)}`;
+    return t('shell.availability.timeRange', {
+      vars: { from: formatDateTime(start), to: formatDateTime(end) },
+    });
   }
-  return `${formatTime(start)} – ${formatTime(end)}`;
+  return t('shell.availability.timeRange', {
+    vars: { from: formatTime(start), to: formatTime(end) },
+  });
 }
 
 interface Props {
@@ -55,6 +70,7 @@ interface Props {
 
 /** The existing-slots list with block/delete actions and the delete confirm. */
 export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -62,7 +78,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
     try {
       await onToggleBlock(slot);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update slot');
+      setError(e instanceof Error ? e.message : t('shell.availability.updateFailed'));
     }
   };
 
@@ -73,14 +89,14 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
     try {
       await onDelete(slotId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not delete slot');
+      setError(e instanceof Error ? e.message : t('shell.availability.deleteFailed'));
     }
   };
 
   return (
     <Box>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
-        Existing slots
+        {t('shell.availability.existingSlots')}
       </Typography>
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 1 }}>
@@ -89,7 +105,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
       )}
       {slots.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          No slots for this date yet.
+          {t('shell.availability.noSlotsForDate')}
         </Typography>
       ) : (
         <Stack spacing={1} sx={{ mt: 1 }}>
@@ -97,11 +113,11 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
             <Box key={slot.id} sx={{ p: 1.25, borderRadius: 1.5, border: 1, borderColor: 'divider' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="body2" fontWeight={800}>
-                  {slotWhenLabel(slot)}
+                  {slotWhenLabel(slot, t)}
                 </Typography>
                 <Stack direction="row" spacing={0.75} alignItems="center">
                   <Typography variant="caption" fontWeight={800} color="text.secondary">
-                    {priceLabel(slot.price)}
+                    {priceLabel(slot.price, t)}
                   </Typography>
                   <Chip size="small" color={STATUS_COLOR[slot.status]} label={slot.status} />
                 </Stack>
@@ -109,17 +125,22 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
               {slot.space_label && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                   {slot.space_label}
-                  {slot.capacity ? ` · holds ${slot.capacity}` : ''}
+                  {slot.capacity
+                    ? ` · ${t('shell.availability.holdsCapacity', { vars: { capacity: slot.capacity } })}`
+                    : ''}
                 </Typography>
               )}
               {slot.booked_pod_title && (
                 <Typography variant="caption" color="text.secondary">
-                  {slot.status === 'PENDING' ? 'Requested by pod' : 'Booked by pod'}: {slot.booked_pod_title}
+                  {slot.status === 'PENDING'
+                    ? t('shell.availability.requestedByPod')
+                    : t('shell.availability.bookedByPod')}
+                  : {slot.booked_pod_title}
                 </Typography>
               )}
               {slot.status === 'PENDING' && (
                 <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
-                  Awaiting your decision — approve or decline it under Slot Requests.
+                  {t('shell.availability.awaitingDecision')}
                 </Typography>
               )}
               {slot.notes && (
@@ -134,10 +155,17 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                     startIcon={slot.status === 'BLOCKED' ? <CheckIcon /> : <BlockIcon />}
                     onClick={() => handleToggleBlock(slot)}
                   >
-                    {slot.status === 'BLOCKED' ? 'Unblock' : 'Block'}
+                    {slot.status === 'BLOCKED'
+                      ? t('shell.availability.unblock')
+                      : t('shell.availability.block')}
                   </Button>
-                  <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setConfirmDeleteId(slot.id)}>
-                    Delete
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteOutlineIcon />}
+                    onClick={() => setConfirmDeleteId(slot.id)}
+                  >
+                    {t('shell.common.delete')}
                   </Button>
                 </Stack>
               )}
@@ -147,14 +175,14 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
       )}
 
       <Dialog open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)}>
-        <DialogTitle>Delete this slot?</DialogTitle>
+        <DialogTitle>{t('shell.availability.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>This permanently removes the time slot. Booked slots cannot be deleted.</DialogContentText>
+          <DialogContentText>{t('shell.availability.deleteBody')}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+          <Button onClick={() => setConfirmDeleteId(null)}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={handleConfirmDelete}>
-            Delete
+            {t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

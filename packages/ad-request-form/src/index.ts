@@ -6,9 +6,10 @@
 export { default as AdRequestForm } from './AdRequestForm';
 export { default as EstimateCard } from './EstimateCard';
 export { default as AdMediaField } from './AdMediaField';
+export { adRequestT, useTranslation, type Translate } from './i18n/useTranslation';
 export {
   AD_DURATION_FALLBACK,
-  adRequestSchema,
+  buildAdRequestSchema,
   makeAdRequestSchema,
   blankAdRequestValues,
   toSubmitAdRequestInput,

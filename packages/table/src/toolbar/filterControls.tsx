@@ -7,6 +7,8 @@ import Select, { type SelectChangeEvent } from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { columnHeader } from '../columnDefs';
+import { useTranslation } from '../i18n';
 import type { DuncitColumn } from '../types';
 import type { FilterDraft } from './filterState';
 
@@ -73,6 +75,7 @@ function MultiSelectControl(props: Readonly<SelectControlProps>) {
 
 function SingleSelectControl(props: Readonly<SelectControlProps>) {
   const { field, label, draft, onChange, options } = props;
+  const { t } = useTranslation();
   const labelId = `duncit-filter-${field}-label`;
   const handleChange = (event: SelectChangeEvent) => {
     const { value } = event.target;
@@ -82,7 +85,7 @@ function SingleSelectControl(props: Readonly<SelectControlProps>) {
     <FormControl size="small" fullWidth>
       <InputLabel id={labelId}>{label}</InputLabel>
       <Select labelId={labelId} label={label} value={draft.selected[0] ?? ''} onChange={handleChange}>
-        <MenuItem value="">Any</MenuItem>
+        <MenuItem value="">{t('shell.table.any')}</MenuItem>
         {options.map((option) => (
           <MenuItem key={option.value} value={option.value}>
             {option.label}
@@ -94,17 +97,18 @@ function SingleSelectControl(props: Readonly<SelectControlProps>) {
 }
 
 function NumberControl({ label, draft, onChange }: Readonly<ControlProps>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1}>
       <TextField
-        label={`${label} min`}
+        label={t('shell.table.rangeMin', { vars: { label } })}
         size="small"
         type="number"
         value={draft.min}
         onChange={(event) => onChange({ min: event.target.value })}
       />
       <TextField
-        label={`${label} max`}
+        label={t('shell.table.rangeMax', { vars: { label } })}
         size="small"
         type="number"
         value={draft.max}
@@ -115,16 +119,17 @@ function NumberControl({ label, draft, onChange }: Readonly<ControlProps>) {
 }
 
 function DateControl({ label, draft, onChange }: Readonly<ControlProps>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1}>
       <DatePicker
-        label={`${label} from`}
+        label={t('shell.table.rangeFrom', { vars: { label } })}
         value={draft.from}
         onChange={(value: Date | null) => onChange({ from: value })}
         slotProps={{ textField: { size: 'small' } }}
       />
       <DatePicker
-        label={`${label} to`}
+        label={t('shell.table.rangeTo', { vars: { label } })}
         value={draft.to}
         onChange={(value: Date | null) => onChange({ to: value })}
         slotProps={{ textField: { size: 'small' } }}
@@ -134,6 +139,7 @@ function DateControl({ label, draft, onChange }: Readonly<ControlProps>) {
 }
 
 function BooleanControl({ field, label, draft, onChange }: Readonly<ControlProps>) {
+  const { t } = useTranslation();
   const labelId = `duncit-filter-${field}-label`;
   const handleChange = (event: SelectChangeEvent) => {
     onChange({ bool: event.target.value as FilterDraft['bool'] });
@@ -142,9 +148,9 @@ function BooleanControl({ field, label, draft, onChange }: Readonly<ControlProps
     <FormControl size="small" fullWidth>
       <InputLabel id={labelId}>{label}</InputLabel>
       <Select labelId={labelId} label={label} value={draft.bool} onChange={handleChange}>
-        <MenuItem value="">Any</MenuItem>
-        <MenuItem value="true">Yes</MenuItem>
-        <MenuItem value="false">No</MenuItem>
+        <MenuItem value="">{t('shell.table.any')}</MenuItem>
+        <MenuItem value="true">{t('shell.table.yes')}</MenuItem>
+        <MenuItem value="false">{t('shell.table.no')}</MenuItem>
       </Select>
     </FormControl>
   );
@@ -159,9 +165,10 @@ export function FilterControl<T>(
   }>,
 ) {
   const { column, draft, onChange } = props;
-  const { filter, field, headerName } = column;
+  const { t } = useTranslation();
+  const { filter, field } = column;
   if (!filter) return null;
-  const common = { field, label: headerName, draft, onChange };
+  const common = { field, label: columnHeader(column, t), draft, onChange };
   if (filter.type === 'text') return <TextControl {...common} />;
   if (filter.type === 'select') {
     if (filter.multiple) return <MultiSelectControl {...common} options={filter.options} />;

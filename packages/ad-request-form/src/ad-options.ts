@@ -5,13 +5,16 @@
  */
 import type { StatusColorMap } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
+import type { Translate } from './i18n/useTranslation';
 
 export const AD_MEDIA_TYPE_VALUES = ['IMAGE', 'VIDEO'] as const;
 export type AdMediaType = (typeof AD_MEDIA_TYPE_VALUES)[number];
 
-export const AD_MEDIA_TYPE_OPTIONS: ReadonlyArray<{ value: AdMediaType; label: string }> = [
-  { value: 'IMAGE', label: 'Image' },
-  { value: 'VIDEO', label: 'Video' },
+export const adMediaTypeOptions = (
+  t: Translate,
+): ReadonlyArray<{ value: AdMediaType; label: string }> => [
+  { value: 'IMAGE', label: t('adRequest.type.image') },
+  { value: 'VIDEO', label: t('adRequest.type.video') },
 ];
 
 export const AD_POSITION_VALUES = [
@@ -27,33 +30,37 @@ export const AD_POSITION_VALUES = [
 ] as const;
 export type AdPosition = (typeof AD_POSITION_VALUES)[number];
 
-export const AD_POSITION_OPTIONS: ReadonlyArray<{ value: AdPosition; label: string }> = [
-  { value: 'AUTO', label: 'Auto (all placements)' },
-  { value: 'HOME_BOTTOM', label: 'Home Bottom' },
-  { value: 'SIDEBAR', label: 'Sidebar' },
-  { value: 'EXPLORE_SCROLL', label: 'Explore Scroll' },
-  { value: 'STATUS', label: 'Status' },
-  { value: 'VENUE_LIST', label: 'Venue List' },
-  { value: 'CLUB_LIST', label: 'Club List' },
-  { value: 'POD_LIST', label: 'Pod List' },
-  { value: 'POD_DETAILS', label: 'Pod Details' },
+export const adPositionOptions = (
+  t: Translate,
+): ReadonlyArray<{ value: AdPosition; label: string }> => [
+  { value: 'AUTO', label: t('adRequest.position.auto') },
+  { value: 'HOME_BOTTOM', label: t('adRequest.position.homeBottom') },
+  { value: 'SIDEBAR', label: t('adRequest.position.sidebar') },
+  { value: 'EXPLORE_SCROLL', label: t('adRequest.position.exploreScroll') },
+  { value: 'STATUS', label: t('adRequest.position.status') },
+  { value: 'VENUE_LIST', label: t('adRequest.position.venueList') },
+  { value: 'CLUB_LIST', label: t('adRequest.position.clubList') },
+  { value: 'POD_LIST', label: t('adRequest.position.podList') },
+  { value: 'POD_DETAILS', label: t('adRequest.position.podDetails') },
 ];
 
-export const adPositionLabel = (position: string): string =>
-  AD_POSITION_OPTIONS.find((option) => option.value === position)?.label ?? position;
+export const adPositionLabel = (position: string, t: Translate): string =>
+  adPositionOptions(t).find((option) => option.value === position)?.label ?? position;
 
-export const adTypeLabel = (type: string): string =>
-  AD_MEDIA_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? type;
+export const adTypeLabel = (type: string, t: Translate): string =>
+  adMediaTypeOptions(t).find((option) => option.value === type)?.label ?? type;
 
 export const AD_STATUS_VALUES = ['PENDING', 'APPROVED', 'REJECTED', 'LIVE', 'EXPIRED'] as const;
 export type AdRequestStatus = (typeof AD_STATUS_VALUES)[number];
 
-export const AD_STATUS_OPTIONS: ReadonlyArray<{ value: AdRequestStatus; label: string }> = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'LIVE', label: 'Live' },
-  { value: 'REJECTED', label: 'Rejected' },
-  { value: 'EXPIRED', label: 'Expired' },
+export const adStatusOptions = (
+  t: Translate,
+): ReadonlyArray<{ value: AdRequestStatus; label: string }> => [
+  { value: 'PENDING', label: t('adRequest.status.pending') },
+  { value: 'APPROVED', label: t('adRequest.status.approved') },
+  { value: 'LIVE', label: t('adRequest.status.live') },
+  { value: 'REJECTED', label: t('adRequest.status.rejected') },
+  { value: 'EXPIRED', label: t('adRequest.status.expired') },
 ];
 
 export const AD_STATUS_COLORS: StatusColorMap = {

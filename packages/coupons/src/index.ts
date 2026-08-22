@@ -21,5 +21,5 @@ export {
 } from './queries';
 export type { CouponPodOption, CouponRow } from './queries';
 
-export { couponFormDefaults, couponFormSchema, toCouponInput } from './coupon';
-export type { CouponFormValues } from './coupon';
+export { buildCouponFormSchema, couponFormDefaults, toCouponInput } from './coupon';
+export type { CouponFormValues, CouponTranslate } from './coupon';

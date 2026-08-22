@@ -7,6 +7,7 @@ import { glass, inkCta } from './glass';
 import LoginForm from './login.form';
 import PromoCard from './PromoCard';
 import OtherPortalsDialog from './OtherPortalsDialog';
+import { sessionT } from '../i18n';
 import type { LoginScreenProps } from './login.types';
 
 const DEFAULT_PRIVACY = 'https://duncit.com/privacy-policy';
@@ -22,6 +23,7 @@ export default function LoginScreen({
   onSubmit,
   altSlot,
   footerSlot,
+  t = sessionT,
 }: Readonly<LoginScreenProps>) {
   const [snack, setSnack] = useState<string | null>(null);
   const [portalsOpen, setPortalsOpen] = useState(false);
@@ -61,10 +63,10 @@ export default function LoginScreen({
         }}
       />
 
-      <Tooltip title={dark ? 'Switch to light' : 'Switch to dark'}>
+      <Tooltip title={dark ? t('session.login.switchToLight') : t('session.login.switchToDark')}>
         <IconButton
           onClick={onToggleMode}
-          aria-label="toggle color mode"
+          aria-label={t('session.login.toggleColorMode')}
           sx={{ position: 'fixed', top: 16, right: 16, zIndex: 3, color: 'text.primary' }}
         >
           {dark ? <LightModeIcon /> : <DarkModeIcon />}
@@ -90,7 +92,7 @@ export default function LoginScreen({
                 <Chip label={config.portalName} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
               </Stack>
               <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
-                Log in
+                {t('session.login.heading')}
               </Typography>
               {errorMessage && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -100,7 +102,8 @@ export default function LoginScreen({
               <LoginForm
                 loading={loading}
                 onSubmit={onSubmit}
-                onForgotPassword={() => setSnack('Contact your administrator to reset your password.')}
+                t={t}
+                onForgotPassword={() => setSnack(t('session.login.forgotPasswordHint'))}
               />
               {/* Directly under the password button, because it is the other
                   way through the same door — not an afterthought below the
@@ -110,23 +113,23 @@ export default function LoginScreen({
 
               <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ mt: 2.5 }}>
                 <Link href={config.privacyUrl ?? DEFAULT_PRIVACY} target="_blank" rel="noopener" underline="none" color="text.secondary" sx={legalLink}>
-                  Privacy Policy
+                  {t('session.login.privacyPolicy')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>
                 <Link href={config.termsUrl ?? DEFAULT_TERMS} target="_blank" rel="noopener" underline="none" color="text.secondary" sx={legalLink}>
-                  Terms of Use
+                  {t('session.login.termsOfUse')}
                 </Link>
                 <Box sx={{ color: 'text.disabled' }}>·</Box>
                 <Link component="button" type="button" onClick={() => setPortalsOpen(true)} underline="none" color="primary" sx={legalLink}>
-                  Other portals
+                  {t('session.login.otherPortals')}
                 </Link>
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Trouble signing in? Email{' '}
+                {t('session.login.supportPrefix')}{' '}
                 <Link href={`mailto:${contact}`} underline="none" color="primary" fontWeight={700}>
                   {contact}
                 </Link>{' '}
-                and our team will help you get back in.
+                {t('session.login.supportSuffix')}
               </Typography>
             </Box>
 
@@ -138,12 +141,17 @@ export default function LoginScreen({
           </Stack>
 
           <Box sx={{ display: { xs: 'none', md: 'block' }, width: 320, flexShrink: 0 }}>
-            <PromoCard title={config.promoTitle} text={config.promoText} brandName={config.brandName} />
+            <PromoCard
+              title={config.promoTitle}
+              text={config.promoText}
+              brandName={config.brandName}
+              t={t}
+            />
           </Box>
         </Stack>
       </Fade>
 
-      <OtherPortalsDialog open={portalsOpen} onClose={() => setPortalsOpen(false)} />
+      <OtherPortalsDialog open={portalsOpen} onClose={() => setPortalsOpen(false)} t={t} />
 
       <Snackbar
         open={!!snack}

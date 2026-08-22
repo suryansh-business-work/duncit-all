@@ -55,8 +55,8 @@ export function ConfirmProvider({ children }: Readonly<ProviderProps>) {
         open={!!options}
         title={options?.title ?? ''}
         message={options?.message}
-        confirmLabel={options?.confirmLabel ?? 'Confirm'}
-        cancelLabel={options?.cancelLabel ?? 'Cancel'}
+        confirmLabel={options?.confirmLabel}
+        cancelLabel={options?.cancelLabel}
         destructive={options?.destructive}
         confirmColor={options?.confirmColor}
         onClose={() => resolve(false)}

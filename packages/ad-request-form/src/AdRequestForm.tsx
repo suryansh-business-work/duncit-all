@@ -5,8 +5,9 @@ import { Alert, Box, Button, Grid, MenuItem, Slider, Stack, TextField, Typograph
 import SendIcon from '@mui/icons-material/Send';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { RhfTextField } from '@duncit/forms';
-import { AD_MEDIA_TYPE_OPTIONS, AD_POSITION_OPTIONS } from './ad-options';
+import { adMediaTypeOptions, adPositionOptions } from './ad-options';
 import AdMediaField from './AdMediaField';
+import { useTranslation, type Translate } from './i18n/useTranslation';
 import {
   AD_DURATION_FALLBACK,
   makeAdRequestSchema,
@@ -21,17 +22,10 @@ import {
  * ceiling. Now that the ceiling is a setting, the label has to be derived or it
  * will one day sit under a 90.
  */
-function dayLabel(days: number): string {
-  if (days === 1) return '1 day';
-  if (days % 30 === 0) {
-    const months = days / 30;
-    return months === 1 ? '1 month' : `${months} months`;
-  }
-  if (days % 7 === 0) {
-    const weeks = days / 7;
-    return weeks === 1 ? '1 week' : `${weeks} weeks`;
-  }
-  return `${days} days`;
+function dayLabel(days: number, t: Translate): string {
+  if (days > 1 && days % 30 === 0) return t('adRequest.months', { count: days / 30 });
+  if (days > 1 && days % 7 === 0) return t('adRequest.weeks', { count: days / 7 });
+  return t('adRequest.days', { count: days });
 }
 
 /** The shared ad-request form (RHF + Zod), used by the Ads portal Create Ad page
@@ -42,9 +36,10 @@ export default function AdRequestForm({
   errorMessage,
   onValuesChange,
   onSubmit,
-  submitLabel = 'Submit Ad Request',
+  submitLabel,
   durationWindow = AD_DURATION_FALLBACK,
 }: Readonly<AdRequestFormProps>) {
+  const { t } = useTranslation();
   // Marketing's window, not a constant: the slider, the sentence above it, its
   // end marks and the schema all come from one pair of numbers, so the form
   // cannot offer a campaign length the server would then refuse.
@@ -52,13 +47,13 @@ export default function AdRequestForm({
     () => ({ min: durationWindow.min, max: Math.max(durationWindow.min, durationWindow.max) }),
     [durationWindow.min, durationWindow.max]
   );
-  const schema = useMemo(() => makeAdRequestSchema(window), [window]);
+  const schema = useMemo(() => makeAdRequestSchema(window, t), [window, t]);
   const durationMarks = useMemo(
     () => [
-      { value: window.min, label: dayLabel(window.min) },
-      { value: window.max, label: dayLabel(window.max) },
+      { value: window.min, label: dayLabel(window.min, t) },
+      { value: window.max, label: dayLabel(window.max, t) },
     ],
-    [window]
+    [window, t]
   );
 
   const { control, handleSubmit, setValue, watch, formState } = useForm<AdRequestFormValues>({
@@ -79,17 +74,23 @@ export default function AdRequestForm({
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <RhfTextField control={control} name="ad_title" label="Ad Title" required hint="3–120 characters" />
+          <RhfTextField
+            control={control}
+            name="ad_title"
+            label={t('adRequest.form.title')}
+            required
+            hint={t('adRequest.form.titleHint')}
+          />
         </Grid>
         <Grid item xs={12}>
           <RhfTextField
             control={control}
             name="ad_description"
-            label="Ad Description"
+            label={t('adRequest.form.description')}
             required
             multiline
             minRows={3}
-            hint="What the ad promotes (10–1000 characters)"
+            hint={t('adRequest.form.descriptionHint')}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -98,7 +99,7 @@ export default function AdRequestForm({
             name="ad_type"
             render={({ field }) => (
               <TextField
-                label="Ad Type"
+                label={t('adRequest.form.type')}
                 select
                 fullWidth
                 value={field.value}
@@ -107,9 +108,9 @@ export default function AdRequestForm({
                   setValue('media_url', '', { shouldValidate: true });
                 }}
                 onBlur={field.onBlur}
-                helperText="Changing the type clears the uploaded media"
+                helperText={t('adRequest.form.typeHint')}
               >
-                {AD_MEDIA_TYPE_OPTIONS.map((option) => (
+                {adMediaTypeOptions(t).map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>
@@ -119,8 +120,14 @@ export default function AdRequestForm({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="position" label="Ad Position" select hint="Auto shows the ad across every placement">
-            {AD_POSITION_OPTIONS.map((option) => (
+          <RhfTextField
+            control={control}
+            name="position"
+            label={t('adRequest.form.position')}
+            select
+            hint={t('adRequest.form.positionHint')}
+          >
+            {adPositionOptions(t).map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
               </MenuItem>
@@ -133,7 +140,7 @@ export default function AdRequestForm({
             name="start_at"
             render={({ field, fieldState }) => (
               <DatePicker
-                label="Ad Start Date"
+                label={t('adRequest.form.startDate')}
                 value={field.value ? new Date(field.value) : null}
                 onChange={(date) => field.onChange(date ? date.toISOString() : '')}
                 disablePast
@@ -142,7 +149,7 @@ export default function AdRequestForm({
                     fullWidth: true,
                     required: true,
                     error: !!fieldState.error,
-                    helperText: fieldState.error?.message ?? 'Today or later',
+                    helperText: fieldState.error?.message ?? t('adRequest.form.startDateHint'),
                   },
                 }}
               />
@@ -156,8 +163,13 @@ export default function AdRequestForm({
             render={({ field }) => (
               <Box sx={{ px: 1 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom id="ad-duration-label">
-                  Ad Duration: {field.value} {field.value === 1 ? 'day' : 'days'} (
-                  {dayLabel(window.min)} – {dayLabel(window.max)})
+                  {t('adRequest.form.duration', {
+                    vars: {
+                      days: t('adRequest.days', { count: field.value }),
+                      from: dayLabel(window.min, t),
+                      to: dayLabel(window.max, t),
+                    },
+                  })}
                 </Typography>
                 <Slider
                   value={field.value}
@@ -190,10 +202,22 @@ export default function AdRequestForm({
           />
         </Grid>
         <Grid item xs={12}>
-          <RhfTextField control={control} name="redirect_url" label="Redirect URL" hint="Optional — where the ad opens; must be an http(s) link" />
+          <RhfTextField
+            control={control}
+            name="redirect_url"
+            label={t('adRequest.form.redirectUrl')}
+            hint={t('adRequest.form.redirectUrlHint')}
+          />
         </Grid>
         <Grid item xs={12}>
-          <RhfTextField control={control} name="target_audience" label="Target Audience" multiline minRows={2} hint="Optional — describe who the ad should reach" />
+          <RhfTextField
+            control={control}
+            name="target_audience"
+            label={t('adRequest.form.targetAudience')}
+            multiline
+            minRows={2}
+            hint={t('adRequest.form.targetAudienceHint')}
+          />
         </Grid>
         {errorMessage && (
           <Grid item xs={12}>
@@ -203,7 +227,7 @@ export default function AdRequestForm({
         <Grid item xs={12}>
           <Stack direction="row" justifyContent="flex-end">
             <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
-              {submitLabel}
+              {submitLabel ?? t('adRequest.form.submit')}
             </Button>
           </Stack>
         </Grid>

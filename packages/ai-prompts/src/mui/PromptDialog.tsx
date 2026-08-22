@@ -3,7 +3,8 @@ import { useMutation } from '@apollo/client';
 import { Alert, Box, Dialog, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { CREATE_AI_PROMPT, UPDATE_AI_PROMPT } from '../queries';
-import { PROMPT_COPY, promptFeedUrl } from '../copy';
+import { promptFeedUrl } from '../copy';
+import { usePromptCopy } from '../i18n/useCopy';
 import type { PromptFormValues } from '../schema';
 import type { AiPrompt } from '../types';
 import { PromptForm } from './PromptForm';
@@ -29,6 +30,7 @@ interface Props {
  * would be noise that reads like it did something.
  */
 export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Readonly<Props>) {
+  const copy = usePromptCopy();
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   // The preview follows the row that is open, not the one that was open last:
@@ -64,7 +66,7 @@ export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Read
     }
   };
 
-  const title = prompt ? PROMPT_COPY.editPrompt : PROMPT_COPY.createTitle;
+  const title = prompt ? copy.editPrompt : copy.createTitle;
   const initialValues = prompt
     ? {
         name: prompt.name,
@@ -94,7 +96,7 @@ export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Read
               editing={!!prompt}
               variables={prompt?.variables ?? []}
               submitting={creating || updating}
-              submitLabel={prompt ? 'Save changes' : 'Add'}
+              submitLabel={prompt ? copy.saveChanges : copy.add}
               onSubmit={submit}
               onCancel={onClose}
               onContentChange={setDraft}
@@ -106,7 +108,7 @@ export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Read
                 {prompt.key && (
                   <FeedUrlBar
                     url={promptFeedUrl(apiOrigin, { key: prompt.key })}
-                    label={PROMPT_COPY.apiCopyOne}
+                    label={copy.apiCopyOne}
                   />
                 )}
                 <PromptContext prompt={prompt} content={draft} />

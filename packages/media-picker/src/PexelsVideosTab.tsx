@@ -88,7 +88,7 @@ export default function PexelsVideosTab({
   const importPexelsVideo = async (v: any) => {
     const file = pickBestVideoFile(v);
     if (!file?.link) {
-      setError('This video has no downloadable mp4');
+      setError(t('media.list.noVideoFile'));
       return;
     }
     setVimportingId(v.id);

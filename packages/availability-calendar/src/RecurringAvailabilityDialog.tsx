@@ -18,6 +18,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { addDays, isAfter, isBefore, set as setTimeOnDate, startOfDay } from 'date-fns';
+import { useTranslation } from '@duncit/app-settings';
 import { wholeDayWindow } from './slot-window';
 import type { NewSlotInput } from './types';
 
@@ -85,6 +86,7 @@ function buildRecurringSlots(
 /** Bulk-add a daily availability window across a date range at one price. The
  *  host wires onAdd (which calls the bulk-create API). Prop-driven + reusable. */
 export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [wholeDay, setWholeDay] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -112,12 +114,12 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
   };
 
   const validate = (): string | null => {
-    if (!startDate || !endDate) return 'Pick the start and end date.';
-    if (isBefore(endDate, startDate)) return 'End date must be on or after the start date.';
+    if (!startDate || !endDate) return t('shell.availability.pickDates');
+    if (isBefore(endDate, startDate)) return t('shell.availability.endDateAfterStart');
     if (wholeDay) return null;
-    if (!startTime || !endTime) return 'Pick the daily start and end time.';
+    if (!startTime || !endTime) return t('shell.availability.pickTimes');
     if (!isAfter(combineDateAndTime(startDate, endTime), combineDateAndTime(startDate, startTime))) {
-      return 'Daily end time must be after the start time.';
+      return t('shell.availability.dailyEndAfterStart');
     }
     return null;
   };
@@ -137,7 +139,7 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
       Math.max(0, Math.round(Number(price) || 0)),
     );
     if (slots.length === 0) {
-      setError('That range has no upcoming slots.');
+      setError(t('shell.availability.noUpcomingSlots'));
       return;
     }
     setSaving(true);
@@ -147,7 +149,7 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
       reset();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not add slots');
+      setError(e instanceof Error ? e.message : t('shell.availability.addFailed'));
     } finally {
       setSaving(false);
     }
@@ -156,31 +158,35 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 900, pr: 6 }}>
-        Recurring availability
-        <IconButton onClick={handleClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
+        {t('shell.availability.recurringTitle')}
+        <IconButton
+          onClick={handleClose}
+          aria-label={t('shell.common.close')}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Add the same daily time window across a date range (up to {MAX_FUTURE_DAYS} days ahead).
+            {t('shell.availability.recurringHint', { vars: { days: MAX_FUTURE_DAYS } })}
           </Typography>
           <FormControlLabel
             control={<Switch checked={wholeDay} onChange={(e) => setWholeDay(e.target.checked)} />}
             label={
               <Box>
                 <Typography variant="body2" fontWeight={800}>
-                  Whole day
+                  {t('shell.slots.wholeDay')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Each day becomes one whole-day slot — no time selection needed.
+                  {t('shell.availability.recurringWholeDayHint')}
                 </Typography>
               </Box>
             }
           />
           <DatePicker
-            label="Start date"
+            label={t('shell.availability.startDate')}
             value={startDate}
             onChange={setStartDate}
             minDate={new Date()}
@@ -188,7 +194,7 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
             slotProps={{ textField: { fullWidth: true, size: 'small' } }}
           />
           <DatePicker
-            label="End date"
+            label={t('shell.availability.endDate')}
             value={endDate}
             onChange={setEndDate}
             minDate={startDate ?? new Date()}
@@ -197,18 +203,28 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
           />
           {!wholeDay && (
             <Stack direction="row" spacing={1}>
-              <TimePicker label="Daily start" value={startTime} onChange={setStartTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
-              <TimePicker label="Daily end" value={endTime} onChange={setEndTime} slotProps={{ textField: { fullWidth: true, size: 'small' } }} />
+              <TimePicker
+                label={t('shell.availability.dailyStart')}
+                value={startTime}
+                onChange={setStartTime}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+              />
+              <TimePicker
+                label={t('shell.availability.dailyEnd')}
+                value={endTime}
+                onChange={setEndTime}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+              />
             </Stack>
           )}
           <TextField
             size="small"
             type="number"
-            label="Price (₹)"
+            label={t('shell.availability.price')}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             inputProps={{ min: 0, step: 50 }}
-            helperText="Applied to every slot. 0 = free."
+            helperText={t('shell.availability.recurringPriceHint')}
           />
           {error && (
             <Alert severity="error" onClose={() => setError(null)}>
@@ -218,9 +234,9 @@ export default function RecurringAvailabilityDialog({ open, onClose, onAdd }: Re
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" disabled={saving} onClick={handleAdd}>
-          {saving ? 'Adding…' : 'Add to calendar'}
+          {saving ? t('shell.availability.adding') : t('shell.availability.addToCalendar')}
         </Button>
       </DialogActions>
     </Dialog>

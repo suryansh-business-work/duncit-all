@@ -18,15 +18,18 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { LoginFormValues } from './login.types';
 import { loginInitialValues } from './login.types';
 import { inkCta } from './glass';
+import { sessionT, type SessionTranslate } from '../i18n';
 
-export const loginSchema = yup.object({
-  email: yup
-    .string()
-    .trim()
-    .email('Enter a valid e-mail address')
-    .required('E-mail address is required'),
-  password: yup.string().required('Password is required'),
-});
+/** Built from the caller's translator, so the messages follow the reader. */
+export const buildLoginSchema = (t: SessionTranslate) =>
+  yup.object({
+    email: yup
+      .string()
+      .trim()
+      .email(t('session.login.emailInvalid'))
+      .required(t('session.login.emailRequired')),
+    password: yup.string().required(t('session.login.passwordRequired')),
+  });
 
 const pillSx = {
   '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' },
@@ -36,13 +39,20 @@ interface Props {
   loading?: boolean;
   onSubmit: (values: LoginFormValues) => Promise<void> | void;
   onForgotPassword: () => void;
+  /** The mounting surface's translator; the shipped English when omitted. */
+  t?: SessionTranslate;
 }
 
-export default function LoginForm({ loading, onSubmit, onForgotPassword }: Readonly<Props>) {
+export default function LoginForm({
+  loading,
+  onSubmit,
+  onForgotPassword,
+  t = sessionT,
+}: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   const formik = useFormik<LoginFormValues>({
     initialValues: loginInitialValues,
-    validationSchema: loginSchema,
+    validationSchema: buildLoginSchema(t),
     onSubmit: (values) => onSubmit(values),
   });
 
@@ -61,7 +71,7 @@ export default function LoginForm({ loading, onSubmit, onForgotPassword }: Reado
         <TextField
           {...field('email')}
           type="email"
-          placeholder="e-mail address"
+          placeholder={t('session.login.email')}
           fullWidth
           sx={pillSx}
           InputProps={{
@@ -75,7 +85,7 @@ export default function LoginForm({ loading, onSubmit, onForgotPassword }: Reado
         <TextField
           {...field('password')}
           type={showPwd ? 'text' : 'password'}
-          placeholder="password"
+          placeholder={t('session.login.password')}
           fullWidth
           sx={pillSx}
           InputProps={{
@@ -86,7 +96,7 @@ export default function LoginForm({ loading, onSubmit, onForgotPassword }: Reado
             ),
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label="toggle password visibility">
+                <IconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
                   {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
                 </IconButton>
               </InputAdornment>
@@ -101,16 +111,16 @@ export default function LoginForm({ loading, onSubmit, onForgotPassword }: Reado
           color="text.secondary"
           sx={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 600 }}
         >
-          Forgot password?
+          {t('session.login.forgotPassword')}
         </Link>
         <Stack direction="row" alignItems="center" spacing={2} sx={{ mt: 0.5 }}>
           <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-            Authorized personnel only. Sign in with your Duncit credentials to access the operations portal.
+            {t('session.login.authorizedOnly')}
           </Typography>
           <IconButton
             type="submit"
             disabled={loading}
-            aria-label="sign in"
+            aria-label={t('session.login.submit')}
             sx={{
               width: 56,
               height: 56,

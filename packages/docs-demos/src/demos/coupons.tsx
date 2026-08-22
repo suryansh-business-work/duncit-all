@@ -1,4 +1,4 @@
-import { couponFormDefaults, couponFormSchema, toCouponInput } from '@duncit/coupons';
+import { buildCouponFormSchema, couponFormDefaults, toCouponInput } from '@duncit/coupons';
 import { defineDemo, defineDemos } from '../types';
 
 /** A coupon exactly as the dialog holds it before Save. */
@@ -24,7 +24,9 @@ export default defineDemos('coupons', [
       is_active: true,
     },
     compute: (mock) => {
-      const parsed = couponFormSchema.safeParse(mock);
+      // The messages come from the catalogue, so the schema takes a
+      // translator — the live one inside a console, the key itself here.
+      const parsed = buildCouponFormSchema((key) => key).safeParse(mock);
       if (!parsed.success) {
         return {
           Valid: false,

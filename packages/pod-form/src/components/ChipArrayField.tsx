@@ -1,11 +1,13 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   label: string;
   value: string[];
   onChange: (next: string[]) => void;
   helperText?: string;
+  /** Defaults to the shared `Type and press Enter` copy, translated. */
   placeholder?: string;
   max?: number;
   error?: string;
@@ -17,10 +19,11 @@ export default function ChipArrayField({
   value,
   onChange,
   helperText,
-  placeholder = 'Type and press Enter',
+  placeholder,
   max = 20,
   error,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
 
   const commit = () => {
@@ -65,7 +68,7 @@ export default function ChipArrayField({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
         onBlur={commit}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('podForm.chipArrayField.placeholder')}
         size="small"
         fullWidth
         error={!!error}

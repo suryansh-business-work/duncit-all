@@ -28,7 +28,7 @@ exports:
   - 'MY_ADMIN_CLUBS_FOR_AUTO_POD'
   - 'PodKindChooser'
   - 'AutoPodForm'
-  - 'autoPodSchema'
+  - 'buildAutoPodSchema'
   - 'toAutoPodInput'
   - 'toAutoPodForm'
   - 'emptyAutoPodForm'
@@ -146,7 +146,9 @@ import { shellPodKindLabels } from '@duncit/utils';
 
 `AutoPodForm` is the template itself — title, category, description, images,
 price, spots, occurrence, hashtags and payment terms, validated by
-`autoPodSchema` against the same rules the server applies. It is deliberately
+`buildAutoPodSchema(t)` against the same rules the server applies — it takes
+the console's translator, because a validation message is copy the author reads
+(rule 38). It is deliberately
 **not** `@duncit/pod-form`: that schema hard-requires a club, a venue, a host
 and a slot, and an Auto Pod has none of them yet.
 

@@ -13,7 +13,13 @@ import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-setti
 import { SHELL_FALLBACK_FLAT } from './i18n/fallback';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
-import { UserProvider, PortalModeGate, configureSessionSocket } from '@duncit/user-context';
+import {
+  UserProvider,
+  PortalModeGate,
+  configureSessionSocket,
+  type PortalModeGateProps,
+} from '@duncit/user-context';
+import { useTranslation } from './i18n/useTranslation';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
@@ -25,6 +31,19 @@ import { socketOrigin } from './lib/socket-origin';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
+
+/**
+ * The portal-mode gate with the console's live translator attached.
+ *
+ * @duncit/user-context sits BELOW @duncit/app-settings in the dependency graph
+ * (the locale provider reads the signed-in user from it), so the gate takes `t`
+ * as a prop rather than calling the hook itself. This is the one component that
+ * can hand it one: it renders inside the provider stack below.
+ */
+function LocalizedPortalModeGate(props: Readonly<Omit<PortalModeGateProps, 't'>>) {
+  const { t } = useTranslation();
+  return <PortalModeGate {...props} t={t} />;
+}
 
 /**
  * Boot a Duncit console with the shared Shell. Owns the entire common provider
@@ -103,9 +122,9 @@ export function mountPortal(opts: MountPortalOptions): void {
 
   const routed = (
     <>
-      <PortalModeGate portalKey={config.key} graphqlUrl={graphqlUrl} appName={config.name}>
+      <LocalizedPortalModeGate portalKey={config.key} graphqlUrl={graphqlUrl} appName={config.name}>
         {children}
-      </PortalModeGate>
+      </LocalizedPortalModeGate>
       <PortalBranding />
       {extras}
     </>

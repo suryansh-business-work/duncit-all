@@ -1,96 +1,97 @@
 import type { PromptKind } from './types';
 
+/** The translator the library reads its copy from (rule 38). */
+export type PromptTranslate = (key: string) => string;
+
 /**
  * Every label the Prompt Library renders, in one place.
  *
- * The AI portal is staff-only and ships no locale switcher today, so this is a
- * plain constant rather than an i18n namespace. It is a constant and not inline
- * strings so that when the portals do get localised, there is one file to walk
- * rather than six components.
+ * Assembled from the console's translator rather than written as literals:
+ * the copy itself lives under `ai.library.*` in @duncit/i18n, so an admin can
+ * translate it from Localization > Translations like every other screen
+ * (rule 38). Every key is written out as a literal `t('…')` call so the build
+ * gate can see it.
  */
-export const PROMPT_COPY = {
-  pageTitle: 'AI Library',
-  pageSubtitle:
-    'Every AI feature on the platform reads its prompt from here. Edit a code prompt and the next call uses your text — there is no deploy in between.',
-
-  kinds: {
-    CODE: {
-      label: 'Code Prompts',
-      chip: 'Code',
-      blurb:
-        'Declared in code and read back on every call. Edit the body or the model and the feature changes; they cannot be created or deleted here, only reset.',
+export const promptCopy = (t: PromptTranslate) =>
+  ({
+    pageTitle: t('ai.library.pageTitle'),
+    pageSubtitle: t('ai.library.pageSubtitle'),
+    kinds: {
+      CODE: {
+        label: t('ai.library.kinds.CODE.label'),
+        chip: t('ai.library.kinds.CODE.chip'),
+        blurb: t('ai.library.kinds.CODE.blurb'),
+      },
+      AI: {
+        label: t('ai.library.kinds.AI.label'),
+        chip: t('ai.library.kinds.AI.chip'),
+        blurb: t('ai.library.kinds.AI.blurb'),
+      },
     },
-    AI: {
-      label: 'AI Prompts',
-      chip: 'AI',
-      blurb:
-        'Written here, owned by nobody in code. Create as many as you like — they are served by the public GET API below for anything outside the server to fetch.',
+    roles: {
+      SYSTEM: t('ai.library.roles.SYSTEM'),
+      USER: t('ai.library.roles.USER'),
     },
-  } satisfies Record<PromptKind, { label: string; chip: string; blurb: string }>,
+    roleHints: {
+      SYSTEM: t('ai.library.roleHints.SYSTEM'),
+      USER: t('ai.library.roleHints.USER'),
+    },
+    addPrompt: t('ai.library.addPrompt'),
+    editPrompt: t('ai.library.editPrompt'),
+    createTitle: t('ai.library.createTitle'),
+    emptyCode: t('ai.library.emptyCode'),
+    emptyAi: t('ai.library.emptyAi'),
+    searchPlaceholder: t('ai.library.searchPlaceholder'),
+    deleteTitle: t('ai.library.deleteTitle'),
+    deleteConfirm: t('ai.library.deleteConfirm'),
+    resetTitle: t('ai.library.resetTitle'),
+    resetConfirm: t('ai.library.resetConfirm'),
+    busy: t('ai.library.busy'),
+    codeDeleteHint: t('ai.library.codeDeleteHint'),
+    resetHint: t('ai.library.resetHint'),
+    fields: {
+      name: t('ai.library.fields.name'),
+      description: t('ai.library.fields.description'),
+      category: t('ai.library.fields.category'),
+      key: t('ai.library.fields.key'),
+      model: t('ai.library.fields.model'),
+      content: t('ai.library.fields.content'),
+      active: t('ai.library.fields.active'),
+    },
+    hints: {
+      nameCode: t('ai.library.hints.nameCode'),
+      nameAi: t('ai.library.hints.nameAi'),
+      description: t('ai.library.hints.description'),
+      category: t('ai.library.hints.category'),
+      keyAi: t('ai.library.hints.keyAi'),
+      keyCode: t('ai.library.hints.keyCode'),
+      model: t('ai.library.hints.model'),
+      content: t('ai.library.hints.content'),
+    },
+    usageTitle: t('ai.library.usageTitle'),
+    usageEmpty: t('ai.library.usageEmpty'),
+    variablesTitle: t('ai.library.variablesTitle'),
+    variablesEmpty: t('ai.library.variablesEmpty'),
+    variablesHintCode: t('ai.library.variablesHintCode'),
+    variablesHintAi: t('ai.library.variablesHintAi'),
+    copyVariable: t('ai.library.copyVariable'),
+    previewTitle: t('ai.library.previewTitle'),
+    previewHint: t('ai.library.previewHint'),
+    apiTitle: t('ai.library.apiTitle'),
+    apiHint: t('ai.library.apiHint'),
+    apiCopyAll: t('ai.library.apiCopyAll'),
+    apiCopyOne: t('ai.library.apiCopyOne'),
+    apiCopied: t('ai.library.apiCopied'),
+    apiOpenInNewTab: t('ai.library.apiOpenInNewTab'),
+    apiOpenFeed: t('ai.library.apiOpenFeed'),
+    saving: t('ai.library.saving'),
+    saveChanges: t('ai.library.saveChanges'),
+    add: t('ai.library.add'),
+    cancel: t('shell.common.cancel'),
+  }) as const;
 
-  roles: {
-    SYSTEM: 'System turn',
-    USER: 'User turn',
-  },
-  roleHints: {
-    SYSTEM: 'The standing instruction — identical on every call of this feature.',
-    USER: 'The per-call payload: what the feature hands the model each time it runs.',
-  },
-
-  addPrompt: 'Add AI prompt',
-  editPrompt: 'Edit prompt',
-  createTitle: 'Add an AI prompt',
-  emptyCode: 'No code prompts seeded yet. They appear the first time the server boots.',
-  emptyAi: 'No AI prompts yet. Click "Add AI prompt" to write your first one.',
-  searchPlaceholder: 'Search by name, key, category or content…',
-
-  deleteTitle: 'Delete prompt',
-  deleteConfirm: 'Delete',
-  resetTitle: 'Reset prompt',
-  resetConfirm: 'Reset',
-  busy: 'Working…',
-  codeDeleteHint: 'Code prompts power a shipped feature — reset instead of deleting',
-  resetHint: 'Restore the shipped default',
-
-  fields: {
-    name: 'Name',
-    description: 'Description',
-    category: 'Category',
-    key: 'Key',
-    model: 'Model',
-    content: 'Prompt content',
-    active: 'Active',
-  },
-  hints: {
-    nameCode: 'Named by the feature that runs this prompt',
-    nameAi: 'A short label, e.g. "Weekly digest writer"',
-    description: 'Optional — what this prompt is for',
-    category: 'e.g. Summarization, Classification',
-    keyAi: 'Optional — how the GET API addresses it. Slugged from the name when left blank, and fixed once saved.',
-    keyCode: 'The catalogue id the call site names. Fixed in code.',
-    model: 'Optional. Empty uses the configured default model.',
-    content: 'The prompt body sent to the model',
-  },
-
-  usageTitle: 'Where this runs',
-  usageEmpty: 'No call site recorded for this prompt.',
-  variablesTitle: 'Placeholders',
-  variablesEmpty: 'This prompt takes no placeholders.',
-  variablesHintCode:
-    'The feature substitutes these at call time. Keep every required one in the body — without it the model is asked the question with the facts missing.',
-  variablesHintAi:
-    'Read out of your body. Whatever fetches this prompt fills them in; the GET API lists them alongside the text.',
-  copyVariable: 'Copy this placeholder',
-  previewTitle: 'Preview',
-  previewHint: 'The prompt as the model receives it, with the example values filled in.',
-
-  apiTitle: 'Public GET API',
-  apiHint:
-    'Open, no login and no key: anyone with the URL can read every prompt below, code ones included. Deactivate a prompt to take it off the feed.',
-  apiCopyAll: 'Copy list URL',
-  apiCopyOne: 'Copy prompt URL',
-  apiCopied: 'Copied',
-} as const;
+/** The shape every component in this package renders from. */
+export type PromptCopy = ReturnType<typeof promptCopy>;
 
 /** The feed URL for a whole kind, or for one prompt. */
 export function promptFeedUrl(base: string, opts: { kind?: PromptKind; key?: string } = {}): string {

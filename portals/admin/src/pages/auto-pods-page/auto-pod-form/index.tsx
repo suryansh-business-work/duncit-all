@@ -6,7 +6,7 @@
  */
 export { default as AutoPodForm } from './AdminAutoPodForm';
 export {
-  autoPodSchema,
+  buildAutoPodSchema,
   emptyAutoPodForm,
   parseHashtags,
   parseMediaLines,

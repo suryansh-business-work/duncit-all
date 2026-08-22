@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { couponFormSchema, couponFormDefaults, toCouponInput } from './coupon.form';
+import { buildCouponFormSchema, couponFormDefaults, toCouponInput } from './coupon.form';
+
+// The schema takes the console's translator; outside React the key is the copy.
+const couponFormSchema = buildCouponFormSchema((key) => key);
 
 const base = { ...couponFormDefaults, code: 'SAVE20', discount_pct: 20 };
 

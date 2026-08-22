@@ -1,4 +1,4 @@
-import { loginInitialValues, loginSchema } from '@duncit/user-context';
+import { buildLoginSchema, loginInitialValues, sessionT } from '@duncit/user-context';
 import { defineDemo, defineDemos } from '../types';
 
 type LoginMock = typeof loginInitialValues;
@@ -12,7 +12,9 @@ export default defineDemos('user-context', [
     mock: { ...loginInitialValues, email: 'meera@duncit.com', password: 'not-a-real-password' },
     compute: (mock) => {
       try {
-        const parsed = loginSchema.validateSync(mock, { abortEarly: false });
+        // The messages come from the catalogue, so the schema takes a
+        // translator — the live one inside a portal, this one outside React.
+        const parsed = buildLoginSchema(sessionT).validateSync(mock, { abortEarly: false });
         return { Valid: true, 'Parsed values': { ...parsed, password: '[redacted]' } };
       } catch (e) {
         const errors = (e as { errors?: string[] }).errors ?? [

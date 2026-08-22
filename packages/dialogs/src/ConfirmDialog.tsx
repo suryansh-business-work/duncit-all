@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import type { ReactNode } from 'react';
+import { useTranslation } from './i18n';
 
 export type ConfirmColor = 'primary' | 'error' | 'warning' | 'success' | 'inherit';
 
@@ -17,7 +18,9 @@ export interface ConfirmDialogProps {
   title: string;
   /** Plain strings render inside DialogContentText; any other node renders as-is. */
   message?: ReactNode;
+  /** Defaults to the shared `Confirm` copy in the reader's language. */
   confirmLabel?: string;
+  /** Defaults to the shared `Cancel` copy in the reader's language. */
   cancelLabel?: string;
   /** Shorthand for confirmColor="error". Ignored when `confirmColor` is set. */
   destructive?: boolean;
@@ -45,8 +48,8 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   destructive,
   confirmColor,
   busy,
@@ -57,12 +60,13 @@ export function ConfirmDialog({
   onClose,
   onCancel,
 }: Readonly<ConfirmDialogProps>) {
+  const { t } = useTranslation();
   const isBusy = Boolean(busy || loading);
   const close = onClose ?? onCancel;
   const fallbackColor: ConfirmColor = destructive ? 'error' : 'primary';
   const color = confirmColor ?? fallbackColor;
   const showBusyLabel = isBusy && busyLabel != null;
-  const confirmContent = showBusyLabel ? busyLabel : confirmLabel;
+  const confirmContent = showBusyLabel ? busyLabel : (confirmLabel ?? t('shell.common.confirm'));
   const startIcon =
     isBusy && busyLabel == null ? <CircularProgress size={16} /> : undefined;
 
@@ -80,7 +84,7 @@ export function ConfirmDialog({
       )}
       <DialogActions>
         <Button onClick={close} disabled={isBusy}>
-          {cancelLabel}
+          {cancelLabel ?? t('shell.common.cancel')}
         </Button>
         <Button
           variant="contained"

@@ -15,8 +15,14 @@ import {
   Switch,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import { useTranslation } from './i18n';
 import CouponDateField from './CouponDateField';
-import { couponFormDefaults, couponFormSchema, toCouponInput, type CouponFormValues } from './coupon';
+import {
+  buildCouponFormSchema,
+  couponFormDefaults,
+  toCouponInput,
+  type CouponFormValues,
+} from './coupon';
 import { CREATE_COUPON, UPDATE_COUPON, type CouponPodOption, type CouponRow } from './queries';
 
 interface Props {
@@ -51,12 +57,13 @@ const buildDefaults = (
     : { ...couponFormDefaults, ...(lockedPod ? { scope: 'POD', pod_id: lockedPod.id } : {}) };
 
 export default function CouponFormDialog({ open, onClose, onSaved, initial, lockedPod, pods }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [createCoupon] = useMutation(CREATE_COUPON);
   const [updateCoupon] = useMutation(UPDATE_COUPON);
 
   const { control, handleSubmit, watch, reset, setError, formState } = useForm<CouponFormValues>({
     defaultValues: buildDefaults(initial, lockedPod),
-    resolver: zodResolver(couponFormSchema),
+    resolver: zodResolver(buildCouponFormSchema(t)),
     mode: 'onTouched',
   });
 
@@ -75,37 +82,73 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
       onSaved();
       onClose();
     } catch (error) {
-      setError('root', { message: (error as Error)?.message ?? 'Could not save coupon' });
+      setError('root', { message: (error as Error)?.message ?? t('shell.coupons.saveFailed') });
     }
   });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initial ? 'Edit coupon' : 'New coupon'}</DialogTitle>
+      <DialogTitle>{initial ? t('shell.coupons.editTitle') : t('shell.coupons.newTitle')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {status && <Alert severity="error">{status}</Alert>}
           <RhfTextField
             control={control}
             name="code"
-            label="Code"
+            label={t('shell.coupons.code')}
             size="small"
             required
-            hint="3–30 chars: A–Z, 0–9, - or _"
+            hint={t('shell.coupons.codeHint')}
             inputProps={{ style: { textTransform: 'uppercase' } }}
           />
-          <RhfTextField control={control} name="description" label="Description" size="small" multiline minRows={2} />
+          <RhfTextField
+            control={control}
+            name="description"
+            label={t('shell.coupons.description')}
+            size="small"
+            multiline
+            minRows={2}
+          />
           <Stack direction="row" spacing={2}>
-            <RhfTextField control={control} name="discount_pct" type="number" label="Discount %" size="small" required hint="Between 1 and 100" />
-            <RhfTextField control={control} name="min_order_amount" type="number" label="Min order ₹" size="small" />
+            <RhfTextField
+              control={control}
+              name="discount_pct"
+              type="number"
+              label={t('shell.coupons.discountPct')}
+              size="small"
+              required
+              hint={t('shell.coupons.discountHint')}
+            />
+            <RhfTextField
+              control={control}
+              name="min_order_amount"
+              type="number"
+              label={t('shell.coupons.minOrder')}
+              size="small"
+            />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <RhfTextField control={control} name="scope" select label="Scope" size="small" disabled={!!lockedPod}>
-              <MenuItem value="GLOBAL">Global (all pods)</MenuItem>
-              <MenuItem value="POD">Pod-specific</MenuItem>
+            <RhfTextField
+              control={control}
+              name="scope"
+              select
+              label={t('shell.coupons.scope')}
+              size="small"
+              disabled={!!lockedPod}
+            >
+              <MenuItem value="GLOBAL">{t('shell.coupons.scopeGlobal')}</MenuItem>
+              <MenuItem value="POD">{t('shell.coupons.scopePod')}</MenuItem>
             </RhfTextField>
             {scope === 'POD' && (
-              <RhfTextField control={control} name="pod_id" select label="Pod" size="small" required disabled={!!lockedPod}>
+              <RhfTextField
+                control={control}
+                name="pod_id"
+                select
+                label={t('shell.coupons.pod')}
+                size="small"
+                required
+                disabled={!!lockedPod}
+              >
                 {lockedPod ? (
                   <MenuItem value={lockedPod.id}>{lockedPod.title}</MenuItem>
                 ) : (
@@ -119,12 +162,24 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
             )}
           </Stack>
           <Stack direction="row" spacing={2}>
-            <CouponDateField control={control} name="valid_from" label="Valid from" />
-            <CouponDateField control={control} name="valid_until" label="Valid until" />
+            <CouponDateField control={control} name="valid_from" label={t('shell.coupons.validFrom')} />
+            <CouponDateField control={control} name="valid_until" label={t('shell.coupons.validUntil')} />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <RhfTextField control={control} name="max_uses" type="number" label="Max total uses" size="small" />
-            <RhfTextField control={control} name="per_user_limit" type="number" label="Per-user limit" size="small" />
+            <RhfTextField
+              control={control}
+              name="max_uses"
+              type="number"
+              label={t('shell.coupons.maxUses')}
+              size="small"
+            />
+            <RhfTextField
+              control={control}
+              name="per_user_limit"
+              type="number"
+              label={t('shell.coupons.perUserLimit')}
+              size="small"
+            />
           </Stack>
           <Controller
             control={control}
@@ -132,16 +187,16 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
             render={({ field }) => (
               <FormControlLabel
                 control={<Switch checked={!!field.value} onChange={(event) => field.onChange(event.target.checked)} />}
-                label="Active"
+                label={t('shell.coupons.active')}
               />
             )}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={submit}>
-          {initial ? 'Save' : 'Create'}
+          {initial ? t('shell.common.save') : t('shell.coupons.create')}
         </Button>
       </DialogActions>
     </Dialog>

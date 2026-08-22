@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import { adTypeLabel } from '../ad-options';
 import type { AdRequestDetail } from '../queries';
 
@@ -13,14 +14,15 @@ const PREVIEW_SX = {
 
 /** The submitted ad creative (image or video) with its media type. */
 export default function AdMediaCard({ ad }: Readonly<{ ad: AdRequestDetail }>) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
           <Typography variant="subtitle1" fontWeight={700}>
-            Ad Media
+            {t('adRequest.media.label')}
           </Typography>
-          <Chip size="small" variant="outlined" label={adTypeLabel(ad.ad_type)} />
+          <Chip size="small" variant="outlined" label={adTypeLabel(ad.ad_type, t)} />
         </Stack>
         {ad.ad_type === 'VIDEO' ? (
           <Box component="video" src={ad.media_url} controls sx={PREVIEW_SX} />

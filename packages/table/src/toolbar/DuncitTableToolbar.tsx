@@ -16,6 +16,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
+import { useTranslation } from '../i18n';
 import type { TableDensity } from '../persistence';
 import type { DuncitColumn, TableFilterValue } from '../types';
 import { ColumnMenu } from './ColumnMenu';
@@ -57,12 +58,13 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
     onExportCsv,
     onRefresh,
   } = props;
+  const { t } = useTranslation();
   const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
   const [columnAnchor, setColumnAnchor] = useState<HTMLElement | null>(null);
   const hasFilterableColumns = columns.some((column) => column.filter);
   const isCompact = density === 'compact';
-  const densityTitle = isCompact ? 'Standard density' : 'Compact density';
-  const placeholder = searchPlaceholder ?? 'Search…';
+  const densityTitle = isCompact ? t('shell.table.densityStandard') : t('shell.table.densityCompact');
+  const placeholder = searchPlaceholder ?? t('shell.table.search');
 
   const removeFilter = (field: string) => {
     setFilters(filters.filter((filter) => filter.field !== field));
@@ -70,8 +72,12 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
 
   const clearAdornment = (
     <InputAdornment position="end">
-      <Tooltip title="Clear search">
-        <IconButton size="small" aria-label="Clear search" onClick={() => setSearchInput('')}>
+      <Tooltip title={t('shell.table.clearSearch')}>
+        <IconButton
+          size="small"
+          aria-label={t('shell.table.clearSearch')}
+          onClick={() => setSearchInput('')}
+        >
           <ClearIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -102,7 +108,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
             startIcon={<FilterListIcon />}
             onClick={(event) => setFilterAnchor(event.currentTarget)}
           >
-            Filters
+            {t('shell.table.filters')}
           </Button>
         </Badge>
       ) : null}
@@ -110,16 +116,16 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         <Chip
           key={filter.field}
           size="small"
-          label={filterChipLabel(columns, filter)}
+          label={filterChipLabel(columns, filter, t)}
           onDelete={() => removeFilter(filter.field)}
         />
       ))}
       <Box sx={{ flexGrow: 1 }} />
       {toolbarActions}
-      <Tooltip title="Columns">
+      <Tooltip title={t('shell.table.columns')}>
         <IconButton
           size="small"
-          aria-label="Columns"
+          aria-label={t('shell.table.columns')}
           onClick={(event) => setColumnAnchor(event.currentTarget)}
         >
           <ViewColumnIcon fontSize="small" />
@@ -130,13 +136,13 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
           {isCompact ? <DensityMediumIcon fontSize="small" /> : <DensitySmallIcon fontSize="small" />}
         </IconButton>
       </Tooltip>
-      <Tooltip title="Export CSV">
-        <IconButton size="small" aria-label="Export CSV" onClick={onExportCsv}>
+      <Tooltip title={t('shell.table.exportCsv')}>
+        <IconButton size="small" aria-label={t('shell.table.exportCsv')} onClick={onExportCsv}>
           <FileDownloadIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Refresh">
-        <IconButton size="small" aria-label="Refresh" onClick={onRefresh}>
+      <Tooltip title={t('shell.table.refresh')}>
+        <IconButton size="small" aria-label={t('shell.table.refresh')} onClick={onRefresh}>
           <RefreshIcon fontSize="small" />
         </IconButton>
       </Tooltip>

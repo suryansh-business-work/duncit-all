@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { startOfDay } from 'date-fns';
 import { optionalText, requiredText } from '@duncit/forms';
 import { AD_MEDIA_TYPE_VALUES, AD_POSITION_VALUES, type AdMediaType, type AdPosition } from './ad-options';
+import { adRequestT, type Translate } from './i18n/useTranslation';
 
 export type { AdMediaType, AdPosition };
 
@@ -35,32 +36,46 @@ const isHttpUrl = (value: string): boolean => {
   }
 };
 
-/** Ad request contract — RHF + Zod. Mirrors the server SubmitAdRequestInput rules. */
-export const adRequestSchema = z.object({
-  ad_title: requiredText('Ad title', 3, 120),
-  ad_description: requiredText('Ad description', 10, 1000),
-  ad_type: z.enum(AD_MEDIA_TYPE_VALUES, { required_error: 'Ad type is required' }),
-  media_url: z.string().trim().min(1, 'Upload the ad media'),
-  position: z.enum(AD_POSITION_VALUES, { required_error: 'Ad position is required' }),
-  start_at: z
-    .string()
-    .trim()
-    .min(1, 'Ad start date is required')
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Ad start date must be a valid date')
-    .refine(isTodayOrLater, 'Ad start date must be today or later'),
-  duration_days: z
-    .number({ invalid_type_error: 'Ad duration must be a number of days' })
-    .int('Ad duration must be whole days')
-    .min(1, 'Ad duration must be at least 1 day'),
-  redirect_url: z
-    .string()
-    .trim()
-    .default('')
-    .refine(isHttpUrl, 'Redirect URL must be a valid http(s) link'),
-  target_audience: optionalText('Target audience', 500, { defaultEmpty: true }),
-});
+/**
+ * Ad request contract — RHF + Zod. Mirrors the server SubmitAdRequestInput
+ * rules.
+ *
+ * Built from the caller's translator: a validation message is copy the
+ * advertiser reads, so it follows their language like every other string on
+ * the screen (rule 38). The field NAMES handed to `requiredText`/`optionalText`
+ * come from the same catalogue rows the labels do.
+ */
+export const buildAdRequestSchema = (t: Translate) =>
+  z.object({
+    ad_title: requiredText(t('adRequest.form.title'), 3, 120),
+    ad_description: requiredText(t('adRequest.form.description'), 10, 1000),
+    ad_type: z.enum(AD_MEDIA_TYPE_VALUES, { required_error: t('adRequest.errors.typeRequired') }),
+    media_url: z.string().trim().min(1, t('adRequest.errors.mediaRequired')),
+    position: z.enum(AD_POSITION_VALUES, {
+      required_error: t('adRequest.errors.positionRequired'),
+    }),
+    start_at: z
+      .string()
+      .trim()
+      .min(1, t('adRequest.errors.startRequired'))
+      .refine(
+        (value) => !Number.isNaN(new Date(value).getTime()),
+        t('adRequest.errors.startInvalid'),
+      )
+      .refine(isTodayOrLater, t('adRequest.errors.startPast')),
+    duration_days: z
+      .number({ invalid_type_error: t('adRequest.errors.durationNumber') })
+      .int(t('adRequest.errors.durationWhole'))
+      .min(1, t('adRequest.errors.durationMin')),
+    redirect_url: z
+      .string()
+      .trim()
+      .default('')
+      .refine(isHttpUrl, t('adRequest.errors.redirectInvalid')),
+    target_audience: optionalText(t('adRequest.form.targetAudience'), 500, { defaultEmpty: true }),
+  });
 
-export type AdRequestFormValues = z.infer<typeof adRequestSchema>;
+export type AdRequestFormValues = z.infer<ReturnType<typeof buildAdRequestSchema>>;
 
 /**
  * The booking window when the caller has not loaded one yet.
@@ -78,10 +93,12 @@ export const AD_DURATION_FALLBACK = { min: 1, max: 30 } as const;
  * Marketing can sell a 90-day campaign, and a schema compiled at import time
  * would still be refusing it at 31.
  */
-export function makeAdRequestSchema(window: { min: number; max: number }) {
+export function makeAdRequestSchema(window: { min: number; max: number }, t: Translate) {
   const max = Math.max(window.min, window.max);
-  return adRequestSchema.refine((values) => values.duration_days <= max, {
-    message: `Ad duration can be at most ${max} ${max === 1 ? 'day' : 'days'}`,
+  return buildAdRequestSchema(t).refine((values) => values.duration_days <= max, {
+    message: t('adRequest.errors.durationMax', {
+      vars: { max: t('adRequest.days', { count: max }) },
+    }),
     path: ['duration_days'],
   });
 }
@@ -100,9 +117,16 @@ export function blankAdRequestValues(): AdRequestFormValues {
   };
 }
 
-/** Validates and maps the form values to the mutation input (empty optionals dropped). */
+/**
+ * Validates and maps the form values to the mutation input (empty optionals
+ * dropped).
+ *
+ * Runs the schema again for its coercions and defaults, never for its messages
+ * — the form has already blocked anything invalid — so the package's own
+ * provider-free translator is enough here.
+ */
 export function toSubmitAdRequestInput(values: AdRequestFormValues): SubmitAdRequestInput {
-  const cast = adRequestSchema.parse(values);
+  const cast = buildAdRequestSchema(adRequestT).parse(values);
   return {
     ad_title: cast.ad_title,
     ad_description: cast.ad_description,

@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Chip, FormControlLabel, Stack, Switch } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import { PROMPT_COPY } from '../copy';
+import { usePromptCopy } from '../i18n/useCopy';
 import { estimateTokens } from '../render';
 import { promptFormSchema, promptInitialValues, type PromptFormValues } from '../schema';
 import type { PromptVariable } from '../types';
@@ -36,7 +36,7 @@ export interface PromptFormProps {
 export function PromptForm({
   initialValues,
   submitting,
-  submitLabel = 'Save',
+  submitLabel,
   code = false,
   editing = false,
   variables = [],
@@ -44,6 +44,7 @@ export function PromptForm({
   onCancel,
   onContentChange,
 }: Readonly<PromptFormProps>) {
+  const copy = usePromptCopy();
   const schema = useMemo(() => promptFormSchema(variables), [variables]);
   const { control, handleSubmit, watch, formState } = useForm<PromptFormValues>({
     defaultValues: { ...promptInitialValues, ...initialValues },
@@ -60,7 +61,7 @@ export function PromptForm({
   }, [content, onContentChange]);
 
   const submit = handleSubmit((values) => onSubmit(values));
-  const keyHint = code ? PROMPT_COPY.hints.keyCode : PROMPT_COPY.hints.keyAi;
+  const keyHint = code ? copy.hints.keyCode : copy.hints.keyAi;
 
   return (
     <form noValidate data-testid="prompt-form" onSubmit={submit}>
@@ -68,47 +69,47 @@ export function PromptForm({
         <RhfTextField
           control={control}
           name="name"
-          label={PROMPT_COPY.fields.name}
+          label={copy.fields.name}
           required
           disabled={code}
-          hint={code ? PROMPT_COPY.hints.nameCode : PROMPT_COPY.hints.nameAi}
+          hint={code ? copy.hints.nameCode : copy.hints.nameAi}
         />
         <RhfTextField
           control={control}
           name="key"
-          label={PROMPT_COPY.fields.key}
+          label={copy.fields.key}
           disabled={code || editing}
           hint={keyHint}
         />
         <RhfTextField
           control={control}
           name="description"
-          label={PROMPT_COPY.fields.description}
-          hint={PROMPT_COPY.hints.description}
+          label={copy.fields.description}
+          hint={copy.hints.description}
         />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <RhfTextField
             control={control}
             name="category"
-            label={PROMPT_COPY.fields.category}
+            label={copy.fields.category}
             disabled={code}
-            hint={PROMPT_COPY.hints.category}
+            hint={copy.hints.category}
           />
           <RhfTextField
             control={control}
             name="target_model"
-            label={PROMPT_COPY.fields.model}
-            hint={PROMPT_COPY.hints.model}
+            label={copy.fields.model}
+            hint={copy.hints.model}
           />
         </Stack>
         <RhfTextField
           control={control}
           name="content"
-          label={PROMPT_COPY.fields.content}
+          label={copy.fields.content}
           required
           multiline
           minRows={10}
-          hint={PROMPT_COPY.hints.content}
+          hint={copy.hints.content}
         />
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Chip
@@ -131,7 +132,7 @@ export function PromptForm({
                       name="is_active"
                     />
                   }
-                  label={PROMPT_COPY.fields.active}
+                  label={copy.fields.active}
                 />
               )}
             />
@@ -140,11 +141,11 @@ export function PromptForm({
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           {onCancel && (
             <Button onClick={onCancel} disabled={submitting}>
-              Cancel
+              {copy.cancel}
             </Button>
           )}
           <Button type="submit" variant="contained" disabled={submitting || !formState.isValid}>
-            {submitting ? 'Saving…' : submitLabel}
+            {submitting ? copy.saving : (submitLabel ?? copy.saveChanges)}
           </Button>
         </Stack>
       </Stack>

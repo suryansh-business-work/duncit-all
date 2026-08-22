@@ -9,6 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
+import { useTranslation } from '@duncit/app-settings';
 import { slotCoveredDays } from './slot-window';
 import type { CalendarView, VenueSlotRow } from './types';
 import { formatDate } from '@duncit/datetime';
@@ -112,6 +113,7 @@ interface DayHeaderProps {
 
 /** The day number (or full date in day view) plus the venue-leave tag. */
 function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderProps>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center">
       <Typography
@@ -121,8 +123,12 @@ function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderPr
         {isDayView ? formatDate(date) : format(date, 'd')}
       </Typography>
       {isHoliday && !isDayView && (
-        <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 800 }} aria-label="Venue on leave">
-          LEAVE
+        <Typography
+          variant="caption"
+          sx={{ fontSize: 9, fontWeight: 800 }}
+          aria-label={t('shell.availability.onLeave')}
+        >
+          {t('shell.availability.leaveTag')}
         </Typography>
       )}
     </Stack>

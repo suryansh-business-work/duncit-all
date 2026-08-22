@@ -12,7 +12,7 @@ exports:
   - 'CouponsPage'
   - 'CouponsTable'
   - 'CouponFormDialog'
-  - 'couponFormSchema'
+  - 'buildCouponFormSchema'
   - 'couponFormDefaults'
   - 'toCouponInput'
   - 'COUPONS_TABLE'
@@ -65,7 +65,7 @@ silently narrow a platform-wide coupon to one pod.
 
 ## The form
 
-`couponFormSchema` is the Zod contract behind the dialog (React Hook Form +
+`buildCouponFormSchema(t)` is the Zod contract behind the dialog (React Hook Form +
 Zod, rule 30). It uppercases the code, enforces the 3–30 char `A–Z 0–9 - _`
 shape, holds the discount to 1–100%, and requires a pod when the scope is
 `POD`. `toCouponInput` maps validated values to `CreateCouponInput` /

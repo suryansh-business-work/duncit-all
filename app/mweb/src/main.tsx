@@ -12,7 +12,9 @@ import {
   PortalModeGate,
   buildSessionMeQuery,
   configureSessionSocket,
+  type PortalModeGateProps,
 } from '@duncit/user-context';
+import { useTranslation } from './i18n/useTranslation';
 import { getSocketUrl } from './lib/socket-url';
 import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
@@ -119,6 +121,19 @@ requireAuthForShortLinkLanding();
 // website, another surface, or the native app.
 installAttributionLinkDecorator();
 
+/**
+ * The portal-mode gate with mWeb's live translator attached.
+ *
+ * @duncit/user-context sits BELOW @duncit/app-settings in the dependency graph
+ * (the locale provider reads the signed-in user from it), so the gate takes `t`
+ * as a prop rather than calling the hook itself. Hoisted to module scope so it
+ * is not redefined on every render (S6478).
+ */
+function LocalizedPortalModeGate(props: Readonly<Omit<PortalModeGateProps, 't'>>) {
+  const { t } = useTranslation();
+  return <PortalModeGate {...props} t={t} />;
+}
+
 function mount() {
   // A top-level ErrorBoundary wraps the WHOLE provider tree (not just the routes)
   // so a boot-time throw from a provider / gate / failing query shows the
@@ -134,7 +149,7 @@ function mount() {
                 <DuncitLocalizationProvider timeZoneAware>
                   <GoogleOAuthProvider clientId={getGoogleClientId()}>
                     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                      <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
+                      <LocalizedPortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></LocalizedPortalModeGate>
                     </BrowserRouter>
                   </GoogleOAuthProvider>
                 </DuncitLocalizationProvider>

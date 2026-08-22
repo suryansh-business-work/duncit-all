@@ -4,11 +4,13 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
+import { useTranslation } from './i18n';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
 import { COUPON_PODS, COUPONS_TABLE, DELETE_COUPON, type CouponPodOption, type CouponRow } from './queries';
 
 export default function CouponsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const { data: podsData } = useQuery(COUPON_PODS, { fetchPolicy: 'cache-first' });
@@ -33,14 +35,17 @@ export default function CouponsPage() {
     setDialogOpen(true);
   };
   const onDelete = async (c: CouponRow) => {
-    const ok = await confirm({ title: 'Delete coupon', message: `Delete coupon "${c.code}"?` });
+    const ok = await confirm({
+      title: t('shell.coupons.deleteTitle'),
+      message: t('shell.coupons.deleteMessage', { vars: { code: c.code } }),
+    });
     if (!ok) return;
     try {
       await deleteCoupon({ variables: { id: c.id } });
-      notifySuccess('Coupon deleted');
+      notifySuccess(t('shell.coupons.deleted'));
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not delete coupon');
+      notifyError(e.message ?? t('shell.coupons.deleteFailed'));
     }
   };
 
@@ -48,10 +53,10 @@ export default function CouponsPage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5" fontWeight={900}>
-          Coupons
+          {t('shell.coupons.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Global discount codes + per-pod offer codes. Discounts apply on the payment step.
+          {t('shell.coupons.subtitle')}
         </Typography>
       </Box>
 
@@ -61,7 +66,7 @@ export default function CouponsPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New coupon
+            {t('shell.coupons.newCta')}
           </Button>
         }
         onEdit={openEdit}
@@ -72,7 +77,7 @@ export default function CouponsPage() {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSaved={() => {
-          notifySuccess(editing ? 'Coupon updated' : 'Coupon created');
+          notifySuccess(editing ? t('shell.coupons.updated') : t('shell.coupons.created'));
           refetchRef.current?.();
         }}
         initial={editing}

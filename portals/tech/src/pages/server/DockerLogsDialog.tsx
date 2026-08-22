@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { TECH_CONTAINER_LOGS } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** Container name whose logs to stream; null closes the dialog. */
@@ -12,6 +13,7 @@ interface Props {
  * logs every 1.5s while open — used to watch a container come back up after a
  * restart. */
 export default function DockerLogsDialog({ name, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data } = useQuery<{ techContainerLogs: string }>(TECH_CONTAINER_LOGS, {
     variables: { name, tail: 300 },
     skip: !name,
@@ -44,7 +46,7 @@ export default function DockerLogsDialog({ name, onClose }: Readonly<Props>) {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

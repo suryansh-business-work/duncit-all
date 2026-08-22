@@ -5,6 +5,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const getBugRowId = (b: BugRow) => b.id;
 
@@ -62,13 +63,14 @@ export default function BugsTable({
   selection,
   toolbarActions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<BugRow>[]>(() => {
     const renderActions = (b: BugRow) => (
       <Stack direction="row" spacing={0.5} alignItems="center">
         <Button size="small" variant="outlined" onClick={() => onOpen(b)}>
           Triage
         </Button>
-        <Tooltip title="Delete this bug">
+        <Tooltip title={t('tech.bugs.deleteThisBug2')}>
           <IconButton size="small" color="error" onClick={() => onDelete(b)}>
             <DeleteOutlineIcon fontSize="small" />
           </IconButton>
@@ -78,50 +80,50 @@ export default function BugsTable({
     return [
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 120,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
       },
-      { field: 'title', headerName: 'Bug', flex: 1.6, minWidth: 240, cellRenderer: renderTitle },
-      { field: 'source', headerName: 'Source', width: 140, filter: { type: 'text' } },
-      { field: 'page', headerName: 'Page', flex: 1, minWidth: 150, filter: { type: 'text' } },
-      { field: 'occurrence_count', headerName: 'Count', width: 90 },
+      { field: 'title', headerName: t('tech.bugs.bug'), flex: 1.6, minWidth: 240, cellRenderer: renderTitle },
+      { field: 'source', headerName: t('tech.common.source'), width: 140, filter: { type: 'text' } },
+      { field: 'page', headerName: t('tech.common.page'), flex: 1, minWidth: 150, filter: { type: 'text' } },
+      { field: 'occurrence_count', headerName: t('tech.bugs.count'), width: 90 },
       {
         field: 'affected_user_count',
-        headerName: 'Affected',
+        headerName: t('tech.bugs.affected'),
         width: 140,
         valueGetter: affectedSummary,
       },
       {
         field: 'last_user',
-        headerName: 'Last user',
+        headerName: t('tech.bugs.lastUser'),
         width: 170,
         sortable: false,
         cellRenderer: renderLastUser,
       },
       {
         field: 'envs',
-        headerName: 'Envs',
+        headerName: t('tech.bugs.envs'),
         width: 120,
         sortable: false,
         valueGetter: envSummary,
       },
       {
         field: 'platform',
-        headerName: 'Platform',
+        headerName: t('tech.common.platform'),
         hide: true,
         width: 120,
         filter: { type: 'text' },
       },
       {
         field: 'first_seen_at',
-        headerName: 'First seen',
+        headerName: t('tech.bugs.firstSeen'),
         hide: true,
         width: 190,
         valueGetter: (b) => formatDateTime(b.first_seen_at),
       },
-      { field: 'last_seen_at', headerName: 'Last seen', width: 180, cellRenderer: renderLastSeen },
+      { field: 'last_seen_at', headerName: t('tech.bugs.lastSeen'), width: 180, cellRenderer: renderLastSeen },
       {
         field: 'actions',
         headerName: '',

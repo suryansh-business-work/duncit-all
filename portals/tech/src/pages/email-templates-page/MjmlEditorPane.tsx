@@ -5,6 +5,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import MjmlAiButton from '../../components/MjmlAiButton';
 import { formatMjml } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   value: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function MjmlEditorPane({ value, onChange, onValidate }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -36,12 +38,12 @@ export default function MjmlEditorPane({ value, onChange, onValidate }: Readonly
         <Typography variant="subtitle2" sx={{ flex: 1 }}>
           MJML source
         </Typography>
-        <Tooltip title="Format MJML">
+        <Tooltip title={t('tech.common.formatMjml')}>
           <IconButton size="small" onClick={() => onChange(formatMjml(value))}>
             <FormatAlignLeftIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Verify MJML">
+        <Tooltip title={t('tech.emailTemplates.verifyMjml')}>
           <IconButton size="small" onClick={onValidate}>
             <FactCheckIcon fontSize="small" />
           </IconButton>

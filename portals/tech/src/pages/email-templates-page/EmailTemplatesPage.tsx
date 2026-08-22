@@ -14,8 +14,10 @@ import FillViewport from '../../components/FillViewport';
 import CreateTemplateDialog from './CreateTemplateDialog';
 import SendTestDialog from './SendTestDialog';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function EmailTemplatesPage() {
+  const { t } = useTranslation();
   const editor = useEmailTemplateEditor();
   const [createOpen, setCreateOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function EmailTemplatesPage() {
           selected={editor.selected}
           onSelect={editor.setSelected}
           searchPlaceholder="Search name or slug"
-          emptyText="No templates yet."
+          emptyText={t('tech.emailTemplates.noTemplatesYet')}
         />
 
         {editor.draft ? (
@@ -82,7 +84,7 @@ export default function EmailTemplatesPage() {
           />
         ) : (
           <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-            <Typography color="text.secondary">Select a template from the left.</Typography>
+            <Typography color="text.secondary">{t('tech.emailTemplates.selectATemplateFromTheLeft')}</Typography>
           </Box>
         )}
       </Stack>

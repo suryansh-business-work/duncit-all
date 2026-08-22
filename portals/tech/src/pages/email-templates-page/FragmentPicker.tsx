@@ -1,5 +1,6 @@
 import { MenuItem, TextField } from '@mui/material';
 import type { FragmentOption } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   value: string | null | undefined;
@@ -33,6 +34,7 @@ export default function FragmentPicker({
   error = null,
   onChange,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const chosen = options.find((o) => o.key === value);
 
   const helper = () => {
@@ -48,7 +50,7 @@ export default function FragmentPicker({
     <TextField
       select
       size="small"
-      label="Header / footer"
+      label={t('tech.emailTemplates.headerFooter')}
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value || null)}
       sx={{ flex: '1 1 220px' }}

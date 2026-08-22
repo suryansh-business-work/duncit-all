@@ -19,6 +19,7 @@ import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
 import { PRODUCTS_BUNDLE } from './bundles/products';
 import { SHELL_BUNDLE } from './bundles/shell';
 import { SUPPORT_BUNDLE } from './bundles/support';
+import { TECH_BUNDLE } from './bundles/tech';
 import { WEBSITE_BUNDLE } from './bundles/website';
 import { WEBSITE_APP_BUNDLE } from './bundles/website-app';
 import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
@@ -65,6 +66,7 @@ export {
   PRODUCTS_BUNDLE,
   SHELL_BUNDLE,
   SUPPORT_BUNDLE,
+  TECH_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -92,6 +94,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   products: PRODUCTS_BUNDLE,
   shell: SHELL_BUNDLE,
   support: SUPPORT_BUNDLE,
+  tech: TECH_BUNDLE,
   website: WEBSITE_BUNDLE,
   websiteApp: WEBSITE_APP_BUNDLE,
   whatsapp: WHATSAPP_BUNDLE,

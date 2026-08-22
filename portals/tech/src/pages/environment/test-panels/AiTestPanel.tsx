@@ -5,9 +5,11 @@ import ChatIcon from '@mui/icons-material/Chat';
 import { TEST_ENV_GEMINI, TEST_ENV_OPENAI, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 /** AI chat test. The provider is fixed by the entry category (OPENAI | GEMINI). */
 export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const isGemini = entry.category === 'GEMINI';
   const label = isGemini ? 'Gemini' : 'OpenAI';
   const [prompt, setPrompt] = useState('Say hello in one short sentence.');
@@ -35,7 +37,7 @@ export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
         Create a test chat against {label} using this entry's API key.
       </Typography>
       <TextField
-        label="Prompt"
+        label={t('tech.environment.prompt')}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         multiline

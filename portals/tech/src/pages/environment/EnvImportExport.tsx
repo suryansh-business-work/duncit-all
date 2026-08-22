@@ -13,6 +13,7 @@ import {
   type EnvImportResult,
 } from './queries';
 import { buildEnvExport, envExportFilename, parseEnvImport } from './env-io';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** The category tab in view — what "this category" means. */
@@ -29,6 +30,7 @@ interface Props {
  * behind a confirmation that says so plainly.
  */
 export default function EnvImportExport({ category, categoryLabel, onImported }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -42,9 +44,9 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
     setMenuAnchor(null);
     const what = scope ? categoryLabel : 'every category';
     const ok = await confirm({
-      title: 'Export environment variables',
+      title: t('tech.environment.exportEnvironmentVariables'),
       message: `The file will contain the real keys and secrets for ${what}. Anyone who opens it can use them — keep it somewhere you would keep a password.`,
-      confirmLabel: 'Download',
+      confirmLabel: t('tech.environment.download'),
     });
     if (!ok) return;
 
@@ -101,7 +103,7 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
         </>
       ),
       destructive: true,
-      confirmLabel: 'Import',
+      confirmLabel: t('tech.common.import'),
     });
     if (!ok) return;
 
@@ -131,7 +133,7 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
       </Button>
       <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
         <MenuItem onClick={() => runExport(category)}>{categoryLabel} only</MenuItem>
-        <MenuItem onClick={() => runExport(null)}>All categories</MenuItem>
+        <MenuItem onClick={() => runExport(null)}>{t('tech.environment.allCategories')}</MenuItem>
       </Menu>
 
       <Button
@@ -147,7 +149,7 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
         type="file"
         accept="application/json,.json"
         hidden
-        aria-label="Environment variables JSON file"
+        aria-label={t('tech.environment.environmentVariablesJsonFile')}
         onChange={async (e) => {
           const file = e.target.files?.[0];
           // Cleared so picking the SAME file again still fires a change event.

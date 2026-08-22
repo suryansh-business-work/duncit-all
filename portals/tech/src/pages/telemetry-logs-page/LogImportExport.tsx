@@ -13,6 +13,7 @@ import {
   type TelemetryLogRow,
 } from './queries';
 import { buildLogExport, logExportFilename, parseLogImport } from './log-io';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   level: TelemetryLevel;
@@ -29,6 +30,7 @@ interface Props {
  * ever duplicating a row.
  */
 export default function LogImportExport({ level, onImported }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -73,9 +75,8 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
 
     const ok = await confirm({
       title: `Import ${parsed.logs.length} logs`,
-      message:
-        'Rows already here under the same id are left exactly as they are; the rest are added. A row keeps the level it was exported at, so a file may land in a different tab than this one.',
-      confirmLabel: 'Import',
+      message: t('tech.telemetryLogs.rowsAlreadyHereUnderTheSame'),
+      confirmLabel: t('tech.common.import'),
     });
     if (!ok) return;
 
@@ -115,7 +116,7 @@ export default function LogImportExport({ level, onImported }: Readonly<Props>) 
         type="file"
         accept="application/json,.json"
         hidden
-        aria-label="Logs JSON file"
+        aria-label={t('tech.telemetryLogs.logsJsonFile')}
         onChange={async (e) => {
           const file = e.target.files?.[0];
           // Cleared so picking the SAME file again still fires a change event.

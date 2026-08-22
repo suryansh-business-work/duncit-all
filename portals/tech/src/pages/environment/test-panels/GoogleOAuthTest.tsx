@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Avatar, Box, Stack, Typography } from '@mui/material';
 import { GoogleLogin } from '@react-oauth/google';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Profile {
   name?: string;
@@ -20,6 +21,7 @@ function decodeJwt(token: string): Profile {
 
 /** Runs a real Google sign-in and shows the resulting user profile. */
 export default function GoogleOAuthTest() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState(false);
 
@@ -33,7 +35,7 @@ export default function GoogleOAuthTest() {
         onError={() => setError(true)}
         useOneTap={false}
       />
-      {error && <Alert severity="error">Sign-in failed — check the client ID and authorised origins.</Alert>}
+      {error && <Alert severity="error">{t('tech.environment.signInFailedCheckTheClient')}</Alert>}
       {profile && (
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
           <Avatar src={profile.picture} />

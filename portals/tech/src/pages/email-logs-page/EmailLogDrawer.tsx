@@ -16,6 +16,7 @@ import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import EmailLogMeta from './EmailLogMeta';
 import EmailLogVars from './EmailLogVars';
 import { EMAIL_LOG_ONE, type EmailLogDetail } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** The row to open, or null for a closed drawer. */
@@ -25,10 +26,12 @@ interface Props {
 
 type TabKey = 'preview' | 'html' | 'vars';
 
-const TABS: DuncitTabItem<TabKey>[] = [
-  { value: 'preview', label: 'Preview', sx: { minHeight: 40 } },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const drawerTabs = (t: Translate): DuncitTabItem<TabKey>[] => [
+  { value: 'preview', label: t('tech.common.preview'), sx: { minHeight: 40 } },
   { value: 'html', label: 'HTML', sx: { minHeight: 40 } },
-  { value: 'vars', label: 'Variables', sx: { minHeight: 40 } },
+  { value: 'vars', label: t('tech.common.variables'), sx: { minHeight: 40 } },
 ];
 
 /**
@@ -39,9 +42,10 @@ const TABS: DuncitTabItem<TabKey>[] = [
  * person received — not what the template says today.
  */
 export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Own key — the drawer opens over the Email Logs table, not instead of it.
   const tabs = useTabParam<TabKey>({
-    items: TABS,
+    items: drawerTabs(t),
     fallback: 'preview',
     param: 'selectedtab_emaillog',
   });
@@ -73,7 +77,7 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
         <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
           {row?.subject || 'Email'}
         </Typography>
-        <IconButton onClick={onClose} aria-label="Close">
+        <IconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
         </IconButton>
       </Stack>
@@ -111,10 +115,11 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
 
 /** An email is a document of its own, so it renders in its own frame. */
 function PreviewPane({ html }: Readonly<{ html: string }>) {
+  const { t } = useTranslation();
   if (!html) return <EmptyBody />;
   return (
     <iframe
-      title="Email preview"
+      title={t('tech.emailLogs.emailPreview')}
       srcDoc={html}
       sandbox=""
       style={{ width: '100%', height: '100%', minHeight: 400, border: 'none', background: 'white' }}

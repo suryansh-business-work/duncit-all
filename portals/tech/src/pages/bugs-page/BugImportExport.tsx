@@ -8,6 +8,7 @@ import { downloadTextFile, parseApiError } from '@duncit/utils';
 import CopyGetApiButton from '../../components/CopyGetApiButton';
 import { BUGS_EXPORT, IMPORT_BUGS, type BugRow } from './queries';
 import { buildBugExport, bugExportFilename, parseBugImport } from './bug-io';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   onImported: () => void;
@@ -21,6 +22,7 @@ interface Props {
  * file can move triage state between environments or restore it after a wipe.
  */
 export default function BugImportExport({ onImported }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -64,10 +66,9 @@ export default function BugImportExport({ onImported }: Readonly<Props>) {
 
     const ok = await confirm({
       title: `Import ${parsed.bugs.length} bugs`,
-      message:
-        'A bug already here with the same fingerprint will be OVERWRITTEN with the file’s counts and status. The rest are added.',
+      message: t('tech.bugs.aBugAlreadyHereWithThe'),
       destructive: true,
-      confirmLabel: 'Import',
+      confirmLabel: t('tech.common.import'),
     });
     if (!ok) return;
 
@@ -103,7 +104,7 @@ export default function BugImportExport({ onImported }: Readonly<Props>) {
         type="file"
         accept="application/json,.json"
         hidden
-        aria-label="Bugs JSON file"
+        aria-label={t('tech.bugs.bugsJsonFile')}
         onChange={async (e) => {
           const file = e.target.files?.[0];
           // Cleared so picking the SAME file again still fires a change event.

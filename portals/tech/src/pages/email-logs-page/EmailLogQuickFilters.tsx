@@ -1,6 +1,7 @@
 import { Chip, Stack } from '@mui/material';
 import type { TableFilterValue } from '@duncit/table';
 import { SOURCE_OPTIONS, STATUS_COLOR, STATUS_OPTIONS } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * The two questions this page is opened with, one click each.
@@ -32,10 +33,11 @@ interface Props {
 }
 
 export default function EmailLogQuickFilters({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
       <Chip
-        label="All"
+        label={t('tech.emailLogs.all')}
         size="small"
         color={value.status || value.source ? 'default' : 'primary'}
         variant={value.status || value.source ? 'outlined' : 'filled'}

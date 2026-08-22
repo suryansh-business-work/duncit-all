@@ -2,6 +2,7 @@ import { useMutation } from '@apollo/client';
 import { Dialog, DialogTitle } from '@mui/material';
 import CreateTemplateForm from './CreateTemplateForm';
 import { CREATE, STARTER } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -11,11 +12,12 @@ interface Props {
 }
 
 export default function CreateTemplateDialog({ open, onClose, onCreated, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [createTpl] = useMutation(CREATE);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>New email template</DialogTitle>
+      <DialogTitle>{t('tech.emailTemplates.newEmailTemplate')}</DialogTitle>
       <CreateTemplateForm
         onCancel={onClose}
         onCreate={async (input) => {

@@ -16,6 +16,7 @@ import {
 import { SEND_TEST, type Tpl } from './queries';
 import { emailTemplateTestSchema, type EmailTemplateTestValues } from './email-template-test';
 import TestVariableFields, { type TestVariable } from './TestVariableFields';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -49,6 +50,7 @@ export default function SendTestDialog({
   onClose,
   onResult,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [sendTest, { loading }] = useMutation(SEND_TEST);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -100,7 +102,7 @@ export default function SendTestDialog({
       if (r?.ok) onClose();
       else setErrorMsg(message);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to send test email';
+      const message = err instanceof Error ? err.message : t('tech.emailTemplates.failedToSendTestEmail');
       onResult('error', message);
       setErrorMsg(message);
     }
@@ -109,7 +111,7 @@ export default function SendTestDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="sm">
       <form noValidate onSubmit={submit}>
-        <DialogTitle>Send test email</DialogTitle>
+        <DialogTitle>{t('tech.emailTemplates.sendTestEmail')}</DialogTitle>
         <DialogContent>
           <Controller
             control={control}

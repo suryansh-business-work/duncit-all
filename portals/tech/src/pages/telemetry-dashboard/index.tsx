@@ -15,6 +15,9 @@ import {
 } from './queries';
 import DistributionCard from './DistributionCard';
 import RecentLogsTable from './RecentLogsTable';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 function TopBugRow({ bug }: Readonly<{ bug: TopBug }>) {
   return (
@@ -33,6 +36,7 @@ function TopBugRow({ bug }: Readonly<{ bug: TopBug }>) {
 }
 
 function TopBugsList({ bugs }: Readonly<{ bugs: readonly TopBug[] }>) {
+  const { t } = useTranslation();
   if (bugs.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
@@ -49,7 +53,7 @@ function TopBugsList({ bugs }: Readonly<{ bugs: readonly TopBug[] }>) {
   );
 }
 
-function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardWidget[] {
+function buildWidgets(d: TelemetryDashboardData, errorCount: number, t: Translate): DashboardWidget[] {
   const kpi = (id: string, x: number, content: DashboardWidget['content']): DashboardWidget => ({
     id,
     bare: true,
@@ -73,7 +77,7 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
       minW: 3,
       // minH floors the measured height — keep it low or empty ranges pin a void.
       minH: 2,
-      content: <DistributionCard title="By level" buckets={d.by_level} />,
+      content: <DistributionCard title={t('tech.telemetryDashboard.byLevel')} buckets={d.by_level} />,
     },
     {
       id: 'by-source',
@@ -82,7 +86,7 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
       defaultLayout: { x: 4, y: 2, w: 4, h: 5 },
       minW: 3,
       minH: 2,
-      content: <DistributionCard title="By source" buckets={d.by_source} />,
+      content: <DistributionCard title={t('tech.telemetryDashboard.bySource')} buckets={d.by_source} />,
     },
     {
       id: 'by-environment',
@@ -91,11 +95,11 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
       defaultLayout: { x: 8, y: 2, w: 4, h: 5 },
       minW: 3,
       minH: 2,
-      content: <DistributionCard title="By environment" buckets={d.by_environment} />,
+      content: <DistributionCard title={t('tech.telemetryDashboard.byEnvironment')} buckets={d.by_environment} />,
     },
     {
       id: 'top-bugs',
-      title: 'Top open bugs',
+      title: t('tech.telemetryDashboard.topOpenBugs'),
       defaultLayout: { x: 0, y: 7, w: 12, h: 5 },
       minW: 4,
       minH: 3,
@@ -103,7 +107,7 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
     },
     {
       id: 'recent-logs',
-      title: 'Recent logs',
+      title: t('tech.telemetryDashboard.recentLogs'),
       disablePadding: true,
       defaultLayout: { x: 0, y: 12, w: 12, h: 7 },
       minW: 4,
@@ -114,6 +118,7 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number): DashboardW
 }
 
 export default function TelemetryDashboardPage() {
+  const { t } = useTranslation();
   const [rangeDays, setRangeDays] = useState(7);
   const { data, loading, error } = useQuery<{ telemetryDashboard: TelemetryDashboardData }>(
     TELEMETRY_DASHBOARD,
@@ -131,7 +136,7 @@ export default function TelemetryDashboardPage() {
       spacing={1}
     >
       <Box>
-        <Typography variant="h5">Telemetry Dashboard</Typography>
+        <Typography variant="h5">{t('tech.telemetryDashboard.telemetryDashboard')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Log volume and errors across every surface — mWeb, portals, native iOS/Android and the
           server.
@@ -140,7 +145,7 @@ export default function TelemetryDashboardPage() {
       <TextField
         select
         size="small"
-        label="Range"
+        label={t('tech.common.range')}
         value={rangeDays}
         onChange={(e) => setRangeDays(Number(e.target.value))}
         sx={{ minWidth: 160 }}
@@ -169,7 +174,7 @@ export default function TelemetryDashboardPage() {
     <DuncitDashboard
       dashboardId="tech.telemetry"
       header={header}
-      widgets={buildWidgets(d, errorCount)}
+      widgets={buildWidgets(d, errorCount, t)}
     />
   );
 }

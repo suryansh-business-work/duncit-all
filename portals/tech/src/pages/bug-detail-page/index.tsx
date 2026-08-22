@@ -14,6 +14,7 @@ import {
   type BugRow,
   type BugStatus,
 } from '../bugs-page/queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * One bug, at its own address.
@@ -24,6 +25,7 @@ import {
  * survives a reload, a bookmark and a forward.
  */
 export default function BugDetailPage() {
+  const { t } = useTranslation();
   const { bugId = '' } = useParams();
   const navigate = useNavigate();
   const [updateStatus] = useMutation(UPDATE_BUG_STATUS);
@@ -43,7 +45,7 @@ export default function BugDetailPage() {
       await updateStatus({ variables: { bug_id: bug.id, status } });
       await refetch();
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : 'Failed to update bug');
+      notifyError(e instanceof Error ? e.message : t('tech.bugDetail.failedToUpdateBug'));
     } finally {
       setBusy(false);
     }

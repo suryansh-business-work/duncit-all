@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { PortalRow } from './PortalMappingTable';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   row: PortalRow | null;
@@ -20,6 +21,7 @@ interface Props {
 
 /** Read-only dialog listing the env configs a portal currently uses. */
 export default function PortalInfoDialog({ row, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const groups = new Map<string, PortalRow['entries']>();
   for (const entry of row?.entries ?? []) {
     if (!groups.has(entry.category)) groups.set(entry.category, []);
@@ -45,7 +47,7 @@ export default function PortalInfoDialog({ row, onClose }: Readonly<Props>) {
                     secondary={entry.description || undefined}
                   />
                   <Stack direction="row" spacing={0.5}>
-                    {entry.is_default && <Chip size="small" color="primary" label="Default" />}
+                    {entry.is_default && <Chip size="small" color="primary" label={t('tech.environment.default')} />}
                     <Chip
                       size="small"
                       variant="outlined"

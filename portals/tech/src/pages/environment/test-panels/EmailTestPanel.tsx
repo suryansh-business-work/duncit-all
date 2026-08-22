@@ -5,8 +5,10 @@ import SendIcon from '@mui/icons-material/Send';
 import { TEST_ENV_EMAIL, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
   const [run, { loading }] = useMutation(TEST_ENV_EMAIL);
@@ -27,7 +29,7 @@ export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>)
         Sends a real test email through this SMTP entry.
       </Typography>
       <TextField
-        label="Recipient email"
+        label={t('tech.environment.recipientEmail')}
         type="email"
         value={to}
         onChange={(e) => setTo(e.target.value)}

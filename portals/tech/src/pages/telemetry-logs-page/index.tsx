@@ -12,6 +12,7 @@ import {
   type TelemetryLevel,
   type TelemetryLogRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const TAB_ITEMS = LEVEL_TABS.map((tab) => ({ value: tab.value, label: tab.label }));
 
@@ -26,6 +27,7 @@ const TAB_ITEMS = LEVEL_TABS.map((tab) => ({ value: tab.value, label: tab.label 
  * pasted link lands where it was sent from.
  */
 export default function TelemetryLogsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<TelemetryLogRow | null>(null);
@@ -42,7 +44,7 @@ export default function TelemetryLogsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Telemetry Logs</Typography>
+        <Typography variant="h5">{t('tech.telemetryLogs.telemetryLogs')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Every persisted log, split by level, with the account, device and build behind each one.
           Only the levels selected in Logs Settings are stored, and rows leave when the retention

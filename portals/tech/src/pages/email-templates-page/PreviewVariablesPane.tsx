@@ -14,21 +14,24 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CodeIcon from '@mui/icons-material/Code';
 import { DuncitTabs, type DuncitTabItem } from '@duncit/tabs';
 import type { Tpl } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 export type PaneTab = 'preview' | 'code';
 
 /** The strip, as data — the editor hook reads the same list to validate the URL. */
-export const PANE_TABS: DuncitTabItem<PaneTab>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const paneTabs = (t: Translate): DuncitTabItem<PaneTab>[] => [
   {
     value: 'preview',
-    label: 'Preview',
+    label: t('tech.common.preview'),
     icon: <VisibilityIcon fontSize="small" />,
     iconPosition: 'start',
     sx: { minHeight: 40 },
   },
   {
     value: 'code',
-    label: 'Variables',
+    label: t('tech.common.variables'),
     icon: <CodeIcon fontSize="small" />,
     iconPosition: 'start',
     sx: { minHeight: 40 },
@@ -60,6 +63,7 @@ export default function PreviewVariablesPane({
   setVarsJson,
   onImportDetected,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const rowKeys = useRef<{ keys: string[]; seq: number }>({ keys: [], seq: 0 });
   if (rowKeys.current.keys.length !== draft.variables.length) {
     const keys = rowKeys.current.keys.slice(0, draft.variables.length);
@@ -83,7 +87,7 @@ export default function PreviewVariablesPane({
       }}
     >
       <DuncitTabs
-        items={PANE_TABS}
+        items={paneTabs(t)}
         value={tab}
         onChange={setTab}
         sx={{ borderBottom: 1, borderColor: 'divider', minHeight: 40 }}
@@ -138,7 +142,7 @@ export default function PreviewVariablesPane({
             onChange={(e) => setVarsJson(e.target.value)}
             fullWidth
             placeholder='{"name":"Suryansh"}'
-            helperText="Used for live preview and Send test email."
+            helperText={t('tech.emailTemplates.usedForLivePreviewAndSend')}
             sx={{ fontFamily: 'monospace', '& textarea': { fontFamily: 'monospace' } }}
           />
 

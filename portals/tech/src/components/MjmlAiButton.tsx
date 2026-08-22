@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useTranslation } from '@duncit/app-settings';
 
 const AI_MJML = gql`
   mutation AiCreateOrUpdateMjml($input: AiMjmlTemplateInput!) {
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
   return (
     <>
       {iconOnly ? (
-        <Tooltip title="Create/update with AI">
+        <Tooltip title={t('tech.mjmlAiButton.createUpdateWithAi')}>
           <IconButton size="small" color="secondary" onClick={(event) => setAnchorEl(event.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
           </IconButton>
@@ -72,11 +74,11 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         slotProps={{ paper: { sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
-          <Typography variant="subtitle2" fontWeight={700}>Create/update MJML with AI</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>{t('tech.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
           <TextField
             autoFocus
-            label="Instruction"
-            placeholder="Make this a Diwali campaign with a CTA"
+            label={t('tech.mjmlAiButton.instruction')}
+            placeholder={t('tech.mjmlAiButton.makeThisADiwaliCampaignWith')}
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             multiline
@@ -86,7 +88,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
           />
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>Cancel</Button>
+            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</Button>
             <Button size="small" variant="contained" onClick={generate} disabled={loading || !prompt.trim()} startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}>
               {loading ? 'Working...' : 'Apply'}
             </Button>

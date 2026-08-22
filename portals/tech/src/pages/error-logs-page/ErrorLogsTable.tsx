@@ -1,9 +1,10 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { ENV_COLOR, ENV_OPTIONS, UserCell } from '../../components/telemetry-identity';
+import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: ErrorLogRow) => row.id;
 
@@ -48,21 +49,22 @@ interface Props {
 }
 
 export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorLogRow>[]>(
     () => [
-      { field: 'created_at', headerName: 'When', width: 175, cellRenderer: renderWhen },
+      { field: 'created_at', headerName: t('tech.common.when'), width: 175, cellRenderer: renderWhen },
       {
         field: 'environment',
-        headerName: 'Env',
+        headerName: t('tech.common.env'),
         width: 115,
-        filter: { type: 'select', options: ENV_OPTIONS },
+        filter: { type: 'select', options: envOptions(t) },
         cellRenderer: renderEnvironment,
       },
-      { field: 'source', headerName: 'Source', width: 130, filter: { type: 'text' } },
-      { field: 'page', headerName: 'Page', width: 140, filter: { type: 'text' } },
+      { field: 'source', headerName: t('tech.common.source'), width: 130, filter: { type: 'text' } },
+      { field: 'page', headerName: t('tech.common.page'), width: 140, filter: { type: 'text' } },
       {
         field: 'kind',
-        headerName: 'Kind',
+        headerName: t('tech.errorLogs.kind'),
         width: 120,
         sortable: false,
         cellRenderer: renderKind,
@@ -70,28 +72,28 @@ export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readon
       },
       {
         field: 'code',
-        headerName: 'Code',
+        headerName: t('tech.errorLogs.code'),
         width: 180,
         sortable: false,
         valueGetter: (row) => parseIssueData(row).code ?? '—',
       },
       {
         field: 'operation',
-        headerName: 'Operation',
+        headerName: t('tech.errorLogs.operation'),
         width: 190,
         sortable: false,
         valueGetter: (row) => parseIssueData(row).operation ?? '—',
       },
       {
         field: 'user',
-        headerName: 'User',
+        headerName: t('tech.common.user'),
         width: 165,
         sortable: false,
         cellRenderer: renderUser,
       },
       {
         field: 'message',
-        headerName: 'Message',
+        headerName: t('tech.common.message'),
         flex: 1,
         minWidth: 240,
         sortable: false,

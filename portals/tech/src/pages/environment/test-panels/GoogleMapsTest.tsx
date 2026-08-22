@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
 import type { EnvEntry } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Maps test: renders a live Google map using the key SAVED on this entry's
@@ -9,6 +10,7 @@ import type { EnvEntry } from '../queries';
  * (Maps API Key), matching how every other category test reads its credentials.
  */
 export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const savedKey = entry.config.find((p) => p.key === 'maps_api_key')?.value ?? '';
   const [load, setLoad] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>)
   }, [load, savedKey]);
 
   if (!savedKey) {
-    return <Alert severity="info">Set a Maps API Key on this entry to run the map test.</Alert>;
+    return <Alert severity="info">{t('tech.environment.setAMapsApiKeyOn')}</Alert>;
   }
 
   return (

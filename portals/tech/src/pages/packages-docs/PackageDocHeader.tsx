@@ -1,5 +1,6 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import type { PackageDoc } from './package-docs';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * What the docs site's frontmatter records about a package, rendered as the
@@ -11,6 +12,7 @@ import type { PackageDoc } from './package-docs';
  * alone.
  */
 export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
       <Box>
@@ -24,7 +26,7 @@ export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>)
 
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         <Chip size="small" label={doc.category} color="primary" variant="outlined" />
-        {doc.zeroDeps && <Chip size="small" label="zero runtime deps" color="success" variant="outlined" />}
+        {doc.zeroDeps && <Chip size="small" label={t('tech.packagesDocs.zeroRuntimeDeps')} color="success" variant="outlined" />}
         {doc.frameworkFree && (
           <Chip size="small" label="framework-free" color="info" variant="outlined" />
         )}

@@ -11,10 +11,14 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 function LastTested({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   if (entry.last_test_ok == null || !entry.last_tested_at) {
-    return <Tooltip title="Not tested yet"><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
+    return <Tooltip title={t('tech.environment.notTestedYet')}><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
   }
   const when = formatDateTime(entry.last_tested_at);
   return entry.last_test_ok ? (
@@ -34,10 +38,10 @@ const renderName = (e: EnvEntry) => (
 );
 const nameValue = (e: EnvEntry) => e.name;
 
-const renderStatus = (e: EnvEntry) => (
+const renderStatus = (e: EnvEntry, t: Translate) => (
   <Stack direction="row" spacing={0.5} component="span">
-    {e.is_default && <Chip size="small" color="primary" label="Default" />}
-    <Chip size="small" variant="outlined" color={e.is_active ? 'success' : 'default'} label={e.is_active ? 'Active' : 'Off'} />
+    {e.is_default && <Chip size="small" color="primary" label={t('tech.environment.default')} />}
+    <Chip size="small" variant="outlined" color={e.is_active ? 'success' : 'default'} label={e.is_active ? t('tech.environment.active') : t('tech.environment.off')} />
   </Stack>
 );
 const statusValue = (e: EnvEntry) =>
@@ -75,37 +79,38 @@ export default function EnvEntriesTable({
   onSetDefault,
   onTest,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EnvEntry>[]>(() => {
     const renderActions = (e: EnvEntry) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Test connection"><IconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></IconButton></Tooltip>
-        <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-        <Tooltip title="Set default"><IconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</IconButton></Tooltip>
-        <Tooltip title="Delete"><IconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+        <Tooltip title={t('tech.environment.testConnection')}><IconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></IconButton></Tooltip>
+        <Tooltip title={t('shell.common.edit')}><IconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+        <Tooltip title={t('tech.environment.setDefault')}><IconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</IconButton></Tooltip>
+        <Tooltip title={t('shell.common.delete')}><IconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
       </Stack>
     );
     return [
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 200, cellRenderer: renderName, valueGetter: nameValue },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 200, cellRenderer: renderName, valueGetter: nameValue },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 150,
         filter: { type: 'boolean' },
-        cellRenderer: renderStatus,
+        cellRenderer: (e: EnvEntry) => renderStatus(e, t),
         valueGetter: statusValue,
       },
-      { field: 'is_default', headerName: 'Default', hide: true, width: 100, filter: { type: 'boolean' } },
+      { field: 'is_default', headerName: t('tech.environment.default'), hide: true, width: 100, filter: { type: 'boolean' } },
       {
         field: 'last_tested_at',
-        headerName: 'Last tested',
+        headerName: t('tech.environment.lastTested'),
         width: 120,
         cellRenderer: renderLastTested,
         valueGetter: lastTestedValue,
       },
-      { field: 'last_test_ok', headerName: 'Test result', hide: true, width: 110, filter: { type: 'boolean' } },
+      { field: 'last_test_ok', headerName: t('tech.environment.testResult'), hide: true, width: 110, filter: { type: 'boolean' } },
       {
         field: 'assigned_portals',
-        headerName: 'Assigned portals',
+        headerName: t('tech.environment.assignedPortals'),
         sortable: false,
         filter: { type: 'text' },
         flex: 1,
@@ -113,8 +118,8 @@ export default function EnvEntriesTable({
         cellRenderer: renderPortals,
         valueGetter: portalsValue,
       },
-      { field: 'created_at', headerName: 'Created', hide: true, width: 130, filter: { type: 'date' } },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 130, filter: { type: 'date' } },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
     ];
   }, [onDelete, onEdit, onSetDefault, onTest]);
 

@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { BUG_OCCURRENCES, type BugOccurrence } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -56,6 +57,7 @@ function occurrenceWho(occ: BugOccurrence): string {
 }
 
 function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
+  const { t } = useTranslation();
   return (
     <Accordion variant="outlined" disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -89,8 +91,8 @@ function OccurrenceItem({ occ }: Readonly<{ occ: BugOccurrence }>) {
               {occ.host ? ` · ${occ.host}` : ''}
             </Typography>
           ) : null}
-          {occ.error?.stack ? <Mono label="Stack trace" value={occ.error.stack} /> : null}
-          {occ.data_json ? <Mono label="Extra data" value={occ.data_json} /> : null}
+          {occ.error?.stack ? <Mono label={t('tech.common.stackTrace')} value={occ.error.stack} /> : null}
+          {occ.data_json ? <Mono label={t('tech.bugs.extraData')} value={occ.data_json} /> : null}
         </Stack>
       </AccordionDetails>
     </Accordion>

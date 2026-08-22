@@ -7,6 +7,7 @@ import { notify, useConfirm } from '@duncit/dialogs';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
 import { IMPORT_FLAGS, QUERY, type FeatureFlagRow, type FlagImportResult } from './queries';
 import { buildFlagExport, flagExportFilename, parseFlagImport } from './flag-io';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   onImported: () => void;
@@ -20,6 +21,7 @@ interface Props {
  * because that state takes effect across the platform the moment it saves.
  */
 export default function FlagImportExport({ onImported }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -83,7 +85,7 @@ export default function FlagImportExport({ onImported }: Readonly<Props>) {
         </>
       ),
       destructive: true,
-      confirmLabel: 'Import',
+      confirmLabel: t('tech.common.import'),
     });
     if (!ok) return;
 
@@ -120,7 +122,7 @@ export default function FlagImportExport({ onImported }: Readonly<Props>) {
         type="file"
         accept="application/json,.json"
         hidden
-        aria-label="Feature flags JSON file"
+        aria-label={t('tech.featureFlags.featureFlagsJsonFile')}
         onChange={async (e) => {
           const file = e.target.files?.[0];
           // Cleared so picking the SAME file again still fires a change event.

@@ -5,13 +5,16 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from '../queries';
 import type { PortalListItem } from '../portal-env-queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const KIND_LABEL: Record<string, string> = { PORTAL: 'Portal', WEBSITE: 'Website', APP: 'App' };
 
-const KIND_OPTIONS = [
-  { value: 'PORTAL', label: 'Portal' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'APP', label: 'App' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const kindOptions = (t: Translate) => [
+  { value: 'PORTAL', label: t('tech.common.portal') },
+  { value: 'WEBSITE', label: t('tech.common.website') },
+  { value: 'APP', label: t('tech.common.app') },
 ] as const;
 
 export interface PortalRow {
@@ -51,10 +54,11 @@ interface Props {
 
 /** Tabular view of every portal and how many env entries it has assigned. */
 export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAssign }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PortalRow>[]>(() => {
     const renderActions = (row: PortalRow) => (
       <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center" component="span">
-        <Tooltip title="Show assigned configs">
+        <Tooltip title={t('tech.environment.showAssignedConfigs')}>
           <span>
             <IconButton size="small" onClick={() => onInfo(row)} disabled={!row.entries.length}>
               <InfoOutlinedIcon fontSize="small" />
@@ -67,24 +71,24 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
       </Stack>
     );
     return [
-      { field: 'name', headerName: 'Portal', flex: 1, minWidth: 200, cellRenderer: renderPortal, valueGetter: portalValue },
+      { field: 'name', headerName: t('tech.common.portal'), flex: 1, minWidth: 200, cellRenderer: renderPortal, valueGetter: portalValue },
       {
         field: 'kind',
-        headerName: 'Type',
+        headerName: t('shell.common.type'),
         width: 130,
-        filter: { type: 'select', options: KIND_OPTIONS },
+        filter: { type: 'select', options: kindOptions(t) },
         cellRenderer: renderKind,
         valueGetter: kindLabel,
       },
       {
         field: 'configs',
-        headerName: 'Assigned configs',
+        headerName: t('tech.environment.assignedConfigs'),
         sortable: false,
         width: 150,
         cellRenderer: renderConfigs,
         valueGetter: configsValue,
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
     ];
   }, [onAssign, onInfo]);
 

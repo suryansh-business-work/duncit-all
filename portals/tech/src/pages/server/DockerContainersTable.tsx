@@ -4,15 +4,18 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { formatDateTime } from './format';
 import type { DockerContainer } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Docker container lifecycle states (fixed by the Docker Engine API). */
-const STATE_OPTIONS = [
-  { value: 'running', label: 'Running' },
-  { value: 'exited', label: 'Exited' },
-  { value: 'created', label: 'Created' },
-  { value: 'restarting', label: 'Restarting' },
-  { value: 'paused', label: 'Paused' },
-  { value: 'dead', label: 'Dead' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const stateOptions = (t: Translate) => [
+  { value: 'running', label: t('tech.server.running') },
+  { value: 'exited', label: t('tech.server.exited') },
+  { value: 'created', label: t('shell.common.created') },
+  { value: 'restarting', label: t('tech.server.restarting') },
+  { value: 'paused', label: t('tech.server.paused') },
+  { value: 'dead', label: t('tech.server.dead') },
 ] as const;
 
 const getContainerRowId = (c: DockerContainer) => c.id;
@@ -36,10 +39,10 @@ const renderState = (c: DockerContainer) => (
 
 const createdValue = (c: DockerContainer) => formatDateTime(c.createdAt);
 
-const COLUMNS: DuncitColumn<DockerContainer>[] = [
+const buildColumns = (t: Translate): DuncitColumn<DockerContainer>[] => [
   {
     field: 'name',
-    headerName: 'Name',
+    headerName: t('shell.common.name'),
     flex: 1,
     minWidth: 180,
     filter: { type: 'text' },
@@ -48,7 +51,7 @@ const COLUMNS: DuncitColumn<DockerContainer>[] = [
   },
   {
     field: 'image',
-    headerName: 'Image',
+    headerName: t('tech.server.image'),
     flex: 1.4,
     minWidth: 220,
     filter: { type: 'text' },
@@ -56,15 +59,15 @@ const COLUMNS: DuncitColumn<DockerContainer>[] = [
   },
   {
     field: 'state',
-    headerName: 'State',
+    headerName: t('tech.server.state'),
     width: 130,
-    filter: { type: 'select', options: STATE_OPTIONS },
+    filter: { type: 'select', options: stateOptions(t) },
     cellRenderer: renderState,
   },
-  { field: 'status', headerName: 'Status', flex: 1, minWidth: 160 },
+  { field: 'status', headerName: t('shell.common.status'), flex: 1, minWidth: 160 },
   {
     field: 'createdAt',
-    headerName: 'Created',
+    headerName: t('shell.common.created'),
     width: 180,
     filter: { type: 'date' },
     valueGetter: createdValue,
@@ -116,9 +119,10 @@ export default function DockerContainersTable({
   refetchRef,
   onRestart,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<DockerContainer>[]>(
-    () => [...COLUMNS, actionsColumn(onRestart)],
-    [onRestart],
+    () => [...buildColumns(t), actionsColumn(onRestart)],
+    [t, onRestart],
   );
 
   return (

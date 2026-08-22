@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import DocsLayout from '../layouts/DocsLayout.astro';
+import Pre from '../components/mdx/Pre.astro';
+import { neighbours, type PackageLink, type TocItem } from '../lib/nav';
 
 export async function getStaticPaths() {
   const entries = await getCollection('packages');
@@ -11,46 +13,97 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const dir = entry.id.split('/')[0];
+
+const siblings: PackageLink[] = (await getCollection('packages'))
+  .map((item) => ({ dir: item.id.split('/')[0], name: item.data.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+const { prev, next } = neighbours(siblings, dir);
 
 const tags = [
   entry.data.zeroDeps ? 'zero runtime deps' : null,
   entry.data.frameworkFree ? 'framework-free' : null,
   entry.data.coverageGate ? '100% coverage gate' : null,
-  `packages/${dir}`,
-].filter(Boolean);
+].filter((tag): tag is string => tag !== null);
+
+/**
+ * The rail lists the page's own summary section first, then whatever the
+ * package wrote. Depth 4 and below is detail you find by reading, not by
+ * jumping — putting it in the rail turns a map into a second copy of the page.
+ */
+const toc: TocItem[] = [
+  { depth: 2, slug: 'at-a-glance', text: 'At a glance' },
+  ...headings
+    .filter((heading) => heading.depth === 2 || heading.depth === 3)
+    .map((heading) => ({ depth: heading.depth, slug: heading.slug, text: heading.text })),
+];
 ---
 
-<DocsLayout title={entry.data.name} subtitle={entry.data.summary} activeDir={dir}>
+<DocsLayout title={entry.data.name} subtitle={entry.data.summary} activeDir={dir} toc={toc}>
   <ul class="tags">
+    <li class="tags__strong">{entry.data.category}</li>
     {tags.map((tag) => <li>{tag}</li>)}
   </ul>
 
-  {
-    entry.data.exports.length > 0 && (
-      <>
-        <h2>Exports</h2>
-        <p>
-          {entry.data.exports.map((name, index) => (
-            <>
-              {index > 0 && ', '}
+  <h2 id="at-a-glance">At a glance</h2>
+
+  <dl class="facts">
+    <dt>Source</dt>
+    <dd>
+      <code>packages/{dir}/</code>
+      <button
+        type="button"
+        class="icon-button"
+        data-open-source={`/source/${dir}.txt`}
+        data-open-source-title={`packages/${dir}/docs/index.mdx`}
+        title="Open this page's MDX in the editor — read it, format it, copy it back"
+      >
+        Open docs/index.mdx
+      </button>
+    </dd>
+
+    {
+      entry.data.exports.length > 0 && (
+        <>
+          <dt>Exports</dt>
+          <dd class="facts__chips">
+            {entry.data.exports.map((name) => (
               <code>{name}</code>
-            </>
-          ))}
-        </p>
-      </>
-    )
-  }
+            ))}
+          </dd>
+        </>
+      )
+    }
 
-  {
-    entry.data.consumers.length > 0 && (
-      <>
-        <h2>Imported by</h2>
-        <p>{entry.data.consumers.join(', ')}</p>
-      </>
-    )
-  }
+    {
+      entry.data.consumers.length > 0 && (
+        <>
+          <dt>Imported by</dt>
+          <dd>{entry.data.consumers.join(' · ')}</dd>
+        </>
+      )
+    }
+  </dl>
 
-  <Content />
+  <Content components={{ pre: Pre }} />
+
+  <nav class="pager" aria-label="Nearby packages">
+    {
+      prev && (
+        <a href={`/${prev.dir}`}>
+          <small>Previous</small>
+          {prev.name}
+        </a>
+      )
+    }
+    {
+      next && (
+        <a class="pager--next" href={`/${next.dir}`}>
+          <small>Next</small>
+          {next.name}
+        </a>
+      )
+    }
+  </nav>
 </DocsLayout>

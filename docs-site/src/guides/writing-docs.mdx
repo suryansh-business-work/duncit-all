@@ -1,0 +1,153 @@
+## Where a page comes from
+
+Every page on this site is one file:
+
+```text
+packages/<name>/docs/index.mdx
+```
+
+Nothing about a package is written here in `docs-site`. The site is a reader — it globs
+`*/docs/index.mdx` out of `packages/` through a content collection and renders whatever it
+finds. That is the whole design: docs that live beside the code move with the code, and a
+package that is deleted takes its page with it. A separate docs repo drifts within a month.
+
+A package with no `docs/index.mdx` simply does not appear. All 47 have one today.
+
+## Frontmatter is a contract, not decoration
+
+The frontmatter is validated by a Zod schema in `docs-site/src/content.config.ts`. A field
+that is wrong or missing **fails the build**, and the docs build is a CI gate
+(`.github/workflows/shared-gates.yml` → *Docs site builds*) — so a malformed page is caught on
+the push that wrote it rather than by whoever next runs `pnpm docs`.
+
+```yaml
+---
+name: '@duncit/regex'                    # published name — the page title
+summary: 'Shared regex patterns and…'    # ONE line; the sidebar search matches on it
+category: 'platform'                     # domain | ui | forms | platform | testing | data
+zeroDeps: true                           # no runtime dependency at all
+frameworkFree: true                      # must never gain React/MUI/Tamagui
+coverageGate: true                       # holds its own 100% threshold
+consumers:                               # who imports it today
+  - 'app/mweb'
+  - 'portals/*'
+exports:                                 # the names a reader is most likely to want
+  - 'isPhoneNumber'
+  - 'PINCODE'
+---
+```
+
+Two of these earn their keep beyond the page they render:
+
+- **`summary`** is what the filter box at the top of every page searches, alongside the name.
+  Write it so someone who does not know the package name still lands on it — *money*,
+  *timezone* and *otp* have to find their package on their own.
+- **`exports`** is the list rule 40 is really about. Before writing a helper anywhere, this is
+  the list you scan. Keep it honest: an export that was renamed or removed and left listed
+  here sends the next reader looking for something that is gone.
+
+## Writing the body
+
+Start straight into prose — **no `# Heading`**. The layout already prints the package name as
+the page title from `name`, so an `# @duncit/thing` line renders it twice.
+
+Then, in this order:
+
+1. **Why this exists.** What was duplicated, where, and what went wrong because of it. This is
+   the part that stops the next person writing a third copy — a feature list does not.
+2. **Use it.** Real imports from real call sites, with real duncit data: pod ids, INR amounts,
+   actual statuses. Never `foo`/`bar`.
+3. **The reference.** A table of exports with signatures.
+4. **The traps.** Anything that has already gone wrong once.
+
+Use `##` for sections and `###` for subsections — those are what the "On this page" rail is
+built from. Deeper headings are deliberately left out of it.
+
+## Code blocks
+
+Tag every fence with its language. It buys three things at once: Shiki colours it at build
+time in both themes, the toolbar can name it, and the editor knows which mode to open it in.
+
+````text
+```ts
+import { payableSpots } from '@duncit/utils';
+```
+````
+
+Every rendered block carries the same toolbar. **Copy** is always visible; the rest appear on
+hover and stay reachable by keyboard:
+
+| Action | What it does |
+| --- | --- |
+| **Copy** | The snippet as text. Line numbers are drawn with a CSS counter, so they are never copied with it. |
+| **Wrap** | Long lines wrap instead of scrolling sideways. |
+| **Lines** | Line numbers, for when prose below the block refers to one. |
+| **Tidy** | Opens the editor with tabs turned into spaces, trailing whitespace gone and runs of blank lines collapsed. Language-agnostic — it works on the `bash`, `graphql` and `mdx` blocks a formatter cannot parse. |
+| **Format** | Opens the editor and runs the real formatter for that language. |
+| **Edit** | Opens the editor untouched. |
+
+## The editor
+
+Tidy, Format and Edit all open the same **Monaco** — the editor the tech, crm and marketing
+portals already run for MJML, pinned to the same version, so it behaves the way you expect it
+to. It loads on the first press and never before: a reader who only reads never downloads it.
+
+Inside it you get Format, Tidy, Wrap, Reset and Copy, plus a language dropdown — switch a
+block to `json` or `typescript` to get a formatter for a fence that was tagged `text`.
+
+Two things to know:
+
+- **It is a scratchpad.** It edits a copy. Nothing is written back to the file, which is why
+  Reset can always return you to the snippet as the docs have it. Copy out what you want.
+- **Monaco only ships formatters for TypeScript, JavaScript, JSON, HTML and CSS.** Press
+  Format on a `graphql` or `shell` block and it says so rather than quietly doing something
+  else. Tidy is the one that always works.
+
+Diagnostics are switched off on purpose. Every snippet here is an excerpt that imports things
+this editor cannot see, so squiggles would only ever be wrong.
+
+## Editing the page you are on
+
+Each package page has an **Open docs/index.mdx** button under *At a glance*. It loads that
+package's real MDX — frontmatter included — into the same editor. Read it, tidy it, copy it,
+paste it back over `packages/<name>/docs/index.mdx`.
+
+## Live previews
+
+Sixteen pages mount the REAL component next to its source. The example lives in
+`docs-site/src/components/examples/`, and the page imports it twice — once to render, once as
+text:
+
+```tsx
+import Preview from '@docs/components/Preview.astro';
+import { ThemedControls } from '@docs/components/examples/ThemedControls.tsx';
+import themedControlsSource from '@docs/components/examples/ThemedControls.tsx?raw';
+
+<Preview
+  title="Portal controls under the shared theme"
+  code={themedControlsSource}
+  note="Only the accent changes per portal — everything else is the theme."
+>
+  <ThemedControls client:visible />
+</Preview>
+```
+
+The `?raw` import is the point: the snippet printed under the preview **is** the file that
+just ran, so the two cannot drift the way a hand-copied block does.
+
+Examples live in `docs-site` rather than beside the package because an example has to import
+the package the way a consumer does (`import { StatCard } from '@duncit/ui'`), and a package
+cannot resolve its own name from inside its own folder. `docs-site` declares `@duncit/ui` and
+`@duncit/dialogs` as real dependencies; a preview for another package needs that package added
+there first.
+
+Rules for an example file: import only from the package under test, its peers and
+`@duncit/utils`; no router (use `onBack`/`onClick`, not `to`/`backTo`); realistic data; and
+keep it short, because the whole file is printed on the page.
+
+## Running it
+
+```bash
+pnpm docs         # dev server on http://localhost:2500
+pnpm docs:build   # exactly what CI runs
+```

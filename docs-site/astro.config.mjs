@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
+import { SHIKI_THEMES } from './src/shiki-themes.mjs';
 
 // The package MDX lives outside this workspace (packages/*/docs), so a relative
 // import of a docs-site component would be a `../../../docs-site/src/…` chain
@@ -14,6 +15,12 @@ export default defineConfig({
   // React powers the live previews: a package's MDX imports the REAL export
   // from @duncit/ui / @duncit/dialogs and mounts it as an island.
   integrations: [react(), mdx()],
+  // Highlight every fenced block in BOTH palettes at build time. Astro writes
+  // the light colours inline and the dark ones as `--shiki-dark*` custom
+  // properties, which is what lets styles/code.css switch themes with one rule
+  // instead of re-rendering. Without this the default is github-dark alone —
+  // black boxes on a white page, which is how the site read before.
+  markdown: { shikiConfig: { themes: SHIKI_THEMES, wrap: false } },
   vite: {
     // The MDX lives in packages/*/docs, outside this workspace, so Vite has to
     // be allowed to serve from the repo root in dev.

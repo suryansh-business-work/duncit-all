@@ -1,0 +1,19 @@
+---
+import CodeCard from '../CodeCard.astro';
+
+/**
+ * Replaces the bare `<pre>` that Shiki emits for every fenced block in a
+ * package's MDX, so all ~330 of them get the same toolbar without a single
+ * `docs/index.mdx` having to know this site exists.
+ *
+ * Wired in `pages/[...slug].astro` via `<Content components={{ pre: Pre }} />`.
+ * The props arriving here are Shiki's own — `class`, `style`, `tabindex` and
+ * `data-language` — and every one of them is passed straight back through:
+ * the colours live in that inline style, so dropping it would blank the block.
+ */
+const { 'data-language': lang, ...rest } = Astro.props;
+---
+
+<CodeCard lang={lang ?? 'text'}>
+  <pre {...rest} data-language={lang}><slot /></pre>
+</CodeCard>

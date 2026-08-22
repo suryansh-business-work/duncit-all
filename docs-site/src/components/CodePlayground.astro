@@ -1,0 +1,75 @@
+---
+import { EDITOR_LANGUAGES } from '../scripts/languages';
+
+/**
+ * The editor every code block on the page opens into — rendered once per page
+ * by DocsLayout and empty until something asks for it.
+ *
+ * It is a native `<dialog>` rather than a React island on purpose: nothing here
+ * needs a component tree, and `showModal()` already gives the focus trap, the
+ * backdrop and Escape-to-close that a hand-rolled overlay gets wrong. Monaco
+ * itself is loaded by `scripts/playground.ts` on the first open, so a reader
+ * who never presses Edit never downloads an editor.
+ */
+const ACTIONS = [
+  { id: 'format', label: 'Format', hint: 'Run the language formatter over the whole document' },
+  { id: 'tidy', label: 'Tidy', hint: 'Normalise indentation, trailing spaces and blank lines' },
+  { id: 'wrap', label: 'Wrap', hint: 'Wrap long lines', toggle: true },
+  { id: 'reset', label: 'Reset', hint: 'Go back to the snippet as it is written in the docs' },
+  { id: 'copy', label: 'Copy', hint: 'Copy the editor contents' },
+] as const;
+---
+
+<dialog class="playground" id="code-playground" aria-label="Code editor">
+  <div class="playground__inner">
+    <div class="playground__bar">
+      <span class="playground__title" id="playground-title">Snippet</span>
+
+      <label class="playground__lang">
+        <span class="visually-hidden">Language</span>
+        <select class="playground__select" id="playground-language">
+          {EDITOR_LANGUAGES.map((language) => <option value={language}>{language}</option>)}
+        </select>
+      </label>
+
+      <span class="topbar__spacer"></span>
+
+      {
+        ACTIONS.map((action) => (
+          <button
+            type="button"
+            class="icon-button"
+            data-playground-action={action.id}
+            title={action.hint}
+            aria-pressed={'toggle' in action ? 'false' : undefined}
+          >
+            {action.label}
+          </button>
+        ))
+      }
+
+      <button type="button" class="icon-button" data-playground-action="close" title="Close (Esc)">
+        Close
+      </button>
+    </div>
+
+    <div class="playground__editor" id="playground-editor">
+      <p class="playground__loading" id="playground-loading">Press an action on any code block to open it here.</p>
+    </div>
+
+    <p class="playground__status" id="playground-status" role="status" aria-live="polite"></p>
+  </div>
+</dialog>
+
+<style is:global>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

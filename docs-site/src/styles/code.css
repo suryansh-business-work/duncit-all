@@ -1,0 +1,295 @@
+/*
+ * Everything that frames code: the card around every fenced block, Shiki's
+ * dual-theme switch, and the Monaco playground dialog.
+ *
+ * Split from docs.css because it is the one part of the site with real
+ * behaviour attached (src/scripts/code-actions.ts, src/scripts/playground.ts),
+ * and the two are read together.
+ */
+
+/* ── Shiki dual theme ────────────────────────────────────────────────── */
+
+/*
+ * astro.config.mjs renders every block with BOTH themes: the light colours land
+ * as real declarations and the dark ones as `--shiki-dark*` custom properties.
+ * Switching themes is therefore this one rule rather than a second render.
+ * `!important` is required — Shiki writes the light colour as an inline style.
+ */
+[data-theme="dark"] .astro-code,
+[data-theme="dark"] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* ── the card ────────────────────────────────────────────────────────── */
+
+.code-card {
+  margin: 18px 0 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.code-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.code-card__lang {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.code-card__title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.code-card__badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.code-card__actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.code-card__action {
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.code-card__action:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+
+.code-card__action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.code-card__action[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/*
+ * Five actions on every block is noise on a page with twenty of them, so the
+ * secondary ones fade in on hover. They stay in the tab order and reappear on
+ * focus, and a coarse pointer (no hover to give) always sees them.
+ */
+.code-card__action--secondary {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.code-card:hover .code-card__action--secondary,
+.code-card:focus-within .code-card__action--secondary {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .code-card__action--secondary {
+    opacity: 1;
+  }
+}
+
+.code-card__body {
+  overflow-x: auto;
+}
+
+.code-card__body pre {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-card__body pre code {
+  font-family: var(--mono);
+  background: none;
+  padding: 0;
+}
+
+/* Wrap: the pre stops scrolling and the lines break instead. */
+.code-card[data-wrap="on"] .code-card__body {
+  overflow-x: visible;
+}
+
+.code-card[data-wrap="on"] pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/*
+ * Line numbers are a CSS counter over Shiki's per-line spans, so they are never
+ * part of the text a Copy picks up (textContent skips ::before).
+ */
+.code-card[data-numbers="on"] code {
+  counter-reset: docs-line;
+}
+
+.code-card[data-numbers="on"] .line::before {
+  counter-increment: docs-line;
+  content: counter(docs-line);
+  display: inline-block;
+  width: 2.2em;
+  margin-right: 1.1em;
+  text-align: right;
+  opacity: 0.35;
+  user-select: none;
+}
+
+/* ── live preview ────────────────────────────────────────────────────── */
+
+.preview {
+  margin: 20px 0 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.preview__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+/* MUI's default theme is light; keep the canvas under it light too. */
+.preview__stage {
+  color-scheme: light;
+  background: #ffffff;
+  color: #14161a;
+  padding: 22px 18px;
+}
+
+.preview__note {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.preview .code-card {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+
+/* ── playground dialog ───────────────────────────────────────────────── */
+
+.playground {
+  width: min(1080px, 94vw);
+  height: min(78vh, 760px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.playground::backdrop {
+  background: rgb(10 12 16 / 55%);
+}
+
+.playground__inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.playground__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+
+.playground__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.playground__select {
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.playground__editor {
+  flex: 1;
+  min-height: 0;
+}
+
+.playground__status {
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  min-height: 32px;
+}
+
+.playground__status[data-tone="error"] {
+  color: #b91c1c;
+}
+
+[data-theme="dark"] .playground__status[data-tone="error"] {
+  color: #fca5a5;
+}
+
+.playground__loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 13px;
+  color: var(--muted);
+}

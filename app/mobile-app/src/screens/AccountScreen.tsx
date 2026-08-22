@@ -13,9 +13,8 @@ import {
   LanguageSection,
   PrivacyToggleCard,
   SecuritySection,
-  UsernameSection,
 } from '@/components/account';
-import { CommunicationPreferencesSection } from '@/components/comm-preference';
+import { CommPreferenceEntryCard } from '@/components/comm-preference';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
@@ -34,11 +33,6 @@ export function AccountScreen() {
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
 
-  const openChannel = (channel: 'EMAIL' | 'WHATSAPP' | 'SMS') => {
-    if (channel === 'EMAIL') navigation.navigate('MailPreference');
-    else if (channel === 'WHATSAPP') navigation.navigate('WhatsAppPreference');
-    else navigation.navigate('SmsPreference');
-  };
 
   const loaded =
     error || !me ? (
@@ -102,11 +96,12 @@ export function AccountScreen() {
         ) : null}
 
         <YStack height={1} backgroundColor="$borderColor" />
-        <UsernameSection current={me.username ?? null} onSaved={() => refresh()} />
         <LanguageSection />
-        {/* Email, WhatsApp and SMS under one heading — each a door to its
-            own categories, each with its one-time-code switch inline. */}
-        <CommunicationPreferencesSection onOpenChannel={openChannel} />
+        {/* One row, not three cards: the channels and every switch on them
+            live behind it. The @handle is minted by the server and is shown —
+            with the link it produces — on the profile itself, which is where
+            somebody goes to share it. */}
+        <CommPreferenceEntryCard onPress={() => navigation.navigate('CommPreference')} />
         <ConnectedAccountsSection />
         <SecuritySection />
       </ScrollView>

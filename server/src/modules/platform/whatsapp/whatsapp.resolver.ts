@@ -5,7 +5,6 @@ import {
   createTemplate,
   deleteTemplate,
 } from '@modules/platform/aisensy/aisensy.project';
-import type { TableQueryInput } from '@utils/table-query';
 import { whatsappAdminService } from './whatsapp.admin';
 import { whatsappPreferenceService } from './whatsapp.preference.service';
 
@@ -25,13 +24,9 @@ export const waAutomationResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return whatsappAdminService.scenarios();
     },
-    whatsappMessageLogs: (
-      _p: unknown,
-      args: { query?: TableQueryInput | null },
-      ctx: GraphQLContext
-    ) => {
+    whatsappMessageLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return whatsappAdminService.logsTable(args.query);
+      return whatsappAdminService.logById(args.id);
     },
     myWhatsappPreference: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

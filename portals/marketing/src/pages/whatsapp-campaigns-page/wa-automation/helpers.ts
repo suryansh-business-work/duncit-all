@@ -37,14 +37,6 @@ export const MEDIA_STATE_COLORS: StatusColorMap = {
   MISSING: 'error',
 };
 
-/** SKIPPED stays grey: nobody was billed and nothing went wrong. */
-export const LOG_STATUS_COLORS: StatusColorMap = {
-  SENT: 'success',
-  SENDING: 'warning',
-  SKIPPED: 'default',
-  FAILED: 'error',
-};
-
 /** AiSensy is not consistent about casing; the colour maps are. */
 export const statusKey = (status: string) => status.toUpperCase();
 

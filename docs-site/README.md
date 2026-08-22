@@ -27,7 +27,7 @@ it is itself `src/guides/writing-docs.mdx`.
 | `src/components/CodePlayground.astro` | The `<dialog>` Monaco mounts into, rendered once per page. |
 | `src/scripts/` | Toolbar behaviour, the Monaco playground, theme, sidebar filter, scrollspy. |
 | `src/styles/` | `docs.css` for the site, `code.css` for code blocks, Shiki's theme switch and the editor. |
-| `src/components/examples/` | The runnable components behind `<Preview>` — see the README there. |
+| `@duncit/docs-demos` | The runnable components behind `<Preview>` — see the README there. |
 
 ## Two things worth knowing before editing
 

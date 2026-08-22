@@ -6,6 +6,7 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { copyToClipboard } from '@duncit/utils';
 import { notifySuccess } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/app-settings';
 import CodeExpandDialog from './CodeExpandDialog';
 import { useLazyVisible } from './useLazyVisible';
 
@@ -45,6 +46,7 @@ export default function MonacoBlock({
   badge,
   readOnly = false,
 }: Readonly<MonacoBlockProps>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const { ref, visible } = useLazyVisible<HTMLDivElement>();
   const [value, setValue] = useState(code);
@@ -53,7 +55,7 @@ export default function MonacoBlock({
 
   const copy = async () => {
     await copyToClipboard(value);
-    notifySuccess('Copied');
+    notifySuccess(t('tech.packagesDocs.copied'));
   };
 
   return (
@@ -79,19 +81,27 @@ export default function MonacoBlock({
         )}
         <Box sx={{ flex: 1 }} />
         {dirty && (
-          <Tooltip title="Back to the snippet as the docs write it">
-            <IconButton size="small" onClick={() => setValue(code)} aria-label="Reset snippet">
+          <Tooltip title={t('tech.packagesDocs.resetSnippetHint')}>
+            <IconButton
+              size="small"
+              onClick={() => setValue(code)}
+              aria-label={t('tech.packagesDocs.resetSnippet')}
+            >
               <RestartAltIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title="Copy">
-          <IconButton size="small" onClick={copy} aria-label="Copy snippet">
+        <Tooltip title={t('tech.packagesDocs.copy')}>
+          <IconButton size="small" onClick={copy} aria-label={t('tech.packagesDocs.copySnippet')}>
             <ContentCopyIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Open full screen">
-          <IconButton size="small" onClick={() => setExpanded(true)} aria-label="Expand snippet">
+        <Tooltip title={t('tech.packagesDocs.openFullScreen')}>
+          <IconButton
+            size="small"
+            onClick={() => setExpanded(true)}
+            aria-label={t('tech.packagesDocs.expandSnippet')}
+          >
             <OpenInFullIcon fontSize="small" />
           </IconButton>
         </Tooltip>

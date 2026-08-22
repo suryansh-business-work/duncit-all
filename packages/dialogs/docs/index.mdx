@@ -32,12 +32,12 @@ exports:
 ---
 
 import Preview from '@docs/components/Preview.astro';
-import { UseConfirmDemo } from '@docs/components/examples/UseConfirmDemo.tsx';
-import useConfirmSource from '@docs/components/examples/UseConfirmDemo.tsx?raw';
-import { ConfirmDialogDemo } from '@docs/components/examples/ConfirmDialogDemo.tsx';
-import confirmDialogSource from '@docs/components/examples/ConfirmDialogDemo.tsx?raw';
-import { NotifyDemo } from '@docs/components/examples/NotifyDemo.tsx';
-import notifySource from '@docs/components/examples/NotifyDemo.tsx?raw';
+import { UseConfirmDemo } from '@duncit/docs-demos/examples/UseConfirmDemo.tsx';
+import useConfirmSource from '@duncit/docs-demos/examples/UseConfirmDemo.tsx?raw';
+import { ConfirmDialogDemo } from '@duncit/docs-demos/examples/ConfirmDialogDemo.tsx';
+import confirmDialogSource from '@duncit/docs-demos/examples/ConfirmDialogDemo.tsx?raw';
+import { NotifyDemo } from '@duncit/docs-demos/examples/NotifyDemo.tsx';
+import notifySource from '@duncit/docs-demos/examples/NotifyDemo.tsx?raw';
 
 ## Why this exists
 
@@ -244,7 +244,7 @@ api === useNotify();        // true  ← stable identity, safe in a useEffect de
 The docs site now runs real React islands (`docs-site/src/components/Preview.astro`) and
 declares `@duncit/dialogs` as a real dependency, so a preview here mounts the actual
 `ConfirmDialog` / `NotifyHost`. The runnable examples already exist at
-`docs-site/src/components/examples/ConfirmDialogDemo.tsx`, `UseConfirmDemo.tsx` and
+`packages/docs-demos/src/examples/ConfirmDialogDemo.tsx`, `UseConfirmDemo.tsx` and
 `NotifyDemo.tsx`; wiring them in is a matter of importing them plus their `?raw` source and
 dropping a `<Preview>` block into this page, exactly as `packages/ui/docs/index.mdx` does.
 Until that lands, the worked examples above are the source of truth — they are the rendered

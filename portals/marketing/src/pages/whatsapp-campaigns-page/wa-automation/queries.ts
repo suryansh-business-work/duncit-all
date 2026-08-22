@@ -33,21 +33,6 @@ export interface WaScenarioBoard {
   rows: WaScenario[];
 }
 
-export interface WaMessageLogRow {
-  id: string;
-  event_key: string;
-  campaign: string;
-  category: string;
-  audience: string;
-  destination: string;
-  status: string;
-  reason: string;
-  template_category: string;
-  msg_rate: number;
-  duration_ms: number;
-  created_at: string | null;
-}
-
 const SCENARIO_BOARD_FIELDS = `
   global_enabled
   catalogue_ok
@@ -104,30 +89,6 @@ export const SET_WHATSAPP_SCENARIO_MEDIA = gql`
   mutation SetWhatsappScenarioMedia($event_key: String!, $url: String!, $filename: String) {
     setWhatsappScenarioMedia(event_key: $event_key, url: $url, filename: $filename) {
       ${SCENARIO_BOARD_FIELDS}
-    }
-  }
-`;
-
-export const WHATSAPP_MESSAGE_LOGS = gql`
-  query WhatsappMessageLogs($query: TableQueryInput) {
-    whatsappMessageLogs(query: $query) {
-      rows {
-        id
-        event_key
-        campaign
-        category
-        audience
-        destination
-        status
-        reason
-        template_category
-        msg_rate
-        duration_ms
-        created_at
-      }
-      total
-      page
-      page_size
     }
   }
 `;

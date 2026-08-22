@@ -5,6 +5,9 @@ interface Props {
   children: ReactNode;
   /** Re-mounts the subtree when the mock changes, so a fixed edit recovers. */
   resetKey: string;
+  /** Localized heading. Passed in because an error boundary must be a class,
+   * and a class cannot call the translation hook. */
+  title: string;
 }
 
 interface State {
@@ -42,7 +45,7 @@ export default class DemoBoundary extends Component<Props, State> {
     if (this.state.message) {
       return (
         <Alert severity="error" variant="outlined">
-          <AlertTitle>This demo threw on the current mock</AlertTitle>
+          <AlertTitle>{this.props.title}</AlertTitle>
           {this.state.message}
         </Alert>
       );

@@ -162,23 +162,55 @@ export const WA_CAMPAIGN = gql`
 `;
 
 /**
- * The messages the platform sends on its own — the logs tab's automatic view.
- * Same query the Admin console reads; the role gate covers both portals, so
- * only the fields this view renders are asked for.
+ * Every WhatsApp send in one feed: campaign sends and the messages the platform
+ * sent on its own. The server flattens both records onto this shape, so the one
+ * Logs table pages, sorts and filters across them, and `kind` decides which
+ * detail view opens behind a row.
  */
-export const WHATSAPP_MESSAGE_LOGS = gql`
-  query WhatsappMessageLogs($query: TableQueryInput) {
-    whatsappMessageLogs(query: $query) {
+export const WA_LOGS = gql`
+  query WaLogs($query: TableQueryInput) {
+    waLogs(query: $query) {
       total
       rows {
         id
-        event_key
-        campaign
-        destination
+        kind
+        name
+        reference
+        target
         status
+        category
+        recipient_count
+        sent_count
+        failed_count
+        skipped_count
+        msg_rate
+        cost
         reason
         created_at
       }
+    }
+  }
+`;
+
+/** One automatic message in full — the fields the merged feed has no column
+ * for, read only when its row is opened. */
+export const WHATSAPP_MESSAGE_LOG = gql`
+  query WhatsappMessageLog($id: ID!) {
+    whatsappMessageLog(id: $id) {
+      id
+      event_key
+      campaign
+      category
+      audience
+      destination
+      status
+      reason
+      params
+      submitted_message_id
+      template_category
+      msg_rate
+      duration_ms
+      created_at
     }
   }
 `;
@@ -410,18 +442,6 @@ export interface AisensyCampaignDraft {
   template_name: string;
 }
 
-/** One automatic send attempt. `reason` is why it was skipped or how it
- * failed — blank on a send that went out. */
-export interface WaMessageLogRow {
-  id: string;
-  event_key: string;
-  campaign: string;
-  destination: string;
-  status: string;
-  reason: string;
-  created_at: string | null;
-}
-
 export interface WaCampaignRecipientRow {
   id: string;
   name: string;
@@ -484,6 +504,47 @@ export interface WaDashboardData {
   total_cost: number;
   by_category: WaDashboardCategory[];
   top_campaigns: WaDashboardCampaign[];
+}
+
+/** One row of the merged Logs feed. A campaign send is one row for many
+ * messages; an automatic message is one row for itself, so its counters are
+ * 1 or 0 and the same columns stay meaningful on both. */
+export interface WaLogRow {
+  id: string;
+  kind: 'CAMPAIGN' | 'AUTOMATIC';
+  name: string;
+  /** The AiSensy campaign name for a campaign send; the scenario key for an automatic one. */
+  reference: string;
+  /** The audience for a campaign send; the number reached for an automatic one. */
+  target: string;
+  status: string;
+  category: string;
+  recipient_count: number;
+  sent_count: number;
+  failed_count: number;
+  skipped_count: number;
+  msg_rate: number;
+  cost: number;
+  reason: string;
+  created_at: string | null;
+}
+
+/** One automatic message, in the detail behind its row. */
+export interface WaMessageLogRow {
+  id: string;
+  event_key: string;
+  campaign: string;
+  category: string;
+  audience: string;
+  destination: string;
+  status: string;
+  reason: string;
+  params: string[];
+  submitted_message_id: string;
+  template_category: string;
+  msg_rate: number;
+  duration_ms: number;
+  created_at: string | null;
 }
 
 export interface WaCampaignRow {

@@ -262,6 +262,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       appPopups: 'App Popups',
       approvals: 'Approvals',
       authentication: 'Authentication',
+      automation: 'Automation',
       autoPods: 'Auto Pods',
       backups: 'Backups',
       badges: 'Badges',
@@ -1213,7 +1214,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       fieldSpotsHint: 'Including the host, who does not pay.',
       fieldOccurrence: 'Occurrence',
       fieldMedia: 'Images',
-      fieldMediaHint: 'One image URL per line. At least one is required.',
+      fieldMediaHint: 'Upload at least one image. The first one is the card cover.',
       fieldHashtags: 'Hashtags',
       fieldPaymentTerms: 'Payment terms',
       noVenueHostHint:

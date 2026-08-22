@@ -268,6 +268,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../packages/dialogs
+      '@duncit/docs-demos':
+        specifier: workspace:*
+        version: link:../packages/docs-demos
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme

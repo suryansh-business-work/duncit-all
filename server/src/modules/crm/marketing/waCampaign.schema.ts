@@ -302,6 +302,46 @@ export const waCampaignTypeDefs = gql`
     top_campaigns: [WaDashboardCampaign!]!
   }
 
+  """
+  One WhatsApp send, whichever way it started.
+
+  A marketing send is one row per CAMPAIGN, because it is planned, billed and
+  retried as a unit. A message the platform sent by itself is one row per
+  MESSAGE, because there is nothing above it — its counters are simply 1 or 0.
+  The row's kind is what decides which detail view opens behind it.
+  """
+  type WaLogRow {
+    "The campaign id for a campaign send; the message log id for an automatic one."
+    id: ID!
+    "CAMPAIGN or AUTOMATIC."
+    kind: String!
+    name: String!
+    "The AiSensy campaign name for a campaign send; the scenario key for an automatic one."
+    reference: String!
+    "The audience for a campaign send; the number reached for an automatic one."
+    target: String!
+    status: String!
+    "Meta's category, which is what the per-message rate was read from."
+    category: String!
+    recipient_count: Int!
+    sent_count: Int!
+    failed_count: Int!
+    skipped_count: Int!
+    msg_rate: Float!
+    "The frozen rate times the messages that actually went out."
+    cost: Float!
+    "The campaign's error, or why one message was skipped or failed."
+    reason: String!
+    created_at: String
+  }
+
+  type WaLogPage {
+    rows: [WaLogRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Whether the Tech portal's AiSensy API key is configured."
     waCampaignConfigured: Boolean!
@@ -323,6 +363,8 @@ export const waCampaignTypeDefs = gql`
     "What WhatsApp cost and reached over a window (ISO dates; absent means all time)."
     waCampaignDashboard(from: String, to: String): WaDashboard!
     waCampaignsTable(query: TableQueryInput): WaCampaignTablePage!
+    "Every WhatsApp send in one feed: campaign sends and the messages the platform sent on its own."
+    waLogs(query: TableQueryInput): WaLogPage!
     "One campaign in full — the detail view behind a table row."
     waCampaign(campaign_id: ID!): WaCampaign!
     "Everyone that campaign walked over, with what happened to each."

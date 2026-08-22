@@ -2,7 +2,13 @@ import { useCallback, useMemo } from 'react';
 import TextField from '@mui/material/TextField';
 import { useCategoryValue, type AdminCategoryValue } from '@duncit/category';
 import { OCCURRENCES } from '@duncit/pod-form';
-import { AutoPodForm, emptyAutoPodForm, type AutoPodFormValues } from '@duncit/auto-pods';
+import { MediaListField } from '@duncit/media-picker';
+import {
+  AutoPodForm,
+  emptyAutoPodForm,
+  type AutoPodFormValues,
+  type AutoPodMediaFieldProps,
+} from '@duncit/auto-pods';
 import { useTranslation } from '@duncit/app-settings';
 
 export interface ClubAutoPodClub {
@@ -68,6 +74,19 @@ export default function ClubAutoPodForm({ club, ...rest }: Readonly<Props>) {
     [category.sub_name, missing, t]
   );
 
+  const renderMediaField = useCallback(
+    ({ value, onChange, label, helperText, error, folder }: Readonly<AutoPodMediaFieldProps>) => (
+      <MediaListField
+        label={label}
+        value={value}
+        onChange={onChange}
+        folder={folder}
+        helperText={error ?? helperText}
+      />
+    ),
+    []
+  );
+
   const hint = t('admin.autoPods.clubHint', { vars: { club: club?.club_name ?? '' } });
 
   return (
@@ -77,6 +96,7 @@ export default function ClubAutoPodForm({ club, ...rest }: Readonly<Props>) {
       t={t}
       occurrences={OCCURRENCES}
       renderCategory={renderCategory}
+      renderMediaField={renderMediaField}
       hint={hint}
     />
   );

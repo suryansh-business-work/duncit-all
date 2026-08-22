@@ -11,10 +11,8 @@ import { PACKAGE_DOCS } from './package-docs';
 import { useTranslation } from '@duncit/app-settings';
 
 /** Prose, and the same package actually running. Selection lives in the URL. */
-const VIEWS = [
-  { value: 'docs', label: 'Documentation' },
-  { value: 'demos', label: 'Live demos' },
-] as const;
+const VIEW_VALUES = ['docs', 'demos'] as const;
+type ViewValue = (typeof VIEW_VALUES)[number];
 
 /**
  * Every shared package's documentation, inside the portal.
@@ -31,7 +29,11 @@ export default function PackagesDocsPage() {
   // right there, and picking a favourite would only be a guess.
   const wanted = useSearchParams()[0].get('pkg');
   const [selected, setSelected] = useState(() => wanted ?? PACKAGE_DOCS[0]?.slug ?? '');
-  const view = useTabParam({ items: VIEWS, fallback: 'docs' });
+  const views = VIEW_VALUES.map((value) => ({
+    value,
+    label: value === 'docs' ? t('tech.packagesDocs.viewDocs') : t('tech.packagesDocs.viewDemos'),
+  }));
+  const view = useTabParam<ViewValue>({ items: views, fallback: 'docs' });
 
   const doc = PACKAGE_DOCS.find((p) => p.slug === selected) ?? PACKAGE_DOCS[0];
 

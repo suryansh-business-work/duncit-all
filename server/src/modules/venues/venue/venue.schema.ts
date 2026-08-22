@@ -77,12 +77,35 @@ export const venueTypeDefs = /* GraphQL */ `
     until: String!
   }
 
+  enum VenueCancellationChargeType {
+    PERCENT
+    AMOUNT
+  }
+
+  "One band of a venue's cancellation policy — cancelling INSIDE hours_before of the slot start costs this much."
+  type VenueCancellationTier {
+    "Hours before the slot start this band covers. The tightest matching band wins."
+    hours_before: Int!
+    charge_type: VenueCancellationChargeType!
+    "A percent of the slot price (0-100), or a flat amount."
+    value: Float!
+  }
+
+  "What a venue owner charges for a late cancellation, or whether they take one at all."
+  type VenueCancellationPolicy {
+    "Bookings may only be rescheduled, never cancelled. The bands do not apply while this is on."
+    reschedule_only: Boolean!
+    "Ordered widest window first."
+    tiers: [VenueCancellationTier!]!
+  }
+
   type VenueSettings {
     operating_hours: VenueOperatingHours!
     weekly_off_days: [Int!]!
     holidays: [String!]!
     rules: VenueRules!
     auto_extend: VenueAutoExtend!
+    cancellation: VenueCancellationPolicy!
   }
 
   input VenueOperatingHoursInput {
@@ -108,12 +131,24 @@ export const venueTypeDefs = /* GraphQL */ `
     until: String
   }
 
+  input VenueCancellationTierInput {
+    hours_before: Int!
+    charge_type: VenueCancellationChargeType!
+    value: Float!
+  }
+
+  input VenueCancellationPolicyInput {
+    reschedule_only: Boolean
+    tiers: [VenueCancellationTierInput!]
+  }
+
   input VenueSettingsInput {
     operating_hours: VenueOperatingHoursInput
     weekly_off_days: [Int!]
     holidays: [String!]
     rules: VenueRulesInput
     auto_extend: VenueAutoExtendInput
+    cancellation: VenueCancellationPolicyInput
   }
 
   type Venue {

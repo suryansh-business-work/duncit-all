@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
 import { autoPodWaitingOn, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
@@ -56,6 +56,37 @@ function FactChip({ text }: Readonly<{ text: string }>) {
 }
 
 /**
+ * The card's cover image. An image that has since been deleted or moved 404s
+ * at request time rather than arriving empty, so the dead URL is caught on the
+ * error event and swapped for the placeholder — the MUI twin does the same.
+ */
+function AutoPodCover({ url }: Readonly<{ url: string }>) {
+  const { muted, surface } = useThemeColors();
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <XStack
+        width="100%"
+        height={150}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor={surface}
+      >
+        <MaterialIcons name="broken-image" size={28} color={muted} />
+      </XStack>
+    );
+  }
+  return (
+    <AppImage
+      source={{ uri: url }}
+      style={{ width: '100%', height: 150 }}
+      resizeMode="cover"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
+/**
  * One Auto Pod, as every role sees it. The card itself is role-agnostic: the
  * three enrolment ticks and the pod's own details read the same to a venue, a
  * host and a club admin, and only the button differs — which is why the caller
@@ -80,13 +111,7 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
       borderColor="$borderColor"
       overflow="hidden"
     >
-      {image ? (
-        <AppImage
-          source={{ uri: image }}
-          style={{ width: '100%', height: 150 }}
-          resizeMode="cover"
-        />
-      ) : null}
+      {image ? <AutoPodCover url={image} /> : null}
 
       <YStack gap={10} padding={12}>
         <YStack gap={2}>

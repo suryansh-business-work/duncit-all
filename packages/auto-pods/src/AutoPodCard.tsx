@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
@@ -9,8 +9,45 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';
+import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import { autoPodWaitingOn, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 import { AutoPodTicks } from './AutoPodTicks';
+
+/**
+ * The card's cover image. A template's URL is whatever was uploaded for it, and
+ * an image that has since been deleted or moved 404s at request time rather
+ * than arriving empty — so the dead URL is caught on its error event and swapped
+ * for the placeholder instead of the browser's broken-image glyph.
+ */
+function AutoPodCover({ url }: Readonly<{ url: string }>) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <Box
+        sx={{
+          height: 150,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'action.hover',
+          color: 'text.disabled',
+        }}
+      >
+        <ImageNotSupportedIcon fontSize="large" />
+      </Box>
+    );
+  }
+  return (
+    <CardMedia
+      component="img"
+      height="150"
+      image={url}
+      alt=""
+      onError={() => setBroken(true)}
+      sx={{ objectFit: 'cover' }}
+    />
+  );
+}
 
 export interface AutoPodCardProps {
   row: AutoPodRow;
@@ -45,7 +82,7 @@ export function AutoPodCard({
 
   return (
     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {image ? <CardMedia component="img" height="150" image={image} alt="" /> : null}
+      {image ? <AutoPodCover url={image} /> : null}
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
         <Box>
           <Typography variant="subtitle1" fontWeight={600} noWrap title={row.pod_title}>

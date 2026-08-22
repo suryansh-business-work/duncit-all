@@ -7,6 +7,7 @@ import {
 } from '@duncit/docs-demos';
 import MonacoBlock from '../editor/MonacoBlock';
 import DemoCard from './DemoCard';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Loaded {
   module: PackageDemoModule | null;
@@ -22,6 +23,7 @@ interface Loaded {
  * written: one file, one import list, several examples out of it.
  */
 export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
+  const { t } = useTranslation();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [failed, setFailed] = useState('');
 
@@ -42,7 +44,11 @@ export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
   }, [slug]);
 
   if (failed) {
-    return <Alert severity="error">This package&apos;s demos could not be loaded: {failed}</Alert>;
+    return (
+      <Alert severity="error">
+        {t('tech.packagesDocs.demosLoadFailed')} {failed}
+      </Alert>
+    );
   }
   if (!loaded) {
     return (
@@ -54,9 +60,8 @@ export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
   if (!loaded.module || loaded.module.demos.length === 0) {
     return (
       <Alert severity="info">
-        This package ships no demo yet. Every package is meant to have one — add
-        <code> packages/docs-demos/src/demos/{slug}.tsx</code> and run
-        <code> node scripts/generate-demo-registry.mjs</code>.
+        {t('tech.packagesDocs.noDemoYet')}{' '}
+        <code>packages/docs-demos/src/demos/{slug}.tsx</code>
       </Alert>
     );
   }
@@ -69,7 +74,7 @@ export default function PackageDemos({ slug }: Readonly<{ slug: string }>) {
 
       <Box>
         <Typography variant="subtitle1" fontWeight={700}>
-          The source of every demo above
+          {t('tech.packagesDocs.demoSource')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           <code>packages/docs-demos/src/demos/{slug}.tsx</code> — the file that just ran.

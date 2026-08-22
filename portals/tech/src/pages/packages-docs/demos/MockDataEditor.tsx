@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { Alert, Box, Button, Stack, Typography, useTheme } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { useTranslation } from '@duncit/app-settings';
 
 const LINE_HEIGHT = 19;
 const MAX_LINES = 24;
@@ -26,6 +27,7 @@ const toJson = (value: unknown) => JSON.stringify(value, null, 2);
  * value keeps rendering rather than blanking the demo mid-keystroke.
  */
 export default function MockDataEditor({ initial, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [text, setText] = useState(() => toJson(initial));
   const [error, setError] = useState('');
@@ -42,7 +44,7 @@ export default function MockDataEditor({ initial, onChange }: Readonly<Props>) {
       onChange(JSON.parse(next));
       setError('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'That is not valid JSON');
+      setError(e instanceof Error ? e.message : t('tech.packagesDocs.mockNotJson'));
     }
   };
 
@@ -52,14 +54,14 @@ export default function MockDataEditor({ initial, onChange }: Readonly<Props>) {
     <Stack spacing={1}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          Edit this and the view above answers for it.
+          {t('tech.packagesDocs.mockHint')}
         </Typography>
         <Button
           size="small"
           startIcon={<RestartAltIcon fontSize="small" />}
           onClick={() => apply(toJson(initial))}
         >
-          Reset mock
+          {t('tech.packagesDocs.resetMock')}
         </Button>
       </Stack>
       <Box sx={{ border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 1, overflow: 'hidden' }}>

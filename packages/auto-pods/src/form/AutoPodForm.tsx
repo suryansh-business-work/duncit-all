@@ -8,7 +8,7 @@
  * the ordinary pod form without this package taking on its whole dependency
  * tree; the category field is injected for the same reason (see auto-pod.types).
  */
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, type ReactElement, type ReactNode } from 'react';
 import { useForm, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Stack from '@mui/material/Stack';
-import AutoPodFields, { type AutoPodOccurrence } from './AutoPodFields';
+import AutoPodFields, {
+  type AutoPodMediaFieldProps,
+  type AutoPodOccurrence,
+} from './AutoPodFields';
 import { parseHashtags, parseMediaLines, type AutoPodFormValues } from './auto-pod.types';
 
 /** Mirrors the server's own template checks so a bad template never round-trips. */
@@ -78,6 +81,8 @@ export interface AutoPodFormProps {
   /** "Cancel" for the dialog's dismiss button, from shellAutoPodLabels. */
   dismissLabel: string;
   occurrences: readonly AutoPodOccurrence[];
+  /** The surface's own upload field — the picker writes the image paths. */
+  renderMediaField: (props: Readonly<AutoPodMediaFieldProps>) => ReactElement;
   /** The surface's own category field — it needs the form's control. */
   renderCategory: (control: Control<AutoPodFormValues>) => ReactNode;
   /** What this author does NOT pick, in their own words. */
@@ -95,6 +100,7 @@ export default function AutoPodForm({
   dismissLabel,
   occurrences,
   renderCategory,
+  renderMediaField,
   hint,
   onClose,
   onSubmit,
@@ -121,6 +127,7 @@ export default function AutoPodForm({
             t={t}
             occurrences={occurrences}
             categoryField={renderCategory(control)}
+            renderMediaField={renderMediaField}
             hint={hint}
           />
           {error ? <Alert severity="error">{error}</Alert> : null}

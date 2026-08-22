@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Box, Divider, Paper, Stack, Typography } from '@mui/material';
 import type { PackageDemo } from '@duncit/docs-demos';
+import { useTranslation } from '@duncit/app-settings';
 import DemoBoundary from './DemoBoundary';
 import DemoOutput from './DemoOutput';
 import MockDataEditor from './MockDataEditor';
@@ -31,6 +32,7 @@ function SectionLabel({ children }: Readonly<{ children: string }>) {
  * and this card owns whatever the reader has made of it since.
  */
 export default function DemoCard({ demo }: Readonly<{ demo: PackageDemo }>) {
+  const { t } = useTranslation();
   const [mock, setMock] = useState<unknown>(demo.mock);
   const output = useMemo(() => runCompute(demo, mock), [demo, mock]);
   // A changed mock must re-mount the boundary, so a demo that threw on bad data
@@ -53,16 +55,18 @@ export default function DemoCard({ demo }: Readonly<{ demo: PackageDemo }>) {
 
         {demo.render && (
           <Box>
-            <SectionLabel>Live view</SectionLabel>
+            <SectionLabel>{t('tech.packagesDocs.liveView')}</SectionLabel>
             <Box sx={{ mt: 1, p: 2, borderRadius: 2, border: 1, borderColor: 'divider' }}>
-              <DemoBoundary resetKey={resetKey}>{demo.render(mock)}</DemoBoundary>
+              <DemoBoundary resetKey={resetKey} title={t('tech.packagesDocs.demoThrew')}>
+                {demo.render(mock)}
+              </DemoBoundary>
             </Box>
           </Box>
         )}
 
         {demo.compute && (
           <Box>
-            <SectionLabel>What the package returned</SectionLabel>
+            <SectionLabel>{t('tech.packagesDocs.whatItReturned')}</SectionLabel>
             <Box sx={{ mt: 1 }}>
               <DemoOutput output={output} />
             </Box>
@@ -72,7 +76,7 @@ export default function DemoCard({ demo }: Readonly<{ demo: PackageDemo }>) {
         <Divider />
 
         <Box>
-          <SectionLabel>Mock data</SectionLabel>
+          <SectionLabel>{t('tech.packagesDocs.mockData')}</SectionLabel>
           <Box sx={{ mt: 1 }}>
             <MockDataEditor initial={demo.mock} onChange={setMock} />
           </Box>

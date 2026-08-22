@@ -95,7 +95,6 @@ const ROUTES = [
   '/upload-settings/portals',
   '/upload-settings/mobile',
   '/upload-settings/mweb',
-  '/whatsapp',
   '/branding',
   '/rbac/roles',
   '/profile',

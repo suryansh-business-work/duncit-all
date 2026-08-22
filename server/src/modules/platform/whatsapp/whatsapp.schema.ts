@@ -76,13 +76,6 @@ export const waAutomationTypeDefs = gql`
     created_at: String
   }
 
-  type WaMessageLogPage {
-    rows: [WaMessageLogRow!]!
-    total: Int!
-    page: Int!
-    page_size: Int!
-  }
-
   "One switch on a person's own WhatsApp settings screen."
   type WaPreferenceCategory {
     category: String!
@@ -136,8 +129,8 @@ export const waAutomationTypeDefs = gql`
   extend type Query {
     "Every automatic message, its switch, and what AiSensy holds for it."
     whatsappScenarios: WaScenarioBoard!
-    "Every send attempt, newest first."
-    whatsappMessageLogs(query: TableQueryInput): WaMessageLogPage!
+    "One send attempt in full — the detail behind a row of the merged WhatsApp log."
+    whatsappMessageLog(id: ID!): WaMessageLogRow
     "The signed-in person's own WhatsApp switches."
     myWhatsappPreference: WaPreference!
   }

@@ -2,7 +2,12 @@ import { useCallback } from 'react';
 import type { Control } from 'react-hook-form';
 import { RhfAdminCategory } from '@duncit/category';
 import { OCCURRENCES } from '@duncit/pod-form';
-import { AutoPodForm, type AutoPodFormValues } from '@duncit/auto-pods';
+import { MediaListField } from '@duncit/media-picker';
+import {
+  AutoPodForm,
+  type AutoPodFormValues,
+  type AutoPodMediaFieldProps,
+} from '@duncit/auto-pods';
 
 interface Props {
   open: boolean;
@@ -38,12 +43,26 @@ export default function AdminAutoPodForm({ t, ...rest }: Readonly<Props>) {
     [t]
   );
 
+  const renderMediaField = useCallback(
+    ({ value, onChange, label, helperText, error, folder }: Readonly<AutoPodMediaFieldProps>) => (
+      <MediaListField
+        label={label}
+        value={value}
+        onChange={onChange}
+        folder={folder}
+        helperText={error ?? helperText}
+      />
+    ),
+    []
+  );
+
   return (
     <AutoPodForm
       {...rest}
       t={t}
       occurrences={OCCURRENCES}
       renderCategory={renderCategory}
+      renderMediaField={renderMediaField}
       hint={t('admin.autoPods.noVenueHostHint')}
     />
   );

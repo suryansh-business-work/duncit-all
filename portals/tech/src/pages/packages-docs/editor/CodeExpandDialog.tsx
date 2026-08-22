@@ -9,6 +9,7 @@ import {
   useTheme,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -34,6 +35,7 @@ export default function CodeExpandDialog({
   language,
   title,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Dialog fullScreen open={open} onClose={onClose}>
@@ -42,7 +44,7 @@ export default function CodeExpandDialog({
           <Typography variant="subtitle2" sx={{ flex: 1, fontFamily: 'monospace' }}>
             {title}
           </Typography>
-          <IconButton edge="end" onClick={onClose} aria-label="Close editor">
+          <IconButton edge="end" onClick={onClose} aria-label={t('tech.packagesDocs.closeEditor')}>
             <CloseIcon />
           </IconButton>
         </Toolbar>

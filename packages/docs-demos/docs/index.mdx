@@ -62,6 +62,21 @@ Then regenerate the registry, which is the index both readers load from:
 node scripts/generate-demo-registry.mjs
 ```
 
+## Two folders, two renderers
+
+`src/demos/` is the whole catalogue: one module per shared package, rendered by the
+Tech portal with editable mock data. `src/examples/` holds the seven React islands the
+docs site mounts through its own `<Preview>` component — they moved here from
+`docs-site/src/components/` so a runnable example has ONE home:
+
+```mdx
+import Preview from '@docs/components/Preview.astro';
+import { ThemedControls } from '@duncit/docs-demos/examples/ThemedControls.tsx';
+import themedControlsSource from '@duncit/docs-demos/examples/ThemedControls.tsx?raw';
+```
+
+Write new ones as demos — they cost the same and the reader gets to change the data.
+
 ## A package shows itself in one of two ways
 
 | Field | For | What the portal renders |
@@ -99,6 +114,12 @@ exists to remove.
 '@duncit/ui'`. That is why the demos live here rather than inside each package: a package
 cannot resolve its own name from inside its own folder, so an example written there would
 have to use a relative path no reader could copy.
+
+**`?raw` does not survive an exports-map lookup.** The docs site imports each example
+twice — the component, and its own source — and Rollup cannot resolve
+`@duncit/docs-demos/examples/X.tsx?raw` through `package.json` `exports`. `docs-site`'s
+Vite config aliases that subpath to the folder for exactly this reason, so the specifier
+in the MDX stays the package name.
 
 **Adding a package means adding a demo.** A shared package with no demo shows an empty
 Live demos tab, which is worse than no tab at all. The registry generator has a

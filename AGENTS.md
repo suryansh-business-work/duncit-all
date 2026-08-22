@@ -476,6 +476,11 @@ the exact drift this whole thing exists to remove.
 statuses, real category names. Never `foo`/`bar` — a reader copies whatever they
 see.
 
+The docs site's `<Preview>` islands live in the SAME package, under
+`packages/docs-demos/src/examples/` — they were moved out of `docs-site` so a runnable
+example has one home. Do not start a third folder: write new ones as demos, and add an
+example only when a docs-site page needs a mounted island.
+
 After adding or renaming a demo run `node scripts/generate-demo-registry.mjs`;
 CI runs it with `--check` and fails on a registry that does not match the files
 on disk, exactly as `generate-shipped-keys.mjs` does for localization.

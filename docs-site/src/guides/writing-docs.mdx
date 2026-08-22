@@ -115,13 +115,13 @@ paste it back over `packages/<name>/docs/index.mdx`.
 ## Live previews
 
 Sixteen pages mount the REAL component next to its source. The example lives in
-`docs-site/src/components/examples/`, and the page imports it twice — once to render, once as
+`packages/docs-demos/src/examples/`, and the page imports it twice — once to render, once as
 text:
 
 ```tsx
 import Preview from '@docs/components/Preview.astro';
-import { ThemedControls } from '@docs/components/examples/ThemedControls.tsx';
-import themedControlsSource from '@docs/components/examples/ThemedControls.tsx?raw';
+import { ThemedControls } from '@duncit/docs-demos/examples/ThemedControls.tsx';
+import themedControlsSource from '@duncit/docs-demos/examples/ThemedControls.tsx?raw';
 
 <Preview
   title="Portal controls under the shared theme"

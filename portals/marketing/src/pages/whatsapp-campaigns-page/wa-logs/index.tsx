@@ -1,19 +1,19 @@
-import { useState, type MutableRefObject } from 'react';
+import { useMemo, useState, type MutableRefObject } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import { useApolloTableFetch } from '@duncit/table';
+import { Stack, Typography } from '@mui/material';
+import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { useTranslation } from '@duncit/app-settings';
-import WaCampaignTable from '../WaCampaignTable';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import WaCampaignDetailDialog from '../wa-campaign-detail';
-import WaAutoLogsTable from './WaAutoLogsTable';
+import AutoLogDetail from './AutoLogDetail';
+import { getLogColumns } from './logColumns';
 import { useWaCurrency } from '../useWaCurrency';
-import { WA_CAMPAIGNS_TABLE, type WaAudienceList, type WaCampaignRow } from '../queries';
+import { WA_LOGS, type WaAudienceList, type WaCampaignRow, type WaLogRow } from '../queries';
 import type { useWaCampaignActions } from '../useWaCampaignActions';
 
-/** The two records this tab holds: sends somebody started, and sends the
- * platform made on its own. */
-type LogView = 'campaigns' | 'automatic';
+/** Campaign ids and message log ids come from different collections, so the
+ * kind is part of the row's identity rather than an assumption about them. */
+const getRowId = (row: WaLogRow) => `${row.kind}-${row.id}`;
 
 interface Props {
   audienceLists: WaAudienceList[];
@@ -25,106 +25,101 @@ interface Props {
 }
 
 /**
- * Every send that has been made: what it cost, who it reached, and who it did
- * not. This is the record, not the place a send starts — sending begins from
- * the campaign you are looking at, under Campaigns. The automatic view is the
- * same record for the messages the platform sends by itself, because this tab
- * is where "why didn't this person get it" is asked.
+ * Every WhatsApp send that has been made, in one table.
+ *
+ * Campaign sends and the messages the platform sends by itself used to be two
+ * records behind a toggle, which meant "why didn't this person get it" had to
+ * be asked twice and answered in whichever half you happened to be looking at.
+ * The server flattens both onto one shape, so this is one feed — and everything
+ * that differs between the two lives BEHIND a row rather than as a column that
+ * is blank on half the table.
+ *
+ * It is the record, not the place a send starts: sending begins from the
+ * campaign you are looking at, under Campaigns.
  */
 export default function WaLogs({ audienceLists, actions, onDuplicate, refetchRef }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormat();
   const client = useApolloClient();
   const currency = useWaCurrency();
-  const [view, setView] = useState<LogView>('campaigns');
-  const [viewing, setViewing] = useState<string | null>(null);
+  const [opened, setOpened] = useState<WaLogRow | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
-  const fetchRows = useApolloTableFetch<WaCampaignRow>(
-    client,
-    WA_CAMPAIGNS_TABLE,
-    'waCampaignsTable'
+
+  const fetchRows = useApolloTableFetch<WaLogRow>(client, WA_LOGS, 'waLogs');
+  const columns = useMemo(
+    () => getLogColumns({ t, formatDateTime, currency }),
+    [t, formatDateTime, currency]
   );
 
   const confirmDelete = async () => {
     if (!target || !(await actions.remove(target))) return;
     // The detail view of a campaign that no longer exists has nothing to show.
-    setViewing((id) => (id === target.campaign_id ? null : id));
+    setOpened(null);
     setTarget(null);
   };
 
   const duplicate = (campaign: WaCampaignRow) => {
-    setViewing(null);
+    setOpened(null);
     onDuplicate(campaign);
   };
 
+  const campaignId = opened?.kind === 'CAMPAIGN' ? opened.id : null;
+  const automaticId = opened?.kind === 'AUTOMATIC' ? opened.id : null;
+
   return (
     <Stack spacing={1.5}>
-      <ToggleButtonGroup
-        size="small"
-        exclusive
-        value={view}
-        onChange={(_e, value) => {
-          if (value !== null) setView(value as LogView);
-        }}
-      >
-        <ToggleButton value="campaigns">{t('marketingWhatsapp.autoLogs.toggleCampaigns')}</ToggleButton>
-        <ToggleButton value="automatic">{t('marketingWhatsapp.autoLogs.toggleAutomatic')}</ToggleButton>
-      </ToggleButtonGroup>
+      <Stack spacing={0.25}>
+        <Typography variant="subtitle1" fontWeight={700}>
+          {t('marketingWhatsapp.logs.title')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t('marketingWhatsapp.logs.hint')}
+        </Typography>
+      </Stack>
 
-      {view === 'campaigns' && (
-        <>
-          <Typography variant="body2" color="text.secondary">
-            Every send, with what it cost. Cost is the rate that send froze times the messages that
-            actually went out — skipped and failed people were never billed.
-          </Typography>
+      <DuncitTable<WaLogRow>
+        tableId="wa-logs"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getRowId}
+        onRowClick={setOpened}
+        emptyText={t('marketingWhatsapp.logs.empty')}
+        defaultSort={{ field: 'created_at', dir: 'desc' }}
+        searchPlaceholder={t('marketingWhatsapp.logs.search')}
+        refetchRef={refetchRef}
+      />
 
-          <WaCampaignTable
-            fetchRows={fetchRows}
-            refetchRef={refetchRef}
-            currency={currency}
-            busy={actions.cancelling}
-            onOpen={(row) => setViewing(row.campaign_id)}
-            onCancel={actions.cancel}
-            onDelete={setTarget}
-          />
+      <WaCampaignDetailDialog
+        campaignId={campaignId}
+        audienceLists={audienceLists}
+        currency={currency}
+        retrying={actions.retrying}
+        cancelling={actions.cancelling}
+        onRetry={actions.retry}
+        onCancel={actions.cancel}
+        onDelete={setTarget}
+        onDuplicate={duplicate}
+        onClose={() => setOpened(null)}
+      />
 
-          <WaCampaignDetailDialog
-            campaignId={viewing}
-            audienceLists={audienceLists}
-            currency={currency}
-            retrying={actions.retrying}
-            onRetry={actions.retry}
-            onDuplicate={duplicate}
-            onClose={() => setViewing(null)}
-          />
+      <AutoLogDetail
+        logId={automaticId}
+        currency={currency}
+        onClose={() => setOpened(null)}
+      />
 
-          {target && (
-            <ConfirmDialog
-              open
-              title={t('marketing.whatsappCampaigns.deleteThisSend')}
-              message={`“${target.name}” and its results will be removed. Messages already delivered are not recalled.`}
-              confirmLabel={t('shell.common.delete')}
-              confirmColor="error"
-              loading={actions.deleting}
-              busyLabel="Deleting…"
-              onClose={() => setTarget(null)}
-              onConfirm={confirmDelete}
-            />
-          )}
-        </>
-      )}
-
-      {view === 'automatic' && (
-        <>
-          <Stack spacing={0.25}>
-            <Typography variant="subtitle1" fontWeight={700}>
-              {t('marketingWhatsapp.autoLogs.title')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('marketingWhatsapp.autoLogs.hint')}
-            </Typography>
-          </Stack>
-          <WaAutoLogsTable />
-        </>
+      {target && (
+        <ConfirmDialog
+          open
+          title={t('marketing.whatsappCampaigns.deleteThisSend')}
+          message={t('marketingWhatsapp.logs.deleteMessage', { vars: { name: target.name } })}
+          confirmLabel={t('shell.common.delete')}
+          confirmColor="error"
+          loading={actions.deleting}
+          busyLabel={t('marketingWhatsapp.logs.deleting')}
+          onClose={() => setTarget(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </Stack>
   );

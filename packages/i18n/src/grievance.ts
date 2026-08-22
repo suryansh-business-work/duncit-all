@@ -63,7 +63,10 @@ export interface GrievanceTicketFieldCopy {
   selectHint: string;
   /** Under the free-text box on the website, where there is nobody to look up. */
   refHint: string;
+  /** The dropdown's closed state, on the two apps. */
   placeholder: string;
+  /** The website's box, which is typed into rather than picked from. */
+  refPlaceholder: string;
   emptyTitle: string;
   emptyBody: string;
   emptyCta: string;
@@ -83,6 +86,7 @@ export function grievanceTicketFieldCopy(t: GrievanceTranslate): GrievanceTicket
     selectHint: t('grievance.ticketSelectHint'),
     refHint: t('grievance.ticketRefHint'),
     placeholder: t('grievance.ticketNonePlaceholder'),
+    refPlaceholder: t('grievance.ticketRefPlaceholder'),
     emptyTitle: t('grievance.ticketEmptyTitle'),
     emptyBody: t('grievance.ticketEmptyBody'),
     emptyCta: t('grievance.ticketEmptyCta'),

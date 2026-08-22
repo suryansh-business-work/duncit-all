@@ -1942,6 +1942,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "grievance.ticketEmptyTitle": "You have not raised a support ticket yet",
   "grievance.ticketNonePlaceholder": "Select a support ticket",
   "grievance.ticketRefHint": "Your support ticket number, e.g. ST-A1B2C3. You will find it on the ticket in the app, or in the email we sent when you raised it.",
+  "grievance.ticketRefPlaceholder": "e.g. ST-A1B2C3",
   "grievance.ticketSelectHint": "Pick the support ticket this grievance is about.",
   "grievance.title": "Raise a grievance",
   "legal.contracts.add": "Add Contract",

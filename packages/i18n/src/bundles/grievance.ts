@@ -70,6 +70,9 @@ export const GRIEVANCE_BUNDLE: NestedCatalogue = {
     ticketRefHint:
       'Your support ticket number, e.g. ST-A1B2C3. You will find it on the ticket in the app, or in the email we sent when you raised it.',
     ticketNonePlaceholder: 'Select a support ticket',
+    // The website types the number in rather than picking it, so "Select…"
+    // would be describing a control that is not on the page.
+    ticketRefPlaceholder: 'e.g. ST-A1B2C3',
     ticketEmptyTitle: 'You have not raised a support ticket yet',
     ticketEmptyBody:
       'A grievance escalates a support ticket, so there has to be one first. Raise a support ticket and give our team a chance to resolve it — you can come back here if it is not settled.',

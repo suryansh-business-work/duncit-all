@@ -20,6 +20,7 @@ import type {
   PolicyAcceptanceSurface,
 } from '@modules/content/policyAcceptance/policyAcceptance.model';
 import type { GraphQLContext } from '@context';
+import type { SignInContext } from '@modules/access/user/user.signin';
 
 /** What a signup door carries besides the account itself. Never part of the
  * validated DTO — the yup schemas strip unknown keys on purpose, so acceptance
@@ -45,6 +46,22 @@ async function requireUserId(ctx: GraphQLContext): Promise<string> {
   }
   return ctx.user.id;
 }
+
+/**
+ * What the "new sign-in" notice describes, off the request that signed in.
+ *
+ * The DUID is the same anonymous device id the clients already send for
+ * attribution, so nothing new has to be collected. `x-forwarded-for` is the
+ * proxy's word for where the request came from and is used only to write a
+ * human-readable line — nothing is decided on it.
+ */
+const signInContext = (ctx: GraphQLContext): SignInContext => ({
+  deviceId: ctx.device_id,
+  userAgent: String(ctx.req.headers['user-agent'] ?? ''),
+  place: String(ctx.req.headers['x-forwarded-for'] ?? '')
+    .split(',')[0]
+    ?.trim(),
+});
 
 export const authResolvers = {
   Query: {
@@ -83,17 +100,17 @@ export const authResolvers = {
       if (referrerId) await referralService.link(referrerId, payload.user.user_id, code);
       return payload;
     },
-    login: async (_p: unknown, args: { input: unknown }) => {
+    login: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       const data = await validate(loginSchema, args.input);
-      return userService.login(data);
+      return userService.login(data, signInContext(ctx));
     },
     requestPortalLoginOtp: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(requestPortalLoginOtpSchema, args.input);
       return userService.requestPortalLoginOtp(data);
     },
-    loginWithPortalOtp: async (_p: unknown, args: { input: unknown }) => {
+    loginWithPortalOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       const data = await validate(portalLoginOtpSchema, args.input);
-      return userService.loginWithPortalOtp(data);
+      return userService.loginWithPortalOtp(data, signInContext(ctx));
     },
     requestPasswordResetOtp: async (_p: unknown, args: { email: string }) => {
       const data = await validate(requestPasswordResetSchema, { email: args.email });
@@ -144,9 +161,14 @@ export const authResolvers = {
     },
     loginWithGoogle: async (
       _p: unknown,
-      args: { input: { id_token: string; portal_key?: string | null } }
+      args: { input: { id_token: string; portal_key?: string | null } },
+      ctx: GraphQLContext
     ) => {
-      return userService.loginWithGoogle(args.input?.id_token, args.input?.portal_key);
+      return userService.loginWithGoogle(
+        args.input?.id_token,
+        args.input?.portal_key,
+        signInContext(ctx)
+      );
     },
     // Unauthenticated by design — see the schema note: the verified Google
     // token IS the proof, the consent step supplies the intent.

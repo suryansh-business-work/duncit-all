@@ -17,6 +17,9 @@ import {
   type IAdPricing,
   type IAdRequest,
 } from './ads.model';
+import { logs } from '@observability/log';
+import { sendEmail } from '@services/email/email.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -314,6 +317,50 @@ async function resolveAdProductContext(adKind: AdKind, productId: string | null 
   };
 }
 
+/**
+ * Tell the advertiser where their ad stands.
+ *
+ * Three moments, one function: submitted and waiting, approved and running,
+ * or turned down with a reason. An ad is money somebody has committed to a
+ * date window, so "we have it", "it is live" and "it is not" are each worth an
+ * email — and until now the advertiser found out only by opening the console.
+ *
+ * Best-effort: a review decision is already saved by the time this runs, and a
+ * mailbox outage must not undo it.
+ */
+async function mailAdvertiser(doc: IAdRequest, template: string, subject: string) {
+  try {
+    const owner = await UserModel.findById(doc.submitted_by)
+      .select('profile.first_name auth.email')
+      .lean();
+    const to = (owner as any)?.auth?.email ?? '';
+    if (!to) return;
+    const { adsUrl } = await getUrlConfigs();
+    const base = adsUrl.replace(/\/+$/, '');
+    const runWindow = `${dayLabel(doc.start_at)} – ${dayLabel(doc.end_at)}`;
+    await sendEmail({
+      to,
+      subject,
+      template,
+      category: 'notification',
+      vars: {
+        name: (owner as any)?.profile?.first_name ?? 'there',
+        ad_title: doc.ad_title,
+        campaign: doc.position,
+        when: template === 'ad-in-review' ? dayLabel(doc.start_at) : runWindow,
+        reason: doc.marketing_remarks ?? '',
+        ad_url: `${base}/ads/${doc.trace_id}`,
+      },
+    });
+  } catch (error) {
+    logs.server.warn('ads', 'mailAdvertiser', { error, template, trace_id: doc.trace_id });
+  }
+}
+
+/** A date as the advertiser reads it, not as Mongo stores it. */
+const dayLabel = (value?: Date | null) =>
+  value ? new Date(value).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : '';
+
 export const adsService = {
   async pricing() {
     return pricingToPub(await getAdPricing());
@@ -371,6 +418,7 @@ export const adsService = {
       estimated_cost: estimated,
       submitted_by: new Types.ObjectId(userId),
     });
+    await mailAdvertiser(doc, 'ad-in-review', 'Your Duncit ad is in review');
     return toPub(doc, pricing.currency_symbol);
   },
 
@@ -389,6 +437,11 @@ export const adsService = {
       doc.approved_cost = pricePerDayFor(pricing, doc.position) * doc.duration_days;
     }
     await doc.save();
+    await mailAdvertiser(
+      doc,
+      approve ? 'ad-live' : 'ad-rejected',
+      approve ? 'Your Duncit ad is live 🎉' : 'About your Duncit ad'
+    );
     return toPub(doc, pricing.currency_symbol);
   },
 

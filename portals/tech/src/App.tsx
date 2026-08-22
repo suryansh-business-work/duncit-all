@@ -11,6 +11,7 @@ import EmailFragmentsPage from './pages/email-fragments-page';
 import EmailLogsPage from './pages/email-logs-page';
 import EmailsDashboardPage from './pages/emails-dashboard';
 import PackagesDocsPage from './pages/packages-docs';
+import PackageUpdatesPage from './pages/package-updates';
 import TelemetryDashboardPage from './pages/telemetry-dashboard';
 import BugsPage from './pages/bugs-page';
 import BugDetailPage from './pages/bug-detail-page';
@@ -50,6 +51,8 @@ export default function App() {
         {/* Connecting a mailbox only. What it replies with lives in Support. */}
         <Route path="/mail-automation" element={authed(<MailAutomationPage />)} />
         <Route path="/package-docs" element={authed(<PackagesDocsPage />)} />
+        {/* What every package.json declares, beside what npm publishes today. */}
+        <Route path="/package-updates" element={authed(<PackageUpdatesPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />
         <Route path="/emails/docs" element={<Navigate to="/package-docs" replace />} />

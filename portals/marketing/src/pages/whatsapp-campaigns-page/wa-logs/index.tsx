@@ -37,7 +37,12 @@ interface Props {
  * It is the record, not the place a send starts: sending begins from the
  * campaign you are looking at, under Campaigns.
  */
-export default function WaLogs({ audienceLists, actions, onDuplicate, refetchRef }: Readonly<Props>) {
+export default function WaLogs({
+  audienceLists,
+  actions,
+  onDuplicate,
+  refetchRef,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const client = useApolloClient();

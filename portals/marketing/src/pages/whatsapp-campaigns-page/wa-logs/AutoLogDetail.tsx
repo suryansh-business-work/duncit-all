@@ -80,7 +80,9 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
             <CircularProgress />
           </Stack>
         )}
-        {!loading && !log && <Alert severity="warning">{t('marketingWhatsapp.logs.detailGone')}</Alert>}
+        {!loading && !log && (
+          <Alert severity="warning">{t('marketingWhatsapp.logs.detailGone')}</Alert>
+        )}
         {log && (
           <Stack spacing={2}>
             {/* The whole point of opening the row: why it did not arrive. */}
@@ -119,7 +121,11 @@ export default function AutoLogDetail({ logId, currency, onClose }: Readonly<Pro
                     {log.params.map((param, index) => (
                       // Values are ordered and may repeat, so the position is
                       // the only stable identity a chip has (S6479).
-                      <Chip key={`${index}-${param}`} size="small" label={`{{${index + 1}}} ${param}`} />
+                      <Chip
+                        key={`${index}-${param}`}
+                        size="small"
+                        label={`{{${index + 1}}} ${param}`}
+                      />
                     ))}
                   </Stack>
                 ) : (

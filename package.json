@@ -104,7 +104,10 @@
     "sync:localization": "node scripts/sync-localization.mjs",
     "docs": "pnpm --filter duncit-docs dev",
     "docs:build": "pnpm --filter duncit-docs build",
-    "gen:shipped-keys": "node scripts/generate-shipped-keys.mjs"
+    "gen:shipped-keys": "node scripts/generate-shipped-keys.mjs",
+    "dup": "node scripts/verify-duplication.mjs",
+    "dup:report": "node scripts/verify-duplication.mjs --summary=duplication-report.md",
+    "dup:update": "node scripts/verify-duplication.mjs --update"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",

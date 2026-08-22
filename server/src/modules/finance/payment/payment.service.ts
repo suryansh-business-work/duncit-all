@@ -25,6 +25,8 @@ import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { sendEmail } from '@services/email/email.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -732,6 +734,40 @@ const buildListFilter = (filter?: PaymentListFilter) => {
   return q;
 };
 
+/**
+ * Tell the payer their money is coming back.
+ *
+ * This path — an operator refunding a payment from Finance — wrote REFUNDED to
+ * the document and told nobody at all, whatever had been paid for. `pod-refund`
+ * exists but is sent from the pod-cancellation flow only, so a refunded shop
+ * order, gift card or manually-reversed booking was silent.
+ *
+ * Best-effort: the refund is already recorded, and a mailbox outage must not
+ * make an operator think it was not.
+ */
+async function mailRefund(doc: IPayment, reason?: string): Promise<void> {
+  try {
+    if (!doc.user_email) return;
+    const [fs, urls] = await Promise.all([getFinanceSettings(), getUrlConfigs()]);
+    await sendEmail({
+      to: doc.user_email,
+      subject: `Refund initiated — ${doc.invoice_no || doc.payment_id}`,
+      template: 'order-refund',
+      category: 'billing',
+      vars: {
+        name: doc.user_name || 'there',
+        order_no: doc.invoice_no || doc.payment_id,
+        amount: `${doc.currency_symbol}${doc.total.toFixed(2)}`,
+        reason: reason || doc.description || '',
+        refund_days: String(fs.refund_processing_days),
+        order_url: urls.appUrl,
+      },
+    });
+  } catch (error) {
+    logs.server.warn('payment', 'mailRefund', { error, payment_id: doc.payment_id });
+  }
+}
+
 export const paymentService = {
   /**
    * The checkout preview. For a pod it prices the ticket × seats server-side
@@ -1349,6 +1385,7 @@ export const paymentService = {
       refunded_at: new Date().toISOString(),
     };
     await doc.save();
+    await mailRefund(doc, reason);
     return toPub(doc);
   },
 

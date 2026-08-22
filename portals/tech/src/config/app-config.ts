@@ -90,6 +90,9 @@ export const appConfig = {
       ],
     },
     { label: 'Package Documentation', labelKey: 'shell.nav.packageDocumentation', to: '/package-docs', icon: 'menuBook' },
+    // Beside the docs, because both answer a question about the same manifests:
+    // what a package exports, and how far behind what it depends on is.
+    { label: 'Package Updates', labelKey: 'shell.nav.packageUpdates', to: '/package-updates', icon: 'inventory' },
   ],
   modules: [],
 } satisfies AppConfig;

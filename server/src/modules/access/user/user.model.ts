@@ -210,12 +210,31 @@ const countersSchema = new Schema(
   { _id: false }
 );
 
+/**
+ * A device this account has been signed in from, by hashed DUID.
+ *
+ * Hashed rather than stored raw so a leaked user document does not hand
+ * somebody a working device identity, and capped at ten by the `$slice` on the
+ * write that adds one — an uncapped list on a shared computer would grow with
+ * every cleared cookie jar.
+ */
+const knownDeviceSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    last_seen_at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const securitySchema = new Schema(
   {
     two_factor_enabled: { type: Boolean, default: false },
     failed_login_attempts: { type: Number, default: 0, min: 0 },
     locked_until: { type: Date, default: null },
     password_changed_at: { type: Date, default: null },
+    // What `recent-account-login` decides on: a sign-in from a device that is
+    // not in here is the one worth telling somebody about.
+    known_devices: { type: [knownDeviceSchema], default: [] },
   },
   { _id: false }
 );

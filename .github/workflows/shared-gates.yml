@@ -152,3 +152,82 @@ jobs:
       # to tsc, all invisible until somebody reads a bad answer.
       - name: AI prompt catalogue is consistent
         run: pnpm --filter server check:prompts
+
+  # ---------------------------------------------------------------------------
+  # Rules 34 + 40: anything used in more than two places lives in a shared
+  # package. Until now that was a review convention, and review is exactly what
+  # a 55-cluster / ~19,000-line backlog (docs/duplication-audit.md) proves does
+  # not catch it — the copies land one at a time and each one looks small.
+  #
+  # jscpd measures it. The gate is a RATCHET, not a clean-slate rule: every
+  # workspace keeps the duplication it already has and may never gain any, with
+  # a repo-wide percentage ceiling on top for duplication spread too thin to
+  # move any single workspace. Same shape as the hardcoded-copy ratchet above,
+  # for the same reason — a gate that is red for months gets switched off.
+  # ---------------------------------------------------------------------------
+  duplication:
+    name: Duplicate code gate (jscpd)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Writes the PR comment body whether it passes or fails, then exits 1 on a
+      # regression — so the comment below is posted either way and the check
+      # still goes red.
+      - name: Duplication ratchet
+        id: duplication
+        run: node scripts/verify-duplication.mjs --summary="$RUNNER_TEMP/duplication.md"
+
+      # One STICKY comment per PR: the body carries a marker, and a re-run
+      # rewrites that comment instead of stacking a new one on every push.
+      - name: Comment the duplication report on the PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const file = `${process.env.RUNNER_TEMP}/duplication.md`;
+            if (!fs.existsSync(file)) {
+              core.info('no duplication report on disk — the detector did not run');
+              return;
+            }
+            const body = fs.readFileSync(file, 'utf8');
+            const marker = '<!-- duncit-duplication-gate -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const mine = comments.find((c) => c.body?.includes(marker));
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+              core.info(`updated duplication comment ${mine.id}`);
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info('created duplication comment');
+            }
+
+      # Same report on the run's own summary page, so a push to staging (where
+      # there is no PR to comment on) still shows the numbers.
+      - name: Duplication report on the run summary
+        if: always()
+        run: cat "$RUNNER_TEMP/duplication.md" >> "$GITHUB_STEP_SUMMARY" || true

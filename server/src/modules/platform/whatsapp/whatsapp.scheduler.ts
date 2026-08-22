@@ -34,7 +34,13 @@ import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.mode
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
-import { whatsappService, type WaSendInput } from './whatsapp.service';
+// `notifyEach`, not `whatsappService.sendEach`: every scenario this file
+// sweeps for now goes out as an email too — the pod reminder, the complete-pod
+// nudge, the unanswered slot request, the unfilled backout and all four
+// feedback asks — filled from the very same `params` arrays. A reminder is
+// exactly the message that must not depend on a channel somebody may have
+// opted out of or changed phone on.
+import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 
 const HOUR_MS = 60 * 60_000;
 const SWEEP_INTERVAL_MS = 30 * 60_000;
@@ -124,7 +130,10 @@ async function waUsers(ids: readonly unknown[]): Promise<UsersById> {
   const unique = [...new Set(ids.map(String).filter(Boolean))];
   if (unique.length === 0) return new Map();
   const users = await UserModel.find({ _id: { $in: unique } })
-    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    // `auth.email` beside the two phone paths: `notifyEvent` reads the address
+    // off these documents, so a narrower projection would send every WhatsApp
+    // message and skip every email without a word.
+    .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
     .lean();
   return new Map(users.map((user: any) => [String(user._id), user]));
 }
@@ -176,7 +185,7 @@ function podReminders(
   users: UsersById,
   slugById: Map<string, string>,
   mwebUrl: string
-): WaSendInput[] {
+): NotifyInput[] {
   const hostName = nameOf(users.get(firstHostId(pod)));
   const link = podUrl(mwebUrl, pod, slugById);
   const hours = hoursUntil(pod.pod_date_time);
@@ -218,7 +227,7 @@ async function remindAttendees(now: number, cutoff: Date, mwebUrl: string) {
   const users = await waUsers(
     pods.flatMap((pod) => [...(pod.pod_attendees ?? []), ...(pod.pod_hosts_id ?? [])])
   );
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.flatMap((pod) => podReminders(pod, users, slugById, mwebUrl))
   );
 }
@@ -237,7 +246,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const users = await waUsers(pods.map(firstHostId));
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.map((pod) => {
       const host = users.get(firstHostId(pod));
       const name = nameOf(host);
@@ -275,7 +284,7 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
     .lean<SweptPod[]>();
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
   const users = await waUsers([...slots.map((slot) => slot.owner_user_id), ...pods.map(firstHostId)]);
-  await whatsappService.sendEach(
+  await notifyEach(
     slots.map((slot) => {
       const pod = podById.get(String(slot.booked_by_pod_id));
       const owner = users.get(String(slot.owner_user_id));
@@ -325,7 +334,7 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
     waUsers(requests.map((request) => request.user_id)),
   ]);
   const podById = new Map(pods.map((pod) => [String(pod._id), pod]));
-  await whatsappService.sendEach(
+  await notifyEach(
     requests.flatMap((request) => {
       const pod = podById.get(String(request.pod_id));
       if (!pod) return [];
@@ -363,7 +372,7 @@ function feedbackAsk(
   pod: SweptPod,
   user: UserLike | undefined,
   mwebUrl: string
-): WaSendInput {
+): NotifyInput {
   const name = nameOf(user);
   return {
     event,
@@ -408,7 +417,7 @@ const guestsOf = (pod: SweptPod) =>
 
 async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
   const users = await waUsers(pods.flatMap(guestsOf));
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.flatMap((pod) =>
       guestsOf(pod).map((id) => feedbackAsk('USER_POD_FEEDBACK', pod, users.get(id), mwebUrl))
     )
@@ -417,7 +426,7 @@ async function askAttendeesForFeedback(pods: SweptPod[], mwebUrl: string) {
 
 async function askHostsForFeedback(pods: SweptPod[], mwebUrl: string) {
   const users = await waUsers(pods.map(firstHostId));
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.map((pod) => feedbackAsk('HOST_POD_FEEDBACK', pod, users.get(firstHostId(pod)), mwebUrl))
   );
 }
@@ -432,7 +441,7 @@ async function askVenuesForFeedback(pods: SweptPod[], mwebUrl: string) {
     venues.map((venue: any) => [String(venue._id), String(venue.owner_user_id ?? '')])
   );
   const users = await waUsers([...ownerByVenue.values()]);
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.flatMap((pod) => {
       const owner = users.get(ownerByVenue.get(String(pod.venue_id)) ?? '');
       return owner ? [feedbackAsk('VENUE_POD_FEEDBACK', pod, owner, mwebUrl)] : [];
@@ -452,7 +461,7 @@ async function askClubAdminsForFeedback(pods: SweptPod[], mwebUrl: string) {
     clubs.map((club: any) => [String(club._id), (club.admin_user_ids ?? []).map(String)])
   );
   const users = await waUsers([...adminsByClub.values()].flat());
-  await whatsappService.sendEach(
+  await notifyEach(
     pods.flatMap((pod) =>
       (adminsByClub.get(String(pod.club_id)) ?? []).map((adminId: string) =>
         feedbackAsk('CLUB_ADMIN_FEEDBACK', pod, users.get(adminId), mwebUrl)

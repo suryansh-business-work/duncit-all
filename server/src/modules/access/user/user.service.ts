@@ -36,6 +36,8 @@ import type {
 import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
 import { assertPortalLogin } from '@modules/portals';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { getUrlConfigs } from '@config/url-configs';
+import { noteSignIn, type SignInContext } from './user.signin';
 import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
@@ -47,6 +49,7 @@ import {
   sendAdminAccessGrantedEmail,
   sendAdminAccessRevokedEmail,
   sendPartnerAccessGrantedEmail,
+  sendEmail,
 } from '@services/email/email.service';
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -66,6 +69,7 @@ import {
 import { toPostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -496,6 +500,38 @@ async function recordSignupAcceptance(
  * holds must stay silent, because an account-level send has no entity for the
  * funnel's unique index to dedupe on.
  */
+/**
+ * Tell somebody their password just changed.
+ *
+ * The CODE that authorises the change is `password-reset-otp` /
+ * `password-change-otp`; this is the confirmation AFTER it, and it is the only
+ * one of the two that reaches a person whose account has been taken over — by
+ * then the attacker holds the code, not them. `authentication`, which is a
+ * REQUIRED mail category, so it can never be switched off.
+ *
+ * Best-effort: the password is already changed by the time this runs.
+ */
+async function mailPasswordChanged(email: string, firstName: string): Promise<void> {
+  if (!email) return;
+  try {
+    const { appUrl } = await getUrlConfigs();
+    await sendEmail({
+      to: email,
+      subject: 'Your Duncit password was changed',
+      template: 'password-changed',
+      category: 'authentication',
+      vars: {
+        name: firstName || 'there',
+        email,
+        when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+        security_url: `${appUrl.replace(/\/+$/, '')}/profile`,
+      },
+    });
+  } catch (error) {
+    logs.server.warn('user.service', 'mailPasswordChanged', { error });
+  }
+}
+
 function accountStatusEvent(before: string, after: string): string | null {
   if (before === after) return null;
   if (after === 'ACTIVE') return 'USER_ACCOUNT_REACTIVATED';
@@ -1098,7 +1134,7 @@ export const userService = {
     return authPayload(created);
   },
 
-  async login(input: LoginDTO) {
+  async login(input: LoginDTO, signIn?: SignInContext) {
     const user = await UserModel.findOne({ 'auth.email': input.email }).select('+auth.password');
     if (!user) {
       throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -1130,10 +1166,14 @@ export const userService = {
     // Console portals: correct credentials are not enough — the account must
     // also hold a role the admin has granted for the requesting portal.
     assertPortalLogin(input.portal_key, payload.user.roles);
+    // AFTER the portal check, so a sign-in that is about to be refused does not
+    // tell somebody their account was signed in to. Not awaited: the notice is
+    // best-effort and a mailbox must never hold up a login.
+    noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
   },
 
-  async loginWithGoogle(idToken: string, portalKey?: string | null) {
+  async loginWithGoogle(idToken: string, portalKey?: string | null, signIn?: SignInContext) {
     const info = await verifyGoogleIdToken(idToken);
     const email = info.email.toLowerCase();
     const user = await UserModel.findOne({ 'auth.google_id': info.sub });
@@ -1168,6 +1208,7 @@ export const userService = {
     const fresh = await UserModel.findById(user._id);
     const payload = await authPayload(fresh);
     assertPortalLogin(portalKey, payload.user.roles);
+    noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
   },
 
@@ -1574,7 +1615,10 @@ export const userService = {
    * The portal it was issued for is checked too, so a code emailed for the one
    * console this person can reach cannot be typed into another.
    */
-  async loginWithPortalOtp(input: { email: string; otp: string; portal_key?: string | null }) {
+  async loginWithPortalOtp(
+    input: { email: string; otp: string; portal_key?: string | null },
+    signIn?: SignInContext
+  ) {
     const email = String(input.email || '').trim().toLowerCase();
     const code = String(input.otp || '').trim();
     const portalKey = String(input.portal_key || '').trim();
@@ -1625,6 +1669,7 @@ export const userService = {
     // Checked again on the way in: roles can be revoked between the code being
     // sent and it being typed, and this is the moment that grants the session.
     assertPortalLogin(portalKey, payload.user.roles);
+    noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
   },
 
@@ -1689,6 +1734,7 @@ export const userService = {
         },
       }
     );
+    await mailPasswordChanged(email, (user as any).profile?.first_name ?? '');
     return true;
   },
 
@@ -1787,6 +1833,10 @@ export const userService = {
           'auth.password_change_otp_expires_at': '',
         },
       }
+    );
+    await mailPasswordChanged(
+      (user as any).auth?.email ?? '',
+      (user as any).profile?.first_name ?? ''
     );
     return true;
   },
@@ -2732,11 +2782,17 @@ export const userService = {
       ? accountStatusEvent(before?.metadata?.status ?? '', input.status)
       : null;
     if (statusEvent) {
-      await whatsappService.send({
+      // Both channels. Being suspended is the single most consequential thing
+      // that can happen to an account, and it used to be told over WhatsApp
+      // alone — which most accounts have no number for, since signup never
+      // asks for one.
+      await notifyEvent({
         event: statusEvent,
         user: fresh,
         name: fresh?.profile?.first_name,
         params: [fresh?.profile?.first_name],
+        email: fresh?.auth?.email ?? '',
+        vars: { email: fresh?.auth?.email ?? '' },
       });
     }
     // Admin edits move the same fields a user can change about themselves —

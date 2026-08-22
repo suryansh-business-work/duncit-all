@@ -131,10 +131,20 @@ jobs:
             })')
           echo "group ${{ matrix.group.name }}: ${#WORKSPACES[@]} workspace(s): ${WORKSPACES[*]}"
           failed=()
+          mkdir -p test-logs
           for ws in "${WORKSPACES[@]}"; do
             # Each workspace is time-boxed so one hang cannot eat the group.
+            slug=$(printf '%s' "$ws" | tr -c 'A-Za-z0-9._-' '_')
             timeout 60m pnpm --filter "$ws" --if-present test:coverage > "/tmp/cov-$$.log" 2>&1
             code=$?
+            # Keep the FULL output for EVERY workspace, colour codes stripped.
+            # The summaries below are cut to 160 chars and de-duplicated, which
+            # shows THAT a suite died but never why — the stack frame naming the
+            # missing provider is exactly the part that gets cut off, so each
+            # repair cycle was costing a blind ~90-minute scan. Uploaded as an
+            # artifact so the whole trace can be read without rerunning anything.
+            sed 's/\x1b\[[0-9;]*m//g' "/tmp/cov-$$.log" > "test-logs/$slug.log"
+            plain="test-logs/$slug.log"
             if [ $code -ne 0 ]; then
               failed+=("$ws($code)")
               echo "::group::coverage FAILED $ws (exit $code)"
@@ -147,8 +157,6 @@ jobs:
               # one grep serves every workspace.
               # Colour codes come off first. vitest emits them even down a
               # pipe, and an anchored grep can never match through them.
-              plain="/tmp/cov-plain-$$.log"
-              sed 's/\x1b\[[0-9;]*m//g' "/tmp/cov-$$.log" > "$plain"
               echo "--- failing suites ---"
               grep -a 'FAIL' "$plain" | sed 's/^[[:space:]]*//' | cut -c1-160 | sort -u | head -200
               echo "--- error headlines ---"
@@ -165,6 +173,13 @@ jobs:
             echo "::warning::coverage run did not succeed for: ${failed[*]}"
           fi
           exit 0
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: testlog-${{ matrix.group.name }}
+          path: test-logs
+          if-no-files-found: warn
       - name: Collect lcov
         run: |
           mkdir -p lcov-out
@@ -239,6 +254,16 @@ jobs:
           else
             echo "::error::app/mobile-app/coverage/lcov.info was not written — the jest run died before reporting."
           fi
+      # The full jest output. The step above tails 120 lines, which shows the
+      # summary but not which of the 400+ suites died or why — and mobile's
+      # tests only run here, so a truncated log means a blind repair cycle.
+      - name: Upload mobile test log
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: testlog-mobile
+          path: app/mobile-app/jest-coverage.log
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v6
         with:
           name: mobile-lcov

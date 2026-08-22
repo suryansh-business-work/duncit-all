@@ -140,12 +140,17 @@ jobs:
               # full of broken suites look identical to one that merely missed
               # its own threshold. jest and vitest both print "FAIL <path>", so
               # one grep serves every workspace.
+              # Colour codes come off first. vitest emits them even down a
+              # pipe, and an anchored grep can never match through them.
+              plain="/tmp/cov-plain-$$.log"
+              sed 's/\x1b\[[0-9;]*m//g' "/tmp/cov-$$.log" > "$plain"
               echo "--- failing suites ---"
-              grep -aE '^[[:space:]]*FAIL ' "/tmp/cov-$$.log" | sed 's/^[[:space:]]*//' | sort -u | head -200
+              grep -a 'FAIL' "$plain" | sed 's/^[[:space:]]*//' | cut -c1-160 | sort -u | head -200
+              echo "--- error headlines ---"
+              grep -aE 'Error:|Error :|Invariant|Unable to find|Cannot find|not a function|No QueryClient|not wrapped' "$plain" |
+                sed 's/^[[:space:]]*//' | cut -c1-160 | sort | uniq -c | sort -rn | head -40
               echo "--- totals / thresholds ---"
-              grep -aE 'Test Suites:|Tests:|Test Files|does not meet|ERROR: Coverage' "/tmp/cov-$$.log" | tail -20
-              echo "--- tail ---"
-              tail -40 "/tmp/cov-$$.log"
+              grep -aE 'Test Suites:|Tests:|Test Files|does not meet|ERROR: Coverage' "$plain" | tail -20
               echo "::endgroup::"
             else
               echo "ok   $ws"

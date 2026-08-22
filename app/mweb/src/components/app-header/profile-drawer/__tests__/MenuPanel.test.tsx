@@ -18,6 +18,14 @@ vi.mock('../../../../StudioModeContext', () => ({ useStudioMode: () => studioSta
 let flagValue = false;
 vi.mock('../../../../hooks/useFeatureFlag', () => ({ useFeatureFlag: () => flagValue }));
 
+// The menu fetches the Auto Pod counts as it mounts, and `useQuery` needs a
+// client in context even when it is skipped — so without this the panel throws
+// before it renders anything. The counts themselves belong to the role
+// switcher's own tests.
+vi.mock('../../../../hooks/useAutoPodCounts', () => ({
+  useAutoPodCounts: () => ({ counts: null, reload: vi.fn() }),
+}));
+
 // Stub the heavy consumer layout (fires ads/branding queries) — it is covered
 // by its own tests; here we only need a marker to assert it mounts.
 vi.mock('../UserModeContent', () => ({

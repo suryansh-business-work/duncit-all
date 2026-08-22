@@ -58,6 +58,15 @@ export function buildGrievanceSchema(t: GrievanceTranslate) {
       .string()
       .trim()
       .max(GRIEVANCE_MAX_LENGTH.address, tooLong(label('address'))),
+    // Required on the form even though the server accepts a blank: support is
+    // the first step and the grievance desk is the last, and a grievance with
+    // no ticket behind it is one the officer rejects. Stopping it here is
+    // kinder than accepting it and rejecting it a week later.
+    support_ticket_ref: z
+      .string()
+      .trim()
+      .min(1, required(label('support_ticket_ref')))
+      .max(GRIEVANCE_MAX_LENGTH.support_ticket_ref, tooLong(label('support_ticket_ref'))),
     subject: z
       .string()
       .trim()

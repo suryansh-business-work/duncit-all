@@ -13,6 +13,7 @@ import {
 
 /** The limits the server's ticket schema enforces — the spec this module mirrors. */
 const SERVER_MAX_LENGTH: Record<GrievanceField, number> = {
+  support_ticket_ref: 60,
   name: 120,
   email: 200,
   phone: 30,
@@ -23,7 +24,15 @@ const SERVER_MAX_LENGTH: Record<GrievanceField, number> = {
 
 describe('GRIEVANCE_FIELDS', () => {
   it('renders identity, then contact, then the complaint — the order every surface shows', () => {
-    expect(GRIEVANCE_FIELDS).toEqual(['name', 'email', 'phone', 'address', 'subject', 'description']);
+    expect(GRIEVANCE_FIELDS).toEqual([
+      'support_ticket_ref',
+      'name',
+      'email',
+      'phone',
+      'address',
+      'subject',
+      'description',
+    ]);
   });
 });
 
@@ -65,6 +74,7 @@ describe('isGrievanceFieldRequired', () => {
 
   it('requires every other field', () => {
     expect(GRIEVANCE_FIELDS.filter(isGrievanceFieldRequired)).toEqual([
+      'support_ticket_ref',
       'name',
       'email',
       'phone',
@@ -87,6 +97,7 @@ describe('grievanceFieldLabelKey', () => {
   // @duncit/i18n; a key that drifts renders the raw key as the field's label.
   it('names each label by the key the shared grievance bundle ships, one per field', () => {
     expect(GRIEVANCE_FIELDS.map(grievanceFieldLabelKey)).toEqual([
+      'grievance.field.support_ticket_ref',
       'grievance.field.name',
       'grievance.field.email',
       'grievance.field.phone',

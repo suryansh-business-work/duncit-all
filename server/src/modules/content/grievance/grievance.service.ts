@@ -36,6 +36,7 @@ const toPub = (g: IGrievanceTicket) => ({
   email: g.email,
   phone: g.phone,
   address: g.address ?? '',
+  support_ticket_ref: g.support_ticket_ref ?? '',
   subject: g.subject,
   description: g.description,
   status: g.status,
@@ -61,11 +62,20 @@ const officerToPub = (o: IGrievanceOfficer | null) => ({
  * back when they chase their grievance.
  */
 const GRIEVANCE_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['grievance_no', 'name', 'email', 'phone', 'subject', 'description'],
+  searchFields: [
+    'grievance_no',
+    'name',
+    'email',
+    'phone',
+    'support_ticket_ref',
+    'subject',
+    'description',
+  ],
   sortFields: {
     grievance_no: 'grievance_no',
     name: 'name',
     email: 'email',
+    support_ticket_ref: 'support_ticket_ref',
     subject: 'subject',
     status: 'status',
     source: 'source',
@@ -77,6 +87,7 @@ const GRIEVANCE_TABLE_CONFIG: TableEntityConfig = {
     name: { type: 'string' },
     email: { type: 'string' },
     phone: { type: 'string' },
+    support_ticket_ref: { type: 'string' },
     subject: { type: 'string' },
     status: { type: 'string' },
     source: { type: 'string' },
@@ -92,6 +103,7 @@ interface SubmitInput {
   email?: string;
   phone?: string;
   address?: string;
+  support_ticket_ref?: string;
   subject?: string;
   description?: string;
   source?: GrievanceSource;
@@ -110,6 +122,7 @@ function cleanSubmission(input: SubmitInput) {
   const email = (input.email ?? '').trim().toLowerCase();
   const phone = (input.phone ?? '').trim();
   const address = (input.address ?? '').trim();
+  const supportTicketRef = (input.support_ticket_ref ?? '').trim();
   const subject = (input.subject ?? '').trim();
   const description = (input.description ?? '').trim();
 
@@ -122,6 +135,10 @@ function cleanSubmission(input: SubmitInput) {
   const digits = phone.replace(/\D/g, '');
   if (digits.length < 7 || digits.length > 15) fail('BAD_USER_INPUT', 'Enter a valid phone number');
   if (address.length > 500) fail('BAD_USER_INPUT', 'Address is too long');
+  // Length only, never presence: the forms are what demand a ticket, and a
+  // grievance that reached us without one is still a grievance we have to hold
+  // — the officer rejects it, the intake does not drop it. See the model.
+  if (supportTicketRef.length > 60) fail('BAD_USER_INPUT', 'Support ticket reference is too long');
   if (!subject) fail('BAD_USER_INPUT', 'Subject is required');
   if (subject.length > 200) fail('BAD_USER_INPUT', 'Subject is too long');
   if (!description) fail('BAD_USER_INPUT', 'Please describe your grievance');
@@ -131,7 +148,16 @@ function cleanSubmission(input: SubmitInput) {
     ? (input.source as GrievanceSource)
     : 'APP';
 
-  return { name, email, phone, address, subject, description, source };
+  return {
+    name,
+    email,
+    phone,
+    address,
+    support_ticket_ref: supportTicketRef,
+    subject,
+    description,
+    source,
+  };
 }
 
 export const grievanceService = {

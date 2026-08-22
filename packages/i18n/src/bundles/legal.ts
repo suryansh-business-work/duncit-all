@@ -166,6 +166,10 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       closed: 'Closed',
       handledBy: 'Handled by',
       address: 'Address',
+      colSupportTicket: 'Support ticket',
+      // The escalation the grievance is built on. Blank is the officer's cue,
+      // not a formatting gap: nobody went to support first.
+      noSupportTicket: 'None — support was never contacted',
       resolutionNote: 'Resolution note',
       resolutionHint: 'Internal — what was done about this grievance.',
       // Where the grievance came from. Kept as copy rather than the raw enum,

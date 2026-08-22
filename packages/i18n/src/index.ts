@@ -49,6 +49,14 @@ export {
   type CaptchaTranslate,
 } from './captcha';
 export {
+  grievanceEscalationCopy,
+  grievanceTicketFieldCopy,
+  type GrievanceEscalationCopy,
+  type GrievanceEscalationStepCopy,
+  type GrievanceTicketFieldCopy,
+  type GrievanceTranslate,
+} from './grievance';
+export {
   mailCategoryCopy,
   type MailCategoryCopy,
   type MailCategoryTranslate,

@@ -25,6 +25,13 @@ export const grievanceTypeDefs = /* GraphQL */ `
     phone: String!
     "Optional — a grievance is answerable without a postal address."
     address: String!
+    """
+    The support ticket this grievance escalates (ST-/CB-/CH-/SOS-).
+
+    Blank means the complainant reached the officer without going through
+    support first — the ground the officer rejects on.
+    """
+    support_ticket_ref: String!
     subject: String!
     description: String!
     status: GrievanceStatus!
@@ -74,6 +81,12 @@ export const grievanceTypeDefs = /* GraphQL */ `
     email: String!
     phone: String!
     address: String
+    """
+    The support ticket being escalated. Nullable in the SCHEMA only so a build
+    that predates the field, or a grievance forwarded from the mailbox, is still
+    recorded — every form requires it.
+    """
+    support_ticket_ref: String
     subject: String!
     description: String!
     source: GrievanceSource

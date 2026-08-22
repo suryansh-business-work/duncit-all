@@ -10,6 +10,7 @@ export const GRIEVANCE_FIELDS = gql`
     email
     phone
     address
+    support_ticket_ref
     subject
     description
     status
@@ -77,6 +78,8 @@ export interface GrievanceTicket {
   email: string;
   phone: string;
   address: string;
+  /** The support ticket this grievance escalates. Blank = support was never contacted. */
+  support_ticket_ref: string;
   subject: string;
   description: string;
   status: GrievanceStatus;

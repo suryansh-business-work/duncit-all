@@ -1,6 +1,8 @@
-import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Divider, Stack, Typography } from '@mui/material';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
+import RetryButton from './RetryButton';
+import SectionBlock from './SectionBlock';
 import type { PaymentStep } from './queries';
 
 const STEP_STATUS_COLORS: StatusColorMap = {
@@ -10,9 +12,61 @@ const STEP_STATUS_COLORS: StatusColorMap = {
   FAILED: 'error',
 };
 
+interface StepRowProps {
+  step: PaymentStep;
+  busyKey: string | null;
+  onRetry: (stepKey: string) => void;
+  formatDateTime: DateFormatter['formatDateTime'];
+}
+
+/** Hoisted rather than nested in the list: a component declared inside its
+ * parent is a new type on every render, so every row would remount. */
+function StepRow({ step, busyKey, onRetry, formatDateTime }: Readonly<StepRowProps>) {
+  const { t } = useTranslation();
+
+  return (
+    <Stack spacing={0.5}>
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        justifyContent="space-between"
+        useFlexGap
+        flexWrap="wrap"
+      >
+        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography variant="body2" fontWeight={600}>
+            {step.label}
+          </Typography>
+          <StatusChip status={step.status} colorMap={STEP_STATUS_COLORS} />
+        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography variant="caption" color="text.secondary">
+            {step.at ? formatDateTime(step.at) : t('finance.payment.stepNotRun')}
+          </Typography>
+          {step.can_retry && (
+            <RetryButton
+              stepKey={step.key}
+              label={step.label}
+              busyKey={busyKey}
+              onRetry={onRetry}
+            />
+          )}
+        </Stack>
+      </Stack>
+      {step.detail && (
+        <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+          {step.detail}
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
 interface Props {
   steps: PaymentStep[];
-  finalizeAttempts: number;
+  busyKey: string | null;
+  onRetry: (stepKey: string) => void;
   formatDateTime: DateFormatter['formatDateTime'];
 }
 
@@ -21,59 +75,27 @@ interface Props {
  * step was skipped and the message when it failed, so it is rendered for every
  * step that has one rather than only for failures.
  */
-export default function StepsTimeline({ steps, finalizeAttempts, formatDateTime }: Readonly<Props>) {
+export default function StepsTimeline({ steps, busyKey, onRetry, formatDateTime }: Readonly<Props>) {
   const { t } = useTranslation();
-  // Two keys rather than a suffixed plural: languages that do not split on one
-  // pick whichever their catalogue defines.
-  const attemptsKey =
-    finalizeAttempts === 1 ? 'finance.payment.finalizeAttemptsOne' : 'finance.payment.finalizeAttemptsMany';
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
-      <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
-          {t('finance.payment.stepsTitle')}
+    <SectionBlock title={t('finance.payment.stepsTitle')}>
+      {steps.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          {t('finance.payment.stepsEmpty')}
         </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-          {t(attemptsKey, { vars: { n: finalizeAttempts } })}
-        </Typography>
-
-        {steps.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
-            {t('finance.payment.stepsEmpty')}
-          </Typography>
-        )}
-
-        <Stack spacing={1.25} divider={<Divider flexItem />}>
-          {steps.map((step) => (
-            <Stack key={step.key} spacing={0.5}>
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                justifyContent="space-between"
-                useFlexGap
-                flexWrap="wrap"
-              >
-                <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-                  <Typography variant="body2" fontWeight={600}>
-                    {step.label}
-                  </Typography>
-                  <StatusChip status={step.status} colorMap={STEP_STATUS_COLORS} />
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {step.at ? formatDateTime(step.at) : t('finance.payment.stepNotRun')}
-                </Typography>
-              </Stack>
-              {step.detail && (
-                <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
-                  {step.detail}
-                </Typography>
-              )}
-            </Stack>
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
+      )}
+      <Stack spacing={1.25} divider={<Divider flexItem />}>
+        {steps.map((step) => (
+          <StepRow
+            key={step.key}
+            step={step}
+            busyKey={busyKey}
+            onRetry={onRetry}
+            formatDateTime={formatDateTime}
+          />
+        ))}
+      </Stack>
+    </SectionBlock>
   );
 }

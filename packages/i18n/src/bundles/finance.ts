@@ -100,7 +100,36 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       artifactReference: 'Reference',
       artifactsEmpty: 'Nothing was recorded for this payment.',
       artifactsSearch: 'Search item or reference',
+      artifactAction: 'Action',
       recordCount: '{n} records',
+
+      // The three things a checkout can buy, one tab each. The payment section
+      // sits outside them because every checkout does that work whatever it
+      // bought — see PaymentSection.
+      tabPod: 'Pod',
+      tabProduct: 'Products',
+      tabGiftCard: 'Gift card',
+      tabPodEmpty: 'This payment did not book a pod.',
+      tabProductEmpty: 'This payment bought no products.',
+      tabGiftCardEmpty: 'This payment bought no gift card.',
+      paymentSectionTitle: 'The payment itself',
+      paymentSectionCaption:
+        'The money, the invoice, the coupon, the coins and the receipt — what every checkout does whatever it bought.',
+
+      // Re-running what did not land. The core wording is deliberately heavier
+      // than the step wording: one resends an e-mail, the other books a seat.
+      retry: 'Retry',
+      retryAll: 'Retry all failed',
+      retrying: 'Re-running…',
+      retryConfirm: 'Re-run',
+      retryRowAria: 'Re-run {step}',
+      retryDone: 'Re-run finished — this page is the fresh result.',
+      retryAllTitle: 'Re-run everything that failed?',
+      retryAllBody:
+        'Only the work this payment still owes is run again. Every step that already landed is skipped, so nothing is created or charged twice.',
+      retryCoreTitle: 'Re-run the whole checkout?',
+      retryCoreBody:
+        'The money was captured but the booking was never written. This re-runs the entire finalization — claiming the seat, creating the booking and issuing the ticket in one transaction. An existing booking is reused rather than duplicated.',
 
       // The pipeline.
       stepsTitle: 'Pipeline steps',
@@ -150,6 +179,20 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       orderAwb: 'AWB',
       ordersEmpty: 'No product orders on this payment.',
       ordersSearch: 'Search order no or AWB',
+
+      // The gift card tab. A card redeems into coins rather than at checkout,
+      // so its balance is what says whether the money reached anybody.
+      giftCardTitle: 'Gift card',
+      giftCardCode: 'Code',
+      giftCardRecipient: 'Sent to',
+      giftCardName: 'Recipient name',
+      giftCardScope: 'Redeemable on',
+      giftCardValue: 'Face value',
+      giftCardBalance: 'Balance',
+      giftCardStatus: 'Status',
+      giftCardExpires: 'Expires',
+      giftCardRedeemed: 'Redeemed',
+      giftCardSelfPurchase: 'Bought for themselves',
 
       // Customer + billing.
       customerTitle: 'Customer & billing',

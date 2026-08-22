@@ -126,6 +126,22 @@ export const paymentResolvers = {
       requireRole(ctx, ADMIN_RW);
       return paymentService.refund(args.payment_doc_id, args.reason);
     },
+    retryPaymentSteps: async (
+      _p: unknown,
+      args: { payment_doc_id: string; step_keys?: string[] },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      const { paymentFinalizer } = await import('./payment.finalize');
+      // Awaited, unlike checkout's own fire-and-forget: whoever pressed Retry is
+      // waiting to see whether it worked, and the answer is the fresh audit.
+      await paymentFinalizer.retry(args.payment_doc_id, args.step_keys);
+      const detail = await paymentDetailService.detail(args.payment_doc_id);
+      if (!detail) {
+        throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      return detail;
+    },
     dummyProductCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       const input = await validate(dummyProductCheckoutSchema, args.input);

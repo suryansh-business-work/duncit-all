@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
-import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import type { SvgIconComponent } from '@mui/icons-material';
 import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
+import RetryButton from './RetryButton';
+import { useTableRefresh } from './useTableRefresh';
 import { staticTableFetch, type PaymentArtifact } from './queries';
 
 type ArtifactState = 'CREATED' | 'NOT_APPLICABLE' | 'MISSING';
@@ -74,56 +76,91 @@ const renderRefs = (artifact: PaymentArtifact, t: Translator['t']) => {
   );
 };
 
+interface RetryCell {
+  busyKey: string | null;
+  onRetry: (stepKey: string) => void;
+}
+
 /** Columns depend on the active catalogue, so they are built per translator
  * rather than frozen at module load — the header text has to change with it. */
-const artifactColumns = (t: Translator['t']): DuncitColumn<PaymentArtifact>[] => [
-  { field: 'label', headerName: t('finance.payment.artifactItem'), sortable: false, flex: 1, minWidth: 200 },
-  {
-    field: 'created',
-    headerName: t('finance.payment.artifactStatus'),
+const artifactColumns = (
+  t: Translator['t'],
+  retry: RetryCell | null,
+): DuncitColumn<PaymentArtifact>[] => {
+  const columns: DuncitColumn<PaymentArtifact>[] = [
+    { field: 'label', headerName: t('finance.payment.artifactItem'), sortable: false, flex: 1, minWidth: 200 },
+    {
+      field: 'created',
+      headerName: t('finance.payment.artifactStatus'),
+      sortable: false,
+      width: 170,
+      cellRenderer: (artifact) => renderStatus(artifact, t),
+      valueGetter: (artifact) => t(ARTIFACT_STATES[artifactState(artifact)].labelKey),
+    },
+    {
+      field: 'refs',
+      headerName: t('finance.payment.artifactReference'),
+      sortable: false,
+      flex: 1.4,
+      minWidth: 220,
+      cellRenderer: (artifact) => renderRefs(artifact, t),
+      valueGetter: (artifact) => artifact.refs.join(', '),
+    },
+  ];
+  if (!retry) return columns;
+  columns.push({
+    field: 'retry_key',
+    headerName: t('finance.payment.artifactAction'),
     sortable: false,
-    width: 170,
-    cellRenderer: (artifact) => renderStatus(artifact, t),
-    valueGetter: (artifact) => t(ARTIFACT_STATES[artifactState(artifact)].labelKey),
-  },
-  {
-    field: 'refs',
-    headerName: t('finance.payment.artifactReference'),
-    sortable: false,
-    flex: 1.4,
-    minWidth: 220,
-    cellRenderer: (artifact) => renderRefs(artifact, t),
-    valueGetter: (artifact) => artifact.refs.join(', '),
-  },
-];
+    width: 130,
+    cellRenderer: (artifact) =>
+      artifact.retry_key ? (
+        <RetryButton
+          stepKey={artifact.retry_key}
+          label={artifact.label}
+          busyKey={retry.busyKey}
+          onRetry={retry.onRetry}
+        />
+      ) : null,
+    valueGetter: (artifact) => artifact.retry_key ?? '',
+  });
+  return columns;
+};
+
+interface Props {
+  artifacts: PaymentArtifact[];
+  /** Unique per section — DuncitTable persists column prefs against it. */
+  tableId: string;
+  busyKey: string | null;
+  onRetry: (stepKey: string) => void;
+}
 
 /**
  * What checkout was supposed to create, each row verified by reading the
  * document back from the database rather than trusting the pipeline's own log.
+ * The action column appears only when something here can actually be re-run.
  */
-export default function ArtifactsTable({ artifacts }: Readonly<{ artifacts: PaymentArtifact[] }>) {
+export default function ArtifactsTable({ artifacts, tableId, busyKey, onRetry }: Readonly<Props>) {
   const { t } = useTranslation();
   const fetchRows = useMemo(() => staticTableFetch(artifacts, artifactSearchText), [artifacts]);
-  const columns = useMemo(() => artifactColumns(t), [t]);
+  const retryable = artifacts.some((artifact) => artifact.retry_key);
+  const columns = useMemo(
+    () => artifactColumns(t, retryable ? { busyKey, onRetry } : null),
+    [t, retryable, busyKey, onRetry],
+  );
+  // A re-run rewrites these rows without touching the query the table asks
+  // with, so it has to be told to read them again.
+  const refetchRef = useTableRefresh(artifacts);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
-      <CardContent>
-        <Typography variant="subtitle1" fontWeight={700}>
-          {t('finance.payment.artifactsTitle')}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-          {t('finance.payment.artifactsCaption')}
-        </Typography>
-        <DuncitTable<PaymentArtifact>
-          tableId="finance-payment-artifacts"
-          columns={columns}
-          fetchRows={fetchRows}
-          getRowId={getArtifactRowId}
-          emptyText={t('finance.payment.artifactsEmpty')}
-          searchPlaceholder={t('finance.payment.artifactsSearch')}
-        />
-      </CardContent>
-    </Card>
+    <DuncitTable<PaymentArtifact>
+      tableId={tableId}
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getArtifactRowId}
+      refetchRef={refetchRef}
+      emptyText={t('finance.payment.artifactsEmpty')}
+      searchPlaceholder={t('finance.payment.artifactsSearch')}
+    />
   );
 }

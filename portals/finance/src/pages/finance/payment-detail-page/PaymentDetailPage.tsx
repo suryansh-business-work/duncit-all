@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import { Box, Stack } from '@mui/material';
@@ -5,13 +6,12 @@ import { QueryGuard } from '@duncit/ui';
 import { useDateFormat, useTranslation, type DateFormatter } from '@duncit/app-settings';
 import PaymentDetailHeader from './PaymentDetailHeader';
 import AmountBreakupCard from './AmountBreakupCard';
-import ArtifactsTable from './ArtifactsTable';
-import StepsTimeline from './StepsTimeline';
+import PaymentSection from './PaymentSection';
+import CheckoutTabs from './CheckoutTabs';
 import CoinsCard from './CoinsCard';
 import CouponCard from './CouponCard';
-import PodBookingCard from './PodBookingCard';
-import ProductOrdersTable from './ProductOrdersTable';
 import CustomerCard from './CustomerCard';
+import { useRetrySteps } from './useRetrySteps';
 import { PAYMENT_DETAIL, type PaymentDetail } from './queries';
 
 interface Props {
@@ -21,17 +21,24 @@ interface Props {
 
 /**
  * The audit, ordered by what Finance reads first: what went wrong, what was
- * charged, what exists, and only then how it got there.
+ * charged, what every checkout owes, and only then the purchase itself — split
+ * into one tab per thing checkout can sell.
  */
 function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
   const p = detail.payment;
   const twoUp = { xs: 'column', md: 'row' } as const;
-  // Both cards are conditional; the row itself only exists when one of them does.
-  const hasBookingRow = Boolean(detail.pod_booking ?? detail.coupon);
+  const { retry, busyKey } = useRetrySteps(p.id);
+  const retryStep = useCallback((stepKey: string) => retry(stepKey), [retry]);
+  const retryAll = useCallback(() => retry(null), [retry]);
 
   return (
     <Box>
-      <PaymentDetailHeader detail={detail} formatDateTime={formatDateTime} />
+      <PaymentDetailHeader
+        detail={detail}
+        busyKey={busyKey}
+        onRetryAll={retryAll}
+        formatDateTime={formatDateTime}
+      />
 
       <Stack spacing={2}>
         <Stack direction={twoUp} spacing={2} alignItems="flex-start">
@@ -44,28 +51,24 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
           />
         </Stack>
 
-        <ArtifactsTable artifacts={detail.artifacts} />
-
-        <StepsTimeline
-          steps={detail.steps}
-          finalizeAttempts={detail.finalize_attempts}
+        <PaymentSection
+          detail={detail}
+          busyKey={busyKey}
+          onRetry={retryStep}
           formatDateTime={formatDateTime}
         />
 
-        {hasBookingRow && (
-          <Stack direction={twoUp} spacing={2} alignItems="flex-start">
-            {detail.pod_booking && (
-              <PodBookingCard booking={detail.pod_booking} formatDateTime={formatDateTime} />
-            )}
-            {detail.coupon && <CouponCard coupon={detail.coupon} currencySymbol={p.currency_symbol} />}
-          </Stack>
-        )}
+        <CheckoutTabs
+          detail={detail}
+          busyKey={busyKey}
+          onRetry={retryStep}
+          formatDateTime={formatDateTime}
+        />
 
-        {detail.product_orders.length > 0 && (
-          <ProductOrdersTable orders={detail.product_orders} currencySymbol={p.currency_symbol} />
-        )}
-
-        <CustomerCard payment={p} />
+        <Stack direction={twoUp} spacing={2} alignItems="flex-start">
+          {detail.coupon && <CouponCard coupon={detail.coupon} currencySymbol={p.currency_symbol} />}
+          <CustomerCard payment={p} />
+        </Stack>
       </Stack>
     </Box>
   );

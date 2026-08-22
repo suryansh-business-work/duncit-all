@@ -9,6 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { surveyLinkUrl, type LeadSurveyDef, type LeadSurveyEntry } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entries: LeadSurveyEntry[];
@@ -23,20 +24,23 @@ interface Props {
 const SOURCE_COLOR: Record<string, 'primary' | 'secondary' | 'info'> = { MANUAL: 'primary', LINK: 'secondary', APP: 'info' };
 const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 
-const statusChip = (e: LeadSurveyEntry) => {
-  if (e.source === 'LINK' && e.token_revoked) return <Chip size="small" label="Revoked" variant="outlined" />;
-  if (e.filled) return <Chip size="small" color="success" label="Filled" variant="outlined" />;
-  return <Chip size="small" color="warning" label="Pending" variant="outlined" />;
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusChip = (e: LeadSurveyEntry, t: Translate) => {
+  if (e.source === 'LINK' && e.token_revoked) return <Chip size="small" label={t('crm.components.revoked')} variant="outlined" />;
+  if (e.filled) return <Chip size="small" color="success" label={t('crm.components.filled')} variant="outlined" />;
+  return <Chip size="small" color="warning" label={t('crm.components.pending')} variant="outlined" />;
 };
 
 /** Per-lead log of every survey generation/response (manual, link, app). */
 export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDelete, onFill, revoking, deleting }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [view, setView] = useState<LeadSurveyEntry | null>(null);
   const labelFor = (qid: string) => survey?.questions.find((q) => q.qid === qid)?.label ?? qid;
   const copy = (token: string) => navigator.clipboard?.writeText(surveyLinkUrl(token));
 
   if (entries.length === 0) {
-    return <Typography variant="body2" color="text.secondary">No surveys generated yet. Click “Fill manually” or “Generate link”.</Typography>;
+    return <Typography variant="body2" color="text.secondary">{t('crm.components.noSurveysGeneratedYetClickFill')}</Typography>;
   }
 
   return (
@@ -45,11 +49,11 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Source</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Generated</TableCell>
-              <TableCell>Submitted</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{t('crm.common.source')}</TableCell>
+              <TableCell>{t('shell.common.status')}</TableCell>
+              <TableCell>{t('crm.components.generated')}</TableCell>
+              <TableCell>{t('crm.components.submitted')}</TableCell>
+              <TableCell align="right">{t('shell.common.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -59,10 +63,10 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 hover
                 sx={{ cursor: 'pointer' }}
                 onClick={() => onFill(e)}
-                title="Open to fill / edit this survey"
+                title={t('crm.components.openToFillEditThisSurvey')}
               >
                 <TableCell><Chip size="small" color={SOURCE_COLOR[e.source]} label={e.source} variant="outlined" /></TableCell>
-                <TableCell>{statusChip(e)}</TableCell>
+                <TableCell>{statusChip(e, t)}</TableCell>
                 <TableCell>
                   <Typography variant="body2">{fmt(e.created_at)}</Typography>
                   {e.generated_by && <Typography variant="caption" color="text.secondary">by {e.generated_by}</Typography>}
@@ -74,14 +78,14 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 <TableCell align="right" onClick={(ev) => ev.stopPropagation()}>
                   {e.source === 'LINK' && !e.token_revoked && e.token && (
                     <>
-                      <Tooltip title="Copy link"><IconButton size="small" onClick={() => copy(e.token!)}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
-                      <Tooltip title="Revoke link"><span><IconButton size="small" color="warning" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></IconButton></span></Tooltip>
+                      <Tooltip title={t('crm.components.copyLink')}><IconButton size="small" onClick={() => copy(e.token!)}><ContentCopyIcon fontSize="small" /></IconButton></Tooltip>
+                      <Tooltip title={t('crm.components.revokeLink')}><span><IconButton size="small" color="warning" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></IconButton></span></Tooltip>
                     </>
                   )}
                   {e.filled && (
-                    <Tooltip title="View answers"><IconButton size="small" onClick={() => setView(e)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
+                    <Tooltip title={t('crm.components.viewAnswers')}><IconButton size="small" onClick={() => setView(e)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
                   )}
-                  <Tooltip title="Delete"><span><IconButton size="small" color="error" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></IconButton></span></Tooltip>
+                  <Tooltip title={t('shell.common.delete')}><span><IconButton size="small" color="error" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></IconButton></span></Tooltip>
                 </TableCell>
               </TableRow>
             ))}
@@ -90,7 +94,7 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
       </Paper>
 
       <Dialog open={!!view} onClose={() => setView(null)} fullWidth maxWidth="sm">
-        <DialogTitle>Survey answers</DialogTitle>
+        <DialogTitle>{t('crm.components.surveyAnswers')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.25}>
             {(view?.answers ?? []).map((a) => (
@@ -99,11 +103,11 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 <Typography variant="body2">{(a.values?.length ? a.values.join(', ') : a.value) || '—'}</Typography>
               </Stack>
             ))}
-            {(view?.answers?.length ?? 0) === 0 && <Typography variant="body2" color="text.secondary">No answers recorded.</Typography>}
+            {(view?.answers?.length ?? 0) === 0 && <Typography variant="body2" color="text.secondary">{t('crm.components.noAnswersRecorded')}</Typography>}
           </Stack>
         </DialogContent>
         <Stack direction="row" justifyContent="flex-end" sx={{ p: 1.5 }}>
-          <Button onClick={() => setView(null)}>Close</Button>
+          <Button onClick={() => setView(null)}>{t('shell.common.close')}</Button>
         </Stack>
       </Dialog>
     </>

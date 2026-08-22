@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useTranslation } from '@duncit/shell';
 
 const GATEWAY = 'https://open-wa-server.duncit.com';
 
@@ -40,12 +41,13 @@ function Step({ n, children }: Readonly<{ n: number; children: React.ReactNode }
 
 /** How to obtain the OpenWA gateway API key — shown inside the tool. */
 export default function WhatsAppApiKeyHelp() {
+  const { t } = useTranslation();
   return (
     <Accordion variant="outlined" disableGutters sx={{ borderRadius: 3, '&:before': { display: 'none' } }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Stack direction="row" spacing={1} alignItems="center">
           <HelpOutlineIcon fontSize="small" color="primary" />
-          <Typography fontWeight={800}>How do I get the API key?</Typography>
+          <Typography fontWeight={800}>{t('crm.tools.howDoIGetTheApi')}</Typography>
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
@@ -55,7 +57,7 @@ export default function WhatsAppApiKeyHelp() {
             <Link href={GATEWAY} target="_blank" rel="noreferrer">
               {GATEWAY}
             </Link>
-            . It authenticates every request with an <b>API key</b> (sent as the{' '}
+            . It authenticates every request with an <b>{t('crm.tools.apiKey')}</b> (sent as the{' '}
             <code>X-API-Key</code> header). WhatsApp itself is linked later by scanning the QR — no
             WhatsApp password/token is ever needed.
           </Typography>
@@ -67,7 +69,7 @@ export default function WhatsAppApiKeyHelp() {
             Ask your DevOps/admin for the gateway’s master key — it’s the value of the{' '}
             <code>OPENWA_API_MASTER_KEY</code> deployment secret.
           </Step>
-          <Step n={2}>Paste it into the “API Key” field above, then click <b>Save &amp; Connect</b>.</Step>
+          <Step n={2}>{t('crm.tools.pasteItIntoTheApiKey')} <b>{t('crm.tools.saveAndAmpConnect')}</b>.</Step>
 
           <Typography variant="subtitle2" fontWeight={800} sx={{ pt: 1 }}>
             Option B — create a dedicated key
@@ -80,13 +82,13 @@ export default function WhatsAppApiKeyHelp() {
             .
           </Step>
           <Step n={2}>
-            Click <b>Authorize</b> and enter the master key as the <code>X-API-Key</code>.
+            Click <b>{t('crm.tools.authorize')}</b> and enter the master key as the <code>X-API-Key</code>.
           </Step>
           <Step n={3}>
-            Run <code>POST /api/auth/api-keys</code> (give it a name + ADMIN role) and{' '}
+            Run <code>{t('crm.tools.postApiAuthApiKeys')}</code> (give it a name + ADMIN role) and{' '}
             <b>copy the returned key</b> — it’s shown only once.
           </Step>
-          <Step n={4}>Paste that key above and <b>Save &amp; Connect</b>, then scan the QR.</Step>
+          <Step n={4}>{t('crm.tools.pasteThatKeyAboveAnd')} <b>{t('crm.tools.saveAndAmpConnect')}</b>, then scan the QR.</Step>
         </Stack>
       </AccordionDetails>
     </Accordion>

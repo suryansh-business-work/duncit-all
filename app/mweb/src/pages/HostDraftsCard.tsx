@@ -18,6 +18,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useDraftRetentionDays, formatDateTime } from '../utils/dateFormat';
 import { STEP_TITLES } from './create-pod-page/create-pod';
+import { useTranslation } from '../i18n/useTranslation';
 
 const MY_POD_DRAFTS = gql`
   query MyPodDrafts {
@@ -36,6 +37,7 @@ function formatWhen(value?: string | null) {
 
 /** Resumable Create Pod drafts for the signed-in host. */
 export default function HostDraftsCard() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(MY_POD_DRAFTS, { fetchPolicy: 'cache-and-network' });
   const [deleteMut, { loading: deleting }] = useMutation(DELETE_POD_DRAFT);
   const [target, setTarget] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export default function HostDraftsCard() {
                 >
                   Continue
                 </Button>
-                <IconButton aria-label="Delete draft" onClick={() => setTarget(draft.id)} size="small" color="error">
+                <IconButton aria-label={t('mweb.common.deleteDraft2')} onClick={() => setTarget(draft.id)} size="small" color="error">
                   <DeleteOutlineIcon fontSize="small" />
                 </IconButton>
               </Stack>
@@ -106,9 +108,9 @@ export default function HostDraftsCard() {
       </CardContent>
       <ConfirmDialog
         open={!!target}
-        title="Delete draft?"
-        message="This in-progress pod will be permanently removed."
-        confirmLabel="Delete"
+        title={t('mweb.common.deleteDraft')}
+        message={t('mweb.common.thisInProgressPodWillBe')}
+        confirmLabel={t('mweb.common.delete')}
         destructive
         busy={deleting}
         onConfirm={() => void confirmDelete()}

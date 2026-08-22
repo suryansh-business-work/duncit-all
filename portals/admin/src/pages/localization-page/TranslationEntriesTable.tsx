@@ -3,6 +3,7 @@ import { useApolloClient } from '@apollo/client';
 import { DuncitTable, useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import { getTranslationColumns } from './translation-columns';
 import { TRANSLATIONS_TABLE, type LocaleRow, type TranslationRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getRowId = (row: TranslationRow) => row.id;
 
@@ -29,6 +30,7 @@ export default function TranslationEntriesTable({
   onOpen,
   refetchRef,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const fetchRows = useApolloTableFetch<TranslationRow>(
     client,
@@ -36,7 +38,7 @@ export default function TranslationEntriesTable({
     'translationsTable',
   );
   const columns = useMemo(
-    () => getTranslationColumns({ locales, formatDateTime }),
+    () => getTranslationColumns({ locales, formatDateTime, t }),
     [locales, formatDateTime],
   );
   const externalFilters = useMemo<TableFilterValue[]>(
@@ -54,7 +56,7 @@ export default function TranslationEntriesTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onOpen}
-      emptyText="No translations match the current filters."
+      emptyText={t('admin.localization.entriesEmpty')}
       defaultSort={{ field: 'key', dir: 'asc' }}
       searchPlaceholder="Search key or description"
       refetchRef={refetchRef}

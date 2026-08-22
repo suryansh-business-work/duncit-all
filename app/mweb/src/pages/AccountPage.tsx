@@ -31,6 +31,7 @@ import WhatsAppPreferenceCard from './account-page/WhatsAppPreferenceCard';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
+import { useTranslation } from '../i18n/useTranslation';
 
 const ME = gql`
   query MeProfile {
@@ -73,6 +74,7 @@ function bandHeadline(band: HealthScore['band']): string {
 }
 
 export default function AccountPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
   const { data, loading, error, refetch } = useQuery(ME, { fetchPolicy: 'cache-and-network' });
@@ -114,10 +116,10 @@ export default function AccountPage() {
           <Divider sx={{ my: 3 }} />
 
           <Stack spacing={2}>
-            <AccountInfoRow icon={<EmailIcon fontSize="small" />} label="Email" value={me.email || '—'} />
+            <AccountInfoRow icon={<EmailIcon fontSize="small" />} label={t('mweb.common.email')} value={me.email || '—'} />
             <AccountInfoRow
               icon={<PhoneIcon fontSize="small" />}
-              label="Phone"
+              label={t('mweb.common.phone')}
               value={
                 me.phone_number
                   ? `${me.phone_extension || ''} ${me.phone_number}`.trim()
@@ -126,12 +128,12 @@ export default function AccountPage() {
             />
             <AccountInfoRow
               icon={<LocationCityIcon fontSize="small" />}
-              label="Location"
+              label={t('mweb.common.location')}
               value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
             />
             <AccountInfoRow
               icon={<CakeIcon fontSize="small" />}
-              label="Date of birth"
+              label={t('mweb.common.dateOfBirth')}
               value={me.dob ? formatDate(me.dob) : '—'}
             />
           </Stack>
@@ -150,9 +152,9 @@ export default function AccountPage() {
                 score={health.total_score}
                 band={health.band}
                 size={140}
-                label="Account Health"
+                label={t('mweb.common.accountHealth')}
                 onClick={() => navigate('/account/health')}
-                caption="Tap for details"
+                caption={t('mweb.common.tapForDetails')}
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

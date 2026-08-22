@@ -11,6 +11,8 @@ import LinksSection from './sections/LinksSection';
 import ContentSection from './sections/ContentSection';
 import AdminsSection from './sections/AdminsSection';
 import { SECTION_OF, type ClubFormValues } from './types';
+import { useTranslation } from './i18n/useTranslation';
+import type { Translate } from './i18n/useTranslation';
 
 interface SectionDef {
   id: string;
@@ -18,22 +20,23 @@ interface SectionDef {
   render: () => JSX.Element;
 }
 
-function buildSections(showAdmins: boolean): SectionDef[] {
+function buildSections(showAdmins: boolean, t: Translate): SectionDef[] {
   const list: SectionDef[] = [
-    { id: 'basic', label: 'Basic Information', render: () => <BasicSection /> },
-    { id: 'media', label: 'Media & Moments', render: () => <MediaSection /> },
-    { id: 'links', label: 'Venues & Community Links', render: () => <LinksSection /> },
-    { id: 'content', label: 'Page Content (Who We Are, Perks, FAQs…)', render: () => <ContentSection /> },
+    { id: 'basic', label: t('clubForm.clubSections.basicInformation'), render: () => <BasicSection /> },
+    { id: 'media', label: t('clubForm.clubSections.mediaAndMoments'), render: () => <MediaSection /> },
+    { id: 'links', label: t('clubForm.clubSections.venuesAndCommunityLinks'), render: () => <LinksSection /> },
+    { id: 'content', label: t('clubForm.clubSections.pageContentWhoWeArePerks'), render: () => <ContentSection /> },
   ];
-  if (showAdmins) list.push({ id: 'admins', label: 'Club Admin', render: () => <AdminsSection /> });
+  if (showAdmins) list.push({ id: 'admins', label: t('clubForm.common.clubAdmin'), render: () => <AdminsSection /> });
   return list;
 }
 
 export default function ClubSections() {
+  const { t } = useTranslation();
   const { config } = useClubFormData();
   const { control } = useFormContext<ClubFormValues>();
   const { errors } = useFormState({ control });
-  const sections = buildSections(config.showAdmins).map((section, index) => ({
+  const sections = buildSections(config.showAdmins, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
   }));

@@ -1,7 +1,12 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { ConfirmProvider } from '@duncit/dialogs';
-import { flattenCatalogue, MAIL_PREFERENCE_BUNDLE, WHATSAPP_BUNDLE } from '@duncit/app-settings';
+import {
+  flattenCatalogue,
+  MAIL_PREFERENCE_BUNDLE,
+  MARKETING_BUNDLE,
+  WHATSAPP_BUNDLE,
+} from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
@@ -26,6 +31,8 @@ mountPortal({
   // bundle is here for the same reason: the template workshop and the admin
   // console describe one AiSensy catalogue.
   i18nFallback: {
+    // This portal's OWN namespace, layered over the shell chrome's.
+    ...flattenCatalogue(MARKETING_BUNDLE),
     ...flattenCatalogue(MAIL_PREFERENCE_BUNDLE),
     ...flattenCatalogue(WHATSAPP_BUNDLE),
   },

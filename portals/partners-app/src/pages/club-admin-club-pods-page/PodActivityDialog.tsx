@@ -21,6 +21,7 @@ import {
   type PodAuditLog,
 } from '../club-admin-monitoring-page/queries';
 import { CLUB_ADMIN_POD_AUDIT_LOGS } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   pod: { id: string; pod_title: string } | null;
@@ -31,6 +32,7 @@ interface Props {
  * critical action, with the risk verdict the monitor assigned it. Shares the
  * audit vocabulary with the Pod Monitoring page so the two cannot drift. */
 export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(CLUB_ADMIN_POD_AUDIT_LOGS, {
     variables: { pod_doc_id: pod?.id },
     skip: !pod,
@@ -92,7 +94,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t('shell.common.close')}</Button>
           </DialogActions>
         </>
       )}

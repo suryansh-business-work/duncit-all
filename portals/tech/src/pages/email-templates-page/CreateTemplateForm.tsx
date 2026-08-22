@@ -5,6 +5,7 @@ import {
   DialogContent,
   TextField,
 } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   onCancel: () => void;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [slug, setSlug] = useState('');
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
@@ -23,18 +25,18 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
           fullWidth
           required
           margin="normal"
-          label="Slug"
+          label={t('tech.emailTemplates.slug')}
           value={slug}
           onChange={(e) =>
             setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))
           }
-          helperText="Used by code, e.g. welcome, payment-receipt."
+          helperText={t('tech.emailTemplates.usedByCodeEGWelcome')}
         />
         <TextField
           fullWidth
           required
           margin="normal"
-          label="Name"
+          label={t('shell.common.name')}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -42,14 +44,14 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
           fullWidth
           required
           margin="normal"
-          label="Subject"
+          label={t('tech.common.subject')}
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Welcome to {{ app_name }}"
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           disabled={!slug || !name || !subject}

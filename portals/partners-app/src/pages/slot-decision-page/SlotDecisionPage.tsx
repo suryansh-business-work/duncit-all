@@ -10,6 +10,7 @@ import DecisionHeader from './DecisionHeader';
 import DeclineForm from './DeclineForm';
 import EarningsBreakdown from './EarningsBreakdown';
 import SlotSummary from './SlotSummary';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * The page the request email's Approve / Decline buttons open — and the same
@@ -22,6 +23,7 @@ import SlotSummary from './SlotSummary';
  * after logging in (the query string survives the bounce).
  */
 export default function SlotDecisionPage() {
+  const { t } = useTranslation();
   const { slotId = '' } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -80,7 +82,7 @@ export default function SlotDecisionPage() {
     );
   }
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!request) return <Alert severity="warning">This booking request could not be found.</Alert>;
+  if (!request) return <Alert severity="warning">{t('partners.slotDecisionPage.thisBookingRequestCouldNotBe')}</Alert>;
 
   const busy = approveState.loading || declineState.loading;
   const declined = request.decision === 'DECLINED';
@@ -142,7 +144,7 @@ export default function SlotDecisionPage() {
       </Card>
 
       <Stack direction="row" justifyContent="center">
-        <Button onClick={() => navigate('/venues/requests')}>See all slot requests</Button>
+        <Button onClick={() => navigate('/venues/requests')}>{t('partners.slotDecisionPage.seeAllSlotRequests')}</Button>
       </Stack>
     </Stack>
   );

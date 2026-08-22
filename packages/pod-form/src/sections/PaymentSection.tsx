@@ -8,8 +8,10 @@ import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
 import { usePodFormData } from '../context';
 import { OCCURRENCES, POD_TYPES, type PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function PaymentSection() {
+  const { t } = useTranslation();
   const { config, finance, products } = usePodFormData();
   const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const podType = useWatch({ control, name: 'pod_type' });
@@ -58,7 +60,7 @@ export default function PaymentSection() {
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
           select
-          label="Pod type"
+          label={t('podForm.paymentSection.podType')}
           value={podType}
           onChange={(event) => {
             setValue('pod_type', event.target.value, { shouldValidate: true });
@@ -72,7 +74,7 @@ export default function PaymentSection() {
         </TextField>
         <TextField
           select
-          label="Occurrence"
+          label={t('podForm.paymentSection.occurrence')}
           value={podOccurrence}
           onChange={(event) => setValue('pod_occurrence', event.target.value)}
           fullWidth
@@ -84,7 +86,7 @@ export default function PaymentSection() {
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
         <TextField
-          label="Amount (₹)"
+          label={t('podForm.common.amount')}
           type="number"
           value={podAmount}
           onChange={(event) => setValue('pod_amount', Number(event.target.value) || 0, { shouldValidate: true })}
@@ -111,7 +113,7 @@ export default function PaymentSection() {
               valueLabelDisplay="on"
               // Single-value slider, so `next` is always a number.
               onChange={(_e, next) => setValue('no_of_spots', next as number, { shouldValidate: true })}
-              aria-label="No. of spots"
+              aria-label={t('podForm.paymentSection.noOfSpots')}
             />
             <Typography variant="caption" color={errors.no_of_spots ? 'error' : 'text.secondary'}>
               {errors.no_of_spots?.message ?? boundsHint}
@@ -119,7 +121,7 @@ export default function PaymentSection() {
           </Box>
         ) : (
           <TextField
-            label="No. of spots"
+            label={t('podForm.paymentSection.noOfSpots')}
             type="number"
             value={noOfSpots}
             onChange={(event) => setValue('no_of_spots', Number(event.target.value) || 0, { shouldValidate: true })}
@@ -141,11 +143,11 @@ export default function PaymentSection() {
         <PriceBreakdown amount={podAmount} finance={finance} productCost={productCost} spots={noOfSpots} />
       )}
       <TextField
-        label="Payment terms"
+        label={t('podForm.common.paymentTerms')}
         fullWidth
         multiline
         minRows={3}
-        helperText="Refund policy, cancellation, tax info."
+        helperText={t('podForm.paymentSection.refundPolicyCancellationTaxInfo')}
         {...register('payment_terms')}
       />
       {config.showPlaceCharges && podMode === 'PHYSICAL' && (
@@ -156,7 +158,7 @@ export default function PaymentSection() {
             <PlaceChargesField
               value={field.value}
               onChange={field.onChange}
-              helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+              helperText={t('podForm.paymentSection.optionalVenueSideChargesEntryTable')}
             />
           )}
         />

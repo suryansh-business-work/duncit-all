@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { formatDateTime } from '../server/format';
 import type { EmailLogFailingAddress } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * An address that fails once is an incident; one that fails every time is a
@@ -20,6 +21,7 @@ import type { EmailLogFailingAddress } from './queries';
 export default function RepeatFailuresCard({
   rows,
 }: Readonly<{ rows: EmailLogFailingAddress[] }>) {
+  const { t } = useTranslation();
   return (
     <Card sx={{ flex: 1, minWidth: 280 }}>
       <CardContent>
@@ -34,9 +36,9 @@ export default function RepeatFailuresCard({
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Address</TableCell>
-                <TableCell align="right">Failures</TableCell>
-                <TableCell>Last reason</TableCell>
+                <TableCell>{t('tech.emailsDashboard.address')}</TableCell>
+                <TableCell align="right">{t('tech.emailsDashboard.failures')}</TableCell>
+                <TableCell>{t('tech.emailsDashboard.lastReason')}</TableCell>
                 <TableCell>When</TableCell>
               </TableRow>
             </TableHead>

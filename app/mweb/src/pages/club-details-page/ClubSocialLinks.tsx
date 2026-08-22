@@ -1,15 +1,17 @@
 import ChatIcon from '@mui/icons-material/Chat';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { Button, Stack } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   club: any;
 }
 
 export default function ClubSocialLinks({ club }: Readonly<Props>) {
+  const { t } = useTranslation();
   const social = [
-    { label: 'Community', href: club.club_whats_app_community_link, icon: <WhatsAppIcon /> },
-    { label: 'Group chat', href: club.club_whats_app_group_link, icon: <ChatIcon /> },
+    { label: t('mweb.common.community'), href: club.club_whats_app_community_link, icon: <WhatsAppIcon /> },
+    { label: t('mweb.common.groupChat'), href: club.club_whats_app_group_link, icon: <ChatIcon /> },
   ].filter((item) => item.href);
 
   if (social.length === 0) return null;

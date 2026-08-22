@@ -18,6 +18,7 @@ import SomethingForYouRail from './SomethingForYouRail';
 import AdSlot from '../../components/ads/AdSlot';
 import { useSavedPodHearts } from '../../hooks/useSavedPodHearts';
 import { useHomeData } from './useHomeData';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface HomePageProps {
   superCategorySlug: string;
@@ -26,6 +27,7 @@ interface HomePageProps {
 }
 
 export default function HomePage({ superCategorySlug, locationId, zoneName }: Readonly<HomePageProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [categoryId, setCategoryId] = useState<string>('');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('ALL');
@@ -179,7 +181,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         {isHost && (
           <Fab
             color="primary"
-            aria-label="Create pod"
+            aria-label={t('mweb.common.createPod')}
             onClick={() => navigate('/create-pod')}
             sx={{
               position: 'fixed',

@@ -6,6 +6,7 @@ import { countryFlagUrl } from '@/utils/location-tree';
 import { SelectSheet, type SelectOption } from './SelectSheet';
 import { COUNTRY_CODES, countryByDial } from './country-codes';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   control: Control<AccountEditValues>;
@@ -29,6 +30,7 @@ const OPTIONS: SelectOption[] = COUNTRY_CODES.map((c) => ({
  * name or code. RN twin of mWeb's MUI CountryCodeField.
  */
 export function CountryCodeField({ control, name, label, testID, disabled }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { field, fieldState } = useController({ control, name });
   const dial = String(field.value ?? '');
   const match = countryByDial(dial);
@@ -39,7 +41,7 @@ export function CountryCodeField({ control, name, label, testID, disabled }: Rea
       testID={testID}
       label={label}
       value={dial}
-      placeholder="Code"
+      placeholder={t('mweb.common.code')}
       options={OPTIONS}
       disabled={disabled}
       error={fieldState.error?.message}

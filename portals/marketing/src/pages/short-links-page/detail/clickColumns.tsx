@@ -1,6 +1,9 @@
 import { Box, Typography } from '@mui/material';
 import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
 import type { ShortLinkClickRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
@@ -48,31 +51,31 @@ const renderDevice = (row: ShortLinkClickRow) => (
   </Box>
 );
 
-export function getClickColumns(): DuncitColumn<ShortLinkClickRow>[] {
+export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[] {
   return [
     dateColumn<ShortLinkClickRow>({
       field: 'clicked_at',
-      headerName: 'When',
+      headerName: t('marketing.shortLinks.when'),
       hide: false,
       width: 180,
       format: DATE_TIME_FORMAT,
     }),
     {
       field: 'platform',
-      headerName: 'Came from',
+      headerName: t('marketing.shortLinks.cameFrom'),
       minWidth: 180,
       cellRenderer: renderPlatform,
       valueGetter: (row) => row.platform,
     },
     {
       field: 'country',
-      headerName: 'Location',
+      headerName: t('marketing.common.location'),
       minWidth: 200,
       valueGetter: locationOf,
     },
     {
       field: 'device_type',
-      headerName: 'Device',
+      headerName: t('marketing.shortLinks.device'),
       minWidth: 170,
       filter: {
         type: 'select',
@@ -82,6 +85,6 @@ export function getClickColumns(): DuncitColumn<ShortLinkClickRow>[] {
       valueGetter: (row) => DEVICE_LABELS[row.device_type] ?? row.device_type,
     },
     { field: 'os', headerName: 'OS', width: 130, hide: true },
-    { field: 'browser', headerName: 'Browser', width: 160, hide: true },
+    { field: 'browser', headerName: t('marketing.shortLinks.browser'), width: 160, hide: true },
   ];
 }

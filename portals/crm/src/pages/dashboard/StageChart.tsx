@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { StageCount } from './dashboardConfig';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
@@ -19,7 +20,10 @@ interface Props {
   title?: string;
 }
 
-export default function StageChart({ data, title = 'Leads by Stage' }: Readonly<Props>) {
+export default function StageChart({ data, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const titleText = title ?? t('crm.dashboard.leadsByStage');
+
   const theme = useTheme();
 
   const chartData = useMemo(
@@ -27,14 +31,14 @@ export default function StageChart({ data, title = 'Leads by Stage' }: Readonly<
       labels: data.map((d) => d.stage),
       datasets: [
         {
-          label: 'Venue',
+          label: t('crm.common.venue'),
           data: data.map((d) => d.venue),
           backgroundColor: theme.palette.primary.main,
           borderRadius: 6,
           maxBarThickness: 28,
         },
         {
-          label: 'Host',
+          label: t('crm.common.host'),
           data: data.map((d) => d.host),
           backgroundColor: theme.palette.info.main,
           borderRadius: 6,
@@ -77,7 +81,7 @@ export default function StageChart({ data, title = 'Leads by Stage' }: Readonly<
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {title}
+            {titleText}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Distribution of venue and host leads across pipeline stages.

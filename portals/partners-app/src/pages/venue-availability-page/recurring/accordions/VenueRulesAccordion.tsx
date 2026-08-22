@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RuleIcon from '@mui/icons-material/Rule';
 import { UPDATE_VENUE_SETTINGS } from '../recurring.queries';
 import type { VenueRulesForm } from '../settings-map';
+import { useTranslation } from '@duncit/shell';
 
 type NumKey = 'buffer_minutes' | 'min_notice_minutes' | 'max_advance_days' | 'max_bookings_per_slot';
 type BoolKey =
@@ -25,19 +26,21 @@ type BoolKey =
   | 'booking_approval_required'
   | 'allow_multiple_bookings';
 
-const NUM_FIELDS: ReadonlyArray<{ key: NumKey; label: string; max?: number }> = [
-  { key: 'buffer_minutes', label: 'Buffer between slots (min)' },
-  { key: 'min_notice_minutes', label: 'Minimum booking notice (min)' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const numFields = (t: Translate): ReadonlyArray<{ key: NumKey; label: string; max?: number }> =>[
+  { key: 'buffer_minutes', label: t('partners.venueAvailabilityPage.bufferBetweenSlotsMin') },
+  { key: 'min_notice_minutes', label: t('partners.venueAvailabilityPage.minimumBookingNoticeMin') },
   // A venue may schedule availability at most 60 days ahead.
-  { key: 'max_advance_days', label: 'Maximum advance booking (days)', max: 60 },
-  { key: 'max_bookings_per_slot', label: 'Maximum bookings per slot' },
+  { key: 'max_advance_days', label: t('partners.venueAvailabilityPage.maximumAdvanceBookingDays'), max: 60 },
+  { key: 'max_bookings_per_slot', label: t('partners.venueAvailabilityPage.maximumBookingsPerSlot') },
 ];
 
-const TOGGLE_FIELDS: ReadonlyArray<{ key: BoolKey; label: string }> = [
-  { key: 'allow_instant_booking', label: 'Allow instant booking' },
-  { key: 'allow_waitlist', label: 'Allow waitlist' },
-  { key: 'booking_approval_required', label: 'Booking approval required' },
-  { key: 'allow_multiple_bookings', label: 'Allow multiple bookings' },
+const toggleFields = (t: Translate): ReadonlyArray<{ key: BoolKey; label: string }> =>[
+  { key: 'allow_instant_booking', label: t('partners.venueAvailabilityPage.allowInstantBooking') },
+  { key: 'allow_waitlist', label: t('partners.venueAvailabilityPage.allowWaitlist') },
+  { key: 'booking_approval_required', label: t('partners.venueAvailabilityPage.bookingApprovalRequired') },
+  { key: 'allow_multiple_bookings', label: t('partners.venueAvailabilityPage.allowMultipleBookings') },
 ];
 
 interface Props {
@@ -47,6 +50,7 @@ interface Props {
 }
 
 export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<VenueRulesForm>(rules);
   const [saved, setSaved] = useState(false);
   const [save, { loading, error }] = useMutation(UPDATE_VENUE_SETTINGS);
@@ -71,7 +75,7 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
         <Stack direction="row" spacing={1.5} alignItems="center">
           <RuleIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>Venue rules</Typography>
+            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.venueRules')}</Typography>
             <Typography variant="caption" color="text.secondary">
               Buffer, booking window and advance-booking limits
             </Typography>
@@ -81,7 +85,7 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
       <AccordionDetails>
         <Stack spacing={2}>
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-            {NUM_FIELDS.map((f) => (
+            {numFields(t).map((f) => (
               <TextField
                 key={f.key}
                 label={f.label}
@@ -94,7 +98,7 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
             ))}
           </Box>
           <Box sx={{ display: 'grid', gap: 0.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-            {TOGGLE_FIELDS.map((f) => (
+            {toggleFields(t).map((f) => (
               <FormControlLabel
                 key={f.key}
                 control={<Switch checked={draft[f.key]} onChange={(e) => setBool(f.key, e.target.checked)} />}
@@ -103,7 +107,7 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
             ))}
           </Box>
           {error && <Alert severity="error">{error.message}</Alert>}
-          {saved && !loading && <Alert severity="success">Venue rules saved.</Alert>}
+          {saved && !loading && <Alert severity="success">{t('partners.venueAvailabilityPage.venueRulesSaved')}</Alert>}
           <Box>
             <Button variant="outlined" onClick={onSave} disabled={loading}>
               {loading ? 'Saving…' : 'Save rules'}

@@ -3,6 +3,7 @@ import { EM_DASH } from '@duncit/table';
 import { InfoRow } from '@duncit/ui';
 import CopyableUrl from '../CopyableUrl';
 import type { ShortLinkRow, ShortLinkStats } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   link: ShortLinkRow;
@@ -33,6 +34,7 @@ function Stat({ label, value }: Readonly<StatProps>) {
 
 /** The headline numbers, the link itself and its tagging. */
 export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
   const when = (value?: string | null) => (value ? formatDateTime(value) : EM_DASH);
 
   return (
@@ -44,18 +46,18 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
           gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
         }}
       >
-        <Stat label="Total clicks" value={stats.total_clicks.toLocaleString()} />
-        <Stat label="Unique visitors" value={stats.unique_visitors.toLocaleString()} />
-        <Stat label="Countries" value={stats.countries_reached.toLocaleString()} />
-        <Stat label="Last click" value={when(link.last_clicked_at)} />
+        <Stat label={t('marketing.shortLinks.totalClicks')} value={stats.total_clicks.toLocaleString()} />
+        <Stat label={t('marketing.shortLinks.uniqueVisitors')} value={stats.unique_visitors.toLocaleString()} />
+        <Stat label={t('marketing.common.countries')} value={stats.countries_reached.toLocaleString()} />
+        <Stat label={t('marketing.shortLinks.lastClick')} value={when(link.last_clicked_at)} />
       </Box>
 
       <Card variant="outlined">
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
-              <CopyableUrl url={link.short_url} label="Share this" />
-              <CopyableUrl url={link.tagged_url} label="Where it lands" />
+              <CopyableUrl url={link.short_url} label={t('marketing.shortLinks.shareThis')} />
+              <CopyableUrl url={link.tagged_url} label={t('marketing.shortLinks.whereItLands')} />
               <Box
                 sx={{
                   display: 'grid',
@@ -66,9 +68,9 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
                 <InfoRow label="utm_source" value={link.utm_source} />
                 <InfoRow label="utm_medium" value={link.utm_medium} />
                 <InfoRow label="utm_campaign" value={link.utm_campaign ?? EM_DASH} />
-                <InfoRow label="Status" value={link.is_active ? 'Active' : 'Retired'} />
-                <InfoRow label="First click" value={when(link.first_clicked_at)} />
-                <InfoRow label="Created" value={when(link.created_at)} />
+                <InfoRow label={t('shell.common.status')} value={link.is_active ? 'Active' : 'Retired'} />
+                <InfoRow label={t('marketing.shortLinks.firstClick')} value={when(link.first_clicked_at)} />
+                <InfoRow label={t('shell.common.created')} value={when(link.created_at)} />
               </Box>
             </Stack>
             {qr && (

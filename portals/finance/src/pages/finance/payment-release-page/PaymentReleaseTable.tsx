@@ -6,18 +6,21 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { ReleaseKindChip } from './ReleaseStatusChip';
 import type { PaymentReleaseRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
-const KIND_OPTIONS = [
-  { value: 'VENUE_BILLING', label: 'Venue Billing' },
-  { value: 'HOST_PAYMENT', label: 'Host Payment' },
-  { value: 'CLUB_ADMIN', label: 'Club Admin' },
-  { value: 'ECOMM_PAYMENT', label: 'E-Commerce Brand' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const kindOptions = (t: Translate) => [
+  { value: 'VENUE_BILLING', label: t('finance.paymentRelease.venueBilling') },
+  { value: 'HOST_PAYMENT', label: t('finance.paymentRelease.hostPayment') },
+  { value: 'CLUB_ADMIN', label: t('finance.common.clubAdmin') },
+  { value: 'ECOMM_PAYMENT', label: t('finance.paymentRelease.eCommerceBrand') },
 ];
 
-const STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
+const statusOptions = (t: Translate) => [
+  { value: 'PENDING', label: t('finance.common.pending') },
+  { value: 'APPROVED', label: t('finance.paymentRelease.approved') },
+  { value: 'REJECTED', label: t('finance.common.rejected') },
 ];
 
 const getReleaseRowId = (row: PaymentReleaseRow) => row.id;
@@ -84,6 +87,7 @@ interface Props {
 }
 
 export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PaymentReleaseRow>[]>(() => {
     const renderActions = (row: PaymentReleaseRow) => (
       <Button size="small" startIcon={<RateReviewIcon />} disabled={row.status !== 'PENDING'} onClick={() => onReview(row)}>
@@ -93,15 +97,15 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
     return [
       {
         field: 'kind',
-        headerName: 'Type',
+        headerName: t('shell.common.type'),
         width: 140,
-        filter: { type: 'select', options: KIND_OPTIONS },
+        filter: { type: 'select', options: kindOptions(t) },
         cellRenderer: renderKind,
         valueGetter: (row) => row.kind,
       },
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('finance.common.pod'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPod,
@@ -109,21 +113,21 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
       },
       {
         field: 'beneficiary_name',
-        headerName: 'Beneficiary',
+        headerName: t('finance.paymentRelease.beneficiary'),
         minWidth: 180,
         cellRenderer: renderBeneficiary,
         valueGetter: (row) => row.beneficiary_name,
       },
       {
         field: 'amount_requested',
-        headerName: 'Requested',
+        headerName: t('finance.common.requested'),
         width: 120,
         filter: { type: 'number' },
         valueGetter: (row) => `Rs ${Number(row.amount_requested || 0).toFixed(2)}`,
       },
       {
         field: 'proof',
-        headerName: 'Proof',
+        headerName: t('finance.paymentRelease.proof'),
         sortable: false,
         minWidth: 160,
         cellRenderer: renderProof,
@@ -131,15 +135,15 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 120,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        filter: { type: 'select', options: statusOptions(t) },
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
       {
         field: 'requested_at',
-        headerName: 'Requested at',
+        headerName: t('finance.paymentRelease.requestedAt'),
         hide: true,
         width: 170,
         filter: { type: 'date' },
@@ -148,7 +152,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
           return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
         },
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 130, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 130, cellRenderer: renderActions },
     ];
   }, [onReview]);
 
@@ -158,7 +162,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getReleaseRowId}
-      emptyText="No payment release requests found."
+      emptyText={t('finance.paymentRelease.noPaymentReleaseRequestsFound')}
       defaultSort={{ field: 'requested_at', dir: 'desc' }}
       searchPlaceholder="Search release, pod or beneficiary"
       refetchRef={refetchRef}

@@ -6,6 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UPDATE_MY_PROFILE } from './queries';
 import { ProfileAboutValues, profileSchema } from './profileAbout.schema';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   bio: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [updateProfile, { loading, error }] = useMutation(UPDATE_MY_PROFILE);
   const { control, handleSubmit, watch } = useForm<ProfileAboutValues>({
     resolver: zodResolver(profileSchema),
@@ -42,7 +44,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
             <TextField
               {...field}
               fullWidth
-              label="Profile description"
+              label={t('mweb.profile.profileDescription')}
               multiline
               minRows={3}
               error={!!fieldState.error}
@@ -51,7 +53,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
           )}
         />
         <Stack spacing={1}>
-          <Typography variant="subtitle2">Links</Typography>
+          <Typography variant="subtitle2">{t('mweb.profile.links')}</Typography>
           {fields.map((item, index) => (
             <Stack key={item.id} direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Controller
@@ -60,7 +62,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
                 render={({ field, fieldState }) => (
                   <TextField
                     {...field}
-                    label="Label"
+                    label={t('mweb.profile.label')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                   />
@@ -79,7 +81,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
                   />
                 )}
               />
-              <IconButton aria-label="remove link" onClick={() => remove(index)}>
+              <IconButton aria-label={t('mweb.profile.removeLink')} onClick={() => remove(index)}>
                 <DeleteIcon />
               </IconButton>
             </Stack>

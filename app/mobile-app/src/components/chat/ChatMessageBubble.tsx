@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { ChatMessage } from '@/hooks/useChat';
 import { formatMessageTime, groupReactions } from '@/utils/chat';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -72,6 +73,7 @@ function BubbleReactions({
 /** A single chat bubble: author, text/image, reactions and time. Right-aligned
  * and tinted for my own messages. Long-press opens the reaction picker. */
 export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessageBubbleProps>) {
+  const { t } = useTranslation();
   const time = formatMessageTime(message.createdAt);
   const reactions = groupReactions(message.reactions);
   const ink: Ink = mine ? '$onPrimary' : '$color';
@@ -81,7 +83,7 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
       <YStack
         testID={`chat-message-${message.id}`}
         role="button"
-        aria-label="Chat message"
+        aria-label={t('mweb.chat.chatMessage')}
         onLongPress={onReact ? () => onReact(message.id) : undefined}
         pressStyle={onReact ? { opacity: 0.85 } : undefined}
         maxWidth="80%"

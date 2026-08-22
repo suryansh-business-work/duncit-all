@@ -3,16 +3,18 @@ import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { appVersion } from '@/utils/app-version';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Logout footer + app version — RN port of mWeb's <DrawerFooter/>. */
 export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) {
+  const { t } = useTranslation();
   const version = appVersion();
   return (
     <YStack borderTopWidth={1} borderColor="$borderColor" padding={12}>
       <XStack
         testID="sidebar-logout"
         role="button"
-        aria-label="Logout"
+        aria-label={t('mweb.common.logout')}
         onPress={onLogout}
         alignItems="center"
         justifyContent="center"

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { MenuItem, TextField } from '@mui/material';
 import { COMMS_PROVIDER_OPTIONS, type CommsProviderOption } from '../api/comms.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   type: 'SMTP' | 'TWILIO_CALL';
@@ -18,7 +19,9 @@ interface Props {
  * current selection is no longer active (e.g. disabled in the Tech portal), it
  * falls back to the default so a disabled provider is never left selected.
  */
-export default function CommsProviderSelect({ type, value, onChange, label = 'Provider', size = 'small' }: Readonly<Props>) {
+export default function CommsProviderSelect({ type, value, onChange, label, size = 'small' }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const labelText = label ?? t('crm.components.provider');
   const { data, loading } = useQuery<{ commsProviderOptions: CommsProviderOption[] }>(COMMS_PROVIDER_OPTIONS, {
     variables: { type },
     fetchPolicy: 'cache-and-network',
@@ -38,7 +41,7 @@ export default function CommsProviderSelect({ type, value, onChange, label = 'Pr
     <TextField
       select
       size={size}
-      label={label}
+      label={labelText}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading || options.length === 0}

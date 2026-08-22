@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { REQUEST_WITHDRAWAL } from '../queries';
 import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * @param max The wallet balance — nobody may withdraw more than they hold.
@@ -24,7 +25,9 @@ import { blankWithdrawValues, type WithdrawValues } from './withdraw.types';
    let someone with a healthy balance submit an under-floor amount and meet a
    raw server error instead of a field message. 0 disables the floor.
  */
-export const buildWithdrawSchema = (max: number, min = 0) =>
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const buildWithdrawSchema = (max: number, min: number, t: Translate) =>
   z
     .object({
       amount: z
@@ -41,19 +44,19 @@ export const buildWithdrawSchema = (max: number, min = 0) =>
     .superRefine((v, ctx) => {
       if (v.payout_method === 'UPI') {
         if (!v.upi_id)
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['upi_id'], message: 'Enter your UPI ID' });
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['upi_id'], message: t('partners.walletPage.enterYourUpiId') });
       } else {
         if (!v.account_number)
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['account_number'],
-            message: 'Enter account number',
+            message: t('partners.walletPage.enterAccountNumber'),
           });
         if (!v.ifsc_code)
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['ifsc_code'],
-            message: 'Enter IFSC code',
+            message: t('partners.walletPage.enterIfscCode'),
           });
       }
     });
@@ -80,6 +83,7 @@ interface Props {
 }
 
 export default function WithdrawForm({ open, maxAmount, minAmount, currency, onClose, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -87,7 +91,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
     watch,
     formState: { errors },
   } = useForm<WithdrawValues>({
-    resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount)),
+    resolver: zodResolver(buildWithdrawSchema(maxAmount, minAmount, t)),
     defaultValues: blankWithdrawValues,
   });
   const [request, state] = useMutation(REQUEST_WITHDRAWAL);
@@ -104,7 +108,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Withdraw from wallet</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 900 }}>{t('partners.walletPage.withdrawFromWallet')}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="withdraw-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <TextField
@@ -115,7 +119,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
             error={!!errors.amount}
             helperText={errors.amount?.message}
           />
-          <TextField select label="Payout method" defaultValue="UPI" {...register('payout_method')}>
+          <TextField select label={t('partners.walletPage.payoutMethod')} defaultValue="UPI" {...register('payout_method')}>
             {['UPI', 'IMPS', 'NEFT'].map((m) => (
               <MenuItem key={m} value={m}>
                 {m}
@@ -124,22 +128,22 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
           </TextField>
           {method === 'UPI' ? (
             <TextField
-              label="UPI ID"
+              label={t('partners.common.upiId')}
               {...register('upi_id')}
               error={!!errors.upi_id}
               helperText={errors.upi_id?.message}
             />
           ) : (
             <>
-              <TextField label="Account holder name" {...register('account_holder_name')} />
+              <TextField label={t('partners.common.accountHolderName')} {...register('account_holder_name')} />
               <TextField
-                label="Account number"
+                label={t('partners.common.accountNumber')}
                 {...register('account_number')}
                 error={!!errors.account_number}
                 helperText={errors.account_number?.message}
               />
               <TextField
-                label="IFSC code"
+                label={t('partners.common.ifscCode')}
                 {...register('ifsc_code')}
                 error={!!errors.ifsc_code}
                 helperText={errors.ifsc_code?.message}
@@ -151,7 +155,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={state.loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button
           type="submit"

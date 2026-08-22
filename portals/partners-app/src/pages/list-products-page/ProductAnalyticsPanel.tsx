@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { MY_PRODUCT_ANALYTICS } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const money = (symbol: string, value: number) => `${symbol}${Number(value || 0).toLocaleString('en-IN')}`;
 
@@ -35,6 +36,7 @@ function Metric({ label, value }: Readonly<{ label: string; value: string | numb
 /** Brand-admin product analytics: orders/units/earnings + purchase locations +
  * per-variant purchases (from order data), and forward-tracked views/clicks. */
 export default function ProductAnalyticsPanel({ productId }: Readonly<{ productId: string }>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_PRODUCT_ANALYTICS, {
     variables: { product_doc_id: productId },
     fetchPolicy: 'cache-and-network',
@@ -60,13 +62,13 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
             Analytics
           </Typography>
           <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-            <Metric label="Product views" value={analytics.total_views} />
-            <Metric label="Total clicks" value={analytics.total_clicks} />
-            <Metric label="Orders" value={analytics.orders} />
-            <Metric label="Units sold" value={analytics.units_sold} />
-            <Metric label="Gross revenue" value={money(symbol, analytics.gross_revenue)} />
-            <Metric label="Total earning" value={money(symbol, analytics.total_earning)} />
-            <Metric label="Pods listed in" value={analytics.linked_pods} />
+            <Metric label={t('partners.listProductsPage.productViews')} value={analytics.total_views} />
+            <Metric label={t('partners.listProductsPage.totalClicks')} value={analytics.total_clicks} />
+            <Metric label={t('shell.nav.orders')} value={analytics.orders} />
+            <Metric label={t('partners.listProductsPage.unitsSold')} value={analytics.units_sold} />
+            <Metric label={t('partners.listProductsPage.grossRevenue')} value={money(symbol, analytics.gross_revenue)} />
+            <Metric label={t('partners.listProductsPage.totalEarning')} value={money(symbol, analytics.total_earning)} />
+            <Metric label={t('partners.listProductsPage.podsListedIn')} value={analytics.linked_pods} />
           </Stack>
           {analytics.variants.length > 0 && (
             <>
@@ -78,11 +80,11 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Variant</TableCell>
+                      <TableCell>{t('partners.listProductsPage.variant')}</TableCell>
                       <TableCell align="right">Sold</TableCell>
-                      <TableCell align="right">Orders</TableCell>
-                      <TableCell align="right">Clicks</TableCell>
-                      <TableCell align="right">Views</TableCell>
+                      <TableCell align="right">{t('shell.nav.orders')}</TableCell>
+                      <TableCell align="right">{t('partners.listProductsPage.clicks')}</TableCell>
+                      <TableCell align="right">{t('partners.listProductsPage.views')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

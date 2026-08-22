@@ -1,5 +1,6 @@
 import { Controller, useFormContext } from 'react-hook-form';
 import { Autocomplete, Chip, TextField } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   name: string;
@@ -33,7 +34,9 @@ function cleanTags(next: (string | string[])[]): string[] {
  * `suggestions` power the dropdown but `freeSolo` lets the user create new tags
  * too.
  */
-export default function TagsField({ name, label = 'Tags', helperText, suggestions = [] }: Readonly<Props>) {
+export default function TagsField({ name, label, helperText, suggestions = [] }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const labelText = label ?? t('crm.forms.tags');
   const { control } = useFormContext();
   return (
     <Controller
@@ -60,7 +63,7 @@ export default function TagsField({ name, label = 'Tags', helperText, suggestion
               <TextField
                 {...params}
                 size="small"
-                label={label}
+                label={labelText}
                 placeholder={value.length ? 'Add another…' : 'Type and press Enter'}
                 helperText={helperText ?? 'Optional — free-text tags for grouping / search.'}
               />

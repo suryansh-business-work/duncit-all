@@ -14,6 +14,7 @@ import EcommServicesSection from './sections/EcommServicesSection';
 import EcommBrandingSection from './sections/EcommBrandingSection';
 import EcommTrackingSection from './sections/EcommTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   config: CrmOptionGroup;
@@ -37,7 +38,10 @@ const SECTIONS = [
   },
 ];
 
-export default function EcommLeadForm({ config, initialValues, submitting, submitLabel = 'Save ecomm lead', onSubmit, onCancel }: Readonly<Props>) {
+export default function EcommLeadForm({ config, initialValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const submitLabelText = submitLabel ?? t('crm.forms.saveEcommLead');
+
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<EcommLeadFormValues>({
     resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }),
@@ -52,7 +56,7 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
     try {
       await onSubmit(values);
     } catch (error: any) {
-      setStatus(error?.message ?? 'Something went wrong');
+      setStatus(error?.message ?? t('crm.components.somethingWentWrong'));
     }
   });
 
@@ -80,7 +84,7 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
           <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
             {onCancel && (
               <Button onClick={onCancel} disabled={submitting}>
-                Cancel
+                {t('shell.common.cancel')}
               </Button>
             )}
             <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>

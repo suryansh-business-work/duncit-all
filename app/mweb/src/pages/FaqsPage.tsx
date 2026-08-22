@@ -18,6 +18,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SearchIcon from '@mui/icons-material/Search';
+import { useTranslation } from '../i18n/useTranslation';
 
 const PUBLIC_FAQS = gql`
   query PublicFaqs {
@@ -38,6 +39,7 @@ const PUBLIC_FAQS = gql`
 `;
 
 export default function FaqsPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(PUBLIC_FAQS, { fetchPolicy: 'cache-and-network' });
   const [params] = useSearchParams();
   const [activeSuper, setActiveSuper] = useState<string>(params.get('cat') ?? 'ALL');
@@ -81,7 +83,7 @@ export default function FaqsPage() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search questions, e.g. refund, host"
+          placeholder={t('mweb.common.searchQuestionsEGRefundHost')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -98,7 +100,7 @@ export default function FaqsPage() {
       {groups.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
           <Chip
-            label="All"
+            label={t('mweb.common.all')}
             color={activeSuper === 'ALL' ? 'primary' : 'default'}
             variant={activeSuper === 'ALL' ? 'filled' : 'outlined'}
             onClick={() => setActiveSuper('ALL')}
@@ -130,7 +132,7 @@ export default function FaqsPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {!loading && filteredGroups.length === 0 && (
-        <Alert severity="info">No FAQs match your search.</Alert>
+        <Alert severity="info">{t('mweb.faqsPage.noFaqsMatchYourSearch')}</Alert>
       )}
 
       {filteredGroups.map((g) => (
@@ -151,8 +153,8 @@ export default function FaqsPage() {
                     {f.answer}
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                    <Chip label="Helpful" variant="outlined" sx={{ fontWeight: 700 }} />
-                    <Chip label="Not really" variant="outlined" sx={{ fontWeight: 700 }} />
+                    <Chip label={t('mweb.faqsPage.helpful')} variant="outlined" sx={{ fontWeight: 700 }} />
+                    <Chip label={t('mweb.faqsPage.notReally')} variant="outlined" sx={{ fontWeight: 700 }} />
                   </Stack>
                 </AccordionDetails>
               </Accordion>

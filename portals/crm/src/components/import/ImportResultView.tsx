@@ -8,6 +8,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 export interface ImportResult {
   inserted: number;
@@ -17,6 +18,7 @@ export interface ImportResult {
 
 /** Full, scrollable result: summary + every failed row with a parsed reason. */
 export default function ImportResultView({ result }: Readonly<{ result: ImportResult }>) {
+  const { t } = useTranslation();
   return (
     <Box>
       <Alert severity={result.failed === 0 ? 'success' : 'warning'} sx={{ mb: result.errors.length ? 1.5 : 0 }}>
@@ -31,7 +33,7 @@ export default function ImportResultView({ result }: Readonly<{ result: ImportRe
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: 70 }}>Row</TableCell>
-                <TableCell>Reason</TableCell>
+                <TableCell>{t('crm.components.reason')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

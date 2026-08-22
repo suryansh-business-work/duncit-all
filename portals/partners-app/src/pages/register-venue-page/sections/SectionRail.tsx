@@ -19,6 +19,7 @@ import SendIcon from '@mui/icons-material/Send';
 import type { SectionState } from '../register-venue/useRegisterVenueForm';
 import type { RegisterVenueMode, VenueSectionKey } from '../register-venue';
 import { sectionsForMode } from './venue-sections';
+import { useTranslation } from '@duncit/shell';
 
 export const RAIL_WIDTH = 250;
 
@@ -50,12 +51,13 @@ const stateIcon = (key: VenueSectionKey, sectionState: Props['sectionState']) =>
 /** 250px side drawer listing the registration sections (md+); collapses to
  * scrollable tabs on small screens. */
 export default function SectionRail({ active, sectionState, onSelect, mode }: Readonly<Props>) {
+  const { t } = useTranslation();
   const sections = sectionsForMode(mode);
   return (
     <>
       <Box
         component="nav"
-        aria-label="Registration sections"
+        aria-label={t('partners.registerVenuePage.registrationSections')}
         sx={{
           width: RAIL_WIDTH,
           flexShrink: 0,
@@ -68,7 +70,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
         }}
       >
         <Typography variant="overline" sx={{ px: 2, fontWeight: 900, color: 'text.secondary' }}>
-          Registration sections
+          {t('partners.registerVenuePage.registrationSections')}
         </Typography>
         <List dense sx={{ pr: 1.5 }}>
           {sections.map((section) => (
@@ -101,7 +103,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
         onChange={onSelect}
         variant="scrollable"
         allowScrollButtonsMobile
-        aria-label="Registration sections"
+        aria-label={t('partners.registerVenuePage.registrationSections')}
         sx={{ display: { xs: 'flex', md: 'none' }, borderBottom: 1, borderColor: 'divider', mb: 2 }}
       />
     </>

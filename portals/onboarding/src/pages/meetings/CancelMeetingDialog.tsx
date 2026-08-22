@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { CANCEL_MEETING, type OnboardingMeeting } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   meeting: OnboardingMeeting | null;
@@ -22,6 +23,7 @@ interface Props {
 /** Staff cancel-with-reason dialog — the applicant is emailed the reason and
  * asked to fill the survey again and book a new slot. */
 export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [cancelMeeting, { loading }] = useMutation(CANCEL_MEETING);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
   const confirm = async () => {
     if (!meeting) return;
     if (!reason.trim()) {
-      setError('A cancellation reason is required — it is emailed to the applicant.');
+      setError(t('onboarding.meetings.aCancellationReasonIsRequiredIt'));
       return;
     }
     setError(null);
@@ -45,13 +47,13 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
       onClose();
       await onCancelled();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not cancel the meeting');
+      setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotCancelTheMeeting'));
     }
   };
 
   return (
     <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="xs">
-      <DialogTitle>Cancel meeting</DialogTitle>
+      <DialogTitle>{t('onboarding.meetings.cancelMeeting')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
@@ -60,7 +62,7 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
         </Typography>
         <TextField
           size="small"
-          label="Reason"
+          label={t('onboarding.common.reason')}
           placeholder="e.g. Survey responses don't meet the requirements"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -71,7 +73,7 @@ export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: R
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>Keep meeting</Button>
+        <Button onClick={close}>{t('onboarding.meetings.keepMeeting')}</Button>
         <Button color="error" variant="contained" onClick={confirm} disabled={loading}>
           {loading ? 'Cancelling…' : 'Cancel meeting'}
         </Button>

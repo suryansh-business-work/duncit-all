@@ -2,6 +2,7 @@ import { FormControl, InputLabel, MenuItem, Paper, Select, Stack, Typography } f
 import EventIcon from '@mui/icons-material/Event';
 import { useDateFormat } from '../../utils/dateFormat';
 import type { SupportPodOption } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   options: SupportPodOption[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function PodPicker({ options, selectedId, onChange, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
 
   if (loading && !options.length) {
@@ -40,7 +42,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
       <InputLabel id="support-pod-picker-label">Pod</InputLabel>
       <Select
         labelId="support-pod-picker-label"
-        label="Pod"
+        label={t('mweb.common.pod')}
         value={selectedId}
         onChange={(event) => onChange(event.target.value)}
       >

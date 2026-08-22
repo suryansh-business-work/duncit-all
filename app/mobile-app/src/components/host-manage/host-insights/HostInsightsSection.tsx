@@ -18,6 +18,7 @@ import {
 import { InsightCard } from './InsightCard';
 import { InsightsBars, InsightsDonut, InsightsLine } from './InsightCharts';
 import { HostInsightsFilterSheet } from './HostInsightsFilterSheet';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const PRIMARY = '#ff5757';
 const INFO = '#3b82f6';
@@ -52,6 +53,7 @@ function KpiTile({ label, value }: Readonly<{ label: string; value: string }>) {
  * pods created over time (filterable), monthly earnings, status donut and the
  * participant trend. RN twin of mWeb's HostInsights. */
 export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink } = useThemeColors();
   const { totalPods, hostEarning, statusCounts, monthlyEarnings } = useHostInsights();
   const [range, setRange] = useState<HostChartRange>(DEFAULT_HOST_CHART_RANGE);
@@ -83,8 +85,11 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
           </Text>
         </XStack>
         <XStack gap={10}>
-          <KpiTile label="Total Pods" value={String(totalPods)} />
-          <KpiTile label="Host Earnings" value={`${currency}${hostEarning.toFixed(2)}`} />
+          <KpiTile label={t('mweb.common.totalPods')} value={String(totalPods)} />
+          <KpiTile
+            label={t('mweb.common.hostEarnings')}
+            value={`${currency}${hostEarning.toFixed(2)}`}
+          />
         </XStack>
       </YStack>
 
@@ -96,7 +101,7 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
           <XStack
             testID="insights-filter-open"
             role="button"
-            aria-label="Filter pods by month"
+            aria-label={t('mweb.common.filterPodsByMonth')}
             onPress={() => setFilterOpen(true)}
             width={34}
             height={34}
@@ -115,24 +120,24 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
       </InsightCard>
 
       <InsightCard
-        title="Monthly Host Earnings"
-        subtitle="Approved payouts by month."
+        title={t('mweb.common.monthlyHostEarnings')}
+        subtitle={t('mweb.common.approvedPayoutsByMonth')}
         empty={allZero(earnings)}
       >
         <InsightsBars data={earnings} color={PRIMARY} />
       </InsightCard>
 
       <InsightCard
-        title="Pod Status Distribution"
-        subtitle="Upcoming, ongoing, completed and cancelled."
+        title={t('mweb.common.podStatusDistribution')}
+        subtitle={t('mweb.common.upcomingOngoingCompletedAndCancelled')}
         empty={allZero(slices)}
       >
         <InsightsDonut slices={slices} />
       </InsightCard>
 
       <InsightCard
-        title="Participant Trend"
-        subtitle="Guests per pod over time."
+        title={t('mweb.common.participantTrend')}
+        subtitle={t('mweb.common.guestsPerPodOverTime')}
         empty={allZero(participants)}
       >
         <InsightsLine data={participants} color={INFO} area />

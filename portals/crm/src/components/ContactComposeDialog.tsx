@@ -15,6 +15,7 @@ import { parseApiError } from '@duncit/utils';
 import CommsProviderSelect from './CommsProviderSelect';
 import ComposeWindow from './compose/ComposeWindow';
 import EmailComposeFields, { type EmailPayload } from './compose/EmailComposeFields';
+import { useTranslation } from '@duncit/shell';
 
 type Mode = 'email' | 'call';
 
@@ -54,6 +55,7 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
 };
 
 export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState('');
   const [defaultSubject, setDefaultSubject] = useState('');
   const [emailPayload, setEmailPayload] = useState<EmailPayload>({ subject: '', body: '', valid: false, attachments: [] });
@@ -104,7 +106,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
       onClose={onClose}
       actions={
         <>
-          <Button onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
           <Button variant="contained" onClick={submit} disabled={disabled}>
             {loading ? 'Sending…' : submitLabel}
           </Button>

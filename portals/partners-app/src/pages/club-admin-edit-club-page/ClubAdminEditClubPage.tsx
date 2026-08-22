@@ -13,6 +13,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import { QueryGuard } from '@duncit/ui';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CLUB_ADMIN_UPDATE_CLUB, CLUB_FOR_EDIT } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 // Club admins edit page content only — governance fields stay admin-only.
 const PARTNER_CLUB_CONFIG: ClubFormConfig = {
@@ -22,6 +23,7 @@ const PARTNER_CLUB_CONFIG: ClubFormConfig = {
 };
 
 export default function ClubAdminEditClubPage() {
+  const { t } = useTranslation();
   const { clubId = '' } = useParams();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(CLUB_FOR_EDIT, {
@@ -96,7 +98,7 @@ export default function ClubAdminEditClubPage() {
         onClose={() => settlePicker(null)}
         onPicked={(url) => settlePicker(url)}
         folder={pickerFolder}
-        title="Add club image"
+        title={t('partners.clubAdminEditClubPage.addClubImage')}
       />
     </>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   status?: string | null;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function HostWithdrawApplication({ status, busy, onWithdraw }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   if (!status || status === 'APPROVED') return null;
 
@@ -20,20 +22,20 @@ export default function HostWithdrawApplication({ status, busy, onWithdraw }: Re
     <>
       <Alert
         severity="warning"
-        action={<Button color="inherit" size="small" disabled={busy} onClick={() => setOpen(true)}>Withdraw</Button>}
+        action={<Button color="inherit" size="small" disabled={busy} onClick={() => setOpen(true)}>{t('partners.becomeHostPage.withdraw')}</Button>}
       >
         You can withdraw this host application until it is approved.
       </Alert>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Withdraw host application?</DialogTitle>
+        <DialogTitle>{t('partners.becomeHostPage.withdrawHostApplication')}</DialogTitle>
         <DialogContent>
           <Stack spacing={1}>
-            <Typography variant="body2">Your host application will move back to draft and can be edited before submitting again.</Typography>
+            <Typography variant="body2">{t('partners.becomeHostPage.yourHostApplicationWillMoveBack')}</Typography>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button color="warning" variant="contained" disabled={busy} onClick={confirm}>Withdraw</Button>
+          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
+          <Button color="warning" variant="contained" disabled={busy} onClick={confirm}>{t('partners.becomeHostPage.withdraw')}</Button>
         </DialogActions>
       </Dialog>
     </>

@@ -22,6 +22,7 @@ import StarIcon from '@mui/icons-material/Star';
 import { ADD_CLUB_RATING, CLUB_RATINGS } from '../ClubDetailsPage/clubDetailsQueries';
 import { notify } from '../../components/notify';
 import { formatDate } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   clubId: string;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stars, setStars] = useState<number | null>(null);
   const [comment, setComment] = useState('');
@@ -119,7 +121,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle fontWeight={600}>Rate this Club</DialogTitle>
+        <DialogTitle fontWeight={600}>{t('mweb.clubDetails.rateThisClub')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Box>
@@ -134,7 +136,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
               />
             </Box>
             <TextField
-              label="Comment (optional)"
+              label={t('mweb.clubDetails.commentOptional')}
               multiline
               rows={3}
               value={comment}
@@ -145,7 +147,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t('mweb.common.cancel')}</Button>
           <Button
             variant="contained"
             onClick={handleSubmit}

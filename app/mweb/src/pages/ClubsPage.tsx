@@ -17,6 +17,7 @@ import ClubsGrid from './clubs-page/ClubsGrid';
 import ClubCategoryChips from './clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
+import { useTranslation } from '../i18n/useTranslation';
 
 export const ALL_CLUBS = gql`
   query AllClubs($locationId: ID, $locality: String) {
@@ -58,6 +59,7 @@ export default function ClubsPage({
   locationId,
   zoneName,
 }: Readonly<ClubsPageProps>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(ALL_CLUBS, {
     variables: { locationId: locationId || undefined, locality: zoneName || undefined },
     fetchPolicy: 'cache-and-network',
@@ -128,7 +130,7 @@ export default function ClubsPage({
   const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
   const clubsBody =
     clubs.length === 0 ? (
-      <Alert severity="info">No clubs found.</Alert>
+      <Alert severity="info">{t('mweb.clubsPage.noClubsFound')}</Alert>
     ) : (
       <ClubsGrid
         clubs={clubs}
@@ -172,7 +174,7 @@ export default function ClubsPage({
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"
-          placeholder="Search clubs"
+          placeholder={t('mweb.common.searchClubs')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           InputProps={{

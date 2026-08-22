@@ -7,10 +7,12 @@ import { Text, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** 404 — shown for unknown deep links / unmatched routes. RN twin of mWeb's
  * NotFound page; offers a route back to Home. */
 export function NotFoundScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { primary, onPrimary } = useThemeColors();
 
@@ -32,7 +34,7 @@ export function NotFoundScreen() {
           <YStack
             testID="not-found-home"
             role="button"
-            aria-label="Go to home"
+            aria-label={t('mweb.notFound.goToHome')}
             onPress={() => navigation.navigate('Home')}
             marginTop={4}
             paddingHorizontal={22}

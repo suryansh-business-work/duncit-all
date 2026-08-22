@@ -4,6 +4,7 @@ import { Chip, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { TELEMETRY_LOGS_TABLE, levelColor, type LogRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const getLogRowId = (l: LogRow) => l.id;
 
@@ -34,18 +35,19 @@ const renderMessage = (l: LogRow) => (
 );
 
 export default function RecentLogsTable() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const fetchRows = useApolloTableFetch<LogRow>(client, TELEMETRY_LOGS_TABLE, 'telemetryLogsTable');
 
   const columns = useMemo<DuncitColumn<LogRow>[]>(
     () => [
-      { field: 'level', headerName: 'Level', width: 110, filter: LEVEL_FILTER, cellRenderer: renderLevel },
-      { field: 'source', headerName: 'Source', width: 150, filter: { type: 'text' } },
-      { field: 'page', headerName: 'Page', flex: 1, minWidth: 150, filter: { type: 'text' } },
-      { field: 'component', headerName: 'Component', width: 150 },
-      { field: 'environment', headerName: 'Env', width: 120, filter: { type: 'text' } },
-      { field: 'error', headerName: 'Message', flex: 1.4, minWidth: 220, sortable: false, cellRenderer: renderMessage },
-      { field: 'created_at', headerName: 'When', width: 190, cellRenderer: renderWhen },
+      { field: 'level', headerName: t('tech.telemetryDashboard.level'), width: 110, filter: LEVEL_FILTER, cellRenderer: renderLevel },
+      { field: 'source', headerName: t('tech.common.source'), width: 150, filter: { type: 'text' } },
+      { field: 'page', headerName: t('tech.common.page'), flex: 1, minWidth: 150, filter: { type: 'text' } },
+      { field: 'component', headerName: t('tech.common.component'), width: 150 },
+      { field: 'environment', headerName: t('tech.common.env'), width: 120, filter: { type: 'text' } },
+      { field: 'error', headerName: t('tech.common.message'), flex: 1.4, minWidth: 220, sortable: false, cellRenderer: renderMessage },
+      { field: 'created_at', headerName: t('tech.common.when'), width: 190, cellRenderer: renderWhen },
     ],
     [],
   );
@@ -56,7 +58,7 @@ export default function RecentLogsTable() {
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getLogRowId}
-      emptyText="No telemetry logs persisted yet."
+      emptyText={t('tech.telemetryDashboard.noTelemetryLogsPersistedYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search page, component or source"
     />

@@ -52,6 +52,12 @@ jobs:
       - name: No new hardcoded user-facing copy
         run: node scripts/verify-hardcoded-copy.mjs .
 
+      # The server seeds Localization on boot from a GENERATED copy of the
+      # bundles (it takes no @duncit/* dependency). A stale copy would seed
+      # yesterday's keys and nothing would say so.
+      - name: Shipped keys match the bundles
+        run: node scripts/generate-shipped-keys.mjs --check
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each

@@ -16,6 +16,7 @@ import VenueBankAccountSection from './VenueBankAccountSection';
 import VenueOwnerAccordion from './VenueOwnerAccordion';
 import type { DocEntry, Step1, Step3 } from './queries';
 import { type VenueValidationErrors } from './venue.form';
+import { useTranslation } from '@duncit/app-settings';
 
 export type VenueAccordionMode = 'create' | 'edit';
 
@@ -74,6 +75,7 @@ export default function VenueAccordionForm({
   showOwnerSection = true,
   errors,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState<Set<PanelKey>>(new Set(['details']));
   const allExpanded = useMemo(
     () => ALL_PANELS.every((p) => expanded.has(p)),
@@ -105,7 +107,7 @@ export default function VenueAccordionForm({
 
       <Accordion expanded={expanded.has('details')} onChange={() => toggle('details')} disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Venue details</Typography>
+          <Typography variant="subtitle1">{t('onboarding.common.venueDetails')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <VenueDetailsSection s1={s1} setS1={setS1} errors={errors} />
@@ -114,7 +116,7 @@ export default function VenueAccordionForm({
 
       <Accordion expanded={expanded.has('documents')} onChange={() => toggle('documents')} disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Documents</Typography>
+          <Typography variant="subtitle1">{t('shell.nav.documents')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} errors={errors} />
@@ -138,7 +140,7 @@ export default function VenueAccordionForm({
       {s3 && setS3 && (
         <Accordion expanded={expanded.has('bank')} onChange={() => toggle('bank')} disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Bank Account Verification</Typography>
+            <Typography variant="subtitle1">{t('onboarding.common.bankAccountVerification')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <VenueBankAccountSection s3={s3} setS3={setS3} errors={errors} />

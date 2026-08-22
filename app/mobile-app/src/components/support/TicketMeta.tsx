@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Short ticket number derived from the id — matches the server's ST- scheme. */
 export function ticketNo(id: string): string {
@@ -30,11 +31,12 @@ export function TicketMeta({
   createdAt,
   updatedAt,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const raised = formatDateTime(createdAt);
   const updated = formatDateTime(updatedAt);
   const rows: MetaRow[] = [];
-  if (raised) rows.push({ label: 'Raised', value: raised });
-  if (updated) rows.push({ label: 'Last updated', value: updated });
+  if (raised) rows.push({ label: t('mweb.common.raised'), value: raised });
+  if (updated) rows.push({ label: t('mweb.common.lastUpdated'), value: updated });
 
   return (
     <YStack gap={4} testID="ticket-meta">

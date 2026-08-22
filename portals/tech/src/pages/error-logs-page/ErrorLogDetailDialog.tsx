@@ -3,12 +3,14 @@ import { DetailBlock as Mono, DetailField as Field } from '../../components/Deta
 import { userLabel } from '../../components/telemetry-identity';
 import { parseIssueData, type ErrorLogRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Everything one captured server-operation failure knows about itself. */
 export default function ErrorLogDetailDialog({
   row,
   onClose,
 }: Readonly<{ row: ErrorLogRow | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   if (!row) return null;
   const issue = parseIssueData(row);
   return (
@@ -17,30 +19,30 @@ export default function ErrorLogDetailDialog({
       <DialogContent dividers>
         <Stack spacing={2}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <Field label="When" value={formatDateTime(row.created_at)} />
-            <Field label="Environment" value={row.environment} />
-            <Field label="Source" value={row.source} />
-            <Field label="Page" value={row.page} />
-            <Field label="Platform" value={[row.platform, row.os].filter(Boolean).join(' · ')} />
-            <Field label="Kind" value={issue.kind ?? ''} />
-            <Field label="GraphQL code" value={issue.code ?? ''} />
-            <Field label="Operation" value={issue.operation ?? ''} />
-            <Field label="GraphQL path" value={issue.gql_path ?? ''} />
+            <Field label={t('tech.common.when')} value={formatDateTime(row.created_at)} />
+            <Field label={t('tech.errorLogs.environment')} value={row.environment} />
+            <Field label={t('tech.common.source')} value={row.source} />
+            <Field label={t('tech.common.page')} value={row.page} />
+            <Field label={t('tech.common.platform')} value={[row.platform, row.os].filter(Boolean).join(' · ')} />
+            <Field label={t('tech.errorLogs.kind')} value={issue.kind ?? ''} />
+            <Field label={t('tech.errorLogs.graphqlCode')} value={issue.code ?? ''} />
+            <Field label={t('tech.errorLogs.operation')} value={issue.operation ?? ''} />
+            <Field label={t('tech.errorLogs.graphqlPath')} value={issue.gql_path ?? ''} />
             <Field label="URL" value={row.url ?? ''} />
-            <Field label="User" value={userLabel(row.user)} />
-            <Field label="Email" value={row.user?.email ?? ''} />
-            <Field label="Phone" value={row.user?.phone ?? ''} />
-            <Field label="App version" value={row.client?.app_version ?? ''} />
-            <Field label="IP address" value={row.ip ?? ''} />
-            <Field label="Session" value={row.session_id ?? ''} />
+            <Field label={t('tech.common.user')} value={userLabel(row.user)} />
+            <Field label={t('shell.common.email')} value={row.user?.email ?? ''} />
+            <Field label={t('shell.common.phone')} value={row.user?.phone ?? ''} />
+            <Field label={t('tech.common.appVersion')} value={row.client?.app_version ?? ''} />
+            <Field label={t('tech.common.ipAddress')} value={row.ip ?? ''} />
+            <Field label={t('tech.common.session')} value={row.session_id ?? ''} />
           </Box>
-          <Field label="Message" value={row.error?.message ?? ''} />
-          {row.error?.stack ? <Mono label="Stack trace" value={row.error.stack} /> : null}
-          {row.data_json ? <Mono label="Structured data" value={row.data_json} /> : null}
+          <Field label={t('tech.common.message')} value={row.error?.message ?? ''} />
+          {row.error?.stack ? <Mono label={t('tech.common.stackTrace')} value={row.error.stack} /> : null}
+          {row.data_json ? <Mono label={t('tech.common.structuredData')} value={row.data_json} /> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

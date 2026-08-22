@@ -15,6 +15,7 @@ import {
   type PartnerPodRow,
 } from '../pods-page/queries';
 import { PARTNER_POD_CONFIG } from '../pods-page/partner-pod-config';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * A cancelled pod has nothing left to act on.
@@ -31,6 +32,7 @@ const isCancelled = (pod: PartnerPodRow) => !!pod.is_deleted;
  * rating link, and cancel.
  */
 function HostPodsContent() {
+  const { t } = useTranslation();
   const { data, error } = useQuery(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -99,14 +101,14 @@ function HostPodsContent() {
             onClick={() => setOpen(true)}
             sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
           >
-            New Pod
+            {t('partners.common.newPod')}
           </Button>
         </Stack>
       </Box>
 
       {!approvedHost && (
         <Alert severity="info">
-          Your host application must be approved before you can create pods.
+          {t('partners.podsPage.yourHostApplicationMustBeApproved')}
         </Alert>
       )}
       {error && <Alert severity="error">{error.message}</Alert>}
@@ -119,7 +121,7 @@ function HostPodsContent() {
             refetchRef={refetchRef}
             clubName={clubName}
             venueName={venueName}
-            emptyText="No pods created from your partner account yet."
+            emptyText={t('partners.common.noPodsCreatedFromYourPartner')}
             renderActions={renderActions}
           />
         </CardContent>

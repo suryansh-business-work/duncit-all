@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { SuperCategoryCount } from './dashboardConfig';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
@@ -24,7 +25,10 @@ interface Props {
  * visually so the dashboard reads consistently — uses the admin-managed
  * SUPER category list as the X axis.
  */
-export default function SuperCategoryChart({ data, title = 'Leads by Super Category' }: Readonly<Props>) {
+export default function SuperCategoryChart({ data, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const titleText = title ?? t('crm.dashboard.leadsBySuperCategory');
+
   const theme = useTheme();
 
   const chartData = useMemo(
@@ -32,14 +36,14 @@ export default function SuperCategoryChart({ data, title = 'Leads by Super Categ
       labels: data.map((d) => d.label),
       datasets: [
         {
-          label: 'Venue',
+          label: t('crm.common.venue'),
           data: data.map((d) => d.venue),
           backgroundColor: theme.palette.primary.main,
           borderRadius: 6,
           maxBarThickness: 28,
         },
         {
-          label: 'Host',
+          label: t('crm.common.host'),
           data: data.map((d) => d.host),
           backgroundColor: theme.palette.info.main,
           borderRadius: 6,
@@ -82,7 +86,7 @@ export default function SuperCategoryChart({ data, title = 'Leads by Super Categ
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {title}
+            {titleText}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Venue and host leads grouped by the super category they were

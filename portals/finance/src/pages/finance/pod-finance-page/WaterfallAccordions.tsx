@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { money, type PodFinanceBreakdown } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface WaterfallLine {
   key: string;
@@ -25,7 +26,9 @@ interface WaterfallStep {
   lines?: WaterfallLine[];
 }
 
-function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+function buildSteps(breakdown: PodFinanceBreakdown, t: Translate): WaterfallStep[] {
   const w = breakdown.waterfall;
   const sym = breakdown.currency_symbol;
   const steps: WaterfallStep[] = [
@@ -51,7 +54,7 @@ function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
       key: 'pool',
       title: '4. Remaining Pool',
       amount: money(sym, w.pool_amount),
-      caption: 'Net amount minus the platform fee — split between the venue and the host.',
+      caption: t('finance.podFinance.netAmountMinusThePlatformFee'),
     },
   ];
   if (w.club_admin_amount > 0) {
@@ -67,14 +70,14 @@ function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
       key: 'venue',
       title: '5. Venue Amount',
       amount: money(sym, w.venue_amount),
-      caption: 'The venue’s fixed booked slot price (set in the Partners portal), clamped to the pool.',
+      caption: t('finance.podFinance.theVenueSFixedBookedSlot'),
       lines: [
         {
           key: 'venue-commission',
           label: `− Venue Commission (${w.venue_commission_pct.toFixed(2)}%)`,
           value: `− ${money(sym, w.venue_commission_amount)}`,
         },
-        { key: 'venue-receives', label: 'Venue Receives', value: money(sym, w.venue_receives) },
+        { key: 'venue-receives', label: t('finance.podFinance.venueReceives'), value: money(sym, w.venue_receives) },
       ],
     });
   }
@@ -83,27 +86,27 @@ function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
       key: 'host',
       title: '6. Host Amount',
       amount: money(sym, w.host_amount),
-      caption: 'The host keeps the pool remainder after the venue’s slot price.',
+      caption: t('finance.podFinance.theHostKeepsThePoolRemainder'),
       lines: [
         {
           key: 'host-commission',
           label: `− Host Commission (${w.host_commission_pct.toFixed(2)}%)`,
           value: `− ${money(sym, w.host_commission_amount)}`,
         },
-        { key: 'host-receives', label: 'Host Receives', value: money(sym, w.host_receives), bold: true },
+        { key: 'host-receives', label: t('finance.podFinance.hostReceives'), value: money(sym, w.host_receives), bold: true },
       ],
     },
     {
       key: 'duncit-revenue',
       title: '7. Duncit Total Revenue',
       amount: money(sym, w.duncit_revenue),
-      caption: 'Platform fee plus the commissions taken from the venue and the host.',
+      caption: t('finance.podFinance.platformFeePlusTheCommissionsTaken'),
     },
     {
       key: 'gst-collected',
       title: '8. GST Collected (to government)',
       amount: money(sym, w.gst_amount),
-      caption: 'GST held for remittance to the government.',
+      caption: t('finance.podFinance.gstHeldForRemittanceToThe'),
     },
   );
   return steps;
@@ -112,13 +115,14 @@ function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
 /** The pod money waterfall rendered as ordered MUI accordions with a
  * reconciliation footer that must add back up to the customer payment. */
 export default function WaterfallAccordions({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
+  const { t } = useTranslation();
   const w = breakdown.waterfall;
   const sym = breakdown.currency_symbol;
   const total = w.gst_amount + w.host_receives + w.venue_receives + w.duncit_revenue;
 
   return (
     <Box>
-      {buildSteps(breakdown).map((step) => (
+      {buildSteps(breakdown, t).map((step) => (
         <Accordion key={step.key} disableGutters variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flex: 1, pr: 1 }}>
@@ -139,7 +143,7 @@ export default function WaterfallAccordions({ breakdown }: Readonly<{ breakdown:
       ))}
       <Divider sx={{ my: 1.5 }} />
       <Stack direction="row" justifyContent="space-between" sx={{ px: 2 }}>
-        <Typography variant="body2" fontWeight={800}>Total (matches customer payment)</Typography>
+        <Typography variant="body2" fontWeight={800}>{t('finance.podFinance.totalMatchesCustomerPayment')}</Typography>
         <Typography variant="body2" fontWeight={800}>{money(sym, total)}</Typography>
       </Stack>
     </Box>

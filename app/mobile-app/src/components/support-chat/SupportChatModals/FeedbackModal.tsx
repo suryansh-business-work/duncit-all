@@ -4,6 +4,7 @@ import { Text, TextArea, XStack, YStack } from 'tamagui';
 import { Field } from '@/components/Field';
 import { Backdrop, ModalButton } from './ModalBase';
 import { FEEDBACK_SCALE, feedbackOption } from './feedback-scale';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const THANK_YOU =
   'Thank you for your feedback. Your feedback helps us improve the Duncit support experience.';
@@ -63,6 +64,7 @@ export function SupportFeedbackModal({
   onSubmit,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [picked, setPicked] = useState(0);
   const [comment, setComment] = useState('');
   if (!open) return null;
@@ -74,7 +76,12 @@ export function SupportFeedbackModal({
         testID="support-feedback-modal"
         footer={
           <XStack justifyContent="flex-end">
-            <ModalButton testID="feedback-close" label="Close" primary onPress={onClose} />
+            <ModalButton
+              testID="feedback-close"
+              label={t('mweb.common.close')}
+              primary
+              onPress={onClose}
+            />
           </XStack>
         }
       >
@@ -99,7 +106,12 @@ export function SupportFeedbackModal({
         testID="support-feedback-modal"
         footer={
           <XStack justifyContent="flex-end">
-            <ModalButton testID="feedback-done" label="Done" primary onPress={onClose} />
+            <ModalButton
+              testID="feedback-done"
+              label={t('mweb.common.done')}
+              primary
+              onPress={onClose}
+            />
           </XStack>
         }
       >
@@ -115,7 +127,11 @@ export function SupportFeedbackModal({
       testID="support-feedback-modal"
       footer={
         <XStack gap={8} justifyContent="flex-end">
-          <ModalButton testID="feedback-skip" label="Skip" onPress={onClose} />
+          <ModalButton
+            testID="feedback-skip"
+            label={t('mweb.supportChat.skip')}
+            onPress={onClose}
+          />
           <ModalButton
             testID="feedback-submit"
             label={busy ? 'Sending…' : 'Submit'}
@@ -130,13 +146,13 @@ export function SupportFeedbackModal({
         How did we do?
       </Text>
       <EmojiScale rating={picked} onPick={setPicked} />
-      <Field label="Comments">
+      <Field label={t('mweb.common.comments')}>
         <TextArea
           testID="feedback-comment"
-          aria-label="Comments"
+          aria-label={t('mweb.common.comments')}
           value={comment}
           onChangeText={setComment}
-          placeholder="Anything to add? (optional)"
+          placeholder={t('mweb.supportChat.anythingToAddOptional')}
           placeholderTextColor="$muted"
           maxLength={1000}
           backgroundColor="$surface"

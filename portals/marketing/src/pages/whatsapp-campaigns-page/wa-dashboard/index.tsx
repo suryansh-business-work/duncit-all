@@ -11,6 +11,7 @@ import { waMoney } from '../helpers';
 import { WA_DASHBOARD, type WaDashboardData } from '../queries';
 import SpendByCategory from './SpendByCategory';
 import TopCampaignsCard from './TopCampaignsCard';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * What WhatsApp cost and reached. Every figure comes from the rate each send
@@ -20,11 +21,13 @@ import TopCampaignsCard from './TopCampaignsCard';
 
 /** Windows worth asking for. Days rather than calendar months: a send is billed
  * when it goes out, not when the month turns. */
-const WINDOWS = [
-  { value: '7', label: 'Last 7 days' },
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
-  { value: 'all', label: 'All time' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const windows = (t: Translate) => [
+  { value: '7', label: t('marketing.whatsappCampaigns.last7Days') },
+  { value: '30', label: t('marketing.whatsappCampaigns.last30Days') },
+  { value: '90', label: t('marketing.whatsappCampaigns.last90Days') },
+  { value: 'all', label: t('marketing.whatsappCampaigns.allTime') },
 ];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -35,6 +38,7 @@ const fromFor = (days: string) => {
 };
 
 export default function WaDashboard() {
+  const { t } = useTranslation();
   const [range, setRange] = useState('30');
   const from = useMemo(() => fromFor(range), [range]);
   const { data, loading, error } = useQuery<{ waCampaignDashboard: WaDashboardData }>(WA_DASHBOARD, {
@@ -55,12 +59,12 @@ export default function WaDashboard() {
         <TextField
           select
           size="small"
-          label="Window"
+          label={t('marketing.whatsappCampaigns.window')}
           value={range}
           onChange={(event) => setRange(event.target.value)}
           sx={{ minWidth: 180 }}
         >
-          {WINDOWS.map((option) => (
+          {windows(t).map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
@@ -80,25 +84,25 @@ export default function WaDashboard() {
             }}
           >
             <KpiCard
-              label="Spent"
+              label={t('marketing.whatsappCampaigns.spent')}
               value={waMoney(board.total_cost, currency)}
               hint="Messages that actually went out"
               icon={<CurrencyRupeeIcon />}
             />
             <KpiCard
-              label="Messages sent"
+              label={t('marketing.whatsappCampaigns.messagesSent')}
               value={board.messages_sent.toLocaleString()}
               hint={`Across ${board.campaigns.toLocaleString()} sends`}
               icon={<ForwardToInboxIcon />}
             />
             <KpiCard
-              label="Failed"
+              label={t('marketing.common.failed')}
               value={board.messages_failed.toLocaleString()}
               hint="AiSensy refused the message"
               icon={<ReportGmailerrorredIcon />}
             />
             <KpiCard
-              label="Skipped"
+              label={t('marketing.whatsappCampaigns.skipped')}
               value={board.messages_skipped.toLocaleString()}
               hint="Nothing attempted, nothing billed"
               icon={<WhatsAppIcon />}

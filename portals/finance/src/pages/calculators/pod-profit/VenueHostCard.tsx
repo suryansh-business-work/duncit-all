@@ -3,6 +3,7 @@ import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import PercentSlider from './PercentSlider';
 import type { PodProfitInputs } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   inputs: PodProfitInputs;
@@ -10,16 +11,17 @@ interface Props {
 }
 
 export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
           <StorefrontIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>Venue &amp; host split</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.venueAndAmpHostSplit')}</Typography>
         </Stack>
         <Stack spacing={2}>
           <TextField
-            label="Venue fixed cost"
+            label={t('finance.calculators.venueFixedCost')}
             type="number"
             size="small"
             value={inputs.venue_amount}
@@ -30,21 +32,21 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
             fullWidth
           />
           <PercentSlider
-            label="Venue commission — Duncit income"
+            label={t('finance.calculators.venueCommissionDuncitIncome')}
             value={inputs.venue_commission_percent}
             onChange={(value) => onChange('venue_commission_percent', value)}
             max={50}
             hint="Default deduction Duncit takes from the venue's amount."
           />
           <PercentSlider
-            label="Host commission — Duncit income"
+            label={t('finance.calculators.hostCommissionDuncitIncome')}
             value={inputs.host_commission_percent}
             onChange={(value) => onChange('host_commission_percent', value)}
             max={50}
             hint="Default deduction Duncit takes from the host's amount."
           />
           <PercentSlider
-            label="Club admin cut — Duncit income"
+            label={t('finance.calculators.clubAdminCutDuncitIncome')}
             value={inputs.club_admin_percent}
             onChange={(value) => onChange('club_admin_percent', value)}
             max={50}

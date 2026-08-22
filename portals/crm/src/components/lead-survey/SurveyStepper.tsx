@@ -3,6 +3,7 @@ import { Alert, Button, Stack, Step, StepLabel, Stepper, Typography } from '@mui
 import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { LeadSurveyAnswer, LeadSurveyDef } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export interface SurveyAnswerInput {
   qid: string;
@@ -26,7 +27,9 @@ const seed = (initial?: LeadSurveyAnswer[]): State => {
 };
 
 /** Section-stepped survey form — one step per SECTION; final step submits. */
-export default function SurveyStepper({ survey, initialAnswers, submitting, onSubmit, submitLabel = 'Submit' }: Readonly<Props>) {
+export default function SurveyStepper({ survey, initialAnswers, submitting, onSubmit, submitLabel }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const submitLabelText = submitLabel ?? t('crm.components.submit');
   const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
   const [answers, setAnswers] = useState<State>(() => seed(initialAnswers));
   const [step, setStep] = useState(0);
@@ -56,7 +59,7 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
     onSubmit(payload);
   };
 
-  if (sections.length === 0) return <Alert severity="info">This survey has no questions.</Alert>;
+  if (sections.length === 0) return <Alert severity="info">{t('crm.components.thisSurveyHasNoQuestions')}</Alert>;
   const active = sections[step];
 
   return (

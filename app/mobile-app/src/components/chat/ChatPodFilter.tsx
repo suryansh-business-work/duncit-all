@@ -1,13 +1,15 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import type { Translate } from '@/i18n/fallback';
 
 export type ChatPodFilterValue = 'ALL' | 'UPCOMING' | 'PREVIOUS';
 
-const OPTIONS: { value: ChatPodFilterValue; label: string }[] = [
-  { value: 'ALL', label: 'All' },
-  { value: 'UPCOMING', label: 'Upcoming Pods' },
-  { value: 'PREVIOUS', label: 'Previous Pods' },
+const options = (t: Translate): { value: ChatPodFilterValue; label: string }[] => [
+  { value: 'ALL', label: t('mweb.common.all') },
+  { value: 'UPCOMING', label: t('mweb.chat.upcomingPods') },
+  { value: 'PREVIOUS', label: t('mweb.chat.previousPods') },
 ];
 
 interface Props {
@@ -18,10 +20,11 @@ interface Props {
 /** Single-select chips that narrow the chat list by the linked pod's status
  * (All / Upcoming / Previous). Twin of mWeb's ChatsPage status chips. */
 export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color: ink, primary, onPrimary } = useThemeColors();
   return (
     <XStack gap={8} paddingHorizontal={16} paddingTop={12} flexWrap="wrap">
-      {OPTIONS.map((option) => {
+      {options(t).map((option) => {
         const selected = option.value === value;
         return (
           <XStack

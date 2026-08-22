@@ -5,6 +5,7 @@ import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
 import { CHALLENGE_BUNDLE } from './bundles/challenge';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
+import { CRM_BUNDLE } from './bundles/crm';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
@@ -17,7 +18,13 @@ import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
 import { PRODUCTS_BUNDLE } from './bundles/products';
 import { SHELL_BUNDLE } from './bundles/shell';
+import { MARKETING_BUNDLE } from './bundles/marketing';
+import { ONBOARDING_BUNDLE } from './bundles/onboarding';
+import { POD_FORM_BUNDLE } from './bundles/pod-form';
+import { CLUB_FORM_BUNDLE } from './bundles/club-form';
+import { POD_DETAILS_BUNDLE } from './bundles/pod-details';
 import { SUPPORT_BUNDLE } from './bundles/support';
+import { TECH_BUNDLE } from './bundles/tech';
 import { WEBSITE_BUNDLE } from './bundles/website';
 import { WEBSITE_APP_BUNDLE } from './bundles/website-app';
 import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
@@ -50,6 +57,7 @@ export {
   AI_MONITORING_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  CRM_BUNDLE,
   DEVELOPERS_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
@@ -62,7 +70,13 @@ export {
   POLICY_ACCEPTANCE_BUNDLE,
   PRODUCTS_BUNDLE,
   SHELL_BUNDLE,
+  MARKETING_BUNDLE,
+  ONBOARDING_BUNDLE,
+  POD_FORM_BUNDLE,
+  CLUB_FORM_BUNDLE,
+  POD_DETAILS_BUNDLE,
   SUPPORT_BUNDLE,
+  TECH_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -76,6 +90,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   aiMonitoring: AI_MONITORING_BUNDLE,
   challenge: CHALLENGE_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
+  crm: CRM_BUNDLE,
   developers: DEVELOPERS_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
@@ -88,7 +103,13 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   policyAcceptance: POLICY_ACCEPTANCE_BUNDLE,
   products: PRODUCTS_BUNDLE,
   shell: SHELL_BUNDLE,
+  marketing: MARKETING_BUNDLE,
+  onboarding: ONBOARDING_BUNDLE,
+  podForm: POD_FORM_BUNDLE,
+  clubForm: CLUB_FORM_BUNDLE,
+  podDetailsPanel: POD_DETAILS_BUNDLE,
   support: SUPPORT_BUNDLE,
+  tech: TECH_BUNDLE,
   website: WEBSITE_BUNDLE,
   websiteApp: WEBSITE_APP_BUNDLE,
   whatsapp: WHATSAPP_BUNDLE,

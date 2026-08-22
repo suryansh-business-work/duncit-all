@@ -16,6 +16,7 @@ import {
   type SavedFilters,
 } from '@/utils/saved-filter';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -39,6 +40,7 @@ export function SavedFilterSheet({
   onReset,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const superOptions = useMemo(() => toOptions(superCategories(categories)), [categories]);
   const categoryOptions = useMemo(
@@ -69,7 +71,7 @@ export function SavedFilterSheet({
         <YStack flex={1} justifyContent="flex-end" testID="saved-filter-sheet">
           <YStack
             role="button"
-            aria-label="Close filters"
+            aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -92,7 +94,7 @@ export function SavedFilterSheet({
                 <XStack
                   testID="saved-filter-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -106,7 +108,7 @@ export function SavedFilterSheet({
               </XStack>
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
-                  <Section title="Super Category">
+                  <Section title={t('mweb.saved.superCategory')}>
                     <OptionChipRow
                       testIDPrefix="saved-super"
                       options={superOptions}
@@ -114,7 +116,7 @@ export function SavedFilterSheet({
                       onSelect={selectSuper}
                     />
                   </Section>
-                  <Section title="Category">
+                  <Section title={t('mweb.common.category')}>
                     {filters.superId ? (
                       <OptionChipRow
                         testIDPrefix="saved-cat"
@@ -128,7 +130,7 @@ export function SavedFilterSheet({
                       </Text>
                     )}
                   </Section>
-                  <Section title="Sub Category">
+                  <Section title={t('mweb.saved.subCategory')}>
                     {filters.categoryId ? (
                       <OptionChipRow
                         testIDPrefix="saved-sub"
@@ -148,7 +150,7 @@ export function SavedFilterSheet({
                 <XStack
                   testID="saved-filter-reset"
                   role="button"
-                  aria-label="Reset filters"
+                  aria-label={t('mweb.common.resetFilters')}
                   onPress={onReset}
                   flex={1}
                   height={46}
@@ -167,7 +169,7 @@ export function SavedFilterSheet({
                 <XStack
                   testID="saved-filter-done"
                   role="button"
-                  aria-label="Apply filters"
+                  aria-label={t('mweb.common.applyFilters')}
                   onPress={onClose}
                   flex={1}
                   height={46}

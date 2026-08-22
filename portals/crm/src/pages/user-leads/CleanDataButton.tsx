@@ -11,9 +11,11 @@ import {
 } from '@mui/material';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import { WA_CLEAN_DATA } from '../tools/whatsapp/whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 /** Database-level cleanup: drops invalid-phone records + de-duplicates leads. */
 export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () => void }>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [clean, { loading }] = useMutation(WA_CLEAN_DATA);
@@ -42,7 +44,7 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
         {loading ? 'Cleaning…' : 'Clean'}
       </Button>
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Clean lead data?</DialogTitle>
+        <DialogTitle>{t('crm.userLeads.cleanLeadData')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Removes leads and contacts with invalid phone numbers (regex-validated) and collapses
@@ -50,7 +52,7 @@ export default function CleanDataButton({ onCleaned }: Readonly<{ onCleaned: () 
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
           <Button color="warning" variant="contained" onClick={run}>
             Clean now
           </Button>

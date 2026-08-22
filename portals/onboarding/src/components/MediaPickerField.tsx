@@ -13,6 +13,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MediaPickerDialog from './MediaPickerDialog';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   label: string;
@@ -43,6 +44,7 @@ export default function MediaPickerField({
   buttonOnly = false,
   buttonLabel = 'Choose image',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   if (buttonOnly) {
@@ -74,12 +76,12 @@ export default function MediaPickerField({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         fullWidth
-        placeholder="Click the image icon to upload, or paste a URL…"
+        placeholder={t('onboarding.mediaPickerField.clickTheImageIconToUpload')}
         helperText={helperText}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Tooltip title="Pick from device or Pexels">
+              <Tooltip title={t('onboarding.mediaPickerField.pickFromDeviceOrPexels')}>
                 <IconButton size="small" onClick={() => setOpen(true)}>
                   <ImageIcon fontSize="small" />
                 </IconButton>
@@ -88,7 +90,7 @@ export default function MediaPickerField({
           ),
           endAdornment: value ? (
             <InputAdornment position="end">
-              <Tooltip title="Open">
+              <Tooltip title={t('onboarding.mediaPickerField.open')}>
                 <IconButton size="small" onClick={() => window.open(value, '_blank')}>
                   <OpenInNewIcon fontSize="small" />
                 </IconButton>

@@ -91,7 +91,7 @@ export default function WaTestForm({
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <form noValidate onSubmit={submit}>
-        <DialogTitle>Send a test message</DialogTitle>
+        <DialogTitle>{t('marketing.whatsappCampaigns.sendATestMessage')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
@@ -100,7 +100,7 @@ export default function WaTestForm({
             <RhfTextField
               control={control}
               name="wa_campaign_name"
-              label="WhatsApp campaign"
+              label={t('marketing.whatsappCampaigns.whatsappCampaign')}
               select
               required
               hint="The approved AiSensy campaign to test"
@@ -120,14 +120,14 @@ export default function WaTestForm({
             <RhfTextField
               control={control}
               name="destination"
-              label="Destination"
+              label={t('marketing.common.destination')}
               required
               hint="Country code + number, digits only — e.g. 919582998897"
             />
             <RhfTextField
               control={control}
               name="user_name"
-              label="User name"
+              label={t('marketing.whatsappCampaigns.userName')}
               required
               hint="Name AiSensy records for this contact"
             />

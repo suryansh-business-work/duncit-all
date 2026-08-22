@@ -17,6 +17,7 @@ import {
   ADMIN_UPDATE_VENUE_SLOT,
   ADMIN_VENUE_SLOTS,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 function Legend({ color, label }: Readonly<{ color: string; label: string }>) {
   return (
@@ -32,6 +33,7 @@ function Legend({ color, label }: Readonly<{ color: string; label: string }>) {
 // Onboarding-side slot management for any venue. Reuses the shared calendar +
 // day editor; wires them to the admin (role-gated) slot mutations.
 export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId: string }>) {
+  const { t } = useTranslation();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -80,13 +82,13 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
       <Card variant="outlined">
         <CardContent>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-            <IconButton onClick={() => setMonth(subMonths(month, 1))} aria-label="Previous month">
+            <IconButton onClick={() => setMonth(subMonths(month, 1))} aria-label={t('onboarding.venueDetails.previousMonth')}>
               <ChevronLeftIcon />
             </IconButton>
             <Typography variant="h6" fontWeight={900}>
               {format(month, 'MMMM yyyy')}
             </Typography>
-            <IconButton onClick={() => setMonth(addMonths(month, 1))} aria-label="Next month">
+            <IconButton onClick={() => setMonth(addMonths(month, 1))} aria-label={t('onboarding.venueDetails.nextMonth')}>
               <ChevronRightIcon />
             </IconButton>
           </Stack>
@@ -106,9 +108,9 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
           )}
 
           <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
-            <Legend color="success.light" label="A — Available" />
-            <Legend color="warning.light" label="B — Booked" />
-            <Legend color="action.disabled" label="× — Blocked" />
+            <Legend color="success.light" label={t('onboarding.venueDetails.aAvailable')} />
+            <Legend color="warning.light" label={t('onboarding.venueDetails.bBooked')} />
+            <Legend color="action.disabled" label={t('onboarding.venueDetails.blocked')} />
           </Stack>
         </CardContent>
       </Card>

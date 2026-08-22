@@ -16,12 +16,14 @@ import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
 import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
 /** Club details — opened from club cards/headers. Hero + summary + moments +
  * the club's upcoming pods. */
 export function ClubDetailsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
@@ -73,7 +75,7 @@ export function ClubDetailsScreen() {
       <Text color="$muted" testID="club-details-error">
         This club is unavailable.
       </Text>
-      <XStack role="button" aria-label="Go back" onPress={goBack}>
+      <XStack role="button" aria-label={t('mweb.common.goBack')} onPress={goBack}>
         <Text color="$primary" fontWeight="700">
           Go back
         </Text>

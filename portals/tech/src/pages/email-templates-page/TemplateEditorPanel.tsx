@@ -4,6 +4,7 @@ import MjmlEditorPane from './MjmlEditorPane';
 import PreviewVariablesPane from './PreviewVariablesPane';
 import EditorActionsBar from './EditorActionsBar';
 import FragmentPicker from './FragmentPicker';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   draft: Tpl;
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function TemplateEditorPanel(p: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     draft,
     setDraft,
@@ -56,22 +58,22 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
       <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
         <TextField
           size="small"
-          label="Name"
+          label={t('shell.common.name')}
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           sx={{ flex: '1 1 200px' }}
         />
         <TextField
           size="small"
-          label="Slug"
+          label={t('tech.emailTemplates.slug')}
           value={draft.slug}
           disabled
           sx={{ flex: '1 1 160px' }}
-          helperText="Used by code; cannot be edited."
+          helperText={t('tech.emailTemplates.usedByCodeCannotBeEdited')}
         />
         <TextField
           size="small"
-          label="Subject"
+          label={t('tech.common.subject')}
           value={draft.subject}
           onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
           sx={{ flex: '2 1 320px' }}
@@ -86,7 +88,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
         />
       </Stack>
 
-      <Tooltip title="A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.">
+      <Tooltip title={t('tech.emailTemplates.aSwitchedOffTemplateSendsNothing')}>
         <FormControlLabel
           sx={{ alignSelf: 'flex-start' }}
           control={
@@ -101,7 +103,7 @@ export default function TemplateEditorPanel(p: Readonly<Props>) {
 
       <TextField
         size="small"
-        label="Footer note"
+        label={t('tech.emailTemplates.footerNote')}
         value={draft.footer_note ?? ''}
         onChange={(e) => setDraft({ ...draft, footer_note: e.target.value })}
         placeholder="You're receiving this because…"

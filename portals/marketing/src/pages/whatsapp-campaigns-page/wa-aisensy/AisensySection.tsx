@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Alert, AlertTitle, CircularProgress, Stack, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** False when the Tech portal has no Project credentials yet. */
@@ -26,10 +27,11 @@ export default function AisensySection({
   emptyText,
   children,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!configured) {
     return (
       <Alert severity="warning">
-        Add the AiSensy <strong>Project ID</strong> and <strong>Project API Key</strong> in the Tech
+        Add the AiSensy <strong>{t('marketing.whatsappCampaigns.projectId')}</strong> and <strong>{t('marketing.whatsappCampaigns.projectApiKey')}</strong> in the Tech
         portal (Environment Variables → AiSensy) to read campaigns and templates from AiSensy. The
         campaign key alone only sends.
       </Alert>
@@ -45,7 +47,7 @@ export default function AisensySection({
   if (error) {
     return (
       <Alert severity="error">
-        <AlertTitle>AiSensy did not answer</AlertTitle>
+        <AlertTitle>{t('marketing.whatsappCampaigns.aisensyDidNotAnswer')}</AlertTitle>
         <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
           {parseApiError(error, 'The Project API request failed')}
         </Typography>

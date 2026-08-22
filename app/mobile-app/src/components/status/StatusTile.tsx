@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface StatusTileProps {
   label: string;
@@ -34,6 +35,7 @@ export function StatusTile({
   onBadgePress,
   testID,
 }: Readonly<StatusTileProps>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const initial = (label[0] ?? '?').toUpperCase();
   const badgeTestID = testID ? `${testID}-badge` : undefined;
@@ -121,7 +123,7 @@ export function StatusTile({
         <YStack
           testID={badgeTestID}
           role="button"
-          aria-label="Add story"
+          aria-label={t('mweb.common.addStory')}
           onPress={onBadgePress}
           position="absolute"
           top={42}

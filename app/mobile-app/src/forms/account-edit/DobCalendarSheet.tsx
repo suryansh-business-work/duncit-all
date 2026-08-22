@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { buildMonthDays } from '@/components/create-pod/DateTimeSheet';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const YEAR_SPAN = 120;
 
@@ -82,6 +83,7 @@ export function DobCalendarSheet({
   maxDate,
   onDone,
 }: Readonly<SheetProps>) {
+  const { t } = useTranslation();
   const seed = initial ?? maxDate;
   const [view, setView] = useState(new Date(seed.getFullYear(), seed.getMonth(), 1));
   const [day, setDay] = useState(seed.getDate());
@@ -118,13 +120,13 @@ export function DobCalendarSheet({
         <MaterialIcons name="search" size={16} color={muted} />
         <Input
           testID={`${testID}-year-search`}
-          aria-label="Type a year"
+          aria-label={t('mweb.accountEdit.typeAYear')}
           flex={1}
           unstyled
           keyboardType="number-pad"
           value={yearQuery}
           onChangeText={setYearQuery}
-          placeholder="Type a year"
+          placeholder={t('mweb.accountEdit.typeAYear')}
           placeholderTextColor="$muted"
           fontSize={13}
           color="$color"
@@ -166,7 +168,7 @@ export function DobCalendarSheet({
         <XStack
           testID={`${testID}-prev-month`}
           role="button"
-          aria-label="Previous month"
+          aria-label={t('mweb.accountEdit.previousMonth')}
           onPress={() => setView((v) => addMonths(v, -1))}
           padding={8}
           pressStyle={{ opacity: 0.7 }}
@@ -179,7 +181,7 @@ export function DobCalendarSheet({
         <XStack
           testID={`${testID}-next-month`}
           role="button"
-          aria-label="Next month"
+          aria-label={t('mweb.accountEdit.nextMonth')}
           onPress={() => setView((v) => addMonths(v, 1))}
           padding={8}
           pressStyle={{ opacity: 0.7 }}
@@ -207,7 +209,7 @@ export function DobCalendarSheet({
       <XStack
         testID={`${testID}-done`}
         role="button"
-        aria-label="Done"
+        aria-label={t('mweb.common.done')}
         onPress={() => onDone(new Date(view.getFullYear(), view.getMonth(), day))}
         height={46}
         alignItems="center"

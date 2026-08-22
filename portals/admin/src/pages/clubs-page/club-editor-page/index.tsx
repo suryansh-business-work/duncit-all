@@ -18,6 +18,7 @@ import AiFillButton from '../../../components/AiFillButton';
 import { applyAiFillToClubForm } from '../clubFormAi';
 import { CLUB_FOR_EDIT, CREATE, UPDATE } from '../queries';
 import useClubImagePicker from './useClubImagePicker';
+import { useTranslation } from '@duncit/shell';
 
 const ADMIN_CLUB_CONFIG: ClubFormConfig = {
   showAdmins: true,
@@ -34,6 +35,7 @@ const BACK_TO = '/clubs';
  * the page it lands on.
  */
 export default function AdminClubEditorPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const methodsRef = useRef<UseFormReturn<ClubFormValues> | null>(null);
@@ -117,7 +119,7 @@ export default function AdminClubEditorPage() {
         onClose={() => picker.settle(null)}
         onPicked={(url) => picker.settle(url)}
         folder={picker.folder}
-        title="Add club image"
+        title={t('admin.clubs.addImage')}
       />
     </>
   );

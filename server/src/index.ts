@@ -168,6 +168,16 @@ async function bootstrap() {
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());
+  // Every key the platform ships copy for, into Admin > Localization.
+  // This used to happen only when somebody opened that page and pressed
+  // "Import app keys", so a fresh environment — or any key added since the
+  // last time anyone pressed it — sat untranslatable. Create-only: an
+  // existing row keeps its translations.
+  await safeSeed('localization', async () => {
+    const { localizationService } = await import('@modules/platform/localization/localization.service');
+    const created = await localizationService.seedDefaults();
+    if (created > 0) logs.server.info('bootstrap', 'localization', { created });
+  });
   // Every AI feature reads its system prompt from the AI portal's Prompt
   // Library; this puts the shipped defaults there on first boot.
   await safeSeed('aiPrompts', async () => {

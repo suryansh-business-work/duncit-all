@@ -17,8 +17,10 @@ import QuickEditPodDialog from './QuickEditPodDialog';
 import usePodDelete from './usePodDelete';
 import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
+import { useTranslation } from '@duncit/shell';
 
 export default function PodsPage() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const clubFilter = params.get('club_id') ?? '';
@@ -101,7 +103,7 @@ export default function PodsPage() {
                   onChange={(e) => setShowCancelled(e.target.checked)}
                 />
               }
-              label="Include cancelled"
+              label={t('admin.pods.includeCancelled')}
               slotProps={{ typography: { variant: 'body2' } }}
             />
             <CreatePodLauncher onNormal={() => navigate(`/pods/new${editorSuffix}`)} />
@@ -142,7 +144,7 @@ export default function PodsPage() {
         onClose={() => setQuickPod(null)}
         onSaved={() => {
           setQuickPod(null);
-          setToast('Saved');
+          setToast(t('shell.common.saved'));
           refetchRef.current?.();
         }}
         onPickImage={picker.pickImage}

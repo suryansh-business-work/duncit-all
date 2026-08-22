@@ -27,10 +27,12 @@ import { TicketThread } from './TicketThread';
 import { TicketHeaderActions } from './TicketHeaderActions';
 import { TicketComposer } from './TicketComposer';
 import { useTicketActions } from './useTicketActions';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** One support ticket — subject, status and the full reply thread. Users land
  * here right after creating a ticket so they can track it immediately. */
 export function TicketDetailsScreen() {
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'TicketDetails'>>();
   const details = useTicketDetails(route.params.ticketId);
   const { ticket, isLoading } = details;
@@ -158,7 +160,7 @@ export function TicketDetailsScreen() {
 
   return (
     <StackScreen
-      title="Ticket Details"
+      title={t('mweb.ticketDetails.ticketDetails')}
       testID="ticket-details-screen"
       right={ticket ? headerActions : undefined}
     >

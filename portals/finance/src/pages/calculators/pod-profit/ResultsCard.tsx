@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { formatRupees, type PodProfitResults } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   results: PodProfitResults;
@@ -56,6 +57,7 @@ function SectionLabel({ text }: Readonly<{ text: string }>) {
 }
 
 export default function ResultsCard({ results }: Readonly<Props>) {
+  const { t } = useTranslation();
   const hostShare = Math.min(Math.max(results.host_earn_percent, 0), 100);
   const hostShortfall = results.host_receives < 0;
   const hostEmphasis: Emphasis = hostShortfall ? 'error' : 'success';
@@ -68,7 +70,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
           <TrendingUpIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>Results</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.results')}</Typography>
         </Stack>
 
         <Box
@@ -99,33 +101,33 @@ export default function ResultsCard({ results }: Readonly<Props>) {
 
         <SectionLabel text="Collection" />
         <Row
-          label="Payable spots"
+          label={t('finance.calculators.payableSpots')}
           value={`${results.payable_spots} of ${results.total_spots}`}
           detail="The host's spot is free — the calculation is based on total spots − 1"
         />
         <Row
-          label="Total collection"
+          label={t('finance.calculators.totalCollection')}
           value={formatRupees(results.collection_total)}
           detail={`Ticket price × ${results.payable_spots} payable spots — the amount the waterfall runs on`}
         />
 
         <Divider sx={{ my: 1 }} />
         <SectionLabel text="Duncit revenue" />
-        <Row label="Platform fee" value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
-        <Row label="Venue commission" value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
-        <Row label="Host commission" value={formatRupees(results.host_commission_amount)} emphasis="primary" />
-        <Row label="Club admin cut" value={formatRupees(results.club_admin_amount)} emphasis="primary" />
+        <Row label={t('finance.common.platformFee')} value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
+        <Row label={t('finance.calculators.venueCommission')} value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
+        <Row label={t('finance.calculators.hostCommission')} value={formatRupees(results.host_commission_amount)} emphasis="primary" />
+        <Row label={t('finance.calculators.clubAdminCut')} value={formatRupees(results.club_admin_amount)} emphasis="primary" />
 
         <Divider sx={{ my: 1 }} />
         <SectionLabel text="Payouts" />
         <Row
-          label="Venue receives"
+          label={t('finance.calculators.venueReceives')}
           value={formatRupees(results.venue_receives)}
           emphasis="success"
           detail={`Venue amount ${formatRupees(results.venue_amount)} − commission`}
         />
         <Row
-          label="Host receives"
+          label={t('finance.calculators.hostReceives')}
           value={formatRupees(results.host_receives)}
           emphasis={hostEmphasis}
           detail={hostDetail}
@@ -134,20 +136,20 @@ export default function ResultsCard({ results }: Readonly<Props>) {
         <Divider sx={{ my: 1 }} />
         <SectionLabel text="Taxes & pool" />
         <Row
-          label="GST (to government)"
+          label={t('finance.calculators.gstToGovernment')}
           value={formatRupees(results.gst_amount)}
           emphasis="warning"
           detail="Extracted from the collection, remitted to the government"
         />
-        <Row label="Net after GST" value={formatRupees(results.net_amount)} />
+        <Row label={t('finance.calculators.netAfterGst')} value={formatRupees(results.net_amount)} />
         <Row
-          label="Remaining pool"
+          label={t('finance.common.remainingPool')}
           value={formatRupees(results.pool_amount)}
           detail="Net minus platform fee — split between venue and host"
         />
 
         <Divider sx={{ my: 1 }} />
-        <Row label="Reconciles to collection" value={formatRupees(results.reconciled_total)} />
+        <Row label={t('finance.calculators.reconcilesToCollection')} value={formatRupees(results.reconciled_total)} />
       </CardContent>
     </Card>
   );

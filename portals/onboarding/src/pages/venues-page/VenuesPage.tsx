@@ -18,8 +18,10 @@ import {
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function VenuesPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
@@ -72,7 +74,7 @@ export default function VenuesPage() {
   return (
     <Box>
       <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>Registered Venues</Typography>
+        <Typography variant="h5" fontWeight={700}>{t('onboarding.venues.registeredVenues')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
         </Typography>

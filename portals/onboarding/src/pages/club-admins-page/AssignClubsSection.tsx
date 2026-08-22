@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { MATCHING_CLUBS, categoryPath, type ClubAdminRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface ClubOption {
   id: string;
@@ -37,6 +38,7 @@ interface Props {
  * from another, and a picker of every club in the country is not a picker.
  */
 export default function AssignClubsSection({ row, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -96,7 +98,7 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
       <TextField
         size="small"
         fullWidth
-        placeholder="Search clubs"
+        placeholder={t('onboarding.clubAdmins.searchClubs')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         sx={{ mb: 1 }}

@@ -75,7 +75,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             <XStack
               testID="header-studio-badge"
               role="button"
-              aria-label="Switch role"
+              aria-label={t('mweb.common.switchRole')}
               onPress={openSwitch}
               alignItems="center"
               gap={4}
@@ -111,7 +111,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
               <XStack
                 testID="header-search"
                 role="button"
-                aria-label="Search pods"
+                aria-label={t('mweb.appHeader.searchPods')}
                 onPress={() => navigation.navigate('Search')}
                 width={40}
                 height={40}

@@ -14,8 +14,10 @@ import AiMonitorPill from './AiMonitorPill';
 import PodStatusFilter from './PodStatusFilter';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 import type { PodRowStatusFilter } from '../../components/pod-status';
+import { useTranslation } from '@duncit/shell';
 
 export default function ClubAdminClubPodsPage() {
+  const { t } = useTranslation();
   const { clubId = '' } = useParams();
   const navigate = useNavigate();
   const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
@@ -68,7 +70,7 @@ export default function ClubAdminClubPodsPage() {
     try {
       await deletePod({ variables: { pod_doc_id: podToDelete.id } });
       setPodToDelete(null);
-      setMessage('Pod deleted.');
+      setMessage(t('partners.clubAdminClubPodsPage.podDeleted'));
       refetchRef.current?.();
     } catch (error: any) {
       setDeleteError(error.message);
@@ -78,12 +80,12 @@ export default function ClubAdminClubPodsPage() {
 
   const renderActions = (pod: PodRowBase) => (
     <Stack direction="row" justifyContent="flex-end" component="span">
-      <Tooltip title="Pod details">
+      <Tooltip title={t('partners.clubAdminClubPodsPage.podDetails')}>
         <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
           <VisibilityIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Edit pod">
+      <Tooltip title={t('partners.clubAdminClubPodsPage.editPod')}>
         <IconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
           <EditIcon fontSize="small" />
         </IconButton>
@@ -91,7 +93,7 @@ export default function ClubAdminClubPodsPage() {
       {/* An already-cancelled pod stays editable, but there is nothing left
           to delete. */}
       {!pod.is_deleted && (
-        <Tooltip title="Delete pod">
+        <Tooltip title={t('partners.clubAdminClubPodsPage.deletePod')}>
           <IconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
             <DeleteOutlineIcon fontSize="small" />
           </IconButton>
@@ -106,9 +108,9 @@ export default function ClubAdminClubPodsPage() {
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1.5}>
             <Stack spacing={0.25}>
-              <Typography variant="overline" color="text.secondary" fontWeight={800}>Club Admin · Pods</Typography>
+              <Typography variant="overline" color="text.secondary" fontWeight={800}>{t('partners.clubAdminClubPodsPage.clubAdminPods')}</Typography>
               <Typography variant="h6" fontWeight={950}>{club?.club_name ?? 'Club pods'}</Typography>
-              <Typography variant="body2" color="text.secondary">Create, edit and delete pods for this club.</Typography>
+              <Typography variant="body2" color="text.secondary">{t('partners.clubAdminClubPodsPage.createEditAndDeletePodsFor')}</Typography>
             </Stack>
             <Button
               variant="outlined"
@@ -126,7 +128,7 @@ export default function ClubAdminClubPodsPage() {
             fetchRows={fetchRows}
             refetchRef={refetchRef}
             venueName={venueName}
-            emptyText="This club has no pods yet. Create the first one."
+            emptyText={t('partners.clubAdminClubPodsPage.thisClubHasNoPodsYet')}
             toolbarActions={
               <>
                 <PodStatusFilter value={status} onChange={setStatus} />
@@ -147,7 +149,7 @@ export default function ClubAdminClubPodsPage() {
 
       <ConfirmDialog
         open={!!podToDelete}
-        title="Delete pod?"
+        title={t('partners.clubAdminClubPodsPage.deletePod2')}
         message={
           <>
             This will remove <strong>{podToDelete?.pod_title}</strong> from the club. Members lose
@@ -157,7 +159,7 @@ export default function ClubAdminClubPodsPage() {
         destructive
         busy={deleteState.loading}
         busyLabel="Deleting..."
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         onConfirm={confirmDelete}
         onClose={() => setPodToDelete(null)}
       />

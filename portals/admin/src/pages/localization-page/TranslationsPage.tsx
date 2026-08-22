@@ -14,6 +14,7 @@ import {
   type TranslationGroupRow,
   type TranslationRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Translations, two levels deep: the namespaces first, then one namespace's
@@ -21,6 +22,7 @@ import {
  * catalogue passed a few hundred rows, and translators work a page at a time.
  */
 export default function TranslationsPage() {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { data: localeData } = useQuery(LOCALES, { fetchPolicy: 'cache-and-network' });
   const [upsert] = useMutation(UPSERT_TRANSLATION);
@@ -73,7 +75,7 @@ export default function TranslationsPage() {
       setOpen(false);
       refetchRef.current?.();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to save translation');
+      setOpError(e instanceof Error ? e.message : t('admin.localization.saveTranslationFailed'));
     } finally {
       setSaving(false);
     }

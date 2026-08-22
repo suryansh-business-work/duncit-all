@@ -23,6 +23,7 @@ import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewS
 import { StatusViewer } from '@/components/status/StatusViewer';
 import { StoryViewersSheet } from '@/components/status/StoryViewersSheet';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface StatusRailProps {
   userName: string;
@@ -53,6 +54,7 @@ function shuffleStatus<T>(items: T[]): T[] {
  * shows upload progress (Bug 1), and the viewer supports like (Bug 5), viewers
  * (Bug 4) and delete (Bug 7). */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const { mine, items } = useStoryRail();
   const { uploading, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
@@ -229,9 +231,9 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
       <ConfirmDialog
         testID="status-delete-confirm"
         open={pendingDelete !== null}
-        title="Delete story?"
+        title={t('mweb.common.deleteStory')}
         message="This story will be removed for everyone. This can't be undone."
-        confirmLabel="Delete"
+        confirmLabel={t('mweb.common.delete')}
         destructive
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}

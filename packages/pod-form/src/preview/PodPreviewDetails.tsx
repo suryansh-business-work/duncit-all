@@ -7,6 +7,7 @@ import { formatMoney } from '@duncit/utils';
 import PreviewMedia from './PreviewMedia';
 import { PreviewBullets, PreviewCharges, PreviewChips, PreviewSection } from './PodPreviewSections';
 import type { PodPreviewModel } from './pod-preview-model';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** The two figures the apps put above the fold, side by side. */
 function StatBox({ caption, value }: Readonly<{ caption: string; value: string }>) {
@@ -36,6 +37,7 @@ function StatBox({ caption, value }: Readonly<{ caption: string; value: string }
  * than imported.
  */
 export default function PodPreviewDetails({ model }: Readonly<{ model: PodPreviewModel }>) {
+  const { t } = useTranslation();
   const money = (amount: number) => formatMoney(amount);
   // Hoisted out of the JSX: each of these is a choice inside a prop, which
   // nests where it sits (S3776) and reads worse than a named value.
@@ -72,8 +74,8 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
         </Stack>
 
         <Stack direction="row" spacing={1}>
-          <StatBox caption="Spots" value={spotsValue} />
-          <StatBox caption="Price" value={model.priceText} />
+          <StatBox caption={t('podForm.preview.spots')} value={spotsValue} />
+          <StatBox caption={t('podForm.preview.price')} value={model.priceText} />
         </Stack>
 
         {model.placeText && (
@@ -85,7 +87,7 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
         )}
 
         {model.description && (
-          <PreviewSection title="About this pod">
+          <PreviewSection title={t('podForm.preview.aboutThisPod')}>
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
               {model.description}
             </Typography>
@@ -93,7 +95,7 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
         )}
 
         {model.info && (
-          <PreviewSection title="Good to know">
+          <PreviewSection title={t('podForm.preview.goodToKnow')}>
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
               {model.info}
             </Typography>
@@ -101,25 +103,25 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
         )}
 
         {model.offers.length > 0 && (
-          <PreviewSection title="What this pod offers">
+          <PreviewSection title={t('podForm.preview.whatThisPodOffers')}>
             <PreviewBullets items={model.offers} kind="OFFER" />
           </PreviewSection>
         )}
 
         {model.perks.length > 0 && (
-          <PreviewSection title="Available perks">
+          <PreviewSection title={t('podForm.common.availablePerks')}>
             <PreviewBullets items={model.perks} kind="PERK" />
           </PreviewSection>
         )}
 
         {model.charges.length > 0 && (
-          <PreviewSection title="Charges at the venue">
+          <PreviewSection title={t('podForm.preview.chargesAtTheVenue')}>
             <PreviewCharges charges={model.charges} money={money} />
           </PreviewSection>
         )}
 
         {model.paymentTerms && (
-          <PreviewSection title="Payment terms">
+          <PreviewSection title={t('podForm.common.paymentTerms')}>
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
               {model.paymentTerms}
             </Typography>

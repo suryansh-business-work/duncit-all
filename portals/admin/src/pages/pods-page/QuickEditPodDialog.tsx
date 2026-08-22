@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client';
 import { podContentRejectionMessage } from '@duncit/utils';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
 import { UPDATE } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   pod: any;
@@ -22,6 +23,7 @@ export default function QuickEditPodDialog({
   onSaved,
   onPickImage,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [updateMut] = useMutation(UPDATE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function QuickEditPodDialog({
   return (
     <PodContentFormDialog
       open={!!pod}
-      title="Quick edit pod"
+      title={t('admin.pods.quickEdit')}
       defaultValues={{
         pod_title: pod.pod_title || '',
         pod_description: pod.pod_description || '',
@@ -63,8 +65,8 @@ export default function QuickEditPodDialog({
       }}
       editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
       readOnlyContext={[
-        { label: 'Club', value: clubName(pod.club_id) },
-        { label: 'Place', value: pod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(pod.venue_id) },
+        { label: t('admin.pods.colClub'), value: clubName(pod.club_id) },
+        { label: t('admin.pods.place'), value: pod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(pod.venue_id) },
       ]}
       busy={busy}
       error={error}

@@ -21,6 +21,7 @@ import {
   type VenueCancelPodResult,
   type VenuePodRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const FORM_ID = 'venue-cancel-pod-form';
 
@@ -68,6 +69,7 @@ interface BodyProps {
  * starts from a clean form and no stale error.
  */
 function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) {
+  const { t } = useTranslation();
   // cache-and-network: a partner portal tab lives for hours, and a cached
   // penalty that an admin has since changed would warn about a number the
   // server will not actually deduct.
@@ -93,7 +95,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
       });
       await onCancelled(response.data.venueCancelPod as VenueCancelPodResult);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not cancel this pod.';
+      const message = error instanceof Error ? error.message : t('partners.venuePodsPage.couldNotCancelThisPod');
       setError('root', { message });
     }
   });
@@ -102,7 +104,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
 
   return (
     <>
-      <DialogTitle sx={{ fontWeight: 900 }}>Cancel this pod?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 900 }}>{t('partners.venuePodsPage.cancelThisPod')}</DialogTitle>
       <DialogContent dividers>
         {/* noValidate so the Zod message is the only one the owner ever sees. */}
         <Stack component="form" id={FORM_ID} noValidate onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
@@ -120,7 +122,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
           <RhfTextField
             control={control}
             name="reason"
-            label="Why are you cancelling?"
+            label={t('partners.venuePodsPage.whyAreYouCancelling')}
             required
             multiline
             minRows={3}

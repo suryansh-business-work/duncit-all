@@ -15,7 +15,8 @@ import {
   Switch,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import { PARTNER_FAQ_TOPICS, type PartnerFaqTopic } from './partner-faq.types';
+import { partnerFaqTopics, type PartnerFaqTopic } from './partner-faq.types';
+import { useTranslation } from '@duncit/shell';
 
 export interface PartnerFaqFormValues {
   partner_topic: PartnerFaqTopic;
@@ -35,20 +36,24 @@ interface Props {
   onSubmit: (values: PartnerFaqFormValues) => Promise<void>;
 }
 
-export const partnerFaqSchema = z.object({
-  partner_topic: z.enum(['VENUE', 'HOST', 'PRODUCTS'], { message: 'Topic is required' }),
-  question: z.string().trim().min(5, 'Question must be at least 5 characters').max(300),
-  answer: z.string().trim().min(5, 'Answer must be at least 5 characters').max(4000),
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Messages are copy, so the schema is built from the active catalogue. */
+export const buildPartnerFaqSchema = (t: Translate) =>
+  z.object({
+  partner_topic: z.enum(['VENUE', 'HOST', 'PRODUCTS'], { message: t('admin.faqs.topicRequired') }),
+  question: z.string().trim().min(5, t('admin.faqs.questionMin')).max(300),
+  answer: z.string().trim().min(5, t('admin.faqs.answerMin')).max(4000),
   sort_order: z.coerce
-    .number({ message: 'Sort order is required' })
+    .number({ message: t('admin.faqs.sortRequired') })
     .int()
     .min(0)
     .max(9999),
   is_active: z.boolean(),
 });
 
-export const toPartnerFaqInput = (values: PartnerFaqFormValues) => {
-  const cast = partnerFaqSchema.parse(values);
+export const toPartnerFaqInput = (values: PartnerFaqFormValues, t: Translate) => {
+  const cast = buildPartnerFaqSchema(t).parse(values);
   return {
     audience: 'PARTNERS',
     partner_topic: cast.partner_topic,
@@ -60,9 +65,10 @@ export const toPartnerFaqInput = (values: PartnerFaqFormValues) => {
 };
 
 export default function PartnerFaqForm({ open, editing, initialValues, saving, error, onClose, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<PartnerFaqFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(partnerFaqSchema),
+    resolver: zodResolver(buildPartnerFaqSchema(t)),
     mode: 'onTouched',
   });
 
@@ -77,24 +83,24 @@ export default function PartnerFaqForm({ open, editing, initialValues, saving, e
       <DialogTitle>{editing ? 'Edit Partner FAQ' : 'New Partner FAQ'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <RhfTextField control={control} name="partner_topic" select label="Topic">
-            {PARTNER_FAQ_TOPICS.map((topic) => (
+          <RhfTextField control={control} name="partner_topic" select label={t('admin.faqs.topic')}>
+            {partnerFaqTopics(t).map((topic) => (
               <MenuItem key={topic.value} value={topic.value}>
                 {topic.label}
               </MenuItem>
             ))}
           </RhfTextField>
-          <RhfTextField control={control} name="question" label="Question" required />
-          <RhfTextField control={control} name="answer" label="Answer" multiline minRows={4} required />
+          <RhfTextField control={control} name="question" label={t('admin.faqs.question')} required />
+          <RhfTextField control={control} name="answer" label={t('admin.faqs.answer')} multiline minRows={4} required />
           <Stack direction="row" spacing={2} alignItems="center">
-            <RhfTextField control={control} name="sort_order" label="Sort order" type="number" sx={{ width: 160 }} fullWidth={false} />
+            <RhfTextField control={control} name="sort_order" label={t('admin.podPlans.sortOrder')} type="number" sx={{ width: 160 }} fullWidth={false} />
             <Controller
               control={control}
               name="is_active"
               render={({ field }) => (
                 <FormControlLabel
                   control={<Switch checked={!!field.value} onChange={(event) => field.onChange(event.target.checked)} />}
-                  label="Active"
+                  label={t('admin.profile.active')}
                 />
               )}
             />
@@ -103,7 +109,7 @@ export default function PartnerFaqForm({ open, editing, initialValues, saving, e
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={submit} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}
         </Button>

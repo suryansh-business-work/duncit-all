@@ -1,5 +1,6 @@
 import { Stack, Typography } from '@mui/material';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * The account and environment shorthand every Telemetry table renders.
@@ -41,11 +42,12 @@ export function userLabel(user: TelemetryUserRef | null | undefined): string {
 
 /** The account behind a row, or a plain marker that nobody was signed in. */
 export function UserCell({ user }: Readonly<{ user: TelemetryUserRef | null }>) {
+  const { t } = useTranslation();
   if (!user?.id) {
     return (
       <Stack direction="row" spacing={0.5} alignItems="center" color="text.disabled">
         <PersonOffIcon fontSize="small" />
-        <Typography variant="body2">Signed out</Typography>
+        <Typography variant="body2">{t('tech.telemetryIdentity.signedOut')}</Typography>
       </Stack>
     );
   }
@@ -63,8 +65,10 @@ export const ENV_COLOR: Record<string, 'error' | 'warning' | 'default'> = {
   localhost: 'default',
 };
 
-export const ENV_OPTIONS = [
-  { value: 'production', label: 'Production' },
-  { value: 'staging', label: 'Staging' },
-  { value: 'localhost', label: 'Localhost' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const envOptions = (t: Translate) => [
+  { value: 'production', label: t('tech.telemetryIdentity.production') },
+  { value: 'staging', label: t('tech.telemetryIdentity.staging') },
+  { value: 'localhost', label: t('tech.telemetryIdentity.localhost') },
 ];

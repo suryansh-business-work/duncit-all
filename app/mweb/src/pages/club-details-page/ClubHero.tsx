@@ -14,6 +14,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import VideoMedia from '../../components/media/VideoMedia';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   media: { url: string; type: string }[];
@@ -50,16 +51,18 @@ const arrowBtn = {
 };
 
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label="Previous" sx={{ ...arrowBtn, left: 10 }}>
+    <IconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={{ ...arrowBtn, left: 10 }}>
       <ChevronLeftIcon />
     </IconButton>
   );
 }
 
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
   return (
-    <IconButton size="small" onClick={onClick} aria-label="Next" sx={{ ...arrowBtn, right: 10 }}>
+    <IconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={{ ...arrowBtn, right: 10 }}>
       <ChevronRightIcon />
     </IconButton>
   );
@@ -76,6 +79,7 @@ export default function ClubHero({
   onToggleSave,
   onShare,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
   const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
   const overlay = (
@@ -93,7 +97,7 @@ export default function ClubHero({
         '& > *': { pointerEvents: 'auto' },
       }}
     >
-      <IconButton size="small" onClick={onBack} aria-label="Back" sx={overlayBtn}>
+      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>
       <Stack direction="row" spacing={0.75} alignItems="center">
@@ -127,7 +131,7 @@ export default function ClubHero({
         >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </IconButton>
-        <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
+        <IconButton size="small" aria-label={t('mweb.common.share')} onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -194,7 +198,7 @@ export default function ClubHero({
               src={m.url}
               alt={title}
               role="button"
-              aria-label="Open image"
+              aria-label={t('mweb.clubDetails.openImage')}
               onClick={() => setLightbox(i)}
               sx={{
                 width: '100%',

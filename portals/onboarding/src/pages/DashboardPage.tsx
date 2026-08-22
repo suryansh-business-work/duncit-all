@@ -10,6 +10,7 @@ import MeetingScheduleStrip from './dashboard/MeetingScheduleStrip';
 import StatusBreakdownChart from './dashboard/StatusBreakdownChart';
 import OnboardingTrendChart from './dashboard/OnboardingTrendChart';
 import { buildKpis, countByKind, countByStatus, monthlyOnboarding } from './dashboard/onboardingStats';
+import { useTranslation } from '@duncit/app-settings';
 
 const ONBOARDING_DASHBOARD = gql`
   query OnboardingDashboard {
@@ -76,6 +77,7 @@ function StatusCard({ to, title, chartTitle, counts }: StatusCardProps) {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(ONBOARDING_DASHBOARD, { fetchPolicy: 'cache-and-network' });
   const me = data?.me;
@@ -122,7 +124,7 @@ export default function DashboardPage() {
     },
     {
       id: 'meeting-schedule',
-      title: 'Meeting schedule',
+      title: t('onboarding.dashboard.meetingSchedule'),
       defaultLayout: { x: 0, y: 2, w: 12, h: 3 },
       minH: 3,
       content: (
@@ -138,7 +140,7 @@ export default function DashboardPage() {
       defaultLayout: { x: 0, y: 5, w: 4, h: 5 },
       minW: 3,
       minH: 4,
-      content: <StatusCard to="/hosts" title="Hosts by status" chartTitle="Host" counts={hostCounts} />,
+      content: <StatusCard to="/hosts" title={t('onboarding.dashboard.hostsByStatus')} chartTitle="Host" counts={hostCounts} />,
     },
     {
       id: 'venues-by-status',
@@ -146,7 +148,7 @@ export default function DashboardPage() {
       defaultLayout: { x: 4, y: 5, w: 4, h: 5 },
       minW: 3,
       minH: 4,
-      content: <StatusCard to="/venues" title="Venues by status" chartTitle="Venue" counts={venueCounts} />,
+      content: <StatusCard to="/venues" title={t('onboarding.dashboard.venuesByStatus')} chartTitle="Venue" counts={venueCounts} />,
     },
     {
       id: 'brands-by-status',
@@ -157,7 +159,7 @@ export default function DashboardPage() {
       content: (
         <StatusCard
           to="/ecomm-brands"
-          title="E-Commerce brands by status"
+          title={t('onboarding.dashboard.eCommerceBrandsByStatus')}
           chartTitle="Brand"
           counts={brandCounts}
         />
@@ -165,8 +167,8 @@ export default function DashboardPage() {
     },
     {
       id: 'onboarding-trend',
-      title: 'Onboarding trend (last 6 months)',
-      subtitle: 'Hosts, Venues, Brands and Club Admins by month.',
+      title: t('onboarding.dashboard.onboardingTrendLast6Months'),
+      subtitle: t('onboarding.dashboard.hostsVenuesBrandsAndClubAdmins'),
       defaultLayout: { x: 0, y: 10, w: 12, h: 6 },
       minW: 4,
       minH: 4,

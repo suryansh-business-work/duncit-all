@@ -1,6 +1,7 @@
 import { Autocomplete, Box, TextField, Typography, type SxProps, type Theme } from '@mui/material';
 import type { ChangeEvent } from 'react';
 import { COUNTRIES, findCountryByDial, type Country } from '../utils/countries';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   value: string;
@@ -22,7 +23,7 @@ export default function PhoneExtensionField({
   onChange,
   onBlur,
   name = 'phone_extension',
-  label = 'Code',
+  label,
   size = 'small',
   fullWidth = true,
   error,
@@ -31,6 +32,10 @@ export default function PhoneExtensionField({
   sx,
   textFieldSx,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const labelText = label ?? t('mweb.common.code');
   const selected = findCountryByDial(value) ?? null;
   return (
     <Autocomplete<Country>
@@ -66,7 +71,7 @@ export default function PhoneExtensionField({
         <TextField
           {...params}
           name={name}
-          label={label}
+          label={labelText}
           size={size}
           error={error}
           helperText={helperText}

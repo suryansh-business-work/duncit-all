@@ -12,6 +12,7 @@ import {
 import MediaPickerField from '../../components/MediaPickerField';
 import CallToActionSection from './CallToActionSection';
 import { TITLE_MAX, type SomethingForYouForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -30,6 +31,7 @@ export default function ItemFormDialog({
   onClose,
   onSave,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const tooLong = form.title.length > TITLE_MAX;
 
   return (
@@ -41,7 +43,7 @@ export default function ItemFormDialog({
               on both surfaces, so a longer headline is not wrapped, it is cut
               off — and this is the last moment anyone can choose what stays. */}
           <TextField
-            label="Title"
+            label={t('shell.common.title')}
             value={form.title}
             onChange={(event) => setForm({ ...form, title: event.target.value })}
             required
@@ -51,29 +53,29 @@ export default function ItemFormDialog({
             inputProps={{ maxLength: TITLE_MAX }}
           />
           <MediaPickerField
-            label="Card image"
+            label={t('admin.somethingForYou.cardImage')}
             value={form.image_url}
             onChange={(url) => setForm({ ...form, image_url: url })}
             folder="/something-for-you"
-            helperText="A portrait image. Each card has its own; the frame and type are the same everywhere."
+            helperText={t('admin.somethingForYou.cardImageHint')}
           />
           <TextField
-            label="Bottom text"
+            label={t('admin.somethingForYou.bottomText')}
             value={form.bottom_text}
             onChange={(event) => setForm({ ...form, bottom_text: event.target.value })}
             fullWidth
-            helperText="The label on the strip along the bottom, e.g. Refer and Earn"
+            helperText={t('admin.somethingForYou.bottomTextHint')}
           />
           <CallToActionSection form={form} setForm={setForm} />
           <TextField
-            label="Sort order"
+            label={t('admin.podPlans.sortOrder')}
             type="number"
             value={form.sort_order}
             onChange={(event) =>
               setForm({ ...form, sort_order: Number(event.target.value) || 0 })
             }
             fullWidth
-            helperText="Lowest first, left to right."
+            helperText={t('admin.somethingForYou.sortHint')}
           />
           <FormControlLabel
             control={
@@ -82,13 +84,13 @@ export default function ItemFormDialog({
                 onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
               />
             }
-            label="Show on Home"
+            label={t('admin.somethingForYou.showOnHome')}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button
           variant="contained"

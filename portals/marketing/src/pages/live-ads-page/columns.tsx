@@ -5,6 +5,9 @@ import { StatusChip } from '@duncit/ui';
 import { actionsColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
 import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from '../ads-approvals-page/helpers';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const renderAd = (row: AdRequestRow) => (
   <Stack spacing={0} sx={{ lineHeight: 1.3 }}>
@@ -41,7 +44,7 @@ export function getLiveAdColumns({
   formatDate,
   onStop,
   onDelete,
-}: Readonly<ColumnDeps>): DuncitColumn<AdRequestRow>[] {
+}: Readonly<ColumnDeps>, t: Translate): DuncitColumn<AdRequestRow>[] {
   return [
     {
       field: 'ad_title',
@@ -53,20 +56,20 @@ export function getLiveAdColumns({
     },
     {
       field: 'submitted_by_name',
-      headerName: 'Advertiser',
+      headerName: t('marketing.liveAds.advertiser'),
       minWidth: 160,
       cellRenderer: renderAdvertiser,
       valueGetter: (row) => row.brand_name || row.submitted_by_name,
     },
     {
       field: 'position',
-      headerName: 'Placement',
+      headerName: t('marketing.common.placement'),
       minWidth: 150,
       valueGetter: (row) => adPositionLabel(row.position),
     },
     {
       field: 'ad_type',
-      headerName: 'Type',
+      headerName: t('shell.common.type'),
       sortable: false,
       width: 110,
       cellRenderer: renderType,
@@ -74,7 +77,7 @@ export function getLiveAdColumns({
     },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       sortable: false,
       width: 110,
       cellRenderer: renderStatus,
@@ -82,14 +85,14 @@ export function getLiveAdColumns({
     },
     dateColumn<AdRequestRow>({
       field: 'end_at',
-      headerName: 'Ends',
+      headerName: t('marketing.common.ends'),
       hide: false,
       width: 160,
       formatDate,
     }),
     {
       field: 'approved_cost',
-      headerName: 'Cost',
+      headerName: t('marketing.common.cost'),
       sortable: false,
       width: 120,
       valueGetter: (row) =>
@@ -99,8 +102,8 @@ export function getLiveAdColumns({
       width: 110,
       onEdit: onStop,
       onDelete,
-      edit: { title: 'Stop this ad', icon: <StopCircleIcon fontSize="small" />, color: 'warning' },
-      delete: { title: 'Delete this ad', icon: <DeleteOutlineIcon fontSize="small" /> },
+      edit: { title: t('marketing.liveAds.stopThisAd'), icon: <StopCircleIcon fontSize="small" />, color: 'warning' },
+      delete: { title: t('marketing.liveAds.deleteThisAd'), icon: <DeleteOutlineIcon fontSize="small" /> },
     }),
   ];
 }

@@ -16,6 +16,7 @@ import { CREATE_HOST_LEAD, CREATE_VENUE_LEAD } from '../api/crm.gql';
 import { parseApiError } from '@duncit/utils';
 import AiRecordsTable, { type AiRow } from './ai-records/AiRecordsTable';
 import { recordToRow, rowError, rowToInput } from './ai-records/aiLeadInput';
+import { useTranslation } from '@duncit/shell';
 
 const AI_PARSE_CRM_LEADS = gql`
   mutation AiParseCrmLeads($entity: CrmAiEntity!, $text: String!) {
@@ -34,6 +35,7 @@ interface Props {
 
 /** Paste free-form text → AI extracts MULTIPLE leads → edit → confirm → bulk create. */
 export default function FillWithAiDialog({ open, entity, title, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [step, setStep] = useState<'input' | 'review'>('input');
   const [rows, setRows] = useState<AiRow[]>([]);
@@ -45,7 +47,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
 
   const parse = async () => {
     setError(null);
-    if (!text.trim()) { setError('Paste some text to parse first.'); return; }
+    if (!text.trim()) { setError(t('crm.components.pasteSomeTextToParseFirst')); return; }
     try {
       const res = await parseMut({ variables: { entity, text } });
       const raw = res.data?.aiParseCrmLeads;
@@ -93,7 +95,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
                 Paste text describing one or more {entity === 'VENUE_LEAD' ? 'venues' : 'hosts'} — a list, a brief,
                 multiple messages. We'll extract each as a row you can edit before saving.
               </Typography>
-              <TextField label="Paste text here" multiline minRows={8} maxRows={16} fullWidth value={text} onChange={(e) => setText(e.target.value)} />
+              <TextField label={t('crm.components.pasteTextHere')} multiline minRows={8} maxRows={16} fullWidth value={text} onChange={(e) => setText(e.target.value)} />
             </>
           ) : (
             <>
@@ -106,7 +108,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={parsing || saving}>Cancel</Button>
+        <Button onClick={close} disabled={parsing || saving}>{t('shell.common.cancel')}</Button>
         {step === 'input' ? (
           <Button variant="contained" onClick={parse} disabled={parsing} startIcon={<AutoFixHighIcon />}>
             {parsing ? 'Parsing…' : 'Parse'}

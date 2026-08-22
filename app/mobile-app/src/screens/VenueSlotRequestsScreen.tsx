@@ -8,6 +8,7 @@ import {
   ALL_VENUES,
 } from '@/hooks/useVenueSlotRequests';
 import { formatDate, formatDateTime, formatTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Slot Requests — the RN twin of mWeb's venue-slot-requests-page.
@@ -67,6 +68,7 @@ function RequestCard({
   onApprove: (slotId: string) => void;
   onDecline: (slotId: string) => void;
 }>) {
+  const { t } = useTranslation();
   return (
     <YStack
       gap={8}
@@ -85,13 +87,16 @@ function RequestCard({
         </Text>
       </YStack>
 
-      <Detail label="Venue" value={request.venue_name} />
-      <Detail label="Slot" value={fmtWindow(request)} />
-      <Detail label="Slot price" value={fmtPrice(request.price)} />
-      <Detail label="Requested" value={fmtRequested(request.requested_at)} />
-      <Detail label="Host" value={request.host_name || '—'} />
+      <Detail label={t('mweb.common.venue')} value={request.venue_name} />
+      <Detail label={t('mweb.venueSlotRequests.slot')} value={fmtWindow(request)} />
+      <Detail label={t('mweb.venueSlotRequests.slotPrice')} value={fmtPrice(request.price)} />
       <Detail
-        label="Contact"
+        label={t('mweb.venueSlotRequests.requested')}
+        value={fmtRequested(request.requested_at)}
+      />
+      <Detail label={t('mweb.venueSlotRequests.host')} value={request.host_name || '—'} />
+      <Detail
+        label={t('mweb.venueSlotRequests.contact')}
         value={[request.host_email, request.host_phone].filter(Boolean).join(' · ') || '—'}
       />
 
@@ -108,6 +113,7 @@ function RequestCard({
 }
 
 export function VenueSlotRequestsScreen() {
+  const { t } = useTranslation();
   const slots = useVenueSlotRequests();
 
   // A pod goes live the moment you say yes, so neither answer is a tap to make
@@ -138,7 +144,10 @@ export function VenueSlotRequestsScreen() {
   };
 
   return (
-    <StackScreen title="Slot Requests" testID="venue-slot-requests-screen">
+    <StackScreen
+      title={t('mweb.venueSlotRequests.slotRequests')}
+      testID="venue-slot-requests-screen"
+    >
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text fontSize={12.5} color="$muted">
           Hosts who want to run their pod at your venue. A pod only goes live after you approve its

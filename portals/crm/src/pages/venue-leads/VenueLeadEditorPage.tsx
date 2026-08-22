@@ -8,8 +8,10 @@ import { VenueLeadForm, fromVenueLead, toVenueLeadInput, type VenueLeadFormValue
 import { venueLeadInitialValues } from '../../forms/venue-lead/venue-lead.types';
 import { mergeAiPrefill } from '../../forms/aiPrefill';
 import type { VenueLead } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export default function VenueLeadEditorPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ export default function VenueLeadEditorPage() {
   if (cfgLoading || (isEdit && leadLoading)) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
   }
-  if (isEdit && !lead) return <Alert severity="error">Venue lead not found.</Alert>;
+  if (isEdit && !lead) return <Alert severity="error">{t('crm.venueLeads.venueLeadNotFound')}</Alert>;
 
   return (
     <Stack spacing={2}>

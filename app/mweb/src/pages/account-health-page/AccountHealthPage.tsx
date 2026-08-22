@@ -5,8 +5,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HealthMeter from '../../components/health/HealthMeter';
 import HealthBreakdown from '../../components/health/HealthBreakdown';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../../components/health/queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function AccountHealthPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ myAccountHealth: HealthScore }>(MY_ACCOUNT_HEALTH, {
     fetchPolicy: 'cache-and-network',
@@ -15,7 +17,7 @@ export default function AccountHealthPage() {
   return (
     <Stack spacing={2.25} sx={{ mx: { xs: -0.25, sm: 0 } }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
+        <IconButton size="small" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
         </IconButton>
         <Box>
@@ -41,7 +43,7 @@ export default function AccountHealthPage() {
           <HealthMeter
             score={data.myAccountHealth.total_score}
             band={data.myAccountHealth.band}
-            label="Account Health"
+            label={t('mweb.common.accountHealth')}
           />
           <Box sx={{ width: '100%' }}>
             <HealthBreakdown score={data.myAccountHealth} />

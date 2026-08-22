@@ -6,7 +6,8 @@ import { setToken, clearToken } from '../../src/lib/session';
 import { renderWithProviders } from '../testkit';
 
 const flag = vi.hoisted(() => ({ value: true }));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useFeatureFlag: () => flag.value,
 }));
 

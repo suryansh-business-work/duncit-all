@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { SurveyAnswers } from '../../components/survey-answers';
 import { DECIDE_MEETING, type MeetingDecision, type OnboardingMeeting } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   meeting: OnboardingMeeting | null;
@@ -26,6 +27,7 @@ interface Props {
  * approval drafts the onboarded entity (or grants the club-admin role); there is
  * no admin round-trip. */
 export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [decideMeeting, { loading }] = useMutation(DECIDE_MEETING);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
   const decide = async (decision: MeetingDecision) => {
     if (!meeting) return;
     if (!feedback.trim()) {
-      setError('Add your feedback before deciding.');
+      setError(t('onboarding.meetings.addYourFeedbackBeforeDeciding'));
       return;
     }
     setError(null);
@@ -49,13 +51,13 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
       onClose();
       await onDecided();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the decision');
+      setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotSaveTheDecision'));
     }
   };
 
   return (
     <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Approve or deny onboarding</DialogTitle>
+      <DialogTitle>{t('onboarding.meetings.approveOrDenyOnboarding')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
@@ -66,8 +68,8 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
         <Divider sx={{ my: 2 }} />
         <TextField
           size="small"
-          label="Your feedback"
-          placeholder="Share how the interview went and your recommendation"
+          label={t('onboarding.meetings.yourFeedback')}
+          placeholder={t('onboarding.meetings.shareHowTheInterviewWentAnd')}
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           multiline
@@ -77,7 +79,7 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>Cancel</Button>
+        <Button onClick={close}>{t('shell.common.cancel')}</Button>
         <Button color="error" onClick={() => decide('DENIED')} disabled={loading}>
           {loading ? 'Saving…' : 'Deny'}
         </Button>

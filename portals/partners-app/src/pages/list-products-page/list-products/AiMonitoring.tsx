@@ -4,22 +4,26 @@ import {
   Typography,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useTranslation } from '@duncit/shell';
 
-const SCANNED_ITEMS = [
-  { key: 'name', label: 'Product title', detail: 'checked for misleading, offensive or restricted wording.' },
-  { key: 'descriptions', label: 'Variant descriptions', detail: 'checked against the community guidelines.' },
-  { key: 'images', label: 'Variant images', detail: 'scanned for prohibited or unsafe content.' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const scannedItems = (t: Translate) =>[
+  { key: 'name', label: t('partners.listProductsPage.productTitle'), detail: 'checked for misleading, offensive or restricted wording.' },
+  { key: 'descriptions', label: t('partners.listProductsPage.variantDescriptions'), detail: 'checked against the community guidelines.' },
+  { key: 'images', label: t('partners.listProductsPage.variantImages'), detail: 'scanned for prohibited or unsafe content.' },
 ];
 
 /** "AI monitoring" chip beside the submit row. Clicking it opens a dialog
  * explaining what the AI preflight scans before a listing is accepted. */
 export function AiMonitoringChip() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <>
       <Chip
         icon={<AutoAwesomeIcon />}
-        label="AI monitoring"
+        label={t('partners.listProductsPage.aiMonitoring')}
         color="secondary"
         variant="outlined"
         onClick={() => setOpen(true)}
@@ -35,7 +39,7 @@ export function AiMonitoringChip() {
             community guidelines reach shoppers. The check reviews:
           </Typography>
           <Stack spacing={1.25}>
-            {SCANNED_ITEMS.map((item) => (
+            {scannedItems(t).map((item) => (
               <Stack key={item.key} spacing={0.25} sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}>
                 <Typography variant="body2" fontWeight={700}>{item.label}</Typography>
                 <Typography variant="caption" color="text.secondary">{item.detail}</Typography>
@@ -48,7 +52,7 @@ export function AiMonitoringChip() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Got it</Button>
+          <Button onClick={() => setOpen(false)}>{t('partners.listProductsPage.gotIt')}</Button>
         </DialogActions>
       </Dialog>
     </>

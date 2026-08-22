@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Controller, useFieldArray, type Control, type Path } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   control: Control<ProductListingValues>;
@@ -12,6 +13,7 @@ interface Props {
 /** Define the product's options (Size, Colour, …) and their values. A variant
  * is generated automatically for every combination (the option matrix). */
 export default function OptionsEditor({ control }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: 'options' });
   return (
     <Stack spacing={1.5}>
@@ -26,7 +28,7 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
           <RhfTextField
             control={control}
             name={`options.${index}.name` as Path<ProductListingValues>}
-            label="Option name"
+            label={t('partners.listProductsPage.optionName')}
             sx={{ maxWidth: 200 }}
           />
           <Controller
@@ -43,8 +45,8 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Values"
-                    placeholder="Type a value + Enter"
+                    label={t('partners.listProductsPage.values')}
+                    placeholder={t('partners.listProductsPage.typeAValueEnter')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message ?? 'e.g. S, M, L'}
                   />
@@ -52,7 +54,7 @@ export default function OptionsEditor({ control }: Readonly<Props>) {
               />
             )}
           />
-          <IconButton aria-label="Remove option" color="error" onClick={() => remove(index)} sx={{ mt: 1 }}>
+          <IconButton aria-label={t('partners.listProductsPage.removeOption')} color="error" onClick={() => remove(index)} sx={{ mt: 1 }}>
             <DeleteOutlineIcon />
           </IconButton>
         </Stack>

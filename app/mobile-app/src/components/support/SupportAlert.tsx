@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Variant = 'success' | 'error';
 
@@ -25,6 +26,7 @@ const ICON: Record<Variant, ComponentProps<typeof MaterialIcons>['name']> = {
  * palette instead of a plain coloured line of text.
  */
 export function SupportAlert({ variant, message, onClose, testID }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { success, danger } = useThemeColors();
   const tone = variant === 'success' ? success : danger;
   return (
@@ -45,7 +47,7 @@ export function SupportAlert({ variant, message, onClose, testID }: Readonly<Pro
       <XStack
         testID={`${testID}-close`}
         role="button"
-        aria-label="Dismiss"
+        aria-label={t('mweb.support.dismiss')}
         onPress={onClose}
         padding={2}
         pressStyle={{ opacity: 0.6 }}

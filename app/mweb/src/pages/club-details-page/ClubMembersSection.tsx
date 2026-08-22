@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Avatar, AvatarGroup, Box, ButtonBase, Typography } from '@mui/material';
 import PodAttendeesDialog, { type AttendeePerson } from '../../components/pod-details/PodAttendeesDialog';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CLUB_MEMBERS = gql`
   query ClubMembers($ids: [ID!]!) {
@@ -20,6 +21,7 @@ interface Props {
 /** Pod members — everyone attending the club's pods. Tapping the avatar group
  * opens the full list; each row opens that member's full profile (B4-12). */
 export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { data } = useQuery(CLUB_MEMBERS, {
     variables: { ids: memberIds },
@@ -51,7 +53,7 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
       </Typography>
       <ButtonBase
         onClick={() => setOpen(true)}
-        aria-label="View all club members"
+        aria-label={t('mweb.clubDetails.viewAllClubMembers')}
         sx={{ borderRadius: 999, p: 0.5 }}
       >
         <AvatarGroup

@@ -10,6 +10,7 @@ import {
   type WhatsAppOtpRequestValues,
   type WhatsAppOtpVerifyValues,
 } from './whatsapp-otp.types';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface RequestProps {
   loading: boolean;
@@ -18,6 +19,7 @@ interface RequestProps {
 }
 
 export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<RequestProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<WhatsAppOtpRequestValues>({
     defaultValues: whatsAppOtpRequestDefaults,
     resolver: zodResolver(whatsAppOtpRequestSchema),
@@ -30,7 +32,7 @@ export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<Requ
         <RhfTextField
           control={control}
           name="phone_extension"
-          label="Code"
+          label={t('mweb.common.code')}
           size="small"
           fullWidth={false}
           sx={{ width: 100 }}
@@ -38,7 +40,7 @@ export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<Requ
         <RhfTextField
           control={control}
           name="phone_number"
-          label="WhatsApp number"
+          label={t('mweb.common.whatsappNumber')}
           required
           hint="6–15 digits"
           size="small"
@@ -69,6 +71,7 @@ export function WhatsAppVerifyForm({
   onChangeNumber,
   onSkip,
 }: Readonly<VerifyProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<WhatsAppOtpVerifyValues>({
     defaultValues: whatsAppOtpVerifyDefaults,
     resolver: zodResolver(whatsAppOtpVerifySchema),
@@ -80,7 +83,7 @@ export function WhatsAppVerifyForm({
       <RhfTextField
         control={control}
         name="otp"
-        label="Enter OTP"
+        label={t('mweb.common.enterOtp')}
         required
         hint="4–8 digit code"
         size="small"

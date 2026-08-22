@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import MediaPickerDialog from '../MediaPickerDialog';
 import MediaListRow from './MediaListRow';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   label: string;
@@ -23,6 +24,7 @@ export default function MediaListField({
   helperText,
   buttonLabel = 'Add image',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -74,7 +76,7 @@ export default function MediaListField({
         >
           <ImageIcon sx={{ opacity: 0.5 }} />
           <Typography variant="caption" sx={{ display: 'block' }}>
-            No images yet. Click <b>Add image</b> to upload or pick from Pexels.
+            No images yet. Click <b>{t('onboarding.mediaListField.addImage')}</b> to upload or pick from Pexels.
           </Typography>
         </Box>
       ) : (

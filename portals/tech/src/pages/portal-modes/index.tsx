@@ -7,6 +7,7 @@ import { PORTAL_MODES_TABLE, SET_PORTAL_MODE, type PortalModeRow, type PortalMod
 import PortalModesTable from './PortalModesTable';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 const MODE_VERB: Record<PortalModeState, string> = {
   LIVE: 'go live',
@@ -15,6 +16,7 @@ const MODE_VERB: Record<PortalModeState, string> = {
 };
 
 export default function PortalModesPage() {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -31,7 +33,7 @@ export default function PortalModesPage() {
           mode === 'MAINTENANCE' ? 'maintenance' : 'under-development'
         } page until you set it back to Live.`,
         destructive: true,
-        confirmLabel: 'Confirm',
+        confirmLabel: t('tech.portalModes.confirm'),
       });
       if (!ok) return;
     }
@@ -52,7 +54,7 @@ export default function PortalModesPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <ConstructionIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>Maintenance & Development</Typography>
+          <Typography variant="h5" fontWeight={800}>{t('tech.portalModes.maintenanceAndDevelopment')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Toggle any portal, website or app into Maintenance or Development. Only one can be on at a time; both block
             the app with a distinct page.

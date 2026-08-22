@@ -13,6 +13,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MediaPickerDialog from './MediaPickerDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   label: string;
@@ -46,6 +47,7 @@ export default function MediaPickerField({
   buttonLabel = 'Choose image',
   accept,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   if (buttonOnly) {
@@ -78,12 +80,12 @@ export default function MediaPickerField({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         fullWidth
-        placeholder="Click the image icon to upload, or paste a URL…"
+        placeholder={t('admin.pickers.mediaHint')}
         helperText={helperText}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Tooltip title="Pick from device or Pexels">
+              <Tooltip title={t('admin.pickers.mediaPick')}>
                 <IconButton size="small" onClick={() => setOpen(true)}>
                   <ImageIcon fontSize="small" />
                 </IconButton>
@@ -92,7 +94,7 @@ export default function MediaPickerField({
           ),
           endAdornment: value ? (
             <InputAdornment position="end">
-              <Tooltip title="Open">
+              <Tooltip title={t('admin.pickers.open')}>
                 <IconButton size="small" onClick={() => window.open(value, '_blank')}>
                   <OpenInNewIcon fontSize="small" />
                 </IconButton>

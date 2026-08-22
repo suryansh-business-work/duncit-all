@@ -1,12 +1,14 @@
 import UploadSettingPage from './UploadSettingPage';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin > Upload Settings > Portals Upload Setting. */
 export default function PortalsUploadSettingPage() {
+  const { t } = useTranslation();
   return (
     <UploadSettingPage
       surface="PORTALS"
-      title="Portals Upload Setting"
-      subtitle="Upload rules applied to every MUI portal (Admin, Partners, CRM, Support, …)."
+      title={t('admin.uploads.portalsTitle')}
+      subtitle={t('admin.uploads.portalsHint')}
     />
   );
 }

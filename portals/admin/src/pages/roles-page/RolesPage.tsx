@@ -70,7 +70,7 @@ export default function RolesPage() {
       title: t('admin.roles.deleteRole'),
       message: `Delete role "${r.key}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {
@@ -84,7 +84,7 @@ export default function RolesPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Roles</Typography>
+        <Typography variant="h5">{t('admin.roles.title')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Each role grants access to one portal. Assign roles to users from User Management.
         </Typography>

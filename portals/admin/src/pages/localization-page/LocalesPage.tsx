@@ -23,9 +23,11 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import TranslateIcon from '@mui/icons-material/Translate';
 import LocaleDialog, { type LocaleFormValues } from './LocaleDialog';
 import { DELETE_LOCALE, LOCALES, UPSERT_LOCALE, type LocaleRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Locales — the languages/country locales the platform can render in. */
 export default function LocalesPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(LOCALES, { fetchPolicy: 'cache-and-network' });
   const [upsert] = useMutation(UPSERT_LOCALE, { refetchQueries: ['Locales'] });
   const [remove] = useMutation(DELETE_LOCALE, { refetchQueries: ['Locales'] });
@@ -46,7 +48,7 @@ export default function LocalesPage() {
       setToast(editing ? 'Locale updated' : 'Locale added');
       setOpen(false);
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to save locale');
+      setOpError(e instanceof Error ? e.message : t('admin.localization.saveLocaleFailed'));
     } finally {
       setSaving(false);
     }
@@ -58,7 +60,7 @@ export default function LocalesPage() {
       await remove({ variables: { code: row.code } });
       setToast(`${row.code} removed`);
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to remove locale');
+      setOpError(e instanceof Error ? e.message : t('admin.localization.removeLocaleFailed'));
     }
   };
 
@@ -92,7 +94,7 @@ export default function LocalesPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
       {opError && <Alert severity="error">{opError}</Alert>}
       {!loading && rows.length === 0 && (
-        <Alert severity="info">No locales yet — add one to start translating.</Alert>
+        <Alert severity="info">{t('admin.localization.localesEmpty')}</Alert>
       )}
 
       {rows.length > 0 && (
@@ -101,10 +103,10 @@ export default function LocalesPage() {
             <TableHead>
               <TableRow>
                 <TableCell>Code</TableCell>
-                <TableCell>Language</TableCell>
-                <TableCell>English name</TableCell>
-                <TableCell>Flags</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>{t('admin.localization.language')}</TableCell>
+                <TableCell>{t('admin.localization.englishName')}</TableCell>
+                <TableCell>{t('admin.localization.colFlags')}</TableCell>
+                <TableCell align="right">{t('shell.common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -115,12 +117,12 @@ export default function LocalesPage() {
                   <TableCell>{row.english_label || '—'}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>
-                      {row.is_default && <Chip size="small" color="primary" label="Default" />}
+                      {row.is_default && <Chip size="small" color="primary" label={t('admin.roles.default')} />}
                       {row.is_rtl && <Chip size="small" label="RTL" />}
                       <Chip
                         size="small"
                         color={row.is_active ? 'success' : 'default'}
-                        label={row.is_active ? 'Active' : 'Off'}
+                        label={row.is_active ? t('admin.profile.active') : 'Off'}
                       />
                     </Stack>
                   </TableCell>

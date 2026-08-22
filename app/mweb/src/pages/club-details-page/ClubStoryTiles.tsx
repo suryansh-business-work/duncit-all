@@ -2,6 +2,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 import { STORY_RING_GRADIENT } from '../home-page/HomeStatusTile';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface ClubStory {
   id: string;
@@ -24,6 +25,7 @@ interface Props {
 
 /** The rail's tiles — the admin-only "Add" tile and one ring per live story. */
 export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { openClubPicker } = useStatusUpload();
 
   return (
@@ -33,7 +35,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
           alignItems="center"
           spacing={0.5}
           role="button"
-          aria-label="Add a story to this club"
+          aria-label={t('mweb.clubDetails.addAStoryToThisClub')}
           onClick={() => openClubPicker(clubId)}
           sx={{ cursor: 'pointer', width: 66, flex: '0 0 auto' }}
         >

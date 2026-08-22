@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { MeetingSlot } from '@/graphql/onboarding-survey';
 import { ReasonField } from './ReasonField';
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -44,6 +45,7 @@ export function RescheduleDialog({
   onClose,
   onConfirm,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary, onPrimary } = useThemeColors();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -53,7 +55,7 @@ export function RescheduleDialog({
             <YStack
               testID="reschedule-backdrop"
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -103,7 +105,7 @@ export function RescheduleDialog({
                   ) : null}
                   <ReasonField
                     testID="reschedule-reason"
-                    label="Why are you rescheduling?"
+                    label={t('mweb.earn.whyAreYouRescheduling')}
                     value={reason}
                     onChangeText={onChangeReason}
                   />
@@ -117,7 +119,7 @@ export function RescheduleDialog({
                   <XStack
                     testID="reschedule-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={onClose}
                     flex={1}
                     height={44}
@@ -135,7 +137,7 @@ export function RescheduleDialog({
                   <XStack
                     testID="reschedule-confirm"
                     role="button"
-                    aria-label="Move to this slot"
+                    aria-label={t('mweb.earn.moveToThisSlot')}
                     aria-disabled={busy}
                     onPress={busy ? undefined : onConfirm}
                     flex={1}

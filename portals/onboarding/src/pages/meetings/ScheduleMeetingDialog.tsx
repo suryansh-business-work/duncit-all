@@ -23,6 +23,7 @@ import {
   type OnboardingMeeting,
 } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const STATUSES: MeetingStatus[] = ['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED'];
 const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
@@ -36,6 +37,7 @@ interface Props {
 /** Slot-aware scheduling dialog — staff pick an open slot (booked ones disabled)
  * instead of a free datetime, so two applicants can't land on the same time. */
 export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
     variables: { exclude_meeting_id: meeting?.id },
     skip: !meeting,
@@ -62,11 +64,11 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
   const save = async () => {
     if (!meeting) return;
     if (status === 'SCHEDULED' && !slot) {
-      setError('Pick an open slot for the meeting.');
+      setError(t('onboarding.meetings.pickAnOpenSlotForThe'));
       return;
     }
     if (status === 'SCHEDULED' && !link.trim()) {
-      setError('Add a meeting link to schedule the meeting.');
+      setError(t('onboarding.meetings.addAMeetingLinkToSchedule'));
       return;
     }
     setError(null);
@@ -79,13 +81,13 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
       });
       onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update meeting');
+      setError(e instanceof Error ? e.message : t('onboarding.meetings.couldNotUpdateMeeting'));
     }
   };
 
   return (
     <Dialog open={!!meeting} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Schedule meeting</DialogTitle>
+      <DialogTitle>{t('onboarding.meetings.scheduleMeeting')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -100,7 +102,7 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
           <TextField
             size="small"
             type="url"
-            label="Meeting link"
+            label={t('onboarding.meetings.meetingLink')}
             required={status === 'SCHEDULED'}
             error={!!error && status === 'SCHEDULED' && !link.trim()}
             helperText={status === 'SCHEDULED' ? 'Required to schedule the meeting.' : undefined}
@@ -109,14 +111,14 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
             onChange={(e) => setLink(e.target.value)}
             fullWidth
           />
-          <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
+          <TextField select size="small" label={t('shell.common.status')} value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
             {STATUSES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
           </TextField>
-          <TextField size="small" label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+          <TextField size="small" label={t('onboarding.meetings.notes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
       </DialogActions>
     </Dialog>

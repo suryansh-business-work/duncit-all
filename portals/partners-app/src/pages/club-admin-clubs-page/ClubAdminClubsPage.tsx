@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { MY_ADMIN_CLUBS_TABLE, type ClubAdminClubInfoRow } from './queries';
-import { CLUB_ADMIN_CLUBS_COLUMNS } from './columns';
+import { clubAdminClubsColumns } from './columns';
+import { useTranslation } from '@duncit/shell';
 
 const getClubRowId = (club: ClubAdminClubInfoRow) => club.id;
 
@@ -11,6 +12,7 @@ const getClubRowId = (club: ClubAdminClubInfoRow) => club.id;
  * partner administers. Row click opens the club's details; the Pods action
  * jumps to that club's pod list. */
 export default function ClubAdminClubsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
 
@@ -23,7 +25,7 @@ export default function ClubAdminClubsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack spacing={0.25}>
-        <Typography variant="h5" fontWeight={950}>Your Clubs</Typography>
+        <Typography variant="h5" fontWeight={950}>{t('partners.clubAdminClubsPage.yourClubs')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Clubs you administer. Click a club to open its details, or jump straight to its pods.
         </Typography>
@@ -31,11 +33,11 @@ export default function ClubAdminClubsPage() {
 
       <DuncitTable<ClubAdminClubInfoRow>
         tableId="partners-club-admin-clubs"
-        columns={CLUB_ADMIN_CLUBS_COLUMNS}
+        columns={clubAdminClubsColumns(t)}
         fetchRows={fetchRows}
         getRowId={getClubRowId}
         onRowClick={(club) => navigate(`/club-admin/clubs/${club.id}/edit`)}
-        emptyText="No clubs are assigned to you yet."
+        emptyText={t('partners.common.noClubsAreAssignedToYou')}
         defaultSort={{ field: 'club_name', dir: 'asc' }}
         searchPlaceholder="Search clubs"
       />

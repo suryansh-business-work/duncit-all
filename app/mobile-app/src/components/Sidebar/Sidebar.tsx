@@ -138,7 +138,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             <XStack
               testID="sidebar-switch-role"
               role="button"
-              aria-label="Switch role"
+              aria-label={t('mweb.common.switchRole')}
               onPress={openSwitch}
               marginHorizontal={8}
               marginTop={4}
@@ -183,7 +183,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             </XStack>
             <Switch
               testID="sidebar-theme-switch"
-              aria-label="Toggle dark mode"
+              aria-label={t('mweb.sidebar.toggleDarkMode')}
               value={scheme === 'dark'}
               onValueChange={toggleTheme}
               trackColor={{ true: primary }}

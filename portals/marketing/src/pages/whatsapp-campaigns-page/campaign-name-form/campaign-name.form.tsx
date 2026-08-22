@@ -4,6 +4,7 @@ import { Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { RhfTextField } from '@duncit/forms';
 import { campaignNameSchema, emptyValues, type CampaignNameValues } from './campaign-name.types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   busy: boolean;
@@ -13,6 +14,7 @@ interface Props {
 /** Add one campaign name to the list marketing picks from. The name must match
  * the AiSensy campaign exactly — it is what every message is sent under. */
 export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     control,
     handleSubmit,
@@ -35,7 +37,7 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
         <RhfTextField
           control={control}
           name="name"
-          label="Campaign name"
+          label={t('marketing.common.campaignName')}
           size="small"
           required
           hint="Exactly as it appears in AiSensy, e.g. duncit_camp_1"
@@ -43,7 +45,7 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
         <RhfTextField
           control={control}
           name="description"
-          label="What this template says (optional)"
+          label={t('marketing.whatsappCampaigns.whatThisTemplateSaysOptional')}
           size="small"
           hint=" "
         />

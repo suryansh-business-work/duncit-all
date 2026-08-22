@@ -6,9 +6,10 @@ import {
   type TableFetch,
   type TableFilterValue,
 } from '@duncit/table';
-import { ENV_COLOR, ENV_OPTIONS, UserCell } from '../../components/telemetry-identity';
+import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { type TelemetryLevel, type TelemetryLogRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: TelemetryLogRow) => row.id;
 
@@ -56,6 +57,7 @@ export default function LogsTable({
   onOpen,
   toolbarActions,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const levelFilter = useMemo<readonly TableFilterValue[]>(
     () => [{ field: 'level', op: 'eq', value: level }],
     [level],
@@ -63,31 +65,31 @@ export default function LogsTable({
 
   const columns = useMemo<DuncitColumn<TelemetryLogRow>[]>(
     () => [
-      { field: 'created_at', headerName: 'When', width: 175, cellRenderer: renderWhen },
+      { field: 'created_at', headerName: t('tech.common.when'), width: 175, cellRenderer: renderWhen },
       {
         field: 'environment',
-        headerName: 'Env',
+        headerName: t('tech.common.env'),
         width: 110,
-        filter: { type: 'select', options: ENV_OPTIONS },
+        filter: { type: 'select', options: envOptions(t) },
         cellRenderer: renderEnvironment,
       },
-      { field: 'source', headerName: 'Source', width: 135, filter: { type: 'text' } },
-      { field: 'page', headerName: 'Page', width: 150, filter: { type: 'text' } },
+      { field: 'source', headerName: t('tech.common.source'), width: 135, filter: { type: 'text' } },
+      { field: 'page', headerName: t('tech.common.page'), width: 150, filter: { type: 'text' } },
       // Sorting is server-side and allowlisted (LOG_TABLE_CONFIG.sortFields).
       // A column the allowlist does not name must say so: otherwise the header
       // offers a sort the server drops, and AG Grid re-orders the 25 rows on
       // screen while the rest of the set stays in created_at order.
       {
         field: 'component',
-        headerName: 'Component',
+        headerName: t('tech.common.component'),
         width: 160,
         sortable: false,
         filter: { type: 'text' },
       },
-      { field: 'user', headerName: 'User', width: 170, cellRenderer: renderUser },
+      { field: 'user', headerName: t('tech.common.user'), width: 170, cellRenderer: renderUser },
       {
         field: 'user_email',
-        headerName: 'Email',
+        headerName: t('shell.common.email'),
         hide: true,
         width: 210,
         sortable: false,
@@ -96,7 +98,7 @@ export default function LogsTable({
       },
       {
         field: 'message',
-        headerName: 'Message',
+        headerName: t('tech.common.message'),
         flex: 1,
         minWidth: 240,
         sortable: false,
@@ -104,7 +106,7 @@ export default function LogsTable({
       },
       {
         field: 'app_version',
-        headerName: 'Version',
+        headerName: t('tech.telemetryLogs.version'),
         hide: true,
         width: 110,
         sortable: false,
@@ -116,7 +118,7 @@ export default function LogsTable({
       // while displaying `native · ios` — a mismatch invisible from the UI.
       {
         field: 'platform',
-        headerName: 'Platform',
+        headerName: t('tech.common.platform'),
         hide: true,
         width: 110,
         sortable: false,
@@ -133,7 +135,7 @@ export default function LogsTable({
       },
       {
         field: 'session_id',
-        headerName: 'Session',
+        headerName: t('tech.common.session'),
         hide: true,
         width: 170,
         sortable: false,
@@ -142,7 +144,7 @@ export default function LogsTable({
       },
       {
         field: 'duid',
-        headerName: 'Device',
+        headerName: t('tech.common.device'),
         hide: true,
         width: 170,
         sortable: false,

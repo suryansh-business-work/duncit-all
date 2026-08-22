@@ -6,6 +6,7 @@ import SectionCard from './SectionCard';
 import { type PodAspectRating, type PodFeedbackRow } from './queries';
 import { usePodDetailsScope } from './scope';
 import PodFeedbackEntry from './PodFeedbackEntry';
+import { useTranslation } from './i18n/useTranslation';
 
 const aspectLabel = (aspect: string) =>
   POD_FEEDBACK_ASPECT_LABEL[aspect as PodFeedbackAspect] ?? aspect;
@@ -37,6 +38,7 @@ function AspectAverage({ row }: Readonly<{ row: PodAspectRating }>) {
  * why.
  */
 export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }>) {
+  const { t } = useTranslation();
   const scopeDocs = usePodDetailsScope();
   const { data, loading, error } = useQuery(scopeDocs.feedback, {
     variables: { pod_id: podId },
@@ -51,7 +53,7 @@ export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }
   return (
     <SectionCard
       icon={<StarRateIcon fontSize="small" />}
-      title="Ratings"
+      title={t('podDetailsPanel.podFeedbackSection.ratings')}
       tone="warning"
       badge={rated ? summary?.total : undefined}
       loading={loading && !summary}

@@ -87,7 +87,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
       title: t('admin.activity.deleteActivity'),
       message: `Delete all ${year} activity for this user?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     await deleteYear({ variables: { user_id: userId, year } });

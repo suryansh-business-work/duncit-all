@@ -75,7 +75,7 @@ export function WithdrawDialog({
       );
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not request the withdrawal');
+      setError(err instanceof Error ? err.message : t('mweb.wallet.couldNotRequestTheWithdrawal'));
     } finally {
       setBusy(false);
     }
@@ -90,7 +90,7 @@ export function WithdrawDialog({
           <YStack flex={1} alignItems="center" justifyContent="center" testID="withdraw-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={dismiss}
               position="absolute"
               top={0}
@@ -117,7 +117,7 @@ export function WithdrawDialog({
                     <FormTextField
                       control={control}
                       name="amount"
-                      label="Amount"
+                      label={t('mweb.wallet.amount')}
                       keyboardType="numeric"
                       required
                       hint={amountHint}
@@ -154,7 +154,7 @@ export function WithdrawDialog({
                       <FormTextField
                         control={control}
                         name="upi_id"
-                        label="UPI ID"
+                        label={t('mweb.wallet.upiId')}
                         autoCapitalize="none"
                         required
                       />
@@ -163,20 +163,20 @@ export function WithdrawDialog({
                         <FormTextField
                           control={control}
                           name="account_holder_name"
-                          label="Account holder name"
+                          label={t('mweb.wallet.accountHolderName')}
                           required
                         />
                         <FormTextField
                           control={control}
                           name="account_number"
-                          label="Account number"
+                          label={t('mweb.wallet.accountNumber')}
                           keyboardType="numeric"
                           required
                         />
                         <FormTextField
                           control={control}
                           name="ifsc_code"
-                          label="IFSC code"
+                          label={t('mweb.wallet.ifscCode')}
                           autoCapitalize="characters"
                           required
                         />
@@ -193,7 +193,7 @@ export function WithdrawDialog({
                   <XStack
                     testID="withdraw-cancel"
                     role="button"
-                    aria-label="Cancel"
+                    aria-label={t('mweb.common.cancel')}
                     aria-disabled={busy}
                     onPress={dismiss}
                     flex={1}
@@ -213,7 +213,7 @@ export function WithdrawDialog({
                   <XStack
                     testID="withdraw-submit"
                     role="button"
-                    aria-label="Request withdrawal"
+                    aria-label={t('mweb.wallet.requestWithdrawal')}
                     aria-disabled={busy}
                     onPress={busy ? undefined : () => fireAndForget(submit())}
                     flex={1}

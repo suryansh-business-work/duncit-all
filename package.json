@@ -103,7 +103,8 @@
     "sonar:scan": "gh workflow run \"SonarQube Scan\" --ref $(git rev-parse --abbrev-ref HEAD)",
     "sync:localization": "node scripts/sync-localization.mjs",
     "docs": "pnpm --filter duncit-docs dev",
-    "docs:build": "pnpm --filter duncit-docs build"
+    "docs:build": "pnpm --filter duncit-docs build",
+    "gen:shipped-keys": "node scripts/generate-shipped-keys.mjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",

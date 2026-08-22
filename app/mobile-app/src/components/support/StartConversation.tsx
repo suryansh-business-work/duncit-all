@@ -4,15 +4,17 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { START_CONVERSATION_GRADIENT } from './gradients';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Primary "Start a conversation" CTA → real-time agent chat. RN twin of mWeb's
  * StartConversation. */
 export function StartConversation({ onPress }: Readonly<{ onPress: () => void }>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID="support-start-chat"
       role="button"
-      aria-label="Start a conversation with support"
+      aria-label={t('mweb.common.startAConversationWithSupport')}
       onPress={onPress}
       alignItems="center"
       gap={14}

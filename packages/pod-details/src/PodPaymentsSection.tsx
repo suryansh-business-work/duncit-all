@@ -8,6 +8,7 @@ import SectionCard from './SectionCard';
 import { type PodPaymentRow } from './queries';
 import { usePodDetailsScope } from './scope';
 import { fmtDateTime, money } from './format';
+import { useTranslation } from './i18n/useTranslation';
 
 const PAYMENT_STATUS_COLORS: StatusColorMap = {
   SUCCESS: 'success',
@@ -44,6 +45,7 @@ interface Props {
 
 /** Every payment transaction of this pod — bookings, failures and refunds. */
 export default function PodPaymentsSection({ podId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const scopeDocs = usePodDetailsScope();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -65,13 +67,13 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
     () => [
       {
         field: 'payment_id',
-        headerName: 'Payment ID',
+        headerName: t('podDetailsPanel.podPaymentsSection.paymentId'),
         minWidth: 170,
         valueGetter: (row) => row.invoice_no ?? row.payment_id,
       },
       {
         field: 'user_name',
-        headerName: 'Payer',
+        headerName: t('podDetailsPanel.podPaymentsSection.payer'),
         flex: 1,
         minWidth: 190,
         cellRenderer: renderPayer,
@@ -79,36 +81,36 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
       },
       {
         field: 'total',
-        headerName: 'Amount',
+        headerName: t('podDetailsPanel.podPaymentsSection.amount'),
         width: 120,
         valueGetter: (row) => money(row.currency_symbol, row.total),
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('podDetailsPanel.common.status'),
         width: 140,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
-      { field: 'gateway', headerName: 'Gateway', width: 120, valueGetter: (row) => row.gateway ?? '—' },
+      { field: 'gateway', headerName: t('podDetailsPanel.podPaymentsSection.gateway'), width: 120, valueGetter: (row) => row.gateway ?? '—' },
       {
         field: 'coupon_code',
-        headerName: 'Coupon',
+        headerName: t('podDetailsPanel.podPaymentsSection.coupon'),
         width: 130,
         hide: true,
         valueGetter: (row) => row.coupon_code ?? '—',
       },
       {
         field: 'paid_at',
-        headerName: 'Paid at',
+        headerName: t('podDetailsPanel.podPaymentsSection.paidAt'),
         width: 170,
         filter: { type: 'date' },
         valueGetter: (row) => fmtDateTime(row.paid_at),
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('podDetailsPanel.common.created'),
         width: 170,
         hide: true,
         filter: { type: 'date' },
@@ -121,7 +123,7 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
   return (
     <SectionCard
       icon={<ReceiptLongIcon fontSize="small" />}
-      title="Payments & transactions"
+      title={t('podDetailsPanel.podPaymentsSection.paymentsAndTransactions')}
       tone="success"
     >
       <DuncitTable<PodPaymentRow>
@@ -129,7 +131,7 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getRowId}
-        emptyText="No payments recorded for this pod."
+        emptyText={t('podDetailsPanel.podPaymentsSection.noPaymentsRecordedForThisPod')}
         searchPlaceholder="Search payment ID, invoice or payer"
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         refetchRef={refetchRef}

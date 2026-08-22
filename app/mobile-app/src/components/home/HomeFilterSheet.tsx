@@ -16,6 +16,7 @@ import {
   activeFilterCount,
   type HomeFilters,
 } from '@/utils/home-filters';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -45,6 +46,7 @@ export function HomeFilterSheet({
   onReset,
   showSort = true,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const count = activeFilterCount(filters, categoryId);
 
@@ -64,7 +66,7 @@ export function HomeFilterSheet({
         <YStack flex={1} justifyContent="flex-end" testID="home-filter-sheet">
           <YStack
             role="button"
-            aria-label="Close filters"
+            aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -87,7 +89,7 @@ export function HomeFilterSheet({
                 <XStack
                   testID="home-filter-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -102,7 +104,7 @@ export function HomeFilterSheet({
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
                   {categoryChips.length > 0 ? (
-                    <Section title="Category">
+                    <Section title={t('mweb.common.category')}>
                       <OptionChipRow
                         layout="scroll"
                         testIDPrefix="filter-cat"
@@ -112,7 +114,7 @@ export function HomeFilterSheet({
                       />
                     </Section>
                   ) : null}
-                  <Section title="Price">
+                  <Section title={t('mweb.common.price')}>
                     <OptionChipRow
                       testIDPrefix="filter-price"
                       options={PRICE_OPTIONS}
@@ -120,7 +122,7 @@ export function HomeFilterSheet({
                       onSelect={(val) => onChange({ ...filters, price: val })}
                     />
                   </Section>
-                  <Section title="When">
+                  <Section title={t('mweb.home.when')}>
                     <OptionChipRow
                       testIDPrefix="filter-date"
                       options={DATE_OPTIONS}
@@ -129,7 +131,7 @@ export function HomeFilterSheet({
                     />
                   </Section>
                   {showSort && (
-                    <Section title="Sort by">
+                    <Section title={t('mweb.home.sortBy')}>
                       <OptionChipRow
                         layout="column"
                         testIDPrefix="filter-sort"
@@ -145,7 +147,7 @@ export function HomeFilterSheet({
                 <XStack
                   testID="home-filter-reset"
                   role="button"
-                  aria-label="Reset filters"
+                  aria-label={t('mweb.common.resetFilters')}
                   onPress={onReset}
                   flex={1}
                   height={46}
@@ -164,7 +166,7 @@ export function HomeFilterSheet({
                 <XStack
                   testID="home-filter-done"
                   role="button"
-                  aria-label="Apply filters"
+                  aria-label={t('mweb.common.applyFilters')}
                   onPress={onClose}
                   flex={1}
                   height={46}

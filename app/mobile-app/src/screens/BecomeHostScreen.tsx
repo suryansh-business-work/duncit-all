@@ -1,12 +1,14 @@
 import { OnboardingSurvey } from '@/components/survey-onboarding/OnboardingSurvey';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function BecomeHostScreen() {
+  const { t } = useTranslation();
   return (
     <OnboardingSurvey
       kind="HOST"
-      title="Be a host"
+      title={t('mweb.becomeHost.beAHost')}
       icon="storefront"
-      subtitle="Start hosting pods and bring people together."
+      subtitle={t('mweb.becomeHost.startHostingPodsAndBringPeople')}
     />
   );
 }

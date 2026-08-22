@@ -6,6 +6,7 @@ import RhfTextField from '../components/RhfTextField';
 import { useClubFormData } from '../context';
 import { MATCHING_VENUES } from '../queries';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 const venueLine = (venue: any) => [venue.locality, venue.city, venue.state].filter(Boolean).join(', ');
 
@@ -13,6 +14,7 @@ const venueLine = (venue: any) => [venue.locality, venue.city, venue.state].filt
  * Admin-only: the `matchingVenues` query requires an admin role. Hoisted to
  * module scope (S6478). */
 function MatchedVenuesPanel() {
+  const { t } = useTranslation();
   const { control } = useFormContext<ClubFormValues>();
   const locationId = useWatch({ control, name: 'location_id' });
   const locality = useWatch({ control, name: 'locality' });
@@ -36,19 +38,19 @@ function MatchedVenuesPanel() {
     <Stack spacing={1}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <StorefrontIcon fontSize="small" color="action" />
-        <Typography variant="subtitle2">Auto-matched venues</Typography>
+        <Typography variant="subtitle2">{t('clubForm.linksSection.autoMatchedVenues')}</Typography>
         {ready && !loading && <Chip size="small" label={venues.length} color={venues.length ? 'primary' : 'default'} />}
       </Stack>
       {!ready && (
         <Alert severity="info">
-          Pick a <strong>Location</strong> (and category) in Basic Information — approved venues in that city and category
+          Pick a <strong>{t('clubForm.linksSection.location')}</strong> (and category) in Basic Information — approved venues in that city and category
           will link to this club automatically.
         </Alert>
       )}
       {ready && loading && (
         <Stack direction="row" alignItems="center" spacing={1}>
           <CircularProgress size={18} />
-          <Typography variant="body2" color="text.secondary">Finding matching venues…</Typography>
+          <Typography variant="body2" color="text.secondary">{t('clubForm.linksSection.findingMatchingVenues')}</Typography>
         </Stack>
       )}
       {ready && error && <Alert severity="error">{error.message}</Alert>}
@@ -73,6 +75,7 @@ function MatchedVenuesPanel() {
 
 /** WhatsApp community + group links, plus the admin-only auto-matched venues. */
 export default function LinksSection() {
+  const { t } = useTranslation();
   const { config } = useClubFormData();
   const { control } = useFormContext<ClubFormValues>();
 
@@ -82,14 +85,14 @@ export default function LinksSection() {
       <RhfTextField
         control={control}
         name="community_link"
-        label="WhatsApp Community link"
+        label={t('clubForm.linksSection.whatsappCommunityLink')}
         required
         hint="Invite link members join — shown on the club page (mWeb + app)."
       />
       <RhfTextField
         control={control}
         name="group_link"
-        label="WhatsApp Group link"
+        label={t('clubForm.linksSection.whatsappGroupLink')}
         required
         hint="Group chat link — shown on the club page (mWeb + app)."
       />

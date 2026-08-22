@@ -3,6 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ImageIcon from '@mui/icons-material/Image';
+import { useTranslation } from '@duncit/app-settings';
 
 const VIDEO_RE = /^.+\.(mp4|webm|mov|m4v)(\?.*)?$/i;
 
@@ -23,6 +24,7 @@ export default function MediaListRow({
   onMove,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -78,19 +80,19 @@ export default function MediaListRow({
           #{index + 1}
         </Typography>
       </Box>
-      <Tooltip title="Replace">
+      <Tooltip title={t('onboarding.mediaListField.replace')}>
         <IconButton size="small" onClick={onReplace}>
           <ImageIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Move up">
+      <Tooltip title={t('onboarding.common.moveUp')}>
         <span>
           <IconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
             <ArrowUpwardIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Move down">
+      <Tooltip title={t('onboarding.common.moveDown')}>
         <span>
           <IconButton
             size="small"
@@ -101,7 +103,7 @@ export default function MediaListRow({
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Remove">
+      <Tooltip title={t('onboarding.mediaListField.remove')}>
         <IconButton size="small" color="error" onClick={onRemove}>
           <DeleteIcon fontSize="small" />
         </IconButton>

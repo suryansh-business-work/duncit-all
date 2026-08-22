@@ -17,18 +17,22 @@ import {
   type PodCancellationRow,
   type PodCancellationStats,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
-const CARDS = [
-  { key: 'total_cancelled', label: 'Total pod cancels', icon: 'analytics', money: false },
-  { key: 'cancelled_by_host', label: 'Cancelled by hosts', icon: 'receipt', money: false },
-  { key: 'cancelled_by_venue', label: 'Cancelled by venues', icon: 'storefront', money: false },
-  { key: 'cancelled_by_club_admin', label: 'Cancelled by club admins', icon: 'dashboard', money: false },
-  { key: 'total_refund_amount', label: 'Total refund amount', icon: 'payments', money: true },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const cards = (t: Translate) => [
+  { key: 'total_cancelled', label: t('finance.cancellations.totalPodCancels'), icon: 'analytics', money: false },
+  { key: 'cancelled_by_host', label: t('finance.cancellations.cancelledByHosts'), icon: 'receipt', money: false },
+  { key: 'cancelled_by_venue', label: t('finance.cancellations.cancelledByVenues'), icon: 'storefront', money: false },
+  { key: 'cancelled_by_club_admin', label: t('finance.cancellations.cancelledByClubAdmins'), icon: 'dashboard', money: false },
+  { key: 'total_refund_amount', label: t('finance.cancellations.totalRefundAmount'), icon: 'payments', money: true },
 ] as const;
 
 /** Cancel & Refunds home — KPI tiles over every cancellation plus the full
  * newest-first list across hosts, venues and admins. */
 export default function CancellationsDashboardPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const [selected, setSelected] = useState<PodCancellationRow | null>(null);
   const { data, loading, error } = useQuery<{ podCancellationStats: PodCancellationStats }>(
@@ -51,7 +55,7 @@ export default function CancellationsDashboardPage() {
   );
 
   const widgets: DashboardWidget[] = [
-    ...CARDS.map((card, index) => ({
+    ...cards(t).map((card, index) => ({
       id: card.key,
       bare: true,
       // Five tiles across twelve columns: two rows of two-and-a-half is
@@ -71,7 +75,7 @@ export default function CancellationsDashboardPage() {
     })),
     {
       id: 'cancellations-table',
-      title: 'Every cancelled pod',
+      title: t('finance.cancellations.everyCancelledPod'),
       disablePadding: true,
       defaultLayout: { x: 0, y: 4, w: 12, h: 8 },
       minW: 4,
@@ -82,7 +86,7 @@ export default function CancellationsDashboardPage() {
           fetchRows={fetchRows}
           onRowClick={setSelected}
           showKind
-          emptyText="No pods have been cancelled yet."
+          emptyText={t('finance.cancellations.noPodsHaveBeenCancelledYet')}
         />
       ),
     },

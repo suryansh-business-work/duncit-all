@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { InfoRow, StatusChip } from '@duncit/ui';
 import { fmtDate, KIND_COLORS, KIND_LABELS, money, type PodCancellationRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return <InfoRow variant="split" label={label} value={value} sx={{ py: 0.5 }} />;
@@ -25,6 +26,7 @@ interface Props {
 /** Full picture of one cancellation: who cancelled and why, what the
  * attendees got back, and what the booking was worth to the venue. */
 export default function CancellationDetailDialog({ row, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!row} onClose={onClose} maxWidth="sm" fullWidth>
       {row && (
@@ -45,11 +47,11 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
                   <Typography variant="subtitle2" fontWeight={800} gutterBottom>
                     Cancellation
                   </Typography>
-                  <Row label="Cancelled by" value={row.actor_name || KIND_LABELS[row.kind]} />
-                  <Row label="Reason" value={row.reason || '—'} />
-                  <Row label="Cancelled at" value={fmtDate(row.cancelled_at)} />
-                  <Row label="Pod was scheduled for" value={fmtDate(row.pod_date_time)} />
-                  <Row label="Hosts" value={row.host_names.join(', ') || '—'} />
+                  <Row label={t('finance.cancellations.cancelledBy')} value={row.actor_name || KIND_LABELS[row.kind]} />
+                  <Row label={t('finance.common.reason')} value={row.reason || '—'} />
+                  <Row label={t('finance.cancellations.cancelledAt')} value={fmtDate(row.cancelled_at)} />
+                  <Row label={t('finance.cancellations.podWasScheduledFor')} value={fmtDate(row.pod_date_time)} />
+                  <Row label={t('finance.common.hosts')} value={row.host_names.join(', ') || '—'} />
                 </CardContent>
               </Card>
 
@@ -58,13 +60,13 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
                   <Typography variant="subtitle2" fontWeight={800} gutterBottom>
                     Attendee refunds
                   </Typography>
-                  <Row label="Attendees on the pod" value={row.attendee_count} />
+                  <Row label={t('finance.cancellations.attendeesOnThePod')} value={row.attendee_count} />
                   <Row
-                    label="Refunded"
+                    label={t('finance.cancellations.refunded')}
                     value={`${money(row.currency_symbol, row.refunded_total)} (${row.refunded_count} payments)`}
                   />
                   <Row
-                    label="Not refunded"
+                    label={t('finance.cancellations.notRefunded')}
                     value={`${money(row.currency_symbol, row.unrefunded_total)} (${row.unrefunded_count} payments)`}
                   />
                   {row.unrefunded_count > 0 && (
@@ -83,9 +85,9 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
                   </Typography>
                   {row.venue_id ? (
                     <>
-                      <Row label="Venue" value={row.venue_name ?? '—'} />
+                      <Row label={t('finance.common.venue')} value={row.venue_name ?? '—'} />
                       <Row
-                        label="Booked slot value"
+                        label={t('finance.cancellations.bookedSlotValue')}
                         value={money(row.currency_symbol, row.venue_amount)}
                       />
                       <Typography variant="caption" color="text.secondary">
@@ -102,7 +104,7 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t('shell.common.close')}</Button>
           </DialogActions>
         </>
       )}

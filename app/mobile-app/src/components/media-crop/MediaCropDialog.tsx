@@ -22,6 +22,8 @@ import {
 } from './cropRect';
 import { FileDetails } from './FileDetails';
 import type { MediaDetails } from './format';
+import { useTranslation } from '@/hooks/useTranslation';
+import { fallbackT, type Translate } from '@/i18n/fallback';
 
 export type UploadStage = 'processing' | 'uploading' | 'compressing';
 
@@ -35,13 +37,17 @@ export interface CropResult {
   cropPresetKey: string;
 }
 
-const NO_CROP: UploadCropPreset = {
-  key: 'NO_CROP',
-  label: 'No Crop',
+/** The preset key is a STORED identifier, so it stays English while its label
+ * is translated. */
+const NO_CROP_KEY = 'NO_CROP';
+
+const noCrop = (t: Translate): UploadCropPreset => ({
+  key: NO_CROP_KEY,
+  label: t('mweb.mediaCrop.noCrop'),
   width: 0,
   height: 0,
   enabled: true,
-};
+});
 
 const STAGE_LABELS: Record<UploadStage, string> = {
   processing: 'Cropping & compressing',
@@ -155,8 +161,11 @@ function MediaPreview({ media, aspect, zoom }: Readonly<PreviewProps>) {
   );
 }
 
-export function optionsFor(presets: readonly UploadCropPreset[]): UploadCropPreset[] {
-  return [NO_CROP, ...croppablePresets(presets)];
+export function optionsFor(
+  presets: readonly UploadCropPreset[],
+  t: Translate = fallbackT,
+): UploadCropPreset[] {
+  return [noCrop(t), ...croppablePresets(presets)];
 }
 
 export function initialKey(
@@ -165,7 +174,7 @@ export function initialKey(
   defaultCropKey: string,
 ): string {
   const preferred = suggestedKey ?? defaultCropKey;
-  return options.some((o) => o.key === preferred) ? preferred : NO_CROP.key;
+  return options.some((o) => o.key === preferred) ? preferred : NO_CROP_KEY;
 }
 
 /**
@@ -185,6 +194,7 @@ export function MediaCropDialog({
   onConfirm,
   onCancel,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   // `null` = the user hasn't picked a chip yet → fall back to the suggested /
   // admin-default preset. Reset whenever a new asset is staged.
@@ -203,7 +213,7 @@ export function MediaCropDialog({
   const isImage = media.kind === 'image';
   const suggestedKey = isImage ? suggestPresetKey(media.width, media.height, presets) : null;
   const selectedKey =
-    pickedKey ?? initialKey(options, suggestedKey, settings?.default_crop_key ?? NO_CROP.key);
+    pickedKey ?? initialKey(options, suggestedKey, settings?.default_crop_key ?? NO_CROP_KEY);
   const setSelectedKey = setPickedKey;
   // The croppable preset the user is on — undefined for No Crop or a video, in
   // which cases the upload keeps the source frame (server compresses only).
@@ -216,7 +226,7 @@ export function MediaCropDialog({
 
   const confirm = () => {
     if (!activePreset) {
-      onConfirm({ cropRect: null, cropPresetKey: NO_CROP.key });
+      onConfirm({ cropRect: null, cropPresetKey: NO_CROP_KEY });
       return;
     }
     onConfirm({
@@ -266,13 +276,13 @@ export function MediaCropDialog({
                 <XStack gap={20}>
                   <ZoomButton
                     icon="zoom-out"
-                    label="Zoom out"
+                    label={t('mweb.common.zoomOut')}
                     testID="crop-zoom-out"
                     onPress={zoomOut}
                   />
                   <ZoomButton
                     icon="zoom-in"
-                    label="Zoom in"
+                    label={t('mweb.common.zoomIn')}
                     testID="crop-zoom-in"
                     onPress={zoomIn}
                   />
@@ -315,6 +325,7 @@ function CropHeader({
   uploading,
   onCancel,
 }: Readonly<{ isImage: boolean; uploading: boolean; onCancel: () => void }>) {
+  const { t } = useTranslation();
   return (
     <XStack alignItems="center" justifyContent="space-between" padding={16}>
       <Text color="#ffffff" fontSize={17} fontWeight="700">
@@ -323,7 +334,7 @@ function CropHeader({
       <XStack
         testID="crop-close"
         role="button"
-        aria-label="Cancel"
+        aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
         width={36}
         height={36}
@@ -353,12 +364,13 @@ function CropActions({
   onCancel: () => void;
   onConfirm: () => void;
 }>) {
+  const { t } = useTranslation();
   return (
     <XStack gap={12} paddingBottom={8}>
       <XStack
         testID="crop-cancel"
         role="button"
-        aria-label="Cancel"
+        aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
         flex={1}
         height={48}
@@ -377,7 +389,7 @@ function CropActions({
       <XStack
         testID="crop-confirm"
         role="button"
-        aria-label="Upload"
+        aria-label={t('mweb.mediaCrop.upload')}
         aria-disabled={uploading}
         onPress={uploading ? undefined : onConfirm}
         flex={1}

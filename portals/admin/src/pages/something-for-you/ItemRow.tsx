@@ -2,6 +2,7 @@ import { Box, Card, CardContent, Chip, IconButton, Stack, Typography } from '@mu
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { SomethingForYouForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** What the card does, in one phrase — the reason to open the editor. */
 const describeAction = (item: SomethingForYouForm): string => {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined">
       <CardContent>
@@ -47,7 +49,7 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
               <Typography variant="subtitle1" fontWeight={700} noWrap>
                 {item.title}
               </Typography>
-              {!item.is_active && <Chip size="small" label="Hidden" />}
+              {!item.is_active && <Chip size="small" label={t('admin.somethingForYou.hidden')} />}
             </Stack>
             <Typography variant="body2" color="text.secondary" noWrap>
               {item.bottom_text || '—'}
@@ -58,10 +60,10 @@ export default function ItemRow({ item, onEdit, onRemove }: Readonly<Props>) {
           </Box>
 
           <Stack direction="row" sx={{ flexShrink: 0 }}>
-            <IconButton aria-label="Edit card" onClick={() => onEdit(item)}>
+            <IconButton aria-label={t('admin.somethingForYou.editCard')} onClick={() => onEdit(item)}>
               <EditIcon fontSize="small" />
             </IconButton>
-            <IconButton aria-label="Delete card" onClick={() => onRemove(item)}>
+            <IconButton aria-label={t('admin.somethingForYou.deleteCard')} onClick={() => onRemove(item)}>
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>

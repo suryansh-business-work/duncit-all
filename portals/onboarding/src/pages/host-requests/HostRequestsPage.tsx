@@ -14,9 +14,11 @@ import {
   REJECT_HOST_REQUEST,
   type HostRequest,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Onboarding → Host Requests: approved hosts applying to host in a new category. */
 export default function HostRequestsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [acknowledge, { loading: acking }] = useMutation(ACKNOWLEDGE_HOST_REQUEST);
@@ -77,7 +79,7 @@ export default function HostRequestsPage() {
   return (
     <Box>
       <Stack spacing={0.25} mb={2}>
-        <Typography variant="h5" fontWeight={700}>Host Requests</Typography>
+        <Typography variant="h5" fontWeight={700}>{t('onboarding.hostRequests.hostRequests')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Review requests from approved hosts to start hosting in a new category.
         </Typography>
@@ -112,9 +114,9 @@ export default function HostRequestsPage() {
 
       <ConfirmDialog
         open={!!deleteFor}
-        title="Delete host request"
+        title={t('onboarding.hostRequests.deleteHostRequest')}
         message={`Permanently delete request ${deleteFor?.request_no ?? ''}? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         confirmColor="error"
         loading={deleting}
         busyLabel="Working…"

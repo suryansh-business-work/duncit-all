@@ -10,6 +10,7 @@ import {
 } from 'chart.js';
 import { PolarArea } from 'react-chartjs-2';
 import type { ServiceCount } from './dashboardConfig';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(ArcElement, RadialLinearScale, ChartTooltip, Legend);
 
@@ -40,7 +41,10 @@ function buildPalette(theme: Theme) {
   ];
 }
 
-export default function ServicesChart({ data, title = 'Services Mix' }: Readonly<Props>) {
+export default function ServicesChart({ data, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const titleText = title ?? t('crm.dashboard.servicesMix');
+
   const theme = useTheme();
   const palette = useMemo(() => buildPalette(theme), [theme]);
 
@@ -49,7 +53,7 @@ export default function ServicesChart({ data, title = 'Services Mix' }: Readonly
       labels: data.map((s) => s.label),
       datasets: [
         {
-          label: 'Lead rows',
+          label: t('crm.dashboard.leadRows'),
           data: data.map((s) => s.count),
           backgroundColor: data.map((_, i) => `${palette[i % palette.length]}cc`),
           borderColor: theme.palette.background.paper,
@@ -94,7 +98,7 @@ export default function ServicesChart({ data, title = 'Services Mix' }: Readonly
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {title}
+            {titleText}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Circular barplot of services offered across venue & host leads — each

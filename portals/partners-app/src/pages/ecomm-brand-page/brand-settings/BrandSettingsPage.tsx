@@ -17,6 +17,7 @@ import {
   DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE, SET_DEFAULT_MY_WAREHOUSE,
   type BrandWarehouse,
 } from './warehouse.queries';
+import { useTranslation } from '@duncit/shell';
 
 type Editing = BrandWarehouse | 'new' | null;
 
@@ -24,6 +25,7 @@ type Editing = BrandWarehouse | 'new' | null;
  * add/edit/delete/set-default. ShipRocket registration stays admin-side — a
  * pending warehouse ships with the manual delivery charge until registered. */
 export default function BrandSettingsPage() {
+  const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const { data: brandsData, loading: brandsLoading } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
@@ -57,7 +59,7 @@ export default function BrandSettingsPage() {
       await saveWarehouse({
         variables: toSaveWarehouseVariables(brandId, editingWarehouse?.id ?? null, values),
       });
-      setMessage('Warehouse saved.');
+      setMessage(t('partners.ecommBrandPage.warehouseSaved'));
       closeDialog();
       await refetch();
     } catch (saveError) {
@@ -68,7 +70,7 @@ export default function BrandSettingsPage() {
     if (!deleteTarget) return;
     try {
       await deleteWarehouse({ variables: { brand_doc_id: brandId, id: deleteTarget.id } });
-      setMessage('Warehouse deleted.');
+      setMessage(t('partners.ecommBrandPage.warehouseDeleted'));
       await refetch();
     } catch (deleteError) {
       setMessage(parseApiError(deleteError));
@@ -107,7 +109,7 @@ export default function BrandSettingsPage() {
           variant="outlined"
           sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}
         >
-          Back
+          {t('partners.venueAvailabilityPage.back')}
         </Button>
         <Typography variant="h4" fontWeight={950} sx={{ mt: 1 }}>
           {brand?.brand_name || 'Brand'} settings
@@ -116,13 +118,13 @@ export default function BrandSettingsPage() {
           Warehouses your products ship from. Orders pick up from the warehouse chosen on each product.
         </Typography>
       </Box>
-      {brandMissing && <Alert severity="warning">Brand was not found in your account.</Alert>}
+      {brandMissing && <Alert severity="warning">{t('partners.ecommBrandPage.brandWasNotFoundInYour')}</Alert>}
       {error && !brandMissing && <Alert severity="error">{parseApiError(error)}</Alert>}
       {!brandMissing && (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" fontWeight={950}>Warehouses</Typography>
+              <Typography variant="h6" fontWeight={950}>{t('partners.ecommBrandPage.warehouses')}</Typography>
               <Alert severity="info">
                 Every new warehouse — and every edit to an existing one — is reviewed by the Duncit team.
                 A product can only be listed against an approved warehouse, so saving changes here sends
@@ -144,7 +146,7 @@ export default function BrandSettingsPage() {
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <span>{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
-          <IconButton size="small" onClick={closeDialog} aria-label="Close"><CloseIcon /></IconButton>
+          <IconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
         </DialogTitle>
         <DialogContent dividers>
           <WarehouseForm
@@ -159,16 +161,16 @@ export default function BrandSettingsPage() {
       </Dialog>
 
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} fullWidth maxWidth="xs">
-        <DialogTitle>Delete warehouse</DialogTitle>
+        <DialogTitle>{t('partners.ecommBrandPage.deleteWarehouse')}</DialogTitle>
         <DialogContent>
           <Typography>
             {deleteTarget?.nickname} will be removed. Products still shipping from it must be moved first.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>
-            Delete
+            {t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

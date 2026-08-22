@@ -12,11 +12,13 @@ import {
 } from './queries';
 import { useConfirm } from '@duncit/dialogs';
 import { useTabParam } from '@duncit/tabs';
-import { PANE_TABS, type PaneTab } from './PreviewVariablesPane';
+import { paneTabs as buildPaneTabs, type PaneTab } from './PreviewVariablesPane';
+import { useTranslation } from '@duncit/app-settings';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
 
 export function useEmailTemplateEditor() {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const { data, loading, refetch } = useQuery<{ emailTemplates: Tpl[] }>(TEMPLATES, {
     fetchPolicy: 'cache-and-network',
@@ -32,7 +34,7 @@ export function useEmailTemplateEditor() {
 
   const [selected, setSelected] = useState<string | null>(null);
   const [draft, setDraft] = useState<Tpl | null>(null);
-  const paneTabs = useTabParam<PaneTab>({ items: PANE_TABS, fallback: 'preview' });
+  const paneTabs = useTabParam<PaneTab>({ items: buildPaneTabs(t), fallback: 'preview' });
   const tab = paneTabs.value;
   const setTab = paneTabs.onChange;
   const [previewHtml, setPreviewHtml] = useState('');

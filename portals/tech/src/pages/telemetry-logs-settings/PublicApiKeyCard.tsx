@@ -8,6 +8,7 @@ import { useUserData } from '@duncit/user-context';
 import { serverOrigin } from '../../components/CopyGetApiButton';
 import { SUPER_ROLE } from '../../lib/session';
 import { ROTATE_TELEMETRY_API_KEY, TELEMETRY_SETTINGS } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * The key inside every "Copy GET API" URL.
@@ -20,6 +21,7 @@ import { ROTATE_TELEMETRY_API_KEY, TELEMETRY_SETTINGS } from './queries';
  * is relying on.
  */
 export default function PublicApiKeyCard() {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const { user } = useUserData();
   const { data } = useQuery<{ telemetrySettings: { public_api_key: string } }>(TELEMETRY_SETTINGS, {
@@ -39,10 +41,9 @@ export default function PublicApiKeyCard() {
 
   const runRotate = async () => {
     const ok = await confirm({
-      title: 'Rotate the telemetry feed key?',
-      message:
-        'Every GET API URL copied so far stops working immediately — including any a dashboard, monitor or teammate is already polling. There is no way to bring the old key back.',
-      confirmLabel: 'Rotate',
+      title: t('tech.telemetryLogsSettings.rotateTheTelemetryFeedKey'),
+      message: t('tech.telemetryLogsSettings.everyGetApiUrlCopiedSo'),
+      confirmLabel: t('tech.telemetryLogsSettings.rotate'),
       destructive: true,
     });
     if (!ok) return;
@@ -58,7 +59,7 @@ export default function PublicApiKeyCard() {
     <Card>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6">Public JSON feeds</Typography>
+          <Typography variant="h6">{t('tech.telemetryLogsSettings.publicJsonFeeds')}</Typography>
           <Typography variant="body2" color="text.secondary">
             The Bugs and Logs sections each offer a “Copy GET API” button. The URL it gives you
             returns the same rows as JSON and needs no login — the key below is what stands in for

@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export type HealthBand = 'RED' | 'YELLOW' | 'GREEN';
 
@@ -25,12 +26,16 @@ const BAND_COLOR: Record<HealthBand, string> = {
 export default function HealthMeter({
   score,
   band,
-  label = 'Account Health',
+  label,
   size = 168,
   thickness = 14,
   onClick,
   caption,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const labelText = label ?? t('mweb.health.accountHealth');
   const theme = useTheme();
   const trackColor = alpha(theme.palette.text.primary, 0.08);
   const radius = (size - thickness) / 2;
@@ -104,7 +109,7 @@ export default function HealthMeter({
         </Stack>
       </Box>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mt: 1 }}>
-        {label}
+        {labelText}
       </Typography>
       {caption && (
         <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 0.25 }}>

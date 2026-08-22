@@ -14,6 +14,7 @@ import {
   STATUS_OPTIONS,
   type EmailLogRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<EmailLogRow>;
@@ -95,16 +96,17 @@ export default function EmailLogsTable({
   toolbarActions,
   externalFilters,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EmailLogRow>[]>(
     () => [
       dateColumn<EmailLogRow>({
         field: 'created_at',
-        headerName: 'When',
+        headerName: t('tech.common.when'),
         width: 165,
       }),
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 110,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -121,7 +123,7 @@ export default function EmailLogsTable({
       },
       {
         field: 'reason',
-        headerName: 'Reason',
+        headerName: t('tech.emailLogs.reason'),
         sortable: false,
         minWidth: 240,
         cellRenderer: renderReason,
@@ -129,7 +131,7 @@ export default function EmailLogsTable({
       },
       {
         field: 'template',
-        headerName: 'Template',
+        headerName: t('tech.emailLogs.template'),
         minWidth: 170,
         filter: { type: 'text' },
         cellRenderer: renderTemplate,
@@ -137,14 +139,14 @@ export default function EmailLogsTable({
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: t('tech.emailLogs.category'),
         width: 140,
         filter: { type: 'select', options: CATEGORY_OPTIONS },
         valueGetter: (row) => row.category,
       },
       {
         field: 'source',
-        headerName: 'Source',
+        headerName: t('tech.common.source'),
         width: 115,
         filter: { type: 'select', options: SOURCE_OPTIONS },
         cellRenderer: renderSource,
@@ -152,21 +154,21 @@ export default function EmailLogsTable({
       },
       {
         field: 'provider',
-        headerName: 'Provider',
+        headerName: t('tech.emailLogs.provider'),
         width: 110,
         filter: { type: 'text' },
         valueGetter: (row) => row.provider || '—',
       },
       {
         field: 'duration_ms',
-        headerName: 'Took',
+        headerName: t('tech.emailLogs.took'),
         width: 95,
         filter: { type: 'number' },
         valueGetter: (row) => `${row.duration_ms} ms`,
       },
       {
         field: 'message_id',
-        headerName: 'Message ID',
+        headerName: t('tech.emailLogs.messageId'),
         hide: true,
         minWidth: 220,
         valueGetter: (row) => row.message_id || '—',
@@ -181,7 +183,7 @@ export default function EmailLogsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No emails yet."
+      emptyText={t('tech.emailLogs.noEmailsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search recipient, subject, template or reason"
       refetchRef={refetchRef}

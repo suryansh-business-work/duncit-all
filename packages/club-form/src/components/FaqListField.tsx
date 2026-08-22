@@ -3,10 +3,12 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Add/remove list of FAQ question + answer pairs, backed by a RHF field array
  * (stable `field.id` keys — never the array index, S6479). */
 export default function FaqListField() {
+  const { t } = useTranslation();
   const { control } = useFormContext<ClubFormValues>();
   const { fields, append, remove } = useFieldArray({ control, name: 'faqs' });
 
@@ -37,7 +39,7 @@ export default function FaqListField() {
             control={control}
             name={`faqs.${index}.answer` as const}
             render={({ field: input }) => (
-              <TextField {...input} value={input.value ?? ''} fullWidth size="small" multiline minRows={2} label="Answer" />
+              <TextField {...input} value={input.value ?? ''} fullWidth size="small" multiline minRows={2} label={t('clubForm.faqListField.answer')} />
             )}
           />
         </Stack>

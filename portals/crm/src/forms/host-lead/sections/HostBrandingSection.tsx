@@ -1,18 +1,20 @@
 import { Stack } from '@mui/material';
 import ImageUploadField from '../../fields/ImageUploadField';
 import TagsField from '../../fields/TagsField';
+import { useTranslation } from '@duncit/shell';
 
 export default function HostBrandingSection() {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.75}>
       <ImageUploadField
         name="profile_photo_url"
-        label="Profile photo"
+        label={t('crm.forms.profilePhoto')}
         shape="circle"
         folder="crm/host-photos"
-        helperText="Optional. PNG/JPG up to 8MB."
+        helperText={t('crm.forms.optionalPngJpgUpTo8mb')}
       />
-      <TagsField name="tags" label="Tags / labels" helperText="Optional — free-text labels for filtering and grouping." />
+      <TagsField name="tags" label={t('crm.forms.tagsLabels')} helperText={t('crm.forms.optionalFreeTextLabelsForFiltering')} />
     </Stack>
   );
 }

@@ -24,8 +24,10 @@ import {
 import { categoryPath } from '../../utils/category-match';
 import { shareUrl } from '../../lib/share-link';
 import useSavedClub from './useSavedClub';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function ClubDetailsPage() {
+  const { t } = useTranslation();
   const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
   const { format: pricingFormat } = usePricing();
@@ -51,7 +53,7 @@ export default function ClubDetailsPage() {
 
   if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!club) return <Alert severity="warning">Club not found.</Alert>;
+  if (!club) return <Alert severity="warning">{t('mweb.clubDetailsPage.clubNotFound')}</Alert>;
 
   const featureMedia = club.club_feature_images_and_videos ?? [];
   const pods = data?.clubPods ?? [];

@@ -11,11 +11,13 @@ import StartConversation from './StartConversation';
 import FaqAnswerDialog from './FaqAnswerDialog';
 import { SUPPORT_SECTIONS } from './sections';
 import { PUBLIC_FAQ_GROUPS, type FaqGroup, type FaqItem } from './faqQueries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const TOP_FAQ_COUNT = 6;
 const MORE_WAYS = SUPPORT_SECTIONS.filter((section) => section.key !== 'live');
 
 export default function SupportHubPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(PUBLIC_FAQ_GROUPS, { fetchPolicy: 'cache-and-network' });
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<FaqItem | null>(null);
@@ -26,8 +28,8 @@ export default function SupportHubPage() {
 
   return (
     <SupportShell
-      title="Have a burning question?"
-      subtitle="Search our help center or talk to us"
+      title={t('mweb.supportHub.haveABurningQuestion')}
+      subtitle={t('mweb.supportHub.searchOurHelpCenterOrTalk')}
       icon={<LiveHelpIcon fontSize="small" />}
       backTo="/"
     >

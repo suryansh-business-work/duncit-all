@@ -1,6 +1,7 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { Alert, Chip, Stack, Typography } from '@mui/material';
 import type { RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -43,22 +44,23 @@ function OptionChip({ option, selected, disabled, value, onChange }: Readonly<Op
 /** Toggle-chip checklist groups for Amenities, Facilities and Venue Security.
  * Options come from `venueRegistrationConfig` — never hardcoded. */
 export default function AmenitiesSection({ form, config, disabled = false }: Readonly<Props>) {
+  const { t } = useTranslation();
   const groups: GroupDef[] = [
     {
       name: 'amenities',
-      label: 'Amenities',
+      label: t('partners.registerVenuePage.amenities'),
       hint: 'Comfort features guests get inside your venue',
       options: config.amenities,
     },
     {
       name: 'facilities',
-      label: 'Facilities',
+      label: t('partners.registerVenuePage.facilities'),
       hint: 'Infrastructure your premises offer',
       options: config.facilities,
     },
     {
       name: 'security',
-      label: 'Venue Security',
+      label: t('partners.registerVenuePage.venueSecurity'),
       hint: 'Safety & security measures at the venue',
       options: config.security,
     },

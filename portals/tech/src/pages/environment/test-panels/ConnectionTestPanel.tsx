@@ -5,6 +5,7 @@ import BoltIcon from '@mui/icons-material/Bolt';
 import { parseApiError } from '@duncit/utils';
 import { TEST_ENV_CONNECTION, type ConnectionTestResult, type EnvEntry } from '../queries';
 import ResultAlert from './ResultAlert';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * What each provider's connection test actually does, so nobody presses the
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [result, setResult] = useState<ConnectionTestResult | null>(null);
   const [run, { loading }] = useMutation(TEST_ENV_CONNECTION);
@@ -64,11 +66,11 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
             This sends a real WhatsApp message and is billed by AiSensy.
           </Alert>
           <TextField
-            label="WhatsApp number (optional)"
+            label={t('tech.environment.whatsappNumberOptional')}
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            placeholder="Country code + number, digits only"
-            helperText="Leave blank to use the phone number on your own profile."
+            placeholder={t('tech.environment.countryCodeNumberDigitsOnly')}
+            helperText={t('tech.environment.leaveBlankToUseThePhone')}
             fullWidth
             autoComplete="off"
             inputProps={{ inputMode: 'numeric', autoComplete: 'off', 'data-1p-ignore': true }}

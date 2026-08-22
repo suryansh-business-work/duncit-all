@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
+import { useTranslation } from '@duncit/shell';
 
 const PRODUCT_REVIEWS = gql`
   query PartnerProductReviews($id: ID!) {
@@ -57,6 +58,7 @@ function ReviewRow({
   review,
   onReply,
 }: Readonly<{ review: Review; onReply: (id: string, reply: string) => Promise<void> }>) {
+  const { t } = useTranslation();
   const [reply, setReply] = useState(review.seller_reply || '');
   const [saving, setSaving] = useState(false);
   const submit = async () => {
@@ -85,7 +87,7 @@ function ReviewRow({
               key={u}
               component="img"
               src={u}
-              alt="Review"
+              alt={t('partners.listProductsPage.review')}
               sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover' }}
             />
           ))}
@@ -102,7 +104,7 @@ function ReviewRow({
           size="small"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
-          placeholder="Reply to this review"
+          placeholder={t('partners.listProductsPage.replyToThisReview')}
           fullWidth
         />
         <Button variant="outlined" onClick={submit} disabled={saving || !reply.trim()}>
@@ -115,6 +117,7 @@ function ReviewRow({
 
 /** Seller view of a product's reviews with a reply box per review. */
 export default function ProductReviewsPanel({ productId }: Readonly<{ productId: string }>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(PRODUCT_REVIEWS, {
     variables: { id: productId },
     fetchPolicy: 'cache-and-network',
@@ -130,7 +133,7 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
       await replyMut({ variables: { review_id: reviewId, reply } });
       await refetch();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save your reply.');
+      setError(e instanceof Error ? e.message : t('partners.listProductsPage.couldNotSaveYourReply'));
     }
   };
 

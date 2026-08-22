@@ -1,15 +1,18 @@
-import { useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Autocomplete, Box, Stack, TextField, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import type { BrandingFormState } from './queries';
 import { GOOGLE_FONTS, googleFontCssUrl } from './googleFonts';
+import { useTranslation } from '@duncit/shell';
 
 type FontField = 'mobile_font_family' | 'mweb_font_family' | 'portals_font_family';
 
-const PLATFORMS: { field: FontField; label: string; hint: string }[] = [
-  { field: 'mobile_font_family', label: 'Mobile App', hint: 'Native app (Tamagui) text.' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const platforms = (t: Translate): { field: FontField; label: string; hint: string }[] => [
+  { field: 'mobile_font_family', label: t('admin.branding.mobileApp'), hint: 'Native app (Tamagui) text.' },
   { field: 'mweb_font_family', label: 'mWeb', hint: 'The consumer PWA (MUI theme).' },
-  { field: 'portals_font_family', label: 'Portals', hint: 'All 17 admin consoles (shared shell).' },
+  { field: 'portals_font_family', label: t('admin.branding.portals'), hint: 'All 17 admin consoles (shared shell).' },
 ];
 
 /** Loads the picked family into the ADMIN page so the preview below renders
@@ -35,11 +38,13 @@ interface Props {
 /** Branding → Fonts: a Google Font per platform (Mobile / mWeb / Portals tabs).
  * Empty = the platform's built-in default (Quicksand). */
 export default function FontsSection({ form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const list = useMemo(() => platforms(t), [t]);
   const tabs = useTabParam<FontField>({
-    items: PLATFORMS.map((p) => ({ value: p.field, label: p.label })),
+    items: list.map((p) => ({ value: p.field, label: p.label })),
     fallback: 'mobile_font_family',
   });
-  const platform = PLATFORMS.find((p) => p.field === tabs.value) ?? PLATFORMS[0];
+  const platform = list.find((p) => p.field === tabs.value) ?? list[0];
   const value = form[platform.field];
   useFontPreview(value);
 
@@ -67,7 +72,7 @@ export default function FontsSection({ form, setForm }: Readonly<Props>) {
         }}
       >
         <Typography sx={{ fontFamily: 'inherit', fontWeight: 900, fontSize: 22 }}>
-          It All Starts Here!
+          {t('admin.branding.taglinePlaceholder')}
         </Typography>
         <Typography sx={{ fontFamily: 'inherit' }}>
           The quick brown fox jumps over the lazy dog — 0123456789

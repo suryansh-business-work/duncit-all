@@ -13,8 +13,10 @@ import VenueHealthCard from './venue-manage-page/VenueHealthCard';
 import VenueListBody from './venue-manage-page/VenueListBody';
 import VenuePodsSection from './venue-manage-page/VenuePodsSection';
 import { MY_VENUE_DETAILS, PODS_AT_VENUE } from './venue-manage-page/queries';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function VenueManagePage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_VENUE_DETAILS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -55,7 +57,7 @@ export default function VenueManagePage() {
       </Stack>
 
       <Stack direction="row" spacing={1}>
-        {[{ label: 'Listed', value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: 'Capacity', value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: 'Status', value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
+        {[{ label: t('mweb.venueManagePage.listed'), value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: t('mweb.common.capacity'), value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: t('mweb.venueManagePage.status'), value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Stack direction="row" spacing={0.75} alignItems="center" color="primary.main">
@@ -101,7 +103,7 @@ export default function VenueManagePage() {
         <CardContent>
           <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Your venues</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{t('mweb.venueManagePage.yourVenues')}</Typography>
               <Typography variant="caption" color="text.secondary">{venueCount} listed</Typography>
             </Box>
             <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />

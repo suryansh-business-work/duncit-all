@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { ADMIN_UPDATE_ECOMM_BRAND, STATUSES } from './queries';
 import EcommBrandEditFields, { type BrandValues, type DocEntry } from './EcommBrandEditFields';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   brand: any;
@@ -32,6 +33,7 @@ const blankValues: BrandValues = {
 const str = (value: string | number | null | undefined) => (value == null ? '' : String(value));
 
 export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [values, setValues] = useState<BrandValues>(blankValues);
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [status, setStatus] = useState('DRAFT');
@@ -127,7 +129,7 @@ export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readon
 
   return (
     <Dialog open={!!brand} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit Brand</DialogTitle>
+      <DialogTitle>{t('onboarding.ecommBrands.editBrand')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -140,7 +142,7 @@ export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readon
           />
           <TextField
             select
-            label="Status"
+            label={t('shell.common.status')}
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             sx={{ maxWidth: 280 }}

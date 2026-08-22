@@ -7,10 +7,12 @@ import { StackScreen } from '@/components/StackScreen';
 import { useVenueHealth } from '@/hooks/useHealth';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Venue Health detail for an owned venue — meter + breakdown + admin remarks.
  * RN twin of mWeb's VenueHealthPage. */
 export function VenueHealthScreen() {
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'VenueHealth'>>();
   const venueId = route.params?.venueId ?? '';
   const { health, isLoading, error } = useVenueHealth(venueId);
@@ -32,7 +34,11 @@ export function VenueHealthScreen() {
     body = (
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
         <YStack alignItems="center">
-          <HealthMeter score={health.total_score} band={health.band} label="Venue health" />
+          <HealthMeter
+            score={health.total_score}
+            band={health.band}
+            label={t('mweb.venueHealth.venueHealth')}
+          />
         </YStack>
         <HealthBreakdown score={health} />
       </ScrollView>

@@ -23,6 +23,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRupees, productSpecs, type ProductSpec } from '@/utils/product-specs';
 import { toErrorMessage } from '@/utils/errors';
 import { selectionKey } from '@/utils/product-selection';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Product = NonNullable<
   ResultOf<typeof PublicInventoryProductDocument>['publicInventoryProduct']
@@ -130,6 +131,7 @@ function ImageStrip({
   images,
   onZoom,
 }: Readonly<{ images: string[]; onZoom: (index: number) => void }>) {
+  const { t } = useTranslation();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <XStack gap={10}>
@@ -138,7 +140,7 @@ function ImageStrip({
             key={url}
             testID={`product-detail-image-${imageIndex}`}
             role="button"
-            aria-label="Zoom image"
+            aria-label={t('mweb.common.zoomImage')}
             onPress={() => onZoom(imageIndex)}
           >
             <AppImage
@@ -303,6 +305,7 @@ export function ProductDetailSheet({
   onUpdateLine,
   readOnly,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -421,7 +424,7 @@ export function ProductDetailSheet({
                   <XStack
                     testID="product-detail-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={onClose}
                     width={32}
                     height={32}

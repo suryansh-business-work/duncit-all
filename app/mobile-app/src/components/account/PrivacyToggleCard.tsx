@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Account privacy toggle — a private profile hides posts and status from people
  * who don't follow you (Instagram-style). Name + avatar stay visible. */
@@ -11,6 +12,7 @@ export function PrivacyToggleCard({
   isPrivate,
   onChange,
 }: Readonly<{ isPrivate: boolean; onChange: (next: boolean) => Promise<void> }>) {
+  const { t } = useTranslation();
   const { primary, color } = useThemeColors();
   const [busy, setBusy] = useState(false);
 
@@ -47,7 +49,7 @@ export function PrivacyToggleCard({
       </YStack>
       <Switch
         testID="privacy-switch"
-        aria-label="Toggle private account"
+        aria-label={t('mweb.account.togglePrivateAccount')}
         value={isPrivate}
         disabled={busy}
         onValueChange={(next) => void onValueChange(next)}

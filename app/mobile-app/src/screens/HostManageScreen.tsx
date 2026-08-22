@@ -20,6 +20,7 @@ import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { formatDate } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function formatWhen(value?: string | null) {
   if (!value) return '';
@@ -29,6 +30,7 @@ function formatWhen(value?: string | null) {
 
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */
 export function HostManageScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { danger, color: ink } = useThemeColors();
   const { draftRetentionDays } = useAppSettings();
@@ -52,19 +54,19 @@ export function HostManageScreen() {
   };
 
   return (
-    <StackScreen header title="Hosts Management" testID="host-manage-screen">
+    <StackScreen header title={t('mweb.hostManage.hostsManagement')} testID="host-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           <PrimaryButton
             testID="host-manage-create"
-            label="Create a Pod"
+            label={t('mweb.hostManage.createAPod')}
             onPress={() => navigation.navigate('CreatePod')}
           />
 
           <XStack
             testID="host-manage-insights"
             role="button"
-            aria-label="Host dashboard and insights"
+            aria-label={t('mweb.hostManage.hostDashboardAndInsights')}
             onPress={() => navigation.navigate('HostDashboard')}
             alignItems="center"
             justifyContent="center"
@@ -144,7 +146,7 @@ export function HostManageScreen() {
                   <XStack
                     testID={`draft-continue-${draft.id}`}
                     role="button"
-                    aria-label="Continue draft"
+                    aria-label={t('mweb.hostManage.continueDraft')}
                     onPress={() => navigation.navigate('CreatePod', { draftId: draft.id })}
                     flex={1}
                     height={42}
@@ -161,7 +163,7 @@ export function HostManageScreen() {
                   <XStack
                     testID={`draft-delete-${draft.id}`}
                     role="button"
-                    aria-label="Delete draft"
+                    aria-label={t('mweb.common.deleteDraft2')}
                     onPress={() => setTarget(draft.id)}
                     width={42}
                     height={42}

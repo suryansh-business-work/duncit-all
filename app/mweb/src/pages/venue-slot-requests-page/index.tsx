@@ -10,6 +10,7 @@ import {
   VENUE_SLOT_REQUESTS,
   type SlotRequestRow,
 } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * Slot Requests, for a venue owner on their phone.
@@ -19,6 +20,7 @@ import {
  * is a pod that cannot sell a seat. Making that wait for a laptop was the gap.
  */
 export default function VenueSlotRequestsPage() {
+  const { t } = useTranslation();
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(
     null
@@ -61,11 +63,11 @@ export default function VenueSlotRequestsPage() {
         <TextField
           select
           size="small"
-          label="Venue"
+          label={t('mweb.common.venue')}
           value={venueId}
           onChange={(event) => setVenueId(event.target.value)}
         >
-          <MenuItem value={ALL_VENUES}>All venues</MenuItem>
+          <MenuItem value={ALL_VENUES}>{t('mweb.venueSlotRequests.allVenues')}</MenuItem>
           {venues.map((venue: { id: string; venue_name?: string }) => (
             <MenuItem key={venue.id} value={venue.id}>
               {venue.venue_name || 'Untitled venue'}

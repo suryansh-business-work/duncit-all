@@ -14,6 +14,7 @@ import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   attachments: EmailAsset[];
@@ -22,6 +23,7 @@ interface Props {
 
 /** Files attached to every send of this template (test send + lead emails). */
 export default function AttachmentsSection({ attachments, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +34,10 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
     setError(null);
     const mime = file.type || '';
     if (!mime.startsWith('image/') && !mime.startsWith('video/')) {
-      setError('Only image or video files are allowed.');
+      setError(t('crm.emailTemplates.onlyImageOrVideoFilesAre'));
       return;
     }
-    if (file.size > 25 * 1024 * 1024) { setError('Max 25MB per attachment.'); return; }
+    if (file.size > 25 * 1024 * 1024) { setError(t('crm.emailTemplates.max25mbPerAttachment')); return; }
     setBusy(true);
     try {
       const { url } = await upload(file, { folder: 'crm/email-attachments' });
@@ -53,8 +55,8 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: attachments.length ? 1 : 0 }}>
         <AttachFileIcon fontSize="small" color="action" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle2">Attachments</Typography>
-          <Typography variant="caption" color="text.secondary">Image or video — sent with every email that uses this template (max 25MB each).</Typography>
+          <Typography variant="subtitle2">{t('crm.emailTemplates.attachments')}</Typography>
+          <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.imageOrVideoSentWithEvery')}</Typography>
         </Box>
         <AiMonitoringChip />
         <Button size="small" variant="outlined" startIcon={busy ? <CircularProgress size={14} /> : <AttachFileIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>

@@ -1,18 +1,48 @@
 /**
- * The staff chat panel, opened with nothing behind it and then with the
- * schema-shaped answers a real session would get.
+ * The staff chat panel, opened against schema-shaped answers.
  *
  * The calls it hosts are peer-to-peer and the thread rides a socket, so neither
  * exists in jsdom — this does not pretend to test either. What it does cover is
  * everything around them, which is most of the panel: the closed state, the
- * composer, the thread's empty and populated shapes, and the search panel. None
- * of it had ever been rendered.
+ * composer, the thread with messages in it, and the search panel. None of it had
+ * ever been rendered.
+ *
+ * The answers come from ./schema-mock, which reads the server's own SDL — a
+ * thread with no messages exercises almost none of what a thread does.
  */
 import { MockedProvider } from '@apollo/client/testing';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+import { schemaMockLink, serverSchema } from './schema-mock';
 
 import { StaffChatPanel } from '../src/staff-chat';
+
+const testTheme = createTheme();
+
+/**
+ * jsdom has neither observer, and the composer and thread both mount things
+ * that construct one. A stub that never REPORTS is as bad as none at all for a
+ * scroller, so both answer immediately.
+ */
+beforeAll(() => {
+  const box = { x: 0, y: 0, top: 0, left: 0, right: 1200, bottom: 800, width: 1200, height: 800 };
+  const size = [{ inlineSize: 1200, blockSize: 800 }];
+  class SizedResizeObserver {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+    observe(target: Element) {
+      this.callback([{ target, contentRect: box, borderBoxSize: size, contentBoxSize: size, devicePixelContentBoxSize: size }] as never, this as never);
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver ??= SizedResizeObserver as unknown as typeof ResizeObserver;
+  Element.prototype.scrollTo ??= () => undefined;
+  Element.prototype.scrollIntoView ??= () => undefined;
+});
+
+vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 const settle = async () => {
   await act(async () => {
@@ -24,7 +54,8 @@ const settle = async () => {
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider link={schemaMockLink()}>
+      <ThemeProvider theme={testTheme}>
       <StaffChatPanel
         open
         onClose={vi.fn()}
@@ -33,6 +64,7 @@ const mount = (props: Record<string, unknown> = {}) =>
         meRoles={['SUPPORT']}
         {...(props as never)}
       />
+      </ThemeProvider>
     </MockedProvider>
   );
 
@@ -41,6 +73,10 @@ afterEach(() => {
 });
 
 describe('StaffChatPanel', () => {
+  it('reads the server schema the answers below depend on', () => {
+    expect(serverSchema()?.getQueryType()).toBeTruthy();
+  });
+
   it('renders nothing on screen while it is closed', async () => {
     const { container } = mount({ open: false });
     await settle();
@@ -48,7 +84,7 @@ describe('StaffChatPanel', () => {
     expect(container.textContent ?? '').toBe('');
   });
 
-  it('opens with nothing behind it rather than throwing', async () => {
+  it('opens and renders a thread rather than throwing', async () => {
     const { container } = mount();
     await settle();
     await settle();

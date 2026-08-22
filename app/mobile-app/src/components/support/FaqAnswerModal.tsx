@@ -7,6 +7,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { FaqItem } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FaqAnswerModalProps {
   faq: FaqItem | null;
@@ -17,6 +18,7 @@ interface FaqAnswerModalProps {
 /** Bottom-sheet showing a single FAQ's answer with a "still need help"
  * conversation CTA. RN twin of mWeb's FaqAnswerDialog. */
 export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswerModalProps>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
 
   return (
@@ -25,7 +27,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
         <YStack flex={1} justifyContent="flex-end" testID="support-faq-modal">
           <YStack
             role="button"
-            aria-label="Close FAQ"
+            aria-label={t('mweb.support.closeFaq')}
             onPress={onClose}
             position="absolute"
             top={0}
@@ -50,7 +52,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                     <XStack
                       testID="support-faq-modal-close"
                       role="button"
-                      aria-label="Close"
+                      aria-label={t('mweb.common.close')}
                       onPress={onClose}
                       width={32}
                       height={32}
@@ -78,7 +80,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                     <XStack
                       testID="support-faq-modal-chat"
                       role="button"
-                      aria-label="Start a conversation"
+                      aria-label={t('mweb.common.startAConversation')}
                       onPress={onStartChat}
                       alignItems="center"
                       justifyContent="center"

@@ -18,12 +18,14 @@ import { INVOICE_SETTINGS, UPDATE_INVOICE_SETTINGS } from './queries';
 import { EMPTY_INVOICE_SETTINGS, type InvoiceField, type InvoiceSettingsForm } from './types';
 import InvoiceBrandingForm from './InvoiceBrandingForm';
 import InvoicePreview from './InvoicePreview';
+import { useTranslation } from '@duncit/app-settings';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Finance → Invoice Management. Single source of truth for the text + components
  * rendered on every invoice and ticket PDF; changes apply on the next document. */
 export default function InvoiceManagementPage() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(INVOICE_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_SETTINGS);
   const [form, setForm] = useState<InvoiceSettingsForm>(EMPTY_INVOICE_SETTINGS);
@@ -59,7 +61,7 @@ export default function InvoiceManagementPage() {
   const save = async () => {
     setError(null);
     if (emailError) {
-      setError('Please fix the support email before saving.');
+      setError(t('finance.invoiceManagement.pleaseFixTheSupportEmailBefore'));
       return;
     }
     try {
@@ -84,7 +86,7 @@ export default function InvoiceManagementPage() {
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
         <DescriptionIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>Invoice Management</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('finance.invoiceManagement.invoiceManagement')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Control the branding and text rendered on every tax invoice and event ticket.
           </Typography>
@@ -114,7 +116,7 @@ export default function InvoiceManagementPage() {
           </Stack>
         </Box>
         <Box sx={{ flex: 1, width: '100%', position: { md: 'sticky' }, top: { md: 16 } }}>
-          <Typography variant="overline" color="text.secondary">Live preview</Typography>
+          <Typography variant="overline" color="text.secondary">{t('finance.invoiceManagement.livePreview')}</Typography>
           <InvoicePreview value={form} />
         </Box>
       </Stack>

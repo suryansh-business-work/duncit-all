@@ -25,6 +25,7 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import ServiceOfferedForm, { type ServiceOfferedDraft } from './ServiceOfferedForm';
 import ServicesOfferedTable from './ServicesOfferedTable';
 import EditServiceOfferedDialog from './EditServiceOfferedDialog';
+import { useTranslation } from '@duncit/shell';
 
 const EMPTY: ServiceOfferedDraft = {
   super_category_id: '', category_id: '', sub_category_id: '', applies_to_venue: true, applies_to_host: true, titles: [],
@@ -32,6 +33,7 @@ const EMPTY: ServiceOfferedDraft = {
 
 /** CRM → Data → Services Offered. Curate service titles under the Super → Category → Sub taxonomy. */
 export default function ServicesOfferedPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function ServicesOfferedPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <HandymanIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>Services Offered (for Host &amp; Venue both)</Typography>
+          <Typography variant="h5" fontWeight={800}>{t('crm.data.servicesOfferedForHostAndAmp')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Curated service titles per Super → Category → Sub. Venue & host forms load these dynamically.
           </Typography>
@@ -101,7 +103,7 @@ export default function ServicesOfferedPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => { setDraft(EMPTY); setFormError(null); setOpen(true); }}>
-            Add Service Offered
+            {t('crm.data.addServiceOffered')}
           </Button>
         }
         onEdit={setToEdit}
@@ -109,13 +111,13 @@ export default function ServicesOfferedPage() {
       />
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Service Offered</DialogTitle>
+        <DialogTitle>{t('crm.data.addServiceOffered')}</DialogTitle>
         <DialogContent>
           {formError && <Alert severity="error" sx={{ mb: 1.5 }}>{formError}</Alert>}
           <ServiceOfferedForm value={draft} onChange={setDraft} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => setOpen(false)}>{t('shell.common.cancel')}</Button>
           <Button variant="contained" onClick={submit} disabled={creating || !draft.super_category_id || draft.titles.length === 0 || !targetValid}>
             {creating ? 'Adding…' : 'Add'}
           </Button>
@@ -130,9 +132,9 @@ export default function ServicesOfferedPage() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title="Delete service"
+        title={t('crm.common.deleteService')}
         message={`Delete "${toDelete?.title ?? ''}"?`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

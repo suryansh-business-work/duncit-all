@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useTranslation } from '@duncit/shell';
 
 const AI_FILL = gql`
   mutation AiFillDummyData($entity: AiDummyEntity!, $prompt: String) {
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export default function AiFillButton({ entity, onFill, iconOnly, label }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
   return (
     <>
       {iconOnly ? (
-        <Tooltip title="Fill with AI">
+        <Tooltip title={t('admin.ai.fill')}>
           <IconButton
             size="small"
             color="secondary"
@@ -135,7 +137,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleGenerate();
             }}
-            helperText="Tip: Cmd/Ctrl + Enter to generate"
+            helperText={t('admin.ai.tip')}
           />
           {error && (
             <Alert severity="error" sx={{ py: 0 }}>
@@ -151,7 +153,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
               }}
               disabled={loading}
             >
-              Cancel
+              {t('shell.common.cancel')}
             </Button>
             <Button
               size="small"

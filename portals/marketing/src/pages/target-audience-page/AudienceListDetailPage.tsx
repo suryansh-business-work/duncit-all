@@ -8,6 +8,7 @@ import { BackHeader, QueryGuard } from '@duncit/ui';
 import AudienceTable from './AudienceTable';
 import { AUDIENCE_LIST, AUDIENCE_TABLE } from './queries';
 import type { AudienceListRow, AudienceRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 /** The stored criteria, back in the shape the table sends to the server. */
 const toFilters = (list?: AudienceListRow | null): TableFilterValue[] =>
@@ -25,6 +26,7 @@ const criterionLabel = (f: AudienceListRow['filters'][number]) => {
 
 /** Who is in a saved list right now — the criteria re-run, not a snapshot. */
 export default function AudienceListDetailPage() {
+  const { t } = useTranslation();
   const { listId = '' } = useParams<{ listId: string }>();
   const navigate = useNavigate();
   const client = useApolloClient();
@@ -72,7 +74,7 @@ export default function AudienceListDetailPage() {
               color="primary"
               label={`${list!.member_count.toLocaleString()} people right now`}
             />
-            {list!.filters.length === 0 && <Chip size="small" variant="outlined" label="No filters — everyone" />}
+            {list!.filters.length === 0 && <Chip size="small" variant="outlined" label={t('marketing.targetAudience.noFiltersEveryone')} />}
             {list!.filters.map((f) => (
               <Chip key={`${f.field}-${f.op}`} size="small" variant="outlined" label={criterionLabel(f)} />
             ))}

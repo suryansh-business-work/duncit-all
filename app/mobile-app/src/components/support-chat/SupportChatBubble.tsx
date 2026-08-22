@@ -5,6 +5,7 @@ import { AttachmentView } from '@/components/AttachmentView';
 import type { SupportChatMessage } from '@/hooks/useSupportChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatTime, tickState } from '@/utils/support-chat';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
 
@@ -39,6 +40,7 @@ export function SupportChatBubble({
   timeZone,
   onRetry,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
 
   if (message.sender_role === 'SYSTEM') {
@@ -96,7 +98,7 @@ export function SupportChatBubble({
           <XStack
             testID={`retry-${message.id}`}
             role="button"
-            aria-label="Retry sending"
+            aria-label={t('mweb.supportChat.retrySending')}
             onPress={() => onRetry?.(message)}
             alignItems="center"
             gap={4}

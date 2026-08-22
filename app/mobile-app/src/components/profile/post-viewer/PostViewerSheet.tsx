@@ -12,6 +12,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { sharePost } from '@/utils/share';
 import { PostMedia } from './PostMedia';
 import { PostViewerBody } from './PostViewerBody';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   postId: string;
@@ -24,6 +25,7 @@ interface Props {
 /** Full-screen post viewer with like + comments + delete — the RN twin of
  * mWeb's profile PostDialog (the profile-image like/comment experience). */
 export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
   const { post, isLoading, toggleLike, addComment, deleteComment, deletePost } =
     usePostViewer(postId);
@@ -78,7 +80,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   <XStack
                     testID="post-viewer-share"
                     role="button"
-                    aria-label="Share post"
+                    aria-label={t('mweb.profile.sharePost')}
                     onPress={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
                     width={36}
                     height={36}
@@ -93,7 +95,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   <XStack
                     testID="post-viewer-delete"
                     role="button"
-                    aria-label="Delete post"
+                    aria-label={t('mweb.profile.deletePost')}
                     aria-disabled={deleting}
                     onPress={removePost}
                     width={36}
@@ -108,7 +110,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                 <XStack
                   testID="post-viewer-close"
                   role="button"
-                  aria-label="Close"
+                  aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={36}
                   height={36}

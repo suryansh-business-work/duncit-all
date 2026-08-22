@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Autocomplete, TextField } from '@mui/material';
 import { cityOptions, Fieldset, localityOptions, useAdminLocations } from '@duncit/location';
+import { useTranslation } from '@duncit/shell';
 
 interface CityProps {
   name: string;
@@ -58,10 +59,11 @@ export function CityField({ name, label, required }: Readonly<CityProps>) {
 
 /** City + Area/Locality grouped in a hinted Location fieldset (lead forms). */
 export function LocationFieldset({ required = true }: Readonly<{ required?: boolean }>) {
+  const { t } = useTranslation();
   return (
     <Fieldset legend="Location" hint="Where the lead is based — city + locality (from the admin Location list).">
-      <CityField name="city" label="City" required={required} />
-      <AreaField name="area" cityField="city" label="Area / Locality" />
+      <CityField name="city" label={t('crm.common.city')} required={required} />
+      <AreaField name="area" cityField="city" label={t('crm.forms.areaLocality')} />
     </Fieldset>
   );
 }

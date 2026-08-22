@@ -15,6 +15,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { describeAttachment, isVideoUpload, typeLabel } from '../../utils/attachment';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // Videos are capped tighter at 50 MB.
@@ -33,11 +34,12 @@ interface PreviewProps {
 
 /** Type-aware preview: image thumbnail vs a small file chip for video/doc. */
 function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
+  const { t } = useTranslation();
   const info = describeAttachment(url);
   const removeButton = (
     <IconButton
       size="small"
-      aria-label="Remove attachment"
+      aria-label={t('mweb.common.removeAttachment')}
       onClick={onRemove}
       sx={{
         position: 'absolute',
@@ -91,6 +93,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
 }
 
 export default function AttachmentsField({ attachments, setAttachments }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { upload, uploading } = useImagekitUpload();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -100,11 +103,11 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
     e.target.value = '';
     if (!file) return;
     if (isVideoUpload(file.name, file.type) && file.size > VIDEO_MAX_BYTES) {
-      setError('Video is too large (max 50 MB)');
+      setError(t('mweb.common.videoIsTooLargeMax50'));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('File is too large (max 100 MB)');
+      setError(t('mweb.common.fileIsTooLargeMax100'));
       return;
     }
     setError(null);

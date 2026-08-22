@@ -4,6 +4,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   coverImageUrl: string;
@@ -24,6 +25,7 @@ export default function VenueImagesField({
   onCoverChange,
   onGalleryChange,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
 
@@ -49,7 +51,7 @@ export default function VenueImagesField({
             <Box
               component="img"
               src={coverImageUrl}
-              alt="Venue cover"
+              alt={t('partners.registerVenuePage.venueCover')}
               sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
             />
           </Box>
@@ -85,13 +87,13 @@ export default function VenueImagesField({
                 <Box
                   component="img"
                   src={url}
-                  alt="Venue gallery"
+                  alt={t('partners.registerVenuePage.venueGallery')}
                   sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 1 }}
                 />
                 <IconButton
                   size="small"
                   disabled={disabled}
-                  aria-label="Remove image"
+                  aria-label={t('partners.registerVenuePage.removeImage')}
                   onClick={() => onGalleryChange(gallery.filter((_url, itemIndex) => itemIndex !== index))}
                   sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'background.paper' }}
                 >
@@ -114,7 +116,7 @@ export default function VenueImagesField({
           setCoverPickerOpen(false);
         }}
         folder="/venues/cover"
-        title="Upload cover image"
+        title={t('partners.registerVenuePage.uploadCoverImage')}
       />
       <MediaPickerDialog
         open={galleryPickerOpen}
@@ -124,7 +126,7 @@ export default function VenueImagesField({
           setGalleryPickerOpen(false);
         }}
         folder="/venues/gallery"
-        title="Add venue image"
+        title={t('partners.registerVenuePage.addVenueImage')}
       />
     </Stack>
   );

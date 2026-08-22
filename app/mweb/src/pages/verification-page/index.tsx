@@ -8,6 +8,7 @@ import { MY_VERIFICATIONS, type Verification } from './queries';
 import VerificationCardShell from './VerificationCardShell';
 import IdentityCard from './IdentityCard';
 import AddressCard from './AddressCard';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * Verification — Identity (one document ≤4 MB), Address (manual residential
@@ -15,6 +16,7 @@ import AddressCard from './AddressCard';
  * & Address. mWeb twin of the native VerificationScreen (B22).
  */
 export default function VerificationPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(MY_VERIFICATIONS, {
     fetchPolicy: 'cache-and-network',
@@ -40,7 +42,7 @@ export default function VerificationPage() {
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton onClick={() => navigate(-1)} aria-label="Go back" sx={{ minWidth: 44, minHeight: 44 }}>
+        <IconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ minWidth: 44, minHeight: 44 }}>
           <ArrowBackIcon />
         </IconButton>
         <VerifiedUserIcon color="primary" />

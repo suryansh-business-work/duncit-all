@@ -8,6 +8,7 @@ import { CRM_CALL_PROMPTS_TABLE, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } fr
 import { ConfirmDialog } from '@duncit/dialogs';
 import CallPromptsTable from './CallPromptsTable';
 import CallPromptDialog from './CallPromptDialog';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * AI Call Prompts → Static Content. Operators curate reusable context blocks
@@ -15,6 +16,7 @@ import CallPromptDialog from './CallPromptDialog';
  * for add/edit and delete confirmation (no native alert/confirm).
  */
 export default function CallPromptsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<CrmCallPrompt | null>(null);
@@ -73,9 +75,9 @@ export default function CallPromptsPage() {
       />
       <ConfirmDialog
         open={!!toDelete}
-        title="Delete Static Content"
+        title={t('crm.callPrompts.deleteStaticContent')}
         message={`Delete "${toDelete?.name ?? ''}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

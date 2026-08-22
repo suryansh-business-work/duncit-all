@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDateTime } from '@/utils/date-format';
 import type { SupportPodOption } from '@/utils/support-pods';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface PodPickerProps {
   options: SupportPodOption[];
@@ -19,6 +20,7 @@ export interface PodPickerProps {
  * single fixed pill.
  */
 export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerProps>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { color: ink, muted } = useThemeColors();
 
@@ -46,7 +48,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
       <XStack
         testID="pod-picker"
         role="button"
-        aria-label="Pod"
+        aria-label={t('mweb.common.pod')}
         aria-expanded={open}
         onPress={() => setOpen((o) => !o)}
         alignItems="center"

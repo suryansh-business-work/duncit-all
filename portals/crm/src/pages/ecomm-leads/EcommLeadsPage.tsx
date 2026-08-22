@@ -12,8 +12,10 @@ import LeadsToolbar from '../../components/LeadsToolbar';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 export default function EcommLeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const { config } = useCrmConfig();
@@ -45,7 +47,7 @@ export default function EcommLeadsPage() {
     if (!toDelete) return;
     try {
       await deleteLead({ variables: { id: toDelete.id } });
-      setToast('Ecomm lead deleted');
+      setToast(t('crm.ecommLeads.ecommLeadDeleted'));
       setToDelete(null);
       refetchRef.current?.();
     } catch (err) {
@@ -56,8 +58,8 @@ export default function EcommLeadsPage() {
   return (
     <Stack spacing={2.5}>
       <LeadsToolbar
-        title="Ecomm Leads"
-        subtitle="Capture and qualify product sellers from the app onboarding gate and manual entry."
+        title={t('shell.nav.ecommLeads')}
+        subtitle={t('crm.ecommLeads.captureAndQualifyProductSellersFrom')}
         onManageServices={() => navigate('/ecomm-leads/services')}
         manageServicesLabel="Manage Ecomm Services"
       />
@@ -83,9 +85,9 @@ export default function EcommLeadsPage() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title="Delete ecomm lead"
+        title={t('crm.ecommLeads.deleteEcommLead')}
         message={`Delete "${toDelete?.seller_name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

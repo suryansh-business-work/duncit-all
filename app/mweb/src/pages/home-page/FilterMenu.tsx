@@ -101,7 +101,7 @@ export default function FilterMenu(props: Readonly<Props>) {
       <ResponsiveDialog
         open={open}
         onClose={() => setOpen(false)}
-        title="Filters"
+        title={t('mweb.common.filters')}
         sheetMaxHeight="78dvh"
         actions={
           <>

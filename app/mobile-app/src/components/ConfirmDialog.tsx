@@ -2,6 +2,7 @@ import { Text, XStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -26,13 +27,18 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   onConfirm,
   onCancel,
   testID = 'confirm-dialog',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as parameter defaults: a default is evaluated before
+  // any hook runs, so `t` would not exist yet.
+  const confirmLabelText = confirmLabel ?? t('mweb.confirm.confirm');
+  const cancelLabelText = cancelLabel ?? t('mweb.common.cancel');
   const { onPrimary } = useThemeColors();
 
   const footer = (
@@ -40,7 +46,7 @@ export function ConfirmDialog({
       <XStack
         testID={`${testID}-cancel`}
         role="button"
-        aria-label={cancelLabel}
+        aria-label={cancelLabelText}
         onPress={onCancel}
         flex={1}
         height={46}
@@ -52,13 +58,13 @@ export function ConfirmDialog({
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
-          {cancelLabel}
+          {cancelLabelText}
         </Text>
       </XStack>
       <XStack
         testID={`${testID}-confirm`}
         role="button"
-        aria-label={confirmLabel}
+        aria-label={confirmLabelText}
         onPress={onConfirm}
         flex={1}
         height={46}
@@ -69,7 +75,7 @@ export function ConfirmDialog({
         pressStyle={{ opacity: 0.85 }}
       >
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
-          {confirmLabel}
+          {confirmLabelText}
         </Text>
       </XStack>
     </XStack>
@@ -82,7 +88,7 @@ export function ConfirmDialog({
       testID={testID}
       variant="center"
       title={title}
-      closeLabel={cancelLabel}
+      closeLabel={cancelLabelText}
       // The footer already offers a way out, and a ✕ beside a Cancel button is
       // two controls for one action.
       showCloseButton={false}

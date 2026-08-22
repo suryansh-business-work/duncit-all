@@ -20,6 +20,9 @@ import {
   type SectionProps,
 } from './sections';
 import { EMPTY_FILTERS, type AudienceFilterOptions, type AudienceFilterState } from './types';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Props {
   state: AudienceFilterState;
@@ -27,12 +30,12 @@ interface Props {
   options: AudienceFilterOptions;
 }
 
-const SECTIONS: { title: string; Body: (p: Readonly<SectionProps>) => JSX.Element }[] = [
-  { title: 'People', Body: PeopleSection },
-  { title: 'Location', Body: LocationSection },
-  { title: 'Reachability', Body: ReachSection },
-  { title: 'Account', Body: AccountSection },
-  { title: 'Activity', Body: ActivitySection },
+const sections = (t: Translate): { title: string; Body: (p: Readonly<SectionProps>) => JSX.Element }[] => [
+  { title: t('marketing.common.people'), Body: PeopleSection },
+  { title: t('marketing.common.location'), Body: LocationSection },
+  { title: t('marketing.targetAudience.reachability'), Body: ReachSection },
+  { title: t('marketing.targetAudience.account'), Body: AccountSection },
+  { title: t('marketing.targetAudience.activity'), Body: ActivitySection },
 ];
 
 /**
@@ -41,6 +44,7 @@ const SECTIONS: { title: string; Body: (p: Readonly<SectionProps>) => JSX.Elemen
  * a column popover only ever shows you one of them.
  */
 export default function FilterSidebar({ state, onChange, options }: Readonly<Props>) {
+  const { t } = useTranslation();
   const count = activeFilterCount(state);
   const set: SectionProps['set'] = (key, value) => onChange({ ...state, [key]: value });
 
@@ -56,14 +60,14 @@ export default function FilterSidebar({ state, onChange, options }: Readonly<Pro
           <FilterListIcon fontSize="small" />
         </Badge>
         <Typography variant="subtitle2" fontWeight={800} sx={{ flex: 1 }}>
-          Filters
+          {t('marketing.targetAudience.filters')}
         </Typography>
         <Button size="small" disabled={count === 0} onClick={() => onChange(EMPTY_FILTERS)}>
-          Reset
+          {t('marketing.common.reset')}
         </Button>
       </Stack>
 
-      {SECTIONS.map(({ title, Body }, index) => (
+      {sections(t).map(({ title, Body }, index) => (
         <Accordion key={title} defaultExpanded={index === 0} disableGutters elevation={0} square>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="body2" fontWeight={700}>

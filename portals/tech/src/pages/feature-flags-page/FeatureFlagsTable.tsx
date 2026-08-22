@@ -2,6 +2,9 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, Switch, Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { FeatureFlagRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const getFlagRowId = (f: FeatureFlagRow) => f.id;
 
@@ -13,8 +16,8 @@ const renderDescription = (f: FeatureFlagRow) => (
   <Typography variant="body2" color="text.secondary">{f.description || '—'}</Typography>
 );
 
-const renderType = (f: FeatureFlagRow) =>
-  f.is_system ? <Chip size="small" label="System" color="info" /> : <Chip size="small" label="Custom" />;
+const renderType = (f: FeatureFlagRow, t: Translate) =>
+  f.is_system ? <Chip size="small" label={t('shell.nav.system')} color="info" /> : <Chip size="small" label={t('tech.featureFlags.custom')} />;
 const typeValue = (f: FeatureFlagRow) => (f.is_system ? 'System' : 'Custom');
 
 const enabledValue = (f: FeatureFlagRow) => (f.enabled ? 'Yes' : 'No');
@@ -36,6 +39,7 @@ export default function FeatureFlagsTable({
   onEdit,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<FeatureFlagRow>[]>(() => {
     const renderEnabled = (f: FeatureFlagRow) => (
       <Switch size="small" checked={f.enabled} onChange={() => onToggle(f)} />
@@ -43,27 +47,27 @@ export default function FeatureFlagsTable({
     return [
       {
         field: 'enabled',
-        headerName: 'Enabled',
+        headerName: t('tech.featureFlags.enabled'),
         width: 110,
         filter: { type: 'boolean' },
         cellRenderer: renderEnabled,
         valueGetter: enabledValue,
       },
-      { field: 'key', headerName: 'Key', flex: 1, minWidth: 160, cellRenderer: renderKey },
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 160 },
+      { field: 'key', headerName: t('tech.featureFlags.key'), flex: 1, minWidth: 160, cellRenderer: renderKey },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 160 },
       {
         field: 'description',
-        headerName: 'Description',
+        headerName: t('shell.common.description'),
         flex: 1.4,
         minWidth: 200,
         cellRenderer: renderDescription,
       },
       {
         field: 'is_system',
-        headerName: 'Type',
+        headerName: t('shell.common.type'),
         width: 110,
         filter: { type: 'boolean' },
-        cellRenderer: renderType,
+        cellRenderer: (f: FeatureFlagRow) => renderType(f, t),
         valueGetter: typeValue,
       },
       actionsColumn<FeatureFlagRow>({

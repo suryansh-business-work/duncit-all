@@ -10,6 +10,7 @@ import {
   UPLOAD_DOCUMENT,
   type Verification,
 } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   item: Verification;
@@ -27,6 +28,7 @@ const readAsDataUrl = (file: File) =>
 
 /** Identity verification — one image/PDF document, max 4 MB → Under Review. */
 export default function IdentityCard({ item, onChanged, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploadDoc] = useMutation(UPLOAD_DOCUMENT);
@@ -58,7 +60,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
       await submit({ variables: { type: 'IDENTITY', document_url: url } });
       onChanged();
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Could not submit the document.');
+      onError(e instanceof Error ? e.message : t('mweb.verification.couldNotSubmitTheDocument'));
     } finally {
       setBusy(false);
     }

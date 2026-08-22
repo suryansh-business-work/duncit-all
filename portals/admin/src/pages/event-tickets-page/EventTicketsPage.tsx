@@ -23,8 +23,10 @@ import {
   VERIFY_EVENT_TICKET,
   type EventTicketRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export default function EventTicketsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [token, setToken] = useState('');
@@ -114,7 +116,7 @@ export default function EventTicketsPage() {
             <TextField
               size="small"
               fullWidth
-              label="Paste scanned QR token"
+              label={t('admin.eventTickets.pasteToken')}
               value={token}
               onChange={(e) => setToken(e.target.value)}
             />
@@ -122,7 +124,7 @@ export default function EventTicketsPage() {
               Verify
             </Button>
             <Button variant="contained" onClick={onCheckInToken} disabled={!verifyResult?.ok}>
-              Check in
+              {t('admin.eventTickets.checkIn')}
             </Button>
           </Stack>
           {verifyResult && (

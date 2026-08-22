@@ -2,8 +2,11 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { SCOPES } from './helpers';
+import { scopes } from './helpers';
 import type { NotificationRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 type LocName = (id?: string | null) => string;
 
@@ -18,25 +21,26 @@ interface Props {
 
 const getNotificationRowId = (n: NotificationRow) => n.id;
 
-const SCOPE_OPTIONS = SCOPES.map((s) => ({ value: s.value, label: s.label }));
+const scopeOptions = (t: Translate) => scopes(t).map((s) => ({ value: s.value, label: s.label }));
 
-const scopeLabel = (n: NotificationRow, locName: LocName) => {
-  if (n.scope === 'LOCATION') return `Location · ${locName(n.location_id)}`;
-  if (n.scope === 'ZONE') return `Zone · ${locName(n.location_id)} / ${n.zone_name}`;
-  if (n.scope === 'USER') return `Users · ${n.target_user_ids?.length ?? 0}`;
-  return SCOPES.find((s) => s.value === n.scope)?.label ?? n.scope;
+const scopeLabel = (n: NotificationRow, locName: LocName, t: Translate) => {
+  if (n.scope === 'LOCATION') return t('marketing.notifications.scopeLocation', { vars: { name: locName(n.location_id) } });
+  if (n.scope === 'ZONE') return t('marketing.notifications.scopeZone', { vars: { name: locName(n.location_id), zone: n.zone_name ?? '' } });
+  if (n.scope === 'USER') return t('marketing.notifications.scopeUsers', { vars: { count: n.target_user_ids?.length ?? 0 } });
+  return scopes(t).find((s) => s.value === n.scope)?.label ?? n.scope;
 };
 
 function ScopeChip({
   notification,
   locName,
 }: Readonly<{ notification: NotificationRow; locName: LocName }>) {
-  const meta = SCOPES.find((s) => s.value === notification.scope);
+  const { t } = useTranslation();
+  const meta = scopes(t).find((s) => s.value === notification.scope);
   return (
     <Chip
       size="small"
       icon={meta?.icon}
-      label={scopeLabel(notification, locName)}
+      label={scopeLabel(notification, locName, t)}
       color={notification.scope === 'GLOBAL' ? 'primary' : 'default'}
       variant="outlined"
     />
@@ -83,10 +87,11 @@ export default function NotificationsTable({
   toolbarActions,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<NotificationRow>[]>(() => {
     const renderScope = (n: NotificationRow) => <ScopeChip notification={n} locName={locName} />;
     const renderActions = (n: NotificationRow) => (
-      <Tooltip title="Delete">
+      <Tooltip title={t('shell.common.delete')}>
         <IconButton size="small" onClick={() => onDelete(n)}>
           <DeleteIcon fontSize="small" />
         </IconButton>
@@ -95,7 +100,7 @@ export default function NotificationsTable({
     return [
       {
         field: 'title',
-        headerName: 'Title',
+        headerName: t('shell.common.title'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderTitle,
@@ -103,7 +108,7 @@ export default function NotificationsTable({
       },
       {
         field: 'body',
-        headerName: 'Body',
+        headerName: t('marketing.notifications.body'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderBody,
@@ -111,15 +116,15 @@ export default function NotificationsTable({
       },
       {
         field: 'scope',
-        headerName: 'Audience',
+        headerName: t('marketing.common.audience'),
         minWidth: 180,
-        filter: { type: 'select', options: SCOPE_OPTIONS },
+        filter: { type: 'select', options: scopeOptions(t) },
         cellRenderer: renderScope,
-        valueGetter: (n) => scopeLabel(n, locName),
+        valueGetter: (n) => scopeLabel(n, locName, t),
       },
       {
         field: 'delivered_count',
-        headerName: 'Delivered',
+        headerName: t('marketing.notifications.delivered'),
         width: 110,
         filter: { type: 'number' },
         cellRenderer: renderDelivered,
@@ -127,21 +132,21 @@ export default function NotificationsTable({
       },
       {
         field: 'failed_count',
-        headerName: 'Failed',
+        headerName: t('marketing.common.failed'),
         width: 100,
         filter: { type: 'number' },
         cellRenderer: renderFailed,
         valueGetter: (n) => n.failed_count,
       },
       dateColumn<NotificationRow>({
-        headerName: 'Sent',
+        headerName: t('marketing.common.sent'),
         hide: false,
         width: 160,
         format: 'd MMM yyyy, HH:mm',
       }),
       {
         field: 'location_id',
-        headerName: 'Location',
+        headerName: t('marketing.common.location'),
         hide: true,
         minWidth: 150,
         filter: { type: 'select', options: locationOptions },
@@ -149,7 +154,7 @@ export default function NotificationsTable({
       },
       {
         field: 'zone_name',
-        headerName: 'Zone',
+        headerName: t('marketing.common.zone'),
         hide: true,
         minWidth: 130,
         filter: { type: 'text' },
@@ -157,7 +162,7 @@ export default function NotificationsTable({
       },
       {
         field: 'silent',
-        headerName: 'Silent',
+        headerName: t('marketing.notifications.silent'),
         hide: true,
         width: 100,
         filter: { type: 'boolean' },
@@ -165,7 +170,7 @@ export default function NotificationsTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 90,
         cellRenderer: renderActions,
@@ -180,7 +185,7 @@ export default function NotificationsTable({
       fetchRows={fetchRows}
       getRowId={getNotificationRowId}
       toolbarActions={toolbarActions}
-      emptyText="No notifications yet"
+      emptyText={t('marketing.notifications.noNotificationsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search title or body"
       refetchRef={refetchRef}

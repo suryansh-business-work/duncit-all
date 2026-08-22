@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   title: string;
@@ -24,6 +25,7 @@ export default function SupportShell({
   action,
   children,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -32,7 +34,7 @@ export default function SupportShell({
         <IconButton
           size="small"
           onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
-          aria-label="Back"
+          aria-label={t('mweb.common.back')}
           sx={{ bgcolor: 'action.hover' }}
         >
           <ArrowBackIcon />

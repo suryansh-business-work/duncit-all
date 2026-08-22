@@ -5,6 +5,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import { formatDistanceToNowStrict } from 'date-fns';
 import SupportShell from './SupportShell';
 import { MY_UNIFIED_SUPPORT_TICKETS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface UnifiedTicket {
   id: string;
@@ -39,6 +40,7 @@ function targetFor(row: UnifiedTicket): string | null {
 /** One list of every support request the user has raised — current + historical
  * across SOS, callbacks, support tickets and chat, with prefixed ticket ids. */
 export default function AllTicketsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ myUnifiedSupportTickets: UnifiedTicket[] }>(
     MY_UNIFIED_SUPPORT_TICKETS,
@@ -56,7 +58,7 @@ export default function AllTicketsPage() {
   } else if (error) {
     body = <Alert severity="error">{error.message}</Alert>;
   } else if (rows.length === 0) {
-    body = <Alert severity="info">You have not raised any support requests yet.</Alert>;
+    body = <Alert severity="info">{t('mweb.supportHub.youHaveNotRaisedAnySupport')}</Alert>;
   } else {
     body = (
       <Stack spacing={1.25}>
@@ -95,8 +97,8 @@ export default function AllTicketsPage() {
 
   return (
     <SupportShell
-      title="All Support Tickets"
-      subtitle="Every request you have raised, in one list"
+      title={t('mweb.common.allSupportTickets')}
+      subtitle={t('mweb.supportHub.everyRequestYouHaveRaisedIn')}
       icon={<HistoryIcon fontSize="small" />}
       gradient="linear-gradient(135deg, #7c5cff 0%, #b388ff 100%)"
       backTo="/support"

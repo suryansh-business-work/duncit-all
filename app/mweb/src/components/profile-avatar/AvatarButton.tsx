@@ -1,6 +1,7 @@
 import { Avatar, Box, CircularProgress, IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   photo?: string | null;
@@ -25,6 +26,7 @@ export default function AvatarButton({
   onAddStory,
   onEdit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const ringSx = hasStory
     ? { p: '3px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff8b5f, #ed4f7a)' }
     : {};
@@ -55,11 +57,11 @@ export default function AvatarButton({
         </Box>
       </Tooltip>
 
-      <Tooltip title="Add story">
+      <Tooltip title={t('mweb.common.addStory')}>
         <IconButton
           size="small"
           data-testid="avatar-add-story"
-          aria-label="Add story"
+          aria-label={t('mweb.common.addStory')}
           onClick={onAddStory}
           sx={{
             position: 'absolute',
@@ -74,11 +76,11 @@ export default function AvatarButton({
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="Change profile photo">
+      <Tooltip title={t('mweb.profileAvatar.changeProfilePhoto')}>
         <IconButton
           size="small"
           data-testid="avatar-edit"
-          aria-label="Edit photo"
+          aria-label={t('mweb.common.editPhoto')}
           disabled={saving}
           onClick={(e) => onEdit(e.currentTarget)}
           sx={{

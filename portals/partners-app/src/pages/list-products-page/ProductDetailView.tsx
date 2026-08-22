@@ -1,5 +1,6 @@
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLORS: StatusColorMap = { APPROVED: 'success', DENIED: 'error' };
 const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
@@ -27,6 +28,7 @@ function CategoryChips({ categories }: Readonly<{ categories: any[] }>) {
 }
 
 function VariantImages({ images }: Readonly<{ images: string[] }>) {
+  const { t } = useTranslation();
   if (!images?.length) return null;
   return (
     <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(6, 1fr)' } }}>
@@ -35,7 +37,7 @@ function VariantImages({ images }: Readonly<{ images: string[] }>) {
           key={url}
           component="img"
           src={url}
-          alt="Variant"
+          alt={t('partners.listProductsPage.variant')}
           sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 1, border: 1, borderColor: 'divider' }}
         />
       ))}

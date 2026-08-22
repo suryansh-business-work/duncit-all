@@ -17,6 +17,7 @@ import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';
 import FragmentEditorPanel from './FragmentEditorPanel';
 import { useEmailFragments } from './useEmailFragments';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Email Fragments — the header and footer that wrap a template's body, one
@@ -25,6 +26,7 @@ import { useEmailFragments } from './useEmailFragments';
  * code, so a tenth fragment could never be reached.
  */
 export default function EmailFragmentsPage() {
+  const { t } = useTranslation();
   const f = useEmailFragments();
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -65,7 +67,7 @@ export default function EmailFragmentsPage() {
           selected={f.selected}
           onSelect={f.setSelected}
           searchPlaceholder="Search category"
-          emptyText="No fragments yet."
+          emptyText={t('tech.emailFragments.noFragmentsYet')}
         />
 
         {f.draft ? (
@@ -82,28 +84,28 @@ export default function EmailFragmentsPage() {
           />
         ) : (
           <Box sx={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-            <Typography color="text.secondary">Select a category from the left.</Typography>
+            <Typography color="text.secondary">{t('tech.emailFragments.selectACategoryFromTheLeft')}</Typography>
           </Box>
         )}
       </Stack>
 
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>New fragment</DialogTitle>
+        <DialogTitle>{t('tech.emailFragments.newFragment')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             fullWidth
             size="small"
-            label="Name"
+            label={t('shell.common.name')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Weekend banner"
-            helperText="Its key is made from the name. Add the header and footer next."
+            placeholder={t('tech.emailFragments.weekendBanner')}
+            helperText={t('tech.emailFragments.itsKeyIsMadeFromThe')}
             sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddOpen(false)}>Close</Button>
+          <Button onClick={() => setAddOpen(false)}>{t('shell.common.close')}</Button>
           <Button
             variant="contained"
             disabled={!newName.trim() || f.busy}

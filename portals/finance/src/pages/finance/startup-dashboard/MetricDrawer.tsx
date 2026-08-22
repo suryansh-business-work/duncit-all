@@ -13,6 +13,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import type { FounderMetric } from './types';
 import { labelizeKey } from './format';
+import { useTranslation } from '@duncit/app-settings';
 
 export type DrawerMode = 'info' | 'settings';
 
@@ -35,6 +36,7 @@ function editableKeys(metric: FounderMetric): string[] {
 }
 
 export default function MetricDrawer({ metric, mode, settings, saving, onClose, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
     <Drawer anchor="right" open onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
         <Typography variant="h6">{metric.label}</Typography>
-        <IconButton onClick={onClose} aria-label="Close">
+        <IconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
         </IconButton>
       </Stack>

@@ -108,20 +108,20 @@ export default function WaCampaignForm({
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <form noValidate onSubmit={handleSubmit((form) => onSubmit(toSendInput(form)))}>
-        <DialogTitle>Send WhatsApp campaign</DialogTitle>
+        <DialogTitle>{t('marketing.whatsappCampaigns.sendWhatsappCampaign')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <RhfTextField
               control={control}
               name="name"
-              label="Campaign name (internal)"
+              label={t('marketing.whatsappCampaigns.campaignNameInternal')}
               required
               hint="How you recognise this send in the logs"
             />
             <RhfTextField
               control={control}
               name="wa_campaign_name"
-              label="WhatsApp campaign"
+              label={t('marketing.whatsappCampaigns.whatsappCampaign')}
               select
               required
               hint="The approved AiSensy campaign this send uses"

@@ -1,6 +1,7 @@
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { IconButton, Tooltip } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: boolean;
@@ -12,6 +13,7 @@ interface Props {
 /** Deactivate/activate + developer-only permanent delete icons, appended to a
  * table row's Actions cell (Venues / Hosts / Brands). */
 export default function LifecycleActions({ active, onToggleActive, canHardDelete, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <Tooltip title={active ? 'Deactivate' : 'Activate'}>
@@ -20,7 +22,7 @@ export default function LifecycleActions({ active, onToggleActive, canHardDelete
         </IconButton>
       </Tooltip>
       {canHardDelete && (
-        <Tooltip title="Delete permanently (developer)">
+        <Tooltip title={t('onboarding.lifecycleActions.deletePermanentlyDeveloper')}>
           <IconButton size="small" color="error" onClick={onDelete}>
             <DeleteForeverIcon fontSize="small" />
           </IconButton>

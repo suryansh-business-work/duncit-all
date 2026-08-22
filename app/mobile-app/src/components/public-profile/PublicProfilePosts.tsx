@@ -8,6 +8,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfilePost } from '@/hooks/usePublicProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Posts grid + active stories on a member's public profile. Shows a lock card
  * for a private account the viewer doesn't follow. */
@@ -16,6 +17,7 @@ export function PublicProfilePosts({
   stories,
   canView,
 }: Readonly<{ posts: PublicProfilePost[]; stories: string[]; canView: boolean }>) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
   const [postIndex, setPostIndex] = useState<number | null>(null);
@@ -94,7 +96,7 @@ export function PublicProfilePosts({
               key={post.id}
               testID={`public-profile-post-${index}`}
               role="button"
-              aria-label="Open post"
+              aria-label={t('mweb.common.openPost')}
               onPress={() => setPostIndex(index)}
             >
               <AppImage

@@ -5,6 +5,7 @@ import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { AttachmentView } from '@/components/AttachmentView';
 import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -20,6 +21,7 @@ interface Props {
  * five.
  */
 export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { uploading, pickAndUpload } = useSupportUpload('/support');
   const { color: ink } = useThemeColors();
   const disabled = uploading || attachments.length >= MAX_ATTACHMENTS;
@@ -39,7 +41,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         <XStack
           testID="ticket-attach-add"
           role="button"
-          aria-label="Add files"
+          aria-label={t('mweb.support.addFiles')}
           aria-disabled={disabled}
           onPress={disabled ? undefined : () => void add()}
           alignItems="center"
@@ -65,7 +67,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
               <XStack
                 testID={`ticket-attach-remove-${i}`}
                 role="button"
-                aria-label="Remove attachment"
+                aria-label={t('mweb.common.removeAttachment')}
                 onPress={() => onChange(attachments.filter((_, j) => j !== i))}
                 position="absolute"
                 top={-6}

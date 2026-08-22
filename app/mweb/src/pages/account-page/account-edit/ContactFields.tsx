@@ -4,6 +4,7 @@ import { Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import CountryCodeField from './CountryCodeField';
 import type { AccountEditValues } from './account-edit.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   control: Control<AccountEditValues>;
@@ -18,6 +19,7 @@ const numericInput = { inputMode: 'numeric' as const, maxLength: 15 };
  * fields mirror the contact number live and are locked from manual edits.
  */
 export default function ContactFields({ control, setValue }: Readonly<Props>) {
+  const { t } = useTranslation();
   const phoneExtension = useWatch({ control, name: 'phone_extension' });
   const phoneNumber = useWatch({ control, name: 'phone_number' });
   const whatsappExtension = useWatch({ control, name: 'whatsapp_extension' });
@@ -42,11 +44,11 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
         Contact number
       </Typography>
       <Stack direction="row" spacing={1}>
-        <CountryCodeField control={control} name="phone_extension" label="Code" />
+        <CountryCodeField control={control} name="phone_extension" label={t('mweb.common.code')} />
         <RhfTextField
           control={control}
           name="phone_number"
-          label="Phone number"
+          label={t('mweb.common.phoneNumber')}
           hint="10-digit number"
           size="small"
           InputLabelProps={{ shrink: true }}
@@ -59,10 +61,10 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           <Checkbox
             checked={sameAsContact}
             onChange={(event) => setSameAsContact(event.target.checked)}
-            inputProps={{ 'aria-label': 'WhatsApp number same as contact number' }}
+            inputProps={{ 'aria-label': t('mweb.account.whatsappSameAsContact') }}
           />
         }
-        label="WhatsApp number same as contact number"
+        label={t('mweb.account.whatsappSameAsContact')}
       />
 
       <Typography variant="overline" color="text.secondary" fontWeight={700}>
@@ -72,13 +74,13 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
         <CountryCodeField
           control={control}
           name="whatsapp_extension"
-          label="Code"
+          label={t('mweb.common.code')}
           disabled={sameAsContact}
         />
         <RhfTextField
           control={control}
           name="whatsapp_number"
-          label="WhatsApp number"
+          label={t('mweb.common.whatsappNumber')}
           hint="10-digit number"
           size="small"
           disabled={sameAsContact}

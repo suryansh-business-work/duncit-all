@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FEEDBACK_OPTIONS, FEEDBACK_THANK_YOU, feedbackOptionFor } from './feedbackScale';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -38,13 +39,14 @@ export default function EmojiFeedbackDialog({
   onSubmit,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const submitted = feedbackOptionFor(existingRating);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>How did we do?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
       <DialogContent>
         {submitted ? (
           <Stack spacing={1.25} sx={{ pt: 1 }}>
@@ -103,7 +105,7 @@ export default function EmojiFeedbackDialog({
             <TextField
               fullWidth
               size="small"
-              label="Anything to add? (optional)"
+              label={t('mweb.supportChat.anythingToAddOptional')}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               multiline

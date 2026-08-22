@@ -8,6 +8,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -23,15 +24,21 @@ interface Props {
 
 export default function ConfirmDialog({
   open,
-  title = 'Are you sure?',
+  title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   destructive,
   busy,
   onConfirm,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as parameter defaults: a default is evaluated before
+  // any hook runs, so `t` would not exist yet.
+  const titleText = title ?? t('mweb.confirm.areYouSure');
+  const confirmText = confirmLabel ?? t('mweb.confirm.confirm');
+  const cancelText = cancelLabel ?? t('mweb.common.cancel');
   return (
     <Dialog
       open={open}
@@ -40,7 +47,7 @@ export default function ConfirmDialog({
       fullWidth
       aria-labelledby="confirm-dialog-title"
     >
-      <DialogTitle id="confirm-dialog-title">{title}</DialogTitle>
+      <DialogTitle id="confirm-dialog-title">{titleText}</DialogTitle>
       {message && (
         <DialogContent>
           {typeof message === 'string' ? (
@@ -52,7 +59,7 @@ export default function ConfirmDialog({
       )}
       <DialogActions>
         <Button onClick={onClose} disabled={busy} sx={{ minHeight: 40 }}>
-          {cancelLabel}
+          {cancelText}
         </Button>
         <Button
           onClick={onConfirm}
@@ -63,7 +70,7 @@ export default function ConfirmDialog({
           sx={{ minHeight: 40 }}
           autoFocus
         >
-          {confirmLabel}
+          {confirmText}
         </Button>
       </DialogActions>
     </Dialog>

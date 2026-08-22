@@ -3,6 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ImageIcon from '@mui/icons-material/Image';
+import { useTranslation } from '../i18n/useTranslation';
 
 const VIDEO_RE = /^.+\.(mp4|webm|mov|m4v)(\?.*)?$/i;
 
@@ -17,6 +18,7 @@ interface Props {
 
 /** One image/video row in the media list with reorder + replace controls. */
 export default function MediaRow({ url, index, total, onReplace, onMove, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
       {VIDEO_RE.test(url) ? (
@@ -50,26 +52,26 @@ export default function MediaRow({ url, index, total, onReplace, onMove, onRemov
           #{index + 1}
         </Typography>
       </Box>
-      <Tooltip title="Replace">
+      <Tooltip title={t('clubForm.mediaRow.replace')}>
         <IconButton size="small" onClick={onReplace}>
           <ImageIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Move up">
+      <Tooltip title={t('clubForm.mediaRow.moveUp')}>
         <span>
           <IconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
             <ArrowUpwardIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Move down">
+      <Tooltip title={t('clubForm.mediaRow.moveDown')}>
         <span>
           <IconButton size="small" disabled={index === total - 1} onClick={() => onMove(1)}>
             <ArrowDownwardIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Remove">
+      <Tooltip title={t('clubForm.mediaRow.remove')}>
         <IconButton size="small" color="error" onClick={onRemove}>
           <DeleteIcon fontSize="small" />
         </IconButton>

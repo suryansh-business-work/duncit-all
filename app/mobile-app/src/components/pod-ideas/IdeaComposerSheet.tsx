@@ -16,6 +16,7 @@ import {
   type CategoryLabels,
   type CategoryScope,
 } from './CategoryCascadeField';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -32,6 +33,7 @@ const EMPTY_LABELS: CategoryLabels = {
 /** Bottom sheet to share a new pod idea: title, description and the mandatory
  * Super → Category → Sub hierarchy. RN port of mWeb's composer dialog. */
 export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, onPrimary } = useThemeColors();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -61,11 +63,11 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
 
   const submit = async () => {
     if (!title.trim() || !description.trim()) {
-      setError('Title and description are both required.');
+      setError(t('mweb.podIdeas.titleAndDescriptionAreBothRequired'));
       return;
     }
     if (!scope.super_category_id || !scope.category_id || !scope.sub_category_id) {
-      setError('Please select a Super Category, Category and Sub Category.');
+      setError(t('mweb.podIdeas.pleaseSelectASuperCategoryCategory'));
       return;
     }
     setSubmitting(true);
@@ -75,7 +77,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
       reset();
       onClose();
     } catch {
-      setError('Could not submit your idea. Please try again.');
+      setError(t('mweb.podIdeas.couldNotSubmitYourIdeaPlease'));
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +90,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
           <YStack flex={1} testID="idea-composer-sheet">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={close}
               position="absolute"
               top={0}
@@ -115,7 +117,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                   <XStack
                     testID="idea-composer-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={close}
                     width={32}
                     height={32}
@@ -128,24 +130,24 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
 
                 <ScrollView keyboardShouldPersistTaps="handled">
                   <YStack gap={10} paddingHorizontal={16} paddingBottom={16}>
-                    <Field label="Title" gap={4}>
+                    <Field label={t('mweb.common.title')} gap={4}>
                       <Input
                         testID="idea-title-input"
-                        aria-label="Title"
+                        aria-label={t('mweb.common.title')}
                         value={title}
                         onChangeText={(t) => setTitle(t.slice(0, 160))}
-                        placeholder="Title"
+                        placeholder={t('mweb.common.title')}
                         placeholderTextColor="$muted"
                         backgroundColor="$surface"
                       />
                     </Field>
-                    <Field label="Description" gap={4}>
+                    <Field label={t('mweb.common.description')} gap={4}>
                       <Input
                         testID="idea-description-input"
-                        aria-label="Description"
+                        aria-label={t('mweb.common.description')}
                         value={description}
                         onChangeText={(t) => setDescription(t.slice(0, 2000))}
-                        placeholder="Describe the vibe, format, location, audience…"
+                        placeholder={t('mweb.podIdeas.describeTheVibeFormatLocationAudience')}
                         placeholderTextColor="$muted"
                         backgroundColor="$surface"
                         multiline
@@ -166,7 +168,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                     <XStack
                       testID="idea-composer-submit"
                       role="button"
-                      aria-label="Submit idea"
+                      aria-label={t('mweb.podIdeas.submitIdea')}
                       aria-disabled={submitting}
                       onPress={submit}
                       height={48}

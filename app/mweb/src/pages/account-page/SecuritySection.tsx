@@ -17,10 +17,12 @@ import { parseApiError } from '../../utils/parseApiError';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import { REQUEST_ACCOUNT_DELETION_OTP } from './security-queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Account security: change password + the de-emphasised, danger-styled delete
  * action at the bottom of Profile → Settings. */
 export default function SecuritySection() {
+  const { t } = useTranslation();
   const { logout } = useUserData();
   const [changeOpen, setChangeOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -89,14 +91,14 @@ export default function SecuritySection() {
       <ChangePasswordDialog
         open={changeOpen}
         onClose={() => setChangeOpen(false)}
-        onChanged={() => setToast('Password updated')}
+        onChanged={() => setToast(t('mweb.account.passwordUpdated'))}
       />
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete your account?"
-        message="This permanently deletes your account and data. This action cannot be undone."
-        confirmLabel="Send code"
+        title={t('mweb.account.deleteYourAccount')}
+        message={t('mweb.account.thisPermanentlyDeletesYourAccountAnd')}
+        confirmLabel={t('mweb.account.sendCode')}
         destructive
         busy={requesting}
         onConfirm={() => {

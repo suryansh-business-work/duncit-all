@@ -3,6 +3,7 @@ import { Alert, AlertTitle, Stack, TextField } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import DateField from '../../../components/DateField';
 import type { RegisterVenueValues } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -10,12 +11,13 @@ interface Props {
 }
 
 export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control } = form;
 
   return (
     <Stack spacing={2.5}>
       <Alert severity="info" icon={<EventAvailableIcon />}>
-        <AlertTitle sx={{ fontWeight: 800 }}>Where slot requests arrive</AlertTitle>
+        <AlertTitle sx={{ fontWeight: 800 }}>{t('partners.registerVenuePage.whereSlotRequestsArrive')}</AlertTitle>
         Pod-related venue slot requests come to these owner details once your venue is approved —
         you can accept or deny each request from your Venue Studio.
       </Alert>
@@ -25,7 +27,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Owner name"
+            label={t('partners.registerVenuePage.ownerName')}
             required
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? 'Person hosts should reach out to'}
@@ -38,7 +40,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Owner email"
+            label={t('partners.registerVenuePage.ownerEmail')}
             type="email"
             required
             disabled
@@ -57,7 +59,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Owner phone"
+            label={t('partners.registerVenuePage.ownerPhone')}
             required
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? 'Digits only, with optional + country code'}
@@ -69,7 +71,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         control={control}
         render={({ field, fieldState }) => (
           <DateField
-            label="Owner DOB"
+            label={t('partners.registerVenuePage.ownerDob')}
             required
             value={field.value}
             onChange={field.onChange}
@@ -86,7 +88,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Owner address"
+            label={t('partners.registerVenuePage.ownerAddress')}
             required
             multiline
             minRows={2}

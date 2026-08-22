@@ -1,13 +1,16 @@
 import type { DuncitColumn } from '@duncit/table';
 import type { AudienceRow } from '../helpers';
 import { dash, yesNo } from './cells';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Account state — hidden by default; the sidebar is where these are filtered. */
-export const accountColumns = (): DuncitColumn<AudienceRow>[] => [
-  { field: 'status', headerName: 'Status', width: 110, valueGetter: (row) => dash(row.status) },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const accountColumns = (t: Translate): DuncitColumn<AudienceRow>[] => [
+  { field: 'status', headerName: t('shell.common.status'), width: 110, valueGetter: (row) => dash(row.status) },
   {
     field: 'email_verified',
-    headerName: 'Email verified',
+    headerName: t('marketing.targetAudience.emailVerified'),
     sortable: false,
     width: 140,
     hide: true,
@@ -15,7 +18,7 @@ export const accountColumns = (): DuncitColumn<AudienceRow>[] => [
   },
   {
     field: 'phone_verified',
-    headerName: 'Phone verified',
+    headerName: t('marketing.targetAudience.phoneVerified'),
     sortable: false,
     width: 140,
     hide: true,
@@ -23,14 +26,14 @@ export const accountColumns = (): DuncitColumn<AudienceRow>[] => [
   },
   {
     field: 'locale',
-    headerName: 'Language',
+    headerName: t('marketing.common.language'),
     width: 120,
     hide: true,
     valueGetter: (row) => dash(row.locale),
   },
   {
     field: 'last_login_provider',
-    headerName: 'Signed in with',
+    headerName: t('marketing.targetAudience.signedInWith'),
     minWidth: 140,
     hide: true,
     valueGetter: (row) => dash(row.last_login_provider),

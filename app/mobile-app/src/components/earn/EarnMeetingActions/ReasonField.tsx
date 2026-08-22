@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   testID: string;
@@ -13,6 +14,7 @@ interface Props {
 /** Required free-text reason captured before a reschedule / cancel. The reason
  * is screened by AI Monitoring on submit, so the field says so up front. */
 export function ReasonField({ testID, label, value, onChangeText }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   return (
     <YStack gap={6} paddingTop={12}>
@@ -24,7 +26,7 @@ export function ReasonField({ testID, label, value, onChangeText }: Readonly<Pro
         aria-label={label}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Add a short reason"
+        placeholder={t('mweb.earn.addAShortReason')}
         placeholderTextColor="$muted"
         minHeight={70}
         maxLength={500}

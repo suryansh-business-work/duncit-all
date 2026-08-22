@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { POD_LIKERS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -27,6 +28,7 @@ interface Props {
 /** "Who liked this pod" — tap the like count to see likers, tap a person to open
  * their profile (explore item 8). */
 export default function LikesListDialog({ open, onClose, userIds }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading } = useQuery(POD_LIKERS, {
     variables: { ids: userIds },
@@ -77,8 +79,8 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Liked by</DialogTitle>
-        <IconButton aria-label="Close" onClick={onClose}>
+        <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.explore.likedBy')}</DialogTitle>
+        <IconButton aria-label={t('mweb.common.close')} onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Stack>

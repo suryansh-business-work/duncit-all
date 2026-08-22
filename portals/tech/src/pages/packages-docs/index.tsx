@@ -6,6 +6,7 @@ import FillViewport from '../../components/FillViewport';
 import PackageDocBody from './PackageDocBody';
 import PackageDocHeader from './PackageDocHeader';
 import { PACKAGE_DOCS } from './package-docs';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Every shared package's documentation, inside the portal.
@@ -16,6 +17,7 @@ import { PACKAGE_DOCS } from './package-docs';
  * with it.
  */
 export default function PackagesDocsPage() {
+  const { t } = useTranslation();
   // `?pkg=` opens a named package; otherwise the first one, because a general
   // index has no package it should privilege — the list and its search are
   // right there, and picking a favourite would only be a guess.
@@ -46,7 +48,7 @@ export default function PackagesDocsPage() {
           selected={doc?.slug ?? null}
           onSelect={setSelected}
           searchPlaceholder="Search package or category"
-          emptyText="No packages documented."
+          emptyText={t('tech.packagesDocs.noPackagesDocumented')}
           width={280}
         />
 

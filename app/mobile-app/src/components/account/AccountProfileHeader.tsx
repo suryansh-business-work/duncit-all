@@ -7,6 +7,7 @@ import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { AccountMe } from '@/hooks/useAccount';
 import { shareProfile } from '@/utils/share';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface AccountProfileHeaderProps {
   me: AccountMe;
@@ -24,6 +25,7 @@ export function AccountProfileHeader({
   onLogout,
   onChanged,
 }: Readonly<AccountProfileHeaderProps>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const initial = (me.first_name?.[0] ?? 'U').toUpperCase();
@@ -63,7 +65,7 @@ export function AccountProfileHeader({
         <XStack
           testID="account-edit"
           role="button"
-          aria-label="Edit profile"
+          aria-label={t('mweb.account.editProfile')}
           onPress={onEdit}
           flex={1}
           height={44}
@@ -83,7 +85,7 @@ export function AccountProfileHeader({
         <XStack
           testID="account-share"
           role="button"
-          aria-label="Share profile"
+          aria-label={t('mweb.common.shareProfile')}
           onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
           flex={1}
           height={44}
@@ -103,7 +105,7 @@ export function AccountProfileHeader({
         <XStack
           testID="account-logout"
           role="button"
-          aria-label="Logout"
+          aria-label={t('mweb.common.logout')}
           onPress={onLogout}
           flex={1}
           height={44}

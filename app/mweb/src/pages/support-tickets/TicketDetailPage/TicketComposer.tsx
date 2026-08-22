@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import AttachmentsField from '../../../forms/support-form/AttachmentsField';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   /** Resolved/closed tickets lock the reply box (B7). */
@@ -12,6 +13,7 @@ interface Props {
 
 /** Reply composer for a ticket; read-only once the ticket is resolved/closed. */
 export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
 
@@ -40,7 +42,7 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
           <TextField
             size="small"
             fullWidth
-            placeholder="Write a reply…"
+            placeholder={t('mweb.common.writeAReply')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             multiline

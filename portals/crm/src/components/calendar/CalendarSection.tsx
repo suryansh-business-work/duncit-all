@@ -28,15 +28,19 @@ import CalendarList from './CalendarList';
 import EventDrawer from './EventDrawer';
 import ReminderFormDialog from '../reminders-tab/ReminderFormDialog';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 type View = 'month' | 'week' | 'day' | 'upcoming' | 'year';
-const VIEWS: { value: View; label: string }[] = [
-  { value: 'day', label: 'Day' }, { value: 'week', label: 'Week' }, { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' }, { value: 'upcoming', label: 'Upcoming' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const views = (t: Translate): { value: View; label: string }[] =>[
+  { value: 'day', label: t('crm.components.day') }, { value: 'week', label: t('crm.components.week') }, { value: 'month', label: t('crm.components.month') },
+  { value: 'year', label: t('crm.components.year') }, { value: 'upcoming', label: t('crm.components.upcoming') },
 ];
 
 /** Full-width dashboard reminders calendar (reminders + lead follow-ups). */
 export default function CalendarSection() {
+  const { t } = useTranslation();
   const [view, setView] = useState<View>('month');
   const [cursor, setCursor] = useState(new Date());
   const [entity, setEntity] = useState<EntityFilter>('ALL');
@@ -63,7 +67,7 @@ export default function CalendarSection() {
     }
     if (view === 'day') return { title: formatDate(cursor), listDays: [cursor] };
     if (view === 'year') return { title: format(cursor, 'yyyy'), listDays: eachDayOfInterval({ start: startOfYear(cursor), end: endOfYear(cursor) }) };
-    if (view === 'upcoming') return { title: 'Upcoming', listDays: eachDayOfInterval({ start: startOfDay(new Date()), end: addDays(new Date(), 60) }) };
+    if (view === 'upcoming') return { title: t('crm.components.upcoming'), listDays: eachDayOfInterval({ start: startOfDay(new Date()), end: addDays(new Date(), 60) }) };
     return { title: format(cursor, 'MMMM yyyy'), listDays: [] };
   }, [view, cursor]);
 
@@ -90,31 +94,31 @@ export default function CalendarSection() {
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
           <EventIcon color="primary" />
-          <Typography variant="h6" fontWeight={800} sx={{ mr: 1 }}>Reminders calendar</Typography>
+          <Typography variant="h6" fontWeight={800} sx={{ mr: 1 }}>{t('crm.components.remindersCalendar')}</Typography>
           {view !== 'upcoming' && (
             <Stack direction="row" alignItems="center">
               <IconButton size="small" onClick={() => step(-1)}><ChevronLeftIcon /></IconButton>
-              <Button size="small" onClick={() => setCursor(new Date())}>Today</Button>
+              <Button size="small" onClick={() => setCursor(new Date())}>{t('crm.components.today')}</Button>
               <IconButton size="small" onClick={() => step(1)}><ChevronRightIcon /></IconButton>
             </Stack>
           )}
           <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 160 }}>{title}</Typography>
           <Box sx={{ flex: 1 }} />
-          <TextField select size="small" label="Type" value={entity} onChange={(e) => setEntity(e.target.value as EntityFilter)} sx={{ minWidth: 120 }}>
+          <TextField select size="small" label={t('shell.common.type')} value={entity} onChange={(e) => setEntity(e.target.value as EntityFilter)} sx={{ minWidth: 120 }}>
             <MenuItem value="ALL">All</MenuItem>
-            <MenuItem value="VENUE_LEAD">Venue</MenuItem>
+            <MenuItem value="VENUE_LEAD">{t('crm.common.venue')}</MenuItem>
             <MenuItem value="HOST_LEAD">Host</MenuItem>
           </TextField>
-          <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} sx={{ minWidth: 120 }}>
+          <TextField select size="small" label={t('shell.common.status')} value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} sx={{ minWidth: 120 }}>
             <MenuItem value="ALL">All</MenuItem>
-            <MenuItem value="PENDING">Pending</MenuItem>
+            <MenuItem value="PENDING">{t('crm.components.pending')}</MenuItem>
             <MenuItem value="DONE">Done</MenuItem>
           </TextField>
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>Add</Button>
         </Stack>
 
         <ToggleButtonGroup size="small" exclusive value={view} onChange={(_e, v) => v && setView(v)} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
-          {VIEWS.map((v) => <ToggleButton key={v.value} value={v.value}>{v.label}</ToggleButton>)}
+          {views(t).map((v) => <ToggleButton key={v.value} value={v.value}>{v.label}</ToggleButton>)}
         </ToggleButtonGroup>
 
         {loading && events.length === 0 && (

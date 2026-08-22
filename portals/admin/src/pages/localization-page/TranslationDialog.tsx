@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import { valueFor, type LocaleRow, type TranslationRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export interface TranslationSubmit {
   key: string;
@@ -36,6 +37,7 @@ export default function TranslationDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [key, setKey] = useState('');
   const [description, setDescription] = useState('');
   const [values, setValues] = useState<Record<string, string>>({});
@@ -70,7 +72,7 @@ export default function TranslationDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField
-            label="Key"
+            label={t('admin.podPlans.key')}
             placeholder="mweb.shop.emptyState"
             value={key}
             onChange={(e) => setKey(e.target.value)}
@@ -85,15 +87,15 @@ export default function TranslationDialog({
             fullWidth
           />
           <TextField
-            label="Description"
+            label={t('shell.common.description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            helperText="What this string is and where it appears — context for translators"
+            helperText={t('admin.localization.noteHint')}
             fullWidth
           />
 
           {locales.length === 0 && (
-            <Alert severity="warning">Add a locale first — there is nothing to translate into.</Alert>
+            <Alert severity="warning">{t('admin.localization.noLocale')}</Alert>
           )}
 
           {locales.map((locale) => (
@@ -115,7 +117,7 @@ export default function TranslationDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={submit}

@@ -28,6 +28,7 @@ import { PodResubmitDialog } from './PodResubmitDialog';
 import type { HostPodSummary } from './pod-edit.form';
 import type { HostPodForComplete } from './pod-complete.form';
 import type { HostPodForResubmit } from './pod-resubmit.form';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HostPodsSectionProps {
   /** Fired after a pod completes — the screen refetches the Host Share list,
@@ -38,6 +39,7 @@ interface HostPodsSectionProps {
 /** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
  * host's self-service Complete/Edit/Delete actions (2). */
 export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProps>) {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
   const feedbackLink = useFeedbackLinkActions();
@@ -76,7 +78,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
         <XStack
           testID="host-pods-filter-open"
           role="button"
-          aria-label="Filter pods"
+          aria-label={t('mweb.hostManage.filterPods')}
           onPress={() => setFilterOpen(true)}
           alignItems="center"
           gap={6}

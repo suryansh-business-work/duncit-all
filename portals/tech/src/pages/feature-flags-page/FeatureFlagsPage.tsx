@@ -17,8 +17,10 @@ import {
 import FeatureFlagsTable from './FeatureFlagsTable';
 import FlagEditDialog from './FlagEditDialog';
 import FlagImportExport from './FlagImportExport';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function FeatureFlagsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [setFlag] = useMutation(SET_FLAG);
@@ -90,7 +92,7 @@ export default function FeatureFlagsPage() {
         });
       }
       setEditOpen(false);
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
       refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
@@ -101,10 +103,10 @@ export default function FeatureFlagsPage() {
 
   const remove = async (f: FeatureFlagRow) => {
     const ok = await confirm({
-      title: 'Delete flag',
+      title: t('tech.featureFlags.deleteFlag'),
       message: `Delete flag "${f.key}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {
@@ -118,7 +120,7 @@ export default function FeatureFlagsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Feature Flags</Typography>
+        <Typography variant="h5">{t('shell.nav.featureFlags')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Toggle features on or off across the platform without deploying code.
         </Typography>

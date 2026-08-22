@@ -3,6 +3,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
 import { categoryLabel, waMoney, waRate } from '../helpers';
 import type { WaCampaignRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** One label/value line. Hoisted so it isn't redefined each render (S6478). */
 function MetaRow({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
@@ -35,25 +36,26 @@ interface Props {
 /** What this send was made of: the template it used, who it was pointed at,
  * what filled its variables, and what it cost. */
 export default function CampaignMeta({ campaign, audienceText, currency }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
 
   return (
     <Stack spacing={0.75}>
-      <MetaRow label="WhatsApp campaign">
+      <MetaRow label={t('marketing.whatsappCampaigns.whatsappCampaign')}>
         <Typography variant="body2" fontWeight={700}>
           {campaign.wa_campaign_name}
         </Typography>
       </MetaRow>
-      <MetaRow label="Target audience">
+      <MetaRow label={t('marketing.common.targetAudience')}>
         <Typography variant="body2">{audienceText}</Typography>
       </MetaRow>
-      <MetaRow label="Template">
+      <MetaRow label={t('marketing.whatsappCampaigns.template')}>
         <Typography variant="body2">{campaign.template_name || 'Not known'}</Typography>
         <Chip size="small" label={categoryLabel(campaign.template_category)} />
       </MetaRow>
       {/* The rate sits beside the total on purpose: a cost with no rate under
           it cannot be checked against the rate card. */}
-      <MetaRow label="Cost">
+      <MetaRow label={t('marketing.common.cost')}>
         <Typography variant="body2" fontWeight={700}>
           {waMoney(campaign.cost, currency)}
         </Typography>
@@ -61,7 +63,7 @@ export default function CampaignMeta({ campaign, audienceText, currency }: Reado
           {costHint(campaign, currency)}
         </Typography>
       </MetaRow>
-      <MetaRow label="Template params">
+      <MetaRow label={t('marketing.whatsappCampaigns.templateParams')}>
         {campaign.template_params.length > 0 ? (
           <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
             {campaign.template_params.map((param, index) => (
@@ -75,14 +77,14 @@ export default function CampaignMeta({ campaign, audienceText, currency }: Reado
         )}
       </MetaRow>
       {campaign.scheduled_at && (
-        <MetaRow label="Scheduled for">
+        <MetaRow label={t('marketing.whatsappCampaigns.scheduledFor')}>
           <Typography variant="body2">{formatDateTime(campaign.scheduled_at)}</Typography>
         </MetaRow>
       )}
-      <MetaRow label="Created">
+      <MetaRow label={t('shell.common.created')}>
         <Typography variant="body2">{formatDateTime(campaign.created_at)}</Typography>
       </MetaRow>
-      <MetaRow label="Finished">
+      <MetaRow label={t('marketing.whatsappCampaigns.finished')}>
         <Typography variant="body2">
           {campaign.sent_at ? formatDateTime(campaign.sent_at) : 'Still sending'}
         </Typography>

@@ -18,10 +18,12 @@ import {
   type VenuePodRow,
   type VenuePodTab,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const ALL_VENUES = 'ALL';
 
 export default function VenuePodsPage() {
+  const { t } = useTranslation();
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
@@ -82,10 +84,10 @@ export default function VenuePodsPage() {
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
           <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.25}>
             <Typography variant="overline" color="text.secondary" fontWeight={800}>
-              Partner tools · Venues
+              {t('partners.common.partnerToolsVenues')}
             </Typography>
             <Typography variant="h5" fontWeight={950}>
-              Pods
+              {t('shell.nav.pods')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Every pod booked at your venues — upcoming, completed and cancelled. Click a pod for
@@ -95,12 +97,12 @@ export default function VenuePodsPage() {
           <TextField
             select
             size="small"
-            label="Venue"
+            label={t('partners.common.venue')}
             value={venueId}
             onChange={(event) => setVenueId(event.target.value)}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value={ALL_VENUES}>All my venues</MenuItem>
+            <MenuItem value={ALL_VENUES}>{t('partners.venuePodsPage.allMyVenues')}</MenuItem>
             {venues.map((venue: { id: string; venue_name: string }) => (
               <MenuItem key={venue.id} value={venue.id}>
                 {venue.venue_name}

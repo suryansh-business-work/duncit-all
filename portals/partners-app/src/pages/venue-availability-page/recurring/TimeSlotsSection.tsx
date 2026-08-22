@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { newTimeSlot, type TimeSlotRow } from './useRecurringDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   timeSlots: TimeSlotRow[];
@@ -15,6 +16,7 @@ interface Props {
 /** The Time section — one or more start/end ranges per day. Adjacent ranges must
  * keep the venue's buffer gap (the generator validates; the hint states it). */
 export default function TimeSlotsSection({ timeSlots, onChange, openHours, bufferMinutes }: Readonly<Props>) {
+  const { t } = useTranslation();
   const setRow = (id: string, p: Partial<TimeSlotRow>) =>
     onChange(timeSlots.map((r) => (r.id === id ? { ...r, ...p } : r)));
   const addRow = () => onChange([...timeSlots, newTimeSlot('15:00', '16:00')]);
@@ -31,13 +33,13 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
         {timeSlots.map((row, index) => (
           <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
             <TimePicker
-              label={timeSlots.length > 1 ? `Start #${index + 1}` : 'Start'}
+              label={timeSlots.length > 1 ? `Start #${index + 1}` : t('partners.page.start')}
               value={row.start}
               onChange={(t) => setRow(row.id, { start: t })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
             <TimePicker
-              label="End"
+              label={t('partners.venueAvailabilityPage.end')}
               value={row.end}
               onChange={(t) => setRow(row.id, { end: t })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}

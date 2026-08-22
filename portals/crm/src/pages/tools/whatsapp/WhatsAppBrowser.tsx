@@ -24,22 +24,26 @@ import SearchIcon from '@mui/icons-material/Search';
 import { WA_COMMUNITIES, WA_CONTACTS, WA_GROUPS } from './whatsappQueries';
 import { useExtraction } from './extraction';
 import GroupMembersDialog, { type GroupRef } from './GroupMembersDialog';
+import { useTranslation } from '@duncit/shell';
 
 const TAB_KEYS = ['communities', 'groups', 'users'] as const;
 type BrowserTab = (typeof TAB_KEYS)[number];
 
-const TAB_CONFIG: Record<BrowserTab, { label: string; query: typeof WA_COMMUNITIES; root: string }> = {
-  communities: { label: 'Communities', query: WA_COMMUNITIES, root: 'waCommunities' },
-  groups: { label: 'Groups', query: WA_GROUPS, root: 'waGroups' },
-  users: { label: 'Users', query: WA_CONTACTS, root: 'waContacts' },
-};
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const tabConfig = (t: Translate): Record<BrowserTab, { label: string; query: typeof WA_COMMUNITIES; root: string }> => ({
+  communities: { label: t('crm.common.communities'), query: WA_COMMUNITIES, root: 'waCommunities' },
+  groups: { label: t('crm.common.groups'), query: WA_GROUPS, root: 'waGroups' },
+  users: { label: t('crm.tools.users'), query: WA_CONTACTS, root: 'waContacts' },
+});
 
 /** Connected-account browser: Communities → Groups → Members, plus all Users.
  * Each tab is server-side searchable + paginated; Extract pulls fresh data. */
 export default function WhatsAppBrowser() {
+  const { t } = useTranslation();
   const { start: startExtraction, job, setOnDone } = useExtraction();
   const tabs = useTabParam<BrowserTab>({
-    items: TAB_KEYS.map((key) => ({ value: key, label: TAB_CONFIG[key].label })),
+    items: TAB_KEYS.map((key) => ({ value: key, label: tabConfig(t)[key].label })),
     fallback: 'communities',
   });
   const tab = tabs.value;
@@ -68,7 +72,7 @@ export default function WhatsAppBrowser() {
     page_size: pageSize,
     ...(tab === 'groups' && community ? { community_jid: community.jid } : {}),
   };
-  const { data, loading, refetch } = useQuery(TAB_CONFIG[tab].query, {
+  const { data, loading, refetch } = useQuery(tabConfig(t)[tab].query, {
     variables: { input },
     fetchPolicy: 'cache-and-network',
   });
@@ -79,7 +83,7 @@ export default function WhatsAppBrowser() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  const pageData = (data as Record<string, { items: any[]; total: number }> | undefined)?.[TAB_CONFIG[tab].root];
+  const pageData = (data as Record<string, { items: any[]; total: number }> | undefined)?.[tabConfig(t)[tab].root];
   const items = pageData?.items ?? [];
   const total = pageData?.total ?? 0;
   const running = job?.status === 'RUNNING';
@@ -121,7 +125,7 @@ export default function WhatsAppBrowser() {
             {tab === 'groups' &&
               items.map((g: any) => (
                 <ListItemButton key={g.id} onClick={() => setMembers({ jid: g.group_jid, name: g.name })}>
-                  <ListItemText primary={g.name} secondary="Tap to view members" />
+                  <ListItemText primary={g.name} secondary={t('crm.tools.tapToViewMembers')} />
                 </ListItemButton>
               ))}
             {tab === 'users' &&
@@ -148,7 +152,7 @@ export default function WhatsAppBrowser() {
         </>
       )}
 
-      {running && <Alert severity="info" sx={{ mt: 1 }}>Extraction in progress — data updates automatically.</Alert>}
+      {running && <Alert severity="info" sx={{ mt: 1 }}>{t('crm.tools.extractionInProgressDataUpdatesAutomatically')}</Alert>}
       <GroupMembersDialog group={members} onClose={() => setMembers(null)} />
     </Box>
   );

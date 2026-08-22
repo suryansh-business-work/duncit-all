@@ -6,6 +6,7 @@ import MeetingRowActions from './MeetingRowActions';
 import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',
@@ -113,6 +114,7 @@ export default function MeetingsTable({
   onReject,
   onRequester,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<OnboardingMeeting>[]>(() => {
     const renderRequester = (m: OnboardingMeeting) => (
       <>
@@ -146,14 +148,14 @@ export default function MeetingsTable({
     return [
       {
         field: 'request_no',
-        headerName: 'Request ID',
+        headerName: t('onboarding.common.requestId'),
         minWidth: 150,
         cellRenderer: renderRequestNo,
         valueGetter: (m) => m.request_no || '—',
       },
       {
         field: 'requester',
-        headerName: 'Requester',
+        headerName: t('onboarding.meetings.requester'),
         sortable: false,
         flex: 1,
         minWidth: 170,
@@ -162,28 +164,28 @@ export default function MeetingsTable({
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: t('onboarding.common.category'),
         sortable: false,
         minWidth: 190,
         valueGetter: catPath,
       },
       {
         field: 'requested_at',
-        headerName: 'Requested for',
+        headerName: t('onboarding.meetings.requestedFor'),
         minWidth: 170,
         filter: { type: 'date' },
         valueGetter: (m) => fmt(m.requested_at),
       },
       {
         field: 'scheduled_at',
-        headerName: 'Scheduled',
+        headerName: t('onboarding.meetings.scheduled'),
         minWidth: 170,
         filter: { type: 'date' },
         valueGetter: (m) => fmt(m.scheduled_at),
       },
       {
         field: 'link',
-        headerName: 'Link',
+        headerName: t('onboarding.meetings.link'),
         sortable: false,
         width: 90,
         cellRenderer: renderJoin,
@@ -191,14 +193,14 @@ export default function MeetingsTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 140,
         cellRenderer: renderMeetingStatus,
         valueGetter: (m) => m.status,
       },
       {
         field: 'approval_status',
-        headerName: 'Approval',
+        headerName: t('onboarding.meetings.approval'),
         width: 150,
         filter: { type: 'select', options: APPROVAL_OPTIONS },
         cellRenderer: renderApproval,
@@ -206,7 +208,7 @@ export default function MeetingsTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 90,
         cellRenderer: renderActions,
@@ -225,7 +227,7 @@ export default function MeetingsTable({
       fetchRows={fetchRows}
       getRowId={getMeetingRowId}
       onRowClick={onSelect}
-      emptyText="No meetings for this filter."
+      emptyText={t('onboarding.meetings.noMeetingsForThisFilter')}
       searchPlaceholder="Search request no, name or phone"
       refetchRef={refetchRef}
     />

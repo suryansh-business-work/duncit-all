@@ -15,6 +15,7 @@ import {
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { getCroppedImage } from './cropImage';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -26,6 +27,7 @@ interface Props {
 
 /** Crop + zoom + rotate + preview before a profile photo is uploaded (item 9). */
 export default function CropDialog({ open, src, saving, onCancel, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -86,7 +88,7 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
         </Box>
         <Stack spacing={1} sx={{ mt: 2 }}>
           <Slider
-            aria-label="Zoom"
+            aria-label={t('mweb.profileAvatar.zoom')}
             value={zoom}
             min={1}
             max={3}
@@ -94,11 +96,11 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
             onChange={(_e, v) => setZoom(v as number)}
           />
           <Stack direction="row" alignItems="center" spacing={1}>
-            <IconButton aria-label="Rotate" onClick={() => setRotation((r) => (r + 90) % 360)}>
+            <IconButton aria-label={t('mweb.common.rotate')} onClick={() => setRotation((r) => (r + 90) % 360)}>
               <RotateRightIcon />
             </IconButton>
             <Slider
-              aria-label="Rotation"
+              aria-label={t('mweb.profileAvatar.rotation')}
               value={rotation}
               min={0}
               max={360}

@@ -9,6 +9,7 @@ import { SearchFilterSheet } from './SearchFilterSheet';
 import { sortClubResults, type SearchSort } from '@/utils/search-sort';
 import type { SearchCategory, SearchClubResult } from '@/hooks/useSearch';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SearchPod = SearchClubResult['upcoming_pods'][number];
 
@@ -45,6 +46,7 @@ export function SearchResults({
   onShareIdea,
   onEarn,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { color, onPrimary } = useThemeColors();
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -59,7 +61,7 @@ export function SearchResults({
         <XStack
           testID="search-sort-button"
           role="button"
-          aria-label="Sort"
+          aria-label={t('mweb.common.sort')}
           onPress={() => setSortOpen(true)}
           alignItems="center"
           gap={6}
@@ -79,7 +81,7 @@ export function SearchResults({
         <XStack
           testID="search-filter-button"
           role="button"
-          aria-label="Filter"
+          aria-label={t('mweb.common.filter')}
           onPress={() => setFilterOpen(true)}
           alignItems="center"
           gap={6}
@@ -115,14 +117,14 @@ export function SearchResults({
       ) : null}
 
       <SearchResultsSection
-        heading="🔥 Explore Experiences Happening Soon"
+        heading={t('mweb.search.exploreExperiencesHappeningSoon')}
         subheading="Find clubs hosting exciting experiences you can join this week."
         results={sortClubResults(happening, sort)}
         testID="search-happening"
         {...sectionProps}
       />
       <SearchResultsSection
-        heading="✨ More Clubs Worth Exploring"
+        heading={t('mweb.search.moreClubsWorthExploring')}
         subheading="Discover communities that match your interests and start your next experience."
         results={sortClubResults(moreClubs, sort)}
         testID="search-more"

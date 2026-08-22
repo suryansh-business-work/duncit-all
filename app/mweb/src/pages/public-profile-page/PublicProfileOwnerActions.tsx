@@ -3,8 +3,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function PublicProfileOwnerActions() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const btnSx = { minHeight: 44, flex: 1 } as const;
   return (
@@ -14,7 +16,7 @@ export default function PublicProfileOwnerActions() {
         startIcon={<EditIcon />}
         onClick={() => navigate('/account')}
         sx={btnSx}
-        aria-label="Edit my profile"
+        aria-label={t('mweb.profile.editMyProfile')}
       >
         Edit
       </Button>
@@ -23,7 +25,7 @@ export default function PublicProfileOwnerActions() {
         startIcon={<SettingsIcon />}
         onClick={() => navigate('/account')}
         sx={btnSx}
-        aria-label="Open account settings"
+        aria-label={t('mweb.profile.openAccountSettings')}
       >
         Settings
       </Button>
@@ -32,7 +34,7 @@ export default function PublicProfileOwnerActions() {
         startIcon={<AddIcon />}
         onClick={() => navigate('/pod-ideas')}
         sx={btnSx}
-        aria-label="Create a new pod idea"
+        aria-label={t('mweb.profile.createANewPodIdea')}
       >
         New
       </Button>

@@ -19,6 +19,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import { MY_SLOT_TEMPLATES, UPDATE_VENUE_SETTINGS } from '../recurring.queries';
 import type { VenueAutoExtendForm } from '../settings-map';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   venueId: string;
@@ -36,6 +37,7 @@ export default function FutureAvailabilityAccordion({
   maxAdvanceDays,
   onSaved,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<VenueAutoExtendForm>(autoExtend);
   // Free-text while typing so multi-digit entry isn't snapped to 1 mid-keystroke;
   // clamped on blur and on save.
@@ -83,7 +85,7 @@ export default function FutureAvailabilityAccordion({
         <Stack direction="row" spacing={1.5} alignItems="center">
           <EventRepeatIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>Future availability</Typography>
+            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.futureAvailability')}</Typography>
             <Typography variant="caption" color="text.secondary">
               Keep slots published automatically
             </Typography>
@@ -94,7 +96,7 @@ export default function FutureAvailabilityAccordion({
         <Stack spacing={2}>
           <FormControlLabel
             control={<Switch checked={draft.enabled} onChange={(e) => patch({ enabled: e.target.checked })} />}
-            label="Auto-extend availability"
+            label={t('partners.venueAvailabilityPage.autoExtendAvailability')}
           />
           <Typography variant="body2" color="text.secondary">
             A daily job keeps slots published ahead using your default slot template — no need to re-open this
@@ -122,7 +124,7 @@ export default function FutureAvailabilityAccordion({
             />
             <Stack direction="row" spacing={1} alignItems="center">
               <DatePicker
-                label="Stop on (optional)"
+                label={t('partners.venueAvailabilityPage.stopOnOptional')}
                 value={untilToDate(draft.until)}
                 onChange={(d) => patch({ until: d ? format(d, 'yyyy-MM-dd') : '' })}
                 minDate={new Date()}
@@ -136,8 +138,8 @@ export default function FutureAvailabilityAccordion({
               )}
             </Stack>
           </Box>
-          {error && <Alert severity="error">Could not save auto-extend. Please try again.</Alert>}
-          {saved && !loading && <Alert severity="success">Auto-extend saved.</Alert>}
+          {error && <Alert severity="error">{t('partners.venueAvailabilityPage.couldNotSaveAutoExtendPlease')}</Alert>}
+          {saved && !loading && <Alert severity="success">{t('partners.venueAvailabilityPage.autoExtendSaved')}</Alert>}
           <Box>
             <Button variant="outlined" onClick={onSave} disabled={loading}>
               {loading ? 'Saving…' : 'Save auto-extend'}

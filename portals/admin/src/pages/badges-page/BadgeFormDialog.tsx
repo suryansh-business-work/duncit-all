@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
 import { CONDITIONS, type BadgeForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -23,20 +24,21 @@ interface Props {
 }
 
 export default function BadgeFormDialog({ open, form, setForm, busy, onClose, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{form.id ? 'Edit Badge' : 'New Badge'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
-            label="Title"
+            label={t('shell.common.title')}
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             required
             fullWidth
           />
           <TextField
-            label="Description"
+            label={t('shell.common.description')}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             multiline
@@ -44,15 +46,15 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
             fullWidth
           />
           <MediaPickerField
-            label="Badge image"
+            label={t('admin.badgesPage.image')}
             value={form.image_url}
             onChange={(url) => setForm({ ...form, image_url: url })}
             folder="/badges"
-            helperText="Upload a square PNG/SVG (transparent background recommended)"
+            helperText={t('admin.badgesPage.imageHint')}
           />
           <TextField
             select
-            label="Condition"
+            label={t('admin.badgesPage.condition')}
             value={form.condition_type}
             onChange={(e) => setForm({ ...form, condition_type: e.target.value })}
             fullWidth
@@ -65,7 +67,7 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
           </TextField>
           <TextField
             type="number"
-            label="Threshold"
+            label={t('admin.badgesPage.threshold')}
             value={form.threshold}
             onChange={(e) =>
               setForm({ ...form, threshold: Math.max(1, +e.target.value || 1) })
@@ -78,12 +80,12 @@ export default function BadgeFormDialog({ open, form, setForm, busy, onClose, on
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             />
-            <Typography variant="body2">Active (auto-evaluated)</Typography>
+            <Typography variant="body2">{t('admin.badgesPage.activeHint')}</Typography>
           </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button onClick={onSave} variant="contained" disabled={!form.title || busy}>
           {form.id ? 'Save' : 'Create'}
         </Button>

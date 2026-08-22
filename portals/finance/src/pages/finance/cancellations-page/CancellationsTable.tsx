@@ -9,6 +9,7 @@ import {
   money,
   type PodCancellationRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: PodCancellationRow) => `${row.pod_id}-${row.kind}`;
 
@@ -57,11 +58,12 @@ export default function CancellationsTable({
   showKind = false,
   emptyText,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PodCancellationRow>[]>(
     () => [
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('finance.common.pod'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPod,
@@ -69,7 +71,7 @@ export default function CancellationsTable({
       },
       {
         field: 'kind',
-        headerName: 'Cancelled by',
+        headerName: t('finance.cancellations.cancelledBy'),
         width: 130,
         hide: !showKind,
         sortable: false,
@@ -78,14 +80,14 @@ export default function CancellationsTable({
       },
       {
         field: 'actor_name',
-        headerName: 'Actor',
+        headerName: t('finance.cancellations.actor'),
         minWidth: 150,
         sortable: false,
         valueGetter: (row) => row.actor_name || '—',
       },
       {
         field: 'reason',
-        headerName: 'Reason',
+        headerName: t('finance.common.reason'),
         flex: 1,
         minWidth: 200,
         sortable: false,
@@ -93,21 +95,21 @@ export default function CancellationsTable({
       },
       {
         field: 'cancelled_at',
-        headerName: 'Cancelled',
+        headerName: t('finance.cancellations.cancelled'),
         width: 170,
         valueGetter: (row) => fmtDate(row.cancelled_at),
       },
-      { field: 'attendee_count', headerName: 'Attendees', width: 110 },
+      { field: 'attendee_count', headerName: t('finance.cancellations.attendees'), width: 110 },
       {
         field: 'refunded_total',
-        headerName: 'Attendee refunds',
+        headerName: t('finance.cancellations.attendeeRefunds'),
         minWidth: 190,
         cellRenderer: renderRefunds,
         valueGetter: (row) => money(row.currency_symbol, row.refunded_total),
       },
       {
         field: 'venue_name',
-        headerName: 'Venue',
+        headerName: t('finance.common.venue'),
         minWidth: 150,
         sortable: false,
         valueGetter: (row) => row.venue_name ?? '—',

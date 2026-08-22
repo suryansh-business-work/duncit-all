@@ -5,8 +5,10 @@ import UploadIcon from '@mui/icons-material/Upload';
 import { TEST_ENV_IMAGEKIT, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { fileToDataUrl, parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const [fileName, setFileName] = useState('');
   const [base64, setBase64] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
@@ -47,7 +49,7 @@ export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry 
           <Link href={result.url} target="_blank" rel="noopener" variant="caption" sx={{ wordBreak: 'break-all' }}>
             {result.url}
           </Link>
-          <Box component="img" src={result.url} alt="Uploaded" sx={{ mt: 1, width: '100%', borderRadius: 1, border: 1, borderColor: 'divider' }} />
+          <Box component="img" src={result.url} alt={t('tech.environment.uploaded')} sx={{ mt: 1, width: '100%', borderRadius: 1, border: 1, borderColor: 'divider' }} />
         </Box>
       )}
     </Stack>

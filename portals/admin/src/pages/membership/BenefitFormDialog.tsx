@@ -21,6 +21,7 @@ import {
   membershipBenefitFormSchema,
   type MembershipBenefitFormValues,
 } from './membership-benefit';
+import { useTranslation } from '@duncit/shell';
 
 /** The tiers this row has a cell for, in display order. */
 export interface BenefitDialogPlan {
@@ -64,6 +65,7 @@ export default function BenefitFormDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<MembershipBenefitFormValues>({
     defaultValues: toFormValues(editing, plans),
     resolver: zodResolver(membershipBenefitFormSchema),
@@ -88,7 +90,7 @@ export default function BenefitFormDialog({
             <RhfTextField
               control={control}
               name="group"
-              label="Section"
+              label={t('admin.membership.section')}
               hint="Rows sharing a section are grouped under it, e.g. Getting a spot"
               size="small"
               required
@@ -96,7 +98,7 @@ export default function BenefitFormDialog({
             <RhfTextField
               control={control}
               name="label"
-              label="Benefit"
+              label={t('admin.membership.benefit')}
               hint="The row label, e.g. Early booking window"
               size="small"
               required
@@ -113,7 +115,7 @@ export default function BenefitFormDialog({
             </Stack>
 
             {plans.length === 0 && (
-              <Alert severity="warning">Create a tier first — a row needs columns to fill.</Alert>
+              <Alert severity="warning">{t('admin.membership.needTier')}</Alert>
             )}
 
             {plans.map((plan, index) => (
@@ -139,7 +141,7 @@ export default function BenefitFormDialog({
                 control={control}
                 name="sort_order"
                 type="number"
-                label="Sort order"
+                label={t('admin.podPlans.sortOrder')}
                 hint="Rows and their sections render in this order."
                 size="small"
                 fullWidth={false}
@@ -153,7 +155,7 @@ export default function BenefitFormDialog({
                     control={
                       <Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />
                     }
-                    label="Active"
+                    label={t('admin.profile.active')}
                   />
                 )}
               />
@@ -161,7 +163,7 @@ export default function BenefitFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={loading || plans.length === 0}>
             {editing ? 'Save changes' : 'Create row'}
           </Button>

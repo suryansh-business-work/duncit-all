@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useBranding } from '@/hooks/useBranding';
 import type { MenuRoute } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const CARD_HEIGHT = 132;
 /** Dark scrim so the big title stays readable over any video frame. */
@@ -44,6 +45,7 @@ function VenuesCardVideo({ url }: Readonly<{ url: string }>) {
 export function SidebarVenuesCard({
   onNavigate,
 }: Readonly<{ onNavigate: (route: MenuRoute) => void }>) {
+  const { t } = useTranslation();
   const { data } = useBranding();
   const videoUrl = data?.branding?.venues_card_video_url ?? '';
   return (
@@ -51,7 +53,7 @@ export function SidebarVenuesCard({
       <YStack
         testID="sidebar-venues"
         role="button"
-        aria-label="Explore venues"
+        aria-label={t('mweb.common.exploreVenues')}
         onPress={() => onNavigate('Venues')}
         height={CARD_HEIGHT}
         borderRadius={16}

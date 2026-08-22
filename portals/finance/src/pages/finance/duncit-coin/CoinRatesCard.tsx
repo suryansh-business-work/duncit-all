@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { CoinSettingsForm } from './coin-settings.schema';
+import { useTranslation } from '@duncit/app-settings';
 
 interface RateField {
   name: keyof CoinSettingsForm;
@@ -19,22 +20,24 @@ interface RateField {
 
 /** The three payout rules, in the order money reaches a member: they join a pod,
  * they buy something, or they bring somebody in. */
-const FIELDS: readonly RateField[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const fields = (t: Translate): readonly RateField[] => [
   {
     name: 'pod_join_earn_pct',
-    label: 'Pod join earn rate',
+    label: t('finance.duncitCoin.podJoinEarnRate'),
     unit: '%',
     helper: 'Share of a pod ticket paid back as coins. 0 turns it off.',
   },
   {
     name: 'shop_earn_pct',
-    label: 'Shop earn rate',
+    label: t('finance.duncitCoin.shopEarnRate'),
     unit: '%',
     helper: 'Share of a shop order paid back as coins. 0 turns it off.',
   },
   {
     name: 'coins_per_referral',
-    label: 'Coins per referral',
+    label: t('finance.duncitCoin.coinsPerReferral'),
     unit: 'coins',
     helper: 'Paid to EACH side — the member who shared and the one who signed up.',
   },
@@ -46,6 +49,7 @@ interface Props {
 }
 
 export default function CoinRatesCard({ control, currencySymbol }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined">
       <CardContent>
@@ -61,7 +65,7 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
         </Stack>
 
         <Grid container spacing={2}>
-          {FIELDS.map((f) => (
+          {fields(t).map((f) => (
             <Grid item xs={12} sm={4} key={f.name}>
               <Controller
                 name={f.name}

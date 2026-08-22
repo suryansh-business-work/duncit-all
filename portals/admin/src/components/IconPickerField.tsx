@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as MuiIcons from '@mui/icons-material';
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import type { SvgIconComponent } from '@mui/icons-material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: string;
@@ -68,9 +69,12 @@ export function renderIconByName(
 export default function IconPickerField({
   value,
   onChange,
-  label = 'Icon',
-  helperText = 'Pick a Material icon, or paste an emoji.',
+  label,
+  helperText,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const fieldLabel = label ?? t('admin.pickers.icon');
+  const hint = helperText ?? t('admin.pickers.iconHint');
   const known = useMemo(() => UNIQUE_NAMES, []);
   const isKnown = !!resolveIcon(value);
   const rawAdornment = value ? <Box sx={{ pl: 1, fontSize: 18 }}>{value}</Box> : null;
@@ -96,7 +100,7 @@ export default function IconPickerField({
       renderInput={(params) => (
         <TextField
           {...params}
-          label={label}
+          label={fieldLabel}
           helperText={
             isKnown ? `Material icon: ${value}` : helperText
           }

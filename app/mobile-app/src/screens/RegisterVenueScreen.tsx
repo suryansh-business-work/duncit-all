@@ -1,12 +1,14 @@
 import { OnboardingSurvey } from '@/components/survey-onboarding/OnboardingSurvey';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function RegisterVenueScreen() {
+  const { t } = useTranslation();
   return (
     <OnboardingSurvey
       kind="VENUE"
-      title="Be a Venue Owner"
+      title={t('mweb.registerVenue.beAVenueOwner')}
       icon="add-business"
-      subtitle="List your venue and host pods at your space."
+      subtitle={t('mweb.registerVenue.listYourVenueAndHostPods')}
     />
   );
 }

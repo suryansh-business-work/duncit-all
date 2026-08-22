@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { WA_GROUP_MEMBERS } from './whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 export type GroupRef = { jid: string; name: string };
 
@@ -18,6 +19,7 @@ export default function GroupMembersDialog({
   group,
   onClose,
 }: Readonly<{ group: GroupRef | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery(WA_GROUP_MEMBERS, {
     variables: { group_jid: group?.jid },
     skip: !group,
@@ -40,7 +42,7 @@ export default function GroupMembersDialog({
                 secondary={`+${m.phone}${m.is_business ? ' · Business' : ''}`}
               />
             ))}
-            {members.length === 0 && <Typography color="text.secondary">No members found.</Typography>}
+            {members.length === 0 && <Typography color="text.secondary">{t('crm.tools.noMembersFound')}</Typography>}
           </List>
         )}
       </DialogContent>

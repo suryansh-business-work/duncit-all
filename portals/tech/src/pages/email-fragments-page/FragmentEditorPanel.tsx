@@ -14,6 +14,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FragmentCodePane from './FragmentCodePane';
 import type { Fragment } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   draft: Fragment;
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function FragmentEditorPanel(p: Readonly<Props>) {
+  const { t } = useTranslation();
   const { draft, setDraft, previewHtml, previewErrors, dirty, busy, onSave, onReset, onDelete } = p;
 
   return (
@@ -35,13 +37,13 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
       <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
         <TextField
           size="small"
-          label="Name"
+          label={t('shell.common.name')}
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           sx={{ flex: '1 1 200px' }}
         />
         <Chip size="small" label={draft.key} sx={{ fontFamily: 'monospace' }} />
-        {draft.is_system && <Chip size="small" variant="outlined" label="ships with Duncit" />}
+        {draft.is_system && <Chip size="small" variant="outlined" label={t('tech.emailFragments.shipsWithDuncit')} />}
         <FormControlLabel
           control={
             <Switch
@@ -49,7 +51,7 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
               onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
             />
           }
-          label="Applied to templates"
+          label={t('tech.emailFragments.appliedToTemplates')}
         />
       </Stack>
 
@@ -62,13 +64,13 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           <FragmentCodePane
-            title="Header"
+            title={t('tech.emailFragments.header')}
             hint="Rendered above every template body"
             value={draft.header_mjml}
             onChange={(v) => setDraft({ ...draft, header_mjml: v })}
           />
           <FragmentCodePane
-            title="Footer"
+            title={t('tech.emailFragments.footer')}
             hint="Rendered below every template body"
             value={draft.footer_mjml}
             onChange={(v) => setDraft({ ...draft, footer_mjml: v })}
@@ -97,7 +99,7 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
           )}
           <Box sx={{ flex: 1, minHeight: 0, bgcolor: 'background.default' }}>
             <iframe
-              title="Fragment preview"
+              title={t('tech.emailFragments.fragmentPreview')}
               srcDoc={previewHtml}
               style={{ width: '100%', height: '100%', border: 0 }}
             />

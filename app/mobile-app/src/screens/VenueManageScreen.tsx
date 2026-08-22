@@ -4,6 +4,7 @@ import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart'
 import { StackScreen } from '@/components/StackScreen';
 import { StudioPodsSection, useVenueStudioPods } from '@/components/studio';
 import { useVenueDashboard } from '@/hooks/useStudioDashboards';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Stat tile shared by the studio dashboards. */
 export function StatTile({ label, value }: Readonly<{ label: string; value: string | number }>) {
@@ -28,20 +29,21 @@ export function StatTile({ label, value }: Readonly<{ label: string; value: stri
 
 /** Venue studio dashboard — venues, capacity, status + bookings chart (B3-1). */
 export function VenueManageScreen() {
+  const { t } = useTranslation();
   const { venues, podDates, isLoading } = useVenueDashboard();
   const podsState = useVenueStudioPods();
   const approved = venues.filter((venue) => venue.status === 'APPROVED' && venue.is_active);
   const capacity = venues.reduce((sum, venue) => sum + (venue.capacity ?? 0), 0);
 
   return (
-    <StackScreen header title="Venue Studio" testID="venue-manage-screen">
+    <StackScreen header title={t('mweb.venueManage.venueStudio')} testID="venue-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}
           <XStack gap={10}>
-            <StatTile label="Venues" value={venues.length} />
-            <StatTile label="Approved" value={approved.length} />
-            <StatTile label="Capacity" value={capacity || '-'} />
+            <StatTile label={t('mweb.common.venues')} value={venues.length} />
+            <StatTile label={t('mweb.common.approved')} value={approved.length} />
+            <StatTile label={t('mweb.common.capacity')} value={capacity || '-'} />
           </XStack>
           <YStack
             gap={4}

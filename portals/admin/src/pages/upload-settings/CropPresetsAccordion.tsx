@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { PRESET_USAGE_NOTES, type UploadCropPreset, type UploadSettings } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   settings: UploadSettings;
@@ -27,6 +28,7 @@ const toDraft = (presets: UploadCropPreset[]): Draft[] =>
 /** Accordion 2 — image crop resolution presets (No Crop default, 16:9,
  * Vertical, Pod Feature, Pod Moment, …) with the researched usage notes. */
 export default function CropPresetsAccordion({ settings, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [presets, setPresets] = useState<Draft[]>(toDraft(settings.crop_presets));
   const [defaultKey, setDefaultKey] = useState(settings.default_crop_key);
 
@@ -49,7 +51,7 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>Image crop resolution settings</Typography>
+        <Typography fontWeight={700}>{t('admin.uploads.cropTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>
@@ -79,7 +81,7 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
                 </Typography>
               </Stack>
               <TextField
-                label="Width"
+                label={t('admin.categories.iconWidth')}
                 size="small"
                 sx={{ width: 110 }}
                 value={String(preset.width)}
@@ -88,7 +90,7 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
                 onChange={(e) => patch(preset.key, { width: Number(e.target.value) || 0 })}
               />
               <TextField
-                label="Height"
+                label={t('admin.categories.iconHeight')}
                 size="small"
                 sx={{ width: 110 }}
                 value={String(preset.height)}
@@ -101,10 +103,10 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
           <TextField
             select
             size="small"
-            label="Default crop"
+            label={t('admin.uploads.defaultCrop')}
             value={defaultValid ? defaultKey : ''}
             onChange={(e) => setDefaultKey(e.target.value)}
-            helperText="Preselected in every crop step — No Crop keeps uploads untouched by default."
+            helperText={t('admin.uploads.defaultCropHint')}
             sx={{ maxWidth: 320 }}
           >
             {enabledPresets.map((p) => (

@@ -3,6 +3,7 @@ import { Card, CardContent, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip as ChartTooltip } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(ArcElement, ChartTooltip, Legend);
 
@@ -16,7 +17,9 @@ interface Props {
   title?: string;
 }
 
-export default function PriorityChart({ slices, title = 'Leads by Priority' }: Readonly<Props>) {
+export default function PriorityChart({ slices, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const titleText = title ?? t('crm.dashboard.leadsByPriority');
   const theme = useTheme();
   const palette = useMemo(
     () => [
@@ -66,7 +69,7 @@ export default function PriorityChart({ slices, title = 'Leads by Priority' }: R
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {title}
+            {titleText}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Lead priority mix across venue and host pipelines.

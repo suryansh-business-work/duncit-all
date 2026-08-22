@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Autocomplete, Chip, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { useCategoriesByParent } from '../../../api/useCategoryTree';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
+import { useTranslation } from '@duncit/shell';
 
 export interface ServiceOfferedDraft {
   super_category_id: string;
@@ -23,6 +24,7 @@ interface Props {
  * can be added at once under one hierarchy slot.
  */
 export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [titleInput, setTitleInput] = useState('');
   const supers = useCategoriesByParent('SUPER');
   const cats = useCategoriesByParent('CATEGORY', value.super_category_id || null);
@@ -35,11 +37,11 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
       <TextField
         select
         size="small"
-        label="Super Category"
+        label={t('crm.common.superCategory')}
         required
         value={value.super_category_id}
         onChange={(e) => set({ super_category_id: e.target.value, category_id: '', sub_category_id: '' })}
-        helperText="Top-level category"
+        helperText={t('crm.data.topLevelCategory')}
         fullWidth
       >
         {supers.options.map((c) => (
@@ -50,7 +52,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
       <TextField
         select
         size="small"
-        label="Category"
+        label={t('crm.common.category')}
         value={value.category_id}
         onChange={(e) => set({ category_id: e.target.value, sub_category_id: '' })}
         disabled={!value.super_category_id || cats.options.length === 0}
@@ -65,7 +67,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
       <TextField
         select
         size="small"
-        label="Sub Category"
+        label={t('crm.common.subCategory')}
         value={value.sub_category_id}
         onChange={(e) => set({ sub_category_id: e.target.value })}
         disabled={!value.category_id || subs.options.length === 0}
@@ -95,10 +97,10 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Service titles"
+            label={t('crm.data.serviceTitles')}
             required
-            placeholder="Type a title and press Enter"
-            helperText="Add one or more (e.g. Catering, Decor, Sound)"
+            placeholder={t('crm.data.typeATitleAndPressEnter')}
+            helperText={t('crm.data.addOneOrMoreEG')}
           />
         )}
       />

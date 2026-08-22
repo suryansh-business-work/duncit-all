@@ -1,3 +1,4 @@
+import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
 
@@ -8,6 +9,7 @@ import {
 } from '@/graphql/account';
 import { graphqlRequest } from '@/services/graphql.client';
 import { SecuritySheet } from './SecuritySheet';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface DeleteAccountDialogProps {
   open: boolean;
@@ -15,7 +17,8 @@ export interface DeleteAccountDialogProps {
   onDeleted: () => void;
 }
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong.');
+const errMsg = (e: unknown, t: Translate) =>
+  e instanceof Error ? e.message : t('mweb.account.somethingWentWrong');
 
 /** OTP step of the delete-account flow (Tamagui) — RN twin of mWeb's dialog.
  * The danger confirmation lives in the parent ConfirmDialog, which requests the
@@ -25,6 +28,7 @@ export function DeleteAccountDialog({
   onClose,
   onDeleted,
 }: Readonly<DeleteAccountDialogProps>) {
+  const { t } = useTranslation();
   const [info, setInfo] = useState('OTP sent to your email.');
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
@@ -35,7 +39,7 @@ export function DeleteAccountDialog({
     setError(null);
     graphqlRequest(MobileRequestAccountDeletionOtpDocument, undefined, { auth: true })
       .then(() => setInfo('OTP sent to your email.'))
-      .catch((e) => setError(errMsg(e)))
+      .catch((e) => setError(errMsg(e, t)))
       .finally(() => setResending(false));
   };
 
@@ -50,7 +54,7 @@ export function DeleteAccountDialog({
       );
       onDeleted();
     } catch (e) {
-      setError(errMsg(e));
+      setError(errMsg(e, t));
     } finally {
       setDeleting(false);
     }
@@ -59,7 +63,7 @@ export function DeleteAccountDialog({
   return (
     <SecuritySheet
       open={open}
-      title="Delete account"
+      title={t('mweb.account.deleteAccount')}
       testID="delete-account-dialog"
       onClose={onClose}
     >
@@ -74,7 +78,7 @@ export function DeleteAccountDialog({
         <Text
           testID="delete-account-resend"
           role="button"
-          aria-label="Resend OTP"
+          aria-label={t('mweb.account.resendOtp')}
           onPress={handleResend}
           fontSize={13.5}
           fontWeight="700"

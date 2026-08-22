@@ -18,6 +18,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { format, parse } from 'date-fns';
 import MeetingHolidaysCard from './MeetingHolidaysCard';
+import { useTranslation } from '@duncit/app-settings';
 
 // "HH:mm" string ↔ Date for the MUIX TimePicker (kept as strings for the API).
 const toTime = (hhmm: string): Date | null => {
@@ -54,18 +55,21 @@ const UPDATE = gql`
   }
 `;
 
-const DAYS = [
-  { value: 0, label: 'Sun' },
-  { value: 1, label: 'Mon' },
-  { value: 2, label: 'Tue' },
-  { value: 3, label: 'Wed' },
-  { value: 4, label: 'Thu' },
-  { value: 5, label: 'Fri' },
-  { value: 6, label: 'Sat' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const days = (t: Translate) => [
+  { value: 0, label: t('onboarding.meetings.sun') },
+  { value: 1, label: t('onboarding.meetings.mon') },
+  { value: 2, label: t('onboarding.meetings.tue') },
+  { value: 3, label: t('onboarding.meetings.wed') },
+  { value: 4, label: t('onboarding.meetings.thu') },
+  { value: 5, label: t('onboarding.meetings.fri') },
+  { value: 6, label: t('onboarding.meetings.sat') },
 ];
 
 /** Global onboarding-meeting availability — drives the slot grid users book from. */
 export default function MeetingAvailabilityPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(AVAILABILITY, { fetchPolicy: 'cache-and-network' });
   const [save, { loading: saving }] = useMutation(UPDATE);
   const [weekDays, setWeekDays] = useState<number[]>([]);
@@ -118,7 +122,7 @@ export default function MeetingAvailabilityPage() {
       <Stack direction="row" spacing={1.25} alignItems="center">
         <EventAvailableIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>Meeting Availability</Typography>
+          <Typography variant="h5" fontWeight={800}>{t('shell.nav.meetingAvailability')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Working hours that generate the bookable onboarding slots (times are IST). Booked slots are disabled for other applicants automatically.
           </Typography>
@@ -129,9 +133,9 @@ export default function MeetingAvailabilityPage() {
         <CardContent>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Working days</Typography>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>{t('onboarding.meetings.workingDays')}</Typography>
               <Stack direction="row" flexWrap="wrap" useFlexGap>
-                {DAYS.map((day) => (
+                {days(t).map((day) => (
                   <FormControlLabel
                     key={day.value}
                     control={<Checkbox checked={weekDays.includes(day.value)} onChange={() => toggleDay(day.value)} />}
@@ -142,13 +146,13 @@ export default function MeetingAvailabilityPage() {
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TimePicker
-                label="Start time (IST)"
+                label={t('onboarding.meetings.startTimeIst')}
                 value={toTime(startTime)}
                 onChange={(d) => setStartTime(fromTime(d))}
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
               <TimePicker
-                label="End time (IST)"
+                label={t('onboarding.meetings.endTimeIst')}
                 value={toTime(endTime)}
                 onChange={(d) => setEndTime(fromTime(d))}
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -158,7 +162,7 @@ export default function MeetingAvailabilityPage() {
               <TextField
                 size="small"
                 type="number"
-                label="Slot length (minutes)"
+                label={t('onboarding.meetings.slotLengthMinutes')}
                 value={slotMinutes}
                 onChange={(e) => setSlotMinutes(e.target.value)}
                 inputProps={{ min: 10, max: 240 }}
@@ -167,7 +171,7 @@ export default function MeetingAvailabilityPage() {
               <TextField
                 size="small"
                 type="number"
-                label="Booking horizon (days)"
+                label={t('onboarding.meetings.bookingHorizonDays')}
                 value={horizonDays}
                 onChange={(e) => setHorizonDays(e.target.value)}
                 inputProps={{ min: 1, max: 60 }}

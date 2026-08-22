@@ -16,6 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useQuery } from '@apollo/client';
 import { STORY_VIEWERS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface StoryViewer {
   user_id: string;
@@ -28,6 +29,7 @@ export default function StoryViewersDialog({
   storyId,
   onClose,
 }: Readonly<{ storyId: string | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery(STORY_VIEWERS, {
     variables: { id: storyId },
     skip: !storyId,
@@ -64,7 +66,7 @@ export default function StoryViewersDialog({
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
           </Typography>
         </Stack>
-        <IconButton onClick={onClose} aria-label="Close viewers" size="small">
+        <IconButton onClick={onClose} aria-label={t('mweb.common.closeViewers')} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>

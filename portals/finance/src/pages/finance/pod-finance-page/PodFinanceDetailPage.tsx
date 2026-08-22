@@ -8,15 +8,17 @@ import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
 import WaterfallAccordions from './WaterfallAccordions';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const sym = breakdown.currency_symbol;
 
   return (
     <Box>
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-        <IconButton aria-label="Back to Pod Finance" onClick={() => navigate('/pod-finance')}>
+        <IconButton aria-label={t('finance.podFinance.backToPodFinance')} onClick={() => navigate('/pod-finance')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1 }}>

@@ -87,7 +87,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
         />
         <IconButton
-          aria-label="Filters"
+          aria-label={t('mweb.common.filters')}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
           sx={{
@@ -104,7 +104,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
       <Collapse in={open}>
         <Stack spacing={1.5} sx={{ pt: 1.5 }}>
           {filters.superOptions.length > 0 && (
-            <FilterSection title="Super category">
+            <FilterSection title={t('mweb.common.superCategory')}>
               <FilterChipRow
                 options={withAll(filters.superOptions)}
                 value={filters.superId}
@@ -113,7 +113,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
             </FilterSection>
           )}
           {filters.categoryOptions.length > 0 && (
-            <FilterSection title="Category">
+            <FilterSection title={t('mweb.common.category')}>
               <FilterChipRow
                 options={withAll(filters.categoryOptions)}
                 value={filters.categoryId}
@@ -130,7 +130,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
               />
             </FilterSection>
           )}
-          <FilterSection title="Rating">
+          <FilterSection title={t('mweb.shop.rating')}>
             <FilterChipRow
               options={SHOP_RATING_OPTIONS}
               value={filters.minRating}
@@ -149,7 +149,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           <TextField
             select
             size="small"
-            label="Sort"
+            label={t('mweb.common.sort')}
             value={filters.sort}
             onChange={(e) => filters.setSort(e.target.value as ShopSort)}
             sx={{ maxWidth: 220 }}

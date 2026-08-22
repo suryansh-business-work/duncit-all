@@ -4,6 +4,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { Skeleton } from '@/components/Skeleton';
 import { useFaqSearch, type FaqItem } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FaqResultsProps {
   results: FaqItem[];
@@ -87,6 +88,7 @@ interface FaqSearchProps {
 /** Debounced server-side FAQ search — a rounded pill field whose matches render
  * in a panel below it. RN twin of mWeb's FaqSearch. */
 export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchProps>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const { results, isLoading, hasQuery } = useFaqSearch(query);
 
@@ -105,12 +107,12 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="support-search"
-          aria-label="Search help topics"
+          aria-label={t('mweb.support.searchHelpTopics')}
           flex={1}
           unstyled
           value={query}
           onChangeText={onQueryChange}
-          placeholder="Search for topics or questions…"
+          placeholder={t('mweb.common.searchForTopicsOrQuestions')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={14}
@@ -119,7 +121,7 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
           <XStack
             testID="support-search-clear"
             role="button"
-            aria-label="Clear search"
+            aria-label={t('mweb.common.clearSearch')}
             onPress={() => onQueryChange('')}
             width={28}
             height={28}

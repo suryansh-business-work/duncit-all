@@ -4,6 +4,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import { notify } from '@duncit/dialogs';
 import { copyToClipboard } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Hands the operator a URL that returns the same rows as JSON, with no login
@@ -35,7 +36,11 @@ interface Props {
   label?: string;
 }
 
-export default function CopyGetApiButton({ path, params, label = 'Copy GET API' }: Readonly<Props>) {
+export default function CopyGetApiButton({ path, params, label }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const labelText = label ?? t('tech.common.copyGetApi');
   const { data, loading } = useQuery<{ telemetrySettings: { public_api_key: string } }>(
     TELEMETRY_API_KEY,
     { fetchPolicy: 'cache-first' },
@@ -56,10 +61,10 @@ export default function CopyGetApiButton({ path, params, label = 'Copy GET API' 
   };
 
   return (
-    <Tooltip title="A no-login URL that returns these rows as JSON. Anyone holding it holds the data — rotate the key in Logs Settings if it leaks.">
+    <Tooltip title={t('tech.copyGetApiButton.aNoLoginUrlThatReturns')}>
       <span>
         <Button size="small" startIcon={<LinkIcon />} disabled={loading || !key} onClick={copy}>
-          {label}
+          {labelText}
         </Button>
       </span>
     </Tooltip>

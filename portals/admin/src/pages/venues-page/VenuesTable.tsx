@@ -8,6 +8,7 @@ import {
 } from '@duncit/table';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const getVenueRowId = (v: VenueRow) => v.id;
 
@@ -44,14 +45,17 @@ const renderOwner = (v: VenueRow) => (
 
 const renderStatus = (v: VenueRow) => <Chip size="small" label={v.status} />;
 
-const activeValue = (v: VenueRow) => (v.is_active === false ? 'Inactive' : 'Active');
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-const renderActive = (v: VenueRow) => (
+const activeValue = (v: VenueRow, t: Translate) =>
+  v.is_active === false ? t('admin.profile.inactive') : t('admin.profile.active');
+
+const renderActive = (v: VenueRow, t: Translate) => (
   <Chip
     size="small"
     variant="outlined"
     color={v.is_active === false ? 'default' : 'success'}
-    label={activeValue(v)}
+    label={activeValue(v, t)}
   />
 );
 
@@ -69,19 +73,20 @@ export default function VenuesTable({
   /** Toolbar's Super Category filter; '' means every super category. */
   superCategoryId: string;
 }>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenueRow>[]>(
     () => [
-      { field: 'venue_name', headerName: 'Venue', flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
-      { field: 'venue_category', headerName: 'Category', minWidth: 200, sortable: false, valueGetter: categoryValue },
-      { field: 'locality', headerName: 'Location', minWidth: 160, filter: { type: 'text' }, valueGetter: locationValue },
-      { field: 'owner_name', headerName: 'Owner', minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
-      { field: 'capacity', headerName: 'Capacity', width: 105, filter: { type: 'number' } },
-      { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
-      { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'pod_count', headerName: 'Pods', sortable: false, width: 90, valueGetter: (v) => v.pod_count ?? 0 },
-      { field: 'created_at', headerName: 'Created', width: 125, filter: { type: 'date' }, valueGetter: createdValue },
+      { field: 'venue_name', headerName: t('admin.faqs.audienceVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'venue_category', headerName: t('admin.clubs.colCategory'), minWidth: 200, sortable: false, valueGetter: categoryValue },
+      { field: 'locality', headerName: t('admin.venues.colLocation'), minWidth: 160, filter: { type: 'text' }, valueGetter: locationValue },
+      { field: 'owner_name', headerName: t('admin.venues.colOwner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
+      { field: 'capacity', headerName: t('admin.venues.colCapacity'), width: 105, filter: { type: 'number' } },
+      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
+      { field: 'is_active', headerName: t('admin.profile.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: (row: VenueRow) => renderActive(row, t), valueGetter: (row: VenueRow) => activeValue(row, t) },
+      { field: 'pod_count', headerName: t('admin.clubs.pods'), sortable: false, width: 90, valueGetter: (v) => v.pod_count ?? 0 },
+      { field: 'created_at', headerName: t('shell.common.created'), width: 125, filter: { type: 'date' }, valueGetter: createdValue },
     ],
-    [],
+    [t],
   );
 
   // Pinned page filter rather than a column one: it belongs to the header, so
@@ -98,7 +103,7 @@ export default function VenuesTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getVenueRowId}
-      emptyText="No venues found."
+      emptyText={t('admin.venues.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, type, city or owner"
       externalFilters={externalFilters}

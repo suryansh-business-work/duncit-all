@@ -13,6 +13,7 @@ import {
   labelTemplateBuckets,
   type EmailLogDashboardData,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Emails Dashboard — did the mail get through, and if it did not, why.
@@ -23,6 +24,7 @@ import {
  * "the customer never got the email" almost always turns out to be.
  */
 export default function EmailsDashboardPage() {
+  const { t } = useTranslation();
   const [rangeDays, setRangeDays] = useState(7);
   const { data, loading, error } = useQuery<{ emailLogDashboard: EmailLogDashboardData }>(
     EMAIL_LOG_DASHBOARD,
@@ -34,13 +36,13 @@ export default function EmailsDashboardPage() {
 
   const header = (
     <PageHeader
-      title="Emails Dashboard"
-      subtitle="Delivery across every email the product tried to send, including the attempts that never left."
+      title={t('tech.emailsDashboard.emailsDashboard')}
+      subtitle={t('tech.emailsDashboard.deliveryAcrossEveryEmailTheProduct')}
       actions={
         <TextField
           select
           size="small"
-          label="Range"
+          label={t('tech.common.range')}
           value={rangeDays}
           onChange={(e) => setRangeDays(Number(e.target.value))}
           sx={{ minWidth: 160 }}
@@ -93,7 +95,7 @@ export default function EmailsDashboardPage() {
       minW: 4,
       // minH floors the measured height — keep it low or a zero-failure day pins a void.
       minH: 2,
-      content: <DistributionCard title="Why nothing went out" buckets={d.not_delivered_reasons} />,
+      content: <DistributionCard title={t('tech.emailsDashboard.whyNothingWentOut')} buckets={d.not_delivered_reasons} />,
     },
     {
       id: 'not-delivered-templates',
@@ -102,7 +104,7 @@ export default function EmailsDashboardPage() {
       defaultLayout: { x: 0, y: 8, w: 6, h: 5 },
       minW: 3,
       minH: 2,
-      content: <DistributionCard title="Templates that did not deliver" buckets={templateBuckets} />,
+      content: <DistributionCard title={t('tech.emailsDashboard.templatesThatDidNotDeliver')} buckets={templateBuckets} />,
     },
     {
       id: 'repeat-failures',

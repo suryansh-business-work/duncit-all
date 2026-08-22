@@ -1,14 +1,16 @@
 import { Chip, Stack } from '@mui/material';
+import { useTranslation } from './i18n/useTranslation';
 
 /** The pod's state, read left to right: what it costs, what kind it is, where
  * it is in its life, and whether a venue is still deciding. */
 export default function PodStatusChips({ pod }: Readonly<{ pod: any }>) {
+  const { t } = useTranslation();
   const isFree = (pod.pod_type ?? '').includes('FREE');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
 
   const lifecycle = () => {
-    if (pod.is_deleted) return <Chip size="small" label="Cancelled" color="error" />;
-    if (pod.completed_at) return <Chip size="small" label="Completed" color="success" />;
+    if (pod.is_deleted) return <Chip size="small" label={t('podDetailsPanel.podStatusChips.cancelled')} color="error" />;
+    if (pod.completed_at) return <Chip size="small" label={t('podDetailsPanel.podStatusChips.completed')} color="success" />;
     return (
       <Chip
         size="small"

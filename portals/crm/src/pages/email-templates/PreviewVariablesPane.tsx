@@ -22,21 +22,24 @@ import type { EmailTemplate } from '../../api/emailTemplates.gql';
 import { HOST_VARIABLES, VENUE_VARIABLES } from '../../config/leadVariables';
 import VariablesValuesEditor from '../../components/email/VariablesValuesEditor';
 import VariableChips from './VariableChips';
+import { useTranslation } from '@duncit/shell';
 
 export type PaneTab = 'preview' | 'code';
 
 /** The strip, as data — the editor hook reads the same list to validate the URL. */
-export const PANE_TABS: DuncitTabItem<PaneTab>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const paneTabs = (t: Translate): DuncitTabItem<PaneTab>[] =>[
   {
     value: 'preview',
-    label: 'Preview',
+    label: t('crm.common.preview'),
     icon: <VisibilityIcon fontSize="small" />,
     iconPosition: 'start',
     sx: { minHeight: 40 },
   },
   {
     value: 'code',
-    label: 'Variables',
+    label: t('crm.emailTemplates.variables'),
     icon: <TuneIcon fontSize="small" />,
     iconPosition: 'start',
     sx: { minHeight: 40 },
@@ -67,6 +70,7 @@ function foreignDetectedMessage(slugs: string[], target: EmailTemplate['target']
 }
 
 export default function PreviewVariablesPane(p: Readonly<Props>) {
+  const { t } = useTranslation();
   const { draft, setDraft, tab, setTab, previewHtml, previewErrors, detected, onImportDetected, onAddVariable, onRemoveVariable } = p;
   const [fullscreen, setFullscreen] = useState(false);
   // Stable per-row keys for the declared-variables editor: variables have no id
@@ -89,7 +93,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
   // Available list + "known" slugs follow the template's target.
   const hostVarsForTarget = draft.target === 'HOST' ? HOST_VARIABLES : [];
   const availableForTarget = draft.target === 'VENUE' ? VENUE_VARIABLES : hostVarsForTarget;
-  const targetNoun = draft.target === 'VENUE' ? 'Venue' : 'Host';
+  const targetNoun = draft.target === 'VENUE' ? t('crm.common.venue') : 'Host';
   const knownSlugs = new Set(availableForTarget.map((v) => v.slug));
   // Detected placeholders that aren't available variables for this target.
   const foreignDetected = detected.filter((s) => !knownSlugs.has(s));
@@ -97,9 +101,9 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Stack direction="row" alignItems="center" sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <DuncitTabs items={PANE_TABS} value={tab} onChange={setTab} sx={{ flex: 1, minHeight: 40 }} />
+        <DuncitTabs items={paneTabs(t)} value={tab} onChange={setTab} sx={{ flex: 1, minHeight: 40 }} />
         {tab === 'preview' && (
-          <Tooltip title="Full screen preview">
+          <Tooltip title={t('crm.emailTemplates.fullScreenPreview')}>
             <IconButton size="small" sx={{ mr: 0.5 }} onClick={() => setFullscreen(true)}><FullscreenIcon fontSize="small" /></IconButton>
           </Tooltip>
         )}
@@ -112,7 +116,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
           <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen>
             <Stack direction="row" alignItems="center" sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
               <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>Preview · {draft.name}</Typography>
-              <IconButton onClick={() => setFullscreen(false)} aria-label="Close full screen"><CloseIcon /></IconButton>
+              <IconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></IconButton>
             </Stack>
             <iframe title="preview-fullscreen" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           </Dialog>
@@ -122,8 +126,8 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
           <Stack spacing={2}>
             <Stack spacing={0.5}>
               <Stack direction="row" alignItems="center">
-                <Typography variant="subtitle2" sx={{ flex: 1 }}>Detected in template</Typography>
-                <Button size="small" onClick={onImportDetected} disabled={!detected.length}>Sync all</Button>
+                <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
+                <Button size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</Button>
               </Stack>
               <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
               {foreignDetected.length > 0 && (
@@ -133,7 +137,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               )}
             </Stack>
             {draft.target === 'STATIC' ? (
-              <Typography variant="caption" color="text.secondary">Static template — no lead variables. Detected placeholders show red.</Typography>
+              <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.staticTemplateNoLeadVariablesDetected')}</Typography>
             ) : (
               <VariableChips
                 title={`Available for ${targetNoun}`}
@@ -144,13 +148,13 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
             )}
 
             <Divider />
-            <Typography variant="subtitle2">Default values</Typography>
-            <Typography variant="caption" color="text.secondary">Used for preview, and as the fallback when a lead has no value for the variable.</Typography>
+            <Typography variant="subtitle2">{t('crm.emailTemplates.defaultValues')}</Typography>
+            <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.usedForPreviewAndAsThe')}</Typography>
             <VariablesValuesEditor variables={draft.variables} values={sampleValues} onChange={setSampleValues} emptyHint="Add variables above to set default values." />
 
-            <Typography variant="subtitle2">Declared variables</Typography>
+            <Typography variant="subtitle2">{t('crm.emailTemplates.declaredVariables')}</Typography>
             {draft.variables.length === 0 ? (
-              <Typography variant="caption" color="text.secondary">Add from the chips above.</Typography>
+              <Typography variant="caption" color="text.secondary">{t('crm.emailTemplates.addFromTheChipsAbove')}</Typography>
             ) : (
               <Stack spacing={1}>
                 {declaredRows.map(({ v, index, key }) => (

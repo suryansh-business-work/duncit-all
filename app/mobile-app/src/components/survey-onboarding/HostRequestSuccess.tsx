@@ -7,9 +7,11 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Confirmation shown after a host files a request to host in a new category. */
 export function HostRequestSuccess() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { color: ink } = useThemeColors();
 
@@ -38,7 +40,7 @@ export function HostRequestSuccess() {
           <XStack
             testID="host-request-done"
             role="button"
-            aria-label="Okay"
+            aria-label={t('mweb.surveyOnboarding.okay')}
             onPress={onDone}
             paddingHorizontal={22}
             paddingVertical={12}

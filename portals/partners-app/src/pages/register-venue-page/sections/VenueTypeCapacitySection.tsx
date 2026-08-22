@@ -13,6 +13,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -24,6 +25,7 @@ interface Props {
  * ("Banquet hall", "Rooftop tables") with its own capacity number. The
  * capacity list stays editable after approval; the venue type is locked. */
 export default function VenueTypeCapacitySection({ form, config, mode }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, watch, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'capacity_items' });
   const items = watch('capacity_items');
@@ -41,7 +43,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
           <TextField
             {...field}
             select
-            label="Venue type"
+            label={t('partners.registerVenuePage.venueType')}
             required
             disabled={typeLocked}
             error={Boolean(fieldState.error)}
@@ -78,7 +80,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="What is this capacity for?"
+                label={t('partners.registerVenuePage.whatIsThisCapacityFor')}
                 required
                 size="small"
                 fullWidth
@@ -94,7 +96,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
               <TextField
                 {...field}
                 type="number"
-                label="Capacity"
+                label={t('partners.common.capacity')}
                 required
                 size="small"
                 sx={{ minWidth: 130 }}
@@ -104,7 +106,7 @@ export default function VenueTypeCapacitySection({ form, config, mode }: Readonl
               />
             )}
           />
-          <IconButton size="small" aria-label="Remove capacity entry" onClick={() => remove(index)}>
+          <IconButton size="small" aria-label={t('partners.registerVenuePage.removeCapacityEntry')} onClick={() => remove(index)}>
             <DeleteIcon />
           </IconButton>
         </Stack>

@@ -4,11 +4,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
 import { EMPTY_CATEGORY, Fieldset, RhfAdminCategory } from '@duncit/category';
 import type { ProductListingValues } from './list-products.types';
+import { useTranslation } from '@duncit/shell';
 
 // Step 1 of the wizard: pick one or more Super → Category → Sub rows the product
 // is sold in. Each row is the shared @duncit/category cascade; a product surfaces
 // only in pods whose category matches one of these rows (full Super→Category→Sub).
 export default function CategoryRows({ control }: Readonly<{ control: Control<ProductListingValues> }>) {
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: 'categories' });
   return (
     <Fieldset
@@ -27,7 +29,7 @@ export default function CategoryRows({ control }: Readonly<{ control: Control<Pr
               />
             </Box>
             <IconButton
-              aria-label="Remove category"
+              aria-label={t('partners.listProductsPage.removeCategory')}
               color="error"
               disabled={fields.length <= 1}
               onClick={() => remove(index)}

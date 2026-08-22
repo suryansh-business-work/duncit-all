@@ -22,6 +22,7 @@ import SaveAsTemplateAccordion from './accordions/SaveAsTemplateAccordion';
 import BulkActionsAccordion from './accordions/BulkActionsAccordion';
 import { useRecurringDialog, type CapacityItem } from './useRecurringDialog';
 import { effectiveMaxAdvance } from './settings-map';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -42,6 +43,7 @@ export default function RecurringAvailabilityDialog({
   venueCapacity,
   onDone,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const { form, patch, reset, venueSettings, result, submit, submitting, serverError, setServerError } =
@@ -74,7 +76,7 @@ export default function RecurringAvailabilityDialog({
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={close} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <IconButton onClick={close} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -109,7 +111,7 @@ export default function RecurringAvailabilityDialog({
       </Box>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={close}>Cancel</Button>
+        <Button onClick={close}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" disabled={!canCreate} onClick={handleCreate}>
           {submitting ? 'Creating…' : `Create ${result.summary.total} slot${slotPlural}`}
         </Button>

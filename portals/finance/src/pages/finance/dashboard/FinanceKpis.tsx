@@ -8,16 +8,19 @@ import {
   type FinanceDashboardStats,
   type FinanceStat,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 type StatKey = keyof Omit<FinanceDashboardStats, 'currency_symbol'>;
 type CardColor = 'primary' | 'success' | 'warning' | 'info' | 'error';
 
-const CARDS: ReadonlyArray<{ key: StatKey; label: string; icon: string; color: CardColor }> = [
-  { key: 'total_revenue', label: 'Total Collected (GMV)', icon: 'payments', color: 'primary' },
-  { key: 'duncit_revenue', label: 'Duncit Revenue', icon: 'insights', color: 'success' },
-  { key: 'gst_collected', label: 'GST Collected', icon: 'quote', color: 'warning' },
-  { key: 'pending_payouts', label: 'Pending Payouts', icon: 'receipt', color: 'info' },
-  { key: 'completed_payouts', label: 'Completed Payouts', icon: 'orders', color: 'primary' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const cards = (t: Translate): ReadonlyArray<{ key: StatKey; label: string; icon: string; color: CardColor }> => [
+  { key: 'total_revenue', label: t('finance.dashboard.totalCollectedGmv'), icon: 'payments', color: 'primary' },
+  { key: 'duncit_revenue', label: t('finance.dashboard.duncitRevenue'), icon: 'insights', color: 'success' },
+  { key: 'gst_collected', label: t('finance.dashboard.gstCollected'), icon: 'quote', color: 'warning' },
+  { key: 'pending_payouts', label: t('finance.dashboard.pendingPayouts'), icon: 'receipt', color: 'info' },
+  { key: 'completed_payouts', label: t('finance.dashboard.completedPayouts'), icon: 'orders', color: 'primary' },
 ];
 
 const trendLabel = (stat?: FinanceStat): string | undefined => {
@@ -33,6 +36,7 @@ const trendColor = (stat?: FinanceStat): string => {
 
 /** Live finance KPIs served by the finance engine (financeDashboardStats). */
 export default function FinanceKpis() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ financeDashboardStats: FinanceDashboardStats }>(
     FINANCE_DASHBOARD_STATS,
     { fetchPolicy: 'cache-and-network' },
@@ -45,7 +49,7 @@ export default function FinanceKpis() {
 
   return (
     <Stack direction="row" useFlexGap flexWrap="wrap" spacing={2}>
-      {CARDS.map((card) => {
+      {cards(t).map((card) => {
         const stat = stats?.[card.key];
         return (
           <StatCard

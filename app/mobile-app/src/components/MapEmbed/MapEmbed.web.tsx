@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { locationMapEmbedUrl } from '@/utils/location-tree';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   query: string;
@@ -13,6 +14,7 @@ interface Props {
 /** Web variant — a real DOM <iframe> embed (react-native-web renders intrinsic
  * tags through React DOM) so the experience matches mWeb exactly. */
 export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const url = locationMapEmbedUrl(apiKey, query);
@@ -39,7 +41,7 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
         </a>
       </XStack>
       <iframe
-        title="Pod location map"
+        title={t('mweb.mapEmbed.podLocationMap')}
         src={url}
         loading="lazy"
         style={{

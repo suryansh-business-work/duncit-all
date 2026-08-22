@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { TicketAttachments } from '@/components/support/TicketAttachments';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   /** Locked (reply hidden) once the ticket is resolved/closed (B7). */
@@ -18,6 +19,7 @@ const RESOLVED_NOTE = 'This conversation has been marked as resolved.';
 
 /** Ticket reply row with file attachments, or the locked "resolved" note (B7). */
 export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted, onPrimary, color: ink } = useThemeColors();
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -62,7 +64,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
             testID="ticket-reply-input"
             value={text}
             onChangeText={setText}
-            placeholder="Write a reply…"
+            placeholder={t('mweb.common.writeAReply')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline
@@ -71,7 +73,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
         <XStack
           testID="ticket-reply-send"
           role="button"
-          aria-label="Send reply"
+          aria-label={t('mweb.ticketDetails.sendReply')}
           onPress={() => void submit()}
           width={42}
           height={42}

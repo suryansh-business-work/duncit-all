@@ -7,6 +7,7 @@ import VenuesLocationBar from './VenuesLocationBar';
 import AdCard from '../../components/ads/AdCard';
 import { interleaveAds, isAdEntry } from '../../components/ads/AdSlot';
 import { useActiveAds } from '../../components/ads/useActiveAds';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export const VENUES_EXPLORE = gql`
   query VenuesExplore($location_id: ID, $search: String, $super_category_id: ID) {
@@ -55,6 +56,7 @@ interface Props {
  * debounced search + Super-category filter, and a location bar that opens the
  * header's picker to change city. Native twin: VenuesScreen. */
 export default function VenuesPage({ locationId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -96,7 +98,7 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
       <VenuesLocationBar cityLabel={cityLabel} />
       <TextField
         size="small"
-        placeholder="Search venues by name, type or area"
+        placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         inputProps={{ 'aria-label': 'Search venues' }}

@@ -9,6 +9,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useBouncer, type ActiveSos } from '@/hooks/useBouncer';
 import { useSupportPods } from '@/hooks/useSupportPods';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Danger SOS button with a busy spinner; disabled until a pod is selected. */
 function SosSendButton({
@@ -16,11 +17,12 @@ function SosSendButton({
   busy,
   onSend,
 }: Readonly<{ disabled: boolean; busy: boolean; onSend: () => void }>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID="sos-send"
       role="button"
-      aria-label="Send SOS"
+      aria-label={t('mweb.sos.sendSos')}
       aria-disabled={disabled}
       onPress={disabled ? undefined : onSend}
       height={52}
@@ -42,6 +44,7 @@ function SosSendButton({
 
 /** SOS — emergency help scoped to a live pod. RN twin of mWeb's SosContent. */
 export function SosScreen() {
+  const { t } = useTranslation();
   const { options, selected, selectedId, setSelectedId } = useSupportPods();
   const { getActiveSos, raiseSos } = useBouncer();
   const [message, setMessage] = useState('');
@@ -131,13 +134,13 @@ export function SosScreen() {
                 </Text>
               </YStack>
             </XStack>
-            <Field label="Message">
+            <Field label={t('mweb.common.message')}>
               <TextArea
                 testID="sos-message"
-                aria-label="Message"
+                aria-label={t('mweb.common.message')}
                 value={message}
                 onChangeText={setMessage}
-                placeholder="Quick note (optional)"
+                placeholder={t('mweb.common.quickNoteOptional')}
                 placeholderTextColor="$muted"
                 maxLength={500}
                 backgroundColor="$surface"

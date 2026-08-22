@@ -14,6 +14,7 @@ import DetailField from '../../marketing-campaigns-page/DetailField';
 import type { AisensyTemplate } from '../queries';
 import TemplateSample from './TemplateSample';
 import { statusKey } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 export interface AisensyFact {
   label: string;
@@ -49,6 +50,7 @@ export default function AisensyDetailDialog({
   missingNote = 'AiSensy returned no message body for this row.',
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!title) return null;
 
   return (
@@ -99,7 +101,7 @@ export default function AisensyDetailDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

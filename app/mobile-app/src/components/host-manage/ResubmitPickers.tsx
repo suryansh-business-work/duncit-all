@@ -89,9 +89,10 @@ export function VenuePickerField({
   error,
   onChange,
 }: Readonly<VenuePickerFieldProps>) {
+  const { t } = useTranslation();
   const emptyText = venues.length === 0 ? 'Loading venues…' : null;
   return (
-    <PickerShell title="Venue" emptyText={emptyText} error={error}>
+    <PickerShell title={t('mweb.common.venue')} emptyText={emptyText} error={error}>
       {venues.map((venue) => (
         <OptionRow
           key={venue.id}

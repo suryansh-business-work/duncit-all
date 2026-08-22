@@ -18,6 +18,7 @@ import {
   type ReminderEntity,
 } from '../../api/reminders.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export default function ReminderFormDialog({ open, entity, leadId, reminder, onClose, onSaved, refetchQueries }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [dueAt, setDueAt] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');
@@ -48,8 +50,8 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
   }, [open, reminder]);
 
   const save = async () => {
-    if (!title.trim()) { setError('Title is required.'); return; }
-    if (!dueAt || Number.isNaN(dueAt.getTime())) { setError('Pick a valid due date & time.'); return; }
+    if (!title.trim()) { setError(t('crm.components.titleIsRequired')); return; }
+    if (!dueAt || Number.isNaN(dueAt.getTime())) { setError(t('crm.components.pickAValidDueDateAnd')); return; }
     setError(null);
     try {
       if (reminder) {
@@ -69,20 +71,20 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField size="small" label="Title" required value={title} onChange={(e) => setTitle(e.target.value)} autoFocus fullWidth />
+          <TextField size="small" label={t('shell.common.title')} required value={title} onChange={(e) => setTitle(e.target.value)} autoFocus fullWidth />
           <DateTimePicker
-            label="Due date & time"
+            label={t('crm.components.dueDateAndTime')}
             value={dueAt}
             onChange={setDueAt}
             slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
           />
-          <TextField size="small" label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+          <TextField size="small" label={t('crm.components.notes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={save} disabled={loading || !title.trim()}>
-          {loading ? 'Saving…' : 'Save'}
+          {loading ? 'Saving…' : t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

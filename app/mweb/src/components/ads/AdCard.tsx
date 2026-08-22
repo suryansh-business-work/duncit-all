@@ -3,6 +3,7 @@ import type { SxProps, Theme } from '@mui/material';
 import AdMedia from './AdMedia';
 import { adClickProps } from './adClick';
 import type { PublicAd } from './useActiveAds';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export type AdCardVariant = 'banner' | 'card';
 
@@ -18,6 +19,7 @@ interface AdCardProps {
  * "Sponsored" chip and an optional title caption. Clickable (new tab) only
  * when the ad carries a redirect_url. */
 export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardProps>) {
+  const { t } = useTranslation();
   const clickable = Boolean(ad.redirect_url);
   const sizeSx = variant === 'card' ? { height: 132 } : { aspectRatio: '16 / 9' };
   return (
@@ -42,7 +44,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
         <AdMedia ad={ad} />
       </Box>
       <Chip
-        label="Sponsored"
+        label={t('mweb.ads.sponsored')}
         size="small"
         sx={{
           position: 'absolute',

@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import { WA_CREATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -19,6 +20,7 @@ interface Props {
 
 /** Manually add a single user lead (phone + name) — dedupes by phone server-side. */
 export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [create, { loading, error }] = useMutation(WA_CREATE_USER_LEAD);
@@ -34,11 +36,11 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>New user lead</DialogTitle>
+      <DialogTitle>{t('crm.userLeads.newUserLead')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <TextField
-            label="Phone (with country code)"
+            label={t('crm.userLeads.phoneWithCountryCode')}
             size="small"
             required
             value={phone}
@@ -50,7 +52,7 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
             autoFocus
           />
           <TextField
-            label="Name"
+            label={t('shell.common.name')}
             size="small"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -60,7 +62,7 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
           {loading ? 'Saving…' : 'Create'}

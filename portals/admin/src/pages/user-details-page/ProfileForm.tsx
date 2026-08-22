@@ -42,7 +42,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
     <form noValidate onSubmit={submit}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Typography variant="subtitle1">Profile</Typography>
+          <Typography variant="subtitle1">{t('admin.profile.tab')}</Typography>
           <Button
             type="submit"
             variant="contained"

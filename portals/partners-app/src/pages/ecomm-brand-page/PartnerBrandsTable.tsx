@@ -9,6 +9,7 @@ import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EcommBrandRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
   DRAFT: 'warning',
@@ -74,6 +75,7 @@ export default function PartnerBrandsTable({
   onSettings,
   onToggleActive,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     const renderActions = (brand: EcommBrandRow) => {
       const locked = brand.status === 'SUBMITTED' || brand.status === 'APPROVED';
@@ -81,7 +83,7 @@ export default function PartnerBrandsTable({
       return (
         <Stack direction="row" justifyContent="flex-end" component="span">
           {brand.status === 'APPROVED' && (
-            <Tooltip title="Product management">
+            <Tooltip title={t('partners.common.productManagement')}>
               <IconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
                 <Inventory2Icon fontSize="small" />
               </IconButton>
@@ -99,7 +101,7 @@ export default function PartnerBrandsTable({
               {locked ? <VisibilityIcon fontSize="small" /> : <EditIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Brand settings">
+          <Tooltip title={t('partners.ecommBrandPage.brandSettings')}>
             <IconButton size="small" onClick={() => onSettings(brand)}>
               <SettingsIcon fontSize="small" />
             </IconButton>
@@ -110,7 +112,7 @@ export default function PartnerBrandsTable({
     return [
       {
         field: 'brand_name',
-        headerName: 'Brand',
+        headerName: t('partners.ecommBrandPage.brand'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderBrand,
@@ -118,21 +120,21 @@ export default function PartnerBrandsTable({
       },
       {
         field: 'categories',
-        headerName: 'Categories',
+        headerName: t('shell.nav.categories'),
         sortable: false,
         minWidth: 180,
         valueGetter: categoriesValue,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 190,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (brand) => brand.status,
       },
-      { field: 'updated_at', headerName: 'Updated', hide: true, width: 130, valueGetter: updatedValue },
-      { field: 'actions', headerName: 'Action', sortable: false, width: 160, cellRenderer: renderActions },
+      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, valueGetter: updatedValue },
+      { field: 'actions', headerName: t('partners.common.action'), sortable: false, width: 160, cellRenderer: renderActions },
     ];
   }, [onOpen, onManageProducts, onSettings, onToggleActive]);
 
@@ -144,7 +146,7 @@ export default function PartnerBrandsTable({
       getRowId={getBrandRowId}
       onRowClick={onOpen}
       toolbarActions={toolbarActions}
-      emptyText="No brands yet — create your first product brand to get started."
+      emptyText={t('partners.ecommBrandPage.noBrandsYetCreateYourFirst')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
       searchPlaceholder="Search brand name or tagline"
       refetchRef={refetchRef}

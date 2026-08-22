@@ -9,6 +9,7 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { CampaignNameForm, type CampaignNameValues } from '../campaign-name-form';
 import type { WaCampaignNameOption } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** One saved name. Hoisted so it isn't redefined each render (S6478). */
 function NameRow({
@@ -16,6 +17,7 @@ function NameRow({
   busy,
   onDelete,
 }: Readonly<{ option: WaCampaignNameOption; busy: boolean; onDelete: () => void }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
@@ -28,7 +30,7 @@ function NameRow({
           </Typography>
         )}
       </Stack>
-      <Tooltip title="Remove from the list">
+      <Tooltip title={t('marketing.whatsappCampaigns.removeFromTheList')}>
         <span>
           <IconButton
             size="small"

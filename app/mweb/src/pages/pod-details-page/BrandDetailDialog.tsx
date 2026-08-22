@@ -17,6 +17,7 @@ import EventIcon from '@mui/icons-material/Event';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { PUBLIC_BRAND } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Brand-detail dialog opened by tapping the brand name in the product dialog —
  * logo/cover, tagline, description and stats, fetched on demand (Task B item 1). */
@@ -24,6 +25,7 @@ export default function BrandDetailDialog({
   brandId,
   onClose,
 }: Readonly<{ brandId: string | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery(PUBLIC_BRAND, {
     variables: { id: brandId },
     skip: !brandId,
@@ -84,7 +86,7 @@ export default function BrandDetailDialog({
     <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         Brand
-        <IconButton aria-label="Close" onClick={onClose} size="small">
+        <IconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>

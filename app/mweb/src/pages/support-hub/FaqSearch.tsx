@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { SEARCH_FAQS, type FaqItem } from './faqQueries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface FaqSearchProps {
   query: string;
@@ -25,6 +26,7 @@ interface FaqSearchProps {
 
 /** Debounced server-side FAQ search; renders matching questions below the field. */
 export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchProps>) {
+  const { t } = useTranslation();
   const debounced = useDebouncedValue(query.trim(), 350);
   const active = debounced.length > 0;
   const { data, loading } = useQuery(SEARCH_FAQS, {
@@ -39,7 +41,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
       <TextField
         fullWidth
         size="small"
-        placeholder="Search for topics or questions…"
+        placeholder={t('mweb.common.searchForTopicsOrQuestions')}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         InputProps={{
@@ -50,7 +52,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
           ),
           endAdornment: query ? (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={() => onQueryChange('')} aria-label="Clear search">
+              <IconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
                 <CloseIcon fontSize="small" />
               </IconButton>
             </InputAdornment>

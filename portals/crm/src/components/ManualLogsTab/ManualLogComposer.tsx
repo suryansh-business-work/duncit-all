@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { LogBody } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   body: LogBody;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function ManualLogComposer(props: Readonly<Props>) {
+  const { t } = useTranslation();
   const { body, error, saving, summary, onBodyChange, onCancel, onErrorClose, onSubmit } = props;
   return (
     <Card
@@ -32,14 +34,14 @@ export function ManualLogComposer(props: Readonly<Props>) {
         <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
           New manual log
         </Typography>
-        <IconButton size="small" aria-label="Cancel" onClick={onCancel} disabled={saving}>
+        <IconButton size="small" aria-label={t('shell.common.cancel')} onClick={onCancel} disabled={saving}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
       <TextField
         fullWidth
         size="small"
-        label="Title (optional)"
+        label={t('crm.components.titleOptional')}
         value={summary}
         onChange={(event) => props.onSummaryChange(event.target.value)}
         sx={{ mb: 1.5 }}
@@ -57,7 +59,7 @@ export function ManualLogComposer(props: Readonly<Props>) {
       ) : null}
       <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1.5 }}>
         <Button onClick={onCancel} disabled={saving}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button
           variant="contained"

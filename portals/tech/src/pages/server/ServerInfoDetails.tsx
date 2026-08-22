@@ -2,6 +2,7 @@ import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
 import InfoList from './InfoList';
 import { formatDate, formatDateTime, formatUptime } from './format';
 import type { ServerInfo } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 function Panel({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
@@ -17,23 +18,24 @@ function Panel({ title, children }: Readonly<{ title: string; children: React.Re
 }
 
 export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo }>) {
+  const { t } = useTranslation();
   const { os, cpu, ssl, network } = info;
   const external = network.filter((n) => !n.internal && n.family === 'IPv4');
 
   return (
     <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
-      <Panel title="Operating system">
+      <Panel title={t('tech.server.operatingSystem')}>
         <InfoList
           rows={[
-            { label: 'Hostname', value: os.hostname },
+            { label: t('tech.server.hostname'), value: os.hostname },
             { label: 'OS', value: `${os.distro} ${os.release}` },
-            { label: 'Type', value: os.type },
-            { label: 'Architecture', value: os.arch },
-            { label: 'Kernel uptime', value: formatUptime(os.kernelUptimeSeconds) },
-            { label: 'API process uptime', value: formatUptime(os.processUptimeSeconds) },
+            { label: t('shell.common.type'), value: os.type },
+            { label: t('tech.server.architecture'), value: os.arch },
+            { label: t('tech.server.kernelUptime'), value: formatUptime(os.kernelUptimeSeconds) },
+            { label: t('tech.server.apiProcessUptime'), value: formatUptime(os.processUptimeSeconds) },
             { label: 'Node.js', value: os.nodeVersion },
-            { label: 'SSH port', value: info.sshPort },
-            { label: 'Collected', value: formatDateTime(info.collectedAt) },
+            { label: t('tech.server.sshPort'), value: info.sshPort },
+            { label: t('tech.server.collected'), value: formatDateTime(info.collectedAt) },
           ]}
         />
       </Panel>
@@ -41,22 +43,22 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
       <Panel title="CPU">
         <InfoList
           rows={[
-            { label: 'Model', value: cpu.model },
-            { label: 'Cores', value: cpu.cores },
-            { label: 'Clock', value: cpu.speedMhz ? `${(cpu.speedMhz / 1000).toFixed(2)} GHz` : '—' },
-            { label: 'Usage', value: `${cpu.usagePercent}%` },
-            { label: 'Load (1m / 5m / 15m)', value: `${cpu.loadAvg1} / ${cpu.loadAvg5} / ${cpu.loadAvg15}` },
+            { label: t('tech.server.model'), value: cpu.model },
+            { label: t('tech.server.cores'), value: cpu.cores },
+            { label: t('tech.server.clock'), value: cpu.speedMhz ? `${(cpu.speedMhz / 1000).toFixed(2)} GHz` : '—' },
+            { label: t('tech.server.usage'), value: `${cpu.usagePercent}%` },
+            { label: t('tech.server.load1m5m15m'), value: `${cpu.loadAvg1} / ${cpu.loadAvg5} / ${cpu.loadAvg15}` },
           ]}
         />
       </Panel>
 
-      <Panel title="SSL certificate">
+      <Panel title={t('tech.server.sslCertificate')}>
         {ssl && !ssl.error ? (
           <InfoList
             rows={[
-              { label: 'Host', value: ssl.host },
+              { label: t('tech.common.host'), value: ssl.host },
               {
-                label: 'Status',
+                label: t('shell.common.status'),
                 value: (
                   <Chip
                     size="small"
@@ -65,12 +67,12 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
                   />
                 ),
               },
-              { label: 'Issuer', value: ssl.issuer ?? '—' },
-              { label: 'Subject', value: ssl.subject ?? '—' },
-              { label: 'Protocol', value: ssl.protocol ?? '—' },
-              { label: 'Valid from', value: formatDate(ssl.validFrom) },
+              { label: t('tech.server.issuer'), value: ssl.issuer ?? '—' },
+              { label: t('tech.common.subject'), value: ssl.subject ?? '—' },
+              { label: t('tech.server.protocol'), value: ssl.protocol ?? '—' },
+              { label: t('tech.server.validFrom'), value: formatDate(ssl.validFrom) },
               {
-                label: 'Expires',
+                label: t('tech.server.expires'),
                 value:
                   ssl.daysRemaining === null
                     ? formatDate(ssl.validTo)
@@ -85,7 +87,7 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
         )}
       </Panel>
 
-      <Panel title="Network">
+      <Panel title={t('tech.common.network')}>
         {external.length ? (
           <InfoList rows={external.map((n) => ({ label: n.name, value: n.address }))} />
         ) : (

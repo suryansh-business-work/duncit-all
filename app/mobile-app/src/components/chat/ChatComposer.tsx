@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChatComposerProps {
   value: string;
@@ -22,6 +23,7 @@ export function ChatComposer({
   onToggleEmoji,
   sending,
 }: Readonly<ChatComposerProps>) {
+  const { t } = useTranslation();
   const { muted, onPrimary } = useThemeColors();
   const canSend = value.trim().length > 0;
 
@@ -38,7 +40,7 @@ export function ChatComposer({
       <XStack
         testID="chat-pick-image"
         role="button"
-        aria-label="Send image"
+        aria-label={t('mweb.common.sendImage')}
         aria-disabled={sending}
         onPress={sending ? undefined : onPickImage}
         width={40}
@@ -58,11 +60,11 @@ export function ChatComposer({
 
       <Input
         testID="chat-input"
-        aria-label="Message"
+        aria-label={t('mweb.common.message')}
         flex={1}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Type a message"
+        placeholder={t('mweb.common.typeAMessage')}
         placeholderTextColor="$muted"
         multiline
         maxLength={2000}
@@ -76,7 +78,7 @@ export function ChatComposer({
       <XStack
         testID="chat-emoji-toggle"
         role="button"
-        aria-label="Emoji"
+        aria-label={t('mweb.chat.emoji')}
         onPress={onToggleEmoji}
         width={40}
         height={40}
@@ -91,7 +93,7 @@ export function ChatComposer({
       <XStack
         testID="chat-send"
         role="button"
-        aria-label="Send message"
+        aria-label={t('mweb.common.sendMessage')}
         aria-disabled={!canSend}
         onPress={canSend ? onSend : undefined}
         width={44}

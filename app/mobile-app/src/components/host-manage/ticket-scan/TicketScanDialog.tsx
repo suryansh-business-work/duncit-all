@@ -89,7 +89,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
       if (outcome.ok && !outcome.already_checked_in) setConfirmed(outcome);
     } catch (err) {
       if (epoch !== epochRef.current) return;
-      setError(err instanceof Error ? err.message : 'Could not read that ticket');
+      setError(err instanceof Error ? err.message : t('mweb.hostManage.couldNotReadThatTicket'));
     } finally {
       setBusy(false);
     }
@@ -132,7 +132,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
           <YStack flex={1} alignItems="center" justifyContent="center" testID="ticket-scan-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={close}
               position="absolute"
               top={0}
@@ -232,7 +232,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                   <XStack
                     testID="ticket-scan-close"
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={close}
                     flex={1}
                     height={46}
@@ -251,7 +251,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     <XStack
                       testID="ticket-scan-next"
                       role="button"
-                      aria-label="Scan next"
+                      aria-label={t('mweb.hostManage.scanNext')}
                       onPress={() => {
                         setResult(null);
                         setError(null);

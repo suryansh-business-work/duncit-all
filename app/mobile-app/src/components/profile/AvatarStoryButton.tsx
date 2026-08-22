@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   photo?: string | null;
@@ -38,6 +39,7 @@ export function AvatarStoryButton({
   onEditPhoto,
   testID = 'avatar-story-button',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary, primary, color } = useThemeColors();
   const badge = Math.round(size * 0.34);
 
@@ -76,7 +78,7 @@ export function AvatarStoryButton({
       <YStack
         testID={`${testID}-add-story`}
         role="button"
-        aria-label="Add story"
+        aria-label={t('mweb.common.addStory')}
         onPress={onAddStory}
         position="absolute"
         bottom={-2}
@@ -96,7 +98,7 @@ export function AvatarStoryButton({
       <YStack
         testID={`${testID}-edit`}
         role="button"
-        aria-label="Edit photo"
+        aria-label={t('mweb.common.editPhoto')}
         aria-disabled={saving}
         onPress={saving ? undefined : onEditPhoto}
         position="absolute"

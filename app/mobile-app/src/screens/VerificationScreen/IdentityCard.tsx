@@ -5,6 +5,7 @@ import type { Verification } from '@/hooks/useVerifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 import { VerificationCard } from './VerificationCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   item: Verification;
@@ -59,6 +60,7 @@ function PickButton({
 
 /** Identity verification — upload an ID document (image or PDF, 4 MB cap). */
 export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Approved is finished; under review is somebody else's turn. Swapping the
   // document mid-review means the admin approves one file having looked at
   // another. The server refuses the submission either way. mWeb twin.
@@ -69,14 +71,14 @@ export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: R
         <XStack gap={10} flexWrap="wrap">
           <PickButton
             testID="verification-upload-photo"
-            label="Upload photo"
+            label={t('mweb.verification.uploadPhoto')}
             icon="image"
             busy={busy}
             onPress={onPickImage}
           />
           <PickButton
             testID="verification-upload-pdf"
-            label="Upload PDF"
+            label={t('mweb.verification.uploadPdf')}
             icon="picture-as-pdf"
             busy={busy}
             onPress={onPickPdf}

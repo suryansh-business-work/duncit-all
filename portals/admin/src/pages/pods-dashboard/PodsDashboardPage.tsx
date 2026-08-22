@@ -8,6 +8,7 @@ import PodDashboardTiles from './PodDashboardTiles';
 import PodRatingsCard from './PodRatingsCard';
 import PodListCard from './PodListCard';
 import PodTrendChart from './PodTrendChart';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Pods > Dashboard — how pods are doing, in one screen.
@@ -22,6 +23,7 @@ import PodTrendChart from './PodTrendChart';
  * grip, not a second frame.
  */
 export default function PodsDashboardPage() {
+  const { t } = useTranslation();
   const [days, setDays] = useState(30);
   const { data, loading, error } = useQuery(POD_DASHBOARD, {
     variables: { days },
@@ -85,10 +87,10 @@ export default function PodsDashboardPage() {
         minH: 2,
         content: (
           <PodListCard
-            title="Best rated"
-            subtitle="Highest scoring pods, all time"
+            title={t('admin.podsDashboard.bestRated')}
+            subtitle={t('admin.podsDashboard.bestRatedHint')}
             pods={topRated}
-            emptyText="No pod has been rated yet."
+            emptyText={t('admin.podsDashboard.notRatedYet')}
             showRating
           />
         ),
@@ -102,10 +104,10 @@ export default function PodsDashboardPage() {
         minH: 2,
         content: (
           <PodListCard
-            title="Needs attention"
-            subtitle="Rated below four — look at these first"
+            title={t('admin.podsDashboard.needsAttention')}
+            subtitle={t('admin.podsDashboard.needsAttentionHint')}
             pods={needsAttention}
-            emptyText="Nothing is scoring badly."
+            emptyText={t('admin.podsDashboard.nothingBad')}
             showRating
           />
         ),
@@ -119,10 +121,10 @@ export default function PodsDashboardPage() {
         minH: 2,
         content: (
           <PodListCard
-            title="Starting next"
-            subtitle="The pods coming up, with seats sold"
+            title={t('admin.podsDashboard.startingNext')}
+            subtitle={t('admin.podsDashboard.upcomingHint')}
             pods={upcoming}
-            emptyText="No upcoming pods."
+            emptyText={t('admin.podsDashboard.noUpcoming')}
           />
         ),
       },
@@ -136,15 +138,15 @@ export default function PodsDashboardPage() {
       header={
         <>
           <PageHeader
-            title="Pods dashboard"
-            subtitle="Counts are live. Money, ratings and the trend cover the selected period."
+            title={t('admin.podsDashboard.title')}
+            subtitle={t('admin.podsDashboard.subtitle')}
             actions={
               <ToggleButtonGroup
                 size="small"
                 exclusive
                 value={days}
                 onChange={(_event, next) => next && setDays(next)}
-                aria-label="Reporting period"
+                aria-label={t('admin.podsDashboard.reportingPeriod')}
               >
                 {WINDOW_OPTIONS.map((option) => (
                   <ToggleButton key={option.days} value={option.days}>

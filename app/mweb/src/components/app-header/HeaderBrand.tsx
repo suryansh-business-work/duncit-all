@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack } from '@mui/material';
 import { HOME_REFRESH_EVENT } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface HeaderBrandProps {
   logoUrl?: string | null;
@@ -13,6 +14,7 @@ function scrollToTop() {
 }
 
 export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const goHome = () => {
@@ -37,7 +39,7 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
       }}
       role="button"
       tabIndex={0}
-      aria-label="Go to home and refresh"
+      aria-label={t('mweb.appHeader.goToHomeAndRefresh')}
     >
       {logoUrl ? (
         <Box

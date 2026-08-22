@@ -8,6 +8,7 @@ import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
 import { useFaqs, type FaqGroup } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Keeps only the groups (and their questions) whose question or answer text
  * matches the query — mirrors mWeb's FAQ search. */
@@ -26,6 +27,7 @@ function filterFaqGroups(groups: FaqGroup[], query: string): FaqGroup[] {
 
 /** FAQs — searchable, grouped questions in collapsible accordions. */
 export function FaqsScreen() {
+  const { t } = useTranslation();
   const { groups, isLoading } = useFaqs();
   const { muted } = useThemeColors();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -71,12 +73,12 @@ export function FaqsScreen() {
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="faqs-search"
-          aria-label="Search FAQs"
+          aria-label={t('mweb.faqs.searchFaqs')}
           flex={1}
           unstyled
           value={search}
           onChangeText={setSearch}
-          placeholder="Search questions, e.g. refund, host"
+          placeholder={t('mweb.common.searchQuestionsEGRefundHost')}
           placeholderTextColor="$muted"
           color="$color"
           fontSize={14}

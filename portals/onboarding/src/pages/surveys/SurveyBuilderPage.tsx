@@ -15,6 +15,7 @@ import {
 import QuestionCard, { type DraftQuestion } from './QuestionCard';
 import ScopePicker, { emptyScope, type Scope } from './ScopePicker';
 import { kindMetaByKind } from './surveyKinds';
+import { useTranslation } from '@duncit/app-settings';
 
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
 const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM', 'CLUB_ADMIN']);
@@ -23,6 +24,7 @@ const initialKind = (raw: string | null): SurveyKind => (raw && KINDS.has(raw as
 
 /** Create / edit a single onboarding survey scoped to a taxonomy slot. */
 export default function SurveyBuilderPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -92,9 +94,11 @@ export default function SurveyBuilderPage() {
   // only known once the survey loads, so read it straight off `data`.
   const loadedKind = data?.surveyById?.kind;
   const backKindKnown = isNew || !!loadedKind;
-  const backMeta = kindMetaByKind(loadedKind ?? kind);
+  const backMeta = kindMetaByKind(loadedKind ?? kind, t);
   const backTo = backKindKnown ? `/surveys/kind/${backMeta.slug}` : '/surveys';
-  const backLabel = backKindKnown ? `Back to ${backMeta.label} Surveys` : 'Back to Surveys';
+  const backLabel = backKindKnown
+    ? t('onboarding.surveys.backToKindSurveys', { vars: { kind: backMeta.label } })
+    : t('onboarding.surveys.backToSurveys');
 
   const saving = creating || updating;
   const verb = isNew ? 'New' : 'Edit';
@@ -126,15 +130,15 @@ export default function SurveyBuilderPage() {
             <Stack spacing={1.75}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
                 {!isDefaultMode && (
-                  <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
-                    <MenuItem value="VENUE">Venue</MenuItem>
+                  <TextField select size="small" label={t('onboarding.surveys.kind')} value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
+                    <MenuItem value="VENUE">{t('onboarding.common.venue')}</MenuItem>
                     <MenuItem value="HOST">Host</MenuItem>
                     <MenuItem value="ECOMM">E-Commerce Brand</MenuItem>
-                    <MenuItem value="CLUB_ADMIN">Club Admin</MenuItem>
+                    <MenuItem value="CLUB_ADMIN">{t('onboarding.common.clubAdmin')}</MenuItem>
                   </TextField>
                 )}
-                <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
-                <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />
+                <TextField size="small" label={t('onboarding.surveys.surveyTitle')} value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
+                <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label={t('onboarding.common.active')} />
               </Stack>
               {!isDefaultMode && (
                 <ScopePicker
@@ -159,13 +163,13 @@ export default function SurveyBuilderPage() {
             />
           ))}
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <TextField select size="small" label="Add" value={addType} onChange={(e) => setAddType(e.target.value as QuestionType)} sx={{ minWidth: 200 }}>
-              <MenuItem value="SECTION">Section heading</MenuItem>
-              <MenuItem value="MCQ">Multiple choice</MenuItem>
-              <MenuItem value="TEXT">Short text</MenuItem>
-              <MenuItem value="TEXTAREA">Long text</MenuItem>
+            <TextField select size="small" label={t('onboarding.surveys.add')} value={addType} onChange={(e) => setAddType(e.target.value as QuestionType)} sx={{ minWidth: 200 }}>
+              <MenuItem value="SECTION">{t('onboarding.surveys.sectionHeading')}</MenuItem>
+              <MenuItem value="MCQ">{t('onboarding.surveys.multipleChoice')}</MenuItem>
+              <MenuItem value="TEXT">{t('onboarding.surveys.shortText')}</MenuItem>
+              <MenuItem value="TEXTAREA">{t('onboarding.surveys.longText')}</MenuItem>
             </TextField>
-            <Button startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])}>Add question</Button>
+            <Button startIcon={<AddIcon />} onClick={() => setQuestions([...questions, blankByType(addType)])}>{t('onboarding.surveys.addQuestion')}</Button>
           </Stack>
         </>
       )}

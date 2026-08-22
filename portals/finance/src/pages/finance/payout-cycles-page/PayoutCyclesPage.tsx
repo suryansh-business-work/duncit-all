@@ -16,6 +16,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { PAYOUT_SETTINGS, PAYOUT_MODES, UPDATE_PAYOUT_SETTINGS, WEEKDAYS } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const timeToDate = (hhmm: string) => {
   const [h, m] = (hhmm || '18:00').split(':').map(Number);
@@ -27,6 +28,7 @@ const dateToTime = (d: Date | null) =>
   d && !Number.isNaN(d.getTime()) ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '18:00';
 
 export default function PayoutCyclesPage() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(PAYOUT_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_PAYOUT_SETTINGS);
   const [venueMode, setVenueMode] = useState('IMMEDIATE');
@@ -96,14 +98,14 @@ export default function PayoutCyclesPage() {
               Disbursement schedule
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1 }}>
-              <TextField select label="Venue payout" value={venueMode} onChange={(e) => setVenueMode(e.target.value)} fullWidth>
+              <TextField select label={t('finance.payoutCycles.venuePayout')} value={venueMode} onChange={(e) => setVenueMode(e.target.value)} fullWidth>
                 {PAYOUT_MODES.map((m) => (
                   <MenuItem key={m.value} value={m.value}>
                     {m.label}
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField select label="Host payout" value={hostMode} onChange={(e) => setHostMode(e.target.value)} fullWidth>
+              <TextField select label={t('finance.payoutCycles.hostPayout')} value={hostMode} onChange={(e) => setHostMode(e.target.value)} fullWidth>
                 {PAYOUT_MODES.map((m) => (
                   <MenuItem key={m.value} value={m.value}>
                     {m.label}
@@ -115,7 +117,7 @@ export default function PayoutCyclesPage() {
             {scheduled && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
                 {weekly && (
-                  <TextField select label="Payout day (weekly)" value={day} onChange={(e) => setDay(Number(e.target.value))} sx={{ minWidth: 200 }}>
+                  <TextField select label={t('finance.payoutCycles.payoutDayWeekly')} value={day} onChange={(e) => setDay(Number(e.target.value))} sx={{ minWidth: 200 }}>
                     {WEEKDAYS.map((w, i) => (
                       <MenuItem key={w} value={i}>
                         {w}
@@ -123,7 +125,7 @@ export default function PayoutCyclesPage() {
                     ))}
                   </TextField>
                 )}
-                <TimePicker label="Payout time" value={time} onChange={setTime} slotProps={{ textField: { sx: { minWidth: 200 } } }} />
+                <TimePicker label={t('finance.payoutCycles.payoutTime')} value={time} onChange={setTime} slotProps={{ textField: { sx: { minWidth: 200 } } }} />
               </Stack>
             )}
 

@@ -1,5 +1,6 @@
 import { Button, Stack } from '@mui/material';
 import { AiCheckingIndicator, AiMonitoringChip } from './AiMonitoring';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   isFirst: boolean;
@@ -23,12 +24,13 @@ export default function StepActions({
   onBack,
   onNext,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.25}>
       {isLast && <AiCheckingIndicator visible={moderating} />}
       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
         <Button disabled={isFirst || loading} onClick={onBack}>
-          Back
+          {t('partners.venueAvailabilityPage.back')}
         </Button>
         {isLast ? (
           <>
@@ -39,7 +41,7 @@ export default function StepActions({
           </>
         ) : (
           <Button variant="contained" onClick={onNext}>
-            Next
+            {t('partners.venueAvailabilityPage.next')}
           </Button>
         )}
       </Stack>

@@ -1,3 +1,4 @@
+import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
 
@@ -13,6 +14,7 @@ import {
 } from '@/graphql/account';
 import { graphqlRequest } from '@/services/graphql.client';
 import { SecuritySheet } from './SecuritySheet';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface ChangePasswordDialogProps {
   open: boolean;
@@ -20,7 +22,8 @@ export interface ChangePasswordDialogProps {
   onChanged: () => void;
 }
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong.');
+const errMsg = (e: unknown, t: Translate) =>
+  e instanceof Error ? e.message : t('mweb.account.somethingWentWrong');
 
 /** Two-step change-password sheet (Tamagui) — RN twin of mWeb's dialog:
  * verify current password → OTP + new password. */
@@ -29,6 +32,7 @@ export function ChangePasswordDialog({
   onClose,
   onChanged,
 }: Readonly<ChangePasswordDialogProps>) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2>(1);
   const [currentPassword, setCurrentPassword] = useState('');
   const [info, setInfo] = useState<string | null>(null);
@@ -65,12 +69,12 @@ export function ChangePasswordDialog({
     try {
       await sendOtp(values.current_password);
     } catch (e) {
-      setError(errMsg(e));
+      setError(errMsg(e, t));
     }
   };
 
   const handleResend = () => {
-    sendOtp(currentPassword).catch((e) => setError(errMsg(e)));
+    sendOtp(currentPassword).catch((e) => setError(errMsg(e, t)));
   };
 
   const handleChange = async (values: NewPasswordValues) => {
@@ -85,7 +89,7 @@ export function ChangePasswordDialog({
       onChanged();
       close();
     } catch (e) {
-      setError(errMsg(e));
+      setError(errMsg(e, t));
     } finally {
       setLoading(false);
     }
@@ -94,7 +98,7 @@ export function ChangePasswordDialog({
   return (
     <SecuritySheet
       open={open}
-      title="Change password"
+      title={t('mweb.account.changePassword')}
       testID="change-password-dialog"
       onClose={close}
     >
@@ -114,7 +118,7 @@ export function ChangePasswordDialog({
           <Text
             testID="change-password-resend"
             role="button"
-            aria-label="Resend OTP"
+            aria-label={t('mweb.account.resendOtp')}
             onPress={handleResend}
             fontSize={13.5}
             fontWeight="700"

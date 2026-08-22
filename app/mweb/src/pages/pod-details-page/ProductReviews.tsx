@@ -19,6 +19,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Review {
   id: string;
@@ -37,6 +38,7 @@ interface Review {
 /** Ratings & reviews for a product — summary, the viewer's write form (stars +
  * comment), the review list with thumbs up/down and the seller's reply. */
 export default function ProductReviews({ productId }: Readonly<{ productId: string }>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(PRODUCT_REVIEWS, {
     variables: { id: productId },
     fetchPolicy: 'cache-and-network',
@@ -61,13 +63,13 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
       const url = await upload(file, '/product-reviews');
       setImages((prev) => [...prev, url]);
     } catch {
-      setError('Could not upload the image.');
+      setError(t('mweb.podDetails.couldNotUploadTheImage'));
     }
   };
 
   const submit = async () => {
     if (!rating) {
-      setError('Please pick a star rating.');
+      setError(t('mweb.common.pleasePickAStarRating'));
       return;
     }
     setError(null);
@@ -79,7 +81,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
       setImages([]);
       await refetch();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not submit your review.');
+      setError(e instanceof Error ? e.message : t('mweb.common.couldNotSubmitYourReview'));
     }
   };
 
@@ -113,7 +115,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         <TextField
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Share your experience (optional)"
+          placeholder={t('mweb.common.shareYourExperienceOptional')}
           multiline
           minRows={2}
           fullWidth
@@ -127,7 +129,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                 <Box
                   component="img"
                   src={url}
-                  alt="Review"
+                  alt={t('mweb.podDetails.review')}
                   sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover' }}
                 />
                 <IconButton
@@ -193,7 +195,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                   key={url}
                   component="img"
                   src={url}
-                  alt="Review"
+                  alt={t('mweb.podDetails.review')}
                   sx={{ width: 64, height: 64, borderRadius: 1, objectFit: 'cover' }}
                 />
               ))}

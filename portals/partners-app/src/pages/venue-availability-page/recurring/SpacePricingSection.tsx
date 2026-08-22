@@ -1,5 +1,6 @@
 import { Box, Checkbox, Stack, TextField, Typography } from '@mui/material';
 import type { SpaceRow } from './useRecurringDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   spaces: SpaceRow[];
@@ -9,6 +10,7 @@ interface Props {
 /** Pricing by capacity — each venue space gets its own price + capacity and
  * creates its own slots. A single unnamed row means the whole venue. */
 export default function SpacePricingSection({ spaces, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const setRow = (label: string, p: Partial<SpaceRow>) =>
     onChange(spaces.map((s) => (s.label === label ? { ...s, ...p } : s)));
   // The include toggle only makes sense when there are named spaces to choose from.
@@ -42,7 +44,7 @@ export default function SpacePricingSection({ spaces, onChange }: Readonly<Props
               </Typography>
             </Box>
             <TextField
-              label="Price (₹)"
+              label={t('partners.venueAvailabilityPage.price')}
               type="number"
               size="small"
               value={space.price}

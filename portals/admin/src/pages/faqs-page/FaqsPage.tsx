@@ -25,8 +25,10 @@ import {
 import { emptyForm, type FormState } from './helpers';
 import FaqsTable from './FaqsTable';
 import FaqEditDialog from './FaqEditDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function FaqsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<any>(null);
@@ -69,7 +71,7 @@ export default function FaqsPage() {
   const submit = async () => {
     setError(null);
     if (!form.question.trim() || !form.answer.trim()) {
-      setError('Question and answer are required');
+      setError(t('admin.faqs.required'));
       return;
     }
     try {
@@ -82,10 +84,10 @@ export default function FaqsPage() {
       };
       if (editing?.id) {
         await updateMut({ variables: { faq_doc_id: editing.id, input } });
-        setToast('FAQ updated');
+        setToast(t('admin.faqs.updated'));
       } else {
         await createMut({ variables: { input } });
-        setToast('FAQ created');
+        setToast(t('admin.faqs.created'));
       }
       setEditing(null);
       refetchRef.current?.();
@@ -98,7 +100,7 @@ export default function FaqsPage() {
     if (!delTarget) return;
     try {
       await deleteMut({ variables: { faq_doc_id: delTarget.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       setDelTarget(null);
       refetchRef.current?.();
     } catch (e: any) {
@@ -121,7 +123,7 @@ export default function FaqsPage() {
         supers={supers}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-            New FAQ
+            {t('admin.faqs.newFaq')}
           </Button>
         }
         onEdit={openEdit}
@@ -140,14 +142,14 @@ export default function FaqsPage() {
       />
 
       <Dialog open={!!delTarget} onClose={() => setDelTarget(null)}>
-        <DialogTitle>Delete this FAQ?</DialogTitle>
+        <DialogTitle>{t('admin.faqs.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">This action cannot be undone.</Typography>
+          <Typography variant="body2">{t('admin.faqs.deleteBody')}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDelTarget(null)}>Cancel</Button>
+          <Button onClick={() => setDelTarget(null)}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={doDelete}>
-            Delete
+            {t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

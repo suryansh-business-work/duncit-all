@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Renders one image inside a WebView whose viewport permits pinch-zoom — the
  * browser supplies the pinch/zoom gesture natively (mirrors the MapEmbed/
@@ -19,6 +20,7 @@ export function ZoomableImageModal({
   index,
   onClose,
 }: Readonly<{ images: string[]; index: number | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function ZoomableImageModal({
             <XStack
               testID="zoom-image-close"
               role="button"
-              aria-label="Close image"
+              aria-label={t('mweb.common.closeImage')}
               onPress={onClose}
               width={36}
               height={36}
@@ -73,7 +75,7 @@ export function ZoomableImageModal({
               <XStack
                 testID="zoom-image-prev"
                 role="button"
-                aria-label="Previous image"
+                aria-label={t('mweb.details.previousImage')}
                 onPress={() => setCurrent((value) => Math.max(0, value - 1))}
                 paddingHorizontal={16}
                 paddingVertical={10}
@@ -85,7 +87,7 @@ export function ZoomableImageModal({
               <XStack
                 testID="zoom-image-next"
                 role="button"
-                aria-label="Next image"
+                aria-label={t('mweb.details.nextImage')}
                 onPress={() => setCurrent((value) => Math.min(images.length - 1, value + 1))}
                 paddingHorizontal={16}
                 paddingVertical={10}

@@ -6,6 +6,7 @@ import ClubPreviewCard from './ClubPreviewCard';
 import ClubPreviewDetails from './ClubPreviewDetails';
 import PreviewPane from './PreviewPane';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * Live member-side preview of the club being written. Rendered INSIDE the
@@ -16,6 +17,7 @@ import type { ClubFormValues } from '../types';
  * are the same ones the Basic section's cascade pickers already read.
  */
 export default function ClubPreview() {
+  const { t } = useTranslation();
   const { control, getValues } = useFormContext<ClubFormValues>();
   const { categories } = useAdminCategories();
   const { locations } = useAdminLocations();
@@ -34,11 +36,11 @@ export default function ClubPreview() {
 
   return (
     <PreviewPane
-      title="Member preview"
+      title={t('clubForm.preview.memberPreview')}
       hint="How this club will look once it is live. Nothing here is saved yet."
       blocks={[
-        { id: 'card', label: 'In the clubs list', node: <ClubPreviewCard model={model} /> },
-        { id: 'details', label: 'On the club page', node: <ClubPreviewDetails model={model} /> },
+        { id: 'card', label: t('clubForm.preview.inTheClubsList'), node: <ClubPreviewCard model={model} /> },
+        { id: 'details', label: t('clubForm.preview.onTheClubPage'), node: <ClubPreviewDetails model={model} /> },
       ]}
     />
   );

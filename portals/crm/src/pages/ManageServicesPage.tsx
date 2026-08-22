@@ -36,6 +36,7 @@ import {
 import type { CrmService, CrmServiceKind } from '../api/crm.types';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** Catalogue this page edits — `VENUE` for /venue-leads/services, `HOST` for /host-leads/services. */
@@ -62,6 +63,7 @@ export default function ManageServicesPage({
     ECOMM: 'Edit the catalogue used by the "Services Offered" dropdown on Ecomm Leads. Independent from the other catalogues.',
   }[kind],
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const queryVars = { kind, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmServices: CrmService[] }>(CRM_SERVICES, {
     variables: queryVars,
@@ -204,10 +206,10 @@ export default function ManageServicesPage({
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: 80 }}>Order</TableCell>
-                  <TableCell>Service name</TableCell>
-                  <TableCell sx={{ width: 110 }}>Active</TableCell>
-                  <TableCell sx={{ width: 140 }} align="right">Actions</TableCell>
+                  <TableCell sx={{ width: 80 }}>{t('shell.common.order')}</TableCell>
+                  <TableCell>{t('crm.page.serviceName')}</TableCell>
+                  <TableCell sx={{ width: 110 }}>{t('crm.common.active')}</TableCell>
+                  <TableCell sx={{ width: 140 }} align="right">{t('shell.common.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -227,7 +229,7 @@ export default function ManageServicesPage({
                         size="small"
                         fullWidth
                         autoFocus
-                        placeholder="e.g. Coaching / Training"
+                        placeholder={t('crm.page.eGCoachingTraining')}
                         value={draft.name}
                         onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                       />
@@ -239,10 +241,10 @@ export default function ManageServicesPage({
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Save">
+                      <Tooltip title={t('shell.common.save')}>
                         <span>
                           <IconButton
-                            aria-label="Save"
+                            aria-label={t('shell.common.save')}
                             size="small"
                             color="primary"
                             onClick={saveDraft}
@@ -252,10 +254,10 @@ export default function ManageServicesPage({
                           </IconButton>
                         </span>
                       </Tooltip>
-                      <Tooltip title="Cancel">
+                      <Tooltip title={t('shell.common.cancel')}>
                         <span>
                           <IconButton
-                            aria-label="Cancel"
+                            aria-label={t('shell.common.cancel')}
                             size="small"
                             onClick={cancelDraft}
                             disabled={busy}
@@ -308,7 +310,7 @@ export default function ManageServicesPage({
                             <Typography variant="body2" fontWeight={600}>
                               {row.name}
                             </Typography>
-                            {!row.is_active && <Chip size="small" label="Inactive" color="warning" />}
+                            {!row.is_active && <Chip size="small" label={t('crm.common.inactive')} color="warning" />}
                           </Stack>
                         )}
                       </TableCell>
@@ -328,14 +330,14 @@ export default function ManageServicesPage({
                       <TableCell align="right">
                         {editing ? (
                           <>
-                            <Tooltip title="Save">
+                            <Tooltip title={t('shell.common.save')}>
                               <span>
                                 <IconButton size="small" color="primary" onClick={saveDraft} disabled={busy}>
                                   <SaveIcon fontSize="small" />
                                 </IconButton>
                               </span>
                             </Tooltip>
-                            <Tooltip title="Cancel">
+                            <Tooltip title={t('shell.common.cancel')}>
                               <span>
                                 <IconButton size="small" onClick={cancelDraft} disabled={busy}>
                                   <CloseIcon fontSize="small" />
@@ -345,14 +347,14 @@ export default function ManageServicesPage({
                           </>
                         ) : (
                           <>
-                            <Tooltip title="Edit">
+                            <Tooltip title={t('shell.common.edit')}>
                               <span>
                                 <IconButton size="small" onClick={() => startEdit(row)} disabled={busy || !!draft}>
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </span>
                             </Tooltip>
-                            <Tooltip title="Delete">
+                            <Tooltip title={t('shell.common.delete')}>
                               <span>
                                 <IconButton
                                   size="small"
@@ -378,13 +380,13 @@ export default function ManageServicesPage({
 
       <ConfirmDialog
         open={!!removing}
-        title="Delete service"
+        title={t('crm.common.deleteService')}
         message={
           removing
             ? `Delete "${removing.name}"? Existing leads keep their entries — only the dropdown is affected.`
             : ''
         }
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleteState.loading}

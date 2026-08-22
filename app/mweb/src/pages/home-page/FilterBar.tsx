@@ -1,6 +1,7 @@
 import { Box, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import SortIcon from '@mui/icons-material/Sort';
 import type { DateFilter, PriceFilter, SortBy } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   categoryChips: any[];
@@ -38,13 +39,14 @@ export default function FilterBar({
   setSortBy,
   showSort = true,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.25}>
       {/* ── Category row ── */}
       {categoryChips.length > 0 && (
         <Box sx={scrollRow}>
           <Chip
-            label="All"
+            label={t('mweb.common.all')}
             size="small"
             color={categoryId ? 'default' : 'primary'}
             variant={categoryId ? 'outlined' : 'filled'}
@@ -135,7 +137,7 @@ export default function FilterBar({
           <TextField
             select
             size="small"
-            label="Sort by"
+            label={t('mweb.home.sortBy')}
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
@@ -145,10 +147,10 @@ export default function FilterBar({
               ),
             }}
           >
-            <MenuItem value="DATE_ASC">Date · Earliest first</MenuItem>
-            <MenuItem value="DATE_DESC">Date · Latest first</MenuItem>
-            <MenuItem value="PRICE_ASC">Price · Low to High</MenuItem>
-            <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
+            <MenuItem value="DATE_ASC">{t('mweb.home.dateEarliestFirst')}</MenuItem>
+            <MenuItem value="DATE_DESC">{t('mweb.home.dateLatestFirst')}</MenuItem>
+            <MenuItem value="PRICE_ASC">{t('mweb.home.priceLowToHigh')}</MenuItem>
+            <MenuItem value="PRICE_DESC">{t('mweb.home.priceHighToLow')}</MenuItem>
           </TextField>
         </Box>
       )}

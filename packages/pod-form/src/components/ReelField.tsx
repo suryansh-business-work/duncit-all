@@ -1,6 +1,7 @@
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   /** Reel video URL ('' = no reel). */
@@ -14,6 +15,7 @@ interface Props {
 const HELPER = 'Shows in Explore while the pod is live.';
 
 function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (value) {
     return (
       <Stack spacing={1}>
@@ -42,14 +44,14 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
       >
         <VideocamIcon sx={{ opacity: 0.5 }} />
         <Typography variant="caption" sx={{ display: 'block' }}>
-          No reel yet. Click <b>Pick video</b> to upload or pick from Pexels.
+          No reel yet. Click <b>{t('podForm.reelField.pickVideo')}</b> to upload or pick from Pexels.
         </Typography>
       </Box>
     );
   }
   return (
     <TextField
-      label="Reel video URL"
+      label={t('podForm.reelField.reelVideoUrl')}
       fullWidth
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -64,6 +66,7 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
  * pick-video button + inline preview; without it, a URL text field.
  */
 export default function ReelField({ value, onChange, error, onPickVideo }: Readonly<Props>) {
+  const { t } = useTranslation();
   const pick = () => {
     onPickVideo?.()
       .then((url) => {
@@ -75,7 +78,7 @@ export default function ReelField({ value, onChange, error, onPickVideo }: Reado
   return (
     <Box sx={{ mb: 2 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">Pod Reel</Typography>
+        <Typography variant="subtitle2">{t('podForm.reelField.podReel')}</Typography>
         {onPickVideo && (
           <Button size="small" startIcon={<VideocamIcon />} onClick={pick}>
             {value ? 'Replace video' : 'Pick video'}

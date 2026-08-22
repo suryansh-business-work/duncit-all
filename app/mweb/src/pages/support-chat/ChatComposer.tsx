@@ -4,6 +4,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { isVideoUpload } from '../../utils/attachment';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // Videos are capped tighter at 50 MB.
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +39,11 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
     e.target.value = '';
     if (!file) return;
     if (isVideoUpload(file.name, file.type) && file.size > VIDEO_MAX_BYTES) {
-      setError('Video is too large (max 50 MB)');
+      setError(t('mweb.common.videoIsTooLargeMax50'));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('File is too large (max 100 MB)');
+      setError(t('mweb.common.fileIsTooLargeMax100'));
       return;
     }
     setError(null);
@@ -81,7 +83,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
       <Stack direction="row" spacing={1} alignItems="center">
         <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={pickFile} />
         <IconButton
-          aria-label="Attach file"
+          aria-label={t('mweb.supportChat.attachFile')}
           disabled={disabled || uploading || attachments.length >= 5}
           onClick={() => fileRef.current?.click()}
         >
@@ -90,7 +92,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
         <TextField
           size="small"
           fullWidth
-          placeholder="Type a message…"
+          placeholder={t('mweb.supportChat.typeAMessage')}
           value={text}
           onChange={(e) => handleTyping(e.target.value)}
           onKeyDown={(e) => {

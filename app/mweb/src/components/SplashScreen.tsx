@@ -1,5 +1,6 @@
 import { Box, Typography, keyframes } from '@mui/material';
 import { useBrandingAssets } from '../hooks/useBrandingAssets';
+import { useTranslation } from '../i18n/useTranslation';
 
 const logoBounce = keyframes`
   0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
@@ -39,8 +40,12 @@ const fullBleedSx = {
  */
 export default function SplashScreen({
   tagline = 'Welcome to Duncit',
-  description = 'Find your tribe. Join pods, meet locals, share moments.',
+  description,
 }: Readonly<SplashProps>) {
+  const { t } = useTranslation();
+  // Resolved here, not as parameter defaults: a default is evaluated before
+  // any hook runs, so `t` would not exist yet.
+  const descriptionText = description ?? t('mweb.splash.findYourTribeJoinPodsMeet');
   const { appName, logoUrl, splashUrl, splashType } = useBrandingAssets();
 
   if (splashUrl) {
@@ -151,7 +156,7 @@ export default function SplashScreen({
           animation: `${fadeUp} 0.6s ease-out 0.75s forwards`,
         }}
       >
-        {description}
+        {descriptionText}
       </Typography>
     </Box>
   );

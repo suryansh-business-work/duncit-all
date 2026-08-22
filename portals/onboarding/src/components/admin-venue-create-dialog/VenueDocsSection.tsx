@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MediaPickerField from '../MediaPickerField';
 import { DOC_TYPES, type DocEntry } from './queries';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   docs: DocEntry[];
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: Readonly<Props>) {
+  const { t } = useTranslation();
   const err = (path: string) => getVenueError(errors, path);
   const rowKeys = useRef<{ keys: string[]; seq: number }>({ keys: [], seq: 0 });
   if (rowKeys.current.keys.length !== docs.length) {
@@ -52,7 +54,7 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: R
             <TextField
               select
               size="small"
-              label="Type"
+              label={t('shell.common.type')}
               value={d.type}
               error={!!err(`step2.documents[${i}].type`)}
               helperText={err(`step2.documents[${i}].type`) || undefined}
@@ -66,7 +68,7 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: R
             </TextField>
             <Box sx={{ flex: 1 }}>
               <MediaPickerField
-                label="File"
+                label={t('onboarding.common.file')}
                 value={d.url}
                 onChange={(url) =>
                   setDocs(docs.map((x, j) => (j === i ? { ...x, url } : x)))

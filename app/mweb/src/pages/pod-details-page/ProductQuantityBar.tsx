@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   quantity: number;
@@ -14,6 +15,7 @@ interface Props {
 /** In-dialog cart control for the product sheet: add the product, adjust its
  * quantity (clamped to available stock), or remove it from the selection. */
 export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (quantity <= 0) {
     const outOfStock = maxQuantity <= 0;
     return (
@@ -31,12 +33,12 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
   return (
     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
       <Stack direction="row" spacing={1} alignItems="center">
-        <IconButton aria-label="Decrease quantity" onClick={() => onUpdate(quantity - 1)}>
+        <IconButton aria-label={t('mweb.podDetails.decreaseQuantity')} onClick={() => onUpdate(quantity - 1)}>
           <RemoveIcon />
         </IconButton>
         <Typography sx={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
         <IconButton
-          aria-label="Increase quantity"
+          aria-label={t('mweb.podDetails.increaseQuantity')}
           disabled={quantity >= maxQuantity}
           onClick={() => onUpdate(Math.min(maxQuantity, quantity + 1))}
         >

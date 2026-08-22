@@ -5,6 +5,7 @@ import Diversity3Icon from '@mui/icons-material/Diversity3';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SectionCard from './SectionCard';
 import { POD_CLUB_DETAIL } from './queries';
+import { useTranslation } from './i18n/useTranslation';
 
 interface Props {
   clubId: string | null;
@@ -18,6 +19,7 @@ interface ClubAdmin {
 
 /** The pod's club and its club admins, each linking to the user's page. */
 export default function PodClubCard({ clubId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(POD_CLUB_DETAIL, {
     variables: { id: clubId },
@@ -29,7 +31,7 @@ export default function PodClubCard({ clubId }: Readonly<Props>) {
   return (
     <SectionCard
       icon={<Diversity3Icon fontSize="small" />}
-      title="Club & club admins"
+      title={t('podDetailsPanel.podClubCard.clubAndClubAdmins')}
       loading={loading && !club}
       error={error?.message}
       empty={!error && !loading && !club ? 'No club linked to this pod.' : null}

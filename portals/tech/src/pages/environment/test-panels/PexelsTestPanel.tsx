@@ -5,8 +5,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import { TEST_ENV_PEXELS, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('nature');
   const [photos, setPhotos] = useState<string[]>([]);
   const [result, setResult] = useState<RichTestResult | null>(null);
@@ -31,7 +33,7 @@ export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>
         Searches Pexels with this API key and previews the results.
       </Typography>
       <Stack direction="row" spacing={1}>
-        <TextField label="Search query" value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }} />
+        <TextField label={t('tech.environment.searchQuery')} value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }} />
         <Button startIcon={<SearchIcon />} variant="contained" onClick={search} disabled={loading}>
           {loading ? '…' : 'Load'}
         </Button>

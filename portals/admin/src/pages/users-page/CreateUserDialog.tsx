@@ -77,7 +77,7 @@ export default function CreateUserDialog({
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <form noValidate onSubmit={submit}>
-        <DialogTitle>Create User</DialogTitle>
+        <DialogTitle>{t('admin.users.create')}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}><RhfTextField control={control} name="first_name" label={t('shell.profile.firstName')} required /></Grid>
@@ -133,8 +133,8 @@ export default function CreateUserDialog({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>Cancel</Button>
-          <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Creating…' : 'Create User'}</Button>
+          <Button type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
+          <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Creating…' : t('admin.users.create')}</Button>
         </DialogActions>
       </form>
     </Dialog>

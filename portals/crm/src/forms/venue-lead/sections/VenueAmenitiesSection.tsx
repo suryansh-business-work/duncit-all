@@ -1,6 +1,8 @@
 import CheckboxGroupField from '../../fields/CheckboxGroupField';
 import type { CrmOptionGroup } from '../../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export default function VenueAmenitiesSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
-  return <CheckboxGroupField name="amenities" label="Amenities available at the venue" options={config.amenities} />;
+  const { t } = useTranslation();
+  return <CheckboxGroupField name="amenities" label={t('crm.forms.amenitiesAvailableAtTheVenue')} options={config.amenities} />;
 }

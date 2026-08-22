@@ -4,6 +4,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import SlotPicker from './SlotPicker';
 import { MEETING_SLOTS, type MeetingSlot, type SurveyKind } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const MEETING_ME = gql`
   query MeetingMe {
@@ -36,6 +37,7 @@ interface Props {
 /** Final gate step: pick an open onboarding slot (booked ones — including the
  * user's own bookings in other onboarding flows — are disabled). */
 export default function MeetingForm({ kind, submitting, error: submitError, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
     variables: { kind },
@@ -81,7 +83,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
   }
   if (error) return <Alert severity="error">{error.message}</Alert>;
   if (slots.length === 0) {
-    return <Alert severity="info">No slots are open right now — please check back soon.</Alert>;
+    return <Alert severity="info">{t('mweb.surveyGate.noSlotsAreOpenRightNow')}</Alert>;
   }
 
   return (
@@ -94,7 +96,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
 
       <TextField
         size="small"
-        label="Your name"
+        label={t('mweb.common.yourName')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         disabled={!!me?.full_name}
@@ -112,15 +114,15 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         />
         <TextField
           size="small"
-          label="Phone"
+          label={t('mweb.common.phone')}
           value={contactPhone}
           InputProps={{ readOnly: true }}
           disabled
-          helperText="From your profile."
+          helperText={t('mweb.surveyGate.fromYourProfile')}
           fullWidth
         />
       </Stack>
-      <TextField size="small" label="Anything we should know? (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+      <TextField size="small" label={t('mweb.surveyGate.anythingWeShouldKnowOptional')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
       {phoneMissing && (
         <Alert
           severity="warning"

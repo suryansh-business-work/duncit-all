@@ -7,8 +7,10 @@ import { useCrmConfig } from '../../api/useCrmConfig';
 import { EcommLeadForm, fromEcommLead, toEcommLeadInput, type EcommLeadFormValues } from '../../forms/ecomm-lead';
 import { ecommLeadInitialValues } from '../../forms/ecomm-lead/ecomm-lead.types';
 import type { EcommLead } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export default function EcommLeadEditorPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function EcommLeadEditorPage() {
   if (cfgLoading || (isEdit && leadLoading)) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
   }
-  if (isEdit && !lead) return <Alert severity="error">Ecomm lead not found.</Alert>;
+  if (isEdit && !lead) return <Alert severity="error">{t('crm.ecommLeads.ecommLeadNotFound')}</Alert>;
 
   return (
     <Stack spacing={2}>

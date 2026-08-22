@@ -3,6 +3,7 @@ import FeedbackDialog from '../FeedbackDialog';
 import EmailTranscriptDialog from '../EmailTranscriptDialog';
 import ReopenReasonDialog from '../ReopenReasonDialog';
 import type { SupportChatSession } from '../queries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   sessionId: string;
@@ -42,14 +43,15 @@ export default function ChatDialogs({
   onCloseReopen,
   onReopen,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <ConfirmDialog
         open={confirmOpen}
-        title="Mark as resolved?"
-        message="Are you sure your issue has been resolved?"
-        confirmLabel="Yes, mark as resolved"
-        cancelLabel="No, continue conversation"
+        title={t('mweb.common.markAsResolved')}
+        message={t('mweb.common.areYouSureYourIssueHas')}
+        confirmLabel={t('mweb.common.yesMarkAsResolved')}
+        cancelLabel={t('mweb.common.noContinueConversation')}
         busy={resolving}
         onConfirm={onConfirmResolve}
         onClose={onCancelResolve}

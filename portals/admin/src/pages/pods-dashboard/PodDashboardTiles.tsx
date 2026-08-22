@@ -10,6 +10,7 @@ import EventSeatIcon from '@mui/icons-material/EventSeat';
 import PaidIcon from '@mui/icons-material/Paid';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import StarRateIcon from '@mui/icons-material/StarRate';
+import { useTranslation } from '@duncit/shell';
 
 interface Totals {
   total: number;
@@ -36,16 +37,17 @@ const rupees = (value: number) => `₹${Math.round(value).toLocaleString('en-IN'
  * which is why they carry a hint saying so.
  */
 export default function PodDashboardTiles({ totals, seats, money, ratings, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
   const tiles = [
-    { key: 'total', label: 'All pods', value: totals?.total ?? 0, icon: <EventAvailableIcon fontSize="small" />, color: '#7c3aed', to: '/pods' },
-    { key: 'upcoming', label: 'Upcoming', value: totals?.upcoming ?? 0, icon: <UpcomingIcon fontSize="small" />, color: '#2563eb' },
-    { key: 'today', label: 'Later today', value: totals?.live_today ?? 0, icon: <TodayIcon fontSize="small" />, color: '#0891b2' },
-    { key: 'completed', label: 'Completed', value: totals?.completed ?? 0, icon: <TaskAltIcon fontSize="small" />, color: '#0f766e' },
-    { key: 'awaiting', label: 'Awaiting venue', value: totals?.awaiting_venue ?? 0, icon: <HourglassTopIcon fontSize="small" />, color: '#d97706' },
-    { key: 'cancelled', label: 'Cancelled', value: totals?.cancelled ?? 0, icon: <CancelIcon fontSize="small" />, color: '#dc2626' },
+    { key: 'total', label: t('admin.podsDashboard.allPods'), value: totals?.total ?? 0, icon: <EventAvailableIcon fontSize="small" />, color: '#7c3aed', to: '/pods' },
+    { key: 'upcoming', label: t('admin.podsDashboard.upcoming'), value: totals?.upcoming ?? 0, icon: <UpcomingIcon fontSize="small" />, color: '#2563eb' },
+    { key: 'today', label: t('admin.podsDashboard.laterToday'), value: totals?.live_today ?? 0, icon: <TodayIcon fontSize="small" />, color: '#0891b2' },
+    { key: 'completed', label: t('admin.podsDashboard.completed'), value: totals?.completed ?? 0, icon: <TaskAltIcon fontSize="small" />, color: '#0f766e' },
+    { key: 'awaiting', label: t('admin.podsDashboard.awaitingVenue'), value: totals?.awaiting_venue ?? 0, icon: <HourglassTopIcon fontSize="small" />, color: '#d97706' },
+    { key: 'cancelled', label: t('admin.eventTickets.cancelled'), value: totals?.cancelled ?? 0, icon: <CancelIcon fontSize="small" />, color: '#dc2626' },
     {
       key: 'occupancy',
-      label: 'Seats filled',
+      label: t('admin.podsDashboard.seatsFilled'),
       value: `${seats?.occupancy_pct ?? 0}%`,
       hint: `${(seats?.seats_filled ?? 0).toLocaleString('en-IN')} of ${(seats?.spots_total ?? 0).toLocaleString('en-IN')} spots`,
       icon: <EventSeatIcon fontSize="small" />,
@@ -53,7 +55,7 @@ export default function PodDashboardTiles({ totals, seats, money, ratings, loadi
     },
     {
       key: 'revenue',
-      label: 'Collected',
+      label: t('admin.podsDashboard.collected'),
       value: rupees(money?.revenue_total ?? 0),
       hint: `${money?.payments_count ?? 0} payments`,
       icon: <PaidIcon fontSize="small" />,
@@ -61,14 +63,14 @@ export default function PodDashboardTiles({ totals, seats, money, ratings, loadi
     },
     {
       key: 'ticket',
-      label: 'Average payment',
+      label: t('admin.podsDashboard.averagePayment'),
       value: rupees(money?.average_ticket ?? 0),
       icon: <ReceiptLongIcon fontSize="small" />,
       color: '#7c3aed',
     },
     {
       key: 'rating',
-      label: 'Rated',
+      label: t('admin.podsDashboard.rated'),
       value: ratings?.total ? ratings.overall_average.toFixed(1) : '—',
       hint: `${ratings?.total ?? 0} ratings`,
       icon: <StarRateIcon fontSize="small" />,

@@ -6,6 +6,7 @@ import type { WaAudienceList } from '../queries';
 import ManualContactsField from './ManualContactsField';
 import UserPickerField from './UserPickerField';
 import type { WaCampaignValues } from './wa-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Who this send goes to. One selector, and exactly one thing under it — the
@@ -26,6 +27,7 @@ export default function RecipientFields({
   audience,
   audienceLists,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const clearOthers = () => {
     setValue('audience_list_id', '');
     setValue('users', []);
@@ -40,7 +42,7 @@ export default function RecipientFields({
         render={({ field }) => (
           <TextField
             select
-            label="Send to"
+            label={t('marketing.whatsappCampaigns.sendTo')}
             fullWidth
             value={field.value}
             onBlur={field.onBlur}

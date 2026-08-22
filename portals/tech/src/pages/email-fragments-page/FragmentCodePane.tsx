@@ -2,6 +2,7 @@ import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import { formatMjml } from '@duncit/utils';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   title: string;
@@ -15,6 +16,7 @@ interface Props {
  * because the two differ only in their label.
  */
 export default function FragmentCodePane({ title, hint, value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -38,7 +40,7 @@ export default function FragmentCodePane({ title, hint, value, onChange }: Reado
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {hint}
         </Typography>
-        <Tooltip title="Format MJML">
+        <Tooltip title={t('tech.common.formatMjml')}>
           <IconButton size="small" onClick={() => onChange(formatMjml(value))}>
             <FormatAlignLeftIcon fontSize="small" />
           </IconButton>

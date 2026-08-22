@@ -4,10 +4,12 @@ import { Alert, Card, MenuItem, Skeleton, Stack, TextField, Typography } from '@
 import { MY_VENUES } from '../register-venue-page/queries';
 import { APPROVE_SLOT_REQUEST, DECLINE_SLOT_REQUEST, VENUE_SLOT_REQUESTS, type SlotRequestRow } from './queries';
 import SlotRequestCard from './SlotRequestCard';
+import { useTranslation } from '@duncit/shell';
 
 const ALL_VENUES = 'ALL';
 
 export default function SlotRequestsPage() {
+  const { t } = useTranslation();
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
 
@@ -48,8 +50,8 @@ export default function SlotRequestsPage() {
       <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }} variant="outlined">
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
           <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.25}>
-            <Typography variant="overline" color="text.secondary" fontWeight={800}>Partner tools · Venues</Typography>
-            <Typography variant="h5" fontWeight={950}>Slot Requests</Typography>
+            <Typography variant="overline" color="text.secondary" fontWeight={800}>{t('partners.common.partnerToolsVenues')}</Typography>
+            <Typography variant="h5" fontWeight={950}>{t('partners.slotRequestsPage.slotRequests')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.
             </Typography>
@@ -57,13 +59,13 @@ export default function SlotRequestsPage() {
           <TextField
             select
             size="small"
-            label="Venue"
+            label={t('partners.common.venue')}
             value={venueId}
             onChange={(e) => setVenueId(e.target.value)}
-            helperText="Filter requests by venue"
+            helperText={t('partners.slotRequestsPage.filterRequestsByVenue')}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value={ALL_VENUES}>All venues</MenuItem>
+            <MenuItem value={ALL_VENUES}>{t('partners.common.allVenues')}</MenuItem>
             {venues.map((venue: any) => (
               <MenuItem key={venue.id} value={venue.id}>{venue.venue_name || 'Untitled venue'}</MenuItem>
             ))}
@@ -86,7 +88,7 @@ export default function SlotRequestsPage() {
       )}
 
       {!requestsQuery.loading && requests.length === 0 && (
-        <Alert severity="info">No pending slot requests right now. New requests appear here the moment a host books one of your slots.</Alert>
+        <Alert severity="info">{t('partners.slotRequestsPage.noPendingSlotRequestsRightNow')}</Alert>
       )}
 
       {requests.map((request) => (

@@ -5,6 +5,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { RhfTextField } from '@duncit/forms';
 import { MANUAL_VARIABLE_NOTE } from '../helpers';
 import type { WaCampaignValues } from './wa-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Numbers typed in by hand. The country code is its own field because it is the
@@ -23,19 +24,20 @@ function ContactRow({
   index,
   onRemove,
 }: Readonly<{ control: Control<WaCampaignValues>; index: number; onRemove: () => void }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1} alignItems="flex-start">
       <RhfTextField
         control={control}
         name={`contacts.${index}.name`}
-        label="Name"
+        label={t('shell.common.name')}
         size="small"
         hint=" "
       />
       <RhfTextField
         control={control}
         name={`contacts.${index}.extension`}
-        label="Code"
+        label={t('marketing.whatsappCampaigns.code')}
         size="small"
         hint=" "
         sx={{ maxWidth: 96 }}
@@ -43,11 +45,11 @@ function ContactRow({
       <RhfTextField
         control={control}
         name={`contacts.${index}.number`}
-        label="Number"
+        label={t('marketing.whatsappCampaigns.number')}
         size="small"
         hint=" "
       />
-      <Tooltip title="Remove contact">
+      <Tooltip title={t('marketing.whatsappCampaigns.removeContact')}>
         <IconButton
           aria-label={`Remove contact ${index + 1}`}
           onClick={onRemove}

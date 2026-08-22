@@ -11,6 +11,8 @@ import {
   Typography,
 } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
+import { useTranslation } from '../../i18n/useTranslation';
+import type { Translate } from '../../i18n/fallback';
 
 export const MY_HOST_PAYOUTS = gql`
   query MyHostPayouts {
@@ -51,28 +53,37 @@ const STATUS_COLOR: Record<Status, 'warning' | 'success' | 'error'> = {
 
 /** v2 (waterfall) breakdowns show the host's pool money − commission; v1 keeps
  * the legacy venue-bill/GST lines. */
-function breakdownLines(b: any) {
+function breakdownLines(b: any, t: Translate) {
   if (!b) return [];
   if (b.version >= 2) {
     return [
-      { label: 'Your amount', value: b.share_amount },
-      { label: `− Commission (${b.commission_pct}%)`, value: b.commission_amount },
+      { label: t('mweb.hostManage.yourAmount2'), value: b.share_amount },
+      {
+        label: t('mweb.hostManage.commissionPct', { vars: { pct: b.commission_pct } }),
+        value: b.commission_amount,
+      },
     ];
   }
   return [
-    { label: 'Venue bill', value: b.venue_bill },
-    { label: `GST (${b.gst_pct}%)`, value: b.gst_amount },
-    { label: `Duncit Taken (${b.duncit_pct}%)`, value: b.duncit_amount },
+    { label: t('mweb.hostManage.venueBill'), value: b.venue_bill },
+    { label: t('mweb.hostManage.gstPct', { vars: { pct: b.gst_pct } }), value: b.gst_amount },
+    {
+      label: t('mweb.hostManage.duncitTakenPct', { vars: { pct: b.duncit_pct } }),
+      value: b.duncit_amount,
+    },
   ];
 }
 
 function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>) {
+  const { t } = useTranslation();
   const b = payout.breakdown;
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
-  const lines = breakdownLines(b);
+  const lines = breakdownLines(b, t);
   const isV2 = (b?.version ?? 0) >= 2;
-  const legacyLabel = b ? `Your Commission (${b.payout_pct}%)` : 'Your Commission';
-  const payableLabel = isV2 ? 'Payout' : legacyLabel;
+  const legacyLabel = b
+    ? t('mweb.hostManage.yourCommissionPct', { vars: { pct: b.payout_pct } })
+    : t('mweb.hostManage.yourCommission');
+  const payableLabel = isV2 ? t('mweb.hostManage.payout') : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
     <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
@@ -106,6 +117,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
 
 /** "Host Share" — every completion payout this host has earned, with status. */
 export default function HostShareCard() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(MY_HOST_PAYOUTS, { fetchPolicy: 'cache-and-network' });
   const payouts = data?.myHostPayouts ?? [];
   const symbol = data?.publicFinanceSettings?.currency_symbol ?? '₹';
@@ -120,7 +132,7 @@ export default function HostShareCard() {
   } else if (error) {
     body = <Alert severity="error">{error.message}</Alert>;
   } else if (payouts.length === 0) {
-    body = <Alert severity="info">Complete a pod to see your share here.</Alert>;
+    body = <Alert severity="info">{t('mweb.hostManage.completeAPodToSeeYour')}</Alert>;
   } else {
     body = (
       <Stack spacing={1}>
@@ -137,7 +149,7 @@ export default function HostShareCard() {
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <PaidIcon color="primary" />
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
-            Host Share
+            {t('mweb.hostManage.hostShare')}
           </Typography>
           <Chip size="small" label={payouts.length} />
         </Stack>

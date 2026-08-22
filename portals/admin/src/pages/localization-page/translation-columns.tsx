@@ -1,8 +1,11 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import { valueFor, type LocaleRow, type TranslationRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface ColumnArgs {
+  /** Headings are copy — the page hands its translator down. */
+  t: (key: string) => string;
   locales: LocaleRow[];
   formatDateTime: (value: string) => string;
 }
@@ -15,6 +18,7 @@ interface ColumnArgs {
 export function getTranslationColumns({
   locales,
   formatDateTime,
+  t,
 }: Readonly<ColumnArgs>): DuncitColumn<TranslationRow>[] {
   const localeColumns: DuncitColumn<TranslationRow>[] = locales.map((locale) => ({
     field: `value_${locale.code}`,
@@ -40,7 +44,7 @@ export function getTranslationColumns({
   return [
     {
       field: 'key',
-      headerName: 'Key',
+      headerName: t('admin.podPlans.key'),
       sortable: true,
       cellRenderer: (row: TranslationRow) => (
         <Stack spacing={0.25}>
@@ -57,20 +61,20 @@ export function getTranslationColumns({
     },
     {
       field: 'surface',
-      headerName: 'Portal',
+      headerName: t('admin.roles.portal'),
       sortable: true,
       cellRenderer: (row: TranslationRow) => (row.surface ? <Chip size="small" label={row.surface} /> : '—'),
     },
     {
       field: 'page',
-      headerName: 'Page',
+      headerName: t('admin.activity.page'),
       sortable: true,
       cellRenderer: (row: TranslationRow) => (row.page ? <Chip size="small" variant="outlined" label={row.page} /> : '—'),
     },
     ...localeColumns,
     {
       field: 'updated_at',
-      headerName: 'Updated',
+      headerName: t('shell.common.updated'),
       sortable: true,
       valueGetter: (row) => (row.updated_at ? formatDateTime(row.updated_at) : '—'),
     },

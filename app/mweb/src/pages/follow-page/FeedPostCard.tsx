@@ -7,6 +7,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import { formatDistanceToNow } from 'date-fns';
 import { getFeedCardHeader } from './feedHeader';
 import type { FeedClub, FeedPost } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface FeedPostCardProps {
   post: FeedPost;
@@ -21,6 +22,7 @@ export default function FeedPostCard({
   onToggleLike,
   onOpenComments,
 }: Readonly<FeedPostCardProps>) {
+  const { t } = useTranslation();
   const header = getFeedCardHeader(post, club);
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
   const avatarFallback = club ? (
@@ -104,7 +106,7 @@ export default function FeedPostCard({
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {post.likes_count}
         </Typography>
-        <IconButton aria-label="Comments" onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
+        <IconButton aria-label={t('mweb.common.comments')} onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
           <ChatBubbleOutlineIcon />
         </IconButton>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>

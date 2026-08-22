@@ -100,9 +100,9 @@ export default function WaLogs({ audienceLists, actions, onDuplicate, refetchRef
           {target && (
             <ConfirmDialog
               open
-              title="Delete this send?"
+              title={t('marketing.whatsappCampaigns.deleteThisSend')}
               message={`“${target.name}” and its results will be removed. Messages already delivered are not recalled.`}
-              confirmLabel="Delete"
+              confirmLabel={t('shell.common.delete')}
               confirmColor="error"
               loading={actions.deleting}
               busyLabel="Deleting…"

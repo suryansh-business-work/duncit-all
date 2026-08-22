@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: any;
@@ -49,6 +50,7 @@ export default function EcommBrandReviewDialog({
   onSaveCommission,
   savingCommission,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [commission, setCommission] = useState('0');
   useEffect(() => {
     setCommission(String(active?.product_commission_pct ?? 0));
@@ -109,21 +111,21 @@ export default function EcommBrandReviewDialog({
             />
           )}
           {active?.tagline && <Typography variant="body2" fontStyle="italic">{active.tagline}</Typography>}
-          <InfoRow label="Description" value={active?.description || '—'} />
-          <InfoRow label="Categories" value={(active?.product_categories ?? []).join(', ') || '—'} />
-          <InfoRow label="Owner" value={[active?.contact_person, active?.contact_email, active?.contact_phone].filter(Boolean).join(' · ') || '—'} />
-          <InfoRow label="Business & legal" value={business || '—'} />
-          <InfoRow label="Address" value={address || '—'} />
+          <InfoRow label={t('shell.common.description')} value={active?.description || '—'} />
+          <InfoRow label={t('shell.nav.categories')} value={(active?.product_categories ?? []).join(', ') || '—'} />
+          <InfoRow label={t('onboarding.common.owner')} value={[active?.contact_person, active?.contact_email, active?.contact_phone].filter(Boolean).join(' · ') || '—'} />
+          <InfoRow label={t('onboarding.ecommBrands.businessAndLegal')} value={business || '—'} />
+          <InfoRow label={t('onboarding.common.address')} value={address || '—'} />
           {(active?.website_url || active?.instagram_url) && (
             <Stack direction="row" spacing={2} flexWrap="wrap">
-              {active?.website_url && <Link href={active.website_url} target="_blank" rel="noreferrer" variant="body2">Website</Link>}
-              {active?.instagram_url && <Link href={active.instagram_url} target="_blank" rel="noreferrer" variant="body2">Instagram</Link>}
+              {active?.website_url && <Link href={active.website_url} target="_blank" rel="noreferrer" variant="body2">{t('onboarding.ecommBrands.website')}</Link>}
+              {active?.instagram_url && <Link href={active.instagram_url} target="_blank" rel="noreferrer" variant="body2">{t('onboarding.ecommBrands.instagram')}</Link>}
             </Stack>
           )}
-          {bank && <InfoRow label="Payout" value={bank} />}
+          {bank && <InfoRow label={t('onboarding.common.payout')} value={bank} />}
           {documents.length > 0 && (
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>Documents</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('shell.nav.documents')}</Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mt: 0.5 }}>
                 {documents.map((doc: any) => (
                   <Chip key={doc.url} size="small" component={Link} href={doc.url} target="_blank" rel="noreferrer" clickable label={doc.type} variant="outlined" />
@@ -133,12 +135,12 @@ export default function EcommBrandReviewDialog({
           )}
 
           <Divider />
-          <TextField label="Reviewer notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+          <TextField label={t('onboarding.common.reviewerNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
           <TextField
-            label="Tags"
+            label={t('onboarding.common.tags')}
             value={tagsText}
             onChange={(e) => setTagsText(e.target.value)}
-            helperText="Comma separated tags for this approved brand."
+            helperText={t('onboarding.ecommBrands.commaSeparatedTagsForThisApproved')}
             fullWidth
           />
 
@@ -148,7 +150,7 @@ export default function EcommBrandReviewDialog({
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
               <TextField
-                label="Product sales commission"
+                label={t('onboarding.ecommBrands.productSalesCommission')}
                 type="number"
                 size="small"
                 value={commission}
@@ -173,7 +175,7 @@ export default function EcommBrandReviewDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Box sx={{ flex: 1 }} />
         <Button color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
           Reject

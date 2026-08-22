@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Button, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Heading + sub-heading over the home "What's your vibe" category filter
@@ -10,8 +11,9 @@ import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
  * vibe options; an empty field falls back to the copy bundled in each app.
  */
 export default function VibeHeadingCard() {
+  const { t } = useTranslation();
   const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
+  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const savedHeading: string = data?.branding?.home_vibe_heading ?? '';
   const savedSubheading: string = data?.branding?.home_vibe_subheading ?? '';
@@ -38,7 +40,7 @@ export default function VibeHeadingCard() {
           input: { home_vibe_heading: heading, home_vibe_subheading: subheading },
         },
       });
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -63,7 +65,7 @@ export default function VibeHeadingCard() {
 
       <Stack spacing={2}>
         <TextField
-          label="Heading"
+          label={t('admin.categories.vibeHeading')}
           value={heading}
           onChange={(e) => setHeading(e.target.value)}
           placeholder="What's your vibe today?"
@@ -73,7 +75,7 @@ export default function VibeHeadingCard() {
           label="Sub-heading"
           value={subheading}
           onChange={(e) => setSubheading(e.target.value)}
-          placeholder="Explore experiences that match your mood."
+          placeholder={t('admin.categories.vibeHeadingPlaceholder')}
           fullWidth
         />
       </Stack>

@@ -6,6 +6,7 @@ import type { SurveyKind } from '@/graphql/onboarding-survey';
 import { useMyMeeting } from '@/hooks/useMyMeeting';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * The signed-in user's onboarding meeting for a kind — scheduled time + a join
@@ -14,6 +15,7 @@ import { formatDateTime } from '@/utils/date-format';
  * MeetingStatusCard.
  */
 export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
+  const { t } = useTranslation();
   const { meeting } = useMyMeeting(kind);
   const { primary } = useThemeColors();
   if (!meeting) return null;
@@ -59,7 +61,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
             <XStack
               testID={`meeting-join-${kind}`}
               role="button"
-              aria-label="Join meeting"
+              aria-label={t('mweb.hostsVenues.joinMeeting')}
               onPress={() => Linking.openURL(meeting.meeting_link as string)}
               alignSelf="flex-start"
               paddingHorizontal={14}

@@ -5,14 +5,20 @@ import { StackScreen } from '@/components/StackScreen';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useEcommDashboard } from '@/hooks/useStudioDashboards';
 import { StatTile } from '@/screens/VenueManageScreen';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** ecomm studio dashboard — catalogue stats + stock-by-product chart (B3-1). */
 export function ProductsManageScreen() {
+  const { t } = useTranslation();
   const showProducts = useFeatureFlag('is_product_visible');
   const { products, isLoading } = useEcommDashboard(showProducts);
   if (!showProducts) {
     return (
-      <StackScreen header title="ecomm Studio" testID="products-manage-screen">
+      <StackScreen
+        header
+        title={t('mweb.productsManage.ecommStudio')}
+        testID="products-manage-screen"
+      >
         <YStack padding={16}>
           <Text testID="products-unavailable" fontSize={13} color="$muted">
             Product features are not available right now.
@@ -32,14 +38,18 @@ export function ProductsManageScreen() {
     .map((p) => ({ label: String(p.product_name).slice(0, 8), value: p.available_count ?? 0 }));
 
   return (
-    <StackScreen header title="ecomm Studio" testID="products-manage-screen">
+    <StackScreen
+      header
+      title={t('mweb.productsManage.ecommStudio')}
+      testID="products-manage-screen"
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="ecomm-dashboard-loading" color="$primary" /> : null}
           <XStack gap={10}>
-            <StatTile label="Products" value={products.length} />
-            <StatTile label="In stock" value={totalStock} />
-            <StatTile label="Avg price" value={`₹${avgPrice}`} />
+            <StatTile label={t('mweb.productsManage.products')} value={products.length} />
+            <StatTile label={t('mweb.productsManage.inStock')} value={totalStock} />
+            <StatTile label={t('mweb.productsManage.avgPrice')} value={`₹${avgPrice}`} />
           </XStack>
           <YStack
             gap={4}

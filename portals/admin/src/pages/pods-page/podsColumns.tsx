@@ -16,6 +16,7 @@ import {
   statusValue,
   typeValue,
 } from './podsColumns.values';
+import { useTranslation } from '@duncit/shell';
 
 const renderCover = (p: PodRow) => {
   const first = p.pod_images_and_videos?.[0];
@@ -67,17 +68,17 @@ const renderHits = (p: PodRow) => (
   </Stack>
 );
 
-const renderStatus = (p: PodRow) => {
-  if (p.is_deleted) return <Chip size="small" label="Cancelled" color="error" />;
-  if (p.completed_at) return <Chip size="small" label="Completed" color="info" />;
+const renderStatus = (p: PodRow, t: PodsColumnDeps['t']) => {
+  if (p.is_deleted) return <Chip size="small" label={t('admin.eventTickets.cancelled')} color="error" />;
+  if (p.completed_at) return <Chip size="small" label={t('admin.podsDashboard.completed')} color="info" />;
   if (p.venue_approval_status === 'PENDING') {
-    return <Chip size="small" label="Awaiting venue" color="warning" />;
+    return <Chip size="small" label={t('admin.podsDashboard.awaitingVenue')} color="warning" />;
   }
   if (p.venue_approval_status === 'DECLINED') {
-    return <Chip size="small" label="Venue rejected" color="error" variant="outlined" />;
+    return <Chip size="small" label={t('admin.pods.venueRejected')} color="error" variant="outlined" />;
   }
-  if (p.is_active) return <Chip size="small" label="Active" color="success" />;
-  return <Chip size="small" label="Draft" color="default" />;
+  if (p.is_active) return <Chip size="small" label={t('admin.profile.active')} color="success" />;
+  return <Chip size="small" label={t('admin.pods.draft')} color="default" />;
 };
 
 const renderProducts = (p: PodRow) => {
@@ -93,6 +94,9 @@ const renderProducts = (p: PodRow) => {
 };
 
 export interface PodsColumnDeps {
+  /** Column headings and the status chips are copy — the page hands its
+   *  translator down rather than a column module reaching for a hook. */
+  t: (key: string) => string;
   showProducts: boolean;
   clubName: (id: string) => string;
   venueName: (id: string) => string;
@@ -105,7 +109,7 @@ export interface PodsColumnDeps {
 }
 
 export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<PodRow>[] {
-  const { showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor } = deps;
+  const { showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } = deps;
   const placeValue = (p: PodRow) => {
     if (p.pod_mode === 'VIRTUAL') return p.meeting_platform ?? 'Virtual';
     if (p.venue_id) return venueName(p.venue_id);
@@ -115,10 +119,10 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     <PodActionButtons pod={p} onEdit={onEdit} onQuickEdit={onQuickEdit} onDelete={onDelete} onComplete={onComplete} />
   );
   const columns: DuncitColumn<PodRow>[] = [
-    { field: 'cover', headerName: 'Cover', sortable: false, width: 76, cellRenderer: renderCover },
+    { field: 'cover', headerName: t('admin.pods.colCover'), sortable: false, width: 76, cellRenderer: renderCover },
     {
       field: 'pod_title',
-      headerName: 'Title',
+      headerName: t('shell.common.title'),
       flex: 1,
       minWidth: 200,
       cellRenderer: renderTitle,
@@ -126,21 +130,21 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     },
     {
       field: 'club_id',
-      headerName: 'Club',
+      headerName: t('admin.pods.colClub'),
       minWidth: 140,
       valueGetter: (p) => clubName(p.club_id),
     },
-    { field: 'place', headerName: 'Venue', sortable: false, minWidth: 140, valueGetter: placeValue },
+    { field: 'place', headerName: t('admin.pods.colVenue'), sortable: false, minWidth: 140, valueGetter: placeValue },
     {
       field: 'pod_date_time',
-      headerName: 'Date / Time',
+      headerName: t('admin.pods.colDateTime'),
       filter: { type: 'date' },
       width: 170,
       valueGetter: (p) => dateValue(p.pod_date_time),
     },
     {
       field: 'pod_mode',
-      headerName: 'Type',
+      headerName: t('shell.common.type'),
       filter: { type: 'select', options: POD_MODE_OPTIONS },
       minWidth: 210,
       cellRenderer: renderType,
@@ -148,7 +152,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     },
     {
       field: 'pod_type',
-      headerName: 'Pod Type',
+      headerName: t('admin.pods.colPodType'),
       filter: { type: 'select', options: POD_TYPE_OPTIONS },
       hide: true,
       minWidth: 150,
@@ -156,17 +160,17 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     },
     {
       field: 'pod_amount',
-      headerName: 'Amount',
+      headerName: t('admin.pods.colAmount'),
       filter: { type: 'number' },
       width: 110,
       valueGetter: (p) => (p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'),
     },
-    { field: 'no_of_spots', headerName: 'Spots', width: 100, valueGetter: spotsValue },
+    { field: 'no_of_spots', headerName: t('admin.pods.colSpots'), width: 100, valueGetter: spotsValue },
     {
       // What a completed pod is settled on — booked seats alone no longer
       // explain the payout, so the scanned count sits beside them.
       field: 'attendance',
-      headerName: 'Attendance',
+      headerName: t('admin.pods.colAttendance'),
       sortable: false,
       width: 150,
       cellRenderer: (p: PodRow) => <AttendanceChip attendance={p.attendance} />,
@@ -175,18 +179,18 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
           ? `${p.attendance.attended_seats}/${p.attendance.booked_seats}`
           : '',
     },
-    { field: 'pod_hits', headerName: 'Hits', width: 90, cellRenderer: renderHits, valueGetter: (p) => p.pod_hits },
+    { field: 'pod_hits', headerName: t('admin.pods.colHits'), width: 90, cellRenderer: renderHits, valueGetter: (p) => p.pod_hits },
     {
       field: 'is_active',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       filter: { type: 'boolean' },
       width: 120,
-      cellRenderer: renderStatus,
+      cellRenderer: (row: PodRow) => renderStatus(row, t),
       valueGetter: statusValue,
     },
     {
       field: 'completed_at',
-      headerName: 'Completed',
+      headerName: t('admin.podsDashboard.completed'),
       filter: { type: 'date' },
       hide: true,
       width: 130,
@@ -194,7 +198,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     },
     {
       field: 'created_at',
-      headerName: 'Created',
+      headerName: t('shell.common.created'),
       filter: { type: 'date' },
       hide: true,
       width: 130,
@@ -202,7 +206,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     },
     {
       field: 'ai_monitor',
-      headerName: 'AI Monitoring',
+      headerName: t('admin.pods.colAiMonitoring'),
       sortable: false,
       width: 150,
       cellRenderer: (p: PodRow) => <AiMonitorPill onClick={() => onMonitor(p)} />,
@@ -210,12 +214,12 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       // so the cell repaints when an edit renames the pod.
       valueGetter: (p) => p.pod_title,
     },
-    { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+    { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
   ];
   if (showProducts) {
     columns.splice(8, 0, {
       field: 'products',
-      headerName: 'Products',
+      headerName: t('admin.pods.colProducts'),
       sortable: false,
       minWidth: 150,
       cellRenderer: renderProducts,

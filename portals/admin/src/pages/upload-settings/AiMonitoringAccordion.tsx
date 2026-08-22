@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { UploadSettings } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   settings: UploadSettings;
@@ -26,10 +27,11 @@ interface Props {
  * to configure it and one place to read it rather than a copy per portal.
  */
 export default function AiMonitoringAccordion({ settings, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>AI image monitoring</Typography>
+        <Typography fontWeight={700}>{t('admin.uploads.aiTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2}>
@@ -41,13 +43,13 @@ export default function AiMonitoringAccordion({ settings, saving, onSave }: Read
                 onChange={(e) => onSave({ ai_image_monitoring_enabled: e.target.checked })}
               />
             }
-            label="Review every uploaded image with AI (risk-scored, images only)"
+            label={t('admin.uploads.aiReview')}
           />
           <Alert severity="info">
             The monitoring history — every image checked, who uploaded it, what the model said and
-            what was done about it — lives in <b>AI Portal &gt; AI Monitoring &gt; Logs</b>. The
+            what was done about it — lives in <b>{t('admin.uploads.aiLogsPath')}</b>. The
             notice shown to people uploading, and the prompt each image is analysed with, are
-            configured in <b>AI Portal &gt; AI Monitoring &gt; Settings</b>.
+            configured in <b>{t('admin.uploads.aiSettingsPath')}</b>.
           </Alert>
         </Stack>
       </AccordionDetails>

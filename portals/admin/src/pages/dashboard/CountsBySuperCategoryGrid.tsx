@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const palette = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626', '#0891b2'];
   const labels = counts.map((c) => c.super_category_name || c.super_category_slug || 'Uncategorised');
@@ -74,7 +76,7 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
             }}
           >
           {counts.length === 0 && (
-            <Typography color="text.secondary">No super categories yet.</Typography>
+            <Typography color="text.secondary">{t('admin.dashboard.noSuperCategories')}</Typography>
           )}
           {counts.map((c, index) => (
             <Card

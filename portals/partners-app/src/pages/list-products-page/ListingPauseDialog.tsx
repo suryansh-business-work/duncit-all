@@ -2,6 +2,7 @@ import { useMutation } from '@apollo/client';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { SET_LISTING_ACTIVE, type ProductListingRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   target: ProductListingRow | null;
@@ -13,6 +14,7 @@ interface Props {
  * paused the product is hidden from the shop everywhere; placed orders are
  * unaffected. Reports the outcome (success or API error) through onDone. */
 export default function ListingPauseDialog({ target, onClose, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [setListingActive, activeState] = useMutation(SET_LISTING_ACTIVE);
   const activating = target ? target.is_active === false : false;
   const body = activating
@@ -39,7 +41,7 @@ export default function ListingPauseDialog({ target, onClose, onDone }: Readonly
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           color={activating ? 'success' : 'warning'}
           variant="contained"

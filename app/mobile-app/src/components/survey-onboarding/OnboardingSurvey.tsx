@@ -20,6 +20,7 @@ import { CategorySummaryBanner } from './CategorySummaryBanner';
 import { SurveyPhase } from './SurveyPhase';
 import { MeetingPhase } from './MeetingPhase';
 import { formatDateTime } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -32,6 +33,7 @@ interface Props {
 
 /** Category → survey → meeting gate before host/venue registration. */
 export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props>) {
+  const { t } = useTranslation();
   const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { color: ink } = useThemeColors();
@@ -60,7 +62,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             <XStack
               testID="thanks-done"
               role="button"
-              aria-label="Back to Home"
+              aria-label={t('mweb.surveyOnboarding.backToHome')}
               onPress={goBack}
               paddingHorizontal={22}
               paddingVertical={12}
@@ -96,7 +98,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={() => {
               // Step back a phase (preserving answers) instead of leaving the
               // whole flow; only exit when already at the first phase.

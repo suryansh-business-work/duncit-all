@@ -3,6 +3,7 @@ import { DuncitTable, type TableFetch } from '@duncit/table';
 import { useFeatureFlag } from '@duncit/app-settings';
 import { buildPodsColumns } from './podsColumns';
 import type { PodRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<PodRow>;
@@ -35,6 +36,7 @@ export default function PodsTable({
   onMonitor,
   onView,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const showProducts = useFeatureFlag('is_product_visible');
   const columns = useMemo(
     () =>
@@ -48,8 +50,9 @@ export default function PodsTable({
         onDelete,
         onComplete,
         onMonitor,
+        t,
       }),
-    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor],
+    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t],
   );
 
   return (
@@ -60,7 +63,7 @@ export default function PodsTable({
       getRowId={getPodRowId}
       onRowClick={onView}
       toolbarActions={toolbarActions}
-      emptyText="No pods yet."
+      emptyText={t('admin.pods.empty')}
       defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
       searchPlaceholder="Search title or pod ID"
       refetchRef={refetchRef}

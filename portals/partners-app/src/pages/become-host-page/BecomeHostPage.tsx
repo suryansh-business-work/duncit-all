@@ -8,10 +8,12 @@ import HostWithdrawApplication from './HostWithdrawApplication';
 import { FINAL, MY_HOST, STEP1, STEP2, STEP3, WITHDRAW_HOST } from './queries';
 import { HOST_STEPS, blankHostStep1, blankHostStep2, blankHostStep3 } from './types';
 import { validateHostStep } from './validation';
+import { useTranslation } from '@duncit/shell';
 
 type PickerKind = null | 'photo' | 'police';
 
 export default function BecomeHostPage() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(MY_HOST);
   const [step, setStep] = useState(0);
   const [s1, setS1] = useState(blankHostStep1);
@@ -81,7 +83,7 @@ export default function BecomeHostPage() {
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Stack direction="row" alignItems="flex-start" spacing={1.25}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Partner tools</Typography>
+            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
             <Typography variant="h4" sx={{ fontWeight: 950 }}>{isHost ? 'Your hosting' : 'Become a host'}</Typography>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 800 }}>
               {isHost ? 'Manage your pods and hosting profile.' : '4 steps - submit your profile for review'}
@@ -92,7 +94,7 @@ export default function BecomeHostPage() {
       </Box>
       {!isHost && (
         <>
-          {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
+          {status === 'SUBMITTED' && <Alert severity="info">{t('partners.becomeHostPage.applicationUnderReview')}</Alert>}
           {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myHost?.reviewer_notes || 'See notes.'}</Alert>}
           <HostWithdrawApplication status={status} busy={busy} onWithdraw={withdraw} />
           <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'action.hover' }}>
@@ -128,7 +130,7 @@ export default function BecomeHostPage() {
         if (picker === 'photo') setS2({ ...s2, passport_photo_url: url });
         if (picker === 'police') setS3({ ...s3, police_verification_url: url });
         setPicker(null);
-      }} folder={picker === 'photo' ? '/hosts/photo' : '/hosts/docs'} title="Upload document" accept={picker === 'photo' ? 'image/*' : 'image/*,application/pdf'} />
+      }} folder={picker === 'photo' ? '/hosts/photo' : '/hosts/docs'} title={t('partners.becomeHostPage.uploadDocument')} accept={picker === 'photo' ? 'image/*' : 'image/*,application/pdf'} />
     </Stack>
   );
 }

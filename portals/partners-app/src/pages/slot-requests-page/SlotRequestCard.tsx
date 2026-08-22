@@ -39,23 +39,23 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               {request.pod_description || 'No description provided.'}
             </Typography>
           </Box>
-          <Chip size="small" color="warning" label="Awaiting decision" />
+          <Chip size="small" color="warning" label={t('partners.slotRequestsPage.awaitingDecision')} />
         </Stack>
         <Divider />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
-          <Detail label="Venue" value={request.venue_name} />
-          <Detail label="Slot" value={slotWindow(request)} />
-          <Detail label="Slot price" value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />
-          <Detail label="Requested" value={formatDateTime(request.requested_at)} />
+          <Detail label={t('partners.common.venue')} value={request.venue_name} />
+          <Detail label={t('partners.slotRequestsPage.slot')} value={slotWindow(request)} />
+          <Detail label={t('partners.slotRequestsPage.slotPrice')} value={request.price > 0 ? `₹${request.price.toLocaleString('en-IN')}` : 'Free'} />
+          <Detail label={t('partners.slotRequestsPage.requested')} value={formatDateTime(request.requested_at)} />
         </Stack>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 1, md: 3 }}>
-          <Detail label="Host" value={request.host_name || '—'} />
+          <Detail label={t('partners.common.host')} value={request.host_name || '—'} />
           <Detail
-            label="Email"
+            label={t('shell.common.email')}
             value={request.host_email ? <Link href={`mailto:${request.host_email}`}>{request.host_email}</Link> : '—'}
           />
           <Detail
-            label="Phone"
+            label={t('shell.common.phone')}
             value={request.host_phone ? <Link href={`tel:${request.host_phone}`}>{request.host_phone}</Link> : '—'}
           />
         </Stack>
@@ -89,14 +89,14 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
       </Stack>
 
       <Dialog open={confirmApprove} onClose={() => setConfirmApprove(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Approve this slot booking?</DialogTitle>
+        <DialogTitle>{t('partners.slotRequestsPage.approveThisSlotBooking')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             "{request.pod_title}" will be confirmed for {slotWindow(request)} and the pod goes live immediately.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmApprove(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmApprove(false)}>{t('shell.common.cancel')}</Button>
           <Button
             variant="contained"
             color="success"
@@ -112,25 +112,25 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
       </Dialog>
 
       <Dialog open={declineOpen} onClose={() => setDeclineOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Decline this slot booking?</DialogTitle>
+        <DialogTitle>{t('partners.slotRequestsPage.declineThisSlotBooking')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 0.5 }}>
             <Typography variant="body2" color="text.secondary">
               The slot opens up again and the host is notified that the request was declined.
             </Typography>
             <TextField
-              label="Reason (optional)"
+              label={t('partners.slotRequestsPage.reasonOptional')}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               multiline
               minRows={2}
               inputProps={{ maxLength: 280 }}
-              helperText="Shared with the host so they can follow up"
+              helperText={t('partners.slotRequestsPage.sharedWithTheHostSoThey')}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeclineOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeclineOpen(false)}>{t('shell.common.cancel')}</Button>
           <Button
             variant="contained"
             color="error"

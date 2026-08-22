@@ -3,7 +3,7 @@ import { buildWithdrawInput, buildWithdrawSchema } from './withdraw.form';
 import { blankWithdrawValues } from './withdraw.types';
 
 describe('buildWithdrawSchema', () => {
-  const schema = buildWithdrawSchema(500);
+  const schema = buildWithdrawSchema(500, 0, (key: string) => key);
 
   it('rejects a non-positive or over-max amount', () => {
     expect(schema.safeParse({ ...blankWithdrawValues, amount: '0', upi_id: 'a@ok' }).success).toBe(

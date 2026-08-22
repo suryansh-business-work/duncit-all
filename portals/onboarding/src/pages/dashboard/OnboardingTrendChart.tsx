@@ -10,6 +10,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { MonthBucket } from './onboardingStats';
+import { useTranslation } from '@duncit/app-settings';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -18,41 +19,42 @@ interface Props {
 }
 
 export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const hasData = buckets.some(
     (bucket) => bucket.hosts > 0 || bucket.venues > 0 || bucket.brands > 0 || bucket.club_admins > 0,
   );
 
   if (!hasData) {
-    return <Typography color="text.secondary">No submissions in this period yet.</Typography>;
+    return <Typography color="text.secondary">{t('onboarding.dashboard.noSubmissionsInThisPeriodYet')}</Typography>;
   }
 
   const data = {
     labels: buckets.map((bucket) => bucket.label),
     datasets: [
       {
-        label: 'Hosts',
+        label: t('onboarding.common.hosts'),
         data: buckets.map((bucket) => bucket.hosts),
         backgroundColor: '#6366f1',
         borderRadius: 6,
         maxBarThickness: 22,
       },
       {
-        label: 'Venues',
+        label: t('shell.nav.venues'),
         data: buckets.map((bucket) => bucket.venues),
         backgroundColor: '#0f766e',
         borderRadius: 6,
         maxBarThickness: 22,
       },
       {
-        label: 'Brands',
+        label: t('shell.nav.brands'),
         data: buckets.map((bucket) => bucket.brands),
         backgroundColor: '#d97706',
         borderRadius: 6,
         maxBarThickness: 22,
       },
       {
-        label: 'Club Admins',
+        label: t('onboarding.dashboard.clubAdmins'),
         data: buckets.map((bucket) => bucket.club_admins),
         backgroundColor: '#9333ea',
         borderRadius: 6,

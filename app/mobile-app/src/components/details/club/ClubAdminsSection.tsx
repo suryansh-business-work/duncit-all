@@ -2,6 +2,7 @@ import { Text, YStack } from 'tamagui';
 
 import { ClubAdminCard } from '@/components/pod-pending/ClubAdminCard';
 import type { ClubDetail } from '@/hooks/useDetails';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type ClubAdmin = ClubDetail['club_admins'][number];
 
@@ -9,6 +10,7 @@ type ClubAdmin = ClubDetail['club_admins'][number];
  * WhatsApp, straight off each admin's profile. Renders the same contact card
  * the host's waiting page uses (mWeb twin: ClubAdminsSection, rule 27). */
 export function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdmin[] }>) {
+  const { t } = useTranslation();
   if (admins.length === 0) return null;
 
   return (
@@ -19,7 +21,7 @@ export function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdmin[] }>)
       {admins.map((admin) => (
         <ClubAdminCard
           key={admin.id}
-          caption="Contact the Club Admin"
+          caption={t('mweb.common.contactTheClubAdmin')}
           admin={{
             name: admin.name,
             profile_photo: admin.avatar_url,

@@ -64,7 +64,7 @@ export default function RoleEditDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={onSave}

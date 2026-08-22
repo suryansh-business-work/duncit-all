@@ -7,9 +7,13 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ServerInfoDetails from './ServerInfoDetails';
 import { formatBytes, formatUptime } from './format';
 import { SERVER_INFO, apiHost, type ServerInfo } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** The shared StatCard styled exactly like the old local server tile. */
+type Translate = ReturnType<typeof useTranslation>['t'];
+
 function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: string; percent?: number }>) {
+  const { t } = useTranslation();
   return (
     <StatCard
       {...props}
@@ -22,7 +26,7 @@ function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: st
   );
 }
 
-function buildWidgets(info: ServerInfo): DashboardWidget[] {
+function buildWidgets(info: ServerInfo, t: Translate): DashboardWidget[] {
   const tile = (id: string, x: number, content: DashboardWidget['content']): DashboardWidget => ({
     id,
     bare: true,
@@ -35,7 +39,7 @@ function buildWidgets(info: ServerInfo): DashboardWidget[] {
   return [
     tile('cpu', 0, (
       <ServerStatCard
-        label="CPU USAGE"
+        label={t('tech.server.cpuUsage')}
         value={`${info.cpu.usagePercent}%`}
         sub={`${info.cpu.cores} cores`}
         percent={info.cpu.usagePercent}
@@ -79,6 +83,7 @@ function buildWidgets(info: ServerInfo): DashboardWidget[] {
 }
 
 export default function ServerInfoPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<{ techServerInfo: ServerInfo }>(SERVER_INFO, {
     variables: { sslHost: apiHost() },
     fetchPolicy: 'cache-and-network',
@@ -122,5 +127,5 @@ export default function ServerInfoPage() {
     );
   }
 
-  return <DuncitDashboard dashboardId="tech.serverInfo" header={header} widgets={buildWidgets(info)} />;
+  return <DuncitDashboard dashboardId="tech.serverInfo" header={header} widgets={buildWidgets(info, t)} />;
 }

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import HealthMeter from '../../components/health/HealthMeter';
 import type { HealthScore } from '../../components/health/queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function bandHeadline(band: HealthScore['band']): string {
   if (band === 'GREEN') return 'Venue is in great shape.';
@@ -16,6 +17,7 @@ interface Props {
 
 /** Venue Account Health meter + its headline; taps through to the detail page. */
 export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const remarkSuffix = health.adjustments.length === 1 ? '' : 's';
   const deltaLabel = health.delta_sum > 0 ? `+${health.delta_sum}` : String(health.delta_sum);
@@ -28,9 +30,9 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
             score={health.total_score}
             band={health.band}
             size={140}
-            label="Venue Health"
+            label={t('mweb.venueManage.venueHealth')}
             onClick={() => navigate(`/venues/${venueId}/health`)}
-            caption="Tap for details"
+            caption={t('mweb.common.tapForDetails')}
           />
           <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

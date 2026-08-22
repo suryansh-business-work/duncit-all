@@ -4,6 +4,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { Autocomplete, Box, Chip, CircularProgress, TextField, Typography } from '@mui/material';
 import { HOST_LEADS } from '../../api/crm.gql';
 import type { HostLead } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** RHF field path — value is `string[]` of host lead ids. */
@@ -17,7 +18,10 @@ interface Props {
  * it ever balloons we can switch to a server-side `search` filter). Stays
  * optional — empty selection = no association.
  */
-export default function LinkedHostsField({ name, label = 'Linked Host Leads' }: Readonly<Props>) {
+export default function LinkedHostsField({ name, label }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const labelText = label ?? t('crm.forms.linkedHostLeads');
+
   const { control } = useFormContext();
 
   const { data, loading } = useQuery<{ hostLeads: HostLead[] }>(HOST_LEADS, {
@@ -82,9 +86,9 @@ export default function LinkedHostsField({ name, label = 'Linked Host Leads' }: 
               <TextField
                 {...params}
                 size="small"
-                label={label}
+                label={labelText}
                 placeholder={selectedIds.length ? 'Add another…' : 'Search host leads…'}
-                helperText="Optional — link host leads who host events at this venue."
+                helperText={t('crm.forms.optionalLinkHostLeadsWhoHost')}
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (

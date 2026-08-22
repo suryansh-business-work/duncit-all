@@ -1,6 +1,7 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useBrandingAssets } from '../../../hooks/useBrandingAssets';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 const CARD_HEIGHT = 132;
 
@@ -8,6 +9,7 @@ const CARD_HEIGHT = 132;
  * background with a big venue title; tapping opens the location-scoped Venues
  * page. Native twin: Sidebar/SidebarVenuesCard. */
 export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
+  const { t } = useTranslation();
   const { venuesCardVideoUrl } = useBrandingAssets();
   return (
     <Box sx={{ px: 2, pb: 1.25 }}>
@@ -20,7 +22,7 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') onNavigate('/venues');
         }}
-        aria-label="Explore venues"
+        aria-label={t('mweb.common.exploreVenues')}
         sx={{
           position: 'relative',
           height: CARD_HEIGHT,
@@ -60,7 +62,7 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
           }}
         >
           <Box>
-            <Typography sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>Venues</Typography>
+            <Typography sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>{t('mweb.common.venues')}</Typography>
             <Typography sx={{ fontSize: 12.5, fontWeight: 700, opacity: 0.85 }}>
               Discover spaces to meet near you
             </Typography>

@@ -1,4 +1,5 @@
 import { Button, DialogActions } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   status: string;
@@ -7,14 +8,15 @@ interface Props {
 }
 
 export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <DialogActions>
       {status !== 'PENDING' && (
-        <Button onClick={() => onSetStatus('PENDING')}>Reset to Pending</Button>
+        <Button onClick={() => onSetStatus('PENDING')}>{t('admin.podIdeas.resetPending')}</Button>
       )}
       {status !== 'REJECTED' && (
         <Button color="warning" onClick={() => onSetStatus('REJECTED')}>
-          Reject
+          {t('admin.podIdeas.reject')}
         </Button>
       )}
       {status !== 'APPROVED' && (
@@ -23,10 +25,10 @@ export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonl
           color="success"
           onClick={() => onSetStatus('APPROVED')}
         >
-          Approve
+          {t('admin.podIdeas.approve')}
         </Button>
       )}
-      <Button onClick={onClose}>Close</Button>
+      <Button onClick={onClose}>{t('shell.common.close')}</Button>
     </DialogActions>
   );
 }

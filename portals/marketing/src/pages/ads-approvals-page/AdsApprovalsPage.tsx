@@ -10,8 +10,10 @@ import type { AdRequestRow, AdStoredStatus } from './helpers';
 import AdsApprovalsToolbar from './AdsApprovalsToolbar';
 import AdsApprovalsTable from './AdsApprovalsTable';
 import ReviewDialog from './ReviewDialog';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function AdsApprovalsPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'' | AdStoredStatus>('PENDING');
   const [active, setActive] = useState<AdRequestRow | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function AdsApprovalsPage() {
       refetchRef.current?.();
     } catch (e) {
       /* v8 ignore next -- Apollo rejects with an Error carrying a message; the non-Error fallback is defensive */
-      setOpError(e instanceof Error ? e.message : 'Failed to review ad request');
+      setOpError(e instanceof Error ? e.message : t('marketing.adsApprovals.failedToReviewAdRequest'));
     } finally {
       setSaving(false);
     }

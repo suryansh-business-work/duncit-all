@@ -24,6 +24,7 @@ import {
   toHostEditVariables,
   type HostEditValues,
 } from '../../forms/host.form';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   host: any;
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [error, setError] = useState('');
   const [updateHost, state] = useMutation(UPDATE_HOST);
 
@@ -64,7 +66,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
     <Dialog open={!!host} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
       <FormProvider {...methods}>
         <form onSubmit={onSubmit} noValidate>
-          <DialogTitle>Edit Host</DialogTitle>
+          <DialogTitle>{t('onboarding.hosts.editHost')}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2} sx={{ mt: 1 }}>
               {error && <Alert severity="error">{error}</Alert>}
@@ -81,7 +83,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
                   return (
                     <TextField
                       select
-                      label="Status"
+                      label={t('shell.common.status')}
                       {...field}
                       error={statusError}
                       helperText={statusError ? fieldState.error?.message : ' '}

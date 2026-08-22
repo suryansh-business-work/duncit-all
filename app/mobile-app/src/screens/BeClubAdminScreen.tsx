@@ -1,12 +1,14 @@
 import { OnboardingSurvey } from '@/components/survey-onboarding/OnboardingSurvey';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function BeClubAdminScreen() {
+  const { t } = useTranslation();
   return (
     <OnboardingSurvey
       kind="CLUB_ADMIN"
-      title="Be a Club Admin"
+      title={t('mweb.beClubAdmin.beAClubAdmin')}
       icon="groups"
-      subtitle="Run a Duncit club and manage its pods and members."
+      subtitle={t('mweb.beClubAdmin.runADuncitClubAndManage')}
     />
   );
 }

@@ -22,6 +22,7 @@ import {
   labelFor,
 } from './helpers';
 import type { MarketingCampaignRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<MarketingCampaignRow>;
@@ -68,11 +69,12 @@ export default function CampaignTable({
   onSend,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<MarketingCampaignRow>[]>(
     () => [
       {
         field: 'name',
-        headerName: 'Campaign',
+        headerName: t('marketing.common.campaign'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderCampaign,
@@ -80,7 +82,7 @@ export default function CampaignTable({
       },
       {
         field: 'channel',
-        headerName: 'Channel',
+        headerName: t('marketing.marketingCampaigns.channel'),
         minWidth: 170,
         filter: { type: 'select', options: CHANNEL_OPTIONS },
         cellRenderer: renderChannel,
@@ -88,7 +90,7 @@ export default function CampaignTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -96,31 +98,31 @@ export default function CampaignTable({
       },
       {
         field: 'card',
-        headerName: 'Card',
+        headerName: t('marketing.marketingCampaigns.card'),
         sortable: false,
         minWidth: 140,
         valueGetter: (row) => row.card?.title ?? '—',
       },
       dateColumn<MarketingCampaignRow>({
         field: 'scheduled_at',
-        headerName: 'Schedule',
+        headerName: t('marketing.common.schedule'),
         hide: false,
         width: 160,
         format: DATE_TIME_FORMAT,
       }),
       dateColumn<MarketingCampaignRow>({
         field: 'sent_at',
-        headerName: 'Sent',
+        headerName: t('marketing.common.sent'),
         hide: false,
         width: 160,
         format: DATE_TIME_FORMAT,
       }),
-      { field: 'recipient_count', headerName: 'Recipients', width: 120 },
-      { field: 'open_count', headerName: 'Opened', width: 110 },
-      { field: 'click_count', headerName: 'Clicked', width: 110 },
+      { field: 'recipient_count', headerName: t('marketing.common.recipients'), width: 120 },
+      { field: 'open_count', headerName: t('marketing.marketingCampaigns.opened'), width: 110 },
+      { field: 'click_count', headerName: t('marketing.common.clicked'), width: 110 },
       {
         field: 'audience',
-        headerName: 'Audience',
+        headerName: t('marketing.common.audience'),
         hide: true,
         minWidth: 180,
         filter: { type: 'select', options: AUDIENCE_OPTIONS },
@@ -134,7 +136,7 @@ export default function CampaignTable({
         // sending campaign should be told why it is unavailable, not left
         // hunting for a button that is missing on some rows.
         delete: {
-          title: 'Delete campaign',
+          title: t('marketing.common.deleteCampaign'),
           disabled: (row) => !canDelete(row.status),
           disabledTitle: 'Sending right now — wait for it to finish',
         },
@@ -144,8 +146,8 @@ export default function CampaignTable({
           const sendLabel = canSend(row.status) ? 'Send campaign now' : 'Already sent';
           return (
             <>
-              <Tooltip title="View campaign">
-                <IconButton size="small" aria-label="View campaign" onClick={() => onView(row)}>
+              <Tooltip title={t('marketing.marketingCampaigns.viewCampaign')}>
+                <IconButton size="small" aria-label={t('marketing.marketingCampaigns.viewCampaign')} onClick={() => onView(row)}>
                   <VisibilityOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -176,7 +178,7 @@ export default function CampaignTable({
       fetchRows={fetchRows}
       getRowId={getCampaignRowId}
       onRowClick={onView}
-      emptyText="No campaigns yet. Create one to reach your audience."
+      emptyText={t('marketing.marketingCampaigns.noCampaignsYetCreateOneTo')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or subject"
       refetchRef={refetchRef}

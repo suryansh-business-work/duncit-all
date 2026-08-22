@@ -7,6 +7,7 @@ import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { OTP_PATTERN } from '../../../forms/validation/rules';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 const REQUEST_EMAIL_OTP = gql`
   mutation RequestEmailVerificationOtp {
@@ -35,6 +36,7 @@ export const emailVerificationSchema = z.object({
 });
 
 export default function EmailVerificationForm({ email, verified, onVerified, autoSend = false }: Readonly<EmailVerificationFormProps>) {
+  const { t } = useTranslation();
   const [requestOtp, requestState] = useMutation(REQUEST_EMAIL_OTP);
   const [verifyOtp, verifyState] = useMutation(VERIFY_EMAIL_OTP);
   const [requested, setRequested] = useState(false);
@@ -50,7 +52,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
     setError(null);
     try {
       await verifyOtp({ variables: { otp: values.otp } });
-      setMessage('Email verified.');
+      setMessage(t('mweb.common.emailVerified'));
       onVerified();
     } catch (e: any) {
       setError(e?.message ?? 'Invalid OTP');
@@ -91,7 +93,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
     <Stack id="email-verification" spacing={1.5}>
       <Stack direction="row" spacing={1} alignItems="center">
         <MarkEmailReadIcon color="primary" fontSize="small" />
-        <Typography variant="subtitle2" fontWeight={700}>Verify email</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('mweb.profile.verifyEmail')}</Typography>
       </Stack>
       <Typography variant="body2" color="text.secondary">{email || 'Add an email address to verify your account.'}</Typography>
       {message && <Alert severity="success">{message}</Alert>}
@@ -116,7 +118,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
               />
             )}
           />
-          <Button type="submit" variant="contained" disabled={verifyState.loading}>Verify</Button>
+          <Button type="submit" variant="contained" disabled={verifyState.loading}>{t('mweb.common.verify')}</Button>
         </Stack>
       </form>
     </Stack>

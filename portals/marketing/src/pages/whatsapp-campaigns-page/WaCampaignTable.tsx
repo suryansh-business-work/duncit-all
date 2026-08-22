@@ -23,6 +23,7 @@ import {
   waRate,
 } from './helpers';
 import type { WaCampaignRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<WaCampaignRow>;
@@ -83,11 +84,12 @@ export default function WaCampaignTable({
   onDelete,
   busy,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<WaCampaignRow>[]>(
     () => [
       {
         field: 'name',
-        headerName: 'Campaign',
+        headerName: t('marketing.common.campaign'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderCampaign,
@@ -95,14 +97,14 @@ export default function WaCampaignTable({
       },
       {
         field: 'audience',
-        headerName: 'Audience',
+        headerName: t('marketing.common.audience'),
         minWidth: 170,
         filter: { type: 'select', options: WA_AUDIENCE_OPTIONS },
         valueGetter: (row) => labelFor(WA_AUDIENCE_LABELS, row.audience),
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         filter: { type: 'select', options: WA_STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -110,34 +112,34 @@ export default function WaCampaignTable({
       },
       {
         field: 'template_category',
-        headerName: 'Category',
+        headerName: t('marketing.whatsappCampaigns.category'),
         width: 140,
         filter: { type: 'select', options: WA_CATEGORY_OPTIONS },
         valueGetter: (row) => categoryLabel(row.template_category),
       },
-      { field: 'recipient_count', headerName: 'Recipients', width: 120 },
-      { field: 'sent_count', headerName: 'Sent', width: 100 },
-      { field: 'failed_count', headerName: 'Failed', width: 100 },
-      { field: 'skipped_count', headerName: 'Skipped', width: 110 },
+      { field: 'recipient_count', headerName: t('marketing.common.recipients'), width: 120 },
+      { field: 'sent_count', headerName: t('marketing.common.sent'), width: 100 },
+      { field: 'failed_count', headerName: t('marketing.common.failed'), width: 100 },
+      { field: 'skipped_count', headerName: t('marketing.whatsappCampaigns.skipped'), width: 110 },
       {
         // Derived from the frozen rate and the messages that went out, so the
         // server has nothing to sort on — the column says so by not offering it.
         field: 'cost',
-        headerName: 'Cost',
+        headerName: t('marketing.common.cost'),
         width: 130,
         sortable: false,
         cellRenderer: (row) => renderCost(row, currency),
       },
       dateColumn<WaCampaignRow>({
         field: 'scheduled_at',
-        headerName: 'Scheduled for',
+        headerName: t('marketing.whatsappCampaigns.scheduledFor'),
         hide: false,
         width: 160,
         format: DATE_TIME_FORMAT,
       }),
       dateColumn<WaCampaignRow>({
         field: 'sent_at',
-        headerName: 'Sent at',
+        headerName: t('marketing.whatsappCampaigns.sentAt'),
         hide: false,
         width: 160,
         format: DATE_TIME_FORMAT,
@@ -147,7 +149,7 @@ export default function WaCampaignTable({
         width: 130,
         onDelete,
         delete: {
-          title: 'Delete campaign',
+          title: t('marketing.common.deleteCampaign'),
           disabled: (row) => !canDelete(row.status),
           disabledTitle: 'Sending right now — wait for it to finish',
         },
@@ -184,7 +186,7 @@ export default function WaCampaignTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onOpen}
-      emptyText="Nothing sent yet — start a send from the Campaigns tab."
+      emptyText={t('marketing.whatsappCampaigns.nothingSentYetStartASend')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or WhatsApp campaign"
       refetchRef={refetchRef}

@@ -7,6 +7,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
 import type { TicketStatus, TranscriptFormat } from '../queries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
   OPEN: 'primary',
@@ -36,6 +37,7 @@ export default function TicketHeader({
   onDownload,
   onEmail,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const close = () => setAnchor(null);
   const run = (fn: () => void) => () => {
@@ -45,14 +47,14 @@ export default function TicketHeader({
 
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
-      <IconButton size="small" onClick={onBack} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
+      <IconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>
       <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }} noWrap>
         {subject || 'Ticket'}
       </Typography>
       {status && <Chip size="small" color={STATUS_COLOR[status]} label={status} />}
-      <IconButton aria-label="Ticket options" disabled={!status} onClick={(e) => setAnchor(e.currentTarget)}>
+      <IconButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)}>
         <MoreVertIcon />
       </IconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={close}>

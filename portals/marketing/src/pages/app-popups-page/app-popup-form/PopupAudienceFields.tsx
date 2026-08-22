@@ -2,10 +2,11 @@ import { useWatch, type Control } from 'react-hook-form';
 import { Grid, MenuItem } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import {
-  AUDIENCE_OPTIONS,
+  audienceOptions,
   type AppPopupFormValues,
   type AudienceListOption,
 } from './app-popup.types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   control: Control<AppPopupFormValues>;
@@ -20,6 +21,7 @@ interface Props {
  * people who match it today, not the ones who matched when it was written.
  */
 export default function PopupAudienceFields({ control, audienceLists }: Readonly<Props>) {
+  const { t } = useTranslation();
   const audienceType = useWatch({ control, name: 'audience_type' });
 
   return (
@@ -28,12 +30,12 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
         <RhfTextField
           control={control}
           name="audience_type"
-          label="Target audience"
+          label={t('marketing.common.targetAudience')}
           select
           required
           hint="Everyone, or a saved list"
         >
-          {AUDIENCE_OPTIONS.map((option) => (
+          {audienceOptions(t).map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
@@ -46,7 +48,7 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
           <RhfTextField
             control={control}
             name="audience_list_id"
-            label="Audience list"
+            label={t('marketing.common.audienceList')}
             select
             required
             hint="Built in Target Audience"
@@ -64,7 +66,7 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
         <RhfTextField
           control={control}
           name="cta_label"
-          label="CTA button label"
+          label={t('marketing.appPopups.ctaButtonLabel')}
           hint="Optional — e.g. Shop now"
         />
       </Grid>
@@ -73,7 +75,7 @@ export default function PopupAudienceFields({ control, audienceLists }: Readonly
         <RhfTextField
           control={control}
           name="cta_url"
-          label="CTA link"
+          label={t('marketing.appPopups.ctaLink')}
           hint="Optional — https://… or an in-app path like /earn"
         />
       </Grid>

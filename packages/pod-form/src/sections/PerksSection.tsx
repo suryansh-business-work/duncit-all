@@ -1,8 +1,10 @@
 import { Controller, useFormContext } from 'react-hook-form';
 import ChipArrayField from '../components/ChipArrayField';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function PerksSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<PodFormValues>();
   return (
     <Controller
@@ -10,11 +12,11 @@ export default function PerksSection() {
       name="available_perks"
       render={({ field }) => (
         <ChipArrayField
-          label="Available perks"
+          label={t('podForm.common.availablePerks')}
           value={field.value}
           onChange={field.onChange}
-          placeholder="e.g. Free Drink, Early Entry, VIP Access"
-          helperText="Perks attendees unlock by joining."
+          placeholder={t('podForm.perksSection.eGFreeDrinkEarlyEntry')}
+          helperText={t('podForm.perksSection.perksAttendeesUnlockByJoining')}
         />
       )}
     />

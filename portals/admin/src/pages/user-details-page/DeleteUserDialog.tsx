@@ -26,7 +26,7 @@ export default function DeleteUserDialog({ open, busy, onClose, onConfirm }: Rea
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button color="error" variant="contained" onClick={onConfirm} disabled={busy}>
           Delete User
         </Button>

@@ -3,6 +3,7 @@ import { ReactTerminal, TerminalContextProvider } from 'react-terminal';
 import { Box, Stack, Typography } from '@mui/material';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import { TECH_EXEC, type TechExecResult } from '../server/queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Format a techExec result into the terminal's output text (stdout, then any
  * stderr, then a non-zero exit marker). */
@@ -19,6 +20,7 @@ export function formatExecResult(result: TechExecResult | undefined): string {
  * SUPER_ADMIN-only techExec mutation. Each command is a one-shot request (no
  * interactive/streaming commands); every invocation is audited server-side. */
 export default function TerminalPage() {
+  const { t } = useTranslation();
   const [runExec] = useMutation<{ techExec: TechExecResult }>(TECH_EXEC);
 
   const runCommand = async (command: string, commandArguments: string) => {
@@ -28,7 +30,7 @@ export default function TerminalPage() {
       const res = await runExec({ variables: { command: full } });
       text = formatExecResult(res.data?.techExec);
     } catch (e) {
-      text = e instanceof Error ? e.message : 'Command failed';
+      text = e instanceof Error ? e.message : t('tech.server.commandFailed');
     }
     return <span style={{ whiteSpace: 'pre-wrap' }}>{text}</span>;
   };

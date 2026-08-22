@@ -1,6 +1,7 @@
 import { Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { BrandingFormState, PlatformPrefix } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface SizeGuide {
   favicon: string;
@@ -24,6 +25,7 @@ interface Props {
  * field so uploads are consistent.
  */
 export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const faviconKey = `${prefix}_favicon_url` as const;
   const logoKey = `${prefix}_logo_url` as const;
   const splashKey = `${prefix}_splash_url` as const;
@@ -43,7 +45,7 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
       )}
 
       <MediaPickerField
-        label="Favicon"
+        label={t('admin.branding.favicon')}
         value={form[faviconKey]}
         onChange={(url) => update(faviconKey, url)}
         folder={`/branding/${prefix}`}
@@ -52,7 +54,7 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
       />
 
       <MediaPickerField
-        label="Logo"
+        label={t('admin.branding.assetLogo')}
         value={form[logoKey]}
         onChange={(url) => update(logoKey, url)}
         folder={`/branding/${prefix}`}
@@ -62,7 +64,7 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
 
       <Stack spacing={1}>
         <Stack direction="row" spacing={2} alignItems="center">
-          <Typography variant="subtitle2">Splash screen</Typography>
+          <Typography variant="subtitle2">{t('admin.branding.splash')}</Typography>
           <ToggleButtonGroup
             size="small"
             exclusive
@@ -71,8 +73,8 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
               if (next) update(splashTypeKey, next);
             }}
           >
-            <ToggleButton value="IMAGE">Image</ToggleButton>
-            <ToggleButton value="VIDEO">Video</ToggleButton>
+            <ToggleButton value="IMAGE">{t('admin.branding.assetImage')}</ToggleButton>
+            <ToggleButton value="VIDEO">{t('admin.branding.assetVideo')}</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
         <MediaPickerField

@@ -10,12 +10,14 @@ import { useHostsVenues } from '@/hooks/useHostsVenues';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Tab = 'HOSTS' | 'VENUES';
 
 /** Hosts & Venues discovery — two tabs that open public profiles / venue details.
  * RN twin of mWeb's HostsVenuesPage. */
 export function HostsVenuesScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { hosts, venues, meId, followingIds, pendingFollow, isLoading, error, toggleFollow } =
     useHostsVenues();
@@ -82,7 +84,7 @@ export function HostsVenuesScreen() {
   }
 
   return (
-    <StackScreen title="Hosts & Venues" testID="hosts-venues-screen">
+    <StackScreen title={t('mweb.hostsVenues.hostsAndVenues')} testID="hosts-venues-screen">
       <XStack gap={8} paddingHorizontal={16} paddingBottom={8}>
         {(['HOSTS', 'VENUES'] as Tab[]).map((t) => {
           const selected = tab === t;

@@ -8,6 +8,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface SecuritySheetProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function SecuritySheet({
   onClose,
   children,
 }: Readonly<SecuritySheetProps>) {
+  const { t } = useTranslation();
   const { color } = useThemeColors();
 
   return (
@@ -36,7 +38,7 @@ export function SecuritySheet({
           <YStack flex={1} testID={testID}>
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={onClose}
               position="absolute"
               top={0}
@@ -69,7 +71,7 @@ export function SecuritySheet({
                   <XStack
                     testID={`${testID}-close`}
                     role="button"
-                    aria-label="Close"
+                    aria-label={t('mweb.common.close')}
                     onPress={onClose}
                     width={32}
                     height={32}

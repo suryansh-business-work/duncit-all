@@ -1,5 +1,6 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { money, type PodFinanceBreakdown } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 function Line({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
@@ -12,6 +13,7 @@ function Line({ label, value, bold }: Readonly<{ label: string; value: string; b
 
 /** Side card summarizing what the host earns from this pod. */
 export default function HostEarningsCard({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
+  const { t } = useTranslation();
   const w = breakdown.waterfall;
   const sym = breakdown.currency_symbol;
   return (
@@ -21,13 +23,13 @@ export default function HostEarningsCard({ breakdown }: Readonly<{ breakdown: Po
           Host Earnings Summary
         </Typography>
         <Stack spacing={1}>
-          <Line label="Host Amount" value={money(sym, w.host_amount)} />
+          <Line label={t('finance.podFinance.hostAmount')} value={money(sym, w.host_amount)} />
           <Line
             label={`− Host Commission (${w.host_commission_pct.toFixed(2)}%)`}
             value={`− ${money(sym, w.host_commission_amount)}`}
           />
           <Divider />
-          <Line label="Host Receives" value={money(sym, w.host_receives)} bold />
+          <Line label={t('finance.podFinance.hostReceives')} value={money(sym, w.host_receives)} bold />
         </Stack>
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
           The host earns {w.host_earn_pct.toFixed(2)}% of the customer payment.

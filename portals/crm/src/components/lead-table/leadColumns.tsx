@@ -3,6 +3,7 @@ import { Stack, Typography } from '@mui/material';
 import { actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import { PriorityChip, StatusChip } from '../StatusChips';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 /** Fields shared by host / venue / ecomm lead rows that the table touches. */
 export interface CrmLeadRowBase {
@@ -28,28 +29,30 @@ interface EntityMeta {
   emptyText: string;
 }
 
-export const LEAD_ENTITY_META: Record<CrmLeadEntity, EntityMeta> = {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const leadEntityMeta = (t: Translate): Record<CrmLeadEntity, EntityMeta> => ({
   host: {
     tableId: 'crm-host-leads',
     nameField: 'host_name',
     nameHeader: 'Host',
-    extra: { field: 'host_type', headerName: 'Type' },
+    extra: { field: 'host_type', headerName: t('shell.common.type') },
     emptyText: 'No host leads yet. Click "New Host Lead" to create the first one.',
   },
   venue: {
     tableId: 'crm-venue-leads',
     nameField: 'venue_name',
-    nameHeader: 'Venue',
+    nameHeader: t('crm.common.venue'),
     emptyText: 'No venue leads yet. Click "New Venue Lead" to create the first one.',
   },
   ecomm: {
     tableId: 'crm-ecomm-leads',
     nameField: 'seller_name',
     nameHeader: 'Seller',
-    extra: { field: 'brand_name', headerName: 'Brand' },
+    extra: { field: 'brand_name', headerName: t('crm.common.brand') },
     emptyText: 'No ecomm leads yet. Click "New Ecomm Lead" to create the first one.',
   },
-};
+});
 
 const fieldText = (row: object, key: string): string => {
   const value = (row as Record<string, unknown>)[key];
@@ -80,13 +83,16 @@ export interface LeadColumnOptions<T extends CrmLeadRowBase> {
   superCategoryOptions: ReadonlyArray<LeadFilterOption>;
   onEdit: (lead: T) => void;
   onDelete: (lead: T) => void;
+  /** Headings are copy — the table hands its translator down. */
+  t: Translate;
 }
 
 /** Column set for one lead entity; sortable/filterable fields follow the server allowlists. */
 export function buildLeadColumns<T extends CrmLeadRowBase>(
   options: LeadColumnOptions<T>,
 ): DuncitColumn<T>[] {
-  const meta = LEAD_ENTITY_META[options.entity];
+  const { t } = options;
+  const meta = leadEntityMeta(t)[options.entity];
   const { extra } = meta;
   const renderName = (row: T): ReactNode => (
     <Stack sx={{ lineHeight: 1.2 }} component="span">
@@ -118,10 +124,10 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
     });
   }
   columns.push(
-    { field: 'city', headerName: 'City', minWidth: 120, filter: { type: 'text' }, valueGetter: (row) => row.city ?? '—' },
+    { field: 'city', headerName: t('crm.common.city'), minWidth: 120, filter: { type: 'text' }, valueGetter: (row) => row.city ?? '—' },
     {
       field: 'lead_status',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       minWidth: 130,
       filter: { type: 'select', options: options.statusOptions },
       cellRenderer: renderStatus,
@@ -129,7 +135,7 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
     },
     {
       field: 'priority',
-      headerName: 'Priority',
+      headerName: t('crm.common.priority'),
       minWidth: 110,
       filter: { type: 'select', options: options.priorityOptions },
       cellRenderer: renderPriority,
@@ -137,7 +143,7 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
     },
     {
       field: 'super_category_id',
-      headerName: 'Super Category',
+      headerName: t('crm.common.superCategory'),
       hide: true,
       minWidth: 150,
       filter: { type: 'select', options: options.superCategoryOptions },

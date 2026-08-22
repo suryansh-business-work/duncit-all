@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Header avatar that opens the account menu — the mobile twin of mWeb's header
@@ -13,6 +14,7 @@ import type { RootStackParamList } from '@/navigation/types';
  * Back/refresh work). Falls back to the user's initial.
  */
 export function AccountButton() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { data } = useMe();
   const me = data?.me;
@@ -22,7 +24,7 @@ export function AccountButton() {
     <XStack
       testID="account-button"
       role="button"
-      aria-label="Open account menu"
+      aria-label={t('mweb.common.openAccountMenu')}
       onPress={() => navigation.navigate('Menu')}
       width={40}
       height={40}

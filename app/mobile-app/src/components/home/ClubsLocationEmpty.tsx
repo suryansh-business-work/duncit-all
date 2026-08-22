@@ -4,11 +4,13 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { LocationDialog } from '@/components/LocationDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Empty state shown on the Clubs tab when the selected locality has no active
  * clubs. Offers a "Reset Location" action that re-opens the location picker so
  * the user can pick a different location. */
 export function ClubsLocationEmpty() {
+  const { t } = useTranslation();
   const { onPrimary, muted } = useThemeColors();
   const [open, setOpen] = useState(false);
 
@@ -27,7 +29,7 @@ export function ClubsLocationEmpty() {
       <XStack
         testID="clubs-location-reset"
         role="button"
-        aria-label="Reset Location"
+        aria-label={t('mweb.home.resetLocation')}
         onPress={() => setOpen(true)}
         alignItems="center"
         gap={6}

@@ -22,6 +22,8 @@ import {
   type CampaignRow,
 } from './helpers';
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
 const EMPTY = '—';
 
 const getRowId = (campaign: CampaignRow) => campaign.name;
@@ -37,13 +39,13 @@ const renderStatus = (campaign: CampaignRow) =>
     />
   ) : null;
 
-const factsFor = (campaign: CampaignRow, template: AisensyTemplate | null): AisensyFact[] => [
-  { label: 'Type', value: campaign.type || EMPTY },
-  { label: 'Template', value: campaign.template_name || EMPTY },
+const factsFor = (campaign: CampaignRow, template: AisensyTemplate | null, t: Translate): AisensyFact[] => [
+  { label: t('shell.common.type'), value: campaign.type || EMPTY },
+  { label: t('marketing.whatsappCampaigns.template'), value: campaign.template_name || EMPTY },
   {
-    label: 'Parameters',
+    label: t('marketing.whatsappCampaigns.parameters'),
     value: template ? paramsLabel(template.param_count) : EMPTY,
-    hint: template ? 'A send must fill exactly that many' : undefined,
+    hint: template ? t('marketing.whatsappCampaigns.sendMustFillExactly') : undefined,
   },
 ];
 
@@ -67,17 +69,17 @@ interface Props {
 
 type RowActionHandlers = Pick<Props, 'onSend' | 'onTest'>;
 
-const buildColumns = ({
-  onSend,
-  onTest,
-}: Readonly<RowActionHandlers>): DuncitColumn<CampaignRow>[] => [
-  { field: 'name', headerName: 'Campaign', flex: 1, minWidth: 220 },
-  { field: 'type', headerName: 'Type', width: 150 },
-  { field: 'status', headerName: 'Status', width: 120, cellRenderer: renderStatus },
-  { field: 'template_name', headerName: 'Template', flex: 1, minWidth: 180 },
+const buildColumns = (
+  { onSend, onTest }: Readonly<RowActionHandlers>,
+  t: Translate,
+): DuncitColumn<CampaignRow>[] => [
+  { field: 'name', headerName: t('marketing.common.campaign'), flex: 1, minWidth: 220 },
+  { field: 'type', headerName: t('shell.common.type'), width: 150 },
+  { field: 'status', headerName: t('shell.common.status'), width: 120, cellRenderer: renderStatus },
+  { field: 'template_name', headerName: t('marketing.whatsappCampaigns.template'), flex: 1, minWidth: 180 },
   {
     field: 'actions',
-    headerName: 'Actions',
+    headerName: t('shell.common.actions'),
     width: 110,
     sortable: false,
     cellRenderer: (campaign) => (
@@ -108,7 +110,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
     [templates, campaigns]
   );
 
-  const columns = useMemo(() => buildColumns({ onSend, onTest }), [onSend, onTest]);
+  const columns = useMemo(() => buildColumns({ onSend, onTest }, t), [t, onSend, onTest]);
 
   const fetchRows = useMemo(() => clientTableFetch(rows, campaignSearchText), [rows]);
 
@@ -131,7 +133,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
       getRowId={getRowId}
       onRowClick={(campaign) => setOpenName(campaign.name)}
       searchPlaceholder="Search campaign, status or template"
-      emptyText="No campaign matches that search."
+      emptyText={t('marketing.whatsappCampaigns.noCampaignMatchesThatSearch')}
       refetchRef={refetchRef}
     />
   );
@@ -156,7 +158,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
           loading={loading}
           error={error}
           count={rows.length}
-          emptyText="AiSensy returned no campaigns for this project."
+          emptyText={t('marketing.whatsappCampaigns.aisensyReturnedNoCampaignsForThis')}
         >
           {table}
         </AisensySection>
@@ -164,8 +166,8 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
         <>
           <Alert severity="warning">
             AiSensy's Project API is not answering, so these are the campaign names saved here —
-            without their status or template. Add the <strong>Project ID</strong> and{' '}
-            <strong>Project API Key</strong> in the Tech portal (Environment Variables → AiSensy) to
+            without their status or template. Add the <strong>{t('marketing.whatsappCampaigns.projectId')}</strong> and{' '}
+            <strong>{t('marketing.whatsappCampaigns.projectApiKey')}</strong> in the Tech portal (Environment Variables → AiSensy) to
             read the real list. Sending still works.
           </Alert>
           {table}
@@ -176,7 +178,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
         title={selected?.name ?? null}
         status={selected?.status ?? ''}
         statusColors={AISENSY_CAMPAIGN_STATUS_COLORS}
-        facts={selected ? factsFor(selected, template) : []}
+        facts={selected ? factsFor(selected, template, t) : []}
         template={template}
         missingNote={missingNoteFor(selected)}
         onClose={() => setOpenName(null)}

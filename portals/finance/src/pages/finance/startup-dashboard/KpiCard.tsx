@@ -6,6 +6,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import type { FounderMetric } from './types';
 import { formatMetricValue } from './format';
 import Sparkline from './Sparkline';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   metric: FounderMetric;
@@ -28,6 +29,7 @@ function DeltaBadge({ delta }: Readonly<{ delta: number }>) {
 }
 
 export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isManual = metric.source === 'manual';
   return (
     <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
@@ -37,12 +39,12 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
             {metric.label}
           </Typography>
           <Stack direction="row" sx={{ mt: -1, mr: -1 }}>
-            <Tooltip title="What is this?">
+            <Tooltip title={t('finance.startupDashboard.whatIsThis')}>
               <IconButton size="small" onClick={() => onInfo(metric)} aria-label={`About ${metric.label}`}>
                 <InfoOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Formula & settings">
+            <Tooltip title={t('finance.startupDashboard.formulaAndSettings')}>
               <IconButton size="small" onClick={() => onSettings(metric)} aria-label={`Settings for ${metric.label}`}>
                 <SettingsOutlinedIcon fontSize="small" />
               </IconButton>
@@ -56,7 +58,7 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
 
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5, minHeight: 24 }}>
           {metric.delta_pct != null && <DeltaBadge delta={metric.delta_pct} />}
-          {isManual && <Chip size="small" variant="outlined" label="Manual" sx={{ height: 20 }} />}
+          {isManual && <Chip size="small" variant="outlined" label={t('finance.startupDashboard.manual')} sx={{ height: 20 }} />}
         </Stack>
 
         <Box sx={{ mt: 1 }}>

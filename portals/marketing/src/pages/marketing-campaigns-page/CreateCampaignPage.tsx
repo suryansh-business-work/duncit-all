@@ -20,6 +20,7 @@ import {
   RENDER_MARKETING_CAMPAIGN,
   type CampaignVariable,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const CAMPAIGNS_PATH = '/campaigns/email';
 const PREVIEW_DEBOUNCE_MS = 350;
@@ -30,6 +31,7 @@ const SUBJECT_PLACEHOLDER = '(no subject yet)';
 /** The MJML editor and its live preview, side by side — the reason creating a
  * campaign gets a page of its own instead of a dialog. */
 export default function CreateCampaignPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<MarketingCampaignFormValues>(() =>
     blankMarketingCampaignValues('EMAIL'),
@@ -153,9 +155,9 @@ export default function CreateCampaignPage() {
       {leaving && (
         <ConfirmDialog
           open
-          title="Leave without sending?"
-          message="This campaign has not been saved. Going back discards the draft, including everything written in the editor."
-          confirmLabel="Discard draft"
+          title={t('marketing.marketingCampaigns.leaveWithoutSending')}
+          message={t('marketing.marketingCampaigns.thisCampaignHasNotBeenSaved')}
+          confirmLabel={t('marketing.marketingCampaigns.discardDraft')}
           confirmColor="error"
           onClose={() => setLeaving(false)}
           onConfirm={leave}

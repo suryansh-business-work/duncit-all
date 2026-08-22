@@ -4,6 +4,7 @@ import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/tab
 import { formatINR, payingAttendees } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 function podStatusLabel(pod: PartnerPodRow) {
   if (pod.completed_at) return 'Completed';
@@ -29,32 +30,34 @@ const renderStatus = (pod: PartnerPodRow) => (
 const earningValue = (pod: PartnerPodRow) =>
   formatINR(Number(pod.pod_amount ?? 0) * payingAttendees(pod.pod_attendees, pod.pod_hosts_id));
 
-const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const columns = (t: Translate): DuncitColumn<PartnerPodRow>[] =>[
   {
     field: 'pod_title',
-    headerName: 'Pod',
+    headerName: t('partners.common.pod'),
     flex: 1,
     minWidth: 200,
     valueGetter: (pod) => pod.pod_title,
   },
   {
     field: 'pod_date_time',
-    headerName: 'Date',
+    headerName: t('partners.common.date'),
     filter: { type: 'date' },
     minWidth: 175,
     valueGetter: (pod) => formatDate(pod.pod_date_time),
   },
   {
     field: 'attendees',
-    headerName: 'Attendees',
+    headerName: t('partners.common.attendees'),
     sortable: false,
     width: 110,
     valueGetter: (pod) => pod.pod_attendees?.length ?? 0,
   },
-  { field: 'earning', headerName: 'Pod earning', sortable: false, width: 130, valueGetter: earningValue },
+  { field: 'earning', headerName: t('partners.becomeHostPage.podEarning'), sortable: false, width: 130, valueGetter: earningValue },
   {
     field: 'pod_amount',
-    headerName: 'Amount',
+    headerName: t('partners.common.amount'),
     filter: { type: 'number' },
     hide: true,
     width: 110,
@@ -62,7 +65,7 @@ const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
   },
   {
     field: 'is_active',
-    headerName: 'Status',
+    headerName: t('shell.common.status'),
     filter: { type: 'boolean' },
     width: 120,
     cellRenderer: renderStatus,
@@ -71,6 +74,7 @@ const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
 ];
 
 export default function HostPodsList() {
+  const { t } = useTranslation();
   const client = useApolloClient();
 
   const fetchRows = useApolloTableFetch<PartnerPodRow>(client, MY_HOST_PODS_TABLE, 'myHostPodsTable');
@@ -79,14 +83,14 @@ export default function HostPodsList() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.25}>
-          <Typography variant="h6" fontWeight={950}>Your hosted pods</Typography>
-          <Typography variant="body2" color="text.secondary">Pods assigned to your host profile appear here.</Typography>
+          <Typography variant="h6" fontWeight={950}>{t('partners.becomeHostPage.yourHostedPods')}</Typography>
+          <Typography variant="body2" color="text.secondary">{t('partners.becomeHostPage.podsAssignedToYourHostProfile')}</Typography>
           <DuncitTable<PartnerPodRow>
             tableId="partners-app-host-pods"
-            columns={COLUMNS}
+            columns={columns(t)}
             fetchRows={fetchRows}
             getRowId={getPodRowId}
-            emptyText="No hosted pods yet."
+            emptyText={t('partners.becomeHostPage.noHostedPodsYet')}
             defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
             searchPlaceholder="Search pod title or ID"
           />

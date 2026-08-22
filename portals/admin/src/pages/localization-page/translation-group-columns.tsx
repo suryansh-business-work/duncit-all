@@ -1,6 +1,7 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import { translatedFor, type LocaleRow, type TranslationGroupRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Complete, untouched, or somewhere in between — the three states worth a colour. */
 function completenessColor(translated: number, total: number): string {
@@ -34,6 +35,7 @@ function Completeness({ translated, total }: Readonly<CompletenessProps>) {
  */
 export function getTranslationGroupColumns(
   locales: ReadonlyArray<LocaleRow>,
+  t: (key: string) => string,
 ): DuncitColumn<TranslationGroupRow>[] {
   const localeColumns: DuncitColumn<TranslationGroupRow>[] = locales.map((locale) => ({
     field: `translated_${locale.code}`,
@@ -47,14 +49,14 @@ export function getTranslationGroupColumns(
   return [
     {
       field: 'surface',
-      headerName: 'Portal',
+      headerName: t('admin.roles.portal'),
       sortable: true,
       cellRenderer: (row: TranslationGroupRow) =>
         row.surface ? <Chip size="small" label={row.surface} /> : '—',
     },
     {
       field: 'page',
-      headerName: 'Page',
+      headerName: t('admin.activity.page'),
       sortable: true,
       cellRenderer: (row: TranslationGroupRow) => (
         <Stack spacing={0.25}>
@@ -69,7 +71,7 @@ export function getTranslationGroupColumns(
     },
     {
       field: 'key_count',
-      headerName: 'Keys',
+      headerName: t('admin.localization.colKeys'),
       sortable: true,
     },
     ...localeColumns,

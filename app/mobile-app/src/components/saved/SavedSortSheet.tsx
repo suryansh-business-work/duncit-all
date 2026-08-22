@@ -1,6 +1,7 @@
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { SAVED_SORTS, type SavedSort } from '@/utils/saved-filter';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -17,8 +18,15 @@ interface Props {
  * and no height cap, so a longer option list simply ran off the screen.
  */
 export function SavedSortSheet({ open, value, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
-    <DuncitDialog open={open} onClose={onClose} testID="saved-sort" title="Sort" closeLabel="Close">
+    <DuncitDialog
+      open={open}
+      onClose={onClose}
+      testID="saved-sort"
+      title={t('mweb.common.sort')}
+      closeLabel="Close"
+    >
       <OptionChipRow
         layout="column"
         testIDPrefix="saved-sort"

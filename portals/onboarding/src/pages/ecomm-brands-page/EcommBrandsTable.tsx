@@ -6,6 +6,7 @@ import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@du
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type EcommBrandRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
@@ -68,15 +69,16 @@ export default function EcommBrandsTable({
   onToggleActive,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     const renderActions = (b: EcommBrandRow) => (
       <>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(b)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Review">
+        <Tooltip title={t('onboarding.common.review')}>
           <IconButton size="small" onClick={() => onReview(b)}>
             <RateReviewIcon fontSize="small" />
           </IconButton>
@@ -92,14 +94,14 @@ export default function EcommBrandsTable({
     return [
       {
         field: 'brand_no',
-        headerName: 'Brand ID',
+        headerName: t('onboarding.ecommBrands.brandId'),
         width: 130,
         sortable: false,
         valueGetter: (b) => b.brand_no || '—',
       },
       {
         field: 'brand_name',
-        headerName: 'Brand',
+        headerName: t('onboarding.ecommBrands.brand'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderBrand,
@@ -107,14 +109,14 @@ export default function EcommBrandsTable({
       },
       {
         field: 'product_categories',
-        headerName: 'Categories',
+        headerName: t('shell.nav.categories'),
         sortable: false,
         minWidth: 160,
         valueGetter: categoriesValue,
       },
       {
         field: 'approved_product_count',
-        headerName: 'Products',
+        headerName: t('onboarding.ecommBrands.products'),
         sortable: false,
         width: 110,
         cellRenderer: renderProducts,
@@ -122,15 +124,15 @@ export default function EcommBrandsTable({
       },
       {
         field: 'contact_person',
-        headerName: 'Owner',
+        headerName: t('onboarding.common.owner'),
         minWidth: 160,
         cellRenderer: renderOwner,
         valueGetter: (b) => b.contact_person || '—',
       },
-      { field: 'city', headerName: 'City', hide: true, minWidth: 130, filter: { type: 'text' } },
+      { field: 'city', headerName: t('onboarding.common.city'), hide: true, minWidth: 130, filter: { type: 'text' } },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 125,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -138,7 +140,7 @@ export default function EcommBrandsTable({
       },
       {
         field: 'is_active',
-        headerName: 'Active',
+        headerName: t('onboarding.common.active'),
         width: 110,
         filter: { type: 'boolean' },
         cellRenderer: renderActive,
@@ -146,15 +148,15 @@ export default function EcommBrandsTable({
       },
       {
         field: 'product_commission_pct',
-        headerName: 'Commission',
+        headerName: t('onboarding.common.commission'),
         width: 130,
         filter: { type: 'number' },
         cellRenderer: renderCommission,
         valueGetter: (b) => commissionLabel(b.product_commission_pct),
       },
-      dateColumn<EcommBrandRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
-      { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 160, cellRenderer: renderActions },
+      dateColumn<EcommBrandRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 160, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 
@@ -164,7 +166,7 @@ export default function EcommBrandsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getBrandRowId}
-      emptyText="No brands found."
+      emptyText={t('onboarding.ecommBrands.noBrandsFound')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search brand, contact or city"
       refetchRef={refetchRef}

@@ -8,9 +8,11 @@ import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserBadge } from '@/hooks/usePublicProfile';
 import { formatDate } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Badge grid with a details sheet — RN twin of mWeb's PublicProfileBadges. */
 export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }>) {
+  const { t } = useTranslation();
   const { onPrimary, primary, color } = useThemeColors();
   const [active, setActive] = useState<UserBadge | null>(null);
   if (badges.length === 0) return null;
@@ -86,7 +88,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
           <XStack
             testID="badge-sheet-close"
             role="button"
-            aria-label="Close"
+            aria-label={t('mweb.common.close')}
             onPress={() => setActive(null)}
             height={44}
             alignItems="center"

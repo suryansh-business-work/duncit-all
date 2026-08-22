@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   onOpen: () => void;
@@ -13,6 +14,7 @@ interface Props {
  * city list a user does, so the switcher is never hidden behind a role. The
  * Tamagui twin of mWeb's HeaderLocationRow. */
 export function HeaderLocationRow({ onOpen }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { cityLabel } = useLocations();
   const { primary } = useThemeColors();
 
@@ -20,7 +22,7 @@ export function HeaderLocationRow({ onOpen }: Readonly<Props>) {
     <XStack
       testID="header-location"
       role="button"
-      aria-label="Select location"
+      aria-label={t('mweb.common.selectLocation')}
       onPress={onOpen}
       alignItems="center"
       gap={2}

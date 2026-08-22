@@ -12,15 +12,17 @@ import { HostInsightsSection } from '@/components/host-manage/host-insights';
 import { useHostDashboard, type HostDashboardStats } from '@/hooks/useHostDashboard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Translate } from '@/i18n/fallback';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 type QuickRoute = 'CreatePod' | 'HostManage' | 'Verification' | 'Wallet';
 
-const QUICK: { label: string; icon: IconName; route: QuickRoute }[] = [
-  { label: 'Create pod', icon: 'add', route: 'CreatePod' },
-  { label: 'Your Pods', icon: 'dashboard', route: 'HostManage' },
-  { label: 'Verification', icon: 'verified-user', route: 'Verification' },
-  { label: 'Wallet', icon: 'account-balance-wallet', route: 'Wallet' },
+const quick = (t: Translate): { label: string; icon: IconName; route: QuickRoute }[] => [
+  { label: t('mweb.common.createPod'), icon: 'add', route: 'CreatePod' },
+  { label: t('mweb.common.yourPods'), icon: 'dashboard', route: 'HostManage' },
+  { label: t('mweb.common.verification'), icon: 'verified-user', route: 'Verification' },
+  { label: t('mweb.common.wallet'), icon: 'account-balance-wallet', route: 'Wallet' },
 ];
 
 const BAND_COLOR: Record<string, string> = {
@@ -81,22 +83,23 @@ function QuickAction({
   );
 }
 
-const statTiles = (stats: HostDashboardStats) => [
-  { label: 'Pods', value: stats.total },
-  { label: 'Upcoming', value: stats.upcoming },
-  { label: 'Paid', value: stats.paid },
+const statTiles = (stats: HostDashboardStats, t: Translate) => [
+  { label: t('mweb.hostDashboard.pods'), value: stats.total },
+  { label: t('mweb.common.upcoming'), value: stats.upcoming },
+  { label: t('mweb.common.paid'), value: stats.paid },
 ];
 
 /** Host Dashboard — earnings, pod stats, quick actions and profile/verification
  * health. RN twin of mWeb's HostDashboardPage (B2-#5). */
 export function HostDashboardScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { me, wallet, earnings, health, stats, pods, isLoading } = useHostDashboard();
 
   if (isLoading && !me) {
     return (
-      <StackScreen header title="Dashboard" testID="host-dashboard-screen">
+      <StackScreen header title={t('mweb.hostDashboard.dashboard')} testID="host-dashboard-screen">
         <DetailSkeleton testID="host-dashboard-loading" />
       </StackScreen>
     );
@@ -105,7 +108,7 @@ export function HostDashboardScreen() {
   const currency = wallet?.currency_symbol ?? '₹';
 
   return (
-    <StackScreen header title="Dashboard" testID="host-dashboard-screen">
+    <StackScreen header title={t('mweb.hostDashboard.dashboard')} testID="host-dashboard-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
         <YStack
           padding={18}
@@ -129,13 +132,13 @@ export function HostDashboardScreen() {
         {earnings ? <EarningsSummaryTiles summary={earnings} /> : null}
 
         <XStack gap={10}>
-          {statTiles(stats).map((tile) => (
+          {statTiles(stats, t).map((tile) => (
             <StatCard key={tile.label} value={tile.value} label={tile.label} />
           ))}
         </XStack>
 
         <XStack flexWrap="wrap" gap={10}>
-          {QUICK.map((action) => (
+          {quick(t).map((action) => (
             <QuickAction
               key={action.label}
               label={action.label}
@@ -151,7 +154,7 @@ export function HostDashboardScreen() {
           <XStack
             testID="host-health"
             role="button"
-            aria-label="View profile health"
+            aria-label={t('mweb.hostDashboard.viewProfileHealth')}
             onPress={() => navigation.navigate('AccountHealth')}
             alignItems="center"
             gap={12}

@@ -2,6 +2,7 @@ import { Box, Badge, Chip, IconButton, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import type { ExploreFilters } from './exploreFilters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ExploreHeaderProps {
   filters: ExploreFilters;
@@ -20,6 +21,7 @@ export default function ExploreHeader({
   onOpenFilters,
   onRefresh,
 }: Readonly<ExploreHeaderProps>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.1} sx={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 3 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -35,10 +37,10 @@ export default function ExploreHeader({
             />
           </Stack>
         </Box>
-        <IconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label="Refresh feed">
+        <IconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
           <RefreshIcon fontSize="small" />
         </IconButton>
-        <IconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label="Open filters">
+        <IconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
           <Badge badgeContent={activeCount} color="primary" overlap="circular">
             <TuneIcon fontSize="small" />
           </Badge>

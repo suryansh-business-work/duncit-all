@@ -4,6 +4,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import type { WaMediaRef } from '@duncit/communication';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * The asset above the message.
@@ -16,18 +17,23 @@ import type { WaMediaRef } from '@duncit/communication';
 
 /** AiSensy says FILE where WhatsApp draws a DOCUMENT; both land on the same
  * placeholder. LOCATION carries no asset but still occupies the header. */
-const MEDIA_HEADERS = {
-  IMAGE: { Icon: ImageIcon, label: 'Image header' },
-  VIDEO: { Icon: VideocamIcon, label: 'Video header' },
-  FILE: { Icon: DescriptionIcon, label: 'Document header' },
-  DOCUMENT: { Icon: DescriptionIcon, label: 'Document header' },
-  LOCATION: { Icon: PlaceIcon, label: 'Location header' },
-} as const;
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-export type MediaFormat = keyof typeof MEDIA_HEADERS;
+const mediaHeaders = (t: Translate) => ({
+  IMAGE: { Icon: ImageIcon, label: t('marketing.whatsappCampaigns.imageHeader') },
+  VIDEO: { Icon: VideocamIcon, label: t('marketing.whatsappCampaigns.videoHeader') },
+  FILE: { Icon: DescriptionIcon, label: t('marketing.whatsappCampaigns.documentHeader') },
+  DOCUMENT: { Icon: DescriptionIcon, label: t('marketing.whatsappCampaigns.documentHeader') },
+  LOCATION: { Icon: PlaceIcon, label: t('marketing.whatsappCampaigns.locationHeader') },
+}) as const;
+
+export type MediaFormat = keyof ReturnType<typeof mediaHeaders>;
+
+/** The header kinds themselves, so a format check does not need a translator. */
+const MEDIA_FORMATS = new Set(['IMAGE', 'VIDEO', 'FILE', 'DOCUMENT', 'LOCATION']);
 
 export const mediaFormatOf = (headerFormat: string): MediaFormat | null =>
-  headerFormat in MEDIA_HEADERS ? (headerFormat as MediaFormat) : null;
+  MEDIA_FORMATS.has(headerFormat) ? (headerFormat as MediaFormat) : null;
 
 /** A URL that ends in a picture, ignoring whatever query a CDN appends. */
 const IMAGE_EXTENSION = /\.(?:jpe?g|png|gif|webp|bmp|avif)$/i;
@@ -49,7 +55,8 @@ interface Props {
 }
 
 export default function BubbleMedia({ format, media }: Readonly<Props>) {
-  const { Icon, label } = MEDIA_HEADERS[format];
+  const { t } = useTranslation();
+  const { Icon, label } = mediaHeaders(t)[format];
   const url = media?.url ?? '';
 
   if (url && looksLikeImage(url, format)) {

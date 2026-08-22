@@ -22,10 +22,12 @@ import { ChatModals } from './ChatModals';
 import { useLiveChatActions } from './useLiveChatActions';
 import { useChatAttachments } from './useChatAttachments';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Live chat — real-time support with AI-first replies, read receipts, resolve/
  * reopen, feedback, attachments and transcript export. mWeb twin of the chat. */
 export function LiveChatScreen() {
+  const { t } = useTranslation();
   const chat = useSupportChat();
   const {
     session,
@@ -123,7 +125,7 @@ export function LiveChatScreen() {
 
   return (
     <StackScreen
-      title="Chat with Us"
+      title={t('mweb.common.chatWithUs')}
       testID="live-chat-screen"
       right={session ? headerActions : undefined}
     >

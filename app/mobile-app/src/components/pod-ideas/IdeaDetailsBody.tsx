@@ -5,6 +5,7 @@ import type { PodIdeaDetail } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { IdeaCommentRow } from './IdeaCommentRow';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   idea: PodIdeaDetail;
@@ -19,6 +20,7 @@ const shareLabel = (count: number) => `${count} share${count === 1 ? '' : 's'}`;
 /** Scrollable body of the idea details sheet: author, description, like/share
  * counts, and the comment thread. */
 export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted, danger } = useThemeColors();
   const author = idea.author;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
@@ -56,7 +58,7 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
         <XStack
           testID="idea-details-like"
           role="button"
-          aria-label="Like idea"
+          aria-label={t('mweb.podIdeas.likeIdea')}
           onPress={onToggleLike}
           alignItems="center"
           gap={6}

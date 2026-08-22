@@ -22,12 +22,14 @@ import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
 /** Live pod chat — history + realtime messages, with send, image and reactions.
  * RN twin of mWeb's ChatRoomPage. */
 export function ChatRoomScreen() {
+  const { t } = useTranslation();
   const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { podId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
@@ -64,7 +66,7 @@ export function ChatRoomScreen() {
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError('Photo access is needed to send an image.');
+      setError(t('mweb.chatRoom.photoAccessIsNeededToSend'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -88,7 +90,7 @@ export function ChatRoomScreen() {
           <XStack
             testID="chat-room-back"
             role="button"
-            aria-label="Go back"
+            aria-label={t('mweb.common.goBack')}
             onPress={goBack}
             width={40}
             height={40}
@@ -130,7 +132,7 @@ export function ChatRoomScreen() {
             <XStack
               testID="chat-room-error"
               role="button"
-              aria-label="Dismiss error"
+              aria-label={t('mweb.chatRoom.dismissError')}
               onPress={() => setError(null)}
               margin={12}
               padding={10}

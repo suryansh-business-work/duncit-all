@@ -1,6 +1,7 @@
 import { Autocomplete, Chip, Stack, TextField, Typography } from '@mui/material';
 import { Controller, type Control } from 'react-hook-form';
 import { ownerLabel, type AudienceListFormValues, type OwnerOption } from './audience-list.types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   control: Control<AudienceListFormValues>;
@@ -14,6 +15,7 @@ interface Props {
  * somebody who cannot open it to act on it.
  */
 export default function OwnerField({ control, options, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Controller
       control={control}
@@ -40,7 +42,7 @@ export default function OwnerField({ control, options, loading }: Readonly<Props
                   </Typography>
                 </Stack>
                 {option.is_admin && (
-                  <Chip size="small" label="Admin" color="primary" variant="outlined" />
+                  <Chip size="small" label={t('marketing.targetAudience.admin')} color="primary" variant="outlined" />
                 )}
               </Stack>
             </li>
@@ -48,7 +50,7 @@ export default function OwnerField({ control, options, loading }: Readonly<Props
           renderInput={(params) => (
             <TextField
               {...params}
-              label="List owner"
+              label={t('marketing.targetAudience.listOwner')}
               required
               error={!!fieldState.error}
               helperText={fieldState.error?.message ?? 'Anyone with access to this portal.'}

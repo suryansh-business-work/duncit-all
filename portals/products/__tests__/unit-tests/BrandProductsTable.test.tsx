@@ -7,7 +7,8 @@ import { makeBrandProductRow } from '../mocks/ecommBrand.mock';
 import { __setTableRows } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ formatDate: () => 'D' }) }));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()), useDateFormat: () => ({ formatDate: () => 'D' }) }));
 
 describe('BrandProductsTable', () => {
   it('renders brand product cells including dimensions and commission', async () => {

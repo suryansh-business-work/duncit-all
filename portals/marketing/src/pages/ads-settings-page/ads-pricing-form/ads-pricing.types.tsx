@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AD_POSITIONS, type AdPricingPriceField } from '../../../lib/ad-positions';
+import { fallbackT, type Translate } from '@duncit/shell';
 
 /** What one placement is called on the public rate card, and its description. */
 export interface AdPlacementCopy {
@@ -54,7 +55,8 @@ const dayText = (label: string) =>
       message: `${label} days must be at least 1`,
     });
 
-export const adsPricingSchema = z.object({
+export const adsPricingSchema = (t: Translate = fallbackT) =>
+  z.object({
   auto_per_day: priceText('Auto'),
   home_bottom_per_day: priceText('Home Bottom'),
   sidebar_per_day: priceText('Sidebar'),
@@ -80,11 +82,11 @@ export const adsPricingSchema = z.object({
     }),
   ),
 }).refine((v) => Number(v.max_days) >= Number(v.min_days), {
-  message: 'Maximum days cannot be shorter than minimum days',
+  message: t('marketing.adsSettings.maximumDaysCannotBeShorterThan'),
   path: ['max_days'],
 });
 
-export type AdsPricingFormValues = z.infer<typeof adsPricingSchema>;
+export type AdsPricingFormValues = z.infer<ReturnType<typeof adsPricingSchema>>;
 
 /** Server pricing → form values (numbers stringified for the text fields). */
 export function fromAdPricing(pricing: AdPricing): AdsPricingFormValues {
@@ -110,7 +112,7 @@ export function fromAdPricing(pricing: AdPricing): AdsPricingFormValues {
 
 /** Validated form values → AdPricing (prices and days back to numbers). */
 export function toUpdateAdPricingInput(values: AdsPricingFormValues): AdPricing {
-  const cast = adsPricingSchema.parse(values);
+  const cast = adsPricingSchema().parse(values);
   const prices = Object.fromEntries(AD_POSITIONS.map((p) => [p.priceField, Number(cast[p.priceField])]));
   return {
     ...prices,

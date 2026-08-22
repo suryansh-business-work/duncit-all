@@ -2,6 +2,7 @@ import { Avatar, Box, Divider, Stack, TextField, Typography } from '@mui/materia
 import MediaPickerField from '../../components/MediaPickerField';
 import ColorField from '../../components/ColorField';
 import type { BrandingFormState } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: BrandingFormState;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function IdentitySection({ form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const update = <K extends keyof BrandingFormState>(k: K, v: BrandingFormState[K]) =>
     setForm({ ...form, [k]: v });
 
@@ -42,35 +44,35 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
       <Divider />
 
       <TextField
-        label="App name"
+        label={t('admin.branding.appName')}
         value={form.app_name}
         onChange={(e) => update('app_name', e.target.value)}
         fullWidth
       />
       <TextField
-        label="Home header tagline"
+        label={t('admin.branding.tagline')}
         value={form.home_header_tagline}
         onChange={(e) => update('home_header_tagline', e.target.value)}
         fullWidth
-        placeholder="It All Starts Here!"
-        helperText="Shown at the top of the home screen, above the location (mWeb + mobile app)."
+        placeholder={t('admin.branding.taglinePlaceholder')}
+        helperText={t('admin.branding.taglineHint')}
       />
       <MediaPickerField
-        label="Logo URL"
+        label={t('admin.branding.logoUrl')}
         value={form.logo_url}
         onChange={(url) => update('logo_url', url)}
         folder="/branding"
-        helperText="Square or wordmark image used in the app header."
+        helperText={t('admin.branding.logoHint')}
         showPreview={false}
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <ColorField
-          label="Primary color"
+          label={t('admin.branding.primaryColor')}
           value={form.primary_color}
           onChange={(v) => update('primary_color', v)}
         />
         <TextField
-          label="Support email"
+          label={t('admin.branding.supportEmail')}
           value={form.support_email}
           onChange={(e) => update('support_email', e.target.value)}
           fullWidth
@@ -78,12 +80,12 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         />
       </Stack>
       <TextField
-        label="Support phone (Bouncers → Quick Support)"
+        label={t('admin.branding.supportPhone')}
         value={form.support_phone}
         onChange={(e) => update('support_phone', e.target.value)}
         fullWidth
         placeholder="+919999999999"
-        helperText="Users tap “Call Now” in Bouncers → Quick Support to dial this number."
+        helperText={t('admin.branding.supportPhoneHint')}
       />
     </Stack>
   );

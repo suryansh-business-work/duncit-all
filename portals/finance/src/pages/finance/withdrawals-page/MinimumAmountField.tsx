@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { ROLE_HINTS, ROLE_LABELS, ROLE_MINIMUM_FIELD, type WithdrawerRole } from './roles';
 import type { WithdrawalMinimumsForm } from './withdrawal-minimums.schema';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   role: WithdrawerRole;
@@ -33,6 +34,7 @@ export default function MinimumAmountField({
   saving,
   onSave,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const field = ROLE_MINIMUM_FIELD[role];
   return (
     <Card variant="outlined">
@@ -50,7 +52,7 @@ export default function MinimumAmountField({
             render={({ field: input, fieldState }) => (
               <TextField
                 {...input}
-                label="Minimum Withdrawal Amount"
+                label={t('finance.withdrawals.minimumWithdrawalAmount')}
                 required
                 size="small"
                 inputMode="numeric"

@@ -3,6 +3,7 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const APP_SETTINGS_MIN_AGE = gql`
   query AppSettingsMinAge {
@@ -37,6 +38,7 @@ interface Props {
  * birth-year range, which drifted by a year every January and could only ever
  * approximate an age. */
 export default function MinAgeSection({ onToast }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(APP_SETTINGS_MIN_AGE, {
     fetchPolicy: 'cache-and-network',
   });
@@ -79,7 +81,7 @@ export default function MinAgeSection({ onToast }: Readonly<Props>) {
           sx={{ mb: 2 }}
         >
           <Box>
-            <Typography variant="subtitle1">Minimum age to use the app</Typography>
+            <Typography variant="subtitle1">{t('admin.settings.minAgeTitle')}</Typography>
             <Typography variant="body2" color="text.secondary">
               A date of birth younger than this is rejected on signup and when editing a profile,
               on the website and the app.
@@ -96,7 +98,7 @@ export default function MinAgeSection({ onToast }: Readonly<Props>) {
         </Stack>
 
         <TextField
-          label="Minimum age (years)"
+          label={t('admin.settings.minAge')}
           type="number"
           value={age}
           onChange={(e) => setAge(e.target.value)}

@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: any;
@@ -53,6 +54,7 @@ export default function VenueReviewDialog({
   savingDeductions,
   defaultCommissionPct,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [commission, setCommission] = useState('');
   // What settlement applies today: the venue's own override, or — because a
   // stored 0 means "follow the global default" — Finance → Default Deductions.
@@ -165,12 +167,12 @@ export default function VenueReviewDialog({
             </Box>
           )}
 
-          <TextField label="Reviewer notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={3} fullWidth />
+          <TextField label={t('onboarding.common.reviewerNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={3} fullWidth />
           <TextField
-            label="Tags"
+            label={t('onboarding.common.tags')}
             value={tagsText}
             onChange={(e) => setTagsText(e.target.value)}
-            helperText="Comma separated tags for this approved venue."
+            helperText={t('onboarding.venues.commaSeparatedTagsForThisApproved')}
             fullWidth
           />
 
@@ -185,7 +187,7 @@ export default function VenueReviewDialog({
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1.5 }}>
               <TextField
-                label="Commission from venue"
+                label={t('onboarding.venues.commissionFromVenue')}
                 type="number"
                 size="small"
                 value={commission}
@@ -211,7 +213,7 @@ export default function VenueReviewDialog({
       </DialogContent>
       <Divider />
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
         <Box sx={{ flex: 1 }} />
         <Button color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
           Reject

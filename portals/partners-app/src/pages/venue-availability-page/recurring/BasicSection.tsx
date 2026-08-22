@@ -6,6 +6,7 @@ import TimeSlotsSection from './TimeSlotsSection';
 import SpacePricingSection from './SpacePricingSection';
 import type { RecurringForm } from './useRecurringDialog';
 import { effectiveMaxAdvance, type VenueSettingsView } from './settings-map';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: RecurringForm;
@@ -14,12 +15,13 @@ interface Props {
 }
 
 export default function BasicSection({ form, patch, settings }: Readonly<Props>) {
+  const { t } = useTranslation();
   const maxDate = addDays(new Date(), effectiveMaxAdvance(settings.rules.max_advance_days));
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <DatePicker
-          label="Start date"
+          label={t('partners.venueAvailabilityPage.startDate')}
           value={form.startDate}
           onChange={(d) => patch({ startDate: d })}
           minDate={new Date()}
@@ -27,7 +29,7 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
           slotProps={{ textField: { fullWidth: true, size: 'small' } }}
         />
         <DatePicker
-          label="End date"
+          label={t('partners.venueAvailabilityPage.endDate')}
           value={form.endDate}
           onChange={(d) => patch({ endDate: d })}
           minDate={form.startDate ?? new Date()}

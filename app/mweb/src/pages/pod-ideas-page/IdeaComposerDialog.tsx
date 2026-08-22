@@ -13,6 +13,7 @@ import CategoryCascade, {
   type CategoryLabels,
   type CategoryScope,
 } from './CategoryCascade';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface IdeaComposerDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export default function IdeaComposerDialog({
   onClose,
   onSubmit,
 }: Readonly<IdeaComposerDialogProps>) {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -48,13 +50,13 @@ export default function IdeaComposerDialog({
       fullWidth
       maxWidth="sm"
     >
-      <DialogTitle>Share a pod idea</DialogTitle>
+      <DialogTitle>{t('mweb.podIdeas.shareAPodIdea')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
           <TextField
             autoFocus
-            label="Title"
+            label={t('mweb.common.title')}
             value={title}
             onChange={(e) => setTitle(e.target.value.slice(0, 160))}
             required
@@ -62,7 +64,7 @@ export default function IdeaComposerDialog({
             helperText={`${title.length} / 160`}
           />
           <TextField
-            label="Description"
+            label={t('mweb.common.description')}
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 2001))}
             required

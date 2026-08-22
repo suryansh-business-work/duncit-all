@@ -2,6 +2,7 @@ import { Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   anchorEl: HTMLElement | null;
@@ -22,6 +23,7 @@ export default function PhotoActionMenu({
   onRemove,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={onClose}>
       {hasPhoto && (
@@ -29,21 +31,21 @@ export default function PhotoActionMenu({
           <ListItemIcon>
             <VisibilityIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>View photo</ListItemText>
+          <ListItemText>{t('mweb.common.viewPhoto')}</ListItemText>
         </MenuItem>
       )}
       <MenuItem data-testid="photo-action-change" onClick={onChange}>
         <ListItemIcon>
           <PhotoCameraIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText>Change photo</ListItemText>
+        <ListItemText>{t('mweb.common.changePhoto')}</ListItemText>
       </MenuItem>
       {hasPhoto && (
         <MenuItem data-testid="photo-action-remove" onClick={onRemove} sx={{ color: 'error.main' }}>
           <ListItemIcon>
             <DeleteOutlineIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText>Remove photo</ListItemText>
+          <ListItemText>{t('mweb.common.removePhoto')}</ListItemText>
         </MenuItem>
       )}
     </Menu>

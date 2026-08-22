@@ -21,9 +21,11 @@ import TestDrawer from './test-panels';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Manage the named entries within each environment category. */
 export default function EnvVariablesTab() {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -86,7 +88,7 @@ export default function EnvVariablesTab() {
   };
 
   const handleDelete = async (e: EnvEntry) => {
-    if (!(await confirm({ title: 'Delete entry', message: `Delete "${e.name}"?`, destructive: true }))) return;
+    if (!(await confirm({ title: t('tech.environment.deleteEntry'), message: `Delete "${e.name}"?`, destructive: true }))) return;
     try {
       await deleteMut({ variables: { id: e.id } });
       notify(`${e.name} deleted`, 'success');

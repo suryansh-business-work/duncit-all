@@ -1,6 +1,7 @@
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import type { SlotDecisionRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const money = (value: number) => formatMoney(value, { symbol: '₹', decimals: 2 });
 
@@ -16,6 +17,7 @@ interface Props {
  * off the host's side), and the take-home as the hero number.
  */
 export default function EarningsBreakdown({ request, lost = false }: Readonly<Props>) {
+  const { t } = useTranslation();
   const accent = lost ? 'text.disabled' : 'success.main';
   return (
     <Box
@@ -47,7 +49,7 @@ export default function EarningsBreakdown({ request, lost = false }: Readonly<Pr
       <Stack spacing={1} sx={{ mt: 2 }}>
         <Stack direction="row" justifyContent="space-between" spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            Slot price
+            {t('partners.slotRequestsPage.slotPrice')}
           </Typography>
           <Typography variant="body2" fontWeight={700}>
             {money(request.price)}

@@ -10,28 +10,32 @@ import LiveAdsTable from './LiveAdsTable';
 import LiveAdDetailsDialog from './LiveAdDetailsDialog';
 import { DELETE_AD_REQUEST, LIVE_ADS_TABLE, STOP_AD_REQUEST } from './queries';
 import type { AdRequestRow } from '../ads-approvals-page/helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 type Pending = { row: AdRequestRow; action: 'stop' | 'delete' } | null;
 
-const COPY = {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const copy = (t: Translate) => ({
   stop: {
-    title: 'Stop this ad?',
-    confirmLabel: 'Stop ad',
+    title: t('marketing.liveAds.stopThisAd2'),
+    confirmLabel: t('marketing.liveAds.stopAd'),
     busyLabel: 'Stopping…',
     body: (name: string) =>
       `“${name}” stops showing immediately. The record is kept for billing, and it cannot be restarted — the advertiser would need a new request.`,
   },
   delete: {
-    title: 'Delete this ad?',
-    confirmLabel: 'Delete',
+    title: t('marketing.liveAds.deleteThisAd2'),
+    confirmLabel: t('shell.common.delete'),
     busyLabel: 'Deleting…',
     body: (name: string) => `“${name}” is removed permanently, along with its billing record.`,
   },
-} as const;
+}) as const;
 
 /** Everything showing right now, with the two things you need in a hurry:
  * stop it, or remove it. */
 export default function LiveAdsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const { formatDateTime } = useDateFormat();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -103,12 +107,12 @@ export default function LiveAdsPage() {
       {pending && (
         <ConfirmDialog
           open
-          title={COPY[pending.action].title}
-          message={error ?? COPY[pending.action].body(pending.row.ad_title)}
-          confirmLabel={COPY[pending.action].confirmLabel}
+          title={copy(t)[pending.action].title}
+          message={error ?? copy(t)[pending.action].body(pending.row.ad_title)}
+          confirmLabel={copy(t)[pending.action].confirmLabel}
           confirmColor={pending.action === 'stop' ? 'warning' : 'error'}
           loading={busy}
-          busyLabel={COPY[pending.action].busyLabel}
+          busyLabel={copy(t)[pending.action].busyLabel}
           onClose={closeConfirm}
           onConfirm={() => confirm(pending)}
         />

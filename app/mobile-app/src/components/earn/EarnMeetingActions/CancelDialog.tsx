@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ReasonField } from './ReasonField';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   open: boolean;
@@ -32,6 +33,7 @@ export function CancelDialog({
   onClose,
   onConfirm,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
 
   const footer = (
@@ -39,7 +41,7 @@ export function CancelDialog({
       <XStack
         testID="cancel-keep"
         role="button"
-        aria-label="Keep meeting"
+        aria-label={t('mweb.earn.keepMeeting')}
         onPress={onClose}
         flex={1}
         height={46}
@@ -57,7 +59,7 @@ export function CancelDialog({
       <XStack
         testID="cancel-confirm"
         role="button"
-        aria-label="Cancel meeting"
+        aria-label={t('mweb.earn.cancelMeeting')}
         aria-disabled={busy}
         onPress={busy ? undefined : onConfirm}
         flex={1}
@@ -81,7 +83,7 @@ export function CancelDialog({
       open={open}
       onClose={onClose}
       testID="cancel-dialog"
-      title="Cancel this meeting?"
+      title={t('mweb.earn.cancelThisMeeting')}
       closeLabel="Close"
       variant="center"
       showCloseButton={false}
@@ -94,7 +96,7 @@ export function CancelDialog({
         </Text>
         <ReasonField
           testID="cancel-reason"
-          label="Why are you cancelling?"
+          label={t('mweb.earn.whyAreYouCancelling')}
           value={reason}
           onChangeText={onChangeReason}
         />

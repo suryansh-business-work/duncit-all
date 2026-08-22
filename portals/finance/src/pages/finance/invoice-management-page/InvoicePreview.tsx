@@ -3,6 +3,7 @@ import { formatMoney } from '@duncit/utils';
 import { InfoRow } from '@duncit/ui';
 import type { InvoiceSettingsForm } from './types';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const ACCENT = '#ff4f73';
 // GST-inclusive sample matching the settlement engine: the customer pays 1000
@@ -12,6 +13,7 @@ const SAMPLE = { subtotal: 847.46, gst: 152.54, total: 1000 };
 /** A faithful, lightweight mirror of the generated invoice PDF so admins see the
  * effect of their edits live — uses sample figures, real branding values. */
 export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSettingsForm }>) {
+  const { t } = useTranslation();
   const c = value.currency_symbol || '₹';
   const money = (n: number) => formatMoney(n, { symbol: c, decimals: 2, grouping: false });
 
@@ -34,15 +36,15 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             {value.business_gstin && <Typography variant="caption" color="text.secondary">GSTIN: {value.business_gstin}</Typography>}
           </Box>
           <Box sx={{ textAlign: 'right' }}>
-            <Typography variant="caption" color="text.secondary">Invoice No</Typography>
+            <Typography variant="caption" color="text.secondary">{t('finance.invoiceManagement.invoiceNo')}</Typography>
             <Typography fontWeight={800}>{value.invoice_prefix || 'DUN'}/2526/000123</Typography>
             <Typography variant="caption" color="text.secondary" display="block">Date: {formatDate(new Date())}</Typography>
           </Box>
         </Stack>
 
         <Box sx={{ mt: 2, bgcolor: '#fff1f4', borderRadius: 2, p: 1.5 }}>
-          <Typography variant="caption" sx={{ color: ACCENT, fontWeight: 800 }}>BILL TO</Typography>
-          <Typography fontWeight={800}>Riya Sharma</Typography>
+          <Typography variant="caption" sx={{ color: ACCENT, fontWeight: 800 }}>{t('finance.invoiceManagement.billTo')}</Typography>
+          <Typography fontWeight={800}>{t('finance.invoiceManagement.riyaSharma')}</Typography>
           <Typography variant="caption" color="text.secondary">riya@example.com · +91 90000 00000</Typography>
         </Box>
 
@@ -50,15 +52,15 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
           <span>DESCRIPTION</span><span>AMOUNT</span>
         </Box>
         <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1, borderBottom: '1px solid #eee' }}>
-          <Typography variant="body2">Pod booking · Sample experience</Typography>
+          <Typography variant="body2">{t('finance.invoiceManagement.podBookingSampleExperience')}</Typography>
           <Typography variant="body2">{money(SAMPLE.subtotal)}</Typography>
         </Stack>
 
         <Stack spacing={0.4} sx={{ mt: 1.5, ml: 'auto', maxWidth: 240 }}>
-          <InfoRow variant="split" label="Taxable value" value={money(SAMPLE.subtotal)} labelWeight={500} valueWeight={500} />
-          <InfoRow variant="split" label="GST (18%)" value={money(SAMPLE.gst)} labelWeight={500} valueWeight={500} />
+          <InfoRow variant="split" label={t('finance.invoiceManagement.taxableValue')} value={money(SAMPLE.subtotal)} labelWeight={500} valueWeight={500} />
+          <InfoRow variant="split" label={t('finance.invoiceManagement.gst18')} value={money(SAMPLE.gst)} labelWeight={500} valueWeight={500} />
           <Divider />
-          <InfoRow variant="split" bold boldColor={ACCENT} label="Total Paid" value={money(SAMPLE.total)} />
+          <InfoRow variant="split" bold boldColor={ACCENT} label={t('finance.invoiceManagement.totalPaid')} value={money(SAMPLE.total)} />
         </Stack>
 
         <Box sx={{ mt: 2 }}>

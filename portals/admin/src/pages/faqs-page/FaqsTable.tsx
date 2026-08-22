@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip } from '@mui/material';
 import type { DuncitColumn, TableFetch } from '@duncit/table';
 import FaqsTableBase, { type FaqRow } from '../../components/FaqsTableBase';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<FaqRow>;
@@ -12,11 +13,13 @@ interface Props {
   onDelete: (row: FaqRow) => void;
 }
 
-const renderSuperCategory = (row: FaqRow) => {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const renderSuperCategory = (row: FaqRow, t: Translate) => {
   if (row.super_category) {
     return <Chip size="small" label={row.super_category.name} variant="outlined" />;
   }
-  return <Chip size="small" label="General" />;
+  return <Chip size="small" label={t('admin.faqs.general')} />;
 };
 
 export default function FaqsTable({
@@ -27,16 +30,17 @@ export default function FaqsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const entityColumn = useMemo<DuncitColumn<FaqRow>>(
     () => ({
       field: 'super_category_id',
-      headerName: 'Super Category',
+      headerName: t('admin.dashboard.superCategory'),
       filter: {
         type: 'select',
         options: supers.map((sc) => ({ value: sc.id, label: sc.name })),
       },
       minWidth: 170,
-      cellRenderer: renderSuperCategory,
+      cellRenderer: (row: FaqRow) => renderSuperCategory(row, t),
       valueGetter: (row) => row.super_category?.name ?? 'General',
     }),
     [supers],

@@ -9,6 +9,7 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Validation for a saved address — RN twin of mWeb's addressSchema. */
 export const addressSchema = z.object({
@@ -97,6 +98,7 @@ export function AddressFormSheet({
   onCancel,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   // The sheet sits flush on the bottom edge, which the edge-to-edge window lets
   // the Android navigation bar paint over — without this the Save row is under it.
@@ -118,7 +120,7 @@ export function AddressFormSheet({
           <YStack flex={1} justifyContent="flex-end" testID="address-form-sheet">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={onCancel}
               position="absolute"
               top={0}
@@ -141,23 +143,23 @@ export function AddressFormSheet({
               </Text>
               <ScrollView>
                 <YStack gap={10} paddingBottom={12}>
-                  <Field name="label" label="Label (Home, Office…)" control={control} />
-                  <Field name="name" label="Receiver name" control={control} />
-                  <Field name="phone" label="Phone" control={control} />
-                  <Field name="line1" label="Address line 1" control={control} />
-                  <Field name="line2" label="Address line 2" control={control} />
-                  <Field name="landmark" label="Landmark" control={control} />
-                  <Field name="city" label="City" control={control} />
-                  <Field name="state" label="State" control={control} />
-                  <Field name="pincode" label="Pincode" control={control} />
-                  <Field name="country" label="Country" control={control} />
+                  <Field name="label" label={t('mweb.account.labelHomeOffice')} control={control} />
+                  <Field name="name" label={t('mweb.account.receiverName')} control={control} />
+                  <Field name="phone" label={t('mweb.common.phone')} control={control} />
+                  <Field name="line1" label={t('mweb.common.addressLine1')} control={control} />
+                  <Field name="line2" label={t('mweb.account.addressLine2')} control={control} />
+                  <Field name="landmark" label={t('mweb.account.landmark')} control={control} />
+                  <Field name="city" label={t('mweb.common.city')} control={control} />
+                  <Field name="state" label={t('mweb.common.state')} control={control} />
+                  <Field name="pincode" label={t('mweb.common.pincode')} control={control} />
+                  <Field name="country" label={t('mweb.common.country')} control={control} />
                 </YStack>
               </ScrollView>
               <XStack gap={12}>
                 <XStack
                   testID="address-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label={t('mweb.common.cancel')}
                   onPress={onCancel}
                   flex={1}
                   height={46}
@@ -175,7 +177,7 @@ export function AddressFormSheet({
                 <XStack
                   testID="address-save"
                   role="button"
-                  aria-label="Save address"
+                  aria-label={t('mweb.account.saveAddress')}
                   aria-disabled={saving}
                   onPress={saving ? undefined : handleSubmit(onSubmit)}
                   flex={1}

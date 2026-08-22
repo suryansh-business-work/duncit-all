@@ -24,6 +24,7 @@ import {
   type PodResubmitValues,
   type ResubmitVenueOption,
 } from './pod-resubmit.form';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   pod: HostPodForResubmit | null;
@@ -36,6 +37,7 @@ interface Props {
  * the same pod is reused, no new pod is created. RN twin of mWeb's
  * PodResubmitForm. */
 export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [venues, setVenues] = useState<ResubmitVenueOption[]>([]);
@@ -77,7 +79,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
       );
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not resubmit the pod');
+      setError(err instanceof Error ? err.message : t('mweb.hostManage.couldNotResubmitThePod'));
     } finally {
       setBusy(false);
     }
@@ -92,7 +94,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
           <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-resubmit-dialog">
             <YStack
               role="button"
-              aria-label="Close"
+              aria-label={t('mweb.common.close')}
               onPress={dismiss}
               position="absolute"
               top={0}
@@ -123,14 +125,14 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                     <FormTextField
                       control={control}
                       name="pod_title"
-                      label="Title"
+                      label={t('mweb.common.title')}
                       required
                       hint="3–120 characters"
                     />
                     <FormTextField
                       control={control}
                       name="pod_description"
-                      label="Description"
+                      label={t('mweb.common.description')}
                       multiline
                       required
                       hint="At least 10 characters"
@@ -172,7 +174,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                           value={field.value}
                           onChange={field.onChange}
                           error={fieldState.error?.message}
-                          label="Media"
+                          label={t('mweb.hostManage.media')}
                         />
                       )}
                     />

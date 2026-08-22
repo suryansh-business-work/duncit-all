@@ -2,6 +2,7 @@ import { useMutation } from '@apollo/client';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { SET_MY_BRAND_ACTIVE, type EcommBrandRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   target: EcommBrandRow | null;
@@ -13,6 +14,7 @@ interface Props {
  * paused the brand and every one of its products are hidden from the shop;
  * placed orders are unaffected. Reports the outcome through onDone. */
 export default function BrandPauseDialog({ target, onClose, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [setBrandActive, activeState] = useMutation(SET_MY_BRAND_ACTIVE);
   const activating = target ? target.is_active === false : false;
   const body = activating
@@ -39,7 +41,7 @@ export default function BrandPauseDialog({ target, onClose, onDone }: Readonly<P
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           color={activating ? 'success' : 'warning'}
           variant="contained"

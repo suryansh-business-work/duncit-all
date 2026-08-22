@@ -18,8 +18,10 @@ import { blankForm, type NotifForm } from './helpers';
 import NotificationsTable from './NotificationsTable';
 import NotificationFormDialog from './NotificationFormDialog';
 import { notificationFormSchema, toCreateNotificationInput } from './notification.form';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const { data: locsData } = useQuery(LOCATIONS_FOR_NOTIF);
@@ -83,15 +85,15 @@ export default function NotificationsPage() {
 
   const remove = async (n: NotificationRow) => {
     const ok = await confirm({
-      title: 'Delete notification',
+      title: t('marketing.notifications.deleteNotification'),
       message: `Delete notification "${n.title}"?`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
     });
     if (!ok) return;
     try {
       await deleteMut({ variables: { id: n.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
@@ -103,7 +105,7 @@ export default function NotificationsPage() {
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <NotificationsActiveIcon color="primary" />
-          <Typography variant="h5">Notifications</Typography>
+          <Typography variant="h5">{t('shell.nav.notifications')}</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
           Send push + in-app notifications to all users, a city, a zone, or specific users.

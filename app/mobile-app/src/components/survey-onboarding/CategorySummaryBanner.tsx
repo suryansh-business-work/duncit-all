@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CategoryLabels } from './useOnboardingFlow';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const summary = (labels: CategoryLabels) =>
   [labels.super, labels.category, labels.sub].filter(Boolean).join(' › ');
@@ -16,6 +17,7 @@ export function CategorySummaryBanner({
   labels,
   onChange,
 }: Readonly<{ labels: CategoryLabels; onChange: () => void }>) {
+  const { t } = useTranslation();
   const { color: ink, primary } = useThemeColors();
   const text = summary(labels);
   if (!text) return null;
@@ -42,7 +44,7 @@ export function CategorySummaryBanner({
       <XStack
         testID="category-change"
         role="button"
-        aria-label="Change category"
+        aria-label={t('mweb.surveyOnboarding.changeCategory')}
         onPress={onChange}
         alignItems="center"
         gap={4}

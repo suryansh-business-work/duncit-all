@@ -19,6 +19,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import type { EnvCategoryDef, EnvEntry, EnvFieldDef } from '../queries';
 import { emptyValues, envEntrySchema, valuesFromEntry, type EnvEntryFormValues } from './env-entry.types';
 import ConfigField from './ConfigField';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function EnvEntryForm({ open, def, initial, busy, testing, onClose, onSubmit, onTest }: Readonly<Props>) {
+  const { t } = useTranslation();
   const isEdit = !!initial;
   const defaults = initial ? valuesFromEntry(initial) : emptyValues();
   const { control, handleSubmit, reset } = useForm<EnvEntryFormValues>({
@@ -82,7 +84,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  label="Name"
+                  label={t('shell.common.name')}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? 'A label to tell entries apart'}
                   fullWidth
@@ -96,7 +98,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
               control={control}
               name="description"
               render={({ field }) => (
-                <TextField {...field} label="Description" fullWidth multiline minRows={2} />
+                <TextField {...field} label={t('shell.common.description')} fullWidth multiline minRows={2} />
               )}
             />
             <Stack direction="row" spacing={2}>
@@ -106,7 +108,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-                    label="Default"
+                    label={t('tech.environment.default')}
                   />
                 )}
               />
@@ -116,7 +118,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-                    label="Active"
+                    label={t('tech.environment.active')}
                   />
                 )}
               />
@@ -152,7 +154,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
             </Button>
           ) : <span />}
           <Stack direction="row" spacing={1}>
-            <Button onClick={onClose} disabled={busy}>Cancel</Button>
+            <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
             <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
           </Stack>
         </DialogActions>

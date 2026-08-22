@@ -2,6 +2,7 @@ import { Chip, Paper, Stack, Typography } from '@mui/material';
 import FlagIcon from '@mui/icons-material/Flag';
 import { useDateFormat } from '../../utils/dateFormat';
 import type { TicketDetail, TicketPriority } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const PRIORITY_COLOR: Record<TicketPriority, 'default' | 'warning' | 'error'> = {
   LOW: 'default',
@@ -24,6 +25,7 @@ function Field({ label, value }: Readonly<{ label: string; value: string }>) {
 
 /** Ticket metadata header — priority, raised-at and last-updated (Bug 1). */
 export default function TicketMeta({ ticket }: Readonly<{ ticket: TicketDetail }>) {
+  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const lastUpdated = ticket.last_message_at || ticket.updated_at;
 
@@ -41,8 +43,8 @@ export default function TicketMeta({ ticket }: Readonly<{ ticket: TicketDetail }
         />
       </Stack>
       <Stack direction="row" spacing={2}>
-        <Field label="Raised" value={formatDateTime(ticket.created_at)} />
-        <Field label="Last updated" value={formatDateTime(lastUpdated)} />
+        <Field label={t('mweb.common.raised')} value={formatDateTime(ticket.created_at)} />
+        <Field label={t('mweb.common.lastUpdated')} value={formatDateTime(lastUpdated)} />
       </Stack>
     </Paper>
   );

@@ -1,6 +1,7 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import HomeStatusTile from './HomeStatusTile';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   me?: any;
@@ -18,6 +19,7 @@ function initials(name?: string | null) {
 }
 
 export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { upload, openProfilePicker } = useStatusUpload();
   const stories = (me?.my_stories ?? []) as Array<{ image_url?: string; media_type?: string }>;
   const latestStory = stories[0] ?? null;
@@ -76,7 +78,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
             fontWeight: 700,
             lineHeight: 1,
           }}
-          aria-label="Add another"
+          aria-label={t('mweb.home.addAnother')}
         >
           +
         </Box>

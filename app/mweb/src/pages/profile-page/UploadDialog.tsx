@@ -16,6 +16,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CREATE_POST } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function UploadDialog({ open, onClose, onSuccess, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
@@ -82,7 +84,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
               }}
             />
             <TextField
-              label="Write a caption…"
+              label={t('mweb.profile.writeACaption')}
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               multiline
@@ -103,7 +105,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
         ) : (
           <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
             <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
-            <Typography variant="body1">Pick an image to share.</Typography>
+            <Typography variant="body1">{t('mweb.profile.pickAnImageToShare')}</Typography>
             <Button variant="contained" onClick={() => setPickerOpen(true)}>
               Choose image
             </Button>
@@ -118,7 +120,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
         onClose={() => setPickerOpen(false)}
         onPicked={(url) => setImageUrl(url)}
         folder="/posts"
-        title="Choose image for your post"
+        title={t('mweb.profile.chooseImageForYourPost')}
       />
     </Dialog>
   );

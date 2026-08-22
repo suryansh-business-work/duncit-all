@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import type { CrmWebsitePage } from '../../api/websitePages.gql';
 import WebsitePageRow from './WebsitePageRow';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   pages: CrmWebsitePage[];
@@ -10,14 +11,15 @@ interface Props {
 }
 
 export default function WebsitePagesTable({ pages, onView, onDelete, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Table size="small">
       <TableHead>
         <TableRow>
-          <TableCell>Page URL</TableCell>
-          <TableCell>Status</TableCell>
-          <TableCell align="right">Chars</TableCell>
-          <TableCell align="right">Actions</TableCell>
+          <TableCell>{t('crm.components.pageUrl')}</TableCell>
+          <TableCell>{t('shell.common.status')}</TableCell>
+          <TableCell align="right">{t('crm.components.chars')}</TableCell>
+          <TableCell align="right">{t('shell.common.actions')}</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>

@@ -8,8 +8,10 @@ import type { FaqRow } from '../../components/FaqsTableBase';
 import { CREATE_PARTNER_FAQ, DELETE_PARTNER_FAQ, PARTNER_FAQS_TABLE, UPDATE_PARTNER_FAQ } from './queries';
 import PartnerFaqsTable from './PartnerFaqsTable';
 import { PartnerFaqForm, emptyPartnerFaqForm, toPartnerFaqForm, toPartnerFaqInput, type PartnerFaqFormValues } from './partner-faq-form';
+import { useTranslation } from '@duncit/shell';
 
 export default function PartnerFaqsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<any>(null);
@@ -43,7 +45,7 @@ export default function PartnerFaqsPage() {
   const submit = async (values: PartnerFaqFormValues) => {
     setError(null);
     try {
-      const input = toPartnerFaqInput(values);
+      const input = toPartnerFaqInput(values, t);
       if (editing?.id) await updateFaq({ variables: { faq_doc_id: editing.id, input } });
       else await createFaq({ variables: { input } });
       setEditing(null);
@@ -58,7 +60,7 @@ export default function PartnerFaqsPage() {
     if (!deleteTarget) return;
     await deleteFaq({ variables: { faq_doc_id: deleteTarget.id } });
     setDeleteTarget(null);
-    setToast('Partner FAQ deleted');
+    setToast(t('admin.faqs.partnerDeleted'));
     refetchRef.current?.();
   };
 
@@ -66,24 +68,24 @@ export default function PartnerFaqsPage() {
     <Box>
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
         <HandshakeIcon color="primary" />
-        <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>Partner FAQs</Typography>
+        <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>{t('admin.faqs.partnerTitle')}</Typography>
       </Stack>
       <PartnerFaqsTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>New FAQ</Button>
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>{t('admin.faqs.newFaq')}</Button>
         }
         onEdit={openEdit}
         onDelete={setDeleteTarget}
       />
       <PartnerFaqForm open={Boolean(editing)} editing={Boolean(editing?.id)} initialValues={form} saving={saving} error={error} onClose={() => setEditing(null)} onSubmit={submit} />
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Delete this partner FAQ?</DialogTitle>
-        <DialogContent><Typography variant="body2">This action cannot be undone.</Typography></DialogContent>
+        <DialogTitle>{t('admin.faqs.partnerDeleteTitle')}</DialogTitle>
+        <DialogContent><Typography variant="body2">{t('admin.faqs.deleteBody')}</Typography></DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete}>Delete</Button>
+          <Button onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</Button>
+          <Button color="error" variant="contained" onClick={confirmDelete}>{t('shell.common.delete')}</Button>
         </DialogActions>
       </Dialog>
       <Snackbar open={Boolean(toast)} autoHideDuration={3000} onClose={() => setToast(null)} message={toast || ''} />

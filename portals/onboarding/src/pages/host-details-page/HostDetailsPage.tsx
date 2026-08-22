@@ -7,11 +7,13 @@ import PodsTable from '../../components/pods-table/PodsTable';
 import { PODS_TABLE, type PodRow } from '../../components/pods-table/queries';
 import { useDateFormat } from '@duncit/app-settings';
 import { HOST_DETAILS } from '../hosts-page/queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const catPath = (c: { super_category_name: string; category_name: string; sub_category_name: string }) =>
   [c.super_category_name, c.category_name, c.sub_category_name].filter(Boolean).join(' › ');
 
 export default function HostDetailsPage() {
+  const { t } = useTranslation();
   const { hostId = '' } = useParams<{ hostId: string }>();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
@@ -78,7 +80,7 @@ export default function HostDetailsPage() {
               tableId="onboarding-host-pods"
               fetchRows={fetchPods}
               formatDateTime={formatDateTime}
-              emptyText="No pods for this host yet."
+              emptyText={t('onboarding.hostDetails.noPodsForThisHostYet')}
             />
           </Stack>
         </Stack>

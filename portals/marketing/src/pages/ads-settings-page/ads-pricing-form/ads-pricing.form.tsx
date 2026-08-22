@@ -11,12 +11,14 @@ import {
   type AdsPricingFormProps,
   type AdsPricingFormValues,
 } from './ads-pricing.types';
+import { useTranslation } from '@duncit/app-settings';
 
 export { adsPricingSchema };
 export { fromAdPricing, toUpdateAdPricingInput } from './ads-pricing.types';
 
 /** Live example — recomputes from the current (possibly unsaved) form values. */
 function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }>) {
+  const { t } = useTranslation();
   const [position, setPosition] = useState<AdPosition>('HOME_BOTTOM');
   const [days, setDays] = useState('7');
 
@@ -38,7 +40,7 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
         <TextField
           select
           size="small"
-          label="Position"
+          label={t('marketing.common.position')}
           value={position}
           onChange={(e) => setPosition(e.target.value as AdPosition)}
           sx={{ minWidth: 220 }}
@@ -51,7 +53,7 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
         </TextField>
         <TextField
           size="small"
-          label="Days"
+          label={t('marketing.common.days')}
           type="number"
           inputProps={{ min: Number(values.min_days) || 1, max: Number(values.max_days) || 30 }}
           value={days}
@@ -72,9 +74,10 @@ export default function AdsPricingForm({
   errorMessage,
   onSubmit,
 }: Readonly<AdsPricingFormProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset, watch, formState } = useForm<AdsPricingFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(adsPricingSchema),
+    resolver: zodResolver(adsPricingSchema(t)),
     mode: 'onChange',
   });
 
@@ -103,7 +106,7 @@ export default function AdsPricingForm({
           <RhfTextField
             control={control}
             name="currency_symbol"
-            label="Currency symbol"
+            label={t('marketing.common.currencySymbol')}
             hint="Shown next to every ad price (e.g. ₹)"
             required
           />
@@ -116,7 +119,7 @@ export default function AdsPricingForm({
           <RhfTextField
             control={control}
             name="min_days"
-            label="Minimum campaign days"
+            label={t('marketing.adsSettings.minimumCampaignDays')}
             type="number"
             inputProps={{ min: 1, step: 1 }}
             hint="Shortest campaign an advertiser may book"
@@ -127,7 +130,7 @@ export default function AdsPricingForm({
           <RhfTextField
             control={control}
             name="max_days"
-            label="Maximum campaign days"
+            label={t('marketing.adsSettings.maximumCampaignDays')}
             type="number"
             inputProps={{ min: 1, step: 1 }}
             hint="Longest campaign an advertiser may book"

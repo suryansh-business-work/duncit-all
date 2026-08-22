@@ -5,6 +5,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StatusVisual, { TranscriptWave } from './statusVisuals';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const fmt = (value?: string | null) => {
   if (!value) return '—';
@@ -39,6 +40,7 @@ interface Props {
 }
 
 export default function LogRow({ log, onRequestTranscript, refreshing }: Readonly<Props>) {
+  const { t } = useTranslation();
   const transcriptReady = log.transcript_status === 'READY' && log.transcript;
   return (
     <Stack
@@ -75,7 +77,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
               <Box sx={{ width: '100%' }}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TranscriptWave />
-                  <Typography variant="caption" color="text.secondary">Transcript</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('crm.components.transcript')}</Typography>
                 </Stack>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
                   {log.transcript}
@@ -103,7 +105,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
               </Stack>
             )}
             {log.recording_url && (
-              <Tooltip title="Open recording">
+              <Tooltip title={t('crm.components.openRecording')}>
                 <IconButton size="small" component="a" href={log.recording_url} target="_blank" rel="noreferrer">
                   <OpenInNewIcon fontSize="small" />
                 </IconButton>

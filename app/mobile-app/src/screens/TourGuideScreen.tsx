@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
 import type { TabParamList } from '@/navigation/tabs';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time. The
@@ -17,6 +18,7 @@ import type { RootStackParamList } from '@/navigation/types';
  * entry and it shows up here and in mWeb's centre with no change to either.
  */
 export function TourGuideScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, primary } = useThemeColors();
   const completed = useToursStore((s) => s.completed);
@@ -39,7 +41,7 @@ export function TourGuideScreen() {
   };
 
   return (
-    <StackScreen title="Tour Guide" testID="tour-guide-screen">
+    <StackScreen title={t('mweb.tourGuide.tourGuide')} testID="tour-guide-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={12} padding={16} paddingBottom={40}>
           <Text fontSize={13} color="$muted">

@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import EcommStatCards from './EcommStatCards';
 import { PARTNER_ECOMM_STATS } from './ecomm-dashboard.queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Partner E-Commerce Dashboard: owner-scoped brand/product/warehouse/order KPIs. */
 export default function EcommDashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(PARTNER_ECOMM_STATS, { fetchPolicy: 'cache-and-network' });
   const stats = data?.partnerEcommStats ?? null;
@@ -15,7 +17,7 @@ export default function EcommDashboardPage() {
   const widgets: DashboardWidget[] = [
     {
       id: 'performance',
-      title: 'E-commerce performance',
+      title: t('partners.ecommDashboardPage.eCommercePerformance'),
       headerActions: loading ? <CircularProgress size={22} /> : undefined,
       // The card row is one line at desktop and wraps below ~1050px — a fixed
       // h is dead space in one shape and a cut in the other.

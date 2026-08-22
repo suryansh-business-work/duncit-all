@@ -17,6 +17,7 @@ import { fileToBase64, parseApiError } from '@duncit/utils';
 import { autoMatch, importFieldsFor } from '../config/importFields';
 import ColumnMappingStep from './import/ColumnMappingStep';
 import ImportResultView, { type ImportResult } from './import/ImportResultView';
+import { useTranslation } from '@duncit/shell';
 
 const CRM_EXCEL_INSPECT = gql`
   query CrmExcelInspect($content_base64: String!) {
@@ -43,6 +44,7 @@ interface Props {
 type Step = 'file' | 'map' | 'done';
 
 export default function ExcelImportDialog({ open, entity, title, onClose, onImported, onDownloadTemplate }: Readonly<Props>) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [step, setStep] = useState<Step>('file');
   const [base64, setBase64] = useState('');
@@ -121,7 +123,7 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
               Multi-value columns accept comma-separated values.
             </Typography>
             {onDownloadTemplate && (
-              <Button size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>Download template</Button>
+              <Button size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>{t('crm.components.downloadTemplate')}</Button>
             )}
             <Divider />
             <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
@@ -141,10 +143,10 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
         {step === 'done' && result && <ImportResultView result={result} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={inspecting || importing}>Close</Button>
+        <Button onClick={close} disabled={inspecting || importing}>{t('shell.common.close')}</Button>
         {step === 'map' && (
           <Button variant="contained" onClick={doImport} disabled={importing || !requiredOk}>
-            {importing ? 'Importing…' : 'Import'}
+            {importing ? 'Importing…' : t('crm.userLeads.import')}
           </Button>
         )}
       </DialogActions>

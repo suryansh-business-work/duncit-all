@@ -3,27 +3,30 @@ import { Box, Chip, Link, Stack, Switch, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { PortalModeRow, PortalModeState } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const KIND_LABEL: Record<string, string> = { PORTAL: 'Portal', WEBSITE: 'Website', APP: 'App' };
 
-const KIND_OPTIONS = [
-  { value: 'PORTAL', label: 'Portal' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'APP', label: 'App' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const kindOptions = (t: Translate) => [
+  { value: 'PORTAL', label: t('tech.common.portal') },
+  { value: 'WEBSITE', label: t('tech.common.website') },
+  { value: 'APP', label: t('tech.common.app') },
 ] as const;
 
-const MODE_OPTIONS = [
-  { value: 'LIVE', label: 'Live' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
-  { value: 'DEVELOPMENT', label: 'Development' },
+const modeOptions = (t: Translate) => [
+  { value: 'LIVE', label: t('tech.portalModes.live') },
+  { value: 'MAINTENANCE', label: t('shell.nav.maintenance') },
+  { value: 'DEVELOPMENT', label: t('tech.portalModes.development') },
 ] as const;
 
 type StatusMeta = { color: 'warning' | 'info' | 'success'; label: string };
 
-const statusMeta = (mode: PortalModeState): StatusMeta => {
-  if (mode === 'MAINTENANCE') return { color: 'warning', label: 'Maintenance' };
-  if (mode === 'DEVELOPMENT') return { color: 'info', label: 'Development' };
-  return { color: 'success', label: 'Live' };
+const statusMeta = (mode: PortalModeState, t: Translate): StatusMeta => {
+  if (mode === 'MAINTENANCE') return { color: 'warning', label: t('shell.nav.maintenance') };
+  if (mode === 'DEVELOPMENT') return { color: 'info', label: t('tech.portalModes.development') };
+  return { color: 'success', label: t('tech.portalModes.live') };
 };
 
 const getPortalModeRowId = (row: PortalModeRow) => row.key;
@@ -56,11 +59,11 @@ const renderLink = (row: PortalModeRow) =>
   );
 const linkValue = (row: PortalModeRow) => row.url ?? '';
 
-const renderStatus = (row: PortalModeRow) => {
-  const status = statusMeta(row.mode);
+const renderStatus = (row: PortalModeRow, t: Translate) => {
+  const status = statusMeta(row.mode, t);
   return <Chip size="small" color={status.color} label={status.label} />;
 };
-const statusValue = (row: PortalModeRow) => statusMeta(row.mode).label;
+const statusValue = (row: PortalModeRow, t: Translate) => statusMeta(row.mode, t).label;
 
 const maintenanceValue = (row: PortalModeRow) => (row.mode === 'MAINTENANCE' ? 'On' : 'Off');
 const developmentValue = (row: PortalModeRow) => (row.mode === 'DEVELOPMENT' ? 'On' : 'Off');
@@ -73,6 +76,7 @@ interface Props {
 }
 
 export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PortalModeRow>[]>(() => {
     const renderMaintenance = (row: PortalModeRow) => (
       <Switch
@@ -91,12 +95,12 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       />
     );
     return [
-      { field: 'name', headerName: 'Portal name', flex: 1, minWidth: 220, cellRenderer: renderName, valueGetter: nameValue },
-      { field: 'kind', headerName: 'Type', hide: true, width: 120, filter: { type: 'select', options: KIND_OPTIONS } },
-      { field: 'url', headerName: 'Link', sortable: false, flex: 1, minWidth: 200, cellRenderer: renderLink, valueGetter: linkValue },
+      { field: 'name', headerName: t('tech.portalModes.portalName'), flex: 1, minWidth: 220, cellRenderer: renderName, valueGetter: nameValue },
+      { field: 'kind', headerName: t('shell.common.type'), hide: true, width: 120, filter: { type: 'select', options: kindOptions(t) } },
+      { field: 'url', headerName: t('tech.portalModes.link'), sortable: false, flex: 1, minWidth: 200, cellRenderer: renderLink, valueGetter: linkValue },
       {
         field: 'maintenance',
-        headerName: 'Maintenance',
+        headerName: t('shell.nav.maintenance'),
         sortable: false,
         width: 130,
         cellRenderer: renderMaintenance,
@@ -104,7 +108,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       },
       {
         field: 'development',
-        headerName: 'Development',
+        headerName: t('tech.portalModes.development'),
         sortable: false,
         width: 130,
         cellRenderer: renderDevelopment,
@@ -112,11 +116,11 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       },
       {
         field: 'mode',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 150,
-        filter: { type: 'select', options: MODE_OPTIONS },
-        cellRenderer: renderStatus,
-        valueGetter: statusValue,
+        filter: { type: 'select', options: modeOptions(t) },
+        cellRenderer: (row: PortalModeRow) => renderStatus(row, t),
+        valueGetter: (row: PortalModeRow) => statusValue(row, t),
       },
     ];
   }, [busyKey, onChange]);
@@ -127,7 +131,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPortalModeRowId}
-      emptyText="No portals registered."
+      emptyText={t('tech.portalModes.noPortalsRegistered')}
       searchPlaceholder="Search by name or key"
       refetchRef={refetchRef}
     />

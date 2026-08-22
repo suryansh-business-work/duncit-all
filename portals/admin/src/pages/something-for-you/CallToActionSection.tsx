@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { SOMETHING_FOR_YOU_ROUTES, type SomethingForYouAction } from '@duncit/utils';
 import type { SomethingForYouForm } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: SomethingForYouForm;
@@ -36,6 +37,7 @@ const ROUTE_OPTIONS = SOMETHING_FOR_YOU_ROUTES.map((route) => ({
  * failure nobody sees until a user reports it.
  */
 export default function CallToActionSection({ form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const selectedRoute = ROUTE_OPTIONS.find((route) => route.path === form.link_path) ?? null;
 
   const chooseAction = (action: SomethingForYouAction | null) => {
@@ -55,13 +57,13 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
         value={form.action_type}
         onChange={(_event, value: SomethingForYouAction | null) => chooseAction(value)}
       >
-        <ToggleButton value="NONE">Nothing</ToggleButton>
-        <ToggleButton value="ROUTE">In-app screen</ToggleButton>
-        <ToggleButton value="URL">Web link</ToggleButton>
+        <ToggleButton value="NONE">{t('admin.somethingForYou.ctaNothing')}</ToggleButton>
+        <ToggleButton value="ROUTE">{t('admin.somethingForYou.ctaScreen')}</ToggleButton>
+        <ToggleButton value="URL">{t('admin.somethingForYou.ctaLink')}</ToggleButton>
       </ToggleButtonGroup>
 
       {form.action_type === 'NONE' && (
-        <FormHelperText>The card is decorative — pressing it does nothing.</FormHelperText>
+        <FormHelperText>{t('admin.somethingForYou.ctaNothingHint')}</FormHelperText>
       )}
 
       {form.action_type === 'ROUTE' && (
@@ -89,8 +91,8 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Opens this screen"
-              helperText="Search by name or path. The app opens the screen; mWeb opens the same page."
+              label={t('admin.somethingForYou.ctaScreenHint')}
+              helperText={t('admin.somethingForYou.screenSearchHint')}
             />
           )}
         />
@@ -98,12 +100,12 @@ export default function CallToActionSection({ form, setForm }: Readonly<Props>) 
 
       {form.action_type === 'URL' && (
         <TextField
-          label="Opens this address"
+          label={t('admin.somethingForYou.ctaLinkHint')}
           value={form.link_url}
           onChange={(event) => setForm({ ...form, link_url: event.target.value })}
           fullWidth
           placeholder="https://duncit.com/…"
-          helperText="Include https://. The app hands this to the browser; mWeb opens a new tab."
+          helperText={t('admin.somethingForYou.linkHint')}
         />
       )}
     </Stack>

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,21 +9,23 @@ import { semantic } from '@duncit/auth-tokens';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatRoom } from '@/stores/chat.store';
 import { podStatus, type PodStatus } from '@/utils/pod-format';
+import type { Translate } from '@/i18n/fallback';
 
-const STATUS_META: Record<PodStatus, { label: string; color: string }> = {
-  LIVE: { label: 'Live', color: semantic.success },
-  UPCOMING: { label: 'Upcoming', color: semantic.info },
-  ENDED: { label: 'Previous', color: semantic.warning },
-};
+const statusMeta = (t: Translate): Record<PodStatus, { label: string; color: string }> => ({
+  LIVE: { label: t('mweb.common.live'), color: semantic.success },
+  UPCOMING: { label: t('mweb.common.upcoming'), color: semantic.info },
+  ENDED: { label: t('mweb.common.previous'), color: semantic.warning },
+});
 
 /** A chat-room row in the Chats thread list — cover, title, member count and the
  * linked pod's status (Upcoming / Live / Previous). */
 export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPress: () => void }>) {
+  const { t } = useTranslation();
   const { onPrimary, muted } = useThemeColors();
   // Identity, deliberately: this counts who is IN the chat, and a multi-seat
   // buyer is one person in it. Do not seat-adjust it the way occupancy was.
   const members = room.pod_attendees.length;
-  const status = STATUS_META[podStatus(room.pod_date_time, room.pod_end_date_time)];
+  const status = statusMeta(t)[podStatus(room.pod_date_time, room.pod_end_date_time)];
 
   return (
     <XStack

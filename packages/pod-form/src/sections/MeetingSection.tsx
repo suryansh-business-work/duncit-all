@@ -5,8 +5,10 @@ import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../components/DateTimeField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function MeetingSection() {
+  const { t } = useTranslation();
   const { meetingPlatforms, onGenerateMeetingLink } = usePodFormData();
   const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const [generating, setGenerating] = useState(false);
@@ -44,14 +46,14 @@ export default function MeetingSection() {
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required />
-        <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} />
+        <DateTimeField control={control} name="pod_date_time" label={t('podForm.common.startDateAndTime')} minDateTime={now} required />
+        <DateTimeField control={control} name="pod_end_date_time" label={t('podForm.common.endDateAndTime')} minDateTime={endMin} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {meetingPlatforms ? (
           <TextField
             select
-            label="Meeting platform"
+            label={t('podForm.meetingSection.meetingPlatform')}
             value={meetingPlatform || ''}
             onChange={(event) => setValue('meeting_platform', event.target.value, { shouldValidate: true })}
             fullWidth
@@ -66,7 +68,7 @@ export default function MeetingSection() {
           </TextField>
         ) : (
           <TextField
-            label="Meeting platform"
+            label={t('podForm.meetingSection.meetingPlatform')}
             fullWidth
             error={!!errors.meeting_platform}
             helperText={errors.meeting_platform?.message}
@@ -79,7 +81,7 @@ export default function MeetingSection() {
           render={({ field, fieldState }) => (
             <TextField
               {...field}
-              label="Meeting link"
+              label={t('podForm.meetingSection.meetingLink')}
               fullWidth
               required
               placeholder="https://meet.google.com/..."
@@ -88,7 +90,7 @@ export default function MeetingSection() {
               InputProps={{
                 endAdornment: canAutoGenerate ? (
                   <InputAdornment position="end">
-                    <Tooltip title="Auto-generate meeting link">
+                    <Tooltip title={t('podForm.meetingSection.autoGenerateMeetingLink')}>
                       <Button
                         size="small"
                         onClick={handleAutoGenerate}
@@ -106,7 +108,7 @@ export default function MeetingSection() {
         />
       </Stack>
       <TextField
-        label="Meeting notes"
+        label={t('podForm.meetingSection.meetingNotes')}
         fullWidth
         multiline
         minRows={3}

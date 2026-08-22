@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Chip, Collapse, IconButton, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useDateFormat } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface PayoutBreakdown {
   version: number;
@@ -28,6 +29,7 @@ const STATUS_COLOR: Record<string, 'warning' | 'success' | 'error'> = {
 };
 
 function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: string }>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { formatDate } = useDateFormat();
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
@@ -53,7 +55,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
         {expandable && (
           <IconButton
             size="small"
-            aria-label="Show payout breakdown"
+            aria-label={t('mweb.venueEarnings.showPayoutBreakdown')}
             onClick={() => setOpen((v) => !v)}
             sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
           >

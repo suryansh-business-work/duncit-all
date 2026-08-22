@@ -5,6 +5,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DELETE_ALL_EMAIL_LOGS, DELETE_EMAIL_LOGS, type EmailLogRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const rowWord = (n: number) => (n === 1 ? 'row' : 'rows');
 
@@ -33,6 +34,7 @@ interface BarProps {
 }
 
 export default function EmailLogBulkBar({ selected, onClear, onDeleted }: Readonly<BarProps>) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [deleteLogs, { loading }] = useMutation<{ deleteEmailLogs: number }>(DELETE_EMAIL_LOGS);
   const count = selected.length;
@@ -41,7 +43,7 @@ export default function EmailLogBulkBar({ selected, onClear, onDeleted }: Readon
     const ok = await confirm({
       title: `Delete ${count} selected ${rowWord(count)}?`,
       message: `The ${count} ${rowWord(count)} ticked on this page will be deleted permanently. Nothing else is touched.`,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
       destructive: true,
     });
     if (!ok) return;
@@ -86,14 +88,15 @@ interface DeleteAllProps {
 }
 
 export function EmailLogDeleteAllButton({ total, onDeleted }: Readonly<DeleteAllProps>) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [deleteAll, { loading }] = useMutation<{ deleteAllEmailLogs: number }>(DELETE_ALL_EMAIL_LOGS);
 
   const removeAll = async () => {
     const ok = await confirm({
-      title: 'Delete every email log?',
+      title: t('tech.emailLogs.deleteEveryEmailLog'),
       message: `This deletes all ${total.toLocaleString()} rows ever recorded — the entire history, not the page on screen. Your search and filters do not narrow it, and there is no undo.`,
-      confirmLabel: 'Delete everything',
+      confirmLabel: t('tech.common.deleteEverything'),
       destructive: true,
     });
     if (!ok) return;

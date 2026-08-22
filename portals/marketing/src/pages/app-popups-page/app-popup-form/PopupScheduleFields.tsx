@@ -2,7 +2,8 @@ import { Controller, type Control } from 'react-hook-form';
 import { FormControlLabel, Grid, MenuItem, Switch } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { RhfTextField } from '@duncit/forms';
-import { PLATFORM_OPTIONS, type AppPopupFormValues } from './app-popup.types';
+import { platformOptions, type AppPopupFormValues } from './app-popup.types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   control: Control<AppPopupFormValues>;
@@ -15,6 +16,7 @@ interface Props {
  * scheduled server-side, so the dates here are the whole mechanism.
  */
 export default function PopupScheduleFields({ control }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
@@ -23,7 +25,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           name="start_at"
           render={({ field, fieldState }) => (
             <DateTimePicker
-              label="Starts"
+              label={t('marketing.common.starts')}
               value={field.value}
               onChange={field.onChange}
               slotProps={{
@@ -46,7 +48,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           name="end_at"
           render={({ field, fieldState }) => (
             <DateTimePicker
-              label="Ends"
+              label={t('marketing.common.ends')}
               value={field.value}
               onChange={field.onChange}
               slotProps={{
@@ -67,12 +69,12 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
         <RhfTextField
           control={control}
           name="platform"
-          label="Target platform"
+          label={t('marketing.appPopups.targetPlatform')}
           select
           required
           hint="Which app builds see it"
         >
-          {PLATFORM_OPTIONS.map((option) => (
+          {platformOptions(t).map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
@@ -87,7 +89,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={field.onChange} />}
-              label="Enabled"
+              label={t('marketing.appPopups.enabled')}
             />
           )}
         />
@@ -97,7 +99,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={field.onChange} />}
-              label="Show ✕ close button"
+              label={t('marketing.appPopups.showCloseButton')}
             />
           )}
         />

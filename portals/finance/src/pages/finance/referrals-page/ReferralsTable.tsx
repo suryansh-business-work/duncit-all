@@ -2,6 +2,7 @@ import { Chip } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ReferralRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<ReferralRow>;
@@ -16,10 +17,12 @@ const whenValue = (r: ReferralRow) => formatDateTime(r.created_at);
 const renderCode = (r: ReferralRow) => <Chip size="small" label={r.code} sx={{ fontWeight: 800 }} />;
 
 /** Read-only referrals log — no handlers, so the columns are static. */
-const COLUMNS: DuncitColumn<ReferralRow>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const columns = (t: Translate): DuncitColumn<ReferralRow>[] => [
   {
     field: 'referrer',
-    headerName: 'Referrer',
+    headerName: t('finance.referrals.referrer'),
     sortable: false,
     flex: 1,
     minWidth: 180,
@@ -27,7 +30,7 @@ const COLUMNS: DuncitColumn<ReferralRow>[] = [
   },
   {
     field: 'referred',
-    headerName: 'Referred',
+    headerName: t('finance.referrals.referred'),
     sortable: false,
     flex: 1,
     minWidth: 180,
@@ -35,7 +38,7 @@ const COLUMNS: DuncitColumn<ReferralRow>[] = [
   },
   {
     field: 'code',
-    headerName: 'Code',
+    headerName: t('finance.referrals.code'),
     filter: { type: 'text' },
     minWidth: 130,
     cellRenderer: renderCode,
@@ -43,7 +46,7 @@ const COLUMNS: DuncitColumn<ReferralRow>[] = [
   },
   {
     field: 'created_at',
-    headerName: 'When',
+    headerName: t('finance.common.when'),
     filter: { type: 'date' },
     minWidth: 190,
     valueGetter: whenValue,
@@ -51,13 +54,14 @@ const COLUMNS: DuncitColumn<ReferralRow>[] = [
 ];
 
 export default function ReferralsTable({ fetchRows }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <DuncitTable<ReferralRow>
       tableId="finance-referrals"
-      columns={COLUMNS}
+      columns={columns(t)}
       fetchRows={fetchRows}
       getRowId={getReferralRowId}
-      emptyText="No referrals yet."
+      emptyText={t('finance.referrals.noReferralsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search referral code"
     />

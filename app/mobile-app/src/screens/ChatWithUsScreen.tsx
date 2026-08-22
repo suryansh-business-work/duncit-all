@@ -6,6 +6,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Chat with Us — a single entry point into the real-time agent chat. The ticket
@@ -13,11 +14,12 @@ import type { RootStackParamList } from '@/navigation/types';
  * this screen now offers only "Chat live with an agent".
  */
 export function ChatWithUsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { onPrimary, color: ink } = useThemeColors();
 
   return (
-    <StackScreen title="Chat with Us" testID="chat-with-us-screen">
+    <StackScreen title={t('mweb.common.chatWithUs')} testID="chat-with-us-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
         <Text testID="chat-inbox-subtitle" fontSize={13} color="$muted">
           Real-time chat with our support team
@@ -25,7 +27,7 @@ export function ChatWithUsScreen() {
         <XStack
           testID="chat-live-card"
           role="button"
-          aria-label="Chat live with an agent"
+          aria-label={t('mweb.chatWithUs.chatLiveWithAnAgent')}
           onPress={() => navigation.navigate('LiveChat')}
           alignItems="center"
           gap={12}

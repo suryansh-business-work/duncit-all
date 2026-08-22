@@ -9,6 +9,9 @@ import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@du
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Props {
   fetchRows: TableFetch<VenueRow>;
@@ -76,8 +79,8 @@ const renderActive = (v: VenueRow) => (
   <Chip size="small" variant="outlined" color={isActiveVenue(v) ? 'success' : 'default'} label={activeValue(v)} />
 );
 
-const renderPods = (v: VenueRow) => (
-  <Tooltip title="View pods hosted at this venue">
+const renderPods = (v: VenueRow, t: Translate) => (
+  <Tooltip title={t('onboarding.venues.viewPodsHostedAtThisVenue')}>
     <Button
       size="small"
       variant="outlined"
@@ -104,20 +107,21 @@ export default function VenuesTable({
   onToggleActive,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenueRow>[]>(() => {
     const renderActions = (v: VenueRow) => (
       <>
-        <Tooltip title="Venue details">
+        <Tooltip title={t('onboarding.common.venueDetails')}>
           <IconButton size="small" component={RouterLink} to={`/venues/${v.id}`}>
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(v)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Review">
+        <Tooltip title={t('onboarding.common.review')}>
           <IconButton size="small" onClick={() => onReview(v)}>
             <RateReviewIcon fontSize="small" />
           </IconButton>
@@ -131,21 +135,21 @@ export default function VenuesTable({
       </>
     );
     return [
-      { field: 'venue_no', headerName: 'Venue ID', width: 130, sortable: false, valueGetter: (v) => v.venue_no || '—' },
-      { field: 'venue_name', headerName: 'Venue', flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
-      { field: 'locality', headerName: 'Location', minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
-      { field: 'city', headerName: 'City', hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_type', headerName: 'Type', hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_category', headerName: 'Category', minWidth: 200, sortable: false, cellRenderer: renderCategory, valueGetter: categoryValue },
-      { field: 'owner_name', headerName: 'Owner', minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
-      { field: 'capacity', headerName: 'Capacity', width: 105, filter: { type: 'number' } },
-      { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
-      { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'pod_count', headerName: 'Pods', sortable: false, width: 100, cellRenderer: renderPods, valueGetter: (v) => v.pod_count ?? 0 },
-      { field: 'venue_commission_pct', headerName: 'Commission', width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
-      dateColumn<VenueRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125 }),
-      { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
+      { field: 'venue_no', headerName: t('onboarding.venues.venueId'), width: 130, sortable: false, valueGetter: (v) => v.venue_no || '—' },
+      { field: 'venue_name', headerName: t('onboarding.common.venue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'locality', headerName: t('onboarding.venues.location'), minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
+      { field: 'city', headerName: t('onboarding.common.city'), hide: true, minWidth: 130, filter: { type: 'text' } },
+      { field: 'venue_type', headerName: t('shell.common.type'), hide: true, minWidth: 130, filter: { type: 'text' } },
+      { field: 'venue_category', headerName: t('onboarding.common.category'), minWidth: 200, sortable: false, cellRenderer: renderCategory, valueGetter: categoryValue },
+      { field: 'owner_name', headerName: t('onboarding.common.owner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
+      { field: 'capacity', headerName: t('onboarding.common.capacity'), width: 105, filter: { type: 'number' } },
+      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
+      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
+      { field: 'pod_count', headerName: t('shell.nav.pods'), sortable: false, width: 100, cellRenderer: (v: VenueRow) => renderPods(v, t), valueGetter: (v) => v.pod_count ?? 0 },
+      { field: 'venue_commission_pct', headerName: t('onboarding.common.commission'), width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
+      dateColumn<VenueRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 190, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 
@@ -155,7 +159,7 @@ export default function VenuesTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getVenueRowId}
-      emptyText="No venues found."
+      emptyText={t('onboarding.venues.noVenuesFound')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, type, city or owner"
       refetchRef={refetchRef}

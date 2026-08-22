@@ -15,10 +15,12 @@ import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { downloadBase64File, parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function VenueLeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const { config } = useCrmConfig();
@@ -52,7 +54,7 @@ export default function VenueLeadsPage() {
     if (!toDelete) return;
     try {
       await deleteLead({ variables: { id: toDelete.id } });
-      setToast('Venue lead deleted');
+      setToast(t('crm.venueLeads.venueLeadDeleted'));
       setToDelete(null);
       refetchRef.current?.();
     } catch (err) {
@@ -80,8 +82,8 @@ export default function VenueLeadsPage() {
   return (
     <Stack spacing={2.5}>
       <LeadsToolbar
-        title="Venue Leads"
-        subtitle="Capture and track venue partnership leads."
+        title={t('shell.nav.venueLeads')}
+        subtitle={t('crm.venueLeads.captureAndTrackVenuePartnershipLeads')}
         onManageServices={() => navigate('/venue-leads/services')}
         manageServicesLabel="Manage Venue Services"
         onFillWithAi={() => setShowAi(true)}
@@ -111,9 +113,9 @@ export default function VenueLeadsPage() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title="Delete venue lead"
+        title={t('crm.venueLeads.deleteVenueLead')}
         message={`Delete "${toDelete?.venue_name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}
@@ -124,7 +126,7 @@ export default function VenueLeadsPage() {
       <FillWithAiDialog
         open={showAi}
         entity="VENUE_LEAD"
-        title="Fill venue leads with AI"
+        title={t('crm.venueLeads.fillVenueLeadsWithAi')}
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
           setToast(`Created ${count} venue lead${count === 1 ? '' : 's'}`);
@@ -135,7 +137,7 @@ export default function VenueLeadsPage() {
       <ExcelImportDialog
         open={showImport}
         entity="VENUE_LEAD"
-        title="Import venue leads from Excel"
+        title={t('crm.venueLeads.importVenueLeadsFromExcel')}
         onClose={() => setShowImport(false)}
         onImported={(result) => {
           setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);

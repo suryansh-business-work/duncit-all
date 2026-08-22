@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsScreen from './notifications-screen';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   notifs: any[];
@@ -22,12 +23,13 @@ export default function NotificationsBell({
   onNotifClick,
   onMarkAll,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const unreadSuffix = unreadCount ? ` (${unreadCount} unread)` : '';
 
   return (
     <>
-      <Tooltip title="Notifications">
+      <Tooltip title={t('mweb.appHeader.notifications')}>
         <IconButton
           size="small"
           onClick={() => setOpen(true)}

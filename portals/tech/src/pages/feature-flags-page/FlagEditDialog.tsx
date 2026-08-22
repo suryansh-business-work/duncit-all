@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { type FlagEdit } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -31,29 +32,30 @@ export default function FlagEditDialog({
   onClose,
   onSave,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing.id ? 'Edit Flag' : 'New Feature Flag'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
-            label="Key"
+            label={t('tech.featureFlags.key')}
             required={!editing.id}
             value={editing.key}
             onChange={(e) => setEditing((p) => ({ ...p, key: e.target.value }))}
             disabled={!!editing.id}
-            helperText="Lowercase, e.g. venue_booking"
+            helperText={t('tech.featureFlags.lowercaseEGVenueBooking')}
             fullWidth
           />
           <TextField
-            label="Name"
+            label={t('shell.common.name')}
             required
             value={editing.name}
             onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
             fullWidth
           />
           <TextField
-            label="Description"
+            label={t('shell.common.description')}
             value={editing.description}
             onChange={(e) => setEditing((p) => ({ ...p, description: e.target.value }))}
             fullWidth
@@ -71,7 +73,7 @@ export default function FlagEditDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={onSave}

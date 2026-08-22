@@ -9,6 +9,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { LocationRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<LocationRow>;
@@ -73,12 +74,13 @@ export default function LocationsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<LocationRow>[]>(() => {
     return [
-      { field: 'image', headerName: 'Image', sortable: false, width: 76, cellRenderer: renderImage },
+      { field: 'image', headerName: t('admin.branding.assetImage'), sortable: false, width: 76, cellRenderer: renderImage },
       {
         field: 'city',
-        headerName: 'City',
+        headerName: t('admin.locations.city'),
         filter: { type: 'text' },
         flex: 1,
         minWidth: 160,
@@ -87,14 +89,14 @@ export default function LocationsTable({
       },
       {
         field: 'state',
-        headerName: 'State',
+        headerName: t('admin.locations.state'),
         filter: { type: 'text' },
         minWidth: 130,
         valueGetter: (loc) => loc.state || '—',
       },
       {
         field: 'zones',
-        headerName: 'Localities / Areas',
+        headerName: t('admin.locations.localities'),
         sortable: false,
         flex: 1.4,
         minWidth: 260,
@@ -103,7 +105,7 @@ export default function LocationsTable({
       },
       {
         field: 'country',
-        headerName: 'Country',
+        headerName: t('admin.locations.country'),
         filter: { type: 'text' },
         hide: true,
         minWidth: 130,

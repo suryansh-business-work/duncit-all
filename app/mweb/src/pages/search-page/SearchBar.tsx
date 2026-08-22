@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { SEARCH_SUGGESTIONS } from './queries';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Suggestion {
   text: string;
@@ -36,6 +37,7 @@ const kindLabel: Record<string, string> = {
 };
 
 export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
   const debounced = useDebouncedValue(value.trim());
   const { data } = useQuery(SEARCH_SUGGESTIONS, {
@@ -59,7 +61,7 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
           size="small"
           autoFocus
           value={value}
-          placeholder="Search clubs, pods, categories or activities…"
+          placeholder={t('mweb.search.searchClubsPodsCategoriesOrActivities')}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           inputProps={{ 'aria-label': 'Search Duncit', enterKeyHint: 'search' }}
@@ -71,7 +73,7 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
             ),
             endAdornment: value ? (
               <InputAdornment position="end">
-                <IconButton aria-label="Clear search" size="small" onClick={() => onChange('')}>
+                <IconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>

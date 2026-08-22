@@ -14,6 +14,7 @@
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@duncit/app-settings": "workspace:*",
     "@hookform/resolvers": ">=3",
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/app-settings": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",

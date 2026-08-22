@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { requiredText } from '@duncit/forms';
 import type { AppPopupRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
+import { fallbackT, type Translate } from '@duncit/shell';
 
 /** A saved Target Audience list, offered as a popup audience. */
 export interface AudienceListOption {
@@ -9,15 +11,15 @@ export interface AudienceListOption {
   member_count: number;
 }
 
-export const PLATFORM_OPTIONS = [
-  { value: 'BOTH', label: 'Both (iOS + Android)' },
+export const platformOptions = (t: Translate) => [
+  { value: 'BOTH', label: t('marketing.appPopups.bothIosAndroid') },
   { value: 'IOS', label: 'iOS only' },
-  { value: 'ANDROID', label: 'Android only' },
+  { value: 'ANDROID', label: t('marketing.appPopups.androidOnly') },
 ] as const;
 
-export const AUDIENCE_OPTIONS = [
-  { value: 'ALL_USERS', label: 'All users' },
-  { value: 'AUDIENCE_LIST', label: 'Saved audience list' },
+export const audienceOptions = (t: Translate) => [
+  { value: 'ALL_USERS', label: t('marketing.appPopups.allUsers') },
+  { value: 'AUDIENCE_LIST', label: t('marketing.common.savedAudienceList') },
 ] as const;
 
 /** A CTA may leave the app, so it is held to the same shape the server accepts. */
@@ -37,7 +39,8 @@ const isUsableCtaUrl = (value: string) => {
  * The dates are Date objects rather than strings because the MUIX pickers hand
  * back Dates; they are serialised on the way to the server, not in the form.
  */
-export const appPopupSchema = z
+export const appPopupSchema = (t: Translate = fallbackT) =>
+  z
   .object({
     name: requiredText('Name', 3, 120),
     image_url: z.string().trim().min(1, 'Upload the popup image'),
@@ -56,14 +59,14 @@ export const appPopupSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['end_at'],
-        message: 'End date must be after the start date',
+        message: t('marketing.appPopups.endDateMustBeAfterThe'),
       });
     }
     if (values.audience_type === 'AUDIENCE_LIST' && !values.audience_list_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['audience_list_id'],
-        message: 'Pick an audience list',
+        message: t('marketing.appPopups.pickAnAudienceList'),
       });
     }
     // A link with no label would render a nameless button; a label with no link
@@ -72,26 +75,26 @@ export const appPopupSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['cta_label'],
-        message: 'Give the button a label',
+        message: t('marketing.appPopups.giveTheButtonALabel'),
       });
     }
     if (values.cta_label && !values.cta_url) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['cta_url'],
-        message: 'Give the button a link',
+        message: t('marketing.appPopups.giveTheButtonALink'),
       });
     }
     if (values.cta_url && !isUsableCtaUrl(values.cta_url)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['cta_url'],
-        message: 'Use a full https:// link or an in-app path like /earn',
+        message: t('marketing.appPopups.useAFullHttpsLinkOr'),
       });
     }
   });
 
-export type AppPopupFormValues = z.infer<typeof appPopupSchema>;
+export type AppPopupFormValues = z.infer<ReturnType<typeof appPopupSchema>>;
 
 /** A new popup starts live today and runs for a week — the common case, and a
  * window the marketer edits rather than builds from nothing. */
@@ -132,7 +135,7 @@ export function toAppPopupValues(row: AppPopupRow): AppPopupFormValues {
 }
 
 export function toAppPopupInput(values: AppPopupFormValues) {
-  const cast = appPopupSchema.parse(values);
+  const cast = appPopupSchema().parse(values);
   return {
     name: cast.name,
     image_url: cast.image_url,

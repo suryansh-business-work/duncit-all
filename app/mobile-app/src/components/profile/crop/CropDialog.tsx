@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CroppedPhoto, PickedPhoto } from '@/hooks/useProfilePhoto';
 import { CropControls } from './CropControls';
 import { cropToAvatar } from './cropImage';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const VIEWPORT = 280;
 const MAX_ZOOM = 3;
@@ -28,6 +29,7 @@ interface Props {
  * A circular viewport frames a centered square; controls adjust zoom/rotation
  * and the result is produced natively by expo-image-manipulator on confirm. */
 export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -78,7 +80,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
               <XStack
                 testID="crop-cancel"
                 role="button"
-                aria-label="Cancel"
+                aria-label={t('mweb.common.cancel')}
                 onPress={cancel}
                 width={36}
                 height={36}
@@ -119,7 +121,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
               <XStack
                 testID="crop-cancel-btn"
                 role="button"
-                aria-label="Discard"
+                aria-label={t('mweb.common.discard')}
                 onPress={cancel}
                 flex={1}
                 height={48}
@@ -137,7 +139,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
               <XStack
                 testID="crop-confirm"
                 role="button"
-                aria-label="Save photo"
+                aria-label={t('mweb.profile.savePhoto')}
                 aria-disabled={busy}
                 onPress={busy ? undefined : confirm}
                 flex={1}

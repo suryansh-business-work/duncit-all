@@ -3,6 +3,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink } from 'react-router-dom';
 import { formatDateTime } from '../server/format';
 import { STATUS_COLOR, type EmailLogDetail } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   row: EmailLogDetail;
@@ -23,6 +24,7 @@ function Field({ label, value }: Readonly<{ label: string; value?: string | null
 }
 
 export default function EmailLogMeta({ row }: Readonly<Props>) {
+  const { t } = useTranslation();
   const recipients = [row.to, ...(row.cc ?? []), ...(row.bcc ?? [])].filter(Boolean).join(', ');
 
   return (
@@ -57,8 +59,8 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
         <Field label="To" value={row.to} />
         {row.cc?.length > 0 && <Field label="CC" value={row.cc.join(', ')} />}
         {row.bcc?.length > 0 && <Field label="BCC" value={row.bcc.join(', ')} />}
-        <Field label="Provider" value={row.provider} />
-        <Field label="Message ID" value={row.message_id} />
+        <Field label={t('tech.emailLogs.provider')} value={row.provider} />
+        <Field label={t('tech.emailLogs.messageId')} value={row.message_id} />
         <Box>
           <Typography variant="caption" color="text.secondary" display="block">
             Template

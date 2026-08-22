@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requiredText } from '@duncit/forms';
 import type { CampaignChoice, ShortLinkOptions } from '../queries';
+import { fallbackT, type Translate } from '@duncit/shell';
 
 /**
  * A duncit.com short link may only point at our own properties or an app
@@ -21,7 +22,8 @@ export const isAllowedDestination = (value: string) => {
   return host === 'duncit.com' || host.endsWith('.duncit.com') || ALLOWED_STORE_HOSTS.has(host);
 };
 
-export const shortLinkSchema = z
+export const shortLinkSchema = (t: Translate = fallbackT) =>
+  z
   .object({
     label: requiredText('Label', 3, 120),
     destination_url: z
@@ -45,19 +47,19 @@ export const shortLinkSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['source_other'],
-        message: 'Say what the channel is',
+        message: t('marketing.shortLinks.sayWhatTheChannelIs'),
       });
     }
     if (values.medium === 'OTHER' && !values.medium_other) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['medium_other'],
-        message: 'Say what the medium is',
+        message: t('marketing.shortLinks.sayWhatTheMediumIs'),
       });
     }
   });
 
-export type ShortLinkFormValues = z.infer<typeof shortLinkSchema>;
+export type ShortLinkFormValues = z.infer<ReturnType<typeof shortLinkSchema>>;
 
 export function blankShortLinkValues(): ShortLinkFormValues {
   return {
@@ -72,7 +74,7 @@ export function blankShortLinkValues(): ShortLinkFormValues {
 }
 
 export function toShortLinkInput(values: ShortLinkFormValues) {
-  const cast = shortLinkSchema.parse(values);
+  const cast = shortLinkSchema().parse(values);
   return {
     label: cast.label,
     destination_url: cast.destination_url,

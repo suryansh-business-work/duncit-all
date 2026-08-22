@@ -3,6 +3,7 @@ import { EM_DASH } from '@duncit/table';
 import DetailField from './DetailField';
 import TrackedAssetList from './TrackedAssetList';
 import type { MarketingCampaignDetail } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   campaign: MarketingCampaignDetail;
@@ -23,6 +24,7 @@ const openHint = (campaign: MarketingCampaignDetail) => {
 };
 
 export default function CampaignEngagement({ campaign, formatDateTime }: Readonly<Props>) {
+  const { t } = useTranslation();
   const when = (value?: string | null) => (value ? formatDateTime(value) : EM_DASH);
   const delivery = campaign.delivery;
 
@@ -34,21 +36,21 @@ export default function CampaignEngagement({ campaign, formatDateTime }: Readonl
         </Typography>
         <Box sx={GRID}>
           <DetailField
-            label="Opened"
+            label={t('marketing.marketingCampaigns.opened')}
             value={String(campaign.open_count)}
             hint={openHint(campaign)}
           />
           <DetailField
-            label="Images loaded"
+            label={t('marketing.marketingCampaigns.imagesLoaded')}
             value={String(campaign.image_load_count)}
             hint="Counts an open the pixel missed"
           />
-          <DetailField label="Clicked" value={String(campaign.click_count)} />
-          <DetailField label="First opened" value={when(campaign.first_opened_at)} />
-          <DetailField label="Last opened" value={when(campaign.last_opened_at)} />
+          <DetailField label={t('marketing.common.clicked')} value={String(campaign.click_count)} />
+          <DetailField label={t('marketing.marketingCampaigns.firstOpened')} value={when(campaign.first_opened_at)} />
+          <DetailField label={t('marketing.marketingCampaigns.lastOpened')} value={when(campaign.last_opened_at)} />
           {delivery && (
             <DetailField
-              label="Accepted by SMTP"
+              label={t('marketing.marketingCampaigns.acceptedBySmtp')}
               value={String(delivery.accepted)}
               hint={delivery.rejected > 0 ? `${delivery.rejected} refused` : undefined}
             />
@@ -63,8 +65,8 @@ export default function CampaignEngagement({ campaign, formatDateTime }: Readonl
       )}
 
       <TrackedAssetList
-        title="Links"
-        emptyText="This campaign had no links to track."
+        title={t('marketing.marketingCampaigns.links')}
+        emptyText={t('marketing.marketingCampaigns.thisCampaignHadNoLinksTo')}
         rows={campaign.tracked_links.map((link) => ({
           url: link.url,
           count: link.click_count,
@@ -74,8 +76,8 @@ export default function CampaignEngagement({ campaign, formatDateTime }: Readonl
       />
 
       <TrackedAssetList
-        title="Images"
-        emptyText="This campaign had no images to track."
+        title={t('marketing.marketingCampaigns.images')}
+        emptyText={t('marketing.marketingCampaigns.thisCampaignHadNoImagesTo')}
         rows={campaign.tracked_images.map((image) => ({
           url: image.url,
           count: image.load_count,

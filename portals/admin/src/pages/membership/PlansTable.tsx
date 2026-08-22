@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { MembershipPlanFormValues } from './membership-plan';
+import { useTranslation } from '@duncit/shell';
 
 export interface PlanRow extends MembershipPlanFormValues {
   id: string;
@@ -54,11 +55,13 @@ const renderPrice = (r: PlanRow) => (
   </Box>
 );
 
-const renderStatus = (r: PlanRow) => (
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const renderStatus = (r: PlanRow, t: Translate) => (
   <Stack direction="row" spacing={0.5} component="span">
     <Chip
       size="small"
-      label={r.is_active ? 'Active' : 'Inactive'}
+      label={r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}
       color={r.is_active ? 'success' : 'default'}
     />
     {r.badge_label && <Chip size="small" label={r.badge_label} variant="outlined" />}
@@ -72,11 +75,12 @@ export default function PlansTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PlanRow>[]>(
     () => [
       {
         field: 'name',
-        headerName: 'Tier',
+        headerName: t('admin.membership.tier'),
         flex: 1,
         minWidth: 240,
         cellRenderer: renderName,
@@ -84,7 +88,7 @@ export default function PlansTable({
       },
       {
         field: 'key',
-        headerName: 'Key',
+        headerName: t('admin.podPlans.key'),
         filter: { type: 'text' },
         width: 130,
         cellRenderer: renderKey,
@@ -92,20 +96,20 @@ export default function PlansTable({
       },
       {
         field: 'price_label',
-        headerName: 'Price',
+        headerName: t('admin.membership.price'),
         minWidth: 180,
         cellRenderer: renderPrice,
         valueGetter: (r) => r.price_label,
       },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'boolean' },
         minWidth: 180,
-        cellRenderer: renderStatus,
-        valueGetter: (r) => (r.is_active ? 'Active' : 'Inactive'),
+        cellRenderer: (row: PlanRow) => renderStatus(row, t),
+        valueGetter: (r) => (r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')),
       },
-      { field: 'sort_order', headerName: 'Sort', width: 90 },
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), width: 90 },
       actionsColumn<PlanRow>({ onEdit, onDelete }),
     ],
     [onEdit, onDelete]

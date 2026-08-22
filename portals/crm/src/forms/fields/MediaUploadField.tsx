@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   name: string;
@@ -25,6 +26,7 @@ const toValue = (list: string[]): string => list.join('\n');
  * NO raw URL paste. Used for venue/host photos and videos.
  */
 export default function MediaUploadField({ name, label, kind, folder = 'crm/media', helperText }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
   const { field } = useController({ control, name });
   const list = toList((field.value as string) ?? '');
@@ -98,7 +100,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
               <IconButton
                 size="small"
                 onClick={() => removeAt(idx)}
-                aria-label="remove media"
+                aria-label={t('crm.forms.removeMedia')}
                 sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
               >
                 <DeleteIcon fontSize="small" />

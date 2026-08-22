@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { PodIdeaComment } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   comment: PodIdeaComment;
@@ -14,6 +15,7 @@ interface Props {
 /** One idea comment: avatar initial · author · relative time · text, with a
  * delete affordance for the viewer's own comments. */
 export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const author = comment.author;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
@@ -49,7 +51,7 @@ export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>
         <XStack
           testID={`idea-comment-delete-${comment.id}`}
           role="button"
-          aria-label="Delete comment"
+          aria-label={t('mweb.common.deleteComment')}
           onPress={onDelete}
           padding={4}
           pressStyle={{ opacity: 0.6 }}

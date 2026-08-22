@@ -32,7 +32,7 @@ export function HappeningNearbyHeader({
     >
       <XStack
         role="button"
-        aria-label="Happening nearby"
+        aria-label={t('mweb.home.happeningNearby')}
         onPress={onPress}
         alignItems="center"
         gap={10}
@@ -65,7 +65,7 @@ export function HappeningNearbyHeader({
       <XStack
         testID="happening-nearby-see-all"
         role="button"
-        aria-label="See all live pods"
+        aria-label={t('mweb.home.seeAllLivePods')}
         onPress={onPress}
         alignItems="center"
         gap={4}

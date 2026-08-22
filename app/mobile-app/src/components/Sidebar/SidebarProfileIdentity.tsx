@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface SidebarIdentityUser {
   full_name?: string | null;
@@ -18,6 +19,7 @@ export function SidebarProfileIdentity({
   me,
   onPress,
 }: Readonly<{ me?: SidebarIdentityUser | null; onPress: () => void }>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
 
@@ -25,7 +27,7 @@ export function SidebarProfileIdentity({
     <XStack
       testID="sidebar-identity"
       role="button"
-      aria-label="Open your profile"
+      aria-label={t('mweb.common.openYourProfile')}
       onPress={onPress}
       alignItems="center"
       justifyContent="space-between"

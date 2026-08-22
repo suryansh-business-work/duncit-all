@@ -35,7 +35,7 @@ export default function LanguageSection() {
       await save({ variables: { locale: code } });
       setToast(t('mweb.common.languageSaved'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save your language');
+      setError(e instanceof Error ? e.message : t('mweb.account.couldNotSaveYourLanguage'));
     }
   };
 

@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   testID: string;
@@ -12,12 +13,13 @@ interface Props {
 
 /** Floating "jump to latest" button shown after the user scrolls up (B13). */
 export function JumpToLatestButton({ testID, bottom, onPress }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   return (
     <XStack
       testID={testID}
       role="button"
-      aria-label="Jump to latest"
+      aria-label={t('mweb.common.jumpToLatest')}
       onPress={onPress}
       position="absolute"
       right={16}

@@ -4,6 +4,7 @@ import { userLabel } from '../../components/telemetry-identity';
 import { affectedSummary, type BugRow } from './queries';
 import BugOccurrences from './BugOccurrences';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Everything one bug knows about itself.
@@ -26,35 +27,37 @@ const resolvedLine = (bug: BugRow) => {
  * named person is who can be asked what they were doing when it happened.
  */
 function AffectedSection({ bug }: Readonly<{ bug: BugRow }>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-      <Field label="Affected" value={affectedSummary(bug)} />
-      <Field label="Last user" value={userLabel(bug.last_user)} />
-      <Field label="Email" value={bug.last_user?.email ?? ''} />
-      <Field label="Phone" value={bug.last_user?.phone ?? ''} />
-      <Field label="Roles" value={bug.last_user?.roles?.join(', ') ?? ''} />
-      <Field label="User id" value={bug.last_user?.id ?? ''} mono />
-      <Field label="App version" value={bug.last_app_version ?? ''} />
-      <Field label="Last environment" value={bug.last_environment ?? ''} />
+      <Field label={t('tech.bugs.affected')} value={affectedSummary(bug)} />
+      <Field label={t('tech.bugs.lastUser')} value={userLabel(bug.last_user)} />
+      <Field label={t('shell.common.email')} value={bug.last_user?.email ?? ''} />
+      <Field label={t('shell.common.phone')} value={bug.last_user?.phone ?? ''} />
+      <Field label={t('shell.nav.roles')} value={bug.last_user?.roles?.join(', ') ?? ''} />
+      <Field label={t('tech.common.userId')} value={bug.last_user?.id ?? ''} mono />
+      <Field label={t('tech.common.appVersion')} value={bug.last_app_version ?? ''} />
+      <Field label={t('tech.bugs.lastEnvironment')} value={bug.last_environment ?? ''} />
       <Field
-        label="Device"
+        label={t('tech.common.device')}
         value={[bug.last_client?.device_model, bug.last_client?.device_os_version]
           .filter(Boolean)
           .join(' · ')}
       />
       <Field
-        label="Locale · timezone"
+        label={t('tech.bugs.localeTimezone')}
         value={[bug.last_client?.locale, bug.last_client?.timezone].filter(Boolean).join(' · ')}
       />
-      <Field label="Network" value={bug.last_client?.network ?? ''} />
-      <Field label="IP address" value={bug.last_ip ?? ''} />
-      <Field label="Device id" value={bug.last_duid ?? ''} mono />
-      <Field label="Session" value={bug.last_session_id ?? ''} mono />
+      <Field label={t('tech.common.network')} value={bug.last_client?.network ?? ''} />
+      <Field label={t('tech.common.ipAddress')} value={bug.last_ip ?? ''} />
+      <Field label={t('tech.common.deviceId')} value={bug.last_duid ?? ''} mono />
+      <Field label={t('tech.common.session')} value={bug.last_session_id ?? ''} mono />
     </Box>
   );
 }
 
 export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
+  const { t } = useTranslation();
   const envRows: Array<[string, number]> = [
     ['Localhost', bug.env_counts.localhost],
     ['Staging', bug.env_counts.staging],
@@ -65,22 +68,22 @@ export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
   return (
     <Stack spacing={2}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-        <Field label="Error" value={bug.error_name} />
-        <Field label="Occurrences" value={String(bug.occurrence_count)} />
-        <Field label="Source" value={bug.source} />
-        <Field label="Page" value={bug.page} />
-        <Field label="Platform" value={[bug.platform, bug.os].filter(Boolean).join(' · ')} />
-        <Field label="App" value={appLine} />
-        <Field label="First seen" value={formatDateTime(bug.first_seen_at)} />
-        <Field label="Last seen" value={formatDateTime(bug.last_seen_at)} />
-        <Field label="Last URL" value={bug.last_url ?? ''} />
-        <Field label="Last host" value={bug.last_host ?? ''} />
-        <Field label="Tracked since" value={formatDateTime(bug.created_at)} />
-        <Field label="Resolved" value={resolvedLine(bug)} />
+        <Field label={t('tech.bugs.error')} value={bug.error_name} />
+        <Field label={t('tech.bugs.occurrences')} value={String(bug.occurrence_count)} />
+        <Field label={t('tech.common.source')} value={bug.source} />
+        <Field label={t('tech.common.page')} value={bug.page} />
+        <Field label={t('tech.common.platform')} value={[bug.platform, bug.os].filter(Boolean).join(' · ')} />
+        <Field label={t('tech.common.app')} value={appLine} />
+        <Field label={t('tech.bugs.firstSeen')} value={formatDateTime(bug.first_seen_at)} />
+        <Field label={t('tech.bugs.lastSeen')} value={formatDateTime(bug.last_seen_at)} />
+        <Field label={t('tech.bugs.lastUrl')} value={bug.last_url ?? ''} />
+        <Field label={t('tech.bugs.lastHost')} value={bug.last_host ?? ''} />
+        <Field label={t('tech.bugs.trackedSince')} value={formatDateTime(bug.created_at)} />
+        <Field label={t('tech.bugs.resolved')} value={resolvedLine(bug)} />
       </Box>
 
-      <Field label="Message" value={bug.message} />
-      <Field label="Fingerprint" value={bug.fingerprint} mono />
+      <Field label={t('tech.common.message')} value={bug.message} />
+      <Field label={t('tech.bugs.fingerprint')} value={bug.fingerprint} mono />
 
       <Box>
         <Typography variant="caption" color="text.secondary">
@@ -102,9 +105,9 @@ export default function BugDetailBody({ bug }: Readonly<{ bug: BugRow }>) {
       </Box>
 
       {bug.last_user_agent ? (
-        <DetailBlock label="Latest user agent" value={bug.last_user_agent} />
+        <DetailBlock label={t('tech.bugs.latestUserAgent')} value={bug.last_user_agent} />
       ) : null}
-      {bug.last_stack ? <DetailBlock label="Latest stack trace" value={bug.last_stack} /> : null}
+      {bug.last_stack ? <DetailBlock label={t('tech.bugs.latestStackTrace')} value={bug.last_stack} /> : null}
 
       <BugOccurrences bugId={bug.id} />
     </Stack>

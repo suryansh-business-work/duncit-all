@@ -10,6 +10,7 @@ import ListingPauseDialog from './ListingPauseDialog';
 import RunAdDialog, { type AdKind } from './RunAdDialog';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 /** Available stock at/below the product's low-stock threshold (opt-in per product). */
 const isLowStock = (product: ProductListingRow) =>
@@ -20,9 +21,11 @@ const isLowStock = (product: ProductListingRow) =>
 export { MY_PRODUCT_LISTINGS } from './queries';
 
 const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'DENIED'].map((value) => ({ value, label: value }));
-const DELIVERY_OPTIONS = [
-  { value: 'HOST', label: 'Host' },
-  { value: 'VENUE', label: 'Venue' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const deliveryOptions = (t: Translate) =>[
+  { value: 'HOST', label: t('partners.common.host') },
+  { value: 'VENUE', label: t('partners.common.venue') },
 ];
 
 const getProductRowId = (product: ProductListingRow) => product.id;
@@ -36,6 +39,7 @@ interface Props {
 }
 
 export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit, onView, onSettings }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -59,7 +63,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       setMessage(null);
       try {
         await updateQuantity({ variables: { product_doc_id: product.id, inventory_count: quantity } });
-        setMessage('Quantity updated.');
+        setMessage(t('partners.listProductsPage.quantityUpdated'));
         refetchRef.current?.();
       } catch (updateError) {
         setMessage(parseApiError(updateError));
@@ -74,7 +78,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     try {
       await deleteListing({ variables: { product_doc_id: deleteTarget.id } });
       setDeleteTarget(null);
-      setMessage('Product listing deleted.');
+      setMessage(t('partners.listProductsPage.productListingDeleted'));
       refetchRef.current?.();
     } catch (deleteError) {
       setMessage(parseApiError(deleteError));
@@ -92,12 +96,12 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       return (
         <ProductRowActions
           actions={[
-            { key: 'edit', label: 'Edit', icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
-            { key: 'settings', label: 'Settings', icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
+            { key: 'edit', label: t('shell.common.edit'), icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
+            { key: 'settings', label: t('shell.nav.settings'), icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
             { key: 'toggle-active', label: paused ? 'Reactivate' : 'Temporarily deactivate', icon: paused ? 'resume' : 'pause', disabled: !canPause, onClick: () => setPauseTarget(product) },
-            { key: 'product-ad', label: 'Run Product Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
-            { key: 'brand-ad', label: 'Run Brand Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
-            { key: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
+            { key: 'product-ad', label: t('partners.listProductsPage.runProductAd'), icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
+            { key: 'brand-ad', label: t('partners.listProductsPage.runBrandAd'), icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
+            { key: 'delete', label: t('shell.common.delete'), icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
           ]}
         />
       );
@@ -105,7 +109,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     return [
       {
         field: 'product_name',
-        headerName: 'Product',
+        headerName: t('partners.listProductsPage.product'),
         flex: 1,
         minWidth: 240,
         cellRenderer: renderProduct,
@@ -113,13 +117,13 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       },
       {
         field: 'unit_cost',
-        headerName: 'Price',
+        headerName: t('partners.common.price'),
         width: 110,
         valueGetter: (product) => `₹${Number(product.unit_cost ?? 0).toFixed(2)}`,
       },
       {
         field: 'inventory_count',
-        headerName: 'Quantity',
+        headerName: t('partners.listProductsPage.quantity'),
         width: 190,
         filter: { type: 'number' },
         cellRenderer: renderQuantity,
@@ -127,7 +131,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       },
       {
         field: 'listing_review_status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderListingStatus,
@@ -135,14 +139,14 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       },
       {
         field: 'delivery_target',
-        headerName: 'Delivery',
+        headerName: t('partners.listProductsPage.delivery'),
         hide: true,
         width: 120,
-        filter: { type: 'select', options: DELIVERY_OPTIONS },
+        filter: { type: 'select', options: deliveryOptions(t) },
       },
       {
         field: 'updated_at',
-        headerName: 'Updated',
+        headerName: t('shell.common.updated'),
         hide: true,
         width: 140,
         filter: { type: 'date' },
@@ -157,7 +161,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" fontWeight={950}>Your listed products</Typography>
+          <Typography variant="h6" fontWeight={950}>{t('partners.listProductsPage.yourListedProducts')}</Typography>
           {message && (
             <Alert severity={/deleted|updated|submitted/.test(message) ? 'success' : 'error'}>{message}</Alert>
           )}
@@ -168,7 +172,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
             getRowId={getProductRowId}
             onRowClick={onView}
             getRowStyle={(product) => (isLowStock(product) ? { backgroundColor: alpha(theme.palette.warning.main, 0.1) } : undefined)}
-            emptyText="No product listings yet."
+            emptyText={t('partners.listProductsPage.noProductListingsYet')}
             defaultSort={{ field: 'updated_at', dir: 'desc' }}
             searchPlaceholder="Search product, size, color"
             refetchRef={refetchRef}
@@ -176,11 +180,11 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         </Stack>
       </CardContent>
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} fullWidth maxWidth="xs">
-        <DialogTitle>Delete product listing</DialogTitle>
+        <DialogTitle>{t('partners.listProductsPage.deleteProductListing')}</DialogTitle>
         <DialogContent><Typography>{deleteTarget?.product_name} will be archived and removed from active listing.</Typography></DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>Delete</Button>
+          <Button onClick={() => setDeleteTarget(null)}>{t('shell.common.cancel')}</Button>
+          <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>{t('shell.common.delete')}</Button>
         </DialogActions>
       </Dialog>
       <ListingPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />

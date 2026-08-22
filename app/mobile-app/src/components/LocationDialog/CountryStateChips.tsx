@@ -6,6 +6,7 @@ import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { countryFlagUrl, type CountryNode } from '@/utils/location-tree';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   tree: CountryNode[];
@@ -56,6 +57,7 @@ function Chip({
 }
 
 export function CountryStateChips({ tree, country, state, onCountry, onState }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
   const activeCountry = tree.find((c) => c.country === country) ?? tree[0];
@@ -108,12 +110,12 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
           <MaterialIcons name="search" size={16} color={muted} />
           <Input
             testID="state-search"
-            aria-label="Search state"
+            aria-label={t('mweb.common.searchState')}
             flex={1}
             unstyled
             value={query}
             onChangeText={setQuery}
-            placeholder="Search state"
+            placeholder={t('mweb.common.searchState')}
             placeholderTextColor="$muted"
             fontSize={13}
             color="$color"

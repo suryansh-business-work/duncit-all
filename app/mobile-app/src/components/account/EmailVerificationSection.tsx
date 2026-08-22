@@ -10,6 +10,7 @@ import {
   requestEmailVerificationOtp,
   verifyEmailVerificationOtp,
 } from '@/services/email-verification.service';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   email?: string | null;
@@ -35,6 +36,7 @@ export function EmailVerificationSection({
   onVerified,
   autoSend = false,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
   const [otp, setOtp] = useState('');
   const [sending, setSending] = useState(false);
@@ -54,7 +56,7 @@ export function EmailVerificationSection({
       setDevOtp(result.devOtp);
       setMessage(`OTP sent to ${email}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send the OTP');
+      setError(e instanceof Error ? e.message : t('mweb.account.couldNotSendTheOtp'));
     } finally {
       setSending(false);
     }
@@ -75,11 +77,11 @@ export function EmailVerificationSection({
     setVerifying(true);
     try {
       await verifyEmailVerificationOtp(otp.trim());
-      setMessage('Email verified.');
+      setMessage(t('mweb.common.emailVerified'));
       setOtp('');
       onVerified();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid OTP');
+      setError(e instanceof Error ? e.message : t('mweb.account.invalidOtp'));
     } finally {
       setVerifying(false);
     }
@@ -136,10 +138,10 @@ export function EmailVerificationSection({
           borderColor={error || otpHint ? '$danger' : '$borderColor'}
           value={otp}
           onChangeText={setOtp}
-          placeholder="Enter OTP"
+          placeholder={t('mweb.common.enterOtp')}
           keyboardType="number-pad"
           maxLength={6}
-          aria-label="Email verification OTP"
+          aria-label={t('mweb.account.emailVerificationOtp')}
         />
         <XStack
           testID="email-verification-send"
@@ -176,7 +178,7 @@ export function EmailVerificationSection({
         testID="email-verification-submit"
         // PrimaryButton swaps the label for a Spinner while loading, so a
         // "Verifying…" branch here would never render.
-        label="Verify"
+        label={t('mweb.common.verify')}
         loading={verifying}
         disabled={verifying || !otpValid}
         onPress={verify}

@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { POD_COIN_TOTALS, PUBLIC_FINANCE_SETTINGS } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface BreakdownLine {
   key: string;
@@ -10,14 +11,16 @@ interface BreakdownLine {
   bold?: boolean;
 }
 
-const PARTY_LABEL_BY_KIND: Record<string, string> = {
-  HOST_PAYMENT: 'Host amount (pool remainder)',
-  CLUB_ADMIN: 'Club admin cut (off the pool)',
-};
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
+const partyLabelByKind = (t: Translate): Record<string, string> => ({
+  HOST_PAYMENT: t('finance.paymentRelease.hostAmountPoolRemainder'),
+  CLUB_ADMIN: t('finance.paymentRelease.clubAdminCutOffThePool'),
+});
+
+const buildV2Lines = (b: any, kind: string, sym: string, t: Translate): BreakdownLine[] => {
   const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
-  const partyLabel = PARTY_LABEL_BY_KIND[kind] ?? 'Venue amount (booked slot price)';
+  const partyLabel = partyLabelByKind(t)[kind] ?? t('finance.paymentRelease.venueAmountBookedSlotPrice');
   // Attendance is what the payout stands on: a pod settles on the seats a host
   // scanned in, so "collected" and "settled on" can legitimately differ. Both
   // are shown — a reviewer seeing only the smaller number would read a correct
@@ -27,30 +30,30 @@ const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
       ? [
           {
             key: 'attendance',
-            label: 'Attendance at completion',
+            label: t('finance.paymentRelease.attendanceAtCompletion'),
             value: `${Number(b.attended_seats || 0)} of ${Number(b.booked_seats || 0)} seats`,
           },
-          { key: 'attended-total', label: 'Settled on (attended seats)', value: money(b.attended_total) },
+          { key: 'attended-total', label: t('finance.paymentRelease.settledOnAttendedSeats'), value: money(b.attended_total) },
         ]
       : [];
   return [
-    { key: 'collected', label: 'Customer collected', value: money(b.collected_total) },
+    { key: 'collected', label: t('finance.paymentRelease.customerCollected'), value: money(b.collected_total) },
     ...attendanceLines,
     { key: 'gst', label: `− GST (${Number(b.gst_pct || 0).toFixed(2)}%)`, value: `− ${money(b.gst_amount)}` },
     { key: 'fee', label: `− Platform fee (${Number(b.platform_fee_pct || 0).toFixed(2)}%)`, value: `− ${money(b.platform_fee_amount)}` },
-    { key: 'pool', label: 'Remaining pool', value: money(b.pool_amount) },
+    { key: 'pool', label: t('finance.common.remainingPool'), value: money(b.pool_amount) },
     { key: 'party', label: partyLabel, value: money(b.share_amount) },
     { key: 'commission', label: `− Commission (${Number(b.commission_pct || 0).toFixed(2)}%)`, value: `− ${money(b.commission_amount)}` },
-    { key: 'payout', label: 'Payout', value: money(b.payout_amount), bold: true },
-    { key: 'duncit', label: 'Duncit revenue (pod total)', value: money(b.duncit_revenue) },
+    { key: 'payout', label: t('finance.paymentRelease.payout'), value: money(b.payout_amount), bold: true },
+    { key: 'duncit', label: t('finance.paymentRelease.duncitRevenuePodTotal'), value: money(b.duncit_revenue) },
   ];
 };
 
-const buildV1Lines = (b: any, sym: string): BreakdownLine[] => {
+const buildV1Lines = (b: any, sym: string, t: Translate): BreakdownLine[] => {
   const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
   return [
-    { key: 'collected', label: 'Customer collected', value: money(b.collected_total) },
-    { key: 'venue-bill', label: 'Venue bill', value: money(b.venue_bill) },
+    { key: 'collected', label: t('finance.paymentRelease.customerCollected'), value: money(b.collected_total) },
+    { key: 'venue-bill', label: t('finance.paymentRelease.venueBill'), value: money(b.venue_bill) },
     { key: 'gst', label: `− GST (${Number(b.gst_pct || 0).toFixed(2)}%)`, value: `− ${money(b.gst_amount)}` },
     { key: 'duncit', label: `− Duncit cut (${Number(b.duncit_pct || 0).toFixed(2)}%)`, value: `− ${money(b.duncit_amount)}` },
     { key: 'payout', label: `Payout (${Number(b.payout_pct || 0).toFixed(2)}%)`, value: money(b.payout_amount), bold: true },
@@ -60,6 +63,7 @@ const buildV1Lines = (b: any, sym: string): BreakdownLine[] => {
 /** Read-only settlement lines shown in the review dialog. v2 = the pool
  * waterfall; v1 = the legacy venue-bill snapshot. */
 export default function ReleaseBreakdownLines({ request }: Readonly<{ request: any }>) {
+  const { t } = useTranslation();
   const settings = useQuery<{ publicFinanceSettings: { currency_symbol: string } }>(
     PUBLIC_FINANCE_SETTINGS,
     { fetchPolicy: 'cache-first' },
@@ -80,8 +84,8 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
 
   const sym = settings.data?.publicFinanceSettings?.currency_symbol ?? '';
   const lines = breakdown.version >= 2
-    ? buildV2Lines(breakdown, request.kind, sym)
-    : buildV1Lines(breakdown, sym);
+    ? buildV2Lines(breakdown, request.kind, sym, t)
+    : buildV1Lines(breakdown, sym, t);
 
   return (
     <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
@@ -96,21 +100,23 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
           </Stack>
         ))}
       </Stack>
-      {coinsNote(coins.data?.podFinanceBreakdown)}
+      {coinsNote(coins.data?.podFinanceBreakdown, t)}
     </Box>
   );
 }
 
 /** One line naming both halves of the pod's coin movement, or nothing when the
  * pod never saw a coin — two zeroes under a settlement say less than silence. */
-function coinsNote(totals?: { coins_redeemed_total: number; coins_earned_total: number }) {
+function coinsNote(
+  totals: { coins_redeemed_total: number; coins_earned_total: number } | undefined,
+  t: Translate,
+) {
   const spent = Math.max(0, Math.floor(Number(totals?.coins_redeemed_total) || 0));
   const earned = Math.max(0, Math.floor(Number(totals?.coins_earned_total) || 0));
   if (spent === 0 && earned === 0) return null;
   return (
     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-      Duncit Coins on this pod: {spent} spent by buyers (already deducted from Customer collected)
-      · {earned} earned back.
+      {t('finance.paymentRelease.coinsNote', { vars: { spent, earned } })}
     </Typography>
   );
 }

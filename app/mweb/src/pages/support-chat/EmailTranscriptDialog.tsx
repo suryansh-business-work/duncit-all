@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import { EMAIL_SUPPORT_CHAT_TRANSCRIPT } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState(defaultEmail ?? '');
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Email this chat</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportChat.emailThisChat')}</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert severity="success">Transcript sent to {email}.</Alert>
@@ -52,7 +54,7 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
               fullWidth
               size="small"
               type="email"
-              label="Email address"
+              label={t('mweb.common.emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mt: 1 }}

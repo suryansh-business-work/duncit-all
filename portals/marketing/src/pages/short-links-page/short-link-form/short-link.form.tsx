@@ -15,6 +15,7 @@ export {
   shortLinkSchema,
   toShortLinkInput,
 } from './short-link.types';
+import { useTranslation } from '@duncit/app-settings';
 
 const NO_CAMPAIGN = '';
 
@@ -26,9 +27,10 @@ export default function ShortLinkForm({
   onCancel,
   onSubmit,
 }: Readonly<ShortLinkFormProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, formState } = useForm<ShortLinkFormValues>({
     defaultValues: blankShortLinkValues(),
-    resolver: zodResolver(shortLinkSchema),
+    resolver: zodResolver(shortLinkSchema(t)),
     mode: 'onChange',
   });
 
@@ -44,7 +46,7 @@ export default function ShortLinkForm({
           <RhfTextField
             control={control}
             name="label"
-            label="Label"
+            label={t('marketing.shortLinks.label')}
             required
             hint="What this link is for, so you can find it later"
           />
@@ -53,14 +55,14 @@ export default function ShortLinkForm({
           <RhfTextField
             control={control}
             name="destination_url"
-            label="Destination"
+            label={t('marketing.common.destination')}
             required
             hint="The page this link should open, e.g. https://mweb.duncit.com/club/…/pod/…"
           />
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="source" label="Link creating for" select required>
+          <RhfTextField control={control} name="source" label={t('marketing.shortLinks.linkCreatingFor')} select required>
             {options.sources.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -73,7 +75,7 @@ export default function ShortLinkForm({
             <RhfTextField
               control={control}
               name="source_other"
-              label="Which channel?"
+              label={t('marketing.shortLinks.whichChannel')}
               required
               hint="Becomes the utm_source"
             />
@@ -81,7 +83,7 @@ export default function ShortLinkForm({
         )}
 
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="medium" label="Medium" select required>
+          <RhfTextField control={control} name="medium" label={t('marketing.shortLinks.medium')} select required>
             {options.mediums.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -94,7 +96,7 @@ export default function ShortLinkForm({
             <RhfTextField
               control={control}
               name="medium_other"
-              label="Which medium?"
+              label={t('marketing.shortLinks.whichMedium')}
               required
               hint="Becomes the utm_medium"
             />
@@ -105,11 +107,11 @@ export default function ShortLinkForm({
           <RhfTextField
             control={control}
             name="campaign_id"
-            label="Campaign"
+            label={t('marketing.common.campaign')}
             select
             hint="Optional — tags the link with utm_campaign"
           >
-            <MenuItem value={NO_CAMPAIGN}>No campaign</MenuItem>
+            <MenuItem value={NO_CAMPAIGN}>{t('marketing.shortLinks.noCampaign')}</MenuItem>
             {campaigns.map((campaign) => (
               <MenuItem key={campaign.campaign_id} value={campaign.campaign_id}>
                 {campaign.name}

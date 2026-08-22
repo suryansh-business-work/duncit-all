@@ -5,6 +5,7 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import CountsBySuperCategoryGrid from './dashboard/CountsBySuperCategoryGrid';
 import SummaryTiles from './dashboard/SummaryTiles';
 import { SUPER_CATS, TOTALS } from './dashboard/queries';
+import { useTranslation } from '@duncit/shell';
 
 /** "Total 128" — the count that used to sit in each chart card's own header. */
 function TotalChip({ total }: Readonly<{ total: number }>) {
@@ -16,6 +17,7 @@ function TotalChip({ total }: Readonly<{ total: number }>) {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [superSlug, setSuperSlug] = useState('');
 
   const { data: catsData } = useQuery(SUPER_CATS);
@@ -40,7 +42,7 @@ export default function DashboardPage() {
       },
       {
         id: 'pods-by-super-category',
-        title: 'Pods by super category',
+        title: t('admin.dashboard.podsBySuper'),
         headerActions: <TotalChip total={totals?.pods_total ?? 0} />,
         fitContent: true,
         defaultLayout: { x: 0, y: 2, w: 12, h: 4 },
@@ -50,7 +52,7 @@ export default function DashboardPage() {
       },
       {
         id: 'clubs-by-super-category',
-        title: 'Clubs by super category',
+        title: t('admin.dashboard.clubsBySuper'),
         headerActions: <TotalChip total={totals?.clubs_total ?? 0} />,
         fitContent: true,
         defaultLayout: { x: 0, y: 6, w: 12, h: 4 },
@@ -74,7 +76,7 @@ export default function DashboardPage() {
         >
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 800 }}>
-              Dashboard
+              {t('admin.hub.dashboard')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Monitor users, pods, clubs and live activity from one workspace.
@@ -85,12 +87,12 @@ export default function DashboardPage() {
           <TextField
             select
             size="small"
-            label="Super Category"
+            label={t('admin.dashboard.superCategory')}
             value={superSlug}
             onChange={(e) => setSuperSlug(e.target.value)}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">All super categories</MenuItem>
+            <MenuItem value="">{t('admin.dashboard.allSuperCategories')}</MenuItem>
             {(catsData?.categories ?? []).map((c: any) => (
               <MenuItem key={c.slug} value={c.slug}>
                 {c.name}

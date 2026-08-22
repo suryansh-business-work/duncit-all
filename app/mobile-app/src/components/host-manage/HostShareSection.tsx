@@ -4,6 +4,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { fireAndForget } from '@/utils/fire-and-forget';
 import type { HostPayout } from '@/hooks/useHostPayouts';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HostShareSectionProps {
   payouts: HostPayout[];
@@ -55,12 +56,13 @@ function BreakdownLines({
   b,
   symbol,
 }: Readonly<{ b: Breakdown | null | undefined; symbol: string }>) {
+  const { t } = useTranslation();
   if (!b) return null;
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
   if (b.version >= 2) {
     return (
       <YStack gap={2}>
-        <PayoutLine label="Your Amount" value={fmt(b.share_amount)} />
+        <PayoutLine label={t('mweb.hostManage.yourAmount')} value={fmt(b.share_amount)} />
         <PayoutLine
           label={`− Commission (${b.commission_pct}%)`}
           value={fmt(b.commission_amount)}
@@ -70,7 +72,7 @@ function BreakdownLines({
   }
   return (
     <YStack gap={2}>
-      <PayoutLine label="Venue bill" value={fmt(b.venue_bill)} />
+      <PayoutLine label={t('mweb.hostManage.venueBill')} value={fmt(b.venue_bill)} />
       <PayoutLine label={`GST (${b.gst_pct}%)`} value={fmt(b.gst_amount)} />
       <PayoutLine label={`Duncit Taken (${b.duncit_pct}%)`} value={fmt(b.duncit_amount)} />
     </YStack>

@@ -18,6 +18,7 @@ import {
   SOURCE_LABELS,
   type PodAuditLog,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   log: PodAuditLog | null;
@@ -27,6 +28,7 @@ interface Props {
 /** Full detail of one AI-monitored audit entry — actor, verdict and the
  * field-by-field change diff. Shared by the Admin + Partners monitoring pages. */
 export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!log} onClose={onClose} fullWidth maxWidth="sm">
       {log && (
@@ -75,7 +77,7 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t('shell.common.close')}</Button>
           </DialogActions>
         </>
       )}

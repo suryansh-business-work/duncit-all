@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { SEND_TEST } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -25,6 +26,7 @@ interface Props {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SendTestDialog({ open, templateId, varsJson, onClose, onResult }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sendTest, { loading }] = useMutation(SEND_TEST);
@@ -53,7 +55,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
 
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Send test email</DialogTitle>
+      <DialogTitle>{t('crm.emailTemplates.sendTestEmail')}</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
@@ -69,10 +71,10 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
           disabled={loading}
         />
         {error && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>{error}</Typography>}
-        {!templateId && <Alert severity="info" sx={{ mt: 1 }}>Save the template first.</Alert>}
+        {!templateId && <Alert severity="info" sx={{ mt: 1 }}>{t('crm.emailTemplates.saveTheTemplateFirst')}</Alert>}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={submit}

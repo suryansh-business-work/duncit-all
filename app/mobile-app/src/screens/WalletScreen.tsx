@@ -7,6 +7,7 @@ import { WithdrawCta } from '@/components/wallet/WithdrawCta';
 import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { useWallet, type WalletTxn, type Withdrawal } from '@/hooks/useWallet';
 import { formatDate } from '@/utils/date-format';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -74,6 +75,7 @@ function WithdrawalRow({ w, symbol }: Readonly<{ w: Withdrawal; symbol: string }
 
 /** Host Wallet — balance, payout cycle, withdrawals and transaction history. */
 export function WalletScreen() {
+  const { t } = useTranslation();
   const { wallet, transactions, withdrawals, isLoading, refetch } = useWallet();
   const [open, setOpen] = useState(false);
   const symbol = wallet?.currency_symbol ?? '₹';
@@ -84,7 +86,7 @@ export function WalletScreen() {
   const minAmount = wallet?.min_withdrawal_amount ?? 0;
 
   return (
-    <StackScreen header title="Wallet" testID="wallet-screen">
+    <StackScreen header title={t('mweb.common.wallet')} testID="wallet-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {isLoading && !wallet ? <Spinner testID="wallet-loading" color="$primary" /> : null}

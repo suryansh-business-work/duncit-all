@@ -5,7 +5,8 @@ import CatalogBrandProductsTable from '../../src/pages/catalog-brands/CatalogBra
 import type { CatalogBrandProductRow } from '../../src/pages/catalog-brands/queries';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDate: () => '01 Jan 2026' }),
 }));
 

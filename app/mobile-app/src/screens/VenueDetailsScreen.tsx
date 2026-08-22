@@ -130,9 +130,9 @@ function VenueDetailsContent({
 
       <VenuePodsSection venueId={venue.id} />
 
-      <ChipsGroup title="Amenities" items={venue.amenities} />
-      <ChipsGroup title="Facilities" items={venue.facilities} />
-      <ChipsGroup title="Venue Security" items={venue.security} />
+      <ChipsGroup title={t('mweb.common.amenities')} items={venue.amenities} />
+      <ChipsGroup title={t('mweb.common.facilities')} items={venue.facilities} />
+      <ChipsGroup title={t('mweb.common.venueSecurity')} items={venue.security} />
 
       <VenueImagesGrid images={gallery} onOpen={setViewerIndex} />
 

@@ -10,9 +10,11 @@ import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
 import MyTicketsList from '../support-tickets/MyTicketsList';
 import { CREATE_TICKET } from '../support-tickets/queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 
 export default function SupportTicketsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -67,7 +69,7 @@ export default function SupportTicketsPage() {
         // Straight to the ticket details page so the user can track it.
         navigate(`/tickets/${id}`);
       } else {
-        setError('Could not create the ticket. Please try again.');
+        setError(t('mweb.common.couldNotCreateTheTicketPlease'));
       }
     } catch (e: any) {
       setError(e?.message ?? 'Network error. Please try again.');
@@ -77,8 +79,8 @@ export default function SupportTicketsPage() {
 
   return (
     <SupportShell
-      title="Create Support Tickets"
-      subtitle="Raise an issue with our team"
+      title={t('mweb.common.createSupportTickets')}
+      subtitle={t('mweb.supportHub.raiseAnIssueWithOurTeam')}
       icon={<ConfirmationNumberIcon fontSize="small" />}
       backTo="/support"
     >
@@ -103,7 +105,7 @@ export default function SupportTicketsPage() {
                 Average reply within 24 hours
               </Typography>
             </Box>
-            <Chip size="small" color="success" label="Live" sx={{ fontWeight: 700 }} />
+            <Chip size="small" color="success" label={t('mweb.common.live')} sx={{ fontWeight: 700 }} />
           </Stack>
         </Paper>
 

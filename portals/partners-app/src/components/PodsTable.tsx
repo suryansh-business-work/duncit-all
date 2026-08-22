@@ -89,26 +89,26 @@ export default function PodsTable<T extends PodRowBase>({
     const cols: DuncitColumn<T>[] = [
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('partners.common.pod'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPod,
         valueGetter: (pod) => pod.pod_title,
       },
-      { field: 'place', headerName: 'Place', sortable: false, minWidth: 150, valueGetter: placeValue },
+      { field: 'place', headerName: t('partners.components.place'), sortable: false, minWidth: 150, valueGetter: placeValue },
       {
         field: 'pod_date_time',
-        headerName: 'Date',
+        headerName: t('partners.common.date'),
         filter: { type: 'date' },
         minWidth: 175,
         valueGetter: dateValue,
       },
-      { field: 'attendees', headerName: 'Attendees', sortable: false, width: 110, valueGetter: attendeesValue },
+      { field: 'attendees', headerName: t('partners.common.attendees'), sortable: false, width: 110, valueGetter: attendeesValue },
       {
         // Booked seats alone no longer explain a completed pod's payout — it is
         // settled on the seats scanned at the door, so both are shown.
         field: 'attendance',
-        headerName: 'Attendance',
+        headerName: t('partners.components.attendance'),
         sortable: false,
         width: 150,
         cellRenderer: renderAttendance,
@@ -119,7 +119,7 @@ export default function PodsTable<T extends PodRowBase>({
       },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'boolean' },
         width: 120,
         cellRenderer: renderStatus,
@@ -127,7 +127,7 @@ export default function PodsTable<T extends PodRowBase>({
       },
       {
         field: 'pod_amount',
-        headerName: 'Amount',
+        headerName: t('partners.common.amount'),
         filter: { type: 'number' },
         hide: true,
         width: 110,
@@ -135,7 +135,7 @@ export default function PodsTable<T extends PodRowBase>({
       },
       {
         field: 'completed_at',
-        headerName: 'Completed',
+        headerName: t('partners.common.completed'),
         filter: { type: 'date' },
         hide: true,
         width: 140,
@@ -145,7 +145,7 @@ export default function PodsTable<T extends PodRowBase>({
     if (renderMonitor) {
       cols.push({
         field: 'ai_monitor',
-        headerName: 'AI Monitoring',
+        headerName: t('shell.nav.aiMonitoring'),
         sortable: false,
         width: 150,
         cellRenderer: renderMonitor,
@@ -157,7 +157,7 @@ export default function PodsTable<T extends PodRowBase>({
     if (renderActions) {
       cols.push({
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 120,
         cellRenderer: renderActions,

@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { locationMapEmbedUrl, mapEmbedHtml } from '@/utils/location-tree';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   query: string;
@@ -16,6 +17,7 @@ interface Props {
  * "Open in Maps" shortcut. Renders nothing when the API key or query is
  * missing — graceful, exactly like mWeb's PodMapSection. */
 export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary } = useThemeColors();
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const url = locationMapEmbedUrl(apiKey, query);
@@ -31,7 +33,7 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
         <XStack
           testID="map-open-external"
           role="button"
-          aria-label="Open in Maps"
+          aria-label={t('mweb.mapEmbed.openInMaps')}
           onPress={() => Linking.openURL(mapUrl)}
           alignItems="center"
           gap={4}

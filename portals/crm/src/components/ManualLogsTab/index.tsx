@@ -9,6 +9,7 @@ import { groupLogs } from './logUtils';
 import { ManualLogComposer } from './ManualLogComposer';
 import { ManualLogList } from './ManualLogList';
 import type { Granularity, LogBody, ManualLogsTabProps } from './types';
+import { useTranslation } from '@duncit/shell';
 
 const EMPTY_BODY: LogBody = { html: '', text: '' };
 
@@ -17,6 +18,7 @@ export default function ManualLogsTab({
   entityId,
   activities,
 }: Readonly<ManualLogsTabProps>) {
+  const { t } = useTranslation();
   const [openComposer, setOpenComposer] = useState(false);
   const [summary, setSummary] = useState('');
   const [body, setBody] = useState<LogBody>(EMPTY_BODY);
@@ -39,7 +41,7 @@ export default function ManualLogsTab({
   const submit = async () => {
     setError(null);
     if (!body.html.trim()) {
-      setError('Please write something before saving.');
+      setError(t('crm.components.pleaseWriteSomethingBeforeSaving'));
       return;
     }
     try {
@@ -81,10 +83,10 @@ export default function ManualLogsTab({
           onChange={(event) => setGranularity(event.target.value as Granularity)}
           sx={{ minWidth: 140 }}
         >
-          <MenuItem value="all">All time</MenuItem>
-          <MenuItem value="today">Today</MenuItem>
-          <MenuItem value="week">Last 7 days</MenuItem>
-          <MenuItem value="month">Last 30 days</MenuItem>
+          <MenuItem value="all">{t('crm.components.allTime')}</MenuItem>
+          <MenuItem value="today">{t('crm.components.today')}</MenuItem>
+          <MenuItem value="week">{t('crm.components.last7Days')}</MenuItem>
+          <MenuItem value="month">{t('crm.components.last30Days')}</MenuItem>
         </Select>
         {openComposer ? null : (
           <Button

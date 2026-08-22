@@ -14,6 +14,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { logs } from '@duncit/logs';
 import ReviewDetails from './ReviewDetails';
 import type { AdRequestRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   request: AdRequestRow | null;
@@ -32,6 +33,7 @@ export default function ReviewDialog({
   onClose,
   onReview,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [remarks, setRemarks] = useState('');
 
   useEffect(() => {
@@ -93,14 +95,14 @@ export default function ReviewDialog({
           <ReviewDetails request={request} formatDateTime={formatDateTime} />
           {isPending && (
             <TextField
-              label="Remarks"
+              label={t('marketing.adsApprovals.remarks')}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               multiline
               minRows={2}
               fullWidth
-              placeholder="Optional, but recommended — shared with the advertiser"
-              helperText="Explain your decision, especially for rejections."
+              placeholder={t('marketing.adsApprovals.optionalButRecommendedSharedWithThe')}
+              helperText={t('marketing.adsApprovals.explainYourDecisionEspeciallyForRejections')}
             />
           )}
           {error && <Alert severity="error">{error}</Alert>}

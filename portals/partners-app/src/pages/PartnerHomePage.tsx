@@ -4,6 +4,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxOpen, faBuilding, faUserTie, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
+import { useTranslation } from '@duncit/shell';
 
 interface PartnerAction {
   id: string;
@@ -13,24 +14,26 @@ interface PartnerAction {
   icon: IconDefinition;
 }
 
-const actions: PartnerAction[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const actions = (t: Translate): PartnerAction[] => [
   {
     id: 'register-venue',
-    title: 'Register your venue',
+    title: t('partners.common.registerYourVenue'),
     text: 'Submit your space, documents, owner details, and photos for partner review.',
     path: '/register-venue',
     icon: faBuilding,
   },
   {
     id: 'become-host',
-    title: 'Be a host',
+    title: t('partners.page.beAHost'),
     text: 'Complete identity, verification, and address details to become a Duncit host.',
     path: '/become-host',
     icon: faUserTie,
   },
   {
     id: 'list-products',
-    title: 'List your products',
+    title: t('partners.page.listYourProducts'),
     text: 'Sell your products via Duncit. Hosts can select approved products during pod creation.',
     path: '/list-products',
     icon: faBoxOpen,
@@ -39,6 +42,7 @@ const actions: PartnerAction[] = [
 
 /** One partner path. Hoisted so the grid can render it as a widget body. */
 function ActionTile({ action }: Readonly<{ action: PartnerAction }>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Card variant="outlined" sx={{ borderRadius: 2, height: '100%' }}>
@@ -60,7 +64,7 @@ function ActionTile({ action }: Readonly<{ action: PartnerAction }>) {
           </Box>
           <Typography variant="h6" fontWeight={900}>{action.title}</Typography>
           <Typography variant="body2" color="text.secondary">{action.text}</Typography>
-          <Button component={RouterLink} to={action.path} variant="contained">Start</Button>
+          <Button component={RouterLink} to={action.path} variant="contained">{t('partners.page.start')}</Button>
         </Stack>
       </CardContent>
     </Card>
@@ -68,7 +72,8 @@ function ActionTile({ action }: Readonly<{ action: PartnerAction }>) {
 }
 
 export default function PartnerHomePage() {
-  const widgets: DashboardWidget[] = actions.map((action, index) => ({
+  const { t } = useTranslation();
+  const widgets: DashboardWidget[] = actions(t).map((action, index) => ({
     id: action.id,
     bare: true,
     defaultLayout: { x: index * 4, y: 0, w: 4, h: 5 },
@@ -82,9 +87,9 @@ export default function PartnerHomePage() {
       dashboardId="partners.home"
       header={
         <Box sx={{ p: 2.5, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
-          <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>Duncit Partners</Typography>
-          <Typography variant="h4" fontWeight={950}>Choose your partner path</Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 1 }}>Use the same Duncit account for venue and host applications.</Typography>
+          <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.common.duncitPartners')}</Typography>
+          <Typography variant="h4" fontWeight={950}>{t('partners.page.chooseYourPartnerPath')}</Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 1 }}>{t('partners.page.useTheSameDuncitAccountFor')}</Typography>
         </Box>
       }
       widgets={widgets}

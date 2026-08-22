@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { isVideoMedia, type ClubMedia } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   items: ClubMedia[];
@@ -16,6 +17,7 @@ interface Props {
 /** Full-screen media viewer with prev/next + keyboard navigation. Opened by a
  * gallery thumbnail; supports images and inline video playback. */
 export default function MediaLightbox({ items, index, onNavigate, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const open = index !== null && index >= 0 && index < items.length;
   const canNavigate = items.length > 1;
 
@@ -41,7 +43,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
       <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 320, md: 520 } }}>
         <IconButton
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
         >
           <CloseIcon />
@@ -50,7 +52,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         {canNavigate && (
           <IconButton
             onClick={goPrev}
-            aria-label="Previous"
+            aria-label={t('admin.pickers.previous')}
             sx={{ position: 'absolute', left: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
           >
             <ChevronLeftIcon fontSize="large" />
@@ -71,7 +73,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         {canNavigate && (
           <IconButton
             onClick={goNext}
-            aria-label="Next"
+            aria-label={t('admin.pickers.next')}
             sx={{ position: 'absolute', right: 8, zIndex: 2, color: 'common.white', bgcolor: 'rgba(0,0,0,0.4)' }}
           >
             <ChevronRightIcon fontSize="large" />

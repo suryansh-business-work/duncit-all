@@ -1,6 +1,7 @@
 import { Box, Button, Chip, Skeleton } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { countryFlagUrl } from '../../utils/location-tree';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
@@ -19,6 +20,7 @@ export default function HeaderLocationButton({
   selectedCountryCode,
   onClick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (loading && !hasData) {
     return <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />;
   }
@@ -51,7 +53,7 @@ export default function HeaderLocationButton({
         '&:hover': { bgcolor: 'action.selected' },
       }}
       size="small"
-      aria-label="Change city or zone"
+      aria-label={t('mweb.appHeader.changeCityOrZone')}
     >
       <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {selectedLocationName ?? 'Select city'}

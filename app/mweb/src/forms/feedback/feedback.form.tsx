@@ -6,6 +6,7 @@ import MediaUrlsField from '../../pages/create-pod-page/create-pod/fields/MediaU
 import RhfTextField from '../components/RhfTextField';
 import { useReportProblemConfig } from './useReportProblemConfig';
 import { buildFeedbackSchema, feedbackDefaults, type FeedbackValues } from './feedback.types';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading?: boolean;
@@ -23,6 +24,7 @@ interface Props {
  * needing a release.
  */
 export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { config, loading: configLoading } = useReportProblemConfig();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -50,7 +52,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
     try {
       await onSubmit(values);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Something went wrong');
+      setSubmitError(e instanceof Error ? e.message : t('mweb.common.somethingWentWrong'));
     }
   });
 
@@ -98,7 +100,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           required
           multiline
           minRows={4}
-          placeholder="Describe the problem or share your idea"
+          placeholder={t('mweb.common.describeTheProblemOrShareYour')}
           hint={config.message_hint}
           size="small"
         />
@@ -112,7 +114,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                 value={field.value}
                 onChange={field.onChange}
                 error={fieldState.error?.message}
-                label="Screenshots (optional)"
+                label={t('mweb.common.screenshotsOptional')}
                 required={false}
                 folder="/feedback"
                 maxImages={config.max_media}

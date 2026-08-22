@@ -3,6 +3,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MapIcon from '@mui/icons-material/Map';
 import PersonIcon from '@mui/icons-material/Person';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { useTranslation } from '@duncit/app-settings';
 
 export type NotifScope = 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER' | 'AUDIENCE_LIST';
 
@@ -39,12 +40,14 @@ export const blankForm: NotifForm = {
   audience_list_id: '',
 };
 
-export const SCOPES = [
-  { value: 'GLOBAL', label: 'All users (Global)', icon: <PublicIcon fontSize="small" /> },
-  { value: 'LOCATION', label: 'By Location', icon: <LocationOnIcon fontSize="small" /> },
-  { value: 'ZONE', label: 'By Zone', icon: <MapIcon fontSize="small" /> },
-  { value: 'USER', label: 'Specific Users', icon: <PersonIcon fontSize="small" /> },
-  { value: 'AUDIENCE_LIST', label: 'Saved audience list', icon: <GroupsIcon fontSize="small" /> },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const scopes = (t: Translate) => [
+  { value: 'GLOBAL', label: t('marketing.notifications.allUsersGlobal'), icon: <PublicIcon fontSize="small" /> },
+  { value: 'LOCATION', label: t('marketing.notifications.byLocation'), icon: <LocationOnIcon fontSize="small" /> },
+  { value: 'ZONE', label: t('marketing.notifications.byZone'), icon: <MapIcon fontSize="small" /> },
+  { value: 'USER', label: t('marketing.notifications.specificUsers'), icon: <PersonIcon fontSize="small" /> },
+  { value: 'AUDIENCE_LIST', label: t('marketing.common.savedAudienceList'), icon: <GroupsIcon fontSize="small" /> },
 ];
 
 /** How many people a chosen audience currently reaches, or null when the

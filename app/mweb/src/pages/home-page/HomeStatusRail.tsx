@@ -11,6 +11,7 @@ import MyStatusUploadTile from './MyStatusUploadTile';
 import StoryViewersDialog from './StoryViewersDialog';
 import { buildAdViewer, buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
 import { DELETE_STORY_POST, RECORD_STORY_VIEW, TOGGLE_STORY_LIKE } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface HomeStatusRailProps {
   me?: any;
@@ -31,6 +32,7 @@ export default function HomeStatusRail({
   followedUsers,
   clubStories,
 }: Readonly<HomeStatusRailProps>) {
+  const { t } = useTranslation();
   // Index into the ordered viewer sequence ([my status, …entries]); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   // The sponsored story opens on its own rather than joining the sequence: it is
@@ -163,9 +165,9 @@ export default function HomeStatusRail({
       <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="Delete story?"
+        title={t('mweb.common.deleteStory')}
         message="This story will be removed for everyone. This can't be undone."
-        confirmLabel="Delete"
+        confirmLabel={t('mweb.common.delete')}
         destructive
         onConfirm={confirmDelete}
         onClose={() => setPendingDelete(null)}

@@ -7,12 +7,14 @@ import { PHONE_RE } from '../env-entry/env-entry.types';
 import ResultAlert from './ResultAlert';
 import { useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Digits-only extension dialed after the call connects (optional). */
 const EXT_RE = /^\d{1,6}$/;
 
 /** Twilio call tester — places a REAL call after confirm. */
 export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [to, setTo] = useState('');
   const [ext, setExt] = useState('');
@@ -29,9 +31,9 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
 
   const call = async () => {
     const ok = await confirm({
-      title: 'Place a real call?',
+      title: t('tech.environment.placeARealCall'),
       message: `This will place an actual billable phone call to ${target} via ${entry.name}.`,
-      confirmLabel: 'Call now',
+      confirmLabel: t('tech.environment.callNow'),
       destructive: true,
     });
     if (!ok) return;
@@ -50,7 +52,7 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         Places a real test call from this Twilio entry.
       </Typography>
       <TextField
-        label="Number to call"
+        label={t('tech.environment.numberToCall')}
         value={to}
         onChange={(e) => setTo(e.target.value)}
         placeholder="+14155552671"
@@ -61,10 +63,10 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         inputProps={{ autoComplete: 'off', inputMode: 'tel', 'data-1p-ignore': true, 'data-lpignore': true }}
       />
       <TextField
-        label="Extension (optional)"
+        label={t('tech.environment.extensionOptional')}
         value={ext}
         onChange={(e) => setExt(e.target.value)}
-        placeholder="e.g. 101"
+        placeholder={t('tech.environment.eG101')}
         error={!extValid}
         helperText={extValid ? 'Digits dialed after the call connects' : 'Extension must be 1–6 digits'}
         fullWidth

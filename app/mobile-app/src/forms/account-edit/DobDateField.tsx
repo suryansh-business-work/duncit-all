@@ -128,7 +128,7 @@ export function DobDateField<T extends FieldValues>({
               <YStack
                 testID="dob-sheet-backdrop"
                 role="button"
-                aria-label="Close"
+                aria-label={t('mweb.common.close')}
                 onPress={closeSheet}
                 position="absolute"
                 top={0}

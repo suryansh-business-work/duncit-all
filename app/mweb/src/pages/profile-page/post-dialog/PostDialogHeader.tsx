@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShareIcon from '@mui/icons-material/Share';
 import { sharePost } from '../../../utils/share';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PostDialogHeaderProps {
   post: any;
@@ -17,6 +18,7 @@ export default function PostDialogHeader({
   onClose,
   onRequestDelete,
 }: Readonly<PostDialogHeaderProps>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -30,17 +32,17 @@ export default function PostDialogHeader({
       <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
         {post.author?.full_name ?? 'User'}
       </Typography>
-      <Tooltip title="Share post">
+      <Tooltip title={t('mweb.profile.sharePost')}>
         <IconButton
           size="small"
-          aria-label="Share post"
+          aria-label={t('mweb.profile.sharePost')}
           onClick={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
         >
           <ShareIcon fontSize="small" />
         </IconButton>
       </Tooltip>
       {canDelete && (
-        <Tooltip title="Delete post">
+        <Tooltip title={t('mweb.profile.deletePost')}>
           <IconButton size="small" onClick={onRequestDelete}>
             <DeleteOutlineIcon fontSize="small" />
           </IconButton>

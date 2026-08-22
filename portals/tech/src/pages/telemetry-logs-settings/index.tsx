@@ -25,6 +25,7 @@ import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
 import PublicApiKeyCard from './PublicApiKeyCard';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const DEFAULTS: TelemetrySettingsForm = {
   signoz_enabled: true,
@@ -42,6 +43,7 @@ const toggleLevel = (
 ): PersistedLevels => (checked ? [...levels, level] : levels.filter((l) => l !== level));
 
 export default function TelemetryLogsSettingsPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(TELEMETRY_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -74,10 +76,10 @@ export default function TelemetryLogsSettingsPage() {
     setOpError(null);
     try {
       await save({ variables: { input: values } });
-      setToast('Telemetry settings saved');
+      setToast(t('tech.telemetryLogsSettings.telemetrySettingsSaved'));
       await refetch();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : 'Failed to save');
+      setOpError(e instanceof Error ? e.message : t('tech.telemetryLogsSettings.failedToSave'));
     }
   };
 
@@ -142,7 +144,7 @@ export default function TelemetryLogsSettingsPage() {
             <TextField
               {...field}
               type="number"
-              label="Retention (days)"
+              label={t('tech.telemetryLogsSettings.retentionDays')}
               required
               error={!!fieldState.error}
               helperText={
@@ -176,7 +178,7 @@ export default function TelemetryLogsSettingsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Telemetry Logs Settings</Typography>
+        <Typography variant="h5">{t('tech.telemetryLogsSettings.telemetryLogsSettings')}</Typography>
         <Typography variant="body2" color="text.secondary">
           Control which log levels are stored, how long they are kept, and whether logs ship to
           SigNoz.

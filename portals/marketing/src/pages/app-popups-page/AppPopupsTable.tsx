@@ -3,8 +3,11 @@ import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { AUDIENCE_OPTIONS, PLATFORM_OPTIONS } from './app-popup-form';
+import { audienceOptions, platformOptions } from './app-popup-form';
 import type { AppPopupRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 interface Props {
   fetchRows: TableFetch<AppPopupRow>;
@@ -17,9 +20,12 @@ interface Props {
 
 const getRowId = (popup: AppPopupRow) => popup.id;
 
-const PLATFORM_LABELS = new Map(PLATFORM_OPTIONS.map((o) => [o.value as string, o.label]));
-const SELECT_PLATFORMS = PLATFORM_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
-const SELECT_AUDIENCES = AUDIENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+const platformLabels = (t: Translate) =>
+  new Map(platformOptions(t).map((o) => [o.value as string, o.label]));
+const selectPlatforms = (t: Translate) =>
+  platformOptions(t).map((o) => ({ value: o.value, label: o.label }));
+const selectAudiences = (t: Translate) =>
+  audienceOptions(t).map((o) => ({ value: o.value, label: o.label }));
 
 /**
  * Live means enabled AND inside its window right now — the same two conditions
@@ -72,8 +78,12 @@ const renderStatus = (popup: AppPopupRow) => {
   return <Chip size="small" label={status} color={STATUS_COLORS[status] ?? 'default'} />;
 };
 
-const renderPlatform = (popup: AppPopupRow) => (
-  <Chip size="small" variant="outlined" label={PLATFORM_LABELS.get(popup.platform) ?? popup.platform} />
+const renderPlatform = (popup: AppPopupRow, t: Translate) => (
+  <Chip
+    size="small"
+    variant="outlined"
+    label={platformLabels(t).get(popup.platform) ?? popup.platform}
+  />
 );
 
 export default function AppPopupsTable({
@@ -84,18 +94,19 @@ export default function AppPopupsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<AppPopupRow>[]>(() => {
     const audienceLabel = (popup: AppPopupRow) =>
       popup.audience_type === 'ALL_USERS' ? 'All users' : listName(popup.audience_list_id);
 
     const renderActions = (popup: AppPopupRow) => (
       <Stack direction="row" spacing={0.5}>
-        <Tooltip title="Edit">
+        <Tooltip title={t('shell.common.edit')}>
           <IconButton size="small" onClick={() => onEdit(popup)}>
             <EditIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Delete">
+        <Tooltip title={t('shell.common.delete')}>
           <IconButton size="small" onClick={() => onDelete(popup)}>
             <DeleteIcon fontSize="small" />
           </IconButton>
@@ -106,7 +117,7 @@ export default function AppPopupsTable({
     return [
       {
         field: 'name',
-        headerName: 'Popup',
+        headerName: t('marketing.appPopups.popup'),
         flex: 1,
         minWidth: 240,
         cellRenderer: renderName,
@@ -114,7 +125,7 @@ export default function AppPopupsTable({
       },
       {
         field: 'enabled',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         // A boolean column filters is_true/is_false — a select of 'true'/'false'
         // is dropped by the shared engine and would filter nothing at all.
@@ -124,36 +135,36 @@ export default function AppPopupsTable({
       },
       {
         field: 'platform',
-        headerName: 'Platform',
+        headerName: t('marketing.appPopups.platform'),
         minWidth: 160,
-        filter: { type: 'select', options: SELECT_PLATFORMS },
-        cellRenderer: renderPlatform,
-        valueGetter: (popup) => PLATFORM_LABELS.get(popup.platform) ?? popup.platform,
+        filter: { type: 'select', options: selectPlatforms(t) },
+        cellRenderer: (popup: AppPopupRow) => renderPlatform(popup, t),
+        valueGetter: (popup) => platformLabels(t).get(popup.platform) ?? popup.platform,
       },
       {
         field: 'audience_type',
-        headerName: 'Audience',
+        headerName: t('marketing.common.audience'),
         minWidth: 180,
-        filter: { type: 'select', options: SELECT_AUDIENCES },
+        filter: { type: 'select', options: selectAudiences(t) },
         valueGetter: audienceLabel,
       },
       dateColumn<AppPopupRow>({
         field: 'start_at',
-        headerName: 'Starts',
+        headerName: t('marketing.common.starts'),
         hide: false,
         width: 160,
         format: 'd MMM yyyy, HH:mm',
       }),
       dateColumn<AppPopupRow>({
         field: 'end_at',
-        headerName: 'Ends',
+        headerName: t('marketing.common.ends'),
         hide: false,
         width: 160,
         format: 'd MMM yyyy, HH:mm',
       }),
       {
         field: 'close_button_enabled',
-        headerName: 'Close ✕',
+        headerName: t('marketing.appPopups.close'),
         hide: true,
         width: 110,
         filter: { type: 'boolean' },
@@ -161,7 +172,7 @@ export default function AppPopupsTable({
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('shell.common.actions'),
         sortable: false,
         width: 110,
         cellRenderer: renderActions,
@@ -176,7 +187,7 @@ export default function AppPopupsTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       toolbarActions={toolbarActions}
-      emptyText="No app popups yet"
+      emptyText={t('marketing.appPopups.noAppPopupsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search popup name"
       refetchRef={refetchRef}

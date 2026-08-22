@@ -9,6 +9,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { CrmCallPrompt } from '../../api/call.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<CrmCallPrompt>;
@@ -41,17 +42,18 @@ export default function CallPromptsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<CrmCallPrompt>[]>(
     () => [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: t('shell.common.name'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderName,
         valueGetter: (p) => p.name,
       },
-      { field: 'language', headerName: 'Language', filter: { type: 'text' }, width: 130 },
+      { field: 'language', headerName: t('crm.common.language'), filter: { type: 'text' }, width: 130 },
       activeChipColumn<CrmCallPrompt>(),
       dateColumn<CrmCallPrompt>(),
       actionsColumn<CrmCallPrompt>({

@@ -17,6 +17,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { QueryGuard } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const APP_SETTINGS = gql`
   query AppSettingsExpiry {
@@ -55,6 +56,7 @@ interface Props {
 }
 
 export default function JwtExpirySection({ onToast }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(APP_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -111,15 +113,15 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
           control={<Switch checked={noExpire} onChange={(_, v) => setNoExpire(v)} color="warning" />}
           label={
             <Box>
-              <Typography variant="body2" fontWeight={600}>Tokens never expire</Typography>
-              <Typography variant="caption" color="text.secondary">Not recommended for production.</Typography>
+              <Typography variant="body2" fontWeight={600}>{t('tech.jwtExpirySection.tokensNeverExpire')}</Typography>
+              <Typography variant="caption" color="text.secondary">{t('tech.jwtExpirySection.notRecommendedForProduction')}</Typography>
             </Box>
           }
         />
         <Divider />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField
-            label="Duration"
+            label={t('tech.jwtExpirySection.duration')}
             type="number"
             value={value}
             onChange={(e) => setValue(Math.max(1, Number(e.target.value) || 1))}
@@ -128,7 +130,7 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
             sx={{ maxWidth: 160 }}
           />
           <TextField
-            label="Unit"
+            label={t('tech.jwtExpirySection.unit')}
             select
             value={unit}
             onChange={(e) => setUnit(e.target.value as Unit)}
@@ -168,7 +170,7 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
           sx={{ mb: 2 }}
         >
           <Box>
-            <Typography variant="subtitle1">Authentication · JWT Token Expiry</Typography>
+            <Typography variant="subtitle1">{t('tech.jwtExpirySection.authenticationJwtTokenExpiry')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Controls how long access tokens issued at login remain valid.
             </Typography>

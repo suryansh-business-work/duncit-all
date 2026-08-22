@@ -18,6 +18,7 @@ import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
 import { parseApiError } from '@duncit/utils';
 import { callStatusView } from './callStatusView';
 import CallStage from './CallStage';
+import { useTranslation } from '@duncit/shell';
 
 export interface PortalCallLead {
   to: string;
@@ -40,6 +41,7 @@ interface Props {
  * socket (with a reconcile poll fallback).
  */
 export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [logId, setLogId] = useState<string | null>(null);
   const [status, setStatus] = useState<CallStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +108,7 @@ export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props
         <CallStage fromNumber={fromNumber} toNumber={lead?.to ?? ''} statusLabel={view.label} tone={view.tone} active={placed && !ended} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{ended ? 'Close' : 'Cancel'}</Button>
+        <Button onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</Button>
         {!placed && (
           <Button variant="contained" startIcon={<PhoneInTalkIcon />} onClick={placeCall} disabled={loading || !lead}>
             {loading ? 'Starting…' : 'Start Call'}

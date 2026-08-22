@@ -10,9 +10,11 @@ import { parseApiError } from '@duncit/utils';
 import { ConfirmDialog } from '@duncit/dialogs';
 import TemplatesTable from './TemplatesTable';
 import CreateTemplateDialog from './CreateTemplateDialog';
+import { useTranslation } from '@duncit/shell';
 
 /** CRM → Email Templates. Table of CRM-owned templates with CRUD; edit opens the editor. */
 export default function EmailTemplatesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -41,7 +43,7 @@ export default function EmailTemplatesPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <MarkEmailReadIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>Email Templates</Typography>
+          <Typography variant="h5" fontWeight={800}>{t('shell.nav.emailTemplates')}</Typography>
           <Typography variant="body2" color="text.secondary">
             CRM-owned MJML templates with variables. Open one to edit the source and preview.
           </Typography>
@@ -72,9 +74,9 @@ export default function EmailTemplatesPage() {
 
       <ConfirmDialog
         open={!!removing}
-        title="Delete template"
+        title={t('crm.emailTemplates.deleteTemplate')}
         message={`Delete "${removing?.name ?? ''}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

@@ -3,6 +3,7 @@ import { gql, useLazyQuery } from '@apollo/client';
 import { Button, Snackbar, Stack } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import DownloadIcon from '@mui/icons-material/Download';
+import { useTranslation } from '../i18n/useTranslation';
 
 const POLICY_PDF = gql`
   query PolicyPdf($slug: String!) {
@@ -18,6 +19,7 @@ function base64ToBlobUrl(base64: string): string {
 /** "View PDF" + "Download PDF" actions for a policy — fetches the rendered PDF
  * from the server on demand so users can zoom, share or save it. */
 export default function PolicyPdfButton({ slug }: Readonly<{ slug: string }>) {
+  const { t } = useTranslation();
   const [error, setError] = useState('');
   const [fetchPdf, { loading }] = useLazyQuery<{ policyPdfBase64: string }>(POLICY_PDF);
 
@@ -26,7 +28,7 @@ export default function PolicyPdfButton({ slug }: Readonly<{ slug: string }>) {
       const { data } = await fetchPdf({ variables: { slug } });
       const base64 = data?.policyPdfBase64;
       if (!base64) {
-        setError('Could not prepare the PDF. Please try again.');
+        setError(t('mweb.policyPdfButton.couldNotPrepareThePdfPlease'));
         return null;
       }
       return base64ToBlobUrl(base64);

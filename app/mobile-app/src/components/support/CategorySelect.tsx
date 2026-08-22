@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TICKET_CATEGORIES, categoryLabel } from './ticketCategories';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   value: string;
@@ -16,6 +17,7 @@ interface Props {
  * inline list of the same friendly categories mWeb offers.
  */
 export function CategorySelect({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { color: ink, muted } = useThemeColors();
 
@@ -24,7 +26,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
       <XStack
         testID="ticket-category"
         role="button"
-        aria-label="Category"
+        aria-label={t('mweb.common.category')}
         aria-expanded={open}
         onPress={() => setOpen((o) => !o)}
         alignItems="center"

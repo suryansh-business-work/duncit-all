@@ -5,6 +5,7 @@ import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from 
 import { StatusChip } from '@duncit/ui';
 import { WA_RECIPIENT_STATUS_COLORS, WA_RECIPIENT_STATUS_OPTIONS } from '../helpers';
 import { WA_CAMPAIGN_RECIPIENTS, type WaCampaignRecipientRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: WaCampaignRecipientRow) => row.id;
 
@@ -32,6 +33,7 @@ const paramsText = (row: WaCampaignRecipientRow) =>
  * two questions a marketer actually has: who got it, and who did not and why.
  */
 export default function RecipientTable({ campaignId }: Readonly<{ campaignId: string }>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const fetchRows = useApolloTableFetch<WaCampaignRecipientRow>(
     client,
@@ -45,7 +47,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
     () => [
       {
         field: 'name',
-        headerName: 'Recipient',
+        headerName: t('marketing.whatsappCampaigns.recipient'),
         flex: 1,
         minWidth: 190,
         cellRenderer: renderPerson,
@@ -53,7 +55,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 120,
         filter: { type: 'select', options: WA_RECIPIENT_STATUS_OPTIONS },
         cellRenderer: renderStatus,
@@ -61,7 +63,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       },
       {
         field: 'reason',
-        headerName: 'Why not',
+        headerName: t('marketing.whatsappCampaigns.whyNot'),
         sortable: false,
         flex: 1,
         minWidth: 220,
@@ -69,14 +71,14 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       },
       {
         field: 'template_params',
-        headerName: 'Params sent',
+        headerName: t('marketing.whatsappCampaigns.paramsSent'),
         sortable: false,
         minWidth: 180,
         valueGetter: paramsText,
       },
       {
         field: 'submitted_message_id',
-        headerName: 'AiSensy message id',
+        headerName: t('marketing.whatsappCampaigns.aisensyMessageId'),
         sortable: false,
         hide: true,
         minWidth: 260,
@@ -84,7 +86,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       },
       {
         field: 'attempts',
-        headerName: 'Tries',
+        headerName: t('marketing.whatsappCampaigns.tries'),
         sortable: false,
         hide: true,
         width: 90,
@@ -106,7 +108,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No per-recipient record for this send."
+      emptyText={t('marketing.whatsappCampaigns.noPerRecipientRecordForThis')}
       defaultSort={{ field: 'created_at', dir: 'asc' }}
       defaultPageSize={10}
       searchPlaceholder="Search name, number or reason"

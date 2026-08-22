@@ -50,6 +50,7 @@ import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import { venueVariableValues } from '../../config/leadVariables';
 import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
@@ -62,6 +63,7 @@ const formatCapacity = (min?: number | null, max?: number | null) => {
 };
 
 export default function VenueLeadDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [aiOpen, setAiOpen] = useState(false);
@@ -84,24 +86,24 @@ export default function VenueLeadDetailPage() {
   const tabs: LeadTab[] = [
     {
       value: 'overview',
-      label: 'Overview',
+      label: t('crm.common.overview'),
       icon: <HomeWorkIcon fontSize="small" />,
       render: () => (
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5}>
           <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0 }}>
-            <LeadDetailCard title="Venue details" icon={<HomeWorkIcon color="primary" />}>
-              <LeadDetailRow label="Super category" value={lead.super_category?.name || '—'} />
-              <LeadDetailRow label="Types" value={joinList(lead.venue_types)} />
-              <LeadDetailRow label="Space" value={lead.space_type || '—'} />
-              <LeadDetailRow label="Capacity" value={formatCapacity(lead.capacity_min, lead.capacity_max)} />
-              <LeadDetailRow label="Description" value={lead.venue_description || '—'} />
+            <LeadDetailCard title={t('crm.venueLeads.venueDetails')} icon={<HomeWorkIcon color="primary" />}>
+              <LeadDetailRow label={t('crm.common.superCategory2')} value={lead.super_category?.name || '—'} />
+              <LeadDetailRow label={t('crm.venueLeads.types')} value={joinList(lead.venue_types)} />
+              <LeadDetailRow label={t('crm.venueLeads.space')} value={lead.space_type || '—'} />
+              <LeadDetailRow label={t('crm.venueLeads.capacity')} value={formatCapacity(lead.capacity_min, lead.capacity_max)} />
+              <LeadDetailRow label={t('shell.common.description')} value={lead.venue_description || '—'} />
             </LeadDetailCard>
 
-            <LeadDetailCard title="Location" icon={<LocationOnIcon color="primary" />}>
-              <LeadDetailRow label="City" value={lead.city} />
-              <LeadDetailRow label="Area" value={lead.area || '—'} />
-              <LeadDetailRow label="Address" value={lead.full_address} />
-              <LeadDetailRow label="Landmark" value={lead.landmark || '—'} />
+            <LeadDetailCard title={t('crm.common.location')} icon={<LocationOnIcon color="primary" />}>
+              <LeadDetailRow label={t('crm.common.city')} value={lead.city} />
+              <LeadDetailRow label={t('crm.common.area')} value={lead.area || '—'} />
+              <LeadDetailRow label={t('crm.common.address')} value={lead.full_address} />
+              <LeadDetailRow label={t('crm.common.landmark')} value={lead.landmark || '—'} />
               <Box sx={{ mt: 1.5 }}>
                 <MapEmbed
                   address={[lead.full_address, lead.area, lead.city].filter(Boolean).join(', ')}
@@ -110,12 +112,12 @@ export default function VenueLeadDetailPage() {
               </Box>
             </LeadDetailCard>
 
-            <LeadDetailCard title="Availability & suitability" icon={<EventIcon color="primary" />}>
-              <LeadDetailRow label="Days" value={joinList(lead.available_days)} />
-              <LeadDetailRow label="Time slots" value={lead.available_time_slots || '—'} />
-              <LeadDetailRow label="Booking notice" value={lead.booking_notice || '—'} />
-              <LeadDetailRow label="Suitable for" value={joinList(lead.event_suitability)} />
-              <LeadDetailRow label="Amenities" value={joinList(lead.amenities)} />
+            <LeadDetailCard title={t('crm.venueLeads.availabilityAndSuitability')} icon={<EventIcon color="primary" />}>
+              <LeadDetailRow label={t('crm.venueLeads.days')} value={joinList(lead.available_days)} />
+              <LeadDetailRow label={t('crm.venueLeads.timeSlots')} value={lead.available_time_slots || '—'} />
+              <LeadDetailRow label={t('crm.venueLeads.bookingNotice')} value={lead.booking_notice || '—'} />
+              <LeadDetailRow label={t('crm.venueLeads.suitableFor')} value={joinList(lead.event_suitability)} />
+              <LeadDetailRow label={t('crm.venueLeads.amenities')} value={joinList(lead.amenities)} />
             </LeadDetailCard>
           </Stack>
 
@@ -128,12 +130,12 @@ export default function VenueLeadDetailPage() {
                     Lead tracking
                   </Typography>
                 </Stack>
-                <LeadDetailRow label="Source" value={lead.lead_source || '—'} />
-                <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
+                <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
+                <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
                 <LeadDetailRow label="Follow-up" value={followUpLabel} />
                 <Divider sx={{ my: 1 }} />
-                <LeadDetailRow label="Created" value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
-                <LeadDetailRow label="Updated" value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
+                <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
+                <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
                 {lead.remarks && (
                   <>
                     <Divider sx={{ my: 1 }} />
@@ -163,15 +165,15 @@ export default function VenueLeadDetailPage() {
 
     {
       value: 'commercial',
-      label: 'Commercial',
+      label: t('crm.venueLeads.commercial'),
       icon: <CurrencyRupeeIcon fontSize="small" />,
       render: () => (
-        <LeadDetailCard title="Commercial" icon={<CurrencyRupeeIcon color="primary" />}>
-          <LeadDetailRow label="Pricing models" value={joinList(lead.pricing_models)} />
-          <LeadDetailRow label="Expected charges" value={lead.expected_charges ? `₹ ${lead.expected_charges}` : '—'} />
-          <LeadDetailRow label="Security deposit" value={lead.security_deposit ? `₹ ${lead.security_deposit}` : '—'} />
+        <LeadDetailCard title={t('crm.venueLeads.commercial')} icon={<CurrencyRupeeIcon color="primary" />}>
+          <LeadDetailRow label={t('crm.venueLeads.pricingModels')} value={joinList(lead.pricing_models)} />
+          <LeadDetailRow label={t('crm.venueLeads.expectedCharges')} value={lead.expected_charges ? `₹ ${lead.expected_charges}` : '—'} />
+          <LeadDetailRow label={t('crm.venueLeads.securityDeposit')} value={lead.security_deposit ? `₹ ${lead.security_deposit}` : '—'} />
           <LeadDetailRow label="GST" value={lead.gst_applicable ? 'Applicable' : 'No'} />
-          <LeadDetailRow label="Invoice" value={lead.invoice_available ? 'Available' : 'No'} />
+          <LeadDetailRow label={t('crm.venueLeads.invoice')} value={lead.invoice_available ? 'Available' : 'No'} />
         </LeadDetailCard>
       ),
     },
@@ -182,7 +184,7 @@ export default function VenueLeadDetailPage() {
       icon: <HandymanIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Services offered"
+          title={t('crm.common.servicesOffered')}
           subtitle={
             lead.services_offered.length
               ? `${lead.services_offered.length} service${servicesPlural} tagged`
@@ -197,21 +199,21 @@ export default function VenueLeadDetailPage() {
 
     {
       value: 'survey',
-      label: 'Survey',
+      label: t('crm.common.survey'),
       icon: <AssignmentIcon fontSize="small" />,
       render: () => <LeadSurveyTab entity="VENUE_LEAD" leadId={lead.id} />,
     },
 
     {
       value: 'website',
-      label: 'Website',
+      label: t('crm.common.website'),
       icon: <LanguageIcon fontSize="small" />,
       render: () => <WebsitePagesTab entity="VENUE_LEAD" leadId={lead.id} website={lead.website} />,
     },
 
     {
       value: 'reminders',
-      label: 'Reminders',
+      label: t('shell.nav.reminders'),
       icon: <EventAvailableIcon fontSize="small" />,
       render: () => <RemindersTab entity="VENUE_LEAD" leadId={lead.id} />,
     },
@@ -222,8 +224,8 @@ export default function VenueLeadDetailPage() {
       icon: <LinkIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Linked hosts"
-          subtitle="Host leads associated with this venue. Set from the Edit form."
+          title={t('crm.venueLeads.linkedHosts')}
+          subtitle={t('crm.venueLeads.hostLeadsAssociatedWithThisVenue')}
           icon={<LinkIcon color="primary" />}
         >
           {lead.linked_hosts.length === 0 ? (
@@ -275,12 +277,12 @@ export default function VenueLeadDetailPage() {
 
     {
       value: 'custom-fields',
-      label: 'Custom Fields',
+      label: t('crm.common.customFields2'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Custom fields"
-          subtitle="Admin-defined fields from Settings → Dynamic Fields."
+          title={t('crm.common.customFields')}
+          subtitle={t('crm.common.adminDefinedFieldsFromSettingsDynamic')}
         >
           <DynamicValuesView entity="VENUE_LEAD" json={lead.dynamic_values_json} />
         </LeadDetailCard>
@@ -289,7 +291,7 @@ export default function VenueLeadDetailPage() {
 
     {
       value: 'manual-logs',
-      label: 'Manual Logs',
+      label: t('crm.common.manualLogs'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <ManualLogsTab entityType="VENUE_LEAD" entityId={lead.id} activities={lead.activity_log} />
@@ -298,7 +300,7 @@ export default function VenueLeadDetailPage() {
 
     {
       value: 'communications',
-      label: 'Communications',
+      label: t('crm.common.communications'),
       icon: <ForumIcon fontSize="small" />,
       render: () => <CommsLogsSection entityType="VENUE_LEAD" entityId={lead.id} />,
     },
@@ -310,7 +312,7 @@ export default function VenueLeadDetailPage() {
           hero card so it reads as a navigation breadcrumb, not part of the
           venue's identity row. */}
       <Box>
-        <BackButton onClick={() => navigate('/venue-leads')}>Back to Venue Leads</BackButton>
+        <BackButton onClick={() => navigate('/venue-leads')}>{t('crm.venueLeads.backToVenueLeads')}</BackButton>
       </Box>
 
       {/* ---- Hero card (Venue details on top, per spec) ---- */}
@@ -382,10 +384,10 @@ export default function VenueLeadDetailPage() {
               />
             </Box>
             <Button startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
-              Ask AI
+              {t('crm.components.askAi')}
             </Button>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/venue-leads/${lead.id}`)}>
-              Edit
+              {t('shell.common.edit')}
             </Button>
           </Stack>
         </CardContent>
@@ -396,14 +398,14 @@ export default function VenueLeadDetailPage() {
       {/* ---- Stat tiles ---- */}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <LeadStatTile
-          label="Capacity"
+          label={t('crm.venueLeads.capacity')}
           value={formatCapacity(lead.capacity_min, lead.capacity_max)}
           hint={lead.space_type ? lead.space_type : 'Indoor / outdoor not set'}
           icon={<GroupsIcon fontSize="small" />}
           accent="primary"
         />
         <LeadStatTile
-          label="Services"
+          label={t('crm.common.services')}
           value={lead.services_offered.length}
           hint={
             lead.services_offered.length
@@ -417,14 +419,14 @@ export default function VenueLeadDetailPage() {
           accent="secondary"
         />
         <LeadStatTile
-          label="Expected charges"
+          label={t('crm.venueLeads.expectedCharges')}
           value={lead.expected_charges ? `₹${lead.expected_charges.toLocaleString()}` : '—'}
           hint={lead.security_deposit ? `Deposit ₹${lead.security_deposit.toLocaleString()}` : 'No deposit set'}
           icon={<CurrencyRupeeIcon fontSize="small" />}
           accent="success"
         />
         <LeadStatTile
-          label="Next follow-up"
+          label={t('crm.common.nextFollowUp')}
           value={followUpLabel}
           hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
           icon={<EventAvailableIcon fontSize="small" />}

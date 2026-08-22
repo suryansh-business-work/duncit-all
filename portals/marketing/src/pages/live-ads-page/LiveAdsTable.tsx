@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import { getLiveAdColumns } from './columns';
 import type { AdRequestRow } from '../ads-approvals-page/helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<AdRequestRow>;
@@ -22,9 +23,10 @@ export default function LiveAdsTable({
   onStop,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo(
-    () => getLiveAdColumns({ formatDate, onStop, onDelete }),
-    [formatDate, onStop, onDelete],
+    () => getLiveAdColumns({ formatDate, onStop, onDelete }, t),
+    [t, formatDate, onStop, onDelete],
   );
 
   return (
@@ -35,7 +37,7 @@ export default function LiveAdsTable({
       getRowId={getRowId}
       onRowClick={onOpen}
       refetchRef={refetchRef}
-      emptyText="No ads are running right now."
+      emptyText={t('marketing.liveAds.noAdsAreRunningRightNow')}
       defaultSort={{ field: 'end_at', dir: 'asc' }}
       searchPlaceholder="Search trace ID or ad title"
     />

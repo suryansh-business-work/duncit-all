@@ -6,6 +6,7 @@ import ExploreHeader from './ExploreHeader';
 import ExploreFilterSheet from './ExploreFilterSheet';
 import { EXPLORE_PODS, TOGGLE_SAVED_POD } from './queries';
 import { activeExploreFilterCount, filterExplorePods, type ExploreFilters } from './exploreFilters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ExplorePageProps {
   superCategorySlug?: string;
@@ -23,6 +24,7 @@ const DEFAULT_FILTERS: ExploreFilters = {
 };
 
 export default function ExplorePage({ superCategorySlug, locationId, zoneName }: Readonly<ExplorePageProps>) {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -150,7 +152,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
       <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
       {pods.length === 0 ? (
         <Stack alignItems="center" justifyContent="center" sx={{ height: '100%', px: 3 }}>
-          <Alert severity="info">No pods match these filters.</Alert>
+          <Alert severity="info">{t('mweb.explore.noPodsMatchTheseFilters')}</Alert>
         </Stack>
       ) : (
         <ExploreReels

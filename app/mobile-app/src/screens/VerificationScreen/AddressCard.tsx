@@ -13,6 +13,7 @@ import {
   buildAddressInput,
   type AddressValues,
 } from './address.form';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   item: Verification;
@@ -35,6 +36,7 @@ function prefill(address: Verification['address']): AddressValues {
 /** Address verification — structured manual form (State / City / Pincode / line)
  * instead of a document upload. Approved rows are read-only. */
 export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const { control, handleSubmit } = useForm<AddressValues>({
     resolver: zodResolver(addressSchema),
@@ -54,48 +56,48 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
           <FormTextField
             control={control}
             name="state"
-            label="State"
-            placeholder="e.g. Maharashtra"
+            label={t('mweb.common.state')}
+            placeholder={t('mweb.verification.eGMaharashtra')}
             required
           />
           <FormTextField
             control={control}
             name="city"
-            label="City"
-            placeholder="e.g. Mumbai"
+            label={t('mweb.common.city')}
+            placeholder={t('mweb.verification.eGMumbai')}
             required
           />
           <FormTextField
             control={control}
             name="pincode"
-            label="Pincode"
-            placeholder="e.g. 400001"
+            label={t('mweb.common.pincode')}
+            placeholder={t('mweb.verification.eG400001')}
             keyboardType="number-pad"
             required
           />
           <FormTextField
             control={control}
             name="line1"
-            label="Address line 1"
-            placeholder="House / street"
+            label={t('mweb.common.addressLine1')}
+            placeholder={t('mweb.verification.houseStreet')}
             required
           />
           <FormTextField
             control={control}
             name="line2"
-            label="Address line 2 (optional)"
-            placeholder="Apartment, landmark"
+            label={t('mweb.verification.addressLine2Optional')}
+            placeholder={t('mweb.verification.apartmentLandmark')}
           />
           <FormTextField
             control={control}
             name="country"
-            label="Country (optional)"
-            placeholder="e.g. India"
+            label={t('mweb.verification.countryOptional')}
+            placeholder={t('mweb.verification.eGIndia')}
           />
           <XStack
             testID="verification-submit-address"
             role="button"
-            aria-label="Submit address"
+            aria-label={t('mweb.verification.submitAddress')}
             aria-disabled={busy}
             onPress={busy ? undefined : submit}
             alignItems="center"

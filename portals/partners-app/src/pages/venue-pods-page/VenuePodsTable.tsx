@@ -10,6 +10,7 @@ import {
   fmtDate,
   type VenuePodRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const CANCEL_HINT = 'Cancel this pod and refund every paid attendee';
 
@@ -65,9 +66,11 @@ function CancelPodCell({
  * because AG Grid exports the value, not the renderer, it reads as plain
  * English in a CSV instead of a machine key.
  */
-const actionsColumn = (onCancel: (row: VenuePodRow) => void): DuncitColumn<VenuePodRow> => ({
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const actionsColumn = (onCancel: (row: VenuePodRow) => void, t: Translate): DuncitColumn<VenuePodRow> => ({
   field: 'actions',
-  headerName: 'Actions',
+  headerName: t('shell.common.actions'),
   width: 160,
   sortable: false,
   valueGetter: (row) => cancelDisabledReason(row) ?? CANCEL_HINT,
@@ -90,11 +93,12 @@ export default function VenuePodsTable({
   onRowClick,
   onCancel,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenuePodRow>[]>(
     () => [
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('partners.common.pod'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPod,
@@ -102,32 +106,32 @@ export default function VenuePodsTable({
       },
       {
         field: 'venue_name',
-        headerName: 'Venue',
+        headerName: t('partners.common.venue'),
         minWidth: 150,
         sortable: false,
       },
       {
         field: 'pod_date_time',
-        headerName: 'Date',
+        headerName: t('partners.common.date'),
         width: 170,
         valueGetter: (row) => fmtDate(row.pod_date_time),
       },
       {
         field: 'pod_amount',
-        headerName: 'Price',
+        headerName: t('partners.common.price'),
         width: 110,
         valueGetter: (row) => (row.pod_type === 'FREE' ? 'Free' : `₹${row.pod_amount}`),
       },
       {
         field: 'attendee_count',
-        headerName: 'Attendees',
+        headerName: t('partners.common.attendees'),
         width: 120,
         valueGetter: (row) =>
           row.no_of_spots > 0 ? `${row.attendee_count} / ${row.no_of_spots}` : String(row.attendee_count),
       },
       {
         field: 'bucket',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 130,
         sortable: false,
         cellRenderer: renderBucket,
@@ -135,7 +139,7 @@ export default function VenuePodsTable({
       },
       {
         field: 'completed_at',
-        headerName: 'Completed',
+        headerName: t('partners.common.completed'),
         width: 170,
         hide: true,
         sortable: false,
@@ -143,13 +147,13 @@ export default function VenuePodsTable({
       },
       {
         field: 'cancelled_at',
-        headerName: 'Cancelled',
+        headerName: t('partners.common.cancelled'),
         width: 170,
         hide: true,
         sortable: false,
         valueGetter: (row) => fmtDate(row.cancelled_at),
       },
-      actionsColumn(onCancel),
+      actionsColumn(onCancel, t),
     ],
     [onCancel],
   );
@@ -163,7 +167,7 @@ export default function VenuePodsTable({
       onRowClick={onRowClick}
       externalFilters={externalFilters}
       refetchRef={refetchRef}
-      emptyText="No pods at your venues yet."
+      emptyText={t('partners.venuePodsPage.noPodsAtYourVenuesYet')}
       searchPlaceholder="Search pod, host or venue"
       defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
     />

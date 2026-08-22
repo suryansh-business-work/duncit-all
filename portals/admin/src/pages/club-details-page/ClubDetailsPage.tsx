@@ -13,8 +13,10 @@ import ClubPodsCard from './ClubPodsCard';
 import ClubAdminsCard from './ClubAdminsCard';
 import MediaGallery from './MediaGallery';
 import type { ClubDetail, ClubPodRow } from './types';
+import { useTranslation } from '@duncit/shell';
 
 export default function ClubDetailsPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(CLUB_DETAIL, {
@@ -43,7 +45,7 @@ export default function ClubDetailsPage() {
         spacing={2}
       >
         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-          <BackButton onClick={() => navigate('/clubs')}>Clubs</BackButton>
+          <BackButton onClick={() => navigate('/clubs')}>{t('admin.clubs.title')}</BackButton>
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
               <Typography variant="h5" fontWeight={900} noWrap>
@@ -52,7 +54,7 @@ export default function ClubDetailsPage() {
               {club.is_verified && <VerifiedIcon color="primary" fontSize="small" titleAccess="Verified" />}
               <Chip
                 size="small"
-                label={club.is_active ? 'Active' : 'Inactive'}
+                label={club.is_active ? t('admin.profile.active') : t('admin.profile.inactive')}
                 color={club.is_active ? 'success' : 'default'}
               />
             </Stack>
@@ -74,16 +76,16 @@ export default function ClubDetailsPage() {
         <Stack spacing={2.5} sx={{ minWidth: 0 }}>
           <ClubOverviewCard club={club} podCount={pods.length} />
           <MediaGallery
-            title="Cover media"
+            title={t('admin.clubs.coverMedia')}
             icon={<PhotoLibraryIcon color="primary" />}
             items={club.club_feature_images_and_videos ?? []}
-            emptyText="No cover images or videos added yet."
+            emptyText={t('admin.clubs.noCoverMedia')}
           />
           <MediaGallery
-            title="Moments"
+            title={t('admin.clubs.moments')}
             icon={<AutoAwesomeIcon color="primary" />}
             items={club.club_moments ?? []}
-            emptyText="No moments captured for this club yet."
+            emptyText={t('admin.clubs.noMoments')}
           />
           <ClubContentSections club={club} />
         </Stack>

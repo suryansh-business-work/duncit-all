@@ -1,5 +1,6 @@
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 export interface AiRow {
   _id: number;
@@ -24,17 +25,18 @@ interface Props {
 
 /** Editable grid of AI-parsed leads. Confirm in the dialog bulk-creates them. */
 export default function AiRecordsTable({ entity, rows, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns: GridColDef<AiRow>[] = [
     { field: 'name', headerName: entity === 'VENUE_LEAD' ? 'Venue name' : 'Host name', flex: 1.2, minWidth: 160, editable: true },
-    { field: 'city', headerName: 'City', flex: 0.8, minWidth: 110, editable: true },
+    { field: 'city', headerName: t('crm.common.city'), flex: 0.8, minWidth: 110, editable: true },
     ...(entity === 'VENUE_LEAD'
-      ? [{ field: 'full_address', headerName: 'Address', flex: 1.2, minWidth: 160, editable: true } as GridColDef<AiRow>]
+      ? [{ field: 'full_address', headerName: t('crm.common.address'), flex: 1.2, minWidth: 160, editable: true } as GridColDef<AiRow>]
       : []),
-    { field: 'mobile', headerName: 'Mobile', flex: 0.8, minWidth: 120, editable: true },
-    { field: 'email', headerName: 'Email', flex: 1, minWidth: 150, editable: true },
-    { field: 'lead_status', headerName: 'Status', flex: 0.7, minWidth: 110, editable: true },
-    { field: 'priority', headerName: 'Priority', flex: 0.6, minWidth: 100, editable: true },
-    { field: '_error', headerName: 'Issue', flex: 1, minWidth: 140 },
+    { field: 'mobile', headerName: t('crm.components.mobile'), flex: 0.8, minWidth: 120, editable: true },
+    { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 150, editable: true },
+    { field: 'lead_status', headerName: t('shell.common.status'), flex: 0.7, minWidth: 110, editable: true },
+    { field: 'priority', headerName: t('crm.common.priority'), flex: 0.6, minWidth: 100, editable: true },
+    { field: '_error', headerName: t('crm.components.issue'), flex: 1, minWidth: 140 },
   ];
 
   return (

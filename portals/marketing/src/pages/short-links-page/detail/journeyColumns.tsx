@@ -4,6 +4,9 @@ import { formatINR } from '@duncit/utils';
 import { STEP_LABELS, stepLabel } from './funnel-steps';
 import { locationOf } from './clickColumns';
 import type { ShortLinkJourneyRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
@@ -69,18 +72,18 @@ const renderPaid = (row: ShortLinkJourneyRow) => {
   );
 };
 
-export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
+export function getJourneyColumns(t: Translate): DuncitColumn<ShortLinkJourneyRow>[] {
   return [
     dateColumn<ShortLinkJourneyRow>({
       field: 'clicked_at',
-      headerName: 'Clicked',
+      headerName: t('marketing.common.clicked'),
       hide: false,
       width: 180,
       format: DATE_TIME_FORMAT,
     }),
     {
       field: 'user_name',
-      headerName: 'Who',
+      headerName: t('marketing.shortLinks.who'),
       sortable: false,
       minWidth: 200,
       cellRenderer: renderVisitor,
@@ -88,7 +91,7 @@ export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
     },
     {
       field: 'furthest_step',
-      headerName: 'Got as far as',
+      headerName: t('marketing.shortLinks.gotAsFarAs'),
       sortable: false,
       minWidth: 200,
       filter: {
@@ -100,7 +103,7 @@ export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
     },
     {
       field: 'converted_amount',
-      headerName: 'Paid',
+      headerName: t('marketing.shortLinks.paid'),
       width: 130,
       cellRenderer: renderPaid,
       valueGetter: (row) =>
@@ -108,7 +111,7 @@ export function getJourneyColumns(): DuncitColumn<ShortLinkJourneyRow>[] {
           ? EM_DASH
           : formatINR(row.converted_amount),
     },
-    { field: 'platform', headerName: 'Came from', minWidth: 150 },
-    { field: 'country', headerName: 'Location', minWidth: 180, valueGetter: locationOf },
+    { field: 'platform', headerName: t('marketing.shortLinks.cameFrom'), minWidth: 150 },
+    { field: 'country', headerName: t('marketing.common.location'), minWidth: 180, valueGetter: locationOf },
   ];
 }

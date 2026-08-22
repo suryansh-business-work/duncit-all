@@ -4,6 +4,7 @@ import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/materia
 import { RENDER, TEMPLATES, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import VariablesValuesEditor from '../email/VariablesValuesEditor';
+import { useTranslation } from '@duncit/shell';
 
 export interface TemplateBody {
   subject: string;
@@ -50,6 +51,7 @@ function seedValue(slug: string, sample: string | null | undefined, vv: Record<s
 
 /** Template send mode: pick a template, auto-fill EVERY placeholder from the lead, render. */
 export default function TemplateBodyPicker({ entity, variableValues, leadName, leadEmail, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const { data, loading } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
   const TARGET_FOR = { VENUE_LEAD: 'VENUE', HOST_LEAD: 'HOST', ECOMM_LEAD: 'ECOMM' } as const;
@@ -110,7 +112,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
       <TextField
         select
         size="small"
-        label="Template"
+        label={t('crm.components.template')}
         value={selectedId}
         onChange={(e) => onPick(e.target.value)}
         helperText={helperText}
@@ -123,7 +125,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
         <>
           {keys.length > 0 && (
             <>
-              <Typography variant="caption" color="text.secondary">Variable values (auto-filled from this lead — edit if needed)</Typography>
+              <Typography variant="caption" color="text.secondary">{t('crm.components.variableValuesAutoFilledFromThis')}</Typography>
               <VariablesValuesEditor variables={editorVars} values={vars} onChange={setVars} />
             </>
           )}
@@ -131,7 +133,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
             <Typography variant="caption" color="text.secondary">{selected.attachments.length} attachment(s) will be sent.</Typography>
           )}
           {errors.length > 0 && <Alert severity="warning">{errors.slice(0, 2).join(' · ')}</Alert>}
-          <Typography variant="caption" color="text.secondary">Preview</Typography>
+          <Typography variant="caption" color="text.secondary">{t('crm.common.preview')}</Typography>
           <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', height: 220, bgcolor: 'background.default' }}>
             <iframe title="template-preview" srcDoc={html} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
           </Box>

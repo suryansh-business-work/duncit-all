@@ -5,6 +5,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { DELETE_ALL_BUGS, DELETE_BUGS, type BugRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const bugWord = (n: number) => (n === 1 ? 'bug' : 'bugs');
 
@@ -21,13 +22,14 @@ async function runDelete(exec: () => Promise<number>, onDeleted: () => void) {
 
 /** The per-row delete — one bug, confirmed by its title so the row is unmistakable. */
 export function useDeleteSingleBug(onDeleted: () => void) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [deleteBugs] = useMutation<{ deleteBugs: number }>(DELETE_BUGS);
   return async (bug: BugRow) => {
     const ok = await confirm({
-      title: 'Delete this bug?',
+      title: t('tech.bugs.deleteThisBug'),
       message: `"${bug.title}" and its ${bug.occurrence_count} recorded occurrences roll-up will be deleted permanently. If the error happens again it reappears as a fresh bug.`,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
       destructive: true,
     });
     if (!ok) return;
@@ -47,6 +49,7 @@ interface BarProps {
 }
 
 export default function BugBulkBar({ selected, onClear, onDeleted }: Readonly<BarProps>) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [deleteBugs, { loading }] = useMutation<{ deleteBugs: number }>(DELETE_BUGS);
   const count = selected.length;
@@ -55,7 +58,7 @@ export default function BugBulkBar({ selected, onClear, onDeleted }: Readonly<Ba
     const ok = await confirm({
       title: `Delete ${count} selected ${bugWord(count)}?`,
       message: `The ${count} ${bugWord(count)} ticked on this page will be deleted permanently. Nothing else is touched.`,
-      confirmLabel: 'Delete',
+      confirmLabel: t('shell.common.delete'),
       destructive: true,
     });
     if (!ok) return;
@@ -98,15 +101,16 @@ interface DeleteAllProps {
 }
 
 export function BugDeleteAllButton({ onDeleted }: Readonly<DeleteAllProps>) {
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const [deleteAll, { loading }] = useMutation<{ deleteAllBugs: number }>(DELETE_ALL_BUGS);
 
   const removeAll = async () => {
     const ok = await confirm({
-      title: 'Delete every bug?',
+      title: t('tech.bugs.deleteEveryBug'),
       message:
         'This deletes the entire bug history — every rolled-up bug ever recorded, not the page on screen. Your search and filters do not narrow it, and there is no undo. Errors that happen again reappear as fresh bugs.',
-      confirmLabel: 'Delete everything',
+      confirmLabel: t('tech.common.deleteEverything'),
       destructive: true,
     });
     if (!ok) return;

@@ -17,6 +17,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { tokens } from '@duncit/theme';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 const HEADER_HEIGHT = tokens.size.headerHeight;
 
@@ -45,6 +46,7 @@ const SUGGESTIONS = ['Summarise this lead', 'Draft a follow-up email', 'Any upco
 
 /** Persistent right drawer (below the header, no backdrop) — chat grounded in this lead. */
 export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -87,16 +89,16 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
       <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <SmartToyIcon color="secondary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={800} noWrap>Ask AI</Typography>
+          <Typography variant="subtitle1" fontWeight={800} noWrap>{t('crm.components.askAi')}</Typography>
           <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>About {leadName}</Typography>
         </Box>
-        <IconButton onClick={onClose} aria-label="Close" sx={{ flexShrink: 0 }}><CloseIcon /></IconButton>
+        <IconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></IconButton>
       </Stack>
 
       <Stack spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
         {messages.length === 0 && (
           <Stack spacing={1}>
-            <Typography variant="body2" color="text.secondary">Ask anything about this lead. Try:</Typography>
+            <Typography variant="body2" color="text.secondary">{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>
             {SUGGESTIONS.map((s) => (
               <Box key={s} onClick={() => send(s)} sx={{ cursor: 'pointer', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, px: 1.25, py: 0.75, fontSize: 13 }}>
                 {s}
@@ -136,12 +138,12 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
           fullWidth
           multiline
           maxRows={4}
-          placeholder="Ask about this lead…"
+          placeholder={t('crm.components.askAboutThisLead')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}
         />
-        <IconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label="Send">
+        <IconButton color="primary" onClick={() => send(input)} disabled={loading || !input.trim()} aria-label={t('crm.components.send')}>
           <SendIcon />
         </IconButton>
       </Stack>

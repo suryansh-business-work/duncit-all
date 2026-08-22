@@ -19,6 +19,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
 import ContactComposeDialog from './ContactComposeDialog';
 import { PortalCallDialog, AiCallDialog } from './call';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD';
@@ -43,6 +44,7 @@ const BTN_SX = { textTransform: 'none', height: CALL_HEIGHT, minHeight: CALL_HEI
  * compose/log window. Buttons disable when the contact detail is missing.
  */
 export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp, variableValues }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [emailOpen, setEmailOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -59,11 +61,11 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
     <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} alignItems="center" flexWrap="wrap" useFlexGap data-testid="lead-contact-actions">
       <Tooltip title={mobile ? `Call ${mobile}` : 'No phone number on file'}>
         <span>
-          <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label="Call options" sx={{ height: CALL_HEIGHT }}>
+          <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label={t('crm.components.callOptions')} sx={{ height: CALL_HEIGHT }}>
             <Button startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
               Call
             </Button>
-            <Button size="small" onClick={() => setMenuOpen((v) => !v)} aria-label="More options" sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
+            <Button size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
               <ArrowDropDownIcon fontSize="small" />
             </Button>
           </ButtonGroup>
@@ -105,7 +107,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
       <Tooltip title={email ? `Email ${email}` : 'No email on file'}>
         <span>
           <Button size="small" variant="outlined" startIcon={<EmailIcon />} disabled={!email} onClick={() => setEmailOpen(true)} sx={BTN_SX}>
-            Email
+            {t('shell.common.email')}
           </Button>
         </span>
       </Tooltip>

@@ -4,7 +4,8 @@ import ProductsReviewTable from '../../src/pages/ecomm/ProductsReviewTable';
 import { makeProductListingRow } from '../mocks/productListing.mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ formatDate: () => 'D' }) }));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()), useDateFormat: () => ({ formatDate: () => 'D' }) }));
 vi.mock('@duncit/ui', () => ({
   StatusChip: ({ status }: { status: string }) => <span>{status}</span>,
 }));

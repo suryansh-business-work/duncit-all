@@ -3,6 +3,7 @@ import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import EastIcon from '@mui/icons-material/East';
 import CallWave from './CallWave';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** Caller-ID (From) — the Tech-portal Twilio number. */
@@ -43,15 +44,16 @@ function Leg({ label, value }: Readonly<{ label: string; value: string }>) {
  * call avatar, live status chip and the speech wave (animated while active).
  */
 export default function CallStage({ fromNumber, toNumber, statusLabel, tone, active, ai }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 1 }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }} justifyContent="center">
-        <Leg label="CALL FROM" value={fmt(fromNumber)} />
+        <Leg label={t('crm.components.callFrom')} value={fmt(fromNumber)} />
         <Stack alignItems="center" spacing={0.25}>
           <EastIcon fontSize="small" color="disabled" />
           {ai && <Chip size="small" color="primary" icon={<SmartToyIcon />} label="AI" sx={{ height: 22 }} />}
         </Stack>
-        <Leg label="CALL TO" value={fmt(toNumber)} />
+        <Leg label={t('crm.components.callTo')} value={fmt(toNumber)} />
       </Stack>
 
       <Box

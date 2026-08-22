@@ -11,6 +11,7 @@ import {
   type GeoState,
 } from '../../utils/geo';
 import type { LocForm } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: LocForm;
@@ -21,6 +22,7 @@ const label = (option: string | { name: string }) =>
   typeof option === 'string' ? option : option.name;
 
 export default function LocationHierarchyFields({ form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const country = findCountry(form.country_code) ?? null;
   const states = getStatesForCountry(form.country_code);
   const state = findState(form.country_code, form.state_code, form.state) ?? form.state;
@@ -57,7 +59,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
               location_name: '',
             }))
           }
-          renderInput={(params) => <TextField {...params} label="Country" required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.country')} required />}
           fullWidth
         />
       </Stack>
@@ -79,7 +81,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, state: value, state_code: '', city: '' }));
           }}
-          renderInput={(params) => <TextField {...params} label="State" required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.state')} required />}
           fullWidth
         />
         <Autocomplete<GeoCity | string, false, false, true>
@@ -94,7 +96,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
           onInputChange={(_, value, reason) => {
             if (reason !== 'reset') setForm((prev) => ({ ...prev, city: value, location_name: value }));
           }}
-          renderInput={(params) => <TextField {...params} label="City" required />}
+          renderInput={(params) => <TextField {...params} label={t('admin.locations.city')} required />}
           fullWidth
         />
       </Stack>

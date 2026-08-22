@@ -11,6 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -34,6 +35,7 @@ export default function HardDeleteDialog({
   onClose,
   onConfirm,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
@@ -59,7 +61,7 @@ export default function HardDeleteDialog({
         </DialogContentText>
         <Stack spacing={2} mt={2}>
           <TextField
-            label="Your email"
+            label={t('onboarding.hardDeleteDialog.yourEmail')}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -68,7 +70,7 @@ export default function HardDeleteDialog({
             disabled={loading}
           />
           <TextField
-            label="Your password"
+            label={t('onboarding.hardDeleteDialog.yourPassword')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

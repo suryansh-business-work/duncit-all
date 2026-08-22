@@ -6,21 +6,25 @@ import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenuePodsTab from './VenuePodsTab';
+import { useTranslation } from '@duncit/app-settings';
 
 // Slot Availability + Account Health are not applicable to onboarded venue
 // details and are intentionally not shown here.
 type VenueTab = 'overview' | 'pods';
-const TABS: DuncitTabItem<VenueTab>[] = [
-  { value: 'overview', label: 'Overview' },
-  { value: 'pods', label: 'Pods' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const venueTabs = (t: Translate): DuncitTabItem<VenueTab>[] => [
+  { value: 'overview', label: t('onboarding.venueDetails.overview') },
+  { value: 'pods', label: t('shell.nav.pods') },
 ];
 
 export default function VenueDetailsPage() {
+  const { t } = useTranslation();
   const { venueId = '' } = useParams<{ venueId: string }>();
   const navigate = useNavigate();
   // Also the deep link: /venues/:id?selectedtab=pods opens the Pods tab from
   // the Onboarded Venues table's pod-count button.
-  const tabs = useTabParam<VenueTab>({ items: TABS, fallback: 'overview' });
+  const tabs = useTabParam<VenueTab>({ items: venueTabs(t), fallback: 'overview' });
   const tab = tabs.value;
   const { data, loading, error } = useQuery<{ venue: AdminVenueDetails | null }>(VENUE_DETAILS, {
     variables: { venue_doc_id: venueId },

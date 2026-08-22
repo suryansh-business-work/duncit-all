@@ -18,6 +18,7 @@ import type { UserNotification } from '@/hooks/useNotifications';
 import { NotificationFilterChips } from './NotificationFilterChips';
 import { NotificationRow } from './NotificationRow';
 import { NotificationsHero } from './NotificationsHero';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface NotificationsScreenProps {
   open: boolean;
@@ -47,6 +48,7 @@ export function NotificationsScreen({
   markAllBusy = false,
   onRefresh,
 }: Readonly<NotificationsScreenProps>) {
+  const { t } = useTranslation();
   const { color, primary } = useThemeColors();
   const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
   const setNotifEnabled = useNotificationPrefsStore((s) => s.setEnabled);
@@ -82,7 +84,7 @@ export function NotificationsScreen({
               <XStack
                 testID="notifications-close"
                 role="button"
-                aria-label="Close notifications"
+                aria-label={t('mweb.common.closeNotifications')}
                 onPress={onClose}
                 width={40}
                 height={40}
@@ -105,7 +107,7 @@ export function NotificationsScreen({
               <XStack
                 testID="notifications-mark-all"
                 role="button"
-                aria-label="Mark all as read"
+                aria-label={t('mweb.common.markAllAsRead')}
                 aria-disabled={markAllDisabled}
                 aria-busy={markAllBusy}
                 onPress={markAllDisabled ? undefined : onMarkAll}

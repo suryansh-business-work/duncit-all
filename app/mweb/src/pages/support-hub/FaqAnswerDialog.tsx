@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useNavigate } from 'react-router-dom';
 import type { FaqItem } from './faqQueries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface FaqAnswerDialogProps {
   faq: FaqItem | null;
@@ -11,6 +12,7 @@ interface FaqAnswerDialogProps {
 
 /** Shows a single FAQ's answer with a "still need help" conversation CTA. */
 export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDialogProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
@@ -20,7 +22,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
             <Typography variant="h6" sx={{ fontWeight: 700, pr: 1 }}>
               {faq.question}
             </Typography>
-            <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }} aria-label="Close">
+            <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.common.close')}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Stack>

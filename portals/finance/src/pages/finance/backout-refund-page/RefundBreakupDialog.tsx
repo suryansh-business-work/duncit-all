@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { buildRefundBreakup, type BackoutRefundRequest } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   refundFor: BackoutRefundRequest | null;
@@ -32,11 +33,12 @@ export default function RefundBreakupDialog({
   onClose,
   onConfirm,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!refundFor} onClose={onClose} fullWidth maxWidth="xs">
       {refundFor && (
         <>
-          <DialogTitle>Refund breakup</DialogTitle>
+          <DialogTitle>{t('finance.backoutRefund.refundBreakup')}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={1.5}>
               <Typography variant="body2">
@@ -60,7 +62,7 @@ export default function RefundBreakupDialog({
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose} disabled={busy}>Cancel</Button>
+            <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
             <Button color="warning" variant="contained" onClick={() => onConfirm(refundFor)} disabled={busy}>
               {busy ? 'Processing…' : 'Refund now'}
             </Button>

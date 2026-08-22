@@ -155,7 +155,7 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
           <VerifiedUserIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1">Verification</Typography>
+          <Typography variant="subtitle1">{t('admin.tabs.verification')}</Typography>
         </Stack>
         <DuncitTable<VerificationItem>
           tableId="admin-user-verifications"

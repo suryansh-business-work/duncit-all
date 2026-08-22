@@ -4,6 +4,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import HandymanIcon from '@mui/icons-material/Handyman';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   title: string;
@@ -30,6 +31,7 @@ export default function LeadsToolbar({
   onManageServices,
   manageServicesLabel = 'Manage Services',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }} justifyContent="space-between">
       <Box>
@@ -38,34 +40,34 @@ export default function LeadsToolbar({
       </Box>
       <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap' }} useFlexGap>
         {onManageServices && (
-          <Tooltip title="Manage the catalogue of services offered">
+          <Tooltip title={t('crm.components.manageTheCatalogueOfServicesOffered')}>
             <Button startIcon={<HandymanIcon />} variant="outlined" onClick={onManageServices}>
               {manageServicesLabel}
             </Button>
           </Tooltip>
         )}
         {onFillWithAi && (
-          <Tooltip title="Paste a free-text description and let AI populate the form">
+          <Tooltip title={t('crm.components.pasteAFreeTextDescriptionAnd')}>
             <Button startIcon={<AutoFixHighIcon />} variant="outlined" color="secondary" onClick={onFillWithAi}>
               Fill with AI
             </Button>
           </Tooltip>
         )}
         {onDownloadTemplate && (
-          <Tooltip title="Download a blank Excel template with instructions">
+          <Tooltip title={t('crm.components.downloadABlankExcelTemplateWith')}>
             <Button startIcon={<DescriptionIcon />} variant="outlined" onClick={onDownloadTemplate}>
-              Template
+              {t('crm.components.template')}
             </Button>
           </Tooltip>
         )}
         {onImport && (
           <Button startIcon={<FileUploadIcon />} variant="outlined" onClick={onImport}>
-            Import
+            {t('crm.userLeads.import')}
           </Button>
         )}
         {onExport && (
           <Button startIcon={<FileDownloadIcon />} variant="outlined" onClick={onExport}>
-            Export
+            {t('crm.userLeads.export')}
           </Button>
         )}
       </Stack>

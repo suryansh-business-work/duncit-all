@@ -3,6 +3,7 @@ import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/mate
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import type { PodPlaceCharge } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   value: PodPlaceCharge[];
@@ -13,6 +14,7 @@ interface Props {
 const blank: PodPlaceCharge = { label: '', amount: 0, note: '' };
 
 export default function PlaceChargesField({ value, onChange, helperText }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Stable per-row keys — never the array index (S6479). Grow with the list by
   // position and survive edits so a row's inputs aren't remounted (losing focus).
   const keysRef = useRef<string[]>([]);
@@ -48,14 +50,14 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
             alignItems={{ xs: 'stretch', sm: 'center' }}
           >
             <TextField
-              label="Label"
+              label={t('podForm.placeChargesField.label')}
               size="small"
               value={row.label}
               onChange={(e) => update(idx, { label: e.target.value })}
               sx={{ flex: 2 }}
             />
             <TextField
-              label="Amount (₹)"
+              label={t('podForm.common.amount')}
               type="number"
               size="small"
               value={row.amount}
@@ -64,13 +66,13 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
               sx={{ flex: 1 }}
             />
             <TextField
-              label="Note"
+              label={t('podForm.placeChargesField.note')}
               size="small"
               value={row.note}
               onChange={(e) => update(idx, { note: e.target.value })}
               sx={{ flex: 2 }}
             />
-            <IconButton aria-label="Remove" onClick={() => remove(idx)} size="small">
+            <IconButton aria-label={t('podForm.common.remove')} onClick={() => remove(idx)} size="small">
               <DeleteOutlineIcon fontSize="small" />
             </IconButton>
           </Stack>

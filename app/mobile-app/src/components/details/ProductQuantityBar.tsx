@@ -3,6 +3,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { StepButton } from './PodShopProductRow';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   quantity: number;
@@ -18,6 +19,7 @@ function AddToSelection({
   outOfStock,
   onAdd,
 }: Readonly<{ outOfStock: boolean; onAdd: () => void }>) {
+  const { t } = useTranslation();
   const { muted } = useThemeColors();
   const iconColor = outOfStock ? muted : '#fff';
   const textColor = outOfStock ? '$muted' : '#fff';
@@ -27,7 +29,7 @@ function AddToSelection({
       testID="product-detail-add"
       role="button"
       aria-disabled={outOfStock}
-      aria-label="Add to selection"
+      aria-label={t('mweb.details.addToSelection')}
       onPress={outOfStock ? undefined : onAdd}
       marginTop={4}
       paddingVertical={12}
@@ -59,6 +61,7 @@ function QuantityStepper({
   primary: string;
   onUpdate: (quantity: number) => void;
 }>) {
+  const { t } = useTranslation();
   const { muted, danger } = useThemeColors();
   const atMax = quantity >= maxQuantity;
   return (
@@ -84,7 +87,7 @@ function QuantityStepper({
       <XStack
         testID="product-detail-remove"
         role="button"
-        aria-label="Remove from selection"
+        aria-label={t('mweb.details.removeFromSelection')}
         onPress={() => onUpdate(0)}
         gap={5}
         alignItems="center"

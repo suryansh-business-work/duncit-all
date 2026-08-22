@@ -8,7 +8,8 @@ import InventoryManagementSection from '../../src/pages/inventory-page/inventory
 import MediaBrandingSection from '../../src/pages/inventory-page/inventory-product-page/MediaBrandingSection';
 import { renderWithProviders } from '../testkit';
 
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }),
 }));
 // Isolate the media section from its heavy children — we only exercise the

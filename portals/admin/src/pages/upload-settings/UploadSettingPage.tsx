@@ -6,6 +6,7 @@ import CropPresetsAccordion from './CropPresetsAccordion';
 import CompressionAccordion from './CompressionAccordion';
 import AiMonitoringAccordion from './AiMonitoringAccordion';
 import { UPDATE_UPLOAD_SETTINGS, UPLOAD_SETTINGS, type UploadSettings, type UploadSurface } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   surface: UploadSurface;
@@ -19,6 +20,7 @@ interface Props {
  * compression and AI image monitoring, all applied by the server upload path.
  */
 export default function UploadSettingPage({ surface, title, subtitle }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery<{ uploadSettings: UploadSettings }>(
     UPLOAD_SETTINGS,
     { variables: { surface }, fetchPolicy: 'cache-and-network' },
@@ -33,7 +35,7 @@ export default function UploadSettingPage({ surface, title, subtitle }: Readonly
     setOpError(null);
     try {
       await save({ variables: { surface, input } });
-      setToast('Upload settings saved');
+      setToast(t('admin.uploads.saved'));
       await refetch();
     } catch (saveError: any) {
       setOpError(saveError.message);

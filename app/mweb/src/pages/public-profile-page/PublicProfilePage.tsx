@@ -15,6 +15,7 @@ import PublicProfileHeader from './PublicProfileHeader';
 import PublicProfileOwnerActions from './PublicProfileOwnerActions';
 import PublicProfileBadges from './PublicProfileBadges';
 import PublicProfilePosts from './PublicProfilePosts';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const PUBLIC_PROFILE = gql`
   query PublicProfile($user_id: ID!) {
@@ -70,6 +71,7 @@ const UNFOLLOW_USER = gql`
 `;
 
 export default function PublicProfilePage() {
+  const { t } = useTranslation();
   const { userId = '' } = useParams();
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(PUBLIC_PROFILE, {
@@ -93,7 +95,7 @@ export default function PublicProfilePage() {
 
   if (error) return <Alert severity="error">{error.message}</Alert>;
   const u = data?.publicUserProfile;
-  if (!u) return <Alert severity="warning">User not found.</Alert>;
+  if (!u) return <Alert severity="warning">{t('mweb.publicProfile.userNotFound')}</Alert>;
   const isOwner = data?.me?.user_id && data.me.user_id === u.user_id;
   // The server is the authority on the state — a private profile answers a
   // follow with REQUESTED, so the button must read its verdict rather than
@@ -110,7 +112,7 @@ export default function PublicProfilePage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <IconButton
           onClick={() => navigate(-1)}
-          aria-label="Go back"
+          aria-label={t('mweb.common.goBack')}
           sx={{ minWidth: 44, minHeight: 44 }}
         >
           <ArrowBackIcon />

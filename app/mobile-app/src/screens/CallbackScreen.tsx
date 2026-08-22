@@ -10,6 +10,7 @@ import { CallbackHistory } from '@/components/support/CallbackHistory';
 import { useBouncer } from '@/hooks/useBouncer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SupportTarget = { phone: string; available: boolean } | null;
 
@@ -17,6 +18,7 @@ type SupportTarget = { phone: string; available: boolean } | null;
  * When no phone is configured the button reads as clearly disabled (muted, not
  * an active-looking red), matching mWeb's greyed-out disabled button. */
 function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
+  const { t } = useTranslation();
   const { onPrimary, muted } = useThemeColors();
   const disabled = !target?.available;
   const fg = disabled ? muted : onPrimary;
@@ -40,7 +42,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
       <XStack
         testID="callback-call-now"
         role="button"
-        aria-label="Call now"
+        aria-label={t('mweb.callback.callNow')}
         aria-disabled={disabled}
         onPress={target?.available ? () => Linking.openURL(`tel:${target.phone}`) : undefined}
         height={46}
@@ -64,6 +66,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
 /** Callback Request — call support now or request a callback. RN twin of mWeb's
  * CallbackContent. */
 export function CallbackScreen() {
+  const { t } = useTranslation();
   const { loadSupportTarget, requestCallback } = useBouncer();
   const { primary } = useThemeColors();
   const [target, setTarget] = useState<SupportTarget>(null);
@@ -99,7 +102,7 @@ export function CallbackScreen() {
   };
 
   return (
-    <StackScreen title="Callback Request" testID="callback-screen">
+    <StackScreen title={t('mweb.common.callbackRequest')} testID="callback-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
         <Text testID="callback-subtitle" fontSize={13} color="$muted">
           Call us or get a callback
@@ -120,10 +123,10 @@ export function CallbackScreen() {
           <Text fontSize={13} color="$muted">
             We will call you back on your registered phone number.
           </Text>
-          <Field label="Reason">
+          <Field label={t('mweb.common.reason')}>
             <TextArea
               testID="callback-reason"
-              aria-label="Reason"
+              aria-label={t('mweb.common.reason')}
               value={reason}
               onChangeText={setReason}
               placeholder="What's it about? (optional)"
@@ -145,14 +148,14 @@ export function CallbackScreen() {
             <SupportAlert
               testID="callback-success"
               variant="success"
-              message="Callback requested. We will reach you shortly."
+              message={t('mweb.callback.callbackRequestedWeWillReachYou')}
               onClose={() => setRequested(false)}
             />
           ) : null}
           <XStack
             testID="callback-request"
             role="button"
-            aria-label="Request callback"
+            aria-label={t('mweb.callback.requestCallback')}
             aria-disabled={busy}
             onPress={busy ? undefined : () => void request()}
             height={46}

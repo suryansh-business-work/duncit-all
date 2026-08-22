@@ -11,6 +11,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
 import type { SearchCategory } from './useSearchDiscovery';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
@@ -21,11 +22,12 @@ interface Props {
 }
 
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Filter by Category</DialogTitle>
-        <IconButton aria-label="Close filter" onClick={onClose}>
+        <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
+        <IconButton aria-label={t('mweb.search.closeFilter')} onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Stack>
@@ -37,7 +39,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
         ) : (
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Chip
-              label="All"
+              label={t('mweb.common.all')}
               color={categoryId === '' ? 'primary' : 'default'}
               onClick={() => onSelect('')}
               sx={{ fontWeight: 600 }}

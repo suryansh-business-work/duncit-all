@@ -6,6 +6,7 @@ import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Max entries shown on the home rail before the See-all card takes over. */
 const RAIL_CAP = 10;
@@ -23,6 +24,7 @@ interface Props {
 /** Bottom-of-home rail of pods whose date has already passed, with a "See all"
  * link to the dedicated Previous Pods screen (bug 8). Hidden when there are none. */
 export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
   if (pods.length === 0) return null;
 
@@ -43,7 +45,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
         <XStack
           testID="previous-pods-see-all"
           role="button"
-          aria-label="See all previous pods"
+          aria-label={t('mweb.home.seeAllPreviousPods')}
           onPress={() => onSeeAll()}
           alignItems="center"
           gap={2}

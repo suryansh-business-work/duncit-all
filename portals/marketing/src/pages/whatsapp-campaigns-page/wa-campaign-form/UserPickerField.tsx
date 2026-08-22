@@ -4,6 +4,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { Autocomplete, CircularProgress, TextField } from '@mui/material';
 import { WA_USER_SEARCH, type WaUserOption } from '../queries';
 import type { WaCampaignValues } from './wa-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * Pick the exact people a send goes to. Search runs on the server against name,
@@ -25,6 +26,7 @@ type Picked = WaCampaignValues['users'][number];
 const labelFor = (option: Picked) => option.name || option.id;
 
 export default function UserPickerField({ control }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   // Two characters is where the server starts answering; below that the query
   // would be a round trip that can only come back empty.
@@ -64,8 +66,8 @@ export default function UserPickerField({ control }: Readonly<Props>) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="People"
-              placeholder="Search by name, email or number"
+              label={t('marketing.common.people')}
+              placeholder={t('marketing.whatsappCampaigns.searchByNameEmailOrNumber')}
               error={!!fieldState.error}
               helperText={fieldState.error?.message ?? ' '}
               InputProps={{

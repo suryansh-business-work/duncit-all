@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { FileDetails } from '@duncit/media-picker';
 import type { MediaDimensions, VideoTrim } from '@duncit/media-picker';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Story videos are short clips — capped at 15s (Bug 3). */
 export const MAX_STORY_VIDEO_SECONDS = 15;
@@ -35,6 +36,7 @@ interface Props {
  * the video during the FFmpeg pass) — only then can they post.
  */
 export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [duration, setDuration] = useState(0);
   const [start, setStart] = useState(0);
@@ -72,7 +74,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
 
   return (
     <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Preview your video story</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
@@ -94,7 +96,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
                 {MAX_STORY_VIDEO_SECONDS}s you want to post.
               </Alert>
               <Slider
-                aria-label="Trim start"
+                aria-label={t('mweb.statusUpload.trimStart')}
                 value={start}
                 min={0}
                 max={maxStart}
@@ -111,7 +113,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('mweb.common.cancel')}</Button>
         <Button variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
           {needsTrim ? 'Trim & Post' : 'Post story'}
         </Button>

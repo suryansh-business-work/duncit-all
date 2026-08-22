@@ -1,11 +1,14 @@
 import type { PartnerFaqFormValues } from './partner-faq.form';
+import { useTranslation } from '@duncit/shell';
 
 export type PartnerFaqTopic = 'VENUE' | 'HOST' | 'PRODUCTS';
 
-export const PARTNER_FAQ_TOPICS: { value: PartnerFaqTopic; label: string }[] = [
-  { value: 'VENUE', label: 'Venue' },
-  { value: 'HOST', label: 'Host' },
-  { value: 'PRODUCTS', label: 'Products' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const partnerFaqTopics = (t: Translate): { value: PartnerFaqTopic; label: string }[] => [
+  { value: 'VENUE', label: t('admin.faqs.audienceVenue') },
+  { value: 'HOST', label: t('admin.faqs.audienceHost') },
+  { value: 'PRODUCTS', label: t('admin.faqs.audienceProducts') },
 ];
 
 export const emptyPartnerFaqForm: PartnerFaqFormValues = {

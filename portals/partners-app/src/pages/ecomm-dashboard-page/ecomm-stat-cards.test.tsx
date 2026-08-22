@@ -18,7 +18,7 @@ const stats: PartnerEcommStats = {
 
 describe('ecommStatCards', () => {
   it('maps the stats payload into six labelled cards with approved captions', () => {
-    const cards = ecommStatCards(stats);
+    const cards = ecommStatCards(stats, (key: string) => key);
     expect(cards.map((card) => card.label)).toEqual([
       'Total Brands',
       'Total Products',

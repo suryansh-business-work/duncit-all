@@ -17,7 +17,7 @@ const defaultMjml = `<mjml>
     <mj-section padding="28px 20px 8px">
       <mj-column>
         <mj-text font-size="26px" line-height="34px" font-weight="700" color="#111827">{{app_name}} update</mj-text>
-        <mj-text font-size="16px" line-height="24px" color="#4b5563">Here is something new for you.</mj-text>
+        <mj-text font-size="16px" line-height="24px" color="#4b5563">{t('marketing.marketingCampaigns.hereIsSomethingNewForYou')}</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

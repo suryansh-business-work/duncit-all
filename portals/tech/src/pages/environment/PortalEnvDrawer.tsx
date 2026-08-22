@@ -21,6 +21,7 @@ import { ENV_ENTRIES, type EnvEntry } from './queries';
 import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './portal-env-queries';
 import { notify } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   portal: PortalListItem | null;
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
     variables: { filter: {} },
     skip: !portal,
@@ -93,7 +95,7 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
           <TextField
             size="small"
             fullWidth
-            placeholder="Search configs…"
+            placeholder={t('tech.environment.searchConfigs')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
@@ -120,7 +122,7 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
                         primary={e.name}
                         secondary={e.is_default ? 'Default' : undefined}
                       />
-                      {!e.is_active && <Chip size="small" label="Off" />}
+                      {!e.is_active && <Chip size="small" label={t('tech.environment.off')} />}
                     </ListItemButton>
                   ))}
                 </List>
@@ -130,7 +132,7 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
         </Box>
         <Divider />
         <Stack direction="row" spacing={1} sx={{ p: 2 }} justifyContent="flex-end">
-          <Button onClick={onClose} disabled={setState.loading}>Cancel</Button>
+          <Button onClick={onClose} disabled={setState.loading}>{t('shell.common.cancel')}</Button>
           <Button variant="contained" onClick={save} disabled={setState.loading}>
             {setState.loading ? 'Saving…' : `Save (${selected.size})`}
           </Button>

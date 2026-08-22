@@ -9,6 +9,7 @@ import {
   type AudienceListFormValues,
   type OwnerOption,
 } from './audience-list.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /** The page's top action bar submits this by id, so Save can live up there. */
 export const AUDIENCE_LIST_FORM_ID = 'audience-list-form';
@@ -31,6 +32,7 @@ export default function AudienceListForm({
   error,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit } = useForm<AudienceListFormValues>({
     resolver: zodResolver(audienceListSchema),
     defaultValues: emptyAudienceList(defaultOwnerId),
@@ -61,14 +63,14 @@ export default function AudienceListForm({
         <RhfTextField
           control={control}
           name="name"
-          label="List name"
+          label={t('marketing.targetAudience.listName')}
           required
           hint="Shown wherever this audience is picked."
         />
         <RhfTextField
           control={control}
           name="description"
-          label="List description"
+          label={t('marketing.targetAudience.listDescription')}
           multiline
           minRows={3}
           hint="What this audience is for."

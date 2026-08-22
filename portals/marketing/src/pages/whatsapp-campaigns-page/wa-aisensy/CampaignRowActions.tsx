@@ -2,6 +2,7 @@ import { IconButton, Stack, Tooltip } from '@mui/material';
 import ScienceIcon from '@mui/icons-material/Science';
 import SendIcon from '@mui/icons-material/Send';
 import type { CampaignRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   campaign: CampaignRow;
@@ -15,6 +16,7 @@ interface Props {
  * is unavailable, not left hunting for it.
  */
 export default function CampaignRowActions({ campaign, onSend, onTest }: Readonly<Props>) {
+  const { t } = useTranslation();
   const sendLabel = campaign.sendable ? 'Send this campaign' : 'Only a Live campaign can be sent';
   return (
     <Stack direction="row" spacing={0.5}>
@@ -31,11 +33,11 @@ export default function CampaignRowActions({ campaign, onSend, onTest }: Readonl
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Send one test message">
+      <Tooltip title={t('marketing.whatsappCampaigns.sendOneTestMessage')}>
         <span>
           <IconButton
             size="small"
-            aria-label="Send one test message"
+            aria-label={t('marketing.whatsappCampaigns.sendOneTestMessage')}
             disabled={!campaign.sendable}
             onClick={() => onTest(campaign)}
           >

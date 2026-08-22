@@ -21,6 +21,7 @@ import HostVerificationSection from './HostVerificationSection';
 import { useHostFieldProps } from './useHostFieldProps';
 import { getHostDobMaxDate, getHostDobMinDate } from '../../utils/hostDob';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
+import { useTranslation } from '@duncit/app-settings';
 
 export type HostAccordionMode = 'create' | 'edit';
 
@@ -49,6 +50,7 @@ type Values = HostCreateValues & Partial<HostEditValues>;
  * details auto-fill from that user's profile.
  */
 export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, setValue, getValues } = useFormContext<Values>();
   const { hasError, errorMessage, tfProps } = useHostFieldProps();
   const targetUserId = useWatch({ control, name: 'target_user_id' });
@@ -104,7 +106,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
 
       <Accordion expanded={expanded.has('personal')} onChange={() => toggle('personal')} disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Personal</Typography>
+          <Typography variant="subtitle1">{t('onboarding.hostForm.personal')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>
@@ -120,7 +122,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Link to existing user"
+                    label={t('onboarding.hostForm.linkToExistingUser')}
                     size="small"
                     required
                     error={hasError('target_user_id')}
@@ -130,9 +132,9 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
               />
             )}
             <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-              <TextField label="Full name" required {...tfProps('step1.full_name')} />
-              <TextField label="Email" type="email" required {...tfProps('step1.email')} />
-              <TextField label="Phone" required {...tfProps('step1.phone', '6–15 digits, optional + prefix')} />
+              <TextField label={t('onboarding.common.fullName')} required {...tfProps('step1.full_name')} />
+              <TextField label={t('shell.common.email')} type="email" required {...tfProps('step1.email')} />
+              <TextField label={t('shell.common.phone')} required {...tfProps('step1.phone', '6–15 digits, optional + prefix')} />
               <DateField
                 size="small"
                 label="DOB"
@@ -150,7 +152,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
 
       <Accordion expanded={expanded.has('identity')} onChange={() => toggle('identity')} disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Identity</Typography>
+          <Typography variant="subtitle1">{t('onboarding.common.identity')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>
@@ -165,7 +167,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
         disableGutters
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Verification</Typography>
+          <Typography variant="subtitle1">{t('shell.nav.verification')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>
@@ -176,7 +178,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
 
       <Accordion expanded={expanded.has('bank')} onChange={() => toggle('bank')} disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">Bank Account Verification</Typography>
+          <Typography variant="subtitle1">{t('onboarding.common.bankAccountVerification')}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>

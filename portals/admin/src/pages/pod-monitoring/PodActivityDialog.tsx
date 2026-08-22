@@ -21,6 +21,7 @@ import {
   SOURCE_LABELS,
   type PodAuditLog,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   pod: { id: string; pod_title: string } | null;
@@ -33,6 +34,7 @@ interface Props {
  * Portal-local twin of the Partners console dialog, per the monitoring-page
  * pattern. */
 export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(POD_AUDIT_LOGS, {
     variables: { pod_doc_id: pod?.id },
     skip: !pod,
@@ -94,7 +96,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t('shell.common.close')}</Button>
           </DialogActions>
         </>
       )}

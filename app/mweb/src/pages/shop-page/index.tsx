@@ -14,22 +14,24 @@ import ShopFilterBar from './ShopFilterBar';
 import { useQuickAddToCart } from './useQuickAddToCart';
 import { useShopFilters } from './useShopFilters';
 import { SHOP_PRODUCTS, type ShopProduct } from './queries';
+import type { Translate } from '../../i18n/fallback';
 
-const TRUST_ITEMS = [
-  { Icon: VerifiedUserRoundedIcon, title: 'Trusted Pods', caption: 'Quality Products' },
-  { Icon: LocalOfferRoundedIcon, title: 'Best Prices', caption: 'Great Deals' },
-  { Icon: LocalShippingRoundedIcon, title: 'Safe Delivery', caption: 'Hassle Free' },
+const trustItems = (t: Translate) => [
+  { Icon: VerifiedUserRoundedIcon, title: t('mweb.shop.trustedPods'), caption: t('mweb.shop.qualityProducts') },
+  { Icon: LocalOfferRoundedIcon, title: t('mweb.shop.bestPrices'), caption: t('mweb.shop.greatDeals') },
+  { Icon: LocalShippingRoundedIcon, title: t('mweb.shop.safeDelivery'), caption: t('mweb.shop.hassleFree') },
 ] as const;
 
 /** Reassurance strip below the grid — static marketing copy. */
 function TrustBar() {
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
       justifyContent="space-around"
       sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5, mt: 1 }}
     >
-      {TRUST_ITEMS.map(({ Icon, title, caption }) => (
+      {trustItems(t).map(({ Icon, title, caption }) => (
         <Stack key={title} direction="row" spacing={1} alignItems="center">
           <Icon sx={{ color: 'primary.main' }} fontSize="small" />
           <Box>

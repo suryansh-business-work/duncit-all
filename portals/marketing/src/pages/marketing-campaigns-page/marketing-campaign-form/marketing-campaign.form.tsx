@@ -19,6 +19,7 @@ export {
   isCampaignDraftDirty,
   toMarketingCampaignInput,
 } from './marketing-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
 export { marketingCampaignSchema };
 
 export default function MarketingCampaignForm({
@@ -32,6 +33,7 @@ export default function MarketingCampaignForm({
   onValuesChange,
   onSubmit,
 }: Readonly<MarketingCampaignFormProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, trigger, watch, formState } = useForm<MarketingCampaignFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(marketingCampaignSchema),
@@ -60,13 +62,13 @@ export default function MarketingCampaignForm({
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="name" label="Campaign name" required hint="3–120 characters" />
+          <RhfTextField control={control} name="name" label={t('marketing.common.campaignName')} required hint="3–120 characters" />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="audience" label="Audience" select>
-            <MenuItem value="ALL_USERS">All active users</MenuItem>
-            <MenuItem value="NEWSLETTER_SUBSCRIBERS">Newsletter subscribers</MenuItem>
-            <MenuItem value="AUDIENCE_LIST">Saved audience list</MenuItem>
+          <RhfTextField control={control} name="audience" label={t('marketing.common.audience')} select>
+            <MenuItem value="ALL_USERS">{t('marketing.marketingCampaigns.allActiveUsers')}</MenuItem>
+            <MenuItem value="NEWSLETTER_SUBSCRIBERS">{t('marketing.marketingCampaigns.newsletterSubscribers')}</MenuItem>
+            <MenuItem value="AUDIENCE_LIST">{t('marketing.common.savedAudienceList')}</MenuItem>
           </RhfTextField>
         </Grid>
         {audience === 'AUDIENCE_LIST' && (
@@ -74,7 +76,7 @@ export default function MarketingCampaignForm({
             <RhfTextField
               control={control}
               name="audience_list_id"
-              label="Audience list"
+              label={t('marketing.common.audienceList')}
               select
               required
               hint="Membership is recomputed when the campaign sends."
@@ -102,7 +104,7 @@ export default function MarketingCampaignForm({
           </Grid>
         )}
         <Grid item xs={12}>
-          <RhfTextField control={control} name="subject" label="Email subject" required hint="3–180 characters" />
+          <RhfTextField control={control} name="subject" label={t('marketing.marketingCampaigns.emailSubject')} required hint="3–180 characters" />
         </Grid>
         <Grid item xs={12} sm={6}>
           <Controller
@@ -110,7 +112,7 @@ export default function MarketingCampaignForm({
             name="scheduled_at"
             render={({ field, fieldState }) => (
               <DateTimeField
-                label="Schedule at"
+                label={t('marketing.marketingCampaigns.scheduleAt')}
                 value={field.value}
                 onChange={field.onChange}
                 error={!!fieldState.error}

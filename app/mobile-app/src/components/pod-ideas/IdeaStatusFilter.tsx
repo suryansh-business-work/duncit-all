@@ -1,13 +1,15 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import { Text, XStack, YStack } from 'tamagui';
+import type { Translate } from '@/i18n/fallback';
 
 /** The moderation states an idea can sit in, plus the unfiltered default. */
 export type IdeaStatusFilterValue = 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING';
 
-const OPTIONS: readonly { value: IdeaStatusFilterValue; label: string }[] = [
-  { value: 'ALL', label: 'All' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
-  { value: 'PENDING', label: 'Pending' },
+const options = (t: Translate): readonly { value: IdeaStatusFilterValue; label: string }[] => [
+  { value: 'ALL', label: t('mweb.common.all') },
+  { value: 'APPROVED', label: t('mweb.common.approved') },
+  { value: 'REJECTED', label: t('mweb.podIdeas.rejected') },
+  { value: 'PENDING', label: t('mweb.common.pending') },
 ];
 
 interface Props {
@@ -24,13 +26,14 @@ interface Props {
  * chip row rather than a different kind of control.
  */
 export function IdeaStatusFilter({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={6} testID="idea-status-filter">
       <Text fontSize={12.5} fontWeight="600" color="$muted">
         Status
       </Text>
       <XStack flexWrap="wrap" gap={8}>
-        {OPTIONS.map((option) => {
+        {options(t).map((option) => {
           const selected = value === option.value;
           return (
             <XStack

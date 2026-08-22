@@ -28,7 +28,9 @@ interface Props {
  */
 export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted, primary } = useThemeColors();
+  // Confirmed in GREEN, not the brand red: a red line under a copy button is
+  // read as "that failed" long before it is read as the brand colour.
+  const { muted, success } = useThemeColors();
   const labels = buildUsernameLabels(t);
   const [copied, setCopied] = useState(false);
 
@@ -60,9 +62,9 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
       <Text fontSize={13} color="$muted" numberOfLines={1}>
         {labels.handle(username)}
       </Text>
-      <MaterialIcons name="content-copy" size={13} color={copied ? primary : muted} />
+      <MaterialIcons name="content-copy" size={13} color={copied ? success : muted} />
       {copied ? (
-        <Text testID="profile-handle-copied" fontSize={11.5} color={primary}>
+        <Text testID="profile-handle-copied" fontSize={11.5} color={success}>
           {labels.linkCopied}
         </Text>
       ) : null}

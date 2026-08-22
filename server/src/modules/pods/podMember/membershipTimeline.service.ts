@@ -68,6 +68,8 @@ export async function backoutsForMembership(memberId: string) {
     seats: row.seats ?? 1,
     seats_before: row.seats_before ?? 1,
     refund_amount: row.refund_amount ?? null,
+    coins_paid: row.coins_paid ?? 0,
+    coins_refunded: row.coins_refunded ?? 0,
     refund_status: refundStatusForRequest(row),
     deduction_pct: row.deduction_pct ?? 0,
     refund_processed_at: row.refund_processed_at?.toISOString?.() ?? null,

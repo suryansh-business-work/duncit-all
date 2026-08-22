@@ -1,0 +1,77 @@
+---
+/**
+ * The frame every block of code on this site sits in.
+ *
+ * One component for two callers — the MDX `pre` override (components/mdx/Pre.astro)
+ * and the live-example `<Preview>` — because a reader should get the same
+ * toolbar whether the snippet came from a fence or from a `?raw` import.
+ *
+ * It renders no code of its own: the highlighted `<pre>` arrives through the
+ * slot, already coloured by Shiki at build time. The toolbar is inert HTML
+ * until src/scripts/code-actions.ts binds it, so a block still reads fine with
+ * JavaScript off — which is also why Copy reads the text back out of the DOM
+ * instead of being handed a second copy of it in an attribute.
+ */
+interface Props {
+  /** Fence language, e.g. `ts`. Shown in the bar and used to pick a Monaco mode. */
+  lang: string;
+  /** Replaces the language chip when the block is a named example. */
+  title?: string;
+  /** Small pill before the title, e.g. `live`. */
+  badge?: string;
+}
+
+const { lang, title, badge } = Astro.props;
+
+/**
+ * `toggle` actions flip a `data-` attribute on the card and stay pressed;
+ * the rest are one-shot. Declared once so the markup below cannot drift from
+ * the handler that reads `data-code-action`.
+ */
+const ACTIONS = [
+  { id: 'wrap', label: 'Wrap', hint: 'Wrap long lines instead of scrolling', toggle: true },
+  { id: 'numbers', label: 'Lines', hint: 'Show line numbers', toggle: true },
+  { id: 'tidy', label: 'Tidy', hint: 'Open in the editor with whitespace normalised', toggle: false },
+  { id: 'format', label: 'Format', hint: 'Open in the editor and format for this language', toggle: false },
+  { id: 'edit', label: 'Edit', hint: 'Open in the editor', toggle: false },
+] as const;
+---
+
+<figure class="code-card" data-lang={lang} data-wrap="off" data-numbers="off">
+  <figcaption class="code-card__bar">
+    {badge && <span class="code-card__badge">{badge}</span>}
+    {
+      title ? (
+        <span class="code-card__title">{title}</span>
+      ) : (
+        <span class="code-card__lang">{lang}</span>
+      )
+    }
+
+    <div class="code-card__actions">
+      {
+        ACTIONS.map((action) => (
+          <button
+            type="button"
+            class="code-card__action code-card__action--secondary"
+            data-code-action={action.id}
+            title={action.hint}
+            aria-pressed={action.toggle ? 'false' : undefined}
+          >
+            {action.label}
+          </button>
+        ))
+      }
+      <button
+        type="button"
+        class="code-card__action"
+        data-code-action="copy"
+        title="Copy this snippet"
+      >
+        Copy
+      </button>
+    </div>
+  </figcaption>
+
+  <div class="code-card__body"><slot /></div>
+</figure>

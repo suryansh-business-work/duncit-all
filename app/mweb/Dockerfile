@@ -72,6 +72,7 @@ COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/onboarding/package.json ./packages/onboarding/
 COPY packages/tours/package.json ./packages/tours/
 COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
+COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/

@@ -77,6 +77,9 @@ export const grievanceTypeDefs = /* GraphQL */ `
     subject: String!
     description: String!
     source: GrievanceSource
+    "Human check, required only when nobody is signed in. See the captchaChallenge query."
+    captcha_token: String
+    captcha_answer: String
   }
 
   input UpdateGrievanceStatusInput {

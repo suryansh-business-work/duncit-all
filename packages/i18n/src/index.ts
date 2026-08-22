@@ -12,6 +12,7 @@ export {
   ADS_BUNDLE,
   AI_BUNDLE,
   AI_MONITORING_BUNDLE,
+  CAPTCHA_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
@@ -41,6 +42,12 @@ export {
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
 } from './bundles';
+export {
+  captchaCopy,
+  CAPTCHA_FALLBACK_COPY,
+  type CaptchaCopy,
+  type CaptchaTranslate,
+} from './captcha';
 export {
   mailCategoryCopy,
   type MailCategoryCopy,

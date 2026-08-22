@@ -9,9 +9,14 @@ consumers:
   - 'app/mweb'
   - 'app/mobile-app'
   - 'packages/dialogs'
+exports:
+  - 'parseIssue'
+  - 'issueLogData'
+  - 'issueLogLevel'
+  - 'buildIssueReportMessage'
+  - 'ISSUE_LOG_COMPONENT'
+  - 'ISSUE_REPORT_CATEGORY'
 ---
-
-# @duncit/errors
 
 One parser for every GraphQL/server failure, shared by the portals, mWeb and
 the native app — structurally typed, so no surface drags Apollo in for it.

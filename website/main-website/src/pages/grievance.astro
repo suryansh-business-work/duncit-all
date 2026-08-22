@@ -5,9 +5,12 @@
 // well have already deleted their account, so this page asks for no login at
 // all. The officer block above the form is what we are required to publish;
 // the Legal portal fills it in and this page reads it at build time.
+import { captchaCopy } from '@duncit/i18n';
+import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchGrievanceOfficer } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
 const { t } = await getTranslator();
 const officer = await fetchGrievanceOfficer();
@@ -89,6 +92,7 @@ const inputClass =
         class={`${inputClass} resize-y`}
         placeholder={t('grievance.descriptionHint')}></textarea>
     </label>
+    <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
     <p id="grievanceErr" class="text-sm text-red-600 hidden"></p>
     <button
       class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start"
@@ -106,6 +110,7 @@ const inputClass =
 </PageLayout>
 
 <script>
+  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
   import { urlConfigs } from '../config/url-configs';
   import { SUBMIT_GRIEVANCE_SDL } from '@duncit/utils';
 
@@ -125,6 +130,7 @@ const inputClass =
     for (const key of ['name', 'email', 'phone', 'address', 'subject', 'description']) {
       input[key] = String(fd.get(key) || '').trim();
     }
+    Object.assign(input, captchaFieldsFrom(form));
 
     const btn = form.querySelector('button');
     const orig = btn?.innerHTML;
@@ -139,7 +145,19 @@ const inputClass =
         body: JSON.stringify({ query: SUBMIT_GRIEVANCE_SDL, variables: { input } }),
       });
       const json = await res.json();
-      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      // A code is spent whether the answer was right or wrong, so the widget
+      // always gets a new one — and when the captcha WAS the reason, it says so
+      // itself and this handler stays quiet.
+      if (json?.errors?.length) {
+        if (showCaptchaFailure(form, json.errors)) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = orig || '';
+          }
+          return;
+        }
+        throw new Error(json.errors[0].message);
+      }
       const grievance = json?.data?.submitGrievance;
       if (!grievance?.grievance_no) throw new Error(failedMessage);
       // The reference replaces the form: there is nothing left to do here, and
@@ -153,6 +171,7 @@ const inputClass =
         errBox.classList.remove('hidden');
         errBox.textContent = err instanceof Error ? err.message : failedMessage;
       }
+      reloadCaptcha(form);
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = orig || '';

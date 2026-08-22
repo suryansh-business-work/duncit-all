@@ -13,6 +13,7 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs status"
   },
   "dependencies": {
+    "@duncit/captcha": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",

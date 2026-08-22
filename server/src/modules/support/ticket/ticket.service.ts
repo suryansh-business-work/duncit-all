@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { TicketModel, type ITicket, type TicketStatus, type TicketCategory, type TicketPriority } from './ticket.model';
+import { isEmailAddress } from '@utils/email';
 import { UserModel } from '@modules/access/user/user.model';
 import {
   displayFrom,
@@ -502,7 +503,7 @@ export const ticketService = {
 
   async emailTranscript(ticketId: string, email: string, format: TranscriptFormat = 'DOCX') {
     const addr = (email || '').trim();
-    if (!/^\S+@\S+\.\S+$/.test(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
+    if (!isEmailAddress(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
     const data = await this.buildTranscript(ticketId);
     const artifact = await buildTranscriptArtifact(data, format);
     await sendHtmlEmail({

@@ -1,0 +1,27 @@
+---
+import Guide, { getHeadings } from '../guides/writing-docs.mdx';
+import DocsLayout from '../layouts/DocsLayout.astro';
+import Pre from '../components/mdx/Pre.astro';
+import type { TocItem } from '../lib/nav';
+
+/**
+ * The one page on this site that is not a package.
+ *
+ * Its body is MDX like every other page, imported rather than routed, so it
+ * goes through the SAME `pre` override and gets the same code toolbar it
+ * describes. A guide to the docs that did not render like the docs would be
+ * describing something else.
+ */
+const toc: TocItem[] = getHeadings()
+  .filter((heading) => heading.depth === 2 || heading.depth === 3)
+  .map((heading) => ({ depth: heading.depth, slug: heading.slug, text: heading.text }));
+---
+
+<DocsLayout
+  title="Writing a package page"
+  subtitle="What a docs/index.mdx has to contain, what the toolbar above every code block does, and how a live preview is wired."
+  activeDir="writing-docs"
+  toc={toc}
+>
+  <Guide components={{ pre: Pre }} />
+</DocsLayout>

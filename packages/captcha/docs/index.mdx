@@ -1,0 +1,116 @@
+---
+name: '@duncit/captcha'
+summary: 'The human check every public form uses — one widget, one wire format, one set of words.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: true
+coverageGate: false
+consumers:
+  - 'website/main-website'
+  - 'website/ads-website'
+  - 'website/earnwith-website'
+  - 'website/status-website'
+  - 'packages/brand'
+exports:
+  - 'requestCaptchaChallenge'
+  - 'captchaErrorCode'
+  - 'captchaFieldsFrom'
+  - 'reloadCaptcha'
+  - 'showCaptchaFailure'
+  - 'Captcha.astro'
+  - 'useCaptcha'
+  - 'CaptchaField'
+---
+
+Every form anyone on the internet can post — contact, grievance, FAQ, the
+newsletter box and the status page's problem report — asks the same question
+first: is there a person here? This package is that question, drawn once.
+
+The server owns the answer. `captchaChallenge` mints a signed token carrying a
+nonce, an expiry and a **hash** of the code, and draws the code as an SVG. There
+is no row in the database behind it, which matters more than it sounds: a
+captcha that needs Mongo is a captcha that fails on the status page exactly when
+the database is the thing being reported as down.
+
+## The wire
+
+Two fields go out with the mutation, and every protected input accepts them:
+
+```graphql
+input SubmitContactInput {
+  # …
+  captcha_token: String
+  captcha_answer: String
+}
+```
+
+The server skips the check for a **signed-in** caller. The account is already
+on the row, the session already cost a login, and the same mutations are what
+mWeb, native and the partner consoles post — the captcha is for the anonymous
+internet, which is where the spam comes from.
+
+## Astro (plain HTML)
+
+Drop it inside the `<form>`. The two inputs it renders are named, so the form's
+own `FormData` already carries them.
+
+```astro
+---
+import Captcha from '@duncit/captcha/Captcha.astro';
+import { captchaCopy } from '@duncit/i18n';
+const { t } = await getTranslator();
+---
+<form id="contactForm">
+  <input name="email" type="email" required />
+  <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
+  <button>Send</button>
+</form>
+```
+
+`copy` is optional — a site with no translator gets `CAPTCHA_FALLBACK_COPY`,
+the shipped default language, rather than a blank label. Pass `defer` for a
+one-field row (a footer newsletter box): the widget stays hidden until the
+first keystroke in the form.
+
+In the submit handler:
+
+```ts
+import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
+
+const input = { ...payload, ...captchaFieldsFrom(form) };
+const json = await post(input);
+// A code is spent whether the answer was right or wrong — ALWAYS reload.
+if (json?.errors?.length) {
+  // true when the captcha was the reason: the widget is already explaining it.
+  if (showCaptchaFailure(form, json.errors)) return;
+  reloadCaptcha(form);
+  throw new Error(json.errors[0].message);
+}
+reloadCaptcha(form);
+```
+
+## React + MUI
+
+```tsx
+import { CaptchaField, useCaptcha } from '@duncit/captcha/mui';
+import { captchaCopy } from '@duncit/i18n';
+
+const captcha = useCaptcha(`${SERVER_BASE}/graphql`);
+const copy = captchaCopy(t);
+
+<CaptchaField control={control} name="captcha_answer" captcha={captcha} copy={copy} />;
+
+// on submit
+await submit({ ...values, captcha_token: captcha.token });
+captcha.reload();
+```
+
+The token is deliberately **not** form state: nobody types it, a form reset must
+not clear it, and it changes on its own every time a code is spent.
+
+## Copy
+
+The words live in `packages/i18n/src/bundles/captcha.ts` under the `captcha.*`
+namespace with every other surface's copy (rule 38), and are resolved by
+`captchaCopy(t)`. Adding a key there means running **Import app keys** in Admin
+> Localization > Translations, exactly like any other namespace.

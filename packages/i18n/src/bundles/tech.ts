@@ -416,6 +416,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       intro:
         'Problems reported by hand from the public status page — the breakage a probe cannot see. The address, browser and account on each row were read off the request by the server, never taken from the form.',
       service: 'Service',
+      website: 'Website',
       impact: 'Impact',
       reporter: 'Reporter',
       pageAddress: 'Page address',
@@ -433,6 +434,14 @@ export const TECH_BUNDLE: NestedCatalogue = {
       deleteWarning:
         'The report is removed permanently, along with the address and browser recorded with it. Nothing else is touched.',
       deleted: 'Report deleted',
+      unknownWebsite: 'Not known',
+      reporterScreenshots: 'Screenshots from the reporter',
+      noScreenshots: 'The reporter attached none.',
+      teamAttachments: 'Team attachments',
+      teamAttachmentsHelp:
+        'Anything worth keeping with this report — an annotated screenshot, a log, a trace. Saved when you save the report.',
+      addAttachment: 'Add image',
+      openScreenshot: 'Open the full-size image',
     },
     telemetryIdentity: {
       localhost: 'Localhost',

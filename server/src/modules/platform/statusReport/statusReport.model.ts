@@ -53,6 +53,14 @@ export interface IStatusReport extends Document {
    * filed against it — or leave a bare slug on screen once it is gone.
    */
   service_name: string;
+  /**
+   * The affected service's ADDRESS, resolved from the catalogue at write time.
+   *
+   * Denormalized for the same reason the name is: a report has to still say
+   * which website it was about after that service is renamed, moved to another
+   * host, or retired altogether.
+   */
+  service_url: string;
   impact: StatusReportImpact;
   name: string;
   email: string;
@@ -67,6 +75,17 @@ export interface IStatusReport extends Document {
   user_agent: string | null;
   /** Set only when the reporter happened to be signed in on this browser. */
   user_id: string | null;
+  /**
+   * Screenshots the reporter attached, as hosted URLs.
+   *
+   * A picture of the error is the single most useful thing on a report — it
+   * carries the message, the URL bar and the state of the page in one go,
+   * which is three things nobody types out. Uploaded server-side from the
+   * mutation, so the public form needs no upload credential of its own.
+   */
+  image_urls: string[];
+  /** Images added by an operator while triaging — annotations, logs, evidence. */
+  staff_image_urls: string[];
   /** Free-text triage note written from the Tech portal. */
   note: string;
   created_at: Date;
@@ -77,6 +96,7 @@ const schema = new Schema<IStatusReport>(
   {
     service_key: { type: String, default: '', trim: true, index: true },
     service_name: { type: String, default: '', trim: true },
+    service_url: { type: String, default: '', trim: true },
     impact: { type: String, enum: STATUS_REPORT_IMPACTS, default: 'OTHER', index: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, lowercase: true, index: true },
@@ -87,6 +107,8 @@ const schema = new Schema<IStatusReport>(
     ip: { type: String, default: null },
     user_agent: { type: String, default: null },
     user_id: { type: String, default: null, index: true },
+    image_urls: { type: [String], default: [] },
+    staff_image_urls: { type: [String], default: [] },
     note: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

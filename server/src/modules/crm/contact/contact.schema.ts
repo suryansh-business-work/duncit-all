@@ -32,6 +32,9 @@ export const contactTypeDefs = /* GraphQL */ `
     subject: String
     message: String!
     attachments: [String!]
+    "Human check, required only when nobody is signed in. See the captchaChallenge query."
+    captcha_token: String
+    captcha_answer: String
   }
 
   type ContactSubmitResult {

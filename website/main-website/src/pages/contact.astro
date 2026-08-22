@@ -1,9 +1,14 @@
 ---
 // Contact — reach-us cards come from Admin branding (support email/phone) and
 // the form lands in the Website portal's Contact Submissions inbox.
+import { captchaCopy } from '@duncit/i18n';
+import Captcha from '@duncit/captcha/Captcha.astro';
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchBranding } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
+const { t } = await getTranslator();
 const branding = await fetchBranding();
 const supportEmail = branding.support_email || 'support@duncit.com';
 const supportPhone = branding.support_phone;
@@ -44,6 +49,7 @@ const supportPhone = branding.support_phone;
     <input name="email" required type="email" placeholder="Your email" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
     <input name="subject" placeholder="Subject (optional)" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
     <textarea name="message" required rows="5" placeholder="What's on your mind?" class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
+    <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
     <p id="contactErr" class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       Send <i class="fa-solid fa-paper-plane"></i>
@@ -52,6 +58,7 @@ const supportPhone = branding.support_phone;
 </PageLayout>
 
 <script>
+  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
   import { urlConfigs } from '../config/url-configs';
 
   const GQL_URL = urlConfigs.graphqlUrl;
@@ -69,6 +76,7 @@ const supportPhone = branding.support_phone;
       email: String(fd.get('email') || '').trim(),
       subject: String(fd.get('subject') || '').trim(),
       message: String(fd.get('message') || '').trim(),
+      ...captchaFieldsFrom(form),
     };
     const btn = form.querySelector('button') as HTMLButtonElement | null;
     const orig = btn?.innerHTML;
@@ -87,15 +95,26 @@ const supportPhone = branding.support_phone;
         }),
       });
       const json = await res.json();
-      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      // A code is spent whether the answer was right or wrong, so the widget
+      // always gets a new one — and when the captcha WAS the reason, it says so
+      // itself and this handler stays quiet.
+      if (json?.errors?.length) {
+        if (showCaptchaFailure(form, json.errors)) {
+          if (btn) btn.innerHTML = orig || 'Send';
+          return;
+        }
+        throw new Error(json.errors[0].message);
+      }
       if (!json?.data?.submitContactForm?.ok) throw new Error('Could not send. Try again.');
       if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Message sent!';
       form.reset();
+      reloadCaptcha(form);
     } catch (err: any) {
       if (errBox) {
         errBox.classList.remove('hidden');
         errBox.textContent = err?.message || 'Could not send. Please try again.';
       }
+      reloadCaptcha(form);
       if (btn) btn.innerHTML = orig || 'Send';
     } finally {
       window.setTimeout(() => {

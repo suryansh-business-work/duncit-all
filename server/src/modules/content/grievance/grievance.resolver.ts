@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { userDisplayOf } from '@modules/access/user/user.display';
+import { requireHuman } from '@modules/platform/captcha/captcha.guard';
 import { grievanceService } from './grievance.service';
 
 const LEGAL_ROLES = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
@@ -29,8 +30,10 @@ export const grievanceResolvers = {
   Mutation: {
     // Open to signed-out visitors. The account is recorded when there is one,
     // so a grievance from a logged-in user is still traceable to them.
-    submitGrievance: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
-      grievanceService.submit(ctx.user?.id ?? null, args.input),
+    submitGrievance: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireHuman(ctx, args.input);
+      return grievanceService.submit(ctx.user?.id ?? null, args.input);
+    },
     updateGrievanceStatus: (
       _p: unknown,
       args: { id: string; input: any },

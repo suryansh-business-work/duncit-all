@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Chip, Link, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { ENV_COLOR, envOptions } from '../../components/telemetry-identity';
@@ -8,6 +8,7 @@ import {
   STATUS_COLOR,
   impactLabel,
   impactOptions,
+  reportWebsite,
   statusLabel,
   statusOptions,
   type StatusReportRow,
@@ -39,6 +40,46 @@ const renderImpact = (t: Translate) => (row: StatusReportRow) => (
     label={impactLabel(t, row.impact)}
   />
 );
+
+/** The host alone: a column of full URLs is a column of "https://" repeated. */
+const websiteHost = (url: string) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+};
+
+/**
+ * The address the report is about, as a link.
+ *
+ * A report almost always ends with somebody opening the thing that broke, and
+ * "which website" is the question the row is read for. The click is stopped
+ * from bubbling so opening the site does not also open the triage dialog.
+ */
+const renderWebsite = (t: Translate) => (row: StatusReportRow) => {
+  const url = reportWebsite(row);
+  if (!url) {
+    return (
+      <Typography variant="body2" color="text.disabled">
+        {t('tech.statusReports.unknownWebsite')}
+      </Typography>
+    );
+  }
+  return (
+    <Link
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="body2"
+      noWrap
+      title={url}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {websiteHost(url)}
+    </Link>
+  );
+};
 
 const renderEnvironment = (row: StatusReportRow) => (
   <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
@@ -93,6 +134,13 @@ export default function StatusReportsTable({ fetchRows, refetchRef, onOpen }: Re
         headerName: t('tech.statusReports.service'),
         width: 150,
         valueGetter: (row) => row.service_name || t('tech.statusReports.unspecifiedService'),
+      },
+      {
+        field: 'service_url',
+        headerName: t('tech.statusReports.website'),
+        width: 190,
+        sortable: false,
+        cellRenderer: renderWebsite(t),
       },
       {
         field: 'environment',

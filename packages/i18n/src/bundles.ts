@@ -3,6 +3,7 @@ import { ADMIN_BUNDLE } from './bundles/admin';
 import { ADS_BUNDLE } from './bundles/ads';
 import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
+import { CAPTCHA_BUNDLE } from './bundles/captcha';
 import { CHALLENGE_BUNDLE } from './bundles/challenge';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { CRM_BUNDLE } from './bundles/crm';
@@ -56,6 +57,7 @@ export {
   ADS_BUNDLE,
   AI_BUNDLE,
   AI_MONITORING_BUNDLE,
+  CAPTCHA_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
@@ -90,6 +92,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   ads: ADS_BUNDLE,
   ai: AI_BUNDLE,
   aiMonitoring: AI_MONITORING_BUNDLE,
+  captcha: CAPTCHA_BUNDLE,
   challenge: CHALLENGE_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
   crm: CRM_BUNDLE,

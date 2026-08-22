@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@duncit/brand": "workspace:*",
+    "@duncit/captcha": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/utils": "workspace:*",

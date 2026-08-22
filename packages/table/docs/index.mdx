@@ -36,7 +36,6 @@ exports:
   - 'dateColumn'
   - 'entityIdColumn'
   - 'formatDateCell'
-  - 'DEFAULT_DATE_FORMAT'
   - 'EM_DASH'
   - 'DuncitColumn'
   - 'TableFetch'
@@ -219,11 +218,15 @@ payoutQuery.filters.map((f) => filterChipLabel(payoutColumns, f));
 `formatDateCell` and `dateColumn()`:
 
 ```ts
-formatDateCell('2026-07-28T09:15:00.000Z');                    // '28 Jul 2026'
+formatDateCell('2026-07-28T09:15:00.000Z');                     // the admin's configured pattern
 formatDateCell('2026-07-28T09:15:00.000Z', 'dd/MM/yyyy HH:mm'); // '28/07/2026 14:45' (IST)
 formatDateCell(null);                                           // '—'  (EM_DASH)
-DEFAULT_DATE_FORMAT;                                            // 'd MMM yyyy'
 ```
+
+The pattern is not a constant this package owns. Left out, it is read from
+`ambientDateFormat()` (`@duncit/datetime`) **at call time**, so a grid built before the
+settings arrived still repaints in the admin's format — a hardcoded `'d MMM yyyy'` default is
+exactly how a table cell and the detail page it opened used to show one date two ways.
 
 `date-fns` formats in the **viewer's** timezone, which is why the second line reads 14:45 for
 a 09:15 UTC timestamp on an IST machine. Never hand-roll this with `toLocaleDateString`
@@ -323,13 +326,13 @@ await fetchRows(payoutQuery);
 | `TableGqlClient` | `{ query(options: { query: unknown; variables?: Record<string, unknown>; fetchPolicy?: string }): Promise<{ data: unknown }> }` | Structural, so the package needs no `@apollo/client` dependency. |
 | `tableQueryToGql` | `(q: TableQueryState) => { query: {...} }` | The single client→server mapping. |
 | `filterChipLabel` | `<T>(columns, filter: TableFilterValue) => string` | Falls back to `filter.field` when no column matches. |
-| `dateColumn` | `<T>(options?: DateColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'created_at'`, `headerName 'Created'`, `hide true`, `width 130`, `filterable true`, `format 'd MMM yyyy'`. `formatDate` wins over `format`. |
+| `dateColumn` | `<T>(options?: DateColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'created_at'`, `headerName 'Created'`, `hide true`, `width 130`, `filterable true`, `format` from `ambientDateFormat()`. `formatDate` wins over `format`. |
 | `activeChipColumn` | `<T>(options?: ActiveChipColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'is_active'`, `headerName 'Status'`, `width 110`, labels `Active`/`Inactive`, `filterable true`. |
 | `actionsColumn` | `<T>(options: ActionsColumnOptions<T>) => DuncitColumn<T>` | Edit/Delete icon buttons; each side takes `RowActionOptions` (`title`, `ariaLabel`, `color`, `icon`, `disabled`, `disabledTitle`), all accepting a `(row) => string`. |
 | `entityIdColumn` | `<T>(options: EntityIdColumnOptions<T>) => DuncitColumn<T>` | Requires `field` + `headerName`. Defaults: `width 150`, `filterable true`. Monospace, non-wrapping, `EM_DASH` when the record predates its id. |
 | `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty. |
 | `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |
-| `DEFAULT_DATE_FORMAT` / `EM_DASH` | `'d MMM yyyy'` / `'—'` | The shared date pattern and empty-cell character. |
+| `EM_DASH` | `'—'` | The empty-cell character every table uses, so blanks look identical across portals. |
 
 ## Live preview
 
@@ -457,8 +460,8 @@ reshaping the state.
 
 ## Column helpers — use them instead of re-deriving cells
 
-`dateColumn()` defaults to the hidden `created_at` column with a `d MMM yyyy` format
-(`DEFAULT_DATE_FORMAT`) and an em-dash fallback for null. `formatDateCell(iso, format)` is the
+`dateColumn()` defaults to the hidden `created_at` column in the admin's configured date
+pattern and an em-dash fallback for null. `formatDateCell(iso, format)` is the
 same formatting on its own, and `EM_DASH` is the empty-value character every table uses so
 blanks look identical across portals. `actionsColumn()` and `activeChipColumn()` cover the two
 cell shapes that repeated most.

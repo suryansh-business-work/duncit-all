@@ -16,11 +16,14 @@ export const STATUS_REPORTS_TABLE = gql`
         id
         service_key
         service_name
+        service_url
         impact
         name
         email
         page_url
         message
+        image_urls
+        staff_image_urls
         environment
         status
         ip
@@ -35,11 +38,22 @@ export const STATUS_REPORTS_TABLE = gql`
 `;
 
 export const UPDATE_STATUS_REPORT = gql`
-  mutation UpdateStatusReport($report_id: ID!, $status: StatusReportStatus!, $note: String) {
-    updateStatusReport(report_id: $report_id, status: $status, note: $note) {
+  mutation UpdateStatusReport(
+    $report_id: ID!
+    $status: StatusReportStatus!
+    $note: String
+    $staff_images: [String!]
+  ) {
+    updateStatusReport(
+      report_id: $report_id
+      status: $status
+      note: $note
+      staff_images: $staff_images
+    ) {
       id
       status
       note
+      staff_image_urls
       updated_at
     }
   }
@@ -68,11 +82,14 @@ export interface StatusReportRow {
   id: string;
   service_key: string;
   service_name: string;
+  service_url: string;
   impact: StatusReportImpact;
   name: string;
   email: string;
   page_url: string;
   message: string;
+  image_urls: string[];
+  staff_image_urls: string[];
   environment: string;
   status: StatusReportStatus;
   ip: string | null;
@@ -82,6 +99,37 @@ export interface StatusReportRow {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * WHICH WEBSITE the report is about.
+ *
+ * The catalogue address the service had when the report was filed, so a
+ * service renamed or moved since does not rewrite its own history. When the
+ * reporter was not sure which service it was, the page they pasted still says
+ * where they were, and its origin is the next best answer.
+ */
+export function reportWebsite(row: StatusReportRow): string {
+  if (row.service_url) return row.service_url;
+  if (!row.page_url) return '';
+  try {
+    return new URL(row.page_url).origin;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * MediaListField speaks one URL per line, like every other media list in the
+ * portals; the API speaks arrays. The two conversions live together so a round
+ * trip through the dialog cannot lose or duplicate a line.
+ */
+export const toMediaList = (urls: readonly string[]): string => urls.join('\n');
+
+export const fromMediaList = (value: string): string[] =>
+  value
+    .split('\n')
+    .map((url) => url.trim())
+    .filter(Boolean);
 
 type Translate = (key: string) => string;
 

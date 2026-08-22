@@ -2,6 +2,8 @@ import * as yup from 'yup';
 import { GraphQLError } from 'graphql';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { findStatusService, getStatusEnvironment } from '@observability/statusServices';
+import type { CaptchaCarrier } from '@modules/platform/captcha/captcha.guard';
+import { uploadReportImages, type StatusReportImageInput } from './statusReport.images';
 import {
   StatusReportModel,
   STATUS_REPORT_IMPACTS,
@@ -35,19 +37,21 @@ export interface StatusReportOrigin {
   user_id?: string | null;
 }
 
-export interface SubmitStatusReportInput {
+export interface SubmitStatusReportInput extends CaptchaCarrier {
   service_key?: string | null;
   impact?: string | null;
   name: string;
   email: string;
   page_url?: string | null;
   message: string;
+  images?: StatusReportImageInput[] | null;
 }
 
 const toPub = (doc: IStatusReport) => ({
   id: String(doc._id),
   service_key: doc.service_key || '',
   service_name: doc.service_name || '',
+  service_url: doc.service_url || '',
   impact: doc.impact,
   name: doc.name,
   email: doc.email,
@@ -58,6 +62,8 @@ const toPub = (doc: IStatusReport) => ({
   ip: doc.ip ?? null,
   user_agent: doc.user_agent ?? null,
   user_id: doc.user_id ?? null,
+  image_urls: doc.image_urls ?? [],
+  staff_image_urls: doc.staff_image_urls ?? [],
   note: doc.note || '',
   created_at: doc.created_at.toISOString(),
   updated_at: doc.updated_at.toISOString(),
@@ -87,6 +93,9 @@ const STATUS_REPORT_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
+/** An operator attaching more than this to one report is filing a ticket, not triaging. */
+const STAFF_IMAGE_MAX = 10;
+
 const badInput = (message: string) =>
   new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 
@@ -112,9 +121,16 @@ export const statusReportService = {
     // report that is otherwise perfectly good.
     const service = payload.service_key ? findStatusService(payload.service_key) : null;
 
+    // Uploaded before the row is written so the report carries its screenshots
+    // from the moment it appears in Tech — never a row that grows a picture a
+    // few seconds after somebody has already read and closed it.
+    const image_urls = await uploadReportImages(input.images);
+
     const doc = await StatusReportModel.create({
       service_key: service?.key ?? '',
       service_name: service?.name ?? '',
+      service_url: service?.url ?? '',
+      image_urls,
       impact: payload.impact as StatusReportImpact,
       name: payload.name,
       email: payload.email,
@@ -140,9 +156,21 @@ export const statusReportService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
-  async updateStatus(id: string, status: StatusReportStatus, note?: string | null) {
+  async updateStatus(
+    id: string,
+    status: StatusReportStatus,
+    note?: string | null,
+    staffImages?: string[] | null
+  ) {
     const update: Record<string, unknown> = { status };
     if (typeof note === 'string') update.note = note.slice(0, 2000);
+    // Absent means "leave them alone"; an empty array means "remove them all".
+    if (Array.isArray(staffImages)) {
+      update.staff_image_urls = staffImages
+        .map((url) => url.trim())
+        .filter(Boolean)
+        .slice(0, STAFF_IMAGE_MAX);
+    }
     const doc = await StatusReportModel.findByIdAndUpdate(id, { $set: update }, { new: true });
     if (!doc) throw new GraphQLError('Status report not found', { extensions: { code: 'NOT_FOUND' } });
     return toPub(doc);

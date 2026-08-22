@@ -10,6 +10,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from '@duncit/shell';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -20,6 +21,7 @@ interface Props {
 
 /** How many pods were created each day — is the supply growing or stalling? */
 export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const hasData = trend.some((day) => day.count > 0);
 
@@ -27,7 +29,7 @@ export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
     labels: trend.map((day) => format(parseISO(day.date), 'd MMM')),
     datasets: [
       {
-        label: 'Pods created',
+        label: t('admin.podsDashboard.podsCreated'),
         data: trend.map((day) => day.count),
         backgroundColor: '#7c3aed',
         borderRadius: 6,
@@ -68,7 +70,7 @@ export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-          Pods created
+          {t('admin.podsDashboard.podsCreated')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
           One bar per day, including the days nobody created anything.

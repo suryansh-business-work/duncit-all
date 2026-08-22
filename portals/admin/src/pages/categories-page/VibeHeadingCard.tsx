@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Button, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Heading + sub-heading over the home "What's your vibe" category filter
@@ -10,6 +11,7 @@ import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
  * vibe options; an empty field falls back to the copy bundled in each app.
  */
 export default function VibeHeadingCard() {
+  const { t } = useTranslation();
   const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
   const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
 
@@ -38,7 +40,7 @@ export default function VibeHeadingCard() {
           input: { home_vibe_heading: heading, home_vibe_subheading: subheading },
         },
       });
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
     } catch (e: any) {
       setOpError(e.message);
     } finally {

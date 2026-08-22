@@ -54,12 +54,12 @@ export default function PodsToolbar({
         <TextField
           size="small"
           select
-          label="Club"
+          label={t('admin.pods.colClub')}
           value={clubFilter}
           onChange={(e) => setClubFilter(e.target.value)}
           sx={{ minWidth: 200 }}
         >
-          <MenuItem value="">All clubs</MenuItem>
+          <MenuItem value="">{t('admin.pods.allClubs')}</MenuItem>
           {clubs.map((c: any) => (
             <MenuItem key={c.id} value={c.id}>
               {c.club_name}

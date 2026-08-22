@@ -11,6 +11,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLOR_MAP, statusIcon, type IdeaRow, type Status } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<IdeaRow>;
@@ -51,21 +52,23 @@ const renderAuthor = (it: IdeaRow) => (
   </Stack>
 );
 
-const renderEngagement = (it: IdeaRow) => (
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const renderEngagement = (it: IdeaRow, t: Translate) => (
   <Stack direction="row" spacing={1} sx={{ color: 'text.secondary', fontSize: 12 }} component="span">
-    <Tooltip title="Likes">
+    <Tooltip title={t('admin.podIdeas.colLikes')}>
       <Stack direction="row" spacing={0.5} alignItems="center" component="span">
         <FavoriteIcon fontSize="inherit" />
         <span>{it.likes_count}</span>
       </Stack>
     </Tooltip>
-    <Tooltip title="Comments">
+    <Tooltip title={t('admin.podIdeas.colComments')}>
       <Stack direction="row" spacing={0.5} alignItems="center" component="span">
         <ChatBubbleOutlineIcon fontSize="inherit" />
         <span>{it.comments_count}</span>
       </Stack>
     </Tooltip>
-    <Tooltip title="Shares">
+    <Tooltip title={t('admin.podIdeas.colShares')}>
       <Stack direction="row" spacing={0.5} alignItems="center" component="span">
         <ShareIcon fontSize="inherit" />
         <span>{it.shares_count}</span>
@@ -79,29 +82,30 @@ const renderStatus = (it: IdeaRow) => (
 );
 
 export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<IdeaRow>[]>(() => {
     const renderActions = (it: IdeaRow) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="View">
+        <Tooltip title={t('shell.common.view')}>
           <IconButton size="small" onClick={() => onView(it.id)}>
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         {it.status !== 'APPROVED' && (
-          <Tooltip title="Approve">
+          <Tooltip title={t('admin.podIdeas.approve')}>
             <IconButton size="small" color="success" onClick={() => onSetStatus(it.id, 'APPROVED')}>
               <CheckCircleIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
         {it.status !== 'REJECTED' && (
-          <Tooltip title="Reject">
+          <Tooltip title={t('admin.podIdeas.reject')}>
             <IconButton size="small" color="warning" onClick={() => onSetStatus(it.id, 'REJECTED')}>
               <CancelIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title="Delete">
+        <Tooltip title={t('shell.common.delete')}>
           <IconButton size="small" color="error" onClick={() => onDelete(it)}>
             <DeleteIcon fontSize="small" />
           </IconButton>
@@ -111,7 +115,7 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
     return [
       {
         field: 'title',
-        headerName: 'Idea',
+        headerName: t('admin.podIdeas.colIdea'),
         flex: 1.4,
         minWidth: 240,
         cellRenderer: renderIdea,
@@ -119,7 +123,7 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       },
       {
         field: 'author',
-        headerName: 'Author',
+        headerName: t('admin.podIdeas.colAuthor'),
         sortable: false,
         minWidth: 200,
         cellRenderer: renderAuthor,
@@ -127,15 +131,15 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       },
       {
         field: 'engagement',
-        headerName: 'Engagement',
+        headerName: t('admin.podIdeas.colEngagement'),
         sortable: false,
         width: 150,
-        cellRenderer: renderEngagement,
+        cellRenderer: (row: IdeaRow) => renderEngagement(row, t),
         valueGetter: (it) => `${it.likes_count} likes · ${it.comments_count} comments · ${it.shares_count} shares`,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'select', options: STATUS_FILTER_OPTIONS },
         width: 140,
         cellRenderer: renderStatus,
@@ -143,12 +147,12 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         width: 170,
         valueGetter: (it) => (it.created_at ? formatDateTime(it.created_at) : '—'),
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
     ];
   }, [onView, onSetStatus, onDelete]);
 
@@ -158,7 +162,7 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getIdeaRowId}
-      emptyText="No pod ideas match the current filters."
+      emptyText={t('admin.podIdeas.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search title or description"
       refetchRef={refetchRef}

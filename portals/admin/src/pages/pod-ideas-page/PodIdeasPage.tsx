@@ -7,8 +7,10 @@ import { POD_IDEAS_TABLE, SET_STATUS, DELETE_IDEA, type IdeaRow, type Status } f
 import DetailsDialog from './DetailsDialog';
 import IdeasTable from './IdeasTable';
 import IdeaDeleteDialog from './IdeaDeleteDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function PodIdeasPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function PodIdeasPage() {
     if (!delTarget) return;
     try {
       await deleteMut({ variables: { id: delTarget.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       setDelTarget(null);
       refetchRef.current?.();
     } catch (e: any) {

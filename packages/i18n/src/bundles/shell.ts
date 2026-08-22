@@ -28,6 +28,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       saving: 'Saving…',
       delete: 'Delete',
       deleting: 'Deleting…',
+      saved: 'Saved',
+      deleted: 'Deleted',
       close: 'Close',
       view: 'View',
       edit: 'Edit',
@@ -46,6 +48,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       title: 'Title',
       description: 'Description',
       updated: 'Updated',
+      type: 'Type',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,

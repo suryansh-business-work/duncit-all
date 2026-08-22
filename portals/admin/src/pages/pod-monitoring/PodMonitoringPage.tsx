@@ -6,10 +6,12 @@ import { useApolloTableFetch } from '@duncit/table';
 import PodAuditDetailDialog from './PodAuditDetailDialog';
 import PodMonitoringTable from './PodMonitoringTable';
 import { POD_AUDIT_LOGS_TABLE, type PodAuditLog } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin > Pods > Pod Monitoring (AI) — the AI-monitored audit trail of every
  * pod edit, status change and critical action across all surfaces. */
 export default function PodMonitoringPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<PodAuditLog | null>(null);
@@ -25,7 +27,7 @@ export default function PodMonitoringPage() {
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
         <MonitorHeartIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>Pod Monitoring (AI)</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('admin.podMonitoring.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Every pod edit, status change and critical action — risk-scored by AI for auditability.
           </Typography>

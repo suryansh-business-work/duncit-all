@@ -12,7 +12,7 @@ const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
 });
 
 const errorsOf = (hasVenue: boolean, values: CompletePodValues): string[] => {
-  const result = buildCompleteSchema(hasVenue).safeParse(values);
+  const result = buildCompleteSchema(hasVenue, (key: string) => key).safeParse(values);
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
 

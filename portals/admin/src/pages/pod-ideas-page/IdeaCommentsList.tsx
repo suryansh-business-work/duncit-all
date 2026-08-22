@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   comments: any[];
@@ -15,11 +16,12 @@ interface Props {
 }
 
 export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <>
       <Divider sx={{ mb: 2 }} />
       <Typography variant="overline" color="text.secondary">
-        Comments
+        {t('admin.podIdeas.colComments')}
       </Typography>
       <Stack spacing={1.5} sx={{ mt: 1 }}>
         {comments.length === 0 && (

@@ -25,8 +25,10 @@ import {
 import { emptyForm, type FormState } from './helpers';
 import FaqsTable from './FaqsTable';
 import FaqEditDialog from './FaqEditDialog';
+import { useTranslation } from '@duncit/shell';
 
 export default function FaqsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<any>(null);
@@ -98,7 +100,7 @@ export default function FaqsPage() {
     if (!delTarget) return;
     try {
       await deleteMut({ variables: { faq_doc_id: delTarget.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       setDelTarget(null);
       refetchRef.current?.();
     } catch (e: any) {

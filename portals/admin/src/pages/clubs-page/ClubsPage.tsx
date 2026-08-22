@@ -8,8 +8,10 @@ import { useApolloTableFetch } from '@duncit/table';
 import { CLUBS_TABLE, CATEGORIES, DELETE, type ClubRow } from './queries';
 import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
+import { useTranslation } from '@duncit/shell';
 
 export default function ClubsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   // Bookmarks from before the editor became a page still point at /clubs?edit=.
@@ -37,7 +39,7 @@ export default function ClubsPage() {
     if (!ok) return;
     try {
       await deleteMut({ variables: { id: c.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);

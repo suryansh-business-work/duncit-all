@@ -37,6 +37,7 @@ const makeDeps = (over: Partial<PodsColumnDeps> = {}): PodsColumnDeps => ({
   onDelete: vi.fn(),
   onComplete: vi.fn(),
   onMonitor: vi.fn(),
+  t: (key: string) => key,
   ...over,
 });
 

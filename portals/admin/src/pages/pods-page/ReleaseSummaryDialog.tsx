@@ -9,6 +9,7 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 export interface ReleaseSummaryRelease {
   id: string;
@@ -35,9 +36,10 @@ export default function ReleaseSummaryDialog({
   summary,
   onClose,
 }: Readonly<{ summary: ReleaseSummary | null; onClose: () => void }>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!summary} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Pod completed — payouts released</DialogTitle>
+      <DialogTitle>{t('admin.completePod.released')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Each payout below has been credited to its beneficiary&apos;s wallet.

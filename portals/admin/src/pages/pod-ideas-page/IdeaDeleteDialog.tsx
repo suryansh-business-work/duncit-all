@@ -6,6 +6,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   target: any;
@@ -14,9 +15,10 @@ interface Props {
 }
 
 export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!target} onClose={onClose}>
-      <DialogTitle>Delete idea?</DialogTitle>
+      <DialogTitle>{t('admin.podIdeas.deleteTitle')}</DialogTitle>
       <DialogContent>
         <Typography>
           This will permanently delete <b>{target?.title}</b> along with all its comments.
@@ -25,7 +27,7 @@ export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonl
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button color="error" variant="contained" onClick={onConfirm}>
-          Delete
+          {t('shell.common.delete')}
         </Button>
       </DialogActions>
     </Dialog>

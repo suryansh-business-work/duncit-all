@@ -6,6 +6,7 @@ import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EventTicketRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<EventTicketRow>;
@@ -20,10 +21,12 @@ const STATUS_COLOR: StatusColorMap = {
   CANCELLED: 'default',
 };
 
-const STATUS_OPTIONS = [
-  { value: 'VALID', label: 'Valid' },
-  { value: 'CHECKED_IN', label: 'Checked in' },
-  { value: 'CANCELLED', label: 'Cancelled' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusOptions = (t: Translate) => [
+  { value: 'VALID', label: t('admin.eventTickets.valid') },
+  { value: 'CHECKED_IN', label: t('admin.eventTickets.checkedIn') },
+  { value: 'CANCELLED', label: t('admin.eventTickets.cancelled') },
 ];
 
 const fmt = (iso?: string | null) =>
@@ -79,22 +82,23 @@ export default function EventTicketsTable({
   onDownload,
   onCheckIn,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EventTicketRow>[]>(() => {
-    const renderActions = (t: EventTicketRow) => (
+    const renderActions = (ticket: EventTicketRow) => (
       <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Download ticket">
-          <IconButton size="small" onClick={() => onDownload(t)} aria-label="Download ticket">
+        <Tooltip title={t('admin.eventTickets.downloadTicket')}>
+          <IconButton size="small" onClick={() => onDownload(ticket)} aria-label={t('admin.eventTickets.downloadTicket')}>
             <DownloadIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t.status === 'CHECKED_IN' ? 'Checked in' : 'Check in'}>
+        <Tooltip title={ticket.status === 'CHECKED_IN' ? t('admin.eventTickets.checkedIn') : t('admin.eventTickets.checkIn')}>
           <span>
             <IconButton
               size="small"
               color="success"
-              disabled={t.status !== 'VALID'}
-              onClick={() => onCheckIn(t)}
-              aria-label="Check in"
+              disabled={ticket.status !== 'VALID'}
+              onClick={() => onCheckIn(ticket)}
+              aria-label={t('admin.eventTickets.checkIn')}
             >
               <CheckCircleIcon fontSize="small" />
             </IconButton>
@@ -103,10 +107,10 @@ export default function EventTicketsTable({
       </Stack>
     );
     return [
-      { field: 'ticket_code', headerName: 'Ticket', minWidth: 140, cellRenderer: renderCode, valueGetter: (t) => t.ticket_code },
+      { field: 'ticket_code', headerName: t('admin.eventTickets.colTicket'), minWidth: 140, cellRenderer: renderCode, valueGetter: (t) => t.ticket_code },
       {
         field: 'pod_title',
-        headerName: 'Event',
+        headerName: t('admin.eventTickets.colEvent'),
         flex: 1,
         minWidth: 200,
         cellRenderer: renderEvent,
@@ -114,24 +118,24 @@ export default function EventTicketsTable({
       },
       {
         field: 'user_name',
-        headerName: 'Attendee',
+        headerName: t('admin.eventTickets.colAttendee'),
         flex: 1,
         minWidth: 180,
         cellRenderer: renderAttendee,
         valueGetter: (t) => t.user_name,
       },
-      { field: 'pod_date_time', headerName: 'When', minWidth: 170, valueGetter: (t) => fmt(t.pod_date_time) },
+      { field: 'pod_date_time', headerName: t('admin.eventTickets.colWhen'), minWidth: 170, valueGetter: (t) => fmt(t.pod_date_time) },
       {
         field: 'status',
-        headerName: 'Status',
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        headerName: t('shell.common.status'),
+        filter: { type: 'select', options: statusOptions(t) },
         minWidth: 140,
         cellRenderer: renderStatus,
         valueGetter: (t) => t.status.replace('_', ' '),
       },
       {
         field: 'checked_in_at',
-        headerName: 'Checked in',
+        headerName: t('admin.eventTickets.checkedIn'),
         filter: { type: 'date' },
         hide: true,
         minWidth: 170,
@@ -139,13 +143,13 @@ export default function EventTicketsTable({
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         filter: { type: 'date' },
         hide: true,
         minWidth: 170,
         valueGetter: (t) => fmt(t.created_at),
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 110, cellRenderer: renderActions },
     ];
   }, [onDownload, onCheckIn]);
 
@@ -155,7 +159,7 @@ export default function EventTicketsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getTicketRowId}
-      emptyText="No tickets yet."
+      emptyText={t('admin.eventTickets.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search code, attendee or event"
       refetchRef={refetchRef}

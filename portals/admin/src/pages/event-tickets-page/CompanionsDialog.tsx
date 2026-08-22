@@ -10,6 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 /** Same rule the server enforces on a companion's number (6-15 digits). */
 const PHONE = /^\d{6,15}$/;
@@ -52,6 +53,7 @@ export default function CompanionsDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<CompanionValue[]>(() => blank(required));
   const [touched, setTouched] = useState(false);
 
@@ -74,7 +76,7 @@ export default function CompanionsDialog({
 
   return (
     <Dialog open={!!ticketCode} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Who else is coming in?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('admin.companions.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           <Typography variant="caption" color="text.secondary">
@@ -90,7 +92,7 @@ export default function CompanionsDialog({
               <TextField
                 size="small"
                 required
-                label="Name"
+                label={t('shell.common.name')}
                 value={row.name}
                 onChange={(e) => set(index, { name: e.target.value })}
                 error={touched && row.name.trim().length < 2}
@@ -99,7 +101,7 @@ export default function CompanionsDialog({
               <TextField
                 size="small"
                 required
-                label="Phone"
+                label={t('shell.common.phone')}
                 inputMode="numeric"
                 value={row.phone_number}
                 onChange={(e) => set(index, { phone_number: e.target.value })}
@@ -113,13 +115,13 @@ export default function CompanionsDialog({
             </Stack>
           ))}
           {touched && !complete && (
-            <Alert severity="warning">Fill in every name and phone number.</Alert>
+            <Alert severity="warning">{t('admin.companions.incomplete')}</Alert>
           )}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={submit} disabled={busy}>
           {busy ? 'Marking…' : 'Mark attendance'}

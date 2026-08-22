@@ -7,8 +7,10 @@ import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import PodPlanFormDialog, { type PodPlanFormValues } from './PodPlanFormDialog';
 import PodPlansTable, { type PlanRow } from './PodPlansTable';
 import { CREATE_POD_PLAN, DELETE_POD_PLAN, PLANS_TABLE, UPDATE_POD_PLAN } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 export default function PodPlansPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createMut, createState] = useMutation(CREATE_POD_PLAN);
@@ -40,7 +42,7 @@ export default function PodPlansPage() {
 
   const onDelete = async (row: PlanRow) => {
     const ok = await confirm({
-      title: 'Delete plan',
+      title: t('admin.podPlans.deletePlan'),
       message: `Delete plan "${row.name}"?`,
       destructive: true,
       confirmLabel: 'Delete',

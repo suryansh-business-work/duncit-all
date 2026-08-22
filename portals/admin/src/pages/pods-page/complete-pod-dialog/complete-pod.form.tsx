@@ -17,6 +17,7 @@ import { RhfTextField } from '@duncit/forms';
 import { MediaListField } from '@duncit/media-picker';
 import SettlementPreview from './SettlementPreview';
 import type { CompletePodDialogProps, CompletePodValues } from './complete-pod.types';
+import { useTranslation } from '@duncit/shell';
 
 export const mediaTextToInput = (value: string) =>
   value
@@ -25,15 +26,18 @@ export const mediaTextToInput = (value: string) =>
     .filter(Boolean)
     .map((url) => ({ url, type: /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
 
-/** Schema depends on whether the pod has a venue: only then is a bill amount required. */
-export const buildCompleteSchema = (hasVenue: boolean) =>
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Schema depends on whether the pod has a venue: only then is a bill amount
+ *  required. Messages are copy, so the translator comes in with it. */
+export const buildCompleteSchema = (hasVenue: boolean, t: Translate) =>
   z.object({
-    host_user_id: z.string().trim().min(1, 'Select host'),
+    host_user_id: z.string().trim().min(1, t('admin.completePod.selectHost')),
     venue_bill_amount: hasVenue
-      ? z.coerce.number({ message: 'Enter a valid amount' }).gt(0, 'Venue bill must be greater than 0')
-      : z.coerce.number({ message: 'Enter a valid amount' }).min(0),
-    media_text: z.string().trim().min(1, 'Upload at least one party photo or video'),
-    notes: z.string().trim().max(1000, 'Notes must be 1000 characters or fewer'),
+      ? z.coerce.number({ message: t('admin.completePod.invalidAmount') }).gt(0, t('admin.completePod.billPositive'))
+      : z.coerce.number({ message: t('admin.completePod.invalidAmount') }).min(0),
+    media_text: z.string().trim().min(1, t('admin.completePod.mediaRequired')),
+    notes: z.string().trim().max(1000, t('admin.completePod.notesTooLong')),
   });
 
 /** Maps validated values onto the server's CompletePodInput. */
@@ -56,6 +60,7 @@ export default function CompletePodDialog({
   onClose,
   onSubmit,
 }: Readonly<CompletePodDialogProps>) {
+  const { t } = useTranslation();
   const hasVenue = !!pod?.venue_id;
   const hostIds = (pod?.pod_hosts_id ?? []) as string[];
   const hostOptions = hostIds.map((id) => users.find((user) => user.user_id === id) ?? { user_id: id, full_name: id });
@@ -68,7 +73,7 @@ export default function CompletePodDialog({
 
   const { control, handleSubmit, watch, reset } = useForm<CompletePodValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(buildCompleteSchema(hasVenue)) as Resolver<CompletePodValues>,
+    resolver: zodResolver(buildCompleteSchema(hasVenue, t)) as Resolver<CompletePodValues>,
     mode: 'onTouched',
   });
 
@@ -90,7 +95,7 @@ export default function CompletePodDialog({
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
           <form noValidate onSubmit={submit}>
             <Stack spacing={1.5}>
-              <RhfTextField control={control} name="host_user_id" select label="Host">
+              <RhfTextField control={control} name="host_user_id" select label={t('admin.completePod.host')}>
                 {hostOptions.map((host) => (
                   <MenuItem key={host.user_id} value={host.user_id}>
                     {host.full_name || host.email || host.user_id}
@@ -98,14 +103,14 @@ export default function CompletePodDialog({
                 ))}
               </RhfTextField>
               {hasVenue && (
-                <RhfTextField control={control} name="venue_bill_amount" type="number" label="Venue bill amount" required />
+                <RhfTextField control={control} name="venue_bill_amount" type="number" label={t('admin.completePod.venueBill')} required />
               )}
               <Controller
                 control={control}
                 name="media_text"
                 render={({ field, fieldState }) => (
                   <MediaListField
-                    label="Party photos & videos"
+                    label={t('admin.completePod.media')}
                     buttonLabel="Add media"
                     value={field.value}
                     onChange={field.onChange}
@@ -117,7 +122,7 @@ export default function CompletePodDialog({
               {pod && (
                 <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} hostUserId={selectedHostId} />
               )}
-              <RhfTextField control={control} name="notes" label="Notes" multiline minRows={2} />
+              <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />
               <Button type="submit" variant="contained" disabled={busy}>
                 {busy ? 'Completing…' : 'Complete pod'}
               </Button>

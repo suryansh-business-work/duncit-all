@@ -26,6 +26,7 @@ import {
 import IdeaCommentsList from './IdeaCommentsList';
 import IdeaActionsBar from './IdeaActionsBar';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface DetailsProps {
   id: string;
@@ -34,6 +35,7 @@ interface DetailsProps {
 }
 
 export default function DetailsDialog({ id, onClose, onChanged }: Readonly<DetailsProps>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -95,7 +97,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
       <IdeaCommentsList comments={idea.comments} onDelete={setConfirmDeleteId} />
     </>
   ) : (
-    <Alert severity="warning">Idea not found.</Alert>
+    <Alert severity="warning">{t('admin.podIdeas.notFound')}</Alert>
   );
 
   return (
@@ -126,7 +128,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
         open={!!confirmDeleteId}
         onClose={() => (deletingComment ? undefined : setConfirmDeleteId(null))}
       >
-        <DialogTitle>Delete this comment?</DialogTitle>
+        <DialogTitle>{t('admin.podIdeas.deleteComment')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
             This permanently removes the comment from the idea. You cannot undo this action.
@@ -134,7 +136,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDeleteId(null)} disabled={deletingComment}>
-            Cancel
+            {t('shell.common.cancel')}
           </Button>
           <Button
             onClick={handleDeleteComment}

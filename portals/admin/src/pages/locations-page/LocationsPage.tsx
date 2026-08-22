@@ -15,8 +15,10 @@ import { blankForm, buildLocationInput, type LocForm, type ZoneEdit } from './ty
 import LocationsTable from './LocationsTable';
 import LocationFormDialog from './LocationFormDialog';
 import LocationsToolbar from './LocationsToolbar';
+import { useTranslation } from '@duncit/shell';
 
 export default function LocationsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createMut] = useMutation(CREATE_LOCATION);
@@ -88,7 +90,7 @@ export default function LocationsPage() {
       } else {
         await createMut({ variables: { input } });
       }
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
       setDialogOpen(false);
       refetchRef.current?.();
     } catch (e: any) {
@@ -108,7 +110,7 @@ export default function LocationsPage() {
     if (!ok) return;
     try {
       await deleteMut({ variables: { id: loc.id } });
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);

@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { PodPlanFormValues } from './PodPlanFormDialog';
+import { useTranslation } from '@duncit/shell';
 
 export interface PlanRow extends PodPlanFormValues {
   id: string;
@@ -47,14 +48,16 @@ const renderName = (r: PlanRow) => (
 
 const renderKey = (r: PlanRow) => <code>{r.key}</code>;
 
-const renderStatus = (r: PlanRow) => (
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const renderStatus = (r: PlanRow, t: Translate) => (
   <Stack direction="row" spacing={0.5} component="span">
     <Chip
       size="small"
       label={r.is_active ? 'Active' : 'Inactive'}
       color={r.is_active ? 'success' : 'default'}
     />
-    {r.is_coming_soon && <Chip size="small" label="Coming soon" color="warning" />}
+    {r.is_coming_soon && <Chip size="small" label={t('admin.podPlans.comingSoon')} color="warning" />}
   </Stack>
 );
 
@@ -65,11 +68,12 @@ export default function PodPlansTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PlanRow>[]>(() => {
     return [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: t('shell.common.name'),
         flex: 1,
         minWidth: 220,
         cellRenderer: renderName,
@@ -77,7 +81,7 @@ export default function PodPlansTable({
       },
       {
         field: 'key',
-        headerName: 'Key',
+        headerName: t('admin.podPlans.key'),
         filter: { type: 'text' },
         width: 130,
         cellRenderer: renderKey,
@@ -85,34 +89,34 @@ export default function PodPlansTable({
       },
       {
         field: 'price_label',
-        headerName: 'Price label',
+        headerName: t('admin.podPlans.priceLabel'),
         minWidth: 140,
         valueGetter: (r) => r.price_label || '—',
       },
       {
         field: 'features',
-        headerName: 'Features',
+        headerName: t('admin.podPlans.features'),
         sortable: false,
         width: 100,
         valueGetter: (r) => (r.features ?? []).length,
       },
       {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         filter: { type: 'boolean' },
         minWidth: 180,
-        cellRenderer: renderStatus,
+        cellRenderer: (row: PlanRow) => renderStatus(row, t),
         valueGetter: (r) => (r.is_active ? 'Active' : 'Inactive'),
       },
       {
         field: 'is_coming_soon',
-        headerName: 'Coming soon',
+        headerName: t('admin.podPlans.comingSoon'),
         filter: { type: 'boolean' },
         hide: true,
         width: 130,
         valueGetter: (r) => (r.is_coming_soon ? 'Yes' : 'No'),
       },
-      { field: 'sort_order', headerName: 'Sort', hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), hide: true, width: 90 },
       actionsColumn<PlanRow>({ onEdit, onDelete }),
     ];
   }, [onEdit, onDelete]);

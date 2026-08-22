@@ -17,6 +17,7 @@ import {
 import AppsIcon from '@mui/icons-material/Apps';
 import MediaPickerField from '../../components/MediaPickerField';
 import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
+import { useTranslation } from '@duncit/shell';
 
 const POSITIONS = ['TOP', 'LEFT', 'RIGHT', 'BOTTOM'] as const;
 type Position = (typeof POSITIONS)[number];
@@ -36,6 +37,7 @@ const titleCase = (p: Position) => p[0] + p.slice(1).toLowerCase();
  * singleton (`home_all_vibe_icon_url` / `home_all_vibe_icon_layout`).
  */
 export default function AllVibeIconCard() {
+  const { t } = useTranslation();
   const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
   const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
 
@@ -80,7 +82,7 @@ export default function AllVibeIconCard() {
           },
         },
       });
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
     } catch (e: any) {
       setOpError(e.message);
     } finally {

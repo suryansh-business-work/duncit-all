@@ -19,6 +19,7 @@ import {
   podPlanFormSchema,
   type PodPlanFormValues,
 } from './pod-plan';
+import { useTranslation } from '@duncit/shell';
 
 export type { PodPlanFormValues } from './pod-plan';
 
@@ -37,6 +38,7 @@ const toFormValues = (editing: (PodPlanFormValues & { id?: string }) | null): Po
 };
 
 export default function PodPlanFormDialog({ open, editing, loading, onClose, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset } = useForm<PodPlanFormValues>({
     defaultValues: toFormValues(editing),
     resolver: zodResolver(podPlanFormSchema),
@@ -61,21 +63,21 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
             <RhfTextField
               control={control}
               name="key"
-              label="Key"
+              label={t('admin.podPlans.key')}
               hint="e.g. free, premium"
               disabled={!!editing}
               size="small"
               required
             />
-            <RhfTextField control={control} name="name" label="Display name" size="small" required />
-            <RhfTextField control={control} name="description" label="Description" multiline minRows={2} size="small" />
-            <RhfTextField control={control} name="image_url" label="Image URL" size="small" />
+            <RhfTextField control={control} name="name" label={t('admin.podPlans.displayName')} size="small" required />
+            <RhfTextField control={control} name="description" label={t('shell.common.description')} multiline minRows={2} size="small" />
+            <RhfTextField control={control} name="image_url" label={t('admin.podPlans.imageUrl')} size="small" />
             <Controller
               control={control}
               name="features"
               render={({ field }) => (
                 <TextField
-                  label="Features (one per line)"
+                  label={t('admin.podPlans.featuresField')}
                   value={(field.value ?? []).join('\n')}
                   onChange={(event) => field.onChange(parsePodPlanFeatures(event.target.value))}
                   multiline
@@ -86,12 +88,12 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
               )}
             />
             <Stack direction="row" spacing={2}>
-              <RhfTextField control={control} name="price_label" label="Price label" size="small" />
+              <RhfTextField control={control} name="price_label" label={t('admin.podPlans.priceLabel')} size="small" />
               <RhfTextField
                 control={control}
                 name="sort_order"
                 type="number"
-                label="Sort order"
+                label={t('admin.podPlans.sortOrder')}
                 size="small"
                 fullWidth={false}
                 sx={{ width: 130 }}
@@ -104,7 +106,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />}
-                    label="Coming soon"
+                    label={t('admin.podPlans.comingSoon')}
                   />
                 )}
               />
@@ -114,7 +116,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />}
-                    label="Active"
+                    label={t('admin.profile.active')}
                   />
                 )}
               />

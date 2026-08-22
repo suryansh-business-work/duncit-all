@@ -19,6 +19,7 @@ import AllVibeIconCard from './AllVibeIconCard';
 import VibeHeadingCard from './VibeHeadingCard';
 import { buildCreateInput, buildMediaFromText, buildUpdateInput } from './helpers';
 import { isImageIconValue } from '../../components/IconPickerField';
+import { useTranslation } from '@duncit/shell';
 
 interface DialogState {
   open: boolean;
@@ -28,6 +29,7 @@ interface DialogState {
 }
 
 export default function CategoriesPage() {
+  const { t } = useTranslation();
   const [superSel, setSuperSel] = useState<CatItem | null>(null);
   const [catSel, setCatSel] = useState<CatItem | null>(null);
 
@@ -104,7 +106,7 @@ export default function CategoriesPage() {
           refetchQueries,
         });
       }
-      setToast('Saved');
+      setToast(t('shell.common.saved'));
       setDialog(null);
     } catch (e: any) {
       setOpError(e.message);
@@ -131,7 +133,7 @@ export default function CategoriesPage() {
       if (delTarget.level === 'CATEGORY' && catSel?.id === delTarget.item.id) {
         setCatSel(null);
       }
-      setToast('Deleted');
+      setToast(t('shell.common.deleted'));
       setDelTarget(null);
     } catch (e: any) {
       setDelError(e.message);

@@ -12,6 +12,7 @@ import {
   SOURCE_OPTIONS,
   type PodAuditLog,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getRowId = (row: PodAuditLog) => row.id;
 
@@ -38,25 +39,26 @@ interface Props {
 /** AI-monitored pod activity table — shared column set for the Admin and
  * Partners (Club Admin) monitoring pages. */
 export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PodAuditLog>[]>(
     () => [
       {
         field: 'created_at',
-        headerName: 'When',
+        headerName: t('admin.eventTickets.colWhen'),
         width: 170,
         filter: { type: 'date' },
         valueGetter: (row) => fmtWhen(row.created_at),
       },
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('admin.podMonitoring.colPod'),
         flex: 1,
         minWidth: 170,
         valueGetter: (row) => row.pod_title || row.pod_id,
       },
       {
         field: 'action',
-        headerName: 'Action',
+        headerName: t('admin.podMonitoring.colAction'),
         width: 150,
         filter: { type: 'select', options: ACTION_OPTIONS },
         cellRenderer: renderAction,
@@ -72,14 +74,14 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
       },
       {
         field: 'changes',
-        headerName: 'Changes',
+        headerName: t('admin.podMonitoring.colChanges'),
         sortable: false,
         width: 100,
         valueGetter: (row) => String(row.changes.length),
       },
       {
         field: 'ai_risk',
-        headerName: 'AI Risk',
+        headerName: t('admin.podMonitoring.colAiRisk'),
         width: 120,
         filter: { type: 'select', options: RISK_OPTIONS },
         cellRenderer: renderRisk,
@@ -87,7 +89,7 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
       },
       {
         field: 'ai_summary',
-        headerName: 'AI Summary',
+        headerName: t('admin.podMonitoring.colAiSummary'),
         sortable: false,
         flex: 1.4,
         minWidth: 220,
@@ -105,7 +107,7 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onRowClick}
-      emptyText="No pod activity recorded yet."
+      emptyText={t('admin.podMonitoring.empty')}
       searchPlaceholder="Search pod, actor or AI summary"
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       refetchRef={refetchRef}

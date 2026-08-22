@@ -13,6 +13,7 @@ import {
   type CouponRow,
 } from '@duncit/coupons';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   podId: string;
@@ -24,6 +25,7 @@ interface Props {
  * the Marketing portal's /coupons page renders, from @duncit/coupons (rule 40);
  * only the pod filter and the locked pod are this page's own. */
 export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [deleteCoupon] = useMutation(DELETE_COUPON);
@@ -40,7 +42,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   );
 
   const onDelete = async (c: CouponRow) => {
-    const ok = await confirm({ title: 'Delete coupon', message: `Delete coupon "${c.code}"?` });
+    const ok = await confirm({ title: t('admin.pods.deleteCoupon'), message: `Delete coupon "${c.code}"?` });
     if (!ok) return;
     try {
       await deleteCoupon({ variables: { id: c.id } });
@@ -54,7 +56,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   return (
     <SectionCard
       icon={<LocalOfferIcon fontSize="small" />}
-      title="Offer codes"
+      title={t('admin.pods.offerCodes')}
       tone="info"
       action={
         <Button

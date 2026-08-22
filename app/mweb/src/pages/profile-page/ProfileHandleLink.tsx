@@ -54,6 +54,10 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
         justifyContent="center"
         aria-label={labels.copyLink}
         sx={{
+          // A flex element is block-level, so it would fill the card and the
+          // hover fill would span it — `fit-content` keeps the target the
+          // size of the handle it is on.
+          width: 'fit-content',
           mx: 'auto',
           px: 1,
           py: 0.25,

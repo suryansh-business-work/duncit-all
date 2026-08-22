@@ -25,6 +25,12 @@ const partnerFaqTopics = (t: Translate): FaqCategoryOption[] => [
 const topicLabel = (row: FaqRow, topics: FaqCategoryOption[]) =>
   topics.find((topic) => topic.value === row.partner_topic)?.label ?? row.partner_topic ?? '—';
 
+/** The topic chip, built out here so the column holds a plain reference rather
+ *  than a component redefined on every render (S6478). */
+const renderTopic = (topics: FaqCategoryOption[]) => (row: FaqRow) => (
+  <Chip size="small" label={topicLabel(row, topics)} />
+);
+
 const toPartnerFaqInput = (values: FaqFormValues) => ({
   audience: 'PARTNERS',
   partner_topic: values.category,
@@ -64,7 +70,7 @@ export default function PartnerFaqsPage() {
       headerName: t('support.faqs.topic'),
       filter: { type: 'select', options: topics },
       minWidth: 140,
-      cellRenderer: (row: FaqRow) => <Chip size="small" label={topicLabel(row, topics)} />,
+      cellRenderer: renderTopic(topics),
       valueGetter: (row) => topicLabel(row, topics),
     }),
     [t, topics],

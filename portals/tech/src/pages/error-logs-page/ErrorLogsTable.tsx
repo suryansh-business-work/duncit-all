@@ -109,7 +109,7 @@ export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readon
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No server-operation errors logged yet."
+      emptyText={t('tech.errorLogs.noServerOperationErrorsLoggedYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search page, source or message"
       refetchRef={refetchRef}

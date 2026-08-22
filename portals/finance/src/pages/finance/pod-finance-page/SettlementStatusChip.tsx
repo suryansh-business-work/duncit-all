@@ -19,5 +19,6 @@ export default function SettlementStatusChip({ status }: Readonly<{ status: PodS
 
 /** Shown when the breakdown is rendered from the frozen completion snapshot. */
 export function FrozenBadge() {
-  return <Chip size="small" variant="outlined" icon={<AcUnitIcon />} label="Frozen snapshot" />;
+  const { t } = useTranslation();
+  return <Chip size="small" variant="outlined" icon={<AcUnitIcon />} label={t('finance.podFinance.frozenSnapshot')} />;
 }

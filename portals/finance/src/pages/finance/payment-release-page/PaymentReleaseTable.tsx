@@ -162,7 +162,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getReleaseRowId}
-      emptyText="No payment release requests found."
+      emptyText={t('finance.paymentRelease.noPaymentReleaseRequestsFound')}
       defaultSort={{ field: 'requested_at', dir: 'desc' }}
       searchPlaceholder="Search release, pod or beneficiary"
       refetchRef={refetchRef}

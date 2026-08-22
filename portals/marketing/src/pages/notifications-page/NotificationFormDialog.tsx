@@ -101,7 +101,7 @@ export default function NotificationFormDialog({
               render={({ field }) => (
                 <FormControlLabel
                   control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />}
-                  label="Silent (in-app only — no push alert)"
+                  label={t('marketing.notifications.silentInAppOnlyNoPush')}
                 />
               )}
             />

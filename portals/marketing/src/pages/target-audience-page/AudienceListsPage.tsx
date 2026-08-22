@@ -84,7 +84,7 @@ export default function AudienceListsPage() {
         getRowId={getRowId}
         onRowClick={openList}
         refetchRef={refetchRef}
-        emptyText="No audience lists yet. Create one to get started."
+        emptyText={t('marketing.targetAudience.noAudienceListsYetCreateOne')}
         searchPlaceholder="Search lists by name, description or owner"
         defaultSort={{ field: 'created_at', dir: 'desc' }}
       />

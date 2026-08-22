@@ -28,7 +28,7 @@ export default function ScheduleField({
                 onChange={(_, on) => field.onChange(on ? defaultScheduleIso() : '')}
               />
             }
-            label="Schedule for later"
+            label={t('marketing.whatsappCampaigns.scheduleForLater')}
           />
           {field.value ? (
             <DateTimeField

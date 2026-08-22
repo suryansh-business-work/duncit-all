@@ -186,7 +186,7 @@ export default function WaCampaignTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onOpen}
-      emptyText="Nothing sent yet — start a send from the Campaigns tab."
+      emptyText={t('marketing.whatsappCampaigns.nothingSentYetStartASend')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or WhatsApp campaign"
       refetchRef={refetchRef}

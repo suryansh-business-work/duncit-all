@@ -183,7 +183,7 @@ export default function EmailLogsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No emails yet."
+      emptyText={t('tech.emailLogs.noEmailsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search recipient, subject, template or reason"
       refetchRef={refetchRef}

@@ -7,24 +7,26 @@ import DoDisturbOnIcon from '@mui/icons-material/DoDisturbOn';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import type { EmailLogDashboardData } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const TILE_SX = { flex: 1, minWidth: 200 };
 
 export default function HeadlineTiles({ data }: Readonly<{ data: EmailLogDashboardData }>) {
+  const { t } = useTranslation();
   const refusedColor = data.partially_refused > 0 ? 'warning.main' : 'text.secondary';
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} flexWrap="wrap" useFlexGap>
       <StatCard
         sx={TILE_SX}
         icon={<GroupsIcon fontSize="small" />}
-        label="RECIPIENTS ADDRESSED"
+        label={t('tech.emailsDashboard.recipientsAddressed')}
         value={data.recipients.toLocaleString()}
         hint="People addressed, not rows — one bcc batch carries up to fifty of them."
       />
       <StatCard
         sx={TILE_SX}
         icon={<OutboxIcon fontSize="small" />}
-        label="ATTEMPTS (LOG ROWS)"
+        label={t('tech.emailsDashboard.attemptsLogRows')}
         value={formatDateTime(data.attempts)}
         hint="One row per send call, whatever it carried."
       />

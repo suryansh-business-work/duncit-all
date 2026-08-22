@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { USER_SURVEY_RESPONSES, type SurveyKind, type UserSurveyResponse } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   userId: string;
@@ -14,7 +15,11 @@ interface Props {
  * one onboarding kind — the same block the meeting drawer, the meeting decision
  * dialog and the host review dialog all need.
  */
-export default function SurveyAnswers({ userId, kind, title = 'Survey answers' }: Readonly<Props>) {
+export default function SurveyAnswers({ userId, kind, title }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const titleText = title ?? t('onboarding.surveys.surveyAnswers');
   const { data, loading } = useQuery<{ userSurveyResponses: UserSurveyResponse[] }>(
     USER_SURVEY_RESPONSES,
     { variables: { user_id: userId }, skip: !userId, fetchPolicy: 'cache-and-network' },
@@ -27,7 +32,7 @@ export default function SurveyAnswers({ userId, kind, title = 'Survey answers' }
     <Box data-testid="survey-answers">
       {title && (
         <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
-          {title}
+          {titleText}
         </Typography>
       )}
       {loading && items.length === 0 && (

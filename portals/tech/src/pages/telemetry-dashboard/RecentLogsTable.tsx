@@ -58,7 +58,7 @@ export default function RecentLogsTable() {
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getLogRowId}
-      emptyText="No telemetry logs persisted yet."
+      emptyText={t('tech.telemetryDashboard.noTelemetryLogsPersistedYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search page, component or source"
     />

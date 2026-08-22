@@ -98,7 +98,7 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPortalRowId}
-      emptyText="No portals match your search."
+      emptyText={t('tech.environment.noPortalsMatchYourSearch')}
       searchPlaceholder="Search portals by name or key…"
       refetchRef={refetchRef}
     />

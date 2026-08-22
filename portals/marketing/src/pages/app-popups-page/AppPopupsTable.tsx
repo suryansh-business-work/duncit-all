@@ -187,7 +187,7 @@ export default function AppPopupsTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       toolbarActions={toolbarActions}
-      emptyText="No app popups yet"
+      emptyText={t('marketing.appPopups.noAppPopupsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search popup name"
       refetchRef={refetchRef}

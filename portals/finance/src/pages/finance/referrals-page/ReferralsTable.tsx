@@ -61,7 +61,7 @@ export default function ReferralsTable({ fetchRows }: Readonly<Props>) {
       columns={columns(t)}
       fetchRows={fetchRows}
       getRowId={getReferralRowId}
-      emptyText="No referrals yet."
+      emptyText={t('finance.referrals.noReferralsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search referral code"
     />

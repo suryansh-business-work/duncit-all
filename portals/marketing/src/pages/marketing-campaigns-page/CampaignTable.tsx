@@ -178,7 +178,7 @@ export default function CampaignTable({
       fetchRows={fetchRows}
       getRowId={getCampaignRowId}
       onRowClick={onView}
-      emptyText="No campaigns yet. Create one to reach your audience."
+      emptyText={t('marketing.marketingCampaigns.noCampaignsYetCreateOneTo')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or subject"
       refetchRef={refetchRef}

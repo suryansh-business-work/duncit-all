@@ -108,7 +108,7 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No per-recipient record for this send."
+      emptyText={t('marketing.whatsappCampaigns.noPerRecipientRecordForThis')}
       defaultSort={{ field: 'created_at', dir: 'asc' }}
       defaultPageSize={10}
       searchPlaceholder="Search name, number or reason"

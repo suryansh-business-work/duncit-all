@@ -23,7 +23,7 @@ export default function AdsApprovalsTable({ fetchRows, refetchRef, onReview }: R
       fetchRows={fetchRows}
       getRowId={getAdRowId}
       onRowClick={onReview}
-      emptyText="No ad requests match the current filters."
+      emptyText={t('marketing.adsApprovals.noAdRequestsMatchTheCurrent')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search trace ID or ad title"
       refetchRef={refetchRef}

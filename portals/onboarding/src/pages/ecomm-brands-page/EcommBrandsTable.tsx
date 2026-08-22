@@ -166,7 +166,7 @@ export default function EcommBrandsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getBrandRowId}
-      emptyText="No brands found."
+      emptyText={t('onboarding.ecommBrands.noBrandsFound')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search brand, contact or city"
       refetchRef={refetchRef}

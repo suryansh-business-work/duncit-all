@@ -126,7 +126,7 @@ export default function PodFinancePage() {
         fetchRows={fetchRows}
         getRowId={getGroupRowId}
         onRowClick={openDetail}
-        emptyText="No pods with payment activity yet."
+        emptyText={t('finance.podFinance.noPodsWithPaymentActivityYet')}
         defaultSort={{ field: 'last_requested_at', dir: 'desc' }}
         searchPlaceholder="Search pod title"
       />

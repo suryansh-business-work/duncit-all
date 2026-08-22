@@ -49,6 +49,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       reviewNotes: 'Review notes',
       searchClubs: 'Search clubs',
       usedForOnboardingContactTheLogin: 'Used for onboarding contact. The login account is not changed.',
+      noClubAdminsOnboardedYet: 'No Club Admins onboarded yet.',
     },
     common: {
       active: 'Active',
@@ -109,6 +110,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       products: 'Products',
       productSalesCommission: 'Product sales commission',
       website: 'Website',
+      noBrandsFound: 'No brands found.',
     },
     hardDeleteDialog: {
       yourEmail: 'Your email',
@@ -141,6 +143,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       phoneNumber: 'Phone Number',
       rejectHostRequest: 'Reject host request',
       requestedOn: 'Requested On',
+      noHostRequestsFound: 'No host requests found.',
     },
     hosts: {
       aadhar: 'Aadhar',
@@ -160,6 +163,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       policeVerification: 'Police verification',
       reviewHistory: 'Review history',
       userId: 'User ID',
+      noHostsFound: 'No hosts found.',
     },
     lifecycleActions: {
       deletePermanentlyDeveloper: 'Delete permanently (developer)',
@@ -231,6 +235,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       wed: 'Wed',
       workingDays: 'Working days',
       yourFeedback: 'Your feedback',
+      noMeetingsForThisFilter: 'No meetings for this filter.',
     },
     podsTable: {
       dateAndTime: 'Date & time',
@@ -271,6 +276,10 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       thisRemovesTheSurveyDefinitionExisting: 'This removes the survey definition. Existing responses are kept.',
       untitled: 'Untitled',
       venueSurveys: 'Venue Surveys',
+      allowMultipleAnswers: 'Allow multiple answers',
+      noCategorySpecificSurveysYetCreate: 'No category-specific surveys yet. Create one with New survey.',
+      required: 'Required',
+      surveyAnswers: 'Survey answers',
     },
     userDetails: {
       aRemarkOfAtLeast3: 'A remark of at least 3 characters is required.',
@@ -294,6 +303,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       registeredVenues: 'Registered Venues',
       venueId: 'Venue ID',
       viewPodsHostedAtThisVenue: 'View pods hosted at this venue',
+      noVenuesFound: 'No venues found.',
     },
   },
 };

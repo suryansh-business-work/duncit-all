@@ -133,7 +133,7 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
       getRowId={getRowId}
       onRowClick={(campaign) => setOpenName(campaign.name)}
       searchPlaceholder="Search campaign, status or template"
-      emptyText="No campaign matches that search."
+      emptyText={t('marketing.whatsappCampaigns.noCampaignMatchesThatSearch')}
       refetchRef={refetchRef}
     />
   );

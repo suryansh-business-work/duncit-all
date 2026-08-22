@@ -64,9 +64,9 @@ function buildWidgets(d: TelemetryDashboardData, errorCount: number, t: Translat
   });
 
   return [
-    kpi('total-logs', 0, <StatCard sx={{ height: '100%' }} icon={<ListAltIcon fontSize="small" />} label="TOTAL LOGS" value={String(d.total_logs)} />),
+    kpi('total-logs', 0, <StatCard sx={{ height: '100%' }} icon={<ListAltIcon fontSize="small" />} label={t('tech.telemetryDashboard.totalLogs')} value={String(d.total_logs)} />),
     kpi('errors', 3, <StatCard sx={{ height: '100%' }} icon={<ErrorOutlineIcon fontSize="small" />} label="ERRORS" value={String(errorCount)} />),
-    kpi('active-bugs', 6, <StatCard sx={{ height: '100%' }} icon={<BugReportIcon fontSize="small" />} label="ACTIVE BUGS" value={String(d.active_bugs)} />),
+    kpi('active-bugs', 6, <StatCard sx={{ height: '100%' }} icon={<BugReportIcon fontSize="small" />} label={t('tech.telemetryDashboard.activeBugs')} value={String(d.active_bugs)} />),
     kpi('sources', 9, <StatCard sx={{ height: '100%' }} icon={<HubIcon fontSize="small" />} label="SOURCES" value={String(d.by_source.length)} />),
     {
       id: 'by-level',

@@ -131,7 +131,7 @@ export default function DockerContainersTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getContainerRowId}
-      emptyText="No containers found."
+      emptyText={t('tech.server.noContainersFound')}
       defaultSort={{ field: 'name', dir: 'asc' }}
       searchPlaceholder="Search name, image or ID"
       refetchRef={refetchRef}

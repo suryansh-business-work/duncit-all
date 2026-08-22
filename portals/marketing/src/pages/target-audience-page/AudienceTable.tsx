@@ -33,7 +33,7 @@ export default function AudienceTable({
       getRowId={getRowId}
       refetchRef={refetchRef}
       externalFilters={externalFilters}
-      emptyText="No one matches these filters."
+      emptyText={t('marketing.targetAudience.noOneMatchesTheseFilters')}
       searchPlaceholder="Search by name, email or phone"
       defaultSort={{ field: 'created_at', dir: 'desc' }}
     />

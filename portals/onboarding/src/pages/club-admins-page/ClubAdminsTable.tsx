@@ -166,7 +166,7 @@ export default function ClubAdminsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText="No Club Admins onboarded yet."
+      emptyText={t('onboarding.clubAdmins.noClubAdminsOnboardedYet')}
       defaultSort={{ field: 'joined_at', dir: 'desc' }}
       searchPlaceholder="Search ID, name, email or phone"
       refetchRef={refetchRef}

@@ -112,7 +112,7 @@ export default function ShortLinksPage() {
         getRowId={getRowId}
         onRowClick={openLink}
         refetchRef={refetchRef}
-        emptyText="No short links yet. Create one to start tracking a channel."
+        emptyText={t('marketing.shortLinks.noShortLinksYetCreateOne')}
         searchPlaceholder="Search by label, code or destination"
         defaultSort={{ field: 'created_at', dir: 'desc' }}
       />

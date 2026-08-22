@@ -159,7 +159,7 @@ export default function VenuesTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getVenueRowId}
-      emptyText="No venues found."
+      emptyText={t('onboarding.venues.noVenuesFound')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, type, city or owner"
       refetchRef={refetchRef}

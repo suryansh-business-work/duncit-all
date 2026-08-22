@@ -131,7 +131,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPortalModeRowId}
-      emptyText="No portals registered."
+      emptyText={t('tech.portalModes.noPortalsRegistered')}
       searchPlaceholder="Search by name or key"
       refetchRef={refetchRef}
     />

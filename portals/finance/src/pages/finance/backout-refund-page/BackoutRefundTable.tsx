@@ -170,7 +170,7 @@ export default function BackoutRefundTable({
       fetchRows={fetchRows}
       getRowId={getBackoutRowId}
       onRowClick={onRowClick}
-      emptyText="No backout refund requests yet."
+      emptyText={t('finance.backoutRefund.noBackoutRefundRequestsYet')}
       searchPlaceholder="Search by Backout ID"
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       refetchRef={refetchRef}

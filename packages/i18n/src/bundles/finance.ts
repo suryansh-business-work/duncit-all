@@ -286,6 +286,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       replacementConfirmed: 'Replacement Confirmed?',
       spots: 'Spots',
       userId: 'User ID',
+      noBackoutRefundRequestsYet: 'No backout refund requests yet.',
     },
     calculators: {
       clubAdminCut: 'Club admin cut',
@@ -309,6 +310,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       venueCommissionDuncitIncome: 'Venue commission — Duncit income',
       venueFixedCost: 'Venue fixed cost',
       venueReceives: 'Venue receives',
+      priceTheCustomerPaysForOne: 'Price the customer pays for one spot, GST included.',
     },
     cancellations: {
       actor: 'Actor',
@@ -396,6 +398,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       source: 'Source',
       spentAtCheckout: 'Spent at checkout',
       user: 'User',
+      noCoinActivityYet: 'No coin activity yet.',
     },
     expenseManagement: {
       category: 'Category',
@@ -413,6 +416,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       removeRefund: 'Remove refund',
       vendor: 'Vendor',
       vendorPayee: 'Vendor / payee',
+      noExpensesMatchTheseFilters: 'No expenses match these filters.',
     },
     invoiceManagement: {
       billTo: 'BILL TO',
@@ -466,6 +470,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       venueAmountBookedSlotPrice: 'Venue amount (booked slot price)',
       venueBill: 'Venue bill',
       venueBilling: 'Venue Billing',
+      noPaymentReleaseRequestsFound: 'No payment release requests found.',
     },
     payoutCycles: {
       hostPayout: 'Host payout',
@@ -490,6 +495,8 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       theVenueSFixedBookedSlot: 'The venue’s fixed booked slot price (set in the Partners portal), clamped to the pool.',
       totalMatchesCustomerPayment: 'Total (matches customer payment)',
       venueReceives: 'Venue Receives',
+      frozenSnapshot: 'Frozen snapshot',
+      noPodsWithPaymentActivityYet: 'No pods with payment activity yet.',
     },
     referrals: {
       code: 'Code',
@@ -497,6 +504,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       referred: 'Referred',
       referrer: 'Referrer',
       shareMessage: 'Share message',
+      noReferralsYet: 'No referrals yet.',
     },
     startupDashboard: {
       formulaAndSettings: 'Formula & settings',

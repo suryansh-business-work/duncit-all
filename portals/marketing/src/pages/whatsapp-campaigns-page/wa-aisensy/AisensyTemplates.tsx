@@ -174,7 +174,7 @@ export default function AisensyTemplates() {
           getRowId={templateRowId}
           onRowClick={(template) => setOpenId(templateRowId(template))}
           searchPlaceholder="Search template, status or message text"
-          emptyText="No template matches that search."
+          emptyText={t('marketing.whatsappCampaigns.noTemplateMatchesThatSearch')}
           refetchRef={refetchRef}
         />
       </AisensySection>

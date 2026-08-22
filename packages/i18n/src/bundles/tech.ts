@@ -42,6 +42,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       occurrences: 'Occurrences',
       resolved: 'Resolved',
       trackedSince: 'Tracked since',
+      noBugsYetErrorLogsRoll: 'No bugs yet — error logs roll up here as they arrive.',
     },
     common: {
       app: 'App',
@@ -72,6 +73,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       variables: 'Variables',
       website: 'Website',
       when: 'When',
+      copyGetApi: 'Copy GET API',
     },
     copyGetApiButton: {
       aNoLoginUrlThatReturns: 'A no-login URL that returns these rows as JSON. Anyone holding it holds the data — rotate the key in Logs Settings if it leaks.',
@@ -86,6 +88,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       selectACategoryFromTheLeft: 'Select a category from the left.',
       shipsWithDuncit: 'ships with Duncit',
       weekendBanner: 'Weekend banner',
+      appliedToTemplates: 'Applied to templates',
     },
     emailLogs: {
       all: 'All',
@@ -97,6 +100,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       reason: 'Reason',
       template: 'Template',
       took: 'Took',
+      noEmailsYet: 'No emails yet.',
     },
     emailsDashboard: {
       address: 'Address',
@@ -106,6 +110,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       lastReason: 'Last reason',
       templatesThatDidNotDeliver: 'Templates that did not deliver',
       whyNothingWentOut: 'Why nothing went out',
+      attemptsLogRows: 'ATTEMPTS (LOG ROWS)',
+      recipientsAddressed: 'RECIPIENTS ADDRESSED',
     },
     emailTemplates: {
       aSwitchedOffTemplateSendsNothing: 'A switched-off template sends nothing, even when code asks for it. Every skipped send is recorded in Telemetry › Logs.',
@@ -156,6 +162,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       testResult: 'Test result',
       uploaded: 'Uploaded',
       whatsappNumberOptional: 'WhatsApp number (optional)',
+      noEntriesYetAddOneYou: 'No entries yet. Add one — you can add multiple and pick a default.',
+      noPortalsMatchYourSearch: 'No portals match your search.',
     },
     errorLogs: {
       code: 'Code',
@@ -164,6 +172,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       graphqlPath: 'GraphQL path',
       kind: 'Kind',
       operation: 'Operation',
+      noServerOperationErrorsLoggedYet: 'No server-operation errors logged yet.',
     },
     featureFlags: {
       custom: 'Custom',
@@ -197,6 +206,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       live: 'Live',
       maintenanceAndDevelopment: 'Maintenance & Development',
       portalName: 'Portal name',
+      noPortalsRegistered: 'No portals registered.',
     },
     server: {
       apiProcessUptime: 'API process uptime',
@@ -225,6 +235,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       state: 'State',
       usage: 'Usage',
       validFrom: 'Valid from',
+      noContainersFound: 'No containers found.',
     },
     telemetryDashboard: {
       byEnvironment: 'By environment',
@@ -234,6 +245,9 @@ export const TECH_BUNDLE: NestedCatalogue = {
       recentLogs: 'Recent logs',
       telemetryDashboard: 'Telemetry Dashboard',
       topOpenBugs: 'Top open bugs',
+      activeBugs: 'ACTIVE BUGS',
+      noTelemetryLogsPersistedYet: 'No telemetry logs persisted yet.',
+      totalLogs: 'TOTAL LOGS',
     },
     telemetryIdentity: {
       localhost: 'Localhost',

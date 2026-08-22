@@ -89,7 +89,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={field.onChange} />}
-              label="Enabled"
+              label={t('marketing.appPopups.enabled')}
             />
           )}
         />
@@ -99,7 +99,7 @@ export default function PopupScheduleFields({ control }: Readonly<Props>) {
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={field.onChange} />}
-              label="Show ✕ close button"
+              label={t('marketing.appPopups.showCloseButton')}
             />
           )}
         />

@@ -138,7 +138,7 @@ export default function SurveyBuilderPage() {
                   </TextField>
                 )}
                 <TextField size="small" label={t('onboarding.surveys.surveyTitle')} value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
-                <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />
+                <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label={t('onboarding.common.active')} />
               </Stack>
               {!isDefaultMode && (
                 <ScopePicker

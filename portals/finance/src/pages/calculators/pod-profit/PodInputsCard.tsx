@@ -28,7 +28,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             onChange={(e) => onChange('pod_amount', Math.max(0, Number(e.target.value)))}
             inputProps={{ min: 0, step: 50 }}
             InputProps={{ startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> }}
-            helperText="Price the customer pays for one spot, GST included."
+            helperText={t('finance.calculators.priceTheCustomerPaysForOne')}
             fullWidth
           />
           <TextField

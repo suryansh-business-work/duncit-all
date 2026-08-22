@@ -37,7 +37,7 @@ export default function LiveAdsTable({
       getRowId={getRowId}
       onRowClick={onOpen}
       refetchRef={refetchRef}
-      emptyText="No ads are running right now."
+      emptyText={t('marketing.liveAds.noAdsAreRunningRightNow')}
       defaultSort={{ field: 'end_at', dir: 'asc' }}
       searchPlaceholder="Search trace ID or ad title"
     />

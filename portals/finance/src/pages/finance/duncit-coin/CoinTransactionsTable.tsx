@@ -205,7 +205,7 @@ export default function CoinTransactionsTable({
       fetchRows={fetchRows}
       getRowId={getCoinRowId}
       externalFilters={[{ field: 'pod_doc_id', op: 'eq', value: podId }]}
-      emptyText="No coin activity yet."
+      emptyText={t('finance.duncitCoin.noCoinActivityYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       defaultPageSize={10}
       searchPlaceholder="Search payment id or reason"

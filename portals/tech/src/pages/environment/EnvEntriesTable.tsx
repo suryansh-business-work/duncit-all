@@ -130,7 +130,7 @@ export default function EnvEntriesTable({
       fetchRows={fetchRows}
       getRowId={getEnvEntryRowId}
       toolbarActions={toolbarActions}
-      emptyText="No entries yet. Add one — you can add multiple and pick a default."
+      emptyText={t('tech.environment.noEntriesYetAddOneYou')}
       defaultSort={{ field: 'name', dir: 'asc' }}
       searchPlaceholder="Search name or description"
       refetchRef={refetchRef}

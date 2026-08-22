@@ -33,6 +33,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       submittedBy2: 'Submitted by',
       traceId: 'Trace ID',
       video: 'Video',
+      noAdRequestsMatchTheCurrent: 'No ad requests match the current filters.',
     },
     adsSettings: {
       failedToUpdateAdPricing: 'Failed to update ad pricing',
@@ -60,6 +61,9 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       popupUpdated: 'Popup updated',
       targetPlatform: 'Target platform',
       useAFullHttpsLinkOr: 'Use a full https:// link or an in-app path like /earn',
+      enabled: 'Enabled',
+      noAppPopupsYet: 'No app popups yet',
+      showCloseButton: 'Show ✕ close button',
     },
     common: {
       audience: 'Audience',
@@ -115,6 +119,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       stopAd: 'Stop ad',
       stopThisAd: 'Stop this ad',
       stopThisAd2: 'Stop this ad?',
+      noAdsAreRunningRightNow: 'No ads are running right now.',
     },
     marketingCampaigns: {
       acceptedBySmtp: 'Accepted by SMTP',
@@ -148,6 +153,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       thisCampaignHasNotBeenSaved: 'This campaign has not been saved. Going back discards the draft, including everything written in the editor.',
       verify: 'Verify',
       viewCampaign: 'View campaign',
+      noCampaignsYetCreateOneTo: 'No campaigns yet. Create one to reach your audience.',
     },
     mediaPickerField: {
       clickTheImageIconToUpload: 'Click the image icon to upload, or paste a URL…',
@@ -176,6 +182,8 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       silent: 'Silent',
       specificUsers: 'Specific Users',
       users: 'Users',
+      noNotificationsYet: 'No notifications yet',
+      silentInAppOnlyNoPush: 'Silent (in-app only — no push alert)',
     },
     shortLinks: {
       browser: 'Browser',
@@ -207,6 +215,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       whichChannel: 'Which channel?',
       whichMedium: 'Which medium?',
       who: 'Who',
+      noShortLinksYetCreateOne: 'No short links yet. Create one to start tracking a channel.',
     },
     targetAudience: {
       account: 'Account',
@@ -243,6 +252,8 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       state: 'State',
       whatsappVerified: 'WhatsApp verified',
       yes: 'Yes',
+      noAudienceListsYetCreateOne: 'No audience lists yet. Create one to get started.',
+      noOneMatchesTheseFilters: 'No one matches these filters.',
     },
     whatsappCampaigns: {
       addAtLeastOneContactTo: 'Add at least one contact to send to',
@@ -298,6 +309,11 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       whatThisTemplateSaysOptional: 'What this template says (optional)',
       whyNot: 'Why not',
       window: 'Window',
+      noCampaignMatchesThatSearch: 'No campaign matches that search.',
+      noPerRecipientRecordForThis: 'No per-recipient record for this send.',
+      noTemplateMatchesThatSearch: 'No template matches that search.',
+      nothingSentYetStartASend: 'Nothing sent yet — start a send from the Campaigns tab.',
+      scheduleForLater: 'Schedule for later',
     },
   },
 };

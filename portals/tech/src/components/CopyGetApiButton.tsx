@@ -36,8 +36,11 @@ interface Props {
   label?: string;
 }
 
-export default function CopyGetApiButton({ path, params, label = 'Copy GET API' }: Readonly<Props>) {
+export default function CopyGetApiButton({ path, params, label }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Resolved here, not as a parameter default: a default is evaluated
+  // before any hook runs, so `t` would not exist yet.
+  const labelText = label ?? t('tech.common.copyGetApi');
   const { data, loading } = useQuery<{ telemetrySettings: { public_api_key: string } }>(
     TELEMETRY_API_KEY,
     { fetchPolicy: 'cache-first' },
@@ -61,7 +64,7 @@ export default function CopyGetApiButton({ path, params, label = 'Copy GET API' 
     <Tooltip title={t('tech.copyGetApiButton.aNoLoginUrlThatReturns')}>
       <span>
         <Button size="small" startIcon={<LinkIcon />} disabled={loading || !key} onClick={copy}>
-          {label}
+          {labelText}
         </Button>
       </span>
     </Tooltip>

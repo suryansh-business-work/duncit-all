@@ -51,7 +51,7 @@ export default function FragmentEditorPanel(p: Readonly<Props>) {
               onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
             />
           }
-          label="Applied to templates"
+          label={t('tech.emailFragments.appliedToTemplates')}
         />
       </Stack>
 

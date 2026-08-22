@@ -140,7 +140,7 @@ export default function BugsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getBugRowId}
-      emptyText="No bugs yet — error logs roll up here as they arrive."
+      emptyText={t('tech.bugs.noBugsYetErrorLogsRoll')}
       defaultSort={{ field: 'last_seen_at', dir: 'desc' }}
       searchPlaceholder="Search title, message, page or source"
       refetchRef={refetchRef}

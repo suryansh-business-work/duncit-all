@@ -77,7 +77,7 @@ export default function SurveysTable({ fetchRows, refetchRef, onOpen, onDelete }
       fetchRows={fetchRows}
       getRowId={getSurveyRowId}
       onRowClick={onOpen}
-      emptyText="No category-specific surveys yet. Create one with New survey."
+      emptyText={t('onboarding.surveys.noCategorySpecificSurveysYetCreate')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
       searchPlaceholder="Search title"
       refetchRef={refetchRef}

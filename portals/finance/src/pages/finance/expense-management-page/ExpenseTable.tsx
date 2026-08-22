@@ -136,7 +136,7 @@ export default function ExpenseTable({
       getRowId={getExpenseRowId}
       onRowClick={onRowClick}
       toolbarActions={toolbarActions}
-      emptyText="No expenses match these filters."
+      emptyText={t('finance.expenseManagement.noExpensesMatchTheseFilters')}
       defaultSort={{ field: 'date', dir: 'desc' }}
       searchPlaceholder="Search vendor, description or reference"
       refetchRef={refetchRef}

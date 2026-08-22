@@ -108,7 +108,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-                    label="Default"
+                    label={t('tech.environment.default')}
                   />
                 )}
               />
@@ -118,7 +118,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-                    label="Active"
+                    label={t('tech.environment.active')}
                   />
                 )}
               />

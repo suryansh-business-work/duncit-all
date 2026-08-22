@@ -185,7 +185,7 @@ export default function NotificationsTable({
       fetchRows={fetchRows}
       getRowId={getNotificationRowId}
       toolbarActions={toolbarActions}
-      emptyText="No notifications yet"
+      emptyText={t('marketing.notifications.noNotificationsYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search title or body"
       refetchRef={refetchRef}

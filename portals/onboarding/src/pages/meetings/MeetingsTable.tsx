@@ -227,7 +227,7 @@ export default function MeetingsTable({
       fetchRows={fetchRows}
       getRowId={getMeetingRowId}
       onRowClick={onSelect}
-      emptyText="No meetings for this filter."
+      emptyText={t('onboarding.meetings.noMeetingsForThisFilter')}
       searchPlaceholder="Search request no, name or phone"
       refetchRef={refetchRef}
     />

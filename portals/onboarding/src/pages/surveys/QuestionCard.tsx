@@ -62,11 +62,11 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
           {question.type === 'MCQ' && (
             <>
               <OptionsEditor options={question.options ?? []} onChange={(options) => set({ options })} />
-              <FormControlLabel control={<Switch checked={!!question.multi} onChange={(e) => set({ multi: e.target.checked })} />} label="Allow multiple answers" />
+              <FormControlLabel control={<Switch checked={!!question.multi} onChange={(e) => set({ multi: e.target.checked })} />} label={t('onboarding.surveys.allowMultipleAnswers')} />
             </>
           )}
           {!isSection && (
-            <FormControlLabel control={<Switch checked={!!question.required} onChange={(e) => set({ required: e.target.checked })} />} label="Required" />
+            <FormControlLabel control={<Switch checked={!!question.required} onChange={(e) => set({ required: e.target.checked })} />} label={t('onboarding.surveys.required')} />
           )}
         </Stack>
       </CardContent>

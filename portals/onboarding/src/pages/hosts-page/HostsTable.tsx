@@ -151,7 +151,7 @@ export default function HostsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getHostRowId}
-      emptyText="No hosts found."
+      emptyText={t('onboarding.hosts.noHostsFound')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, email or phone"
       refetchRef={refetchRef}

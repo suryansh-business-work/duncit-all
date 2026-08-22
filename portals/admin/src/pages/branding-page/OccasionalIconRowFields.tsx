@@ -5,6 +5,7 @@ import { toLocalDateTimeInput } from '@duncit/datetime';
 import LocalDateTimeField from '../../components/LocalDateTimeField';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { OccasionalIconRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** The local `YYYY-MM-DDTHH:mm` draft shape these rows keep. Re-exported
  * because the branding page reads it from here; the implementation is shared
@@ -28,6 +29,7 @@ export default function OccasionalIconRowFields({
   onChange,
   onRemove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const slug = row.slug.trim().toLowerCase();
   const bundled = bundledSlugs.includes(slug);
   const badWindow =
@@ -37,7 +39,7 @@ export default function OccasionalIconRowFields({
     <Stack spacing={1.5} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
         <TextField
-          label="Slug"
+          label={t('admin.policies.slug')}
           value={row.slug}
           onChange={(e) => onChange(index, { slug: e.target.value })}
           fullWidth
@@ -49,22 +51,22 @@ export default function OccasionalIconRowFields({
           }
         />
         <TextField
-          label="Label"
+          label={t('admin.branding.occasionLabel')}
           value={row.label}
           onChange={(e) => onChange(index, { label: e.target.value })}
           fullWidth
-          helperText="Shown to admins only."
+          helperText={t('admin.settings.adminsOnly')}
         />
       </Stack>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <LocalDateTimeField
-          label="Starts at"
+          label={t('admin.branding.startsAt')}
           value={toLocalInput(row.starts_at)}
           onChange={(starts_at) => onChange(index, { starts_at })}
         />
         <LocalDateTimeField
-          label="Ends at"
+          label={t('admin.branding.endsAt')}
           value={toLocalInput(row.ends_at)}
           onChange={(ends_at) => onChange(index, { ends_at })}
           error={badWindow}
@@ -73,21 +75,21 @@ export default function OccasionalIconRowFields({
       </Stack>
 
       <MediaPickerField
-        label="Icon (used by mWeb, portals and any app without bundled art)"
+        label={t('admin.branding.occasionIcon')}
         value={row.icon_url}
         onChange={(url) => onChange(index, { icon_url: url })}
         folder="/branding/occasions"
         accept="image/*"
-        helperText="Square transparent PNG/SVG, ~96×96px."
+        helperText={t('admin.branding.iconHintShort')}
       />
 
       <TextField
         select
-        label="Fallback icon"
+        label={t('admin.branding.fallbackIcon')}
         value={row.fallback_icon || 'occasion'}
         onChange={(e) => onChange(index, { fallback_icon: e.target.value })}
         fullWidth
-        helperText="Bundled artwork each app renders if the icon above is blank or fails to load."
+        helperText={t('admin.branding.fallbackHint')}
       >
         {FALLBACK_ICON_NAMES.map((name) => (
           <MenuItem key={name} value={name}>
@@ -106,15 +108,15 @@ export default function OccasionalIconRowFields({
             <Typography variant="body2">{row.is_active ? 'Active' : 'Paused'}</Typography>
           </Stack>
           <TextField
-            label="Priority"
+            label={t('admin.branding.priority')}
             type="number"
             value={row.sort_order}
             onChange={(e) => onChange(index, { sort_order: Number(e.target.value) || 0 })}
             sx={{ maxWidth: 130 }}
-            helperText="Higher wins on overlap"
+            helperText={t('admin.branding.priorityHint')}
           />
         </Stack>
-        <Tooltip title="Remove occasion">
+        <Tooltip title={t('admin.branding.removeOccasion')}>
           <IconButton onClick={() => onRemove(index)} color="error">
             <DeleteOutlineIcon />
           </IconButton>

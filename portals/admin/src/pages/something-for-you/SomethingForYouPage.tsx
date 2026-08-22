@@ -13,6 +13,7 @@ import {
   emptyItem,
   type SomethingForYouForm,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 type Saved = SomethingForYouForm & { id: string };
 
@@ -25,6 +26,7 @@ type Saved = SomethingForYouForm & { id: string };
  * which is what keeps them looking like one product.
  */
 export default function SomethingForYouPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(SOMETHING_FOR_YOU_ITEMS);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<SomethingForYouForm>(emptyItem);
@@ -66,7 +68,7 @@ export default function SomethingForYouPage() {
 
   const remove = async (item: Saved) => {
     const ok = await confirm({
-      title: 'Delete card',
+      title: t('admin.somethingForYou.deleteCard'),
       message: `Delete "${item.title}"? It disappears from Home on both mWeb and the app.`,
       destructive: true,
       confirmLabel: 'Delete',
@@ -95,7 +97,7 @@ export default function SomethingForYouPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
       {loading && <CircularProgress size={24} />}
       {!loading && items.length === 0 && (
-        <Alert severity="info">No cards yet, so the section is hidden on Home.</Alert>
+        <Alert severity="info">{t('admin.somethingForYou.empty')}</Alert>
       )}
 
       <Stack spacing={1.5}>

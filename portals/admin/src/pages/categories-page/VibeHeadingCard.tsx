@@ -13,7 +13,7 @@ import { useTranslation } from '@duncit/shell';
 export default function VibeHeadingCard() {
   const { t } = useTranslation();
   const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
+  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const savedHeading: string = data?.branding?.home_vibe_heading ?? '';
   const savedSubheading: string = data?.branding?.home_vibe_subheading ?? '';
@@ -65,7 +65,7 @@ export default function VibeHeadingCard() {
 
       <Stack spacing={2}>
         <TextField
-          label="Heading"
+          label={t('admin.categories.vibeHeading')}
           value={heading}
           onChange={(e) => setHeading(e.target.value)}
           placeholder="What's your vibe today?"
@@ -75,7 +75,7 @@ export default function VibeHeadingCard() {
           label="Sub-heading"
           value={subheading}
           onChange={(e) => setSubheading(e.target.value)}
-          placeholder="Explore experiences that match your mood."
+          placeholder={t('admin.categories.vibeHeadingPlaceholder')}
           fullWidth
         />
       </Stack>

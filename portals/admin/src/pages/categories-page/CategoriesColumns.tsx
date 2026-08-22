@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import ColumnPanel from './ColumnPanel';
 import type { CatItem, Level } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   superSel: CatItem | null;
@@ -21,6 +22,7 @@ export default function CategoriesColumns({
   openEdit,
   remove,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -34,7 +36,7 @@ export default function CategoriesColumns({
       }}
     >
       <ColumnPanel
-        title="Super Categories"
+        title={t('admin.categories.superCategories')}
         level="SUPER"
         parentId={null}
         selectedId={superSel?.id ?? null}
@@ -47,7 +49,7 @@ export default function CategoriesColumns({
         onDelete={(it) => remove('SUPER', it)}
       />
       <ColumnPanel
-        title="Categories"
+        title={t('admin.categories.categories')}
         level="CATEGORY"
         parentId={superSel?.id}
         parentName={superSel?.name}

@@ -1,12 +1,14 @@
 import UploadSettingPage from './UploadSettingPage';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin > Upload Settings > Mobile App. */
 export default function MobileUploadSettingPage() {
+  const { t } = useTranslation();
   return (
     <UploadSettingPage
       surface="MOBILE"
-      title="Mobile App Upload Setting"
-      subtitle="Upload rules applied to the native app (pods, reels, statuses, avatars)."
+      title={t('admin.uploads.mobileTitle')}
+      subtitle={t('admin.uploads.mobileHint')}
     />
   );
 }

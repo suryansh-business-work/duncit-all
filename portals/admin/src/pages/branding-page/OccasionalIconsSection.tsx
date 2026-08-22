@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import OccasionalIconRowFields from './OccasionalIconRowFields';
 import { OCCASIONAL_ICONS, UPDATE_OCCASIONAL_ICONS, type OccasionalIconRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Slugs the native app ships bundled art for — keep in step with
  * app/mobile-app/src/assets/occasion-icons.ts. */
@@ -34,6 +35,7 @@ const blankRow = (sortOrder: number): EditableRow => ({
  * source), so a custom time also previews an upcoming occasion.
  */
 export default function OccasionalIconsSection() {
+  const { t } = useTranslation();
   const { data } = useQuery(OCCASIONAL_ICONS, { fetchPolicy: 'cache-and-network' });
   const [save] = useMutation(UPDATE_OCCASIONAL_ICONS, { refetchQueries: ['OccasionalIcons'] });
 
@@ -71,7 +73,7 @@ export default function OccasionalIconsSection() {
           sort_order: r.sort_order,
         }));
       await save({ variables: { input } });
-      setToast('Occasional icons saved');
+      setToast(t('admin.branding.occasionalSaved'));
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -96,7 +98,7 @@ export default function OccasionalIconsSection() {
 
       <Stack spacing={2}>
         {rows.length === 0 && (
-          <Alert severity="info">No occasions yet — add one to schedule a festive icon.</Alert>
+          <Alert severity="info">{t('admin.branding.occasionalEmpty')}</Alert>
         )}
         {rows.map((row, index) => (
           <OccasionalIconRowFields

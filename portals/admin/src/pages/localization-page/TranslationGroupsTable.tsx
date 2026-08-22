@@ -3,6 +3,7 @@ import { useApolloClient } from '@apollo/client';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { getTranslationGroupColumns } from './translation-group-columns';
 import { TRANSLATION_GROUPS, type LocaleRow, type TranslationGroupRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const getRowId = (row: TranslationGroupRow) => row.id;
 
@@ -22,13 +23,14 @@ export default function TranslationGroupsTable({
   onOpen,
   refetchRef,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const fetchRows = useApolloTableFetch<TranslationGroupRow>(
     client,
     TRANSLATION_GROUPS,
     'translationGroups',
   );
-  const columns = useMemo(() => getTranslationGroupColumns(locales), [locales]);
+  const columns = useMemo(() => getTranslationGroupColumns(locales, t), [locales, t]);
 
   return (
     <DuncitTable<TranslationGroupRow>
@@ -37,7 +39,7 @@ export default function TranslationGroupsTable({
       fetchRows={fetchRows}
       getRowId={getRowId}
       onRowClick={onOpen}
-      emptyText="No namespaces yet — press Import app keys to seed them."
+      emptyText={t('admin.localization.namespacesEmpty')}
       defaultSort={{ field: 'surface', dir: 'asc' }}
       searchPlaceholder="Search portal or page"
       refetchRef={refetchRef}

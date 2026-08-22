@@ -39,7 +39,7 @@ const titleCase = (p: Position) => p[0] + p.slice(1).toLowerCase();
 export default function AllVibeIconCard() {
   const { t } = useTranslation();
   const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
+  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const savedIcon: string = data?.branding?.home_all_vibe_icon_url ?? '';
   const savedLayout: Layout | null = data?.branding?.home_all_vibe_icon_layout ?? null;
@@ -106,16 +106,16 @@ export default function AllVibeIconCard() {
       </Stack>
 
       <MediaPickerField
-        label="All tab icon"
+        label={t('admin.categories.allTabIcon')}
         value={value}
         onChange={setValue}
         folder="/categories/all"
         accept="image/*"
-        helperText="Square transparent PNG/SVG, ~96×96px — shown full-bleed, no background."
+        helperText={t('admin.branding.iconHint')}
       />
 
       <Stack spacing={1.5} sx={{ mt: 2 }}>
-        <Typography variant="subtitle2">Icon layout</Typography>
+        <Typography variant="subtitle2">{t('admin.categories.iconLayout')}</Typography>
         <ToggleButtonGroup
           value={layout.position}
           exclusive
@@ -132,7 +132,7 @@ export default function AllVibeIconCard() {
         </ToggleButtonGroup>
         <Stack direction="row" spacing={2}>
           <TextField
-            label="Width"
+            label={t('admin.categories.iconWidth')}
             type="number"
             value={layout.width}
             onChange={(e) => setLayout((l) => ({ ...l, width: Number(e.target.value) || 0 }))}
@@ -140,7 +140,7 @@ export default function AllVibeIconCard() {
             sx={{ maxWidth: 140 }}
           />
           <TextField
-            label="Height"
+            label={t('admin.categories.iconHeight')}
             type="number"
             value={layout.height}
             onChange={(e) => setLayout((l) => ({ ...l, height: Number(e.target.value) || 0 }))}
@@ -153,12 +153,12 @@ export default function AllVibeIconCard() {
       <Divider sx={{ my: 2 }} />
 
       <Stack spacing={0.5}>
-        <Typography variant="subtitle2">Home page settings</Typography>
+        <Typography variant="subtitle2">{t('admin.categories.homeSettings')}</Typography>
         <FormControlLabel
           control={
             <Switch checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
           }
-          label="Show all categories on Home"
+          label={t('admin.categories.showAll')}
         />
         <Typography variant="caption" color="text.secondary">
           On: the home &quot;What&apos;s your vibe&quot; tabber shows every category (with its icon),

@@ -17,6 +17,7 @@ import IconPickerField from '../../components/IconPickerField';
 import MediaPickerField from '../../components/MediaPickerField';
 import IconLayoutSection from './IconLayoutSection';
 import { Level, FormState } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Mirrors the server's MIN_CO_HOSTS..MAX_CO_HOSTS bounds. */
 const CO_HOST_LIMITS = [1, 2, 3, 4, 5];
@@ -62,6 +63,7 @@ export default function CategoryFormDialog({
   opError,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!dialog?.open} onClose={() => setDialog(null)} fullWidth maxWidth="sm">
       <DialogTitle>
@@ -71,7 +73,7 @@ export default function CategoryFormDialog({
         {dialog && (
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Name"
+              label={t('shell.common.name')}
               value={dialog.form.name}
               onChange={(e) =>
                 setDialog({ ...dialog, form: { ...dialog.form, name: e.target.value } })
@@ -92,7 +94,7 @@ export default function CategoryFormDialog({
                 });
               }}
             >
-              <ToggleButton value="ICON">MUI Icon</ToggleButton>
+              <ToggleButton value="ICON">{t('admin.categories.muiIcon')}</ToggleButton>
               <ToggleButton value="IMAGE">Image</ToggleButton>
             </ToggleButtonGroup>
             {dialog.form.iconMode === 'ICON' ? (
@@ -101,17 +103,17 @@ export default function CategoryFormDialog({
                 onChange={(next) =>
                   setDialog({ ...dialog, form: { ...dialog.form, icon: next } })
                 }
-                helperText="Search Material icons (e.g. Pets, SportsSoccer) or paste an emoji."
+                helperText={t('admin.categories.muiIconHint')}
               />
             ) : (
               <MediaPickerField
-                label="Category image"
+                label={t('admin.categories.image')}
                 value={dialog.form.icon}
                 onChange={(next) =>
                   setDialog({ ...dialog, form: { ...dialog.form, icon: next } })
                 }
                 folder="/categories/icons"
-                helperText="Upload or pick an image to use as the category visual."
+                helperText={t('admin.categories.imageHint')}
               />
             )}
             {/* Icon layout is a CATEGORY-only concept; the server rejects it on
@@ -123,7 +125,7 @@ export default function CategoryFormDialog({
               />
             )}
             <TextField
-              label="Description"
+              label={t('shell.common.description')}
               value={dialog.form.description}
               onChange={(e) =>
                 setDialog({
@@ -136,7 +138,7 @@ export default function CategoryFormDialog({
               fullWidth
             />
             <TextField
-              label="Images & Videos (one URL per line)"
+              label={t('admin.categories.media')}
               value={dialog.form.mediaText}
               onChange={(e) =>
                 setDialog({
@@ -146,12 +148,12 @@ export default function CategoryFormDialog({
               }
               multiline
               minRows={3}
-              helperText="URLs ending in .mp4/.mov/.webm are stored as VIDEO, others as IMAGE."
+              helperText={t('admin.categories.mediaHint')}
               fullWidth
             />
             <Stack direction="row" spacing={2}>
               <TextField
-                label="Sort order"
+                label={t('admin.podPlans.sortOrder')}
                 type="number"
                 value={dialog.form.sort_order}
                 onChange={(e) =>
@@ -164,7 +166,7 @@ export default function CategoryFormDialog({
               />
               {dialog.form.id && (
                 <TextField
-                  label="Status"
+                  label={t('shell.common.status')}
                   select
                   value={dialog.form.is_active ? 'active' : 'inactive'}
                   onChange={(e) =>
@@ -186,7 +188,7 @@ export default function CategoryFormDialog({
             {dialog.level === 'SUB' && (
               <Stack spacing={1.5}>
                 <TextField
-                  label="Min number of pax allowed"
+                  label={t('admin.categories.minPax')}
                   type="number"
                   value={dialog.form.min_pax}
                   onChange={(e) =>
@@ -212,11 +214,11 @@ export default function CategoryFormDialog({
                       }
                     />
                   }
-                  label="Allow Co-Hosts"
+                  label={t('admin.categories.allowCoHosts')}
                 />
                 {dialog.form.allow_co_hosts && (
                   <TextField
-                    label="Max co-hosts per pod"
+                    label={t('admin.categories.maxCoHosts')}
                     select
                     value={dialog.form.max_co_hosts}
                     onChange={(e) =>
@@ -225,7 +227,7 @@ export default function CategoryFormDialog({
                         form: { ...dialog.form, max_co_hosts: Number(e.target.value) || 1 },
                       })
                     }
-                    helperText="How many co-hosts a host may invite to one pod in this sub-category."
+                    helperText={t('admin.categories.maxCoHostsHint')}
                     sx={{ maxWidth: 260 }}
                   >
                     {CO_HOST_LIMITS.map((n) => (

@@ -4,6 +4,7 @@ import { Button, Tooltip } from '@mui/material';
 import DownloadingIcon from '@mui/icons-material/Downloading';
 import { allFallbackEntries } from '@duncit/app-settings';
 import { IMPORT_TRANSLATION_KEYS, SERVER_TRANSLATION_SEED } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** Locale the bundled English text is stored against — the default one. */
@@ -19,6 +20,7 @@ interface Props {
  * keys are created — so this is safe to press at any time.
  */
 export default function ImportKeysButton({ defaultLocale, onDone, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const [importKeys] = useMutation(IMPORT_TRANSLATION_KEYS);
   const [busy, setBusy] = useState(false);
@@ -41,14 +43,14 @@ export default function ImportKeysButton({ defaultLocale, onDone, onError }: Rea
       const added = res.data?.importTranslationKeys ?? 0;
       onDone(added > 0 ? `${added} new key(s) imported` : 'Already up to date');
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Failed to import keys');
+      onError(e instanceof Error ? e.message : t('admin.localization.importFailed'));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Tooltip title="Add every key the apps and emails ship, keeping existing translations">
+    <Tooltip title={t('admin.localization.importHint')}>
       <span>
         <Button
           variant="outlined"

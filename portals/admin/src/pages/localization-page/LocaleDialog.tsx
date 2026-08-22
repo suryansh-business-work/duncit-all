@@ -14,6 +14,7 @@ import {
   TextField,
 } from '@mui/material';
 import type { LocaleRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** BCP-47-ish: a language, optionally a region — e.g. en, en-IN, zh-Hant-HK. */
 const localeSchema = z.object({
@@ -51,6 +52,7 @@ interface Props {
 }
 
 export default function LocaleDialog({ open, editing, saving, onClose, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -83,7 +85,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField
-            label="Locale code"
+            label={t('admin.localization.localeCode')}
             placeholder="hi-IN"
             // The code is the stable id stored on every user's profile, so it
             // cannot be edited once created.
@@ -94,7 +96,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
             {...register('code')}
           />
           <TextField
-            label="Language name"
+            label={t('admin.localization.languageName')}
             placeholder="हिन्दी"
             error={!!errors.label}
             helperText={errors.label?.message ?? "Shown in the switcher, in the language's own script"}
@@ -102,15 +104,15 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
             {...register('label')}
           />
           <TextField
-            label="English name"
-            placeholder="Hindi (India)"
+            label={t('admin.localization.englishName')}
+            placeholder={t('admin.localization.englishNamePlaceholder')}
             error={!!errors.english_label}
             helperText={errors.english_label?.message ?? 'Shown in admin lists'}
             fullWidth
             {...register('english_label')}
           />
           <TextField
-            label="Sort order"
+            label={t('admin.podPlans.sortOrder')}
             type="number"
             error={!!errors.sort_order}
             helperText={errors.sort_order?.message ?? 'Order in the language switcher'}
@@ -124,13 +126,13 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
                 onChange={(_, v) => setValue('is_active', v)}
               />
             }
-            label="Active — offered in the language switcher"
+            label={t('admin.localization.activeHint')}
           />
           <FormControlLabel
             control={
               <Switch checked={watch('is_rtl')} onChange={(_, v) => setValue('is_rtl', v)} />
             }
-            label="Right-to-left script"
+            label={t('admin.localization.rtl')}
           />
           <FormControlLabel
             control={
@@ -139,7 +141,7 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
                 onChange={(_, v) => setValue('is_default', v)}
               />
             }
-            label="Default language — every other locale falls back to it"
+            label={t('admin.localization.defaultHint')}
           />
         </Stack>
       </DialogContent>

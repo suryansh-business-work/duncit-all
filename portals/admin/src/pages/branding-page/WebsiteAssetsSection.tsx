@@ -1,6 +1,7 @@
 import { Stack, TextField, Typography } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { BrandingFormState } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: BrandingFormState;
@@ -14,6 +15,7 @@ interface Props {
  * app" section links to. Distinct from mWeb (the PWA) — no duplication.
  */
 export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const update = (key: keyof BrandingFormState, value: string) =>
     setForm({ ...form, [key]: value });
 
@@ -25,34 +27,34 @@ export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>)
       </Typography>
 
       <MediaPickerField
-        label="Header logo"
+        label={t('admin.branding.headerLogo')}
         value={form.website_header_logo_url}
         onChange={(url) => update('website_header_logo_url', url)}
         folder="/branding/website"
         accept="image/*"
-        helperText="Transparent PNG/SVG, ~320×96px — shown in the site header on light glass."
+        helperText={t('admin.branding.headerLogoHint')}
       />
 
       <MediaPickerField
-        label="Footer logo"
+        label={t('admin.branding.footerLogo')}
         value={form.website_footer_logo_url}
         onChange={(url) => update('website_footer_logo_url', url)}
         folder="/branding/website"
         accept="image/*"
-        helperText="Transparent PNG/SVG, ~320×96px — shown in the site footer on dark ink."
+        helperText={t('admin.branding.footerLogoHint')}
       />
 
       <MediaPickerField
-        label="Favicon"
+        label={t('admin.branding.favicon')}
         value={form.website_favicon_url}
         onChange={(url) => update('website_favicon_url', url)}
         folder="/branding/website"
         accept="image/*"
-        helperText="Square PNG/SVG, 64×64px — browser-tab icon for every website."
+        helperText={t('admin.branding.faviconHint')}
       />
 
       <TextField
-        label="Android app URL (Google Play)"
+        label={t('admin.branding.androidUrl')}
         value={form.android_app_url}
         onChange={(e) => update('android_app_url', e.target.value)}
         helperText="Play Store listing link for the websites' Download section. Leave empty until live — the sites show a 'coming soon' state."
@@ -60,7 +62,7 @@ export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>)
       />
 
       <TextField
-        label="iOS app URL (App Store)"
+        label={t('admin.branding.iosUrl')}
         value={form.ios_app_url}
         onChange={(e) => update('ios_app_url', e.target.value)}
         helperText="App Store listing link for the websites' Download section. Leave empty until live — the sites show a 'coming soon' state."
@@ -68,10 +70,10 @@ export default function WebsiteAssetsSection({ form, setForm }: Readonly<Props>)
       />
 
       <TextField
-        label="Minimum supported app version"
+        label={t('admin.branding.minVersion')}
         value={form.app_min_supported_version}
         onChange={(e) => update('app_min_supported_version', e.target.value)}
-        placeholder="e.g. 1.50.0"
+        placeholder={t('admin.branding.minVersionPlaceholder')}
         helperText="Mobile builds older than this are force-updated and cannot use the app. Raise it ONLY after that release is live in the stores — set it to a version users cannot download yet and they are locked out. Leave empty to block nobody. (The app's own version bumps on every deploy; this one never does.)"
         fullWidth
       />

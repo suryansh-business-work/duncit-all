@@ -151,7 +151,7 @@ export default function CategoriesPage() {
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <CategoryIcon color="primary" />
-          <Typography variant="h5">Category Management</Typography>
+          <Typography variant="h5">{t('admin.categories.title')}</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
           Manage Super Categories (Human / Pet), their categories and sub-categories. Click an

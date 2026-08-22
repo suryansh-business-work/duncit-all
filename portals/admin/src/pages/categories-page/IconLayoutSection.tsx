@@ -7,15 +7,18 @@ import {
   Typography,
 } from '@mui/material';
 import { CategoryIconLayout, CategoryIconPosition, FormState } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Server default applied the first time an admin edits a surface's layout. */
 const DEFAULT_ICON_LAYOUT: CategoryIconLayout = { position: 'TOP', width: 40, height: 40 };
 
-const POSITION_OPTIONS: ReadonlyArray<{ value: CategoryIconPosition; label: string }> = [
-  { value: 'TOP', label: 'Top' },
-  { value: 'LEFT', label: 'Left' },
-  { value: 'RIGHT', label: 'Right' },
-  { value: 'BOTTOM', label: 'Bottom' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const positionOptions = (t: Translate): ReadonlyArray<{ value: CategoryIconPosition; label: string }> => [
+  { value: 'TOP', label: t('admin.categories.layoutTop') },
+  { value: 'LEFT', label: t('admin.categories.layoutLeft') },
+  { value: 'RIGHT', label: t('admin.categories.layoutRight') },
+  { value: 'BOTTOM', label: t('admin.categories.layoutBottom') },
 ];
 
 type IconSurface = 'MWEB' | 'NATIVE';
@@ -31,6 +34,7 @@ interface Props {
  * controls below edit; mWeb and Native are configured independently.
  */
 export default function IconLayoutSection({ form, onFormChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [surface, setSurface] = useState<IconSurface>('MWEB');
   const raw = surface === 'MWEB' ? form.icon_layout_mweb : form.icon_layout_native;
   const layout = raw ?? DEFAULT_ICON_LAYOUT;
@@ -46,7 +50,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">Icon layout</Typography>
+      <Typography variant="subtitle2">{t('admin.categories.iconLayout')}</Typography>
       <ToggleButtonGroup
         value={surface}
         exclusive
@@ -56,7 +60,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
         }}
       >
         <ToggleButton value="MWEB">mWeb</ToggleButton>
-        <ToggleButton value="NATIVE">Native</ToggleButton>
+        <ToggleButton value="NATIVE">{t('admin.categories.layoutNative')}</ToggleButton>
       </ToggleButtonGroup>
       <ToggleButtonGroup
         value={layout.position}
@@ -66,7 +70,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
           if (next) patchLayout({ position: next });
         }}
       >
-        {POSITION_OPTIONS.map((opt) => (
+        {positionOptions(t).map((opt) => (
           <ToggleButton key={opt.value} value={opt.value}>
             {opt.label}
           </ToggleButton>
@@ -74,7 +78,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
       </ToggleButtonGroup>
       <Stack direction="row" spacing={2}>
         <TextField
-          label="Width"
+          label={t('admin.categories.iconWidth')}
           type="number"
           value={layout.width}
           onChange={(e) => patchLayout({ width: Number(e.target.value) || 0 })}
@@ -82,7 +86,7 @@ export default function IconLayoutSection({ form, onFormChange }: Readonly<Props
           sx={{ maxWidth: 160 }}
         />
         <TextField
-          label="Height"
+          label={t('admin.categories.iconHeight')}
           type="number"
           value={layout.height}
           onChange={(e) => patchLayout({ height: Number(e.target.value) || 0 })}

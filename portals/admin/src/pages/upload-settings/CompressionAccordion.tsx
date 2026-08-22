@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { UploadSettings } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   settings: UploadSettings;
@@ -22,6 +23,7 @@ interface Props {
 
 /** Accordion 4 — server-side compression: sharp for images, FFmpeg for videos. */
 export default function CompressionAccordion({ settings, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [imageOn, setImageOn] = useState(settings.image_compression_enabled);
   const [quality, setQuality] = useState(settings.image_quality);
   const [maxDim, setMaxDim] = useState(String(settings.image_max_dimension));
@@ -54,13 +56,13 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>Compression (sharp images · FFmpeg videos)</Typography>
+        <Typography fontWeight={700}>{t('admin.uploads.compressionTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2.5}>
           <FormControlLabel
             control={<Switch checked={imageOn} onChange={(e) => setImageOn(e.target.checked)} />}
-            label="Compress images server-side with sharp before they reach ImageKit"
+            label={t('admin.uploads.compressImages')}
           />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
             <Stack sx={{ flex: 1, px: 1 }}>
@@ -74,11 +76,11 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
                 value={quality}
                 disabled={!imageOn}
                 onChange={(_e, value) => setQuality(value as number)}
-                aria-label="Image quality"
+                aria-label={t('admin.uploads.imageQuality')}
               />
             </Stack>
             <TextField
-              label="Max image dimension (px)"
+              label={t('admin.uploads.maxImageDimension')}
               size="small"
               value={maxDim}
               disabled={!imageOn}
@@ -89,7 +91,7 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
           </Stack>
           <FormControlLabel
             control={<Switch checked={videoOn} onChange={(e) => setVideoOn(e.target.checked)} />}
-            label="Compress videos server-side with FFmpeg after direct upload (H.264 + faststart)"
+            label={t('admin.uploads.compressVideos')}
           />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
             <Stack sx={{ flex: 1, px: 1 }}>
@@ -103,11 +105,11 @@ export default function CompressionAccordion({ settings, saving, onSave }: Reado
                 value={crf}
                 disabled={!videoOn}
                 onChange={(_e, value) => setCrf(value as number)}
-                aria-label="Video CRF"
+                aria-label={t('admin.uploads.videoCrf')}
               />
             </Stack>
             <TextField
-              label="Max video height (px)"
+              label={t('admin.uploads.maxVideoHeight')}
               size="small"
               value={maxHeight}
               disabled={!videoOn}

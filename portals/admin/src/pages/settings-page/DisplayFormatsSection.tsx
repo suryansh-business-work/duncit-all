@@ -14,6 +14,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { format } from 'date-fns';
 import { PUBLIC_APP_SETTINGS, unsupportedPickerTokens } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const APP_SETTINGS_FORMATS = gql`
   query AppSettingsFormats {
@@ -49,6 +50,7 @@ interface Props {
 }
 
 export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(APP_SETTINGS_FORMATS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -115,7 +117,7 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
           sx={{ mb: 2 }}
         >
           <Box>
-            <Typography variant="subtitle1">Display formats</Typography>
+            <Typography variant="subtitle1">{t('admin.settings.displayFormats')}</Typography>
             <Typography variant="body2" color="text.secondary">
               The one date &amp; time format every surface reads and writes — this panel, the
               portals, mWeb and the app, in what is displayed and in every date box that is
@@ -136,7 +138,7 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               select
-              label="Date format"
+              label={t('admin.settings.dateFormat')}
               value={DATE_PRESETS.includes(dateFmt) ? dateFmt : '__custom__'}
               onChange={(e) =>
                 setDateFmt(e.target.value === '__custom__' ? dateFmt : e.target.value)
@@ -148,11 +150,11 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
                   {p} — {(() => { try { return format(new Date(), p); } catch { return ''; } })()}
                 </MenuItem>
               ))}
-              <MenuItem value="__custom__">Custom pattern…</MenuItem>
+              <MenuItem value="__custom__">{t('admin.settings.customPattern')}</MenuItem>
             </TextField>
             <TextField
               select
-              label="Time format"
+              label={t('admin.settings.timeFormat')}
               value={TIME_PRESETS.includes(timeFmt) ? timeFmt : '__custom__'}
               onChange={(e) =>
                 setTimeFmt(e.target.value === '__custom__' ? timeFmt : e.target.value)
@@ -164,23 +166,23 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
                   {p} — {(() => { try { return format(new Date(), p); } catch { return ''; } })()}
                 </MenuItem>
               ))}
-              <MenuItem value="__custom__">Custom pattern…</MenuItem>
+              <MenuItem value="__custom__">{t('admin.settings.customPattern')}</MenuItem>
             </TextField>
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Date pattern (date-fns)"
+              label={t('admin.settings.datePattern')}
               value={dateFmt}
               onChange={(e) => setDateFmt(e.target.value)}
               fullWidth
-              helperText="e.g. dd MMM yyyy, dd/MM/yyyy, yyyy-MM-dd"
+              helperText={t('admin.settings.datePatternHint')}
             />
             <TextField
-              label="Time pattern (date-fns)"
+              label={t('admin.settings.timePattern')}
               value={timeFmt}
               onChange={(e) => setTimeFmt(e.target.value)}
               fullWidth
-              helperText="e.g. hh:mm a, HH:mm, HH:mm:ss"
+              helperText={t('admin.settings.timePatternHint')}
             />
           </Stack>
           <Alert severity="info">Preview: <strong>{preview}</strong></Alert>

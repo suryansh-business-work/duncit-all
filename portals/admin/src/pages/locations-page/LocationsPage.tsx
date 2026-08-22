@@ -102,7 +102,7 @@ export default function LocationsPage() {
 
   const remove = async (loc: LocationRow) => {
     const ok = await confirm({
-      title: 'Delete location',
+      title: t('admin.locations.deleteLocation'),
       message: `Delete location "${loc.location_name}"?`,
       destructive: true,
       confirmLabel: 'Delete',

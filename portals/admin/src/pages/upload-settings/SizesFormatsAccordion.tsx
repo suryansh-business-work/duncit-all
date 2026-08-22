@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { UploadSettings } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 const IMAGE_FORMAT_OPTIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic'];
 const VIDEO_FORMAT_OPTIONS = ['mp4', 'mov', 'webm', 'm4v', '3gp'];
@@ -24,6 +25,7 @@ interface Props {
 
 /** Accordion 1+3 — maximum upload sizes and the accepted image/video formats. */
 export default function SizesFormatsAccordion({ settings, saving, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [imageMb, setImageMb] = useState(String(settings.max_image_mb));
   const [videoMb, setVideoMb] = useState(String(settings.max_video_mb));
   const [imageFormats, setImageFormats] = useState<string[]>(settings.allowed_image_formats);
@@ -50,13 +52,13 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
   return (
     <Accordion defaultExpanded>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>Maximum upload sizes & formats</Typography>
+        <Typography fontWeight={700}>{t('admin.uploads.sizesTitle')}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={2.5}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Max image upload size (MB)"
+              label={t('admin.uploads.maxImageSize')}
               size="small"
               fullWidth
               value={imageMb}
@@ -65,7 +67,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               helperText={imageInvalid ? 'Enter a whole number of 1 or more.' : 'Default 15 MB.'}
             />
             <TextField
-              label="Max video upload size (MB)"
+              label={t('admin.uploads.maxVideoSize')}
               size="small"
               fullWidth
               value={videoMb}
@@ -87,7 +89,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               ))
             }
             renderInput={(params) => (
-              <TextField {...params} label="Allowed image formats" helperText="File extensions accepted for images." />
+              <TextField {...params} label={t('admin.uploads.imageFormats')} helperText={t('admin.uploads.imageFormatsHint')} />
             )}
           />
           <Autocomplete
@@ -103,7 +105,7 @@ export default function SizesFormatsAccordion({ settings, saving, onSave }: Read
               ))
             }
             renderInput={(params) => (
-              <TextField {...params} label="Allowed video formats" helperText="File extensions accepted for videos." />
+              <TextField {...params} label={t('admin.uploads.videoFormats')} helperText={t('admin.uploads.videoFormatsHint')} />
             )}
           />
           <Button

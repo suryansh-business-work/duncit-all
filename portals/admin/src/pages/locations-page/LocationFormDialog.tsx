@@ -22,6 +22,7 @@ import MediaPickerField from '../../components/MediaPickerField';
 import LocationHierarchyFields from './LocationHierarchyFields';
 import { AI_FILL_LOCATION_AREAS } from './queries';
 import type { LocForm, ZoneEdit } from './types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -48,6 +49,7 @@ export default function LocationFormDialog({
   addZone,
   removeZone,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [aiError, setAiError] = useState<string | null>(null);
   const [fillAreas, { loading: fillingAreas }] = useMutation(AI_FILL_LOCATION_AREAS);
   // Scroll the freshly-added Area row into view so the user doesn't have to hunt
@@ -133,7 +135,7 @@ export default function LocationFormDialog({
             </Stack>
           )}
           <MediaPickerField
-            label="Location image URL"
+            label={t('admin.locations.imageUrl')}
             value={form.location_image}
             onChange={(url) => setForm({ ...form, location_image: url })}
             folder="/locations"
@@ -178,14 +180,14 @@ export default function LocationFormDialog({
                 >
                   <TextField
                     size="small"
-                    label="Locality / Area"
+                    label={t('admin.locations.locality')}
                     value={z.zone_name}
                     onChange={(e) => updateZone(index, { zone_name: e.target.value })}
                     sx={{ flex: 1 }}
                   />
                   <TextField
                     size="small"
-                    label="PIN code"
+                    label={t('admin.locations.pinCode')}
                     value={z.pincode}
                     onChange={(e) => updateZone(index, { pincode: e.target.value })}
                     sx={{ width: { xs: '100%', sm: 140 } }}

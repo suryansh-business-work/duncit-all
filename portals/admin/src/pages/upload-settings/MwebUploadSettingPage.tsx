@@ -1,12 +1,14 @@
 import UploadSettingPage from './UploadSettingPage';
+import { useTranslation } from '@duncit/shell';
 
 /** Admin > Upload Settings > mWeb Upload Setting. */
 export default function MwebUploadSettingPage() {
+  const { t } = useTranslation();
   return (
     <UploadSettingPage
       surface="MWEB"
-      title="mWeb Upload Setting"
-      subtitle="Upload rules applied to the mWeb PWA (pods, reels, statuses, avatars)."
+      title={t('admin.uploads.mwebTitle')}
+      subtitle={t('admin.uploads.mwebHint')}
     />
   );
 }

@@ -15,6 +15,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import LocalDateTimeField from '../../components/LocalDateTimeField';
 import { TIME_ZONES, SOURCE_OPTIONS, toLocalInput, useClockPreview } from './time-source';
+import { useTranslation } from '@duncit/shell';
 
 const APP_SETTINGS_CLOCK = gql`
   query AppSettingsClock {
@@ -47,6 +48,7 @@ interface Props {
 /** Time zone + where every app reads "now" from. Drives all rendered dates and
  * the date-based occasion icons across mobile, mWeb and every portal. */
 export default function TimeSourceSection({ onToast }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(APP_SETTINGS_CLOCK, {
     fetchPolicy: 'cache-and-network',
   });
@@ -104,7 +106,7 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
           sx={{ mb: 2 }}
         >
           <Box>
-            <Typography variant="subtitle1">Time zone &amp; source</Typography>
+            <Typography variant="subtitle1">{t('admin.settings.timeTitle')}</Typography>
             <Typography variant="body2" color="text.secondary">
               Where every app reads &quot;now&quot; from, and the zone dates are shown in. Also
               decides which occasion icons are active.
@@ -124,7 +126,7 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               select
-              label="Time zone"
+              label={t('admin.settings.timeZone')}
               value={TIME_ZONES.includes(zone) ? zone : '__custom__'}
               onChange={(e) => setZone(e.target.value === '__custom__' ? zone : e.target.value)}
               fullWidth
@@ -134,20 +136,20 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
                   {tz}
                 </MenuItem>
               ))}
-              <MenuItem value="__custom__">Other (type below)…</MenuItem>
+              <MenuItem value="__custom__">{t('admin.settings.otherZone')}</MenuItem>
             </TextField>
             <TextField
-              label="IANA zone"
+              label={t('admin.settings.ianaZone')}
               value={zone}
               onChange={(e) => setZone(e.target.value)}
               fullWidth
-              helperText="e.g. Asia/Kolkata, Europe/London, America/New_York"
+              helperText={t('admin.settings.ianaHint')}
             />
           </Stack>
 
           <TextField
             select
-            label="Time source"
+            label={t('admin.settings.timeSource')}
             value={source}
             onChange={(e) => setSource(e.target.value)}
             fullWidth
@@ -164,10 +166,10 @@ export default function TimeSourceSection({ onToast }: Readonly<Props>) {
 
           {source === 'CUSTOM' && (
             <LocalDateTimeField
-              label="Custom time"
+              label={t('admin.settings.customTime')}
               value={customTime}
               onChange={setCustomTime}
-              helperText="Saving sets the clock here; it then runs forward from this instant."
+              helperText={t('admin.settings.customTimeHint')}
             />
           )}
 

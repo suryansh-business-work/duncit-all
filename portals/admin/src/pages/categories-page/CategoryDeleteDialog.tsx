@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { CatItem, Level } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   target: { level: Level; item: CatItem } | null;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function CategoryDeleteDialog({ target, busy, error, onClose, onConfirm }: Readonly<Props>) {
+  const { t } = useTranslation();
   const nonSuperLabel = target?.level === 'CATEGORY' ? 'Category' : 'Sub-Category';
   const levelLabel = target?.level === 'SUPER' ? 'Super Category' : nonSuperLabel;
   return (
@@ -38,7 +40,7 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
             </>
           )}
           {target?.level === 'CATEGORY' && (
-            <> This will also remove its sub-categories, clubs and pods.</>
+            <> {t('admin.categories.deleteWarning')}</>
           )}
           {' '}This action cannot be undone.
         </DialogContentText>
@@ -50,7 +52,7 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button onClick={onConfirm} color="error" variant="contained" disabled={busy}>
           {busy ? 'Deleting…' : 'Delete'}

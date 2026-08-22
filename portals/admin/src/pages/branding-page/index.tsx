@@ -22,6 +22,7 @@ import FontsSection from './FontsSection';
 import OccasionalIconsSection from './OccasionalIconsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
 import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 interface SectionProps {
   title: string;
@@ -49,8 +50,9 @@ function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Reado
 }
 
 export default function BrandingPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
+  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const [form, setForm] = useState<BrandingFormState>(emptyBrandingForm);
   const [busy, setBusy] = useState(false);
@@ -73,7 +75,7 @@ export default function BrandingPage() {
     setOpError(null);
     try {
       await updateMut({ variables: { input: form } });
-      setToast('Branding saved');
+      setToast(t('admin.branding.saved'));
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -90,7 +92,7 @@ export default function BrandingPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <BrandingWatermarkIcon color="primary" />
         <Box>
-          <Typography variant="h5">Branding</Typography>
+          <Typography variant="h5">{t('admin.branding.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Identity, per-platform assets (favicon · logo · splash) — every app reads these live,
             nothing is hard-coded.
@@ -102,8 +104,8 @@ export default function BrandingPage() {
 
       <Stack>
         <BrandingAccordion
-          title="Identity"
-          subtitle="App name, default logo, primary color and support contacts."
+          title={t('admin.branding.identity')}
+          subtitle={t('admin.branding.identityHint')}
           defaultExpanded
         >
           <IdentitySection form={form} setForm={setForm} />
@@ -125,22 +127,22 @@ export default function BrandingPage() {
         ))}
 
         <BrandingAccordion
-          title="Website Logos (marketing sites)"
-          subtitle="Header logo, footer logo, favicon + app-store links for duncit.com and its subsites."
+          title={t('admin.branding.websiteLogos')}
+          subtitle={t('admin.branding.websiteHint')}
         >
           <WebsiteAssetsSection form={form} setForm={setForm} />
         </BrandingAccordion>
 
         <BrandingAccordion
-          title="Occasional Icons"
-          subtitle="Festive icon windows that swap the apps’ icons by date — has its own Save."
+          title={t('admin.branding.occasional')}
+          subtitle={t('admin.branding.occasionalHint')}
         >
           <OccasionalIconsSection />
         </BrandingAccordion>
 
         <BrandingAccordion
-          title="Fonts"
-          subtitle="Google Font per platform — Mobile App, mWeb and the Portals pick it up live."
+          title={t('admin.branding.fonts')}
+          subtitle={t('admin.branding.fontsHint')}
         >
           <FontsSection form={form} setForm={setForm} />
         </BrandingAccordion>

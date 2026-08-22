@@ -5,6 +5,8 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from "@utils/table-query";
+import { EMAIL_FALLBACK } from "@services/email/email-i18n";
+import { SHIPPED_CLIENT_KEYS } from "./shipped-keys";
 import {
   LocaleModel,
   TranslationModel,
@@ -213,6 +215,44 @@ export const localizationService = {
   async deleteTranslation(key: string) {
     const result = await TranslationModel.deleteOne({ key: (key ?? "").trim() });
     return result.deletedCount > 0;
+  },
+
+
+  /**
+   * Put every key the platform SHIPS copy for into the store, on boot.
+   *
+   * Until now this only happened when somebody opened Admin > Localization
+   * and pressed "Import app keys", so a fresh environment — or any key added
+   * since the last time anyone pressed it — sat untranslatable in a database
+   * nobody had told about it. The keys are the platform's, not an operator's
+   * decision, so the server owns getting them there.
+   *
+   * Create-only, exactly like `importTranslationKeys`: an existing row keeps
+   * every translation on it. The English text of a NEW key comes from the
+   * code, which is the source of truth for it.
+   *
+   * The client keys arrive as generated data (`shipped-keys.ts`) because
+   * `server/src` takes no `@duncit/*` dependency (rule 40); the email keys
+   * are the server's own bundle and are read directly.
+   */
+  async seedDefaults() {
+    const entries = Object.entries({ ...SHIPPED_CLIENT_KEYS, ...EMAIL_FALLBACK });
+    if (entries.length === 0) return 0;
+
+    // A store with no locale has nothing to write text against. `en` matches
+    // what scripts/sync-localization.mjs creates, so the two agree on a fresh
+    // database rather than each inventing a source language.
+    let code = await this.defaultLocaleCode();
+    if (!code) {
+      code = "en";
+      await LocaleModel.updateOne(
+        { code },
+        { $setOnInsert: { code, label: "English", english_label: "English", is_active: true, is_default: true } },
+        { upsert: true },
+      );
+    }
+
+    return this.importTranslationKeys(code, entries.map(([key, value]) => ({ key, value })));
   },
 
   /**

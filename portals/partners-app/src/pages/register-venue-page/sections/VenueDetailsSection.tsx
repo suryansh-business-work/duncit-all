@@ -4,6 +4,7 @@ import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
 import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
 import VenueImagesField from './VenueImagesField';
 import type { RegisterVenueMode, RegisterVenueValues } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -14,6 +15,7 @@ const CATEGORY_HINT = 'Pick the category you want to host pods in at this venue.
 const LOCATION_HINT = 'Where the venue is — used to match it to clubs in this locality.';
 
 export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, watch, setValue, formState } = form;
   const values = watch();
   // Post-approval, only the description and images stay editable here —
@@ -54,7 +56,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Venue name"
+            label={t('partners.registerVenuePage.venueName')}
             required
             disabled={locked}
             error={Boolean(fieldState.error)}
@@ -68,7 +70,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
         render={({ field, fieldState }) => (
           <TextField
             {...field}
-            label="Venue description"
+            label={t('partners.registerVenuePage.venueDescription')}
             required
             multiline
             minRows={3}
@@ -107,7 +109,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
           render={({ field, fieldState }) => (
             <TextField
               {...field}
-              label="Address line 1"
+              label={t('partners.common.addressLine1')}
               required
               disabled={locked}
               error={Boolean(fieldState.error)}
@@ -121,7 +123,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
           render={({ field, fieldState }) => (
             <TextField
               {...field}
-              label="Address line 2"
+              label={t('partners.common.addressLine2')}
               disabled={locked}
               error={Boolean(fieldState.error)}
               helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Landmark or floor (optional)')}

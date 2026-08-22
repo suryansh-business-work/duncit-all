@@ -16,6 +16,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
@@ -28,6 +29,7 @@ interface Props {
 
 /** Dynamic document list: each row pairs a document type with a PDF upload. */
 export default function DocumentsSection({ form, config, mode, lockedDocCount = 0 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, setValue, watch, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'documents' });
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
@@ -90,7 +92,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
                 <TextField
                   {...field}
                   select
-                  label="Document type"
+                  label={t('partners.registerVenuePage.documentType')}
                   size="small"
                   disabled={isRowLocked(index)}
                   sx={{ minWidth: 180 }}
@@ -107,7 +109,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
             />
             {documents[index]?.url ? (
               <Chip
-                label="Uploaded"
+                label={t('partners.common.uploaded')}
                 color="success"
                 size="small"
                 onClick={() => window.open(documents[index].url, '_blank')}
@@ -123,7 +125,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
               </Button>
             )}
             {!isRowLocked(index) && (
-              <IconButton size="small" aria-label="Remove document" onClick={() => remove(index)}>
+              <IconButton size="small" aria-label={t('partners.registerVenuePage.removeDocument')} onClick={() => remove(index)}>
                 <DeleteIcon />
               </IconButton>
             )}
@@ -138,7 +140,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         onClick={() => append({ type: config.doc_types[0] ?? '', url: '' })}
         sx={{ alignSelf: 'flex-start' }}
       >
-        Add document
+        {t('partners.ecommBrandPage.addDocument')}
       </Button>
       <MediaPickerDialog
         open={pickerIndex !== null}
@@ -149,7 +151,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
           setPickerIndex(null);
         }}
         folder="/venues/docs"
-        title="Upload document (PDF, max 50 MB)"
+        title={t('partners.registerVenuePage.uploadDocumentPdfMax50Mb')}
         accept="application/pdf"
       />
     </Stack>

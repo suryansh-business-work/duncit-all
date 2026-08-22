@@ -6,6 +6,7 @@ import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/tab
 import { StatusChip } from '@duncit/ui';
 import { MY_VENUES_TABLE, type VenueListingRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const rowAction = (status: string) => {
   if (status === 'APPROVED' || status === 'SUBMITTED') return 'View';
@@ -63,10 +64,12 @@ const renderActions = (venue: VenueListingRow) => (
   </Stack>
 );
 
-const COLUMNS: DuncitColumn<VenueListingRow>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const columns = (t: Translate): DuncitColumn<VenueListingRow>[] =>[
   {
     field: 'venue_name',
-    headerName: 'Venue',
+    headerName: t('partners.common.venue'),
     flex: 1,
     minWidth: 230,
     cellRenderer: renderVenue,
@@ -74,14 +77,14 @@ const COLUMNS: DuncitColumn<VenueListingRow>[] = [
   },
   {
     field: 'capacity',
-    headerName: 'Capacity',
+    headerName: t('partners.common.capacity'),
     width: 110,
     filter: { type: 'number' },
     valueGetter: (venue) => Number(venue.capacity ?? 0),
   },
   {
     field: 'status',
-    headerName: 'Status',
+    headerName: t('shell.common.status'),
     width: 140,
     filter: { type: 'select', options: STATUS_OPTIONS },
     cellRenderer: renderStatus,
@@ -89,25 +92,26 @@ const COLUMNS: DuncitColumn<VenueListingRow>[] = [
   },
   {
     field: 'updated_at',
-    headerName: 'Updated',
+    headerName: t('shell.common.updated'),
     width: 140,
     valueGetter: (venue) => availabilityDate(venue.updated_at ?? venue.created_at),
   },
-  { field: 'venue_type', headerName: 'Type', hide: true, filter: { type: 'text' }, minWidth: 130 },
-  { field: 'city', headerName: 'City', hide: true, filter: { type: 'text' }, minWidth: 130 },
-  { field: 'locality', headerName: 'Locality', hide: true, filter: { type: 'text' }, minWidth: 140 },
+  { field: 'venue_type', headerName: t('shell.common.type'), hide: true, filter: { type: 'text' }, minWidth: 130 },
+  { field: 'city', headerName: t('partners.common.city'), hide: true, filter: { type: 'text' }, minWidth: 130 },
+  { field: 'locality', headerName: t('partners.common.locality'), hide: true, filter: { type: 'text' }, minWidth: 140 },
   {
     field: 'created_at',
-    headerName: 'Created',
+    headerName: t('shell.common.created'),
     hide: true,
     filter: { type: 'date' },
     width: 140,
     valueGetter: (venue) => availabilityDate(venue.created_at),
   },
-  { field: 'actions', headerName: 'Action', sortable: false, width: 230, cellRenderer: renderActions },
+  { field: 'actions', headerName: t('partners.common.action'), sortable: false, width: 230, cellRenderer: renderActions },
 ];
 
 export default function VenueListingsTable() {
+  const { t } = useTranslation();
   const client = useApolloClient();
 
   const fetchRows = useApolloTableFetch<VenueListingRow>(client, MY_VENUES_TABLE, 'myVenuesTable');
@@ -116,13 +120,13 @@ export default function VenueListingsTable() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" fontWeight={950}>Your venue registrations</Typography>
+          <Typography variant="h6" fontWeight={950}>{t('partners.venueListingsPage.yourVenueRegistrations')}</Typography>
           <DuncitTable<VenueListingRow>
             tableId="partners-app-venues"
-            columns={COLUMNS}
+            columns={columns(t)}
             fetchRows={fetchRows}
             getRowId={getVenueRowId}
-            emptyText="No venue registration yet."
+            emptyText={t('partners.venueListingsPage.noVenueRegistrationYet')}
             defaultSort={{ field: 'updated_at', dir: 'desc' }}
             searchPlaceholder="Search venue, type, city"
           />

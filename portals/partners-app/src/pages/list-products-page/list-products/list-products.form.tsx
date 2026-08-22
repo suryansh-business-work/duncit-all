@@ -13,6 +13,7 @@ import { StepBody } from './list-products.form-ui';
 import StepActions from './StepActions';
 import { useAutoVariants } from './useAutoVariants';
 import { useProductModeration } from './useProductModeration';
+import { useTranslation } from '@duncit/shell';
 
 export { productListingSchema } from './list-products.schema';
 
@@ -59,6 +60,7 @@ interface Props {
 }
 
 export default function ListProductsForm({ brandId, product = null, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [submitProduct, submitState] = useMutation(SUBMIT_PRODUCT_LISTING);
   const [updateProduct, updateState] = useMutation(UPDATE_PRODUCT_LISTING);
   const [activeStep, setActiveStep] = useState(0);
@@ -162,7 +164,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
         onClose={() => setPickerIndex(null)}
         onPicked={addVariantImage}
         folder="/partner-products"
-        title="Upload variant image"
+        title={t('partners.listProductsPage.uploadVariantImage')}
         accept="image/*"
       />
       <ModerationBlockedDialog
@@ -172,7 +174,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
           moderation.closeBlocked();
         }}
         onClose={moderation.closeBlocked}
-        description="Our AI check found content that breaks the community guidelines, so the product was not submitted. Fix the items below and try again."
+        description={t('partners.listProductsPage.ourAiCheckFoundContentThat')}
       />
     </Card>
   );

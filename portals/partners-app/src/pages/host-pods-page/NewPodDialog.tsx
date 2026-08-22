@@ -49,10 +49,10 @@ export default function NewPodDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>New Pod</DialogTitle>
+      <DialogTitle>{t('partners.common.newPod')}</DialogTitle>
       <DialogContent dividers>
         <Alert severity="info" sx={{ mb: 1.5 }}>
-          Your approved host profile is added as the pod host automatically.
+          {t('partners.podsPage.yourApprovedHostProfileIsAdded')}
         </Alert>
         <PodForm
           initialValues={blankPodFormValues}

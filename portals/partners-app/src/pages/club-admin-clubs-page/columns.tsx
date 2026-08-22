@@ -5,6 +5,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { activeChipColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { ClubAdminClubInfoRow } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** Thumbnail + name (+ verified badge) + slug caption — the primary club cell. */
 const renderClub = (club: ClubAdminClubInfoRow) => (
@@ -32,7 +33,7 @@ const renderClub = (club: ClubAdminClubInfoRow) => (
 );
 
 /** "Pods" jump to the club's pod list (row click opens the club details). */
-const renderActions = (club: ClubAdminClubInfoRow) => (
+const renderActions = (club: ClubAdminClubInfoRow, t: Translate) => (
   <Stack direction="row" justifyContent="flex-end" component="span">
     <Button
       size="small"
@@ -41,15 +42,17 @@ const renderActions = (club: ClubAdminClubInfoRow) => (
       to={`/club-admin/clubs/${club.id}`}
       startIcon={<EventNoteIcon />}
     >
-      Pods
+      {t('shell.nav.pods')}
     </Button>
   </Stack>
 );
 
-export const CLUB_ADMIN_CLUBS_COLUMNS: DuncitColumn<ClubAdminClubInfoRow>[] = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const clubAdminClubsColumns = (t: Translate): DuncitColumn<ClubAdminClubInfoRow>[] =>[
   {
     field: 'club_name',
-    headerName: 'Club',
+    headerName: t('partners.common.club'),
     flex: 1,
     minWidth: 230,
     filter: { type: 'text' },
@@ -58,14 +61,14 @@ export const CLUB_ADMIN_CLUBS_COLUMNS: DuncitColumn<ClubAdminClubInfoRow>[] = [
   },
   {
     field: 'category',
-    headerName: 'Category',
+    headerName: t('partners.common.category'),
     minWidth: 140,
     filter: { type: 'text' },
     valueGetter: (club) => club.category ?? EM_DASH,
   },
   {
     field: 'super_category',
-    headerName: 'Super category',
+    headerName: t('partners.clubAdminClubsPage.superCategory'),
     hide: true,
     minWidth: 150,
     filter: { type: 'text' },
@@ -73,49 +76,49 @@ export const CLUB_ADMIN_CLUBS_COLUMNS: DuncitColumn<ClubAdminClubInfoRow>[] = [
   },
   {
     field: 'locality',
-    headerName: 'Locality',
+    headerName: t('partners.common.locality'),
     minWidth: 130,
     filter: { type: 'text' },
     valueGetter: (club) => club.locality || EM_DASH,
   },
   {
     field: 'location_label',
-    headerName: 'City',
+    headerName: t('partners.common.city'),
     hide: true,
     minWidth: 120,
     valueGetter: (club) => club.location_label ?? EM_DASH,
   },
   {
     field: 'followers_count',
-    headerName: 'Followers',
+    headerName: t('partners.common.followers'),
     width: 115,
     filter: { type: 'number' },
     valueGetter: (club) => club.followers_count,
   },
   {
     field: 'total_pods',
-    headerName: 'Pods',
+    headerName: t('shell.nav.pods'),
     width: 95,
     filter: { type: 'number' },
     valueGetter: (club) => club.total_pods,
   },
   {
     field: 'upcoming_pods',
-    headerName: 'Upcoming',
+    headerName: t('partners.common.upcoming'),
     width: 115,
     filter: { type: 'number' },
     valueGetter: (club) => club.upcoming_pods,
   },
   {
     field: 'matched_venues_count',
-    headerName: 'Venues',
+    headerName: t('shell.nav.venues'),
     width: 105,
     filter: { type: 'number' },
     valueGetter: (club) => club.matched_venues_count,
   },
   activeChipColumn<ClubAdminClubInfoRow>({
     field: 'is_verified',
-    headerName: 'Verified',
+    headerName: t('partners.clubAdminClubsPage.verified'),
     width: 120,
     activeLabel: 'Verified',
     inactiveLabel: 'Unverified',
@@ -125,9 +128,9 @@ export const CLUB_ADMIN_CLUBS_COLUMNS: DuncitColumn<ClubAdminClubInfoRow>[] = [
   dateColumn<ClubAdminClubInfoRow>({ hide: false }),
   {
     field: 'actions',
-    headerName: 'Actions',
+    headerName: t('shell.common.actions'),
     sortable: false,
     width: 130,
-    cellRenderer: renderActions,
+    cellRenderer: (row: ClubAdminClubInfoRow) => renderActions(row, t),
   },
 ];

@@ -7,6 +7,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import { useTranslation } from '@duncit/shell';
 
 export interface ProductRowAction {
   key: string;
@@ -29,11 +30,12 @@ const ICONS = {
 /** Per-row 3-dots menu. Lives in a MUI Menu portal, so item clicks never bubble
  * to the table's row-click. */
 export default function ProductRowActions({ actions }: Readonly<{ actions: ProductRowAction[] }>) {
+  const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const close = () => setAnchor(null);
   return (
     <>
-      <IconButton size="small" aria-label="Product actions" onClick={(event) => setAnchor(event.currentTarget)}>
+      <IconButton size="small" aria-label={t('partners.listProductsPage.productActions')} onClick={(event) => setAnchor(event.currentTarget)}>
         <MoreVertIcon fontSize="small" />
       </IconButton>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>

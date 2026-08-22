@@ -2,6 +2,7 @@ import { Box, Card, Grid, LinearProgress, Stack, Typography, useTheme } from '@m
 import { formatMoney } from '@duncit/utils';
 import type { HostInsights } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const WIDTH = 640;
 const HEIGHT = 180;
@@ -10,11 +11,13 @@ const PAD = 10;
 type StatusKey = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
 type PaletteKey = 'info' | 'warning' | 'success' | 'error';
 
-const STATUS: { key: StatusKey; label: string; palette: PaletteKey }[] = [
-  { key: 'upcoming', label: 'Upcoming', palette: 'info' },
-  { key: 'ongoing', label: 'Ongoing', palette: 'warning' },
-  { key: 'completed', label: 'Completed', palette: 'success' },
-  { key: 'cancelled', label: 'Cancelled', palette: 'error' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const status = (t: Translate): { key: StatusKey; label: string; palette: PaletteKey }[] =>[
+  { key: 'upcoming', label: t('partners.common.upcoming'), palette: 'info' },
+  { key: 'ongoing', label: t('partners.hostDashboardPage.ongoing'), palette: 'warning' },
+  { key: 'completed', label: t('partners.common.completed'), palette: 'success' },
+  { key: 'cancelled', label: t('partners.common.cancelled'), palette: 'error' },
 ];
 
 /** "2026-08" -> "Aug 26" — the axis label under each bar. */
@@ -52,6 +55,7 @@ interface Props {
  * itself from the palette in both light and dark.
  */
 export default function HostInsightsCharts({ insights, currencySymbol }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const counts = insights?.status_counts;
   const months = insights?.monthly_earnings ?? [];
@@ -74,7 +78,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
                 No pods yet. Once you host one it appears here.
               </Typography>
             ) : (
-              STATUS.map((status) => {
+              status(t).map((status) => {
                 const value = counts?.[status.key] ?? 0;
                 return (
                   <Stack key={status.key} spacing={0.5}>
@@ -115,7 +119,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
                     viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
                     preserveAspectRatio="none"
                     role="img"
-                    aria-label="Monthly host earnings"
+                    aria-label={t('partners.hostDashboardPage.monthlyHostEarnings')}
                   >
                     <polyline
                       points={earningsLine(totals)}

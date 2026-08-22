@@ -2,14 +2,16 @@ import { useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { POLICY_BY_SLUG } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery(POLICY_BY_SLUG, { variables: { slug }, fetchPolicy: 'cache-and-network' });
   if (loading && !data) return <PolicySkeleton />;
   if (error) return <Alert severity="error">Could not load policy: {error.message}</Alert>;
   const policy = data?.policyBySlug;
-  if (!policy) return <Alert severity="warning">No policy found.</Alert>;
-  if (!policy.is_active) return <Alert severity="info">This policy is currently hidden.</Alert>;
+  if (!policy) return <Alert severity="warning">{t('partners.policiesPage.noPolicyFound')}</Alert>;
+  if (!policy.is_active) return <Alert severity="info">{t('partners.policiesPage.thisPolicyIsCurrentlyHidden')}</Alert>;
 
   return (
     <Box>

@@ -11,10 +11,12 @@ import BrandPauseDialog from './BrandPauseDialog';
 import PartnerBrandsTable from './PartnerBrandsTable';
 import { MY_BRANDS, MY_BRANDS_TABLE, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrand, type EcommBrandRow } from './queries';
 import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
+import { useTranslation } from '@duncit/shell';
 
 type Editing = EcommBrand | 'new' | null;
 
 export default function EcommBrandPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
@@ -60,7 +62,7 @@ export default function EcommBrandPage() {
     setError(null);
     try {
       await saveBrand({ variables: { brand_doc_id: brandId ?? null, input: toSaveInput(values) } });
-      setMessage('Brand saved.');
+      setMessage(t('partners.ecommBrandPage.brandSaved'));
       closeDialog();
       refetchRef.current?.();
     } catch (e: any) {
@@ -73,7 +75,7 @@ export default function EcommBrandPage() {
       const res = await saveBrand({ variables: { brand_doc_id: brandId ?? null, input: toSaveInput(values) } });
       const id = brandId ?? res.data?.saveEcommBrand?.id;
       await submitBrand({ variables: { brand_doc_id: id } });
-      setMessage('Brand submitted for review.');
+      setMessage(t('partners.ecommBrandPage.brandSubmittedForReview'));
       closeDialog();
       refetchRef.current?.();
     } catch (e: any) {
@@ -85,7 +87,7 @@ export default function EcommBrandPage() {
     try {
       await withdrawBrand({ variables: { brand_doc_id: brand.id } });
       setEditing({ ...brand, status: 'DRAFT' }); // unlock the form in place
-      setMessage('Brand moved back to draft.');
+      setMessage(t('partners.ecommBrandPage.brandMovedBackToDraft'));
       refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
@@ -97,7 +99,7 @@ export default function EcommBrandPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
-        <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Partner tools</Typography>
+        <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
         <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05 }}>E-Commerce Brands</Typography>
         <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
           Register one or more product brands — our onboarding team verifies each before it goes live.
@@ -108,7 +110,7 @@ export default function EcommBrandPage() {
 
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Your brands</Typography>
+          <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>{t('partners.ecommBrandPage.yourBrands')}</Typography>
           <PartnerBrandsTable
             fetchRows={fetchRows}
             refetchRef={refetchRef}
@@ -128,7 +130,7 @@ export default function EcommBrandPage() {
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <span>{dialogTitle}</span>
-          <IconButton size="small" onClick={closeDialog} aria-label="Close"><CloseIcon /></IconButton>
+          <IconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
         </DialogTitle>
         <DialogContent dividers>
           {editingBrand?.status === 'SUBMITTED' && (
@@ -136,7 +138,7 @@ export default function EcommBrandPage() {
               This brand is under review.
             </Alert>
           )}
-          {editingBrand?.status === 'APPROVED' && <Alert severity="success" sx={{ mb: 2 }}>Approved — your brand is verified.</Alert>}
+          {editingBrand?.status === 'APPROVED' && <Alert severity="success" sx={{ mb: 2 }}>{t('partners.ecommBrandPage.approvedYourBrandIsVerified')}</Alert>}
           {editingBrand?.status === 'REJECTED' && <Alert severity="error" sx={{ mb: 2 }}>Rejected: {editingBrand.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>}
           {error && editing && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
           <EcommBrandForm
@@ -157,7 +159,7 @@ export default function EcommBrandPage() {
         onClose={() => settlePicker(null)}
         onPicked={(url) => settlePicker(url)}
         folder="/brands/media"
-        title="Upload brand media"
+        title={t('partners.ecommBrandPage.uploadBrandMedia')}
         accept="image/*,application/pdf"
       />
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />

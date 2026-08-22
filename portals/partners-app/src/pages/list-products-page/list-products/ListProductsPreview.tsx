@@ -8,6 +8,7 @@ import {
   type BrandWarehouse,
 } from '../../ecomm-brand-page/brand-settings/warehouse.queries';
 import type { ProductListingValues, ProductVariantValues } from './list-products.types';
+import { useTranslation } from '@duncit/shell';
 
 const dimensions = (variant: ProductVariantValues) =>
   `${Number(variant.length_cm) || 0} × ${Number(variant.breadth_cm) || 0} × ${Number(variant.height_cm) || 0} cm · ${Number(variant.weight_kg) || 0} kg`;
@@ -44,6 +45,7 @@ interface Props {
 
 /** Final review step: everything the listing will submit, at a glance. */
 export default function ListProductsPreview({ values, brandId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data } = useQuery(MY_BRAND_WAREHOUSES, {
     variables: { brand_doc_id: brandId },
     skip: !brandId,
@@ -81,9 +83,9 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Variant</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Stock</TableCell>
+              <TableCell>{t('partners.listProductsPage.variant')}</TableCell>
+              <TableCell>{t('partners.common.price')}</TableCell>
+              <TableCell>{t('partners.listProductsPage.stock')}</TableCell>
               <TableCell>L × B × H · Weight</TableCell>
             </TableRow>
           </TableHead>
@@ -97,7 +99,7 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
       <Divider />
       <Stack spacing={0.5}>
         <Typography variant="body2">
-          <strong>Commission:</strong> {values.commission_pct}% · <strong>Total stock:</strong> {totalStock}
+          <strong>Commission:</strong> {values.commission_pct}% · <strong>{t('partners.listProductsPage.totalStock')}</strong> {totalStock}
         </Typography>
         <Typography variant="body2">
           <strong>Delivery:</strong> ShipRocket

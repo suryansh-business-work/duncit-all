@@ -20,6 +20,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DayOfWeekPicker from '../DayOfWeekPicker';
 import { BULK_DELETE_VENUE_SLOTS, BULK_UPDATE_VENUE_SLOTS } from '../recurring.queries';
+import { useTranslation } from '@duncit/shell';
 
 const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [from, setFrom] = useState<Date | null>(null);
   const [to, setTo] = useState<Date | null>(null);
   const [weekdays, setWeekdays] = useState<number[]>([]);
@@ -79,7 +81,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             Filter (all optional — empty means every upcoming non-booked slot). Booked slots are never affected.
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <DatePicker label="From" value={from} onChange={setFrom} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
+            <DatePicker label={t('partners.venueAvailabilityPage.from')} value={from} onChange={setFrom} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
             <DatePicker label="To" value={to} onChange={setTo} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
           </Stack>
           <DayOfWeekPicker value={weekdays} onChange={setWeekdays} />
@@ -99,7 +101,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             </Button>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            <TextField size="small" type="number" label="New price (₹)" value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} inputProps={{ min: 0 }} />
+            <TextField size="small" type="number" label={t('partners.venueAvailabilityPage.newPrice')} value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} inputProps={{ min: 0 }} />
             <Button
               variant="outlined"
               disabled={price === ''}
@@ -117,12 +119,12 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
       </AccordionDetails>
 
       <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
-        <DialogTitle>Are you sure?</DialogTitle>
+        <DialogTitle>{t('partners.venueAvailabilityPage.areYouSure')}</DialogTitle>
         <DialogContent>
           <DialogContentText>{confirm?.text}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirm(null)}>Cancel</Button>
+          <Button onClick={() => setConfirm(null)}>{t('shell.common.cancel')}</Button>
           <Button
             color="error"
             variant="contained"

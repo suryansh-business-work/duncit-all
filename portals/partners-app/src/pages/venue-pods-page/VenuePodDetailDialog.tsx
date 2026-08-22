@@ -20,6 +20,7 @@ import {
   type AttendeeProfile,
   type VenuePodRow,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return <InfoRow variant="split" label={label} value={value} sx={{ py: 0.5 }} />;
@@ -32,6 +33,7 @@ interface Props {
 
 /** Basic pod info + the attendee names, for the venue owner's click-through. */
 export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const ids = row?.pod_attendees ?? [];
   const { data, loading } = useQuery(VENUE_POD_ATTENDEE_PROFILES, {
     variables: { ids },
@@ -53,17 +55,17 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             />
           </DialogTitle>
           <DialogContent dividers>
-            <Row label="Venue" value={row.venue_name} />
-            <Row label="Hosts" value={row.host_names.join(', ') || '—'} />
-            <Row label="When" value={fmtDate(row.pod_date_time)} />
-            <Row label="Ends" value={fmtDate(row.pod_end_date_time)} />
-            <Row label="Price" value={row.pod_type === 'FREE' ? 'Free' : `₹${row.pod_amount}`} />
+            <Row label={t('partners.common.venue')} value={row.venue_name} />
+            <Row label={t('partners.venuePodsPage.hosts')} value={row.host_names.join(', ') || '—'} />
+            <Row label={t('partners.common.when')} value={fmtDate(row.pod_date_time)} />
+            <Row label={t('partners.venuePodsPage.ends')} value={fmtDate(row.pod_end_date_time)} />
+            <Row label={t('partners.common.price')} value={row.pod_type === 'FREE' ? 'Free' : `₹${row.pod_amount}`} />
             <Row
-              label="Attendees"
+              label={t('partners.common.attendees')}
               value={row.no_of_spots > 0 ? `${row.attendee_count} / ${row.no_of_spots}` : row.attendee_count}
             />
-            {row.completed_at && <Row label="Completed" value={fmtDate(row.completed_at)} />}
-            {row.cancelled_at && <Row label="Cancelled" value={fmtDate(row.cancelled_at)} />}
+            {row.completed_at && <Row label={t('partners.common.completed')} value={fmtDate(row.completed_at)} />}
+            {row.cancelled_at && <Row label={t('partners.common.cancelled')} value={fmtDate(row.cancelled_at)} />}
 
             <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle2" fontWeight={800} gutterBottom>
@@ -89,7 +91,7 @@ export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) 
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t('shell.common.close')}</Button>
           </DialogActions>
         </>
       )}

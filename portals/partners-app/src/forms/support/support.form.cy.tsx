@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { supportInitialValues } from './support.types';
-import { supportSchema, toContactInput } from './support.form';
+import { buildSupportSchema, toContactInput } from './support.form';
+
+/** The spec reads keys back, so an identity translator keeps its assertions. */
+const supportSchema = buildSupportSchema((key: string) => key);
 
 const valid = {
   ...supportInitialValues,

@@ -47,14 +47,14 @@ export default function PartnerPodsPage() {
       <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
           <Box>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>Partner pods</Typography>
-            <Typography variant="h4" fontWeight={950}>Create and manage pods</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>Use the same pod setup flow as the admin panel.</Typography>
+            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.podsPage.partnerPods')}</Typography>
+            <Typography variant="h4" fontWeight={950}>{t('partners.podsPage.createAndManagePods')}</Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.podsPage.useTheSamePodSetupFlow')}</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>Add Pod</Button>
+          <Button variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)} sx={{ bgcolor: '#fff', color: '#15111c', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>{t('partners.podsPage.addPod')}</Button>
         </Stack>
       </Box>
-      {!approvedHost && <Alert severity="info">Your host application must be approved before you can create pods.</Alert>}
+      {!approvedHost && <Alert severity="info">{t('partners.podsPage.yourHostApplicationMustBeApproved')}</Alert>}
       {error && <Alert severity="error">{error.message}</Alert>}
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
@@ -64,14 +64,14 @@ export default function PartnerPodsPage() {
             refetchRef={refetchRef}
             clubName={clubName}
             venueName={venueName}
-            emptyText="No pods created from your partner account yet."
+            emptyText={t('partners.common.noPodsCreatedFromYourPartner')}
           />
         </CardContent>
       </Card>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>New Pod</DialogTitle>
+        <DialogTitle>{t('partners.common.newPod')}</DialogTitle>
         <DialogContent dividers>
-          <Alert severity="info" sx={{ mb: 1.5 }}>Your approved host profile is added as the pod host automatically.</Alert>
+          <Alert severity="info" sx={{ mb: 1.5 }}>{t('partners.podsPage.yourApprovedHostProfileIsAdded')}</Alert>
           <PodForm
             initialValues={blankPodFormValues}
             config={PARTNER_POD_CONFIG}

@@ -3,6 +3,7 @@ import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import type { UseFormReturn } from 'react-hook-form';
 import { InfoRow } from '@duncit/ui';
 import type { RegisterVenueValues } from '../register-venue';
+import { useTranslation } from '@duncit/shell';
 
 const CATEGORY_NAMES = gql`
   query VenueCategoryNames($ids: CategoryFilterInput) {
@@ -53,6 +54,7 @@ interface Props {
 }
 
 export default function ReviewSection({ form }: Readonly<Props>) {
+  const { t } = useTranslation();
   const values = form.watch();
   const categoryPath = useCategoryPath(values);
   const totalCapacity = values.capacity_items.reduce(
@@ -73,12 +75,12 @@ export default function ReviewSection({ form }: Readonly<Props>) {
         Review your registration
       </Typography>
       <Stack spacing={1}>
-        <Row label="Venue name" value={values.venue_name} />
-        <Row label="Venue type" value={values.venue_type} />
-        <Row label="Category" value={categoryPath} />
-        <Row label="Address" value={addressLine} />
+        <Row label={t('partners.registerVenuePage.venueName')} value={values.venue_name} />
+        <Row label={t('partners.registerVenuePage.venueType')} value={values.venue_type} />
+        <Row label={t('partners.common.category')} value={categoryPath} />
+        <Row label={t('partners.common.address')} value={addressLine} />
         <Divider flexItem sx={{ my: 0.5 }} />
-        <Row label="Total capacity" value={totalCapacity ? String(totalCapacity) : ''} />
+        <Row label={t('partners.registerVenuePage.totalCapacity')} value={totalCapacity ? String(totalCapacity) : ''} />
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, pl: '146px' }}>
           {values.capacity_items
             .filter((item) => item.label)
@@ -87,13 +89,13 @@ export default function ReviewSection({ form }: Readonly<Props>) {
             ))}
         </Box>
         <Divider flexItem sx={{ my: 0.5 }} />
-        <Row label="Documents" value={documentsLine} />
+        <Row label={t('shell.nav.documents')} value={documentsLine} />
         <Row label="GSTIN" value={values.gstin} />
         <Row label="PAN" value={values.pan} />
         <Divider flexItem sx={{ my: 0.5 }} />
-        <Row label="Owner" value={values.owner_name} />
-        <Row label="Owner email" value={values.owner_email} />
-        <Row label="Owner phone" value={values.owner_phone} />
+        <Row label={t('partners.registerVenuePage.owner')} value={values.owner_name} />
+        <Row label={t('partners.registerVenuePage.ownerEmail')} value={values.owner_email} />
+        <Row label={t('partners.registerVenuePage.ownerPhone')} value={values.owner_phone} />
       </Stack>
       <Typography variant="caption" color="text.secondary">
         Submitting sends your application for review. You can keep editing until it is submitted;

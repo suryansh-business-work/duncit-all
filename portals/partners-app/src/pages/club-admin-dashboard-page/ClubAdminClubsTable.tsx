@@ -4,6 +4,7 @@ import { Card, Link, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ClubAdminClubRow } from './queries';
 import { formatCount, formatMoney, formatRating } from './format';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<ClubAdminClubRow>;
@@ -20,11 +21,12 @@ const renderClub = (club: ClubAdminClubRow) => (
 );
 
 export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySymbol }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ClubAdminClubRow>[]>(
     () => [
       {
         field: 'club_name',
-        headerName: 'Club',
+        headerName: t('partners.common.club'),
         flex: 1,
         minWidth: 180,
         filter: { type: 'text' },
@@ -33,7 +35,7 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
       },
       {
         field: 'total_pods',
-        headerName: 'Total pods',
+        headerName: t('partners.clubAdminDashboardPage.totalPods'),
         hide: true,
         width: 110,
         filter: { type: 'number' },
@@ -41,35 +43,35 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
       },
       {
         field: 'upcoming_pods',
-        headerName: 'Upcoming',
+        headerName: t('partners.common.upcoming'),
         width: 115,
         filter: { type: 'number' },
         valueGetter: (club) => formatCount(club.upcoming_pods),
       },
       {
         field: 'completed_pods',
-        headerName: 'Completed',
+        headerName: t('partners.common.completed'),
         width: 120,
         filter: { type: 'number' },
         valueGetter: (club) => formatCount(club.completed_pods),
       },
       {
         field: 'followers',
-        headerName: 'Followers',
+        headerName: t('partners.common.followers'),
         width: 115,
         filter: { type: 'number' },
         valueGetter: (club) => formatCount(club.followers),
       },
       {
         field: 'rating',
-        headerName: 'Rating',
+        headerName: t('partners.clubAdminDashboardPage.rating'),
         width: 100,
         filter: { type: 'number' },
         valueGetter: (club) => formatRating(club.rating),
       },
       {
         field: 'revenue',
-        headerName: 'Revenue',
+        headerName: t('partners.clubAdminDashboardPage.revenue'),
         width: 120,
         filter: { type: 'number' },
         valueGetter: (club) => formatMoney(club.revenue, currencySymbol),
@@ -81,13 +83,13 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" fontWeight={900}>Per-club breakdown</Typography>
+        <Typography variant="subtitle2" fontWeight={900}>{t('partners.clubAdminDashboardPage.perClubBreakdown')}</Typography>
         <DuncitTable<ClubAdminClubRow>
           tableId="partners-app-club-admin-clubs"
           columns={columns}
           fetchRows={fetchRows}
           getRowId={getClubRowId}
-          emptyText="No clubs are assigned to you yet."
+          emptyText={t('partners.common.noClubsAreAssignedToYou')}
           defaultSort={{ field: 'club_name', dir: 'asc' }}
           searchPlaceholder="Search club name or slug"
           refetchRef={refetchRef}

@@ -3,6 +3,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 type Decision = 'NONE' | 'APPROVED' | 'DECLINED';
 
@@ -17,22 +18,23 @@ export default function DecisionHeader({
   decision,
   startAt,
 }: Readonly<{ decision: Decision; startAt: string }>) {
+  const { t } = useTranslation();
   const when = formatDateTime(startAt);
 
   let icon = <HourglassTopIcon sx={{ fontSize: 44 }} />;
   let eyebrow = 'Awaiting your decision';
-  let title = 'A host wants to book your venue';
+  let title = t('partners.slotDecisionPage.aHostWantsToBookYour');
   let subtitle = `They have asked for ${when}. Approve it to put the pod live.`;
 
   if (decision === 'APPROVED') {
     icon = <CheckCircleIcon sx={{ fontSize: 44 }} />;
     eyebrow = 'Booking confirmed';
-    title = 'Your venue is booked';
+    title = t('partners.slotDecisionPage.yourVenueIsBooked');
     subtitle = `Blocked for ${when}. The pod is live and open for bookings.`;
   } else if (decision === 'DECLINED') {
     icon = <CancelIcon sx={{ fontSize: 44 }} />;
     eyebrow = 'Booking declined';
-    title = 'You turned this slot down';
+    title = t('partners.slotDecisionPage.youTurnedThisSlotDown');
     subtitle = `${when} is open again on your calendar.`;
   }
 

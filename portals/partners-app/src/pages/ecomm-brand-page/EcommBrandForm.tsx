@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import SendIcon from '@mui/icons-material/Send';
 import { brandSchema, type BrandFormValues } from './schema';
+import { useTranslation } from '@duncit/shell';
 
 interface FieldDef {
   name: keyof BrandFormValues & string;
@@ -15,56 +16,58 @@ interface FieldDef {
   required?: boolean;
 }
 
-const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const sections = (t: Translate): Array<{ title: string; fields: FieldDef[] }> =>[
   {
-    title: 'Brand identity',
+    title: t('partners.ecommBrandPage.brandIdentity'),
     fields: [
-      { name: 'brand_name', label: 'Brand name', required: true },
-      { name: 'tagline', label: 'Tagline' },
-      { name: 'description', label: 'Description', multiline: true, required: true },
+      { name: 'brand_name', label: t('partners.ecommBrandPage.brandName'), required: true },
+      { name: 'tagline', label: t('partners.ecommBrandPage.tagline') },
+      { name: 'description', label: t('shell.common.description'), multiline: true, required: true },
     ],
   },
   {
-    title: 'Online presence',
+    title: t('partners.ecommBrandPage.onlinePresence'),
     fields: [
-      { name: 'website_url', label: 'Website' },
-      { name: 'instagram_url', label: 'Instagram' },
+      { name: 'website_url', label: t('partners.ecommBrandPage.website') },
+      { name: 'instagram_url', label: t('partners.ecommBrandPage.instagram') },
     ],
   },
   {
-    title: 'Contact',
+    title: t('partners.ecommBrandPage.contact'),
     fields: [
-      { name: 'contact_person', label: 'Contact person' },
-      { name: 'contact_email', label: 'Contact email', required: true },
-      { name: 'contact_phone', label: 'Contact phone' },
+      { name: 'contact_person', label: t('partners.ecommBrandPage.contactPerson') },
+      { name: 'contact_email', label: t('partners.ecommBrandPage.contactEmail'), required: true },
+      { name: 'contact_phone', label: t('partners.ecommBrandPage.contactPhone') },
     ],
   },
   {
-    title: 'Business & legal',
+    title: t('partners.ecommBrandPage.businessAndLegal'),
     fields: [
-      { name: 'registered_business_name', label: 'Registered business name' },
+      { name: 'registered_business_name', label: t('partners.ecommBrandPage.registeredBusinessName') },
       { name: 'gstin', label: 'GSTIN' },
       { name: 'pan', label: 'PAN' },
-      { name: 'established_year', label: 'Established year' },
+      { name: 'established_year', label: t('partners.ecommBrandPage.establishedYear') },
     ],
   },
   {
-    title: 'Address',
+    title: t('partners.common.address'),
     fields: [
-      { name: 'address_line1', label: 'Address' },
-      { name: 'city', label: 'City' },
-      { name: 'state', label: 'State' },
-      { name: 'postal_code', label: 'Postal code' },
-      { name: 'country', label: 'Country' },
+      { name: 'address_line1', label: t('partners.common.address') },
+      { name: 'city', label: t('partners.common.city') },
+      { name: 'state', label: t('partners.ecommBrandPage.state') },
+      { name: 'postal_code', label: t('partners.ecommBrandPage.postalCode') },
+      { name: 'country', label: t('partners.ecommBrandPage.country') },
     ],
   },
   {
-    title: 'Payout (optional)',
+    title: t('partners.ecommBrandPage.payoutOptional'),
     fields: [
-      { name: 'account_holder_name', label: 'Account holder name' },
-      { name: 'account_number', label: 'Account number' },
-      { name: 'ifsc_code', label: 'IFSC code' },
-      { name: 'upi_id', label: 'UPI ID' },
+      { name: 'account_holder_name', label: t('partners.common.accountHolderName') },
+      { name: 'account_number', label: t('partners.common.accountNumber') },
+      { name: 'ifsc_code', label: t('partners.common.ifscCode') },
+      { name: 'upi_id', label: t('partners.common.upiId') },
     ],
   },
 ];
@@ -79,6 +82,7 @@ interface Props {
 }
 
 export default function EcommBrandForm({ defaultValues, busy, locked, onSave, onSubmitForReview, onPickImage }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues,
@@ -111,7 +115,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
 
   return (
     <Stack spacing={2.5} component="form" onSubmit={handleSubmit(onSave)} noValidate>
-      {SECTIONS.map((section) => (
+      {sections(t).map((section) => (
         <Box key={section.title}>
           <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{section.title}</Typography>
           <Stack spacing={2}>
@@ -134,13 +138,13 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       ))}
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>Product categories</Typography>
+        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t('partners.ecommBrandPage.productCategories')}</Typography>
         <Stack direction="row" spacing={1}>
           <TextField
             size="small"
             fullWidth
             disabled={locked}
-            label="Add a category"
+            label={t('partners.ecommBrandPage.addACategory')}
             value={categoryDraft}
             onChange={(e) => setCategoryDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
@@ -159,25 +163,25 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
       </Box>
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>Brand media</Typography>
+        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>{t('partners.ecommBrandPage.brandMedia')}</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <MediaSlot label="Logo" url={logo} disabled={locked} onPick={() => pickInto('logo_url')} onClear={() => setValue('logo_url', '')} />
-          <MediaSlot label="Cover image" url={cover} disabled={locked} onPick={() => pickInto('cover_image_url')} onClear={() => setValue('cover_image_url', '')} />
+          <MediaSlot label={t('partners.ecommBrandPage.logo')} url={logo} disabled={locked} onPick={() => pickInto('logo_url')} onClear={() => setValue('logo_url', '')} />
+          <MediaSlot label={t('partners.ecommBrandPage.coverImage')} url={cover} disabled={locked} onPick={() => pickInto('cover_image_url')} onClear={() => setValue('cover_image_url', '')} />
         </Stack>
       </Box>
 
       <Box>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="subtitle2" fontWeight={800}>Documents</Typography>
-          <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addDocument} disabled={locked}>Add document</Button>
+          <Typography variant="subtitle2" fontWeight={800}>{t('shell.nav.documents')}</Typography>
+          <Button size="small" startIcon={<AddPhotoAlternateIcon />} onClick={addDocument} disabled={locked}>{t('partners.ecommBrandPage.addDocument')}</Button>
         </Stack>
         {documents.length === 0 ? (
-          <Typography variant="caption" color="text.secondary">Brand registration, trademark, GST certificate, etc.</Typography>
+          <Typography variant="caption" color="text.secondary">{t('partners.ecommBrandPage.brandRegistrationTrademarkGstCertificateEtc')}</Typography>
         ) : (
           <Stack spacing={1}>
             {documents.map((doc, index) => (
               <Stack key={doc.url} direction="row" alignItems="center" spacing={1}>
-                <TextField size="small" label="Type" value={doc.type} disabled={locked} onChange={(e) => setValue('documents', documents.map((d, i) => (i === index ? { ...d, type: e.target.value } : d)))} sx={{ width: 160 }} />
+                <TextField size="small" label={t('shell.common.type')} value={doc.type} disabled={locked} onChange={(e) => setValue('documents', documents.map((d, i) => (i === index ? { ...d, type: e.target.value } : d)))} sx={{ width: 160 }} />
                 <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1, minWidth: 0 }}>{doc.url}</Typography>
                 {!locked && (
                   <IconButton size="small" onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></IconButton>
@@ -192,7 +196,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
         <>
           <Divider />
           <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-            <Button type="submit" variant="outlined" disabled={busy}>Save draft</Button>
+            <Button type="submit" variant="outlined" disabled={busy}>{t('partners.ecommBrandPage.saveDraft')}</Button>
             <Button type="button" variant="contained" endIcon={<SendIcon />} disabled={busy} onClick={handleSubmit(onSubmitForReview)}>
               Submit for review
             </Button>
@@ -204,13 +208,14 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
 }
 
 function MediaSlot({ label, url, disabled, onPick, onClear }: Readonly<{ label: string; url: string; disabled: boolean; onPick: () => void; onClear: () => void }>) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ flex: 1 }}>
       <Typography variant="caption" color="text.secondary">{label}</Typography>
       {url && <Box component="img" src={url} alt={label} sx={{ display: 'block', width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 1, my: 0.5 }} />}
       <Stack direction="row" spacing={1}>
-        <Button size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={onPick} disabled={disabled}>{url ? 'Change' : 'Upload'}</Button>
-        {url && !disabled && <Button size="small" color="error" onClick={onClear}>Remove</Button>}
+        <Button size="small" startIcon={<UploadFileIcon />} variant="outlined" onClick={onPick} disabled={disabled}>{url ? 'Change' : t('partners.becomeHostPage.upload')}</Button>
+        {url && !disabled && <Button size="small" color="error" onClick={onClear}>{t('partners.ecommBrandPage.remove')}</Button>}
       </Stack>
     </Box>
   );

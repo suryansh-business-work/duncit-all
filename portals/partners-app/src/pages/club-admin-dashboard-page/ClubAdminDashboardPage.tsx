@@ -14,12 +14,15 @@ import {
 import ClubAdminKpiCards from './ClubAdminKpiCards';
 import ClubAdminTrendChart from './ClubAdminTrendChart';
 import ClubAdminClubsTable from './ClubAdminClubsTable';
+import { useTranslation } from '@duncit/shell';
 
-const RANGES = [
-  { value: '30d', label: 'Last 30 days', from: () => subDays(new Date(), 30) },
-  { value: 'month', label: 'This month', from: () => startOfMonth(new Date()) },
-  { value: '12m', label: 'Last 12 months', from: () => subMonths(new Date(), 12) },
-  { value: 'all', label: 'All time', from: () => null },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const ranges = (t: Translate) =>[
+  { value: '30d', label: t('partners.clubAdminDashboardPage.last30Days'), from: () => subDays(new Date(), 30) },
+  { value: 'month', label: t('partners.clubAdminDashboardPage.thisMonth'), from: () => startOfMonth(new Date()) },
+  { value: '12m', label: t('partners.clubAdminDashboardPage.last12Months'), from: () => subMonths(new Date(), 12) },
+  { value: 'all', label: t('partners.clubAdminDashboardPage.allTime'), from: () => null },
 ];
 
 const HERO_SX = {
@@ -37,12 +40,13 @@ const RANGE_SX = {
 } as const;
 
 export default function ClubAdminDashboardPage() {
+  const { t } = useTranslation();
   const [range, setRange] = useState('12m');
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
   const from = useMemo(() => {
-    const start = RANGES.find((item) => item.value === range)?.from() ?? null;
+    const start = ranges(t).find((item) => item.value === range)?.from() ?? null;
     return start ? start.toISOString() : null;
   }, [range]);
 
@@ -117,8 +121,8 @@ export default function ClubAdminDashboardPage() {
           <Card sx={HERO_SX}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>Partner tools · Club Admin</Typography>
-                <Typography variant="h5" fontWeight={950}>Club Admin Dashboard</Typography>
+                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.clubAdminDashboardPage.partnerToolsClubAdmin')}</Typography>
+                <Typography variant="h5" fontWeight={950}>{t('partners.clubAdminDashboardPage.clubAdminDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
                   Pods, bookings, community and revenue across every club you administer.
                 </Typography>
@@ -126,12 +130,12 @@ export default function ClubAdminDashboardPage() {
               <TextField
                 select
                 size="small"
-                label="Range"
+                label={t('partners.clubAdminDashboardPage.range')}
                 value={range}
                 onChange={(event) => setRange(event.target.value)}
                 sx={RANGE_SX}
               >
-                {RANGES.map((item) => (
+                {ranges(t).map((item) => (
                   <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
                 ))}
               </TextField>

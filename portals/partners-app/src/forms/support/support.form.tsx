@@ -4,14 +4,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
 import { RhfTextField, zodRules } from '@duncit/forms';
-import { SUPPORT_CATEGORIES, supportInitialValues, type SupportFormValues } from './support.types';
+import { supportCategories, supportInitialValues, type SupportFormValues } from './support.types';
+import { useTranslation } from '@duncit/shell';
 
-const CATEGORY_VALUES = SUPPORT_CATEGORIES.map((item) => item.value) as [SupportFormValues['category'], ...SupportFormValues['category'][]];
+// The schema only needs the VALUES, and those never translate — pass an
+// identity translator rather than requiring a hook at module scope.
+const CATEGORY_VALUES = supportCategories((key: string) => key).map((item) => item.value) as [SupportFormValues['category'], ...SupportFormValues['category'][]];
 
-export const supportSchema = z.object({
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Messages are copy, so the schema is built from the active catalogue. */
+export const buildSupportSchema = (t: Translate) =>
+  z.object({
   name: zodRules.personName('Name'),
   email: zodRules.email('Email', { lengthFirst: true }),
-  category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: 'Select a valid category' }) }),
+  category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: t('partners.forms.selectAValidCategory') }) }),
   subject: zodRules.requiredText('Subject', 3, 120),
   message: zodRules.requiredText('Message', 10, 2000),
 });
@@ -24,9 +31,10 @@ interface Props {
 }
 
 export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const { t } = useTranslation();
   const defaults = { ...supportInitialValues, ...initialValues };
   const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues>({
-    resolver: zodResolver(supportSchema),
+    resolver: zodResolver(buildSupportSchema(t)),
     defaultValues: defaults,
     mode: 'onBlur',
   });
@@ -41,7 +49,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
     try {
       await onSubmit(values);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not submit support request.';
+      const message = error instanceof Error ? error.message : t('partners.forms.couldNotSubmitSupportRequest');
       setError('root', { message });
     }
   });
@@ -51,13 +59,13 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
 
   return (
     <Stack component="form" noValidate onSubmit={submit} spacing={2}>
-      <RhfTextField control={control} name="name" label="Your name" required autoComplete="name" />
-      <RhfTextField control={control} name="email" label="Email" type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint="Locked to your Duncit account" />
-      <TextField select label="Category" defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
-        {SUPPORT_CATEGORIES.map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
+      <RhfTextField control={control} name="name" label={t('partners.forms.yourName')} required autoComplete="name" />
+      <RhfTextField control={control} name="email" label={t('shell.common.email')} type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint={t('partners.becomeHostPage.lockedToYourDuncitAccount')} />
+      <TextField select label={t('partners.common.category')} defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
+        {supportCategories(t).map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
       </TextField>
-      <RhfTextField control={control} name="subject" label="Subject" required />
-      <RhfTextField control={control} name="message" label="Message" required multiline minRows={4} hint="At least 10 characters" />
+      <RhfTextField control={control} name="subject" label={t('partners.forms.subject')} required />
+      <RhfTextField control={control} name="message" label={t('partners.forms.message')} required multiline minRows={4} hint="At least 10 characters" />
       {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
       <Button type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</Button>
     </Stack>
@@ -65,6 +73,6 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
 }
 
 export function toContactInput(values: SupportFormValues) {
-  const payload = supportSchema.parse(values);
+  const payload = buildSupportSchema((key: string) => key).parse(values);
   return { name: payload.name, email: payload.email, subject: `[${payload.category}] ${payload.subject}`, message: payload.message };
 }

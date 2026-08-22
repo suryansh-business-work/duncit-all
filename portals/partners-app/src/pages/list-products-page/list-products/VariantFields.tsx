@@ -5,6 +5,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues, VariantOptionValue } from './list-products.types';
+import { useTranslation } from '@duncit/shell';
 
 interface VariantImagesProps {
   images: string[];
@@ -14,13 +15,14 @@ interface VariantImagesProps {
 
 /** Per-variant image grid + picker trigger. Hoisted to module scope (S6478). */
 function VariantImages({ images, onAdd, onRemove }: Readonly<VariantImagesProps>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1}>
       {images.length > 0 && (
         <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' } }}>
           {images.map((url) => (
             <Box key={url} sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
-              <Box component="img" src={url} alt="Variant" sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
+              <Box component="img" src={url} alt={t('partners.listProductsPage.variant')} sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
               <IconButton
                 size="small"
                 onClick={() => onRemove(url)}
@@ -55,6 +57,7 @@ interface Props {
 
 /** All inputs for one variant — its own media, copy, dimensions, price and stock. */
 export default function VariantFields({ control, index, watch, setValue, onPickImage, onRemove, canRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   const nm = (fieldName: string) => `variants.${index}.${fieldName}` as Path<ProductListingValues>;
   const imagePath = `variants.${index}.image_urls` as Path<ProductListingValues>;
   const images = (watch(imagePath) as string[] | undefined) ?? [];
@@ -73,13 +76,13 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
           ))}
         </Stack>
       ) : (
-        <RhfTextField control={control} name={nm('option_label')} label="Variant name (e.g. Default)" />
+        <RhfTextField control={control} name={nm('option_label')} label={t('partners.listProductsPage.variantNameEGDefault')} />
       )}
       <VariantImages images={images} onAdd={() => onPickImage(index)} onRemove={removeImage} />
       <RhfTextField
         control={control}
         name={nm('description')}
-        label="Description"
+        label={t('shell.common.description')}
         multiline
         minRows={3}
         hint="Describe this variant — what's included, how it's used, handling notes."
@@ -94,7 +97,7 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {numberField(control, nm('unit_cost'), 'Price (₹)')}
-        {numberField(control, nm('inventory_count'), 'Stock')}
+        {numberField(control, nm('inventory_count'), t('partners.listProductsPage.stock'))}
       </Stack>
       <Button color="error" size="small" startIcon={<DeleteOutlineIcon />} onClick={onRemove} disabled={!canRemove} sx={{ alignSelf: 'flex-start' }}>
         Remove this variant

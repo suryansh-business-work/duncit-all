@@ -3,6 +3,7 @@ import { PortalLoginPage, type PortalLoginAppConfig } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import { urlConfigs } from '../config/url-configs';
+import { useTranslation } from '@duncit/shell';
 
 const PARTNERS_LOGIN_IMAGE =
   (import.meta.env.VITE_LOGIN_IMAGE as string | undefined) ||
@@ -10,20 +11,23 @@ const PARTNERS_LOGIN_IMAGE =
 
 const PARTNER_EXTRA_FIELDS = ['onboarding_survey_completed'] as const;
 
-const partnersLoginConfig: PortalLoginAppConfig = {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const partnersLoginConfig = (t: Translate): PortalLoginAppConfig => ({
   key: appConfig.key,
   name: 'Partners',
-  fullName: 'Duncit Partners',
+  fullName: t('partners.common.duncitPartners'),
   tagline: 'Onboard, manage and grow your hosts and venues.',
   promoTitle: 'Grow together',
   promoText: 'Onboard and manage your hosts and venues from one console.',
   loginImage: PARTNERS_LOGIN_IMAGE,
-};
+});
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   return (
     <PortalLoginPage
-      appConfig={partnersLoginConfig}
+      appConfig={partnersLoginConfig(t)}
       session={{ setToken, hasAppAccess, accessDeniedMessage }}
       mutationName="PartnerLogin"
       extraUserFields={PARTNER_EXTRA_FIELDS}

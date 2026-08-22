@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   busy: boolean;
@@ -11,6 +12,7 @@ interface Props {
 /** Decline needs a reason so the host knows what to fix before re-requesting;
  * it is shared with them and kept on the pod's audit trail. */
 export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const trimmed = reason.trim();
 
@@ -25,7 +27,7 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
         multiline
         minRows={3}
         fullWidth
-        placeholder="e.g. the space is already blocked for a private event that evening"
+        placeholder={t('partners.slotDecisionPage.eGTheSpaceIsAlready')}
         inputProps={{ maxLength: 280 }}
         helperText={`Shared with the host so they can follow up · ${trimmed.length}/280`}
       />

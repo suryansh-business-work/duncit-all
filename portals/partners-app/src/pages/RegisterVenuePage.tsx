@@ -8,6 +8,7 @@ import {
   type VenueRegistrationConfig,
 } from './register-venue-page/register-venue';
 import { MY_VENUE, REGISTRATION_CONFIG } from './register-venue-page/queries';
+import { useTranslation } from '@duncit/shell';
 
 const statusChipColor = (status: string) => {
   if (status === 'APPROVED') return 'success.main';
@@ -15,7 +16,8 @@ const statusChipColor = (status: string) => {
 };
 
 function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: string }>) {
-  if (status === 'SUBMITTED') return <Alert severity="info">Application under review — view only.</Alert>;
+  const { t } = useTranslation();
+  if (status === 'SUBMITTED') return <Alert severity="info">{t('partners.page.applicationUnderReviewViewOnly')}</Alert>;
   if (status === 'APPROVED') {
     return (
       <Alert severity="success">
@@ -31,6 +33,7 @@ function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: str
 }
 
 export default function RegisterVenuePage() {
+  const { t } = useTranslation();
   const { venueId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,10 +93,10 @@ export default function RegisterVenuePage() {
         <Stack direction="row" alignItems="flex-start" spacing={1.25}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ opacity: 0.8, letterSpacing: 0.4, lineHeight: 1, fontWeight: 800 }}>
-              Venue registration
+              {t('partners.venueListingsPage.venueRegistration')}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
-              {venue ? venue.venue_name || 'Your venue' : 'Register your venue'}
+              {venue ? venue.venue_name || 'Your venue' : t('partners.common.registerYourVenue')}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
               Complete each section, then submit your space for review.
@@ -108,12 +111,12 @@ export default function RegisterVenuePage() {
           )}
         </Stack>
         <BackButton to="/register-venue" sx={{ mt: 1.5, color: '#fff', fontWeight: 800 }}>
-          Your venue registrations
+          {t('partners.venueListingsPage.yourVenueRegistrations')}
         </BackButton>
       </Box>
 
       <StatusAlerts status={status} notes={venue?.reviewer_notes} />
-      {notFound && <Alert severity="error">This venue registration was not found in your account.</Alert>}
+      {notFound && <Alert severity="error">{t('partners.page.thisVenueRegistrationWasNotFound')}</Alert>}
 
       {!notFound && (
         <RegisterVenueForm

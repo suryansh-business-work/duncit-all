@@ -6,8 +6,10 @@ import { ListProductsForm } from './list-products';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import { useTranslation } from '@duncit/shell';
 
 export default function ProductListingEditorPage() {
+  const { t } = useTranslation();
   const { brandId = '', productId } = useParams<{ brandId: string; productId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +27,7 @@ export default function ProductListingEditorPage() {
 
   const notFound = editing && !product && !loading;
   const managedContent = notFound
-    ? <Alert severity="warning">Product listing was not found.</Alert>
+    ? <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>
     : <ListProductsForm brandId={brandId} product={product} onSaved={() => navigate(productsHome, { replace: true })} />;
   const content = canManageProducts ? managedContent : <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>;
 
@@ -34,7 +36,7 @@ export default function ProductListingEditorPage() {
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Stack direction="row" alignItems="center" spacing={1.25}>
           <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
-            Back
+            {t('partners.venueAvailabilityPage.back')}
           </Button>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{editing ? 'Edit product' : 'New product'}</Typography>

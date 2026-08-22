@@ -1,6 +1,7 @@
 import { Card, CardContent, Stack, Typography } from '@mui/material';
 import { formatINR } from '@duncit/utils';
 import type { PartnerEcommStats } from './ecomm-dashboard.queries';
+import { useTranslation } from '@duncit/shell';
 
 interface StatCard {
   key: string;
@@ -21,30 +22,33 @@ export const emptyEcommStats: PartnerEcommStats = {
 };
 
 /** Flatten the stats payload into labelled cards (approved counts as captions). */
-export function ecommStatCards(stats: PartnerEcommStats): StatCard[] {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export function ecommStatCards(stats: PartnerEcommStats, t: Translate): StatCard[] {
   return [
     {
       key: 'brands',
-      label: 'Total Brands',
+      label: t('partners.ecommDashboardPage.totalBrands'),
       value: String(stats.total_brands),
       caption: `${stats.approved_brands} approved`,
     },
     {
       key: 'products',
-      label: 'Total Products',
+      label: t('partners.ecommDashboardPage.totalProducts'),
       value: String(stats.total_products),
       caption: `${stats.approved_products} approved`,
     },
-    { key: 'warehouses', label: 'Total Warehouses', value: String(stats.total_warehouses) },
-    { key: 'orders', label: 'Total Orders', value: String(stats.total_orders) },
-    { key: 'items', label: 'Total Items Sold', value: String(stats.total_items_sold) },
-    { key: 'revenue', label: 'Total Revenue', value: formatINR(stats.gross_revenue) },
+    { key: 'warehouses', label: t('partners.ecommDashboardPage.totalWarehouses'), value: String(stats.total_warehouses) },
+    { key: 'orders', label: t('partners.ecommDashboardPage.totalOrders'), value: String(stats.total_orders) },
+    { key: 'items', label: t('partners.ecommDashboardPage.totalItemsSold'), value: String(stats.total_items_sold) },
+    { key: 'revenue', label: t('partners.common.totalRevenue'), value: formatINR(stats.gross_revenue) },
   ];
 }
 
 /** KPI cards for the E-Commerce Dashboard (DashboardMetricCards pattern). */
 export default function EcommStatCards({ stats }: Readonly<{ stats?: PartnerEcommStats | null }>) {
-  const cards = ecommStatCards(stats ?? emptyEcommStats);
+  const { t } = useTranslation();
+  const cards = ecommStatCards(stats ?? emptyEcommStats, t);
   return (
     <Stack direction="row" flexWrap="wrap" gap={1.5}>
       {cards.map((card) => (

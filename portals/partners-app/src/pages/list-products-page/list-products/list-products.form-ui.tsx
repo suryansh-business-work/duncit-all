@@ -27,6 +27,7 @@ import CategoryRows from './CategoryRows';
 import OptionsEditor from './OptionsEditor';
 import VariantTabs from './VariantTabs';
 import ListProductsPreview from './ListProductsPreview';
+import { useTranslation } from '@duncit/shell';
 
 /** Why a warehouse cannot be picked, shown inline on its disabled option. */
 const WAREHOUSE_STATE_SUFFIX: Record<WarehouseReviewStatus, string> = {
@@ -45,6 +46,7 @@ interface StepProps {
 }
 
 export function StepBody({ step, brandId, control, watch, setValue, onPickImage }: Readonly<StepProps>) {
+  const { t } = useTranslation();
   if (step === 0) {
     return <CategoryRows control={control} />;
   }
@@ -54,7 +56,7 @@ export function StepBody({ step, brandId, control, watch, setValue, onPickImage 
         <RhfTextField
           control={control}
           name="product_name"
-          label="Product title"
+          label={t('partners.listProductsPage.productTitle')}
           required
           hint="Use the exact product name hosts will understand during pod creation."
         />
@@ -98,6 +100,7 @@ function CommissionField({ control }: Readonly<{ control: Control<ProductListing
 }
 
 function DeliveryField({ control, brandId }: Readonly<{ control: Control<ProductListingValues>; brandId: string }>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery(MY_BRAND_WAREHOUSES, {
     variables: { brand_doc_id: brandId },
     skip: !brandId,
@@ -111,9 +114,9 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
         name="delivery_target"
         render={({ field }) => (
           <FormControl>
-            <FormLabel>Delivery option</FormLabel>
+            <FormLabel>{t('partners.listProductsPage.deliveryOption')}</FormLabel>
             <RadioGroup value={field.value} onChange={(event) => field.onChange(event.target.value)}>
-              <FormControlLabel value="SHIPROCKET" control={<Radio />} label="ShipRocket delivery" />
+              <FormControlLabel value="SHIPROCKET" control={<Radio />} label={t('partners.listProductsPage.shiprocketDelivery')} />
             </RadioGroup>
           </FormControl>
         )}
@@ -143,7 +146,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
       <RhfTextField
         control={control}
         name="pickup_location_id"
-        label="Ship-from warehouse"
+        label={t('partners.listProductsPage.shipFromWarehouse')}
         select
         required
         hint="The warehouse ShipRocket picks this product up from. Only approved warehouses can be selected."
@@ -158,7 +161,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
       <RhfTextField
         control={control}
         name="free_delivery_above"
-        label="Free delivery above (₹)"
+        label={t('partners.listProductsPage.freeDeliveryAbove')}
         type="number"
         inputProps={{ min: 0, step: 1, inputMode: 'numeric' }}
         hint="Order value of this product at/above which its delivery is free. Leave blank for no offer."

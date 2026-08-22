@@ -16,6 +16,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { MY_WALLET } from './queries';
 import { WithdrawForm } from './withdraw';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -36,6 +37,7 @@ const fmtDate = (iso: string) => {
  * Withdraw dialog. Reuses the per-user myWallet/requestWithdrawal GraphQL that
  * powers the mWeb wallet page. */
 export default function WalletPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(MY_WALLET, {
     fetchPolicy: 'cache-and-network',
   });
@@ -98,7 +100,7 @@ export default function WalletPage() {
               onClick={() => setOpen(true)}
               sx={{ borderRadius: 999, fontWeight: 900 }}
             >
-              Withdraw
+              {t('partners.becomeHostPage.withdraw')}
             </Button>
             {belowMinimum && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
@@ -116,7 +118,7 @@ export default function WalletPage() {
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
           {withdrawals.length === 0 ? (
-            <Alert severity="info">No withdrawals yet.</Alert>
+            <Alert severity="info">{t('partners.walletPage.noWithdrawalsYet')}</Alert>
           ) : (
             <Stack spacing={1}>
               {withdrawals.map((w: any) => (
@@ -146,7 +148,7 @@ export default function WalletPage() {
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
           {transactions.length === 0 ? (
-            <Alert severity="info">Your payouts will show up here.</Alert>
+            <Alert severity="info">{t('partners.walletPage.yourPayoutsWillShowUpHere')}</Alert>
           ) : (
             <Stack spacing={1}>
               {transactions.map((t: any) => (

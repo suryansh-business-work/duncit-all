@@ -5,8 +5,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { BackButton } from '@duncit/ui';
 import ProductListingsTable from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import { useTranslation } from '@duncit/shell';
 
 export default function ListProductsPage() {
+  const { t } = useTranslation();
   const { brandId = '' } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
@@ -20,8 +22,8 @@ export default function ListProductsPage() {
         </BackButton>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
           <Box>
-            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Product management</Typography>
-            <Typography variant="h4" fontWeight={900}>Brand products</Typography>
+            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.productManagement')}</Typography>
+            <Typography variant="h4" fontWeight={900}>{t('partners.listProductsPage.brandProducts')}</Typography>
             <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
               Add products under a Super → Category → Sub category. Once the products portal approves them they appear in matching pods.
             </Typography>

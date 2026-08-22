@@ -23,6 +23,7 @@ import {
 } from '../recurring.queries';
 import { timeToHHMM } from '../settings-map';
 import { newTimeSlot, type RecurringForm } from '../useRecurringDialog';
+import { useTranslation } from '@duncit/shell';
 
 const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const { data, refetch } = useQuery(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
   const [createTemplate, { loading: saving, error }] = useMutation(CREATE_SLOT_TEMPLATE);
@@ -86,7 +88,7 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
         <Stack direction="row" spacing={1.5} alignItems="center">
           <BookmarkBorderIcon fontSize="small" color="action" />
           <div>
-            <Typography fontWeight={800}>Save as template</Typography>
+            <Typography fontWeight={800}>{t('partners.venueAvailabilityPage.saveAsTemplate')}</Typography>
             <Typography variant="caption" color="text.secondary">
               Reuse this setup later in one tap
             </Typography>
@@ -100,7 +102,7 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
               {templates.map((t: any) => (
                 <Stack key={t.id} direction="row" spacing={1} alignItems="center">
                   <Chip size="small" label={t.name} onClick={() => apply(t)} sx={{ cursor: 'pointer' }} />
-                  {t.is_default && <Chip size="small" color="primary" label="Default" />}
+                  {t.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
                   <Box sx={{ flex: 1 }} />
                   <Button size="small" onClick={() => apply(t)}>
                     Use
@@ -116,7 +118,7 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
           <Stack direction="row" spacing={1}>
             <TextField
               size="small"
-              label="Template name"
+              label={t('partners.venueAvailabilityPage.templateName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               sx={{ flex: 1 }}

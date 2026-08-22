@@ -22,6 +22,7 @@ import { parseApiError } from '@duncit/utils';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { UPDATE_PRODUCT_SETTINGS } from './queries';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import { useTranslation } from '@duncit/shell';
 
 const settingsSchema = z.object({
   low_stock_alert: z.coerce
@@ -34,6 +35,7 @@ const settingsSchema = z.object({
 type SettingsValues = z.infer<typeof settingsSchema>;
 
 export default function ProductSettingsPage() {
+  const { t } = useTranslation();
   const { brandId = '', productId = '' } = useParams<{ brandId: string; productId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,19 +98,19 @@ export default function ProductSettingsPage() {
         }}
       >
         <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
-          Back
+          {t('partners.venueAvailabilityPage.back')}
         </Button>
         <Typography variant="h4" fontWeight={950} sx={{ mt: 1 }}>
           {product?.product_name || 'Product'} settings
         </Typography>
       </Box>
       {!canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
-      {canManageProducts && !product && <Alert severity="warning">Product listing was not found.</Alert>}
+      {canManageProducts && !product && <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
       {canManageProducts && product && (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Stack spacing={2.25} component="form" onSubmit={onSubmit}>
-              {saved && <Alert severity="success">Settings saved.</Alert>}
+              {saved && <Alert severity="success">{t('partners.listProductsPage.settingsSaved')}</Alert>}
               {apiError && <Alert severity="error">{apiError}</Alert>}
               <Typography variant="body2" color="text.secondary">
                 Currently {available} unit{available === 1 ? '' : 's'} available.
@@ -116,7 +118,7 @@ export default function ProductSettingsPage() {
               <RhfTextField
                 control={control}
                 name="low_stock_alert"
-                label="Low-stock threshold"
+                label={t('partners.listProductsPage.lowStockThreshold')}
                 type="number"
                 inputProps={{ min: 0, step: 1, inputMode: 'numeric' }}
                 hint="The product row is highlighted, and you can be notified, when available stock drops to this number or below."
@@ -128,7 +130,7 @@ export default function ProductSettingsPage() {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />}
-                    label="Notify me when this product hits the low-stock threshold"
+                    label={t('partners.listProductsPage.notifyMeWhenThisProductHits')}
                   />
                 )}
               />

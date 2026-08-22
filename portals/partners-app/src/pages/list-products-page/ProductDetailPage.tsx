@@ -8,8 +8,10 @@ import ProductAnalyticsPanel from './ProductAnalyticsPanel';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
+import { useTranslation } from '@duncit/shell';
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
   const { brandId = '', productId = '' } = useParams<{ brandId: string; productId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,7 +57,7 @@ export default function ProductDetailPage() {
               variant="outlined"
               sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}
             >
-              Back
+              {t('partners.venueAvailabilityPage.back')}
             </Button>
             <Box>
               <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>
@@ -74,7 +76,7 @@ export default function ProductDetailPage() {
               color="inherit"
               sx={{ color: 'primary.main', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
             >
-              Edit
+              {t('shell.common.edit')}
             </Button>
           )}
         </Stack>
@@ -82,7 +84,7 @@ export default function ProductDetailPage() {
       {accessError && <Alert severity="error">{accessError.message}</Alert>}
       {error && <Alert severity="error">{error.message}</Alert>}
       {!canManageProducts && <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>}
-      {canManageProducts && notFound && <Alert severity="warning">Product listing was not found.</Alert>}
+      {canManageProducts && notFound && <Alert severity="warning">{t('partners.listProductsPage.productListingWasNotFound')}</Alert>}
       {canManageProducts && product && (
         <>
           <ProductDetailView product={product} />

@@ -47,6 +47,7 @@ import {
 import RecurringAvailabilityDialog from './recurring/RecurringAvailabilityDialog';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 function viewRange(view: CalendarView, anchor: Date) {
   if (view === 'day') return { from: startOfDay(anchor), to: endOfDay(anchor) };
@@ -63,6 +64,7 @@ function periodLabel(view: CalendarView, anchor: Date, range: { from: Date; to: 
 }
 
 export default function VenueAvailabilityPage() {
+  const { t } = useTranslation();
   const { venueId = '' } = useParams<{ venueId: string }>();
   const navigate = useNavigate();
   const [view, setView] = useState<CalendarView>('month');
@@ -125,7 +127,7 @@ export default function VenueAvailabilityPage() {
   if (!venue && venuesData) {
     return (
       <Stack spacing={2} sx={{ width: '100%' }}>
-        <Alert severity="error">Venue not found, or it isn't yours.</Alert>
+        <Alert severity="error">{t('partners.venueAvailabilityPage.venueNotFoundOrItIsn')}</Alert>
         <Button component={RouterLink} to="/register-venue" variant="outlined">
           Back to venues
         </Button>
@@ -149,7 +151,7 @@ export default function VenueAvailabilityPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/register-venue')} aria-label="Back">
+        <IconButton size="small" onClick={() => navigate('/register-venue')} aria-label={t('partners.venueAvailabilityPage.back')}>
           <ArrowBackIcon />
         </IconButton>
         <Box>
@@ -179,21 +181,21 @@ export default function VenueAvailabilityPage() {
               exclusive
               value={view}
               onChange={(_e, next) => next && setView(next)}
-              aria-label="Calendar view"
+              aria-label={t('partners.venueAvailabilityPage.calendarView')}
             >
               <ToggleButton value="day">Day</ToggleButton>
               <ToggleButton value="week">Week</ToggleButton>
-              <ToggleButton value="month">Month</ToggleButton>
+              <ToggleButton value="month">{t('partners.venueAvailabilityPage.month')}</ToggleButton>
             </ToggleButtonGroup>
 
             <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
-              <IconButton onClick={() => shift(-1)} aria-label="Previous">
+              <IconButton onClick={() => shift(-1)} aria-label={t('partners.venueAvailabilityPage.previous')}>
                 <ChevronLeftIcon />
               </IconButton>
               <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 160, textAlign: 'center' }}>
                 {periodLabel(view, anchor, range)}
               </Typography>
-              <IconButton onClick={() => shift(1)} aria-label="Next" disabled={!canGoNext}>
+              <IconButton onClick={() => shift(1)} aria-label={t('partners.venueAvailabilityPage.next')} disabled={!canGoNext}>
                 <ChevronRightIcon />
               </IconButton>
               <Button size="small" startIcon={<TodayIcon />} onClick={() => setAnchor(new Date())}>
@@ -228,11 +230,11 @@ export default function VenueAvailabilityPage() {
           )}
 
           <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
-            <Legend color="success.light" label="A — Available" />
-            <Legend color="info.light" label="P — Pending approval" />
-            <Legend color="warning.light" label="B — Booked" />
-            <Legend color="grey.300" label="× — Blocked" />
-            <Legend color="error.light" label="Leave / Holiday" />
+            <Legend color="success.light" label={t('partners.venueAvailabilityPage.aAvailable')} />
+            <Legend color="info.light" label={t('partners.venueAvailabilityPage.pPendingApproval')} />
+            <Legend color="warning.light" label={t('partners.venueAvailabilityPage.bBooked')} />
+            <Legend color="grey.300" label={t('partners.venueAvailabilityPage.blocked')} />
+            <Legend color="error.light" label={t('partners.venueAvailabilityPage.leaveHoliday')} />
           </Stack>
         </CardContent>
       </Card>

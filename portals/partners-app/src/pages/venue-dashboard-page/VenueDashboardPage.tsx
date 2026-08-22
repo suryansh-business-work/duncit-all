@@ -9,6 +9,7 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { VENUE_OWNER_STATS, emptyVenueOwnerStats } from './queries';
 import VenueStatCards from './VenueStatCards';
+import { useTranslation } from '@duncit/shell';
 
 const ALL_VENUES = 'ALL';
 
@@ -29,6 +30,7 @@ const PICKER_SX = {
 } as const;
 
 export default function VenueDashboardPage() {
+  const { t } = useTranslation();
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const venuesQuery = useQuery(MY_VENUES, { fetchPolicy: 'cache-and-network' });
   const statsQuery = useQuery(VENUE_OWNER_STATS, {
@@ -52,7 +54,7 @@ export default function VenueDashboardPage() {
     },
     {
       id: 'quick-actions',
-      title: 'Quick actions',
+      title: t('partners.common.quickActions'),
       defaultLayout: { x: 0, y: 2, w: 12, h: 2 },
       minH: 2,
       content: (
@@ -87,8 +89,8 @@ export default function VenueDashboardPage() {
           <Card sx={HERO_SX}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>Partner tools · Venues</Typography>
-                <Typography variant="h5" fontWeight={950}>Venue Dashboard</Typography>
+                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.common.partnerToolsVenues')}</Typography>
+                <Typography variant="h5" fontWeight={950}>{t('partners.venueDashboardPage.venueDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
                   Slot-based earnings potential, capacity and booking requests across your venues.
                 </Typography>
@@ -96,13 +98,13 @@ export default function VenueDashboardPage() {
               <TextField
                 select
                 size="small"
-                label="Venue"
+                label={t('partners.common.venue')}
                 value={venueId}
                 onChange={(e) => setVenueId(e.target.value)}
-                helperText="Pick one venue or view all together"
+                helperText={t('partners.venueDashboardPage.pickOneVenueOrViewAll')}
                 sx={PICKER_SX}
               >
-                <MenuItem value={ALL_VENUES}>All venues</MenuItem>
+                <MenuItem value={ALL_VENUES}>{t('partners.common.allVenues')}</MenuItem>
                 {venues.map((venue: any) => (
                   <MenuItem key={venue.id} value={venue.id}>
                     {venue.venue_name || 'Untitled venue'}
@@ -115,7 +117,7 @@ export default function VenueDashboardPage() {
           {statsQuery.error && <Alert severity="error">{statsQuery.error.message}</Alert>}
 
           {!venuesQuery.loading && venues.length === 0 && (
-            <Alert severity="info" action={<Button component={RouterLink} to="/register-venue/new" size="small">Register venue</Button>}>
+            <Alert severity="info" action={<Button component={RouterLink} to="/register-venue/new" size="small">{t('partners.venueDashboardPage.registerVenue')}</Button>}>
               Register your first venue to start publishing bookable slots.
             </Alert>
           )}

@@ -20,6 +20,7 @@ import {
   type HostInsights,
   type HostWallet,
 } from './queries';
+import { useTranslation } from '@duncit/shell';
 
 /** The dark banner that heads every partner console. Not a widget: it carries
  *  the page's identity and its balance, which nobody wants to lose behind a
@@ -66,6 +67,7 @@ function QuickActions({ isHost }: Readonly<{ isHost: boolean }>) {
  * profile-health card, off the same queries.
  */
 export default function HostDashboardPage() {
+  const { t } = useTranslation();
   const dashboardQuery = useQuery(HOST_DASHBOARD, { fetchPolicy: 'cache-and-network' });
   const insightsQuery = useQuery(HOST_INSIGHTS, {
     variables: { months: 12 },
@@ -100,7 +102,7 @@ export default function HostDashboardPage() {
     },
     {
       id: 'quick-actions',
-      title: 'Quick actions',
+      title: t('partners.common.quickActions'),
       defaultLayout: { x: 0, y: 2, w: 12, h: 2 },
       minH: 2,
       content: <QuickActions isHost={isHost} />,

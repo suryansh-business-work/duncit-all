@@ -5,6 +5,7 @@ import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
 import type { BrandWarehouse, WarehouseReviewStatus } from './warehouse.queries';
+import { useTranslation } from '@duncit/shell';
 
 interface WarehouseCardProps {
   warehouse: BrandWarehouse;
@@ -22,11 +23,13 @@ const addressLine = (warehouse: BrandWarehouse) =>
 /** What the partner can act on. ShipRocket registration is Duncit-side plumbing
  * that never gates the partner, so showing it here (as this card used to) read
  * as "still not approved" long after the Products portal had approved it. */
-const REVIEW_CHIP: Record<WarehouseReviewStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
-  APPROVED: { label: 'Approved', color: 'success' },
-  PENDING: { label: 'Awaiting approval', color: 'warning' },
-  REJECTED: { label: 'Rejected', color: 'error' },
-};
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const reviewChip = (t: Translate): Record<WarehouseReviewStatus, { label: string; color: 'success' | 'warning' | 'error' }> => ({
+  APPROVED: { label: t('partners.ecommBrandPage.approved'), color: 'success' },
+  PENDING: { label: t('partners.ecommBrandPage.awaitingApproval'), color: 'warning' },
+  REJECTED: { label: t('partners.ecommBrandPage.rejected'), color: 'error' },
+});
 
 /** Says what the state means for the partner — a bare chip left them guessing
  * whether the wait was theirs to end. */
@@ -38,7 +41,8 @@ const REVIEW_HINT: Record<WarehouseReviewStatus, string> = {
 
 /** One warehouse card: address summary, approval status, edit/delete/default. */
 function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Readonly<WarehouseCardProps>) {
-  const review = REVIEW_CHIP[warehouse.review_status] ?? REVIEW_CHIP.PENDING;
+  const { t } = useTranslation();
+  const review = reviewChip(t)[warehouse.review_status] ?? reviewChip(t).PENDING;
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -46,7 +50,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Typography fontWeight={900}>{warehouse.nickname}</Typography>
-              {warehouse.is_default && <Chip size="small" color="primary" label="Default" />}
+              {warehouse.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}
               <Chip size="small" color={review.color} label={review.label} />
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -75,12 +79,12 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Edit">
+            <Tooltip title={t('shell.common.edit')}>
               <IconButton size="small" disabled={busy} onClick={() => onEdit(warehouse)} aria-label={`Edit ${warehouse.nickname}`}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title={t('shell.common.delete')}>
               <IconButton size="small" color="error" disabled={busy} onClick={() => onDelete(warehouse)} aria-label={`Delete ${warehouse.nickname}`}>
                 <DeleteOutlineIcon fontSize="small" />
               </IconButton>

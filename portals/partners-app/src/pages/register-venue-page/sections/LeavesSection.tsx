@@ -8,6 +8,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { UPDATE_VENUE_HOLIDAYS } from '../queries';
 import { formatDay } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   venueId: string | null;
@@ -20,6 +21,7 @@ interface Props {
  * these dates and they render red in the availability calendar. Saved through
  * `updateVenueSettings`, so it works for approved venues too. */
 export default function LeavesSection({ venueId, holidays, disabled = false, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [dates, setDates] = useState<string[]>(holidays);
   const [picked, setPicked] = useState<Date | null>(null);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
@@ -52,7 +54,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
   return (
     <Stack spacing={2.5}>
       <Stack spacing={0.5}>
-        <Typography variant="subtitle2" fontWeight={800}>Leaves & Holidays</Typography>
+        <Typography variant="subtitle2" fontWeight={800}>{t('partners.registerVenuePage.leavesAndHolidays')}</Typography>
         <Typography variant="caption" color="text.secondary">
           Mark the dates your venue stays closed. No slots can be created on these dates, hosts cannot book
           them, and they show in red on your availability calendar.
@@ -60,17 +62,17 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
       </Stack>
 
       {!venueId && (
-        <Alert severity="info">Save the Venue Details section first — leaves are stored on your venue.</Alert>
+        <Alert severity="info">{t('partners.registerVenuePage.saveTheVenueDetailsSectionFirst')}</Alert>
       )}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
         <DatePicker
-          label="Add a leave date"
+          label={t('partners.registerVenuePage.addALeaveDate')}
           value={picked}
           onChange={setPicked}
           disablePast
           disabled={disabled || !venueId}
-          slotProps={{ textField: { size: 'small', helperText: 'Pick a date, then press Add' } }}
+          slotProps={{ textField: { size: 'small', helperText: t('partners.registerVenuePage.pickADateThenPressAdd') } }}
         />
         <Button
           startIcon={<AddIcon />}
@@ -85,7 +87,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
       </Stack>
 
       {dates.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">No leave dates yet.</Typography>
+        <Typography variant="body2" color="text.secondary">{t('partners.registerVenuePage.noLeaveDatesYet')}</Typography>
       ) : (
         <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
           {dates.map((date) => (

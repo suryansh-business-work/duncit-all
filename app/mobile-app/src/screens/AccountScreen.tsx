@@ -33,7 +33,6 @@ export function AccountScreen() {
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
 
-
   const loaded =
     error || !me ? (
       <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>

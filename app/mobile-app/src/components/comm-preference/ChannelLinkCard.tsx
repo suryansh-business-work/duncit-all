@@ -23,14 +23,7 @@ interface Props {
  * its categories AND its authentication messages — is on the other side of it,
  * so the reader never has to hold two places in their head for one channel.
  */
-export function ChannelLinkCard({
-  channel,
-  icon,
-  name,
-  hint,
-  summary,
-  onPress,
-}: Readonly<Props>) {
+export function ChannelLinkCard({ channel, icon, name, hint, summary, onPress }: Readonly<Props>) {
   const { color, muted } = useThemeColors();
 
   return (

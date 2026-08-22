@@ -73,7 +73,9 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
             {card.note}
           </Text>
         </YStack>
-        {busy ? <ActivityIndicator testID={`auth-messages-busy-${channel}`} color={primary} /> : null}
+        {busy ? (
+          <ActivityIndicator testID={`auth-messages-busy-${channel}`} color={primary} />
+        ) : null}
         {!busy && card.showSwitch ? (
           <Switch
             testID={`auth-messages-switch-${channel}`}

@@ -103,7 +103,6 @@
   "portals/admin/src/pages/auto-pods-page/auto-pod-form/AdminAutoPodForm.tsx": 1,
   "portals/admin/src/pages/membership/BenefitFormDialog.tsx": 1,
   "portals/admin/src/pages/membership/PlanFormDialog.tsx": 1,
-  "portals/admin/src/pages/partners-faqs-page/partner-faq-form/partner-faq.form.tsx": 1,
   "portals/admin/src/pages/pod-plans/PodPlanFormDialog.tsx": 1,
   "portals/admin/src/pages/pod-settings/NumberSettingCard.tsx": 1,
   "portals/admin/src/pages/pod-settings/ToggleSettingCard.tsx": 1,

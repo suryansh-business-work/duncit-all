@@ -569,31 +569,6 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       noSuperCategories: 'No super categories yet.',
     },
 
-    faqs: {
-      question: 'Question',
-      answer: 'Answer',
-      general: 'General',
-      generalOption: 'General (no category)',
-      generalHint: 'Leave empty to make this a general FAQ',
-      deleteTitle: 'Delete this FAQ?',
-      deleteBody: 'This action cannot be undone.',
-      created: 'FAQ created',
-      updated: 'FAQ updated',
-      required: 'Question and answer are required',
-      partnerTitle: 'Partner FAQs',
-      newFaq: 'New FAQ',
-      partnerDeleteTitle: 'Delete this partner FAQ?',
-      partnerDeleted: 'Partner FAQ deleted',
-      topic: 'Topic',
-      topicRequired: 'Topic is required',
-      questionMin: 'Question must be at least 5 characters',
-      answerMin: 'Answer must be at least 5 characters',
-      sortRequired: 'Sort order is required',
-      audienceHost: 'Host',
-      audienceVenue: 'Venue',
-      audienceProducts: 'Products',
-    },
-
     hub: {
       dashboard: 'Dashboard',
       dashboardHint: 'Live KPIs, growth charts and platform health.',
@@ -604,7 +579,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       catalog: 'Catalog',
       catalogHint: 'Categories and locations.',
       engagement: 'Engagement',
-      engagementHint: 'FAQs, email templates and badges.',
+      engagementHint: 'Badges and the home-page promo rail.',
       system: 'System',
       systemHint: 'Branding and global settings.',
     },
@@ -649,6 +624,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
 
     venues: {
       empty: 'No venues found.',
+      colVenue: 'Venue',
       colCapacity: 'Capacity',
       colLocation: 'Location',
       colOwner: 'Owner',

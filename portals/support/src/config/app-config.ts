@@ -29,6 +29,16 @@ export const appConfig = {
     { label: 'Callback Requests', labelKey: 'shell.nav.callbackRequests', to: '/callbacks', icon: 'callback' },
     { label: 'Tickets', labelKey: 'shell.nav.tickets', to: '/tickets', icon: 'ticket' },
     { label: 'Chat with Us', labelKey: 'shell.nav.chatWithUs', to: '/live-chat', icon: 'chat' },
+    {
+      // A group header, not a link: the two children are the two FAQ
+      // audiences — the app's members and the partner surfaces.
+      label: 'FAQs', labelKey: 'shell.nav.faqs',
+      icon: 'help',
+      children: [
+        { label: 'FAQs', labelKey: 'shell.nav.faqs', to: '/faqs', icon: 'help' },
+        { label: 'Partner FAQs', labelKey: 'shell.nav.partnerFaqs', to: '/partners/faqs', icon: 'help' },
+      ],
+    },
     { label: 'Mail Automation', labelKey: 'shell.nav.mailAutomation', to: '/mail-automation', icon: 'markEmailRead' },
     {
       // A group header, not a link: the two children are the list and the

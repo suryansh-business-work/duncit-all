@@ -54,7 +54,7 @@ const hubCards = (t: Translate): HubCard[] => [
     key: 'engagement',
     title: t('admin.hub.engagement'),
     description: t('admin.hub.engagementHint'),
-    to: '/faqs',
+    to: '/badges',
     icon: 'engagement',
     accent: '#dc2626',
   },

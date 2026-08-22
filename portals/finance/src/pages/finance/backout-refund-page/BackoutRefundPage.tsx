@@ -14,12 +14,14 @@ import {
   PROCESS_BACKOUT_REFUND,
   type BackoutRefundRequest,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface SettingsData {
   publicFinanceSettings: { currency_symbol: string; default_backout_deduction_pct: number };
 }
 
 export default function BackoutRefundPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -62,7 +64,7 @@ export default function BackoutRefundPage() {
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
         <RequestQuoteIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>Backout Refunds</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('finance.backoutRefund.backoutRefunds')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Every Backout request with its lifecycle status — refunds unlock once the spot is filled.
           </Typography>

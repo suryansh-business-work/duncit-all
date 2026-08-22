@@ -9,6 +9,7 @@ import {
   POD_PICKER_SEARCH_SIZE,
   type PodOption,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   /** The selected pod's document id, or '' for every pod. */
@@ -28,6 +29,7 @@ const podCaption = (pod: PodOption) => [pod.club_slug, pod.pod_id].filter(Boolea
  * types, so the option list never has to hold every pod on the platform.
  */
 export default function PodPicker({ value, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [chosen, setChosen] = useState<PodOption[]>([]);
   const term = useDebouncedValue(input.trim(), 300);
@@ -115,7 +117,7 @@ export default function PodPicker({ value, onChange }: Readonly<Props>) {
         <TextField
           {...params}
           size="small"
-          label="Pod"
+          label={t('finance.common.pod')}
           placeholder={placeholder}
           InputProps={{
             ...params.InputProps,

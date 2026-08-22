@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLazyQuery } from '@apollo/client';
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import { COIN_USER_SEARCH, USER_SEARCH_MIN_CHARS, type CoinUserOption } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   value: CoinUserOption | null;
@@ -23,6 +24,7 @@ const optionLabel = (o: CoinUserOption) => (o.full_name ? `${o.full_name} — ${
  * balance, because that is the number that decides what is reasonable to type.
  */
 export default function CoinUserPicker({ value, onChange, disabled }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [term, setTerm] = useState('');
   const [search, { data, loading }] = useLazyQuery<{ coinUserSearch: CoinUserOption[] }>(
     COIN_USER_SEARCH,
@@ -71,10 +73,10 @@ export default function CoinUserPicker({ value, onChange, disabled }: Readonly<P
       renderInput={(params) => (
         <TextField
           {...params}
-          label="User"
+          label={t('finance.duncitCoin.user')}
           required
           size="small"
-          helperText="Search by name or email."
+          helperText={t('finance.duncitCoin.searchByNameOrEmail')}
         />
       )}
     />

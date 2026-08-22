@@ -19,6 +19,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, EXPENSE_CATEGORIES, PAYMENT_METHODS, REMOVE_REFUND, UPDATE_EXPENSE, labelize } from './queries';
 import RefundTimeline from './RefundTimeline';
+import { useTranslation } from '@duncit/app-settings';
 
 const BLANK = { category: 'RENT', amount: '', vendor_name: '', payment_method: 'BANK_TRANSFER', reference: '', description: '', attachment_url: '' };
 
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [current, setCurrent] = useState<any>(null);
   const [date, setDate] = useState<Date | null>(new Date());
   const [form, setForm] = useState(BLANK);
@@ -59,7 +61,7 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
 
   const save = async () => {
     setError(null);
-    if (Number(form.amount) <= 0) return setError('Enter an amount greater than 0');
+    if (Number(form.amount) <= 0) return setError(t('finance.expenseManagement.enterAnAmountGreaterThan0'));
     try {
       if (editing) await update({ variables: { id: current.id, input: input() } });
       else await create({ variables: { input: input() } });
@@ -95,31 +97,31 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
           {editing ? 'Expense details' : 'New expense'}
         </Typography>
         {editing && (
-          <IconButton color="error" aria-label="Delete expense" onClick={remove}>
+          <IconButton color="error" aria-label={t('finance.expenseManagement.deleteExpense')} onClick={remove}>
             <DeleteOutlineIcon />
           </IconButton>
         )}
-        <IconButton aria-label="Close" onClick={onClose}>
+        <IconButton aria-label={t('shell.common.close')} onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Stack>
       {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
       <Stack spacing={1.75}>
-        <DatePicker label="Date" value={date} onChange={setDate} slotProps={{ textField: { fullWidth: true } }} />
-        <TextField select label="Category" value={form.category} onChange={(e) => set('category')(e.target.value)} fullWidth>
+        <DatePicker label={t('finance.common.date')} value={date} onChange={setDate} slotProps={{ textField: { fullWidth: true } }} />
+        <TextField select label={t('finance.expenseManagement.category')} value={form.category} onChange={(e) => set('category')(e.target.value)} fullWidth>
           {EXPENSE_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{labelize(c)}</MenuItem>)}
         </TextField>
-        <TextField label="Amount" required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} fullWidth />
-        <TextField label="Vendor / payee" value={form.vendor_name} onChange={(e) => set('vendor_name')(e.target.value)} fullWidth />
-        <TextField select label="Payment method" value={form.payment_method} onChange={(e) => set('payment_method')(e.target.value)} fullWidth>
+        <TextField label={t('finance.common.amount')} required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} fullWidth />
+        <TextField label={t('finance.expenseManagement.vendorPayee')} value={form.vendor_name} onChange={(e) => set('vendor_name')(e.target.value)} fullWidth />
+        <TextField select label={t('finance.expenseManagement.paymentMethod')} value={form.payment_method} onChange={(e) => set('payment_method')(e.target.value)} fullWidth>
           {PAYMENT_METHODS.map((m) => <MenuItem key={m} value={m}>{labelize(m)}</MenuItem>)}
         </TextField>
-        <TextField label="Reference / txn id" value={form.reference} onChange={(e) => set('reference')(e.target.value)} fullWidth />
-        <TextField label="Description" value={form.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} fullWidth />
+        <TextField label={t('finance.expenseManagement.referenceTxnId')} value={form.reference} onChange={(e) => set('reference')(e.target.value)} fullWidth />
+        <TextField label={t('shell.common.description')} value={form.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} fullWidth />
         <SingleImageUploadField
           variant="url-button"
-          label="Receipt / attachment URL"
+          label={t('finance.expenseManagement.receiptAttachmentUrl')}
           value={form.attachment_url}
           onChange={set('attachment_url')}
           folder="/expenses"

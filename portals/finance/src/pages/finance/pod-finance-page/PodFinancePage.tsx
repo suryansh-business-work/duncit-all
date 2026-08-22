@@ -13,6 +13,7 @@ import {
   type PodFinanceGroup,
   type PodReleaseRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLORS: Record<string, 'warning' | 'success' | 'error'> = {
   PENDING: 'warning',
@@ -56,6 +57,7 @@ const lastActivityValue = (g: PodFinanceGroup) => {
 };
 
 export default function PodFinancePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const [sym, setSym] = useState('');
@@ -74,17 +76,17 @@ export default function PodFinancePage() {
 
   const columns = useMemo<DuncitColumn<PodFinanceGroup>[]>(
     () => [
-      { field: 'pod_title', headerName: 'Pod', flex: 1, minWidth: 200, cellRenderer: renderPod },
-      { field: 'releases_count', headerName: 'Releases', width: 110 },
+      { field: 'pod_title', headerName: t('finance.common.pod'), flex: 1, minWidth: 200, cellRenderer: renderPod },
+      { field: 'releases_count', headerName: t('finance.podFinance.releases'), width: 110 },
       {
         field: 'requested_total',
-        headerName: 'Requested',
+        headerName: t('finance.common.requested'),
         width: 130,
         valueGetter: (g) => money(sym, g.requested_total),
       },
       {
         field: 'status_counts',
-        headerName: 'Release statuses',
+        headerName: t('finance.podFinance.releaseStatuses'),
         sortable: false,
         minWidth: 220,
         cellRenderer: renderStatuses,
@@ -92,7 +94,7 @@ export default function PodFinancePage() {
       },
       {
         field: 'last_requested_at',
-        headerName: 'Last activity',
+        headerName: t('finance.podFinance.lastActivity'),
         hide: true,
         width: 170,
         valueGetter: lastActivityValue,
@@ -111,7 +113,7 @@ export default function PodFinancePage() {
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
         <AnalyticsIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>Pod Finance</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('shell.nav.podFinance')}</Typography>
           <Typography variant="body2" color="text.secondary">
             Pods with money movement — open a pod to see its full financial waterfall.
           </Typography>

@@ -21,11 +21,14 @@ import {
   renderWithdrawer,
   withdrawerSearchText,
 } from './withdrawal-cells';
+import { useTranslation } from '@duncit/app-settings';
 
-const STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'REJECTED', label: 'Rejected' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const statusOptions = (t: Translate) => [
+  { value: 'PENDING', label: t('finance.common.pending') },
+  { value: 'PAID', label: t('finance.withdrawals.paid') },
+  { value: 'REJECTED', label: t('finance.common.rejected') },
 ];
 
 const METHOD_OPTIONS = [
@@ -59,6 +62,7 @@ export default function WithdrawalsTable({
   onMarkPaid,
   onReject,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<WithdrawalRow>[]>(() => {
     const renderReview = (w: WithdrawalRow) => {
       if (w.status !== 'PENDING') return EM_DASH;
@@ -82,7 +86,7 @@ export default function WithdrawalsTable({
     return [
       {
         field: 'beneficiary_name',
-        headerName: 'Withdrawer Name',
+        headerName: t('finance.withdrawals.withdrawerName'),
         flex: 1,
         minWidth: 190,
         cellRenderer: renderWithdrawer,
@@ -90,7 +94,7 @@ export default function WithdrawalsTable({
       },
       {
         field: 'payout_method',
-        headerName: 'Withdrawal Method',
+        headerName: t('finance.withdrawals.withdrawalMethod'),
         width: 160,
         filter: { type: 'select', options: METHOD_OPTIONS },
         cellRenderer: renderMethod,
@@ -98,21 +102,21 @@ export default function WithdrawalsTable({
       },
       {
         field: 'withdrawer_role',
-        headerName: 'Role',
+        headerName: t('finance.withdrawals.role'),
         width: 170,
         cellRenderer: renderRole,
         valueGetter: (w) => roleLabel(w.withdrawer_role),
       },
       {
         field: 'scheduled_for',
-        headerName: 'Scheduled',
+        headerName: t('finance.withdrawals.scheduled'),
         width: 130,
         filter: { type: 'date' },
         valueGetter: (w) => formatDateCell(w.scheduled_for),
       },
       {
         field: 'amount',
-        headerName: 'Amount',
+        headerName: t('finance.common.amount'),
         width: 150,
         filter: { type: 'number' },
         cellRenderer: (w: WithdrawalRow) => {
@@ -126,7 +130,7 @@ export default function WithdrawalsTable({
       },
       {
         field: 'account_number',
-        headerName: 'Account Details',
+        headerName: t('finance.withdrawals.accountDetails'),
         flex: 1,
         minWidth: 200,
         sortable: false,
@@ -135,21 +139,21 @@ export default function WithdrawalsTable({
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         minWidth: 150,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        filter: { type: 'select', options: statusOptions(t) },
         cellRenderer: renderStatus,
         valueGetter: (w) => w.status,
       },
       {
         field: 'requested_at',
-        headerName: 'Requested',
+        headerName: t('finance.common.requested'),
         hide: true,
         width: 130,
         filter: { type: 'date' },
         valueGetter: (w) => formatDateCell(w.requested_at),
       },
-      { field: 'actions', headerName: 'Review', sortable: false, width: 210, cellRenderer: renderReview },
+      { field: 'actions', headerName: t('finance.withdrawals.review'), sortable: false, width: 210, cellRenderer: renderReview },
     ];
   }, [podId, reviewing, onMarkPaid, onReject]);
 

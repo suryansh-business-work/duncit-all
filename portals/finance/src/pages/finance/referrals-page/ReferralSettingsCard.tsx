@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Card, CardContent, Link, Stack, TextField, Typography } from '@mui/material';
 import { REFERRAL_MESSAGE_TOKENS } from '@duncit/utils';
 import type { ReferralSettingsForm } from './referral-settings.schema';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   control: Control<ReferralSettingsForm>;
@@ -27,6 +28,7 @@ export default function ReferralSettingsCard({
   preview,
   coinsPerReferral,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined">
       <CardContent>
@@ -61,7 +63,7 @@ export default function ReferralSettingsCard({
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Share message"
+                label={t('finance.referrals.shareMessage')}
                 size="small"
                 multiline
                 minRows={2}
@@ -91,7 +93,7 @@ export default function ReferralSettingsCard({
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Gift line (optional)"
+                label={t('finance.referrals.giftLineOptional')}
                 size="small"
                 error={!!fieldState.error}
                 helperText={

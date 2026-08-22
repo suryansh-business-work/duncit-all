@@ -3,6 +3,7 @@ import { Chip, Link, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, labelize } from './queries';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 const CATEGORY_OPTIONS = EXPENSE_CATEGORIES.map((c) => ({ value: c, label: labelize(c) }));
 const METHOD_OPTIONS = PAYMENT_METHODS.map((m) => ({ value: m, label: labelize(m) }));
@@ -53,6 +54,7 @@ export default function ExpenseTable({
   toolbarActions,
   onRowClick,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<any>[]>(() => {
     const renderRefund = (e: any) => {
       if (e.refund_total <= 0) return '—';
@@ -68,10 +70,10 @@ export default function ExpenseTable({
       </Typography>
     );
     return [
-      { field: 'date', headerName: 'Date', width: 120, filter: { type: 'date' }, valueGetter: (e) => fmtDate(e.date) },
+      { field: 'date', headerName: t('finance.common.date'), width: 120, filter: { type: 'date' }, valueGetter: (e) => fmtDate(e.date) },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: t('finance.expenseManagement.category'),
         flex: 1,
         minWidth: 190,
         filter: { type: 'select', options: CATEGORY_OPTIONS },
@@ -80,28 +82,28 @@ export default function ExpenseTable({
       },
       {
         field: 'vendor_name',
-        headerName: 'Vendor',
+        headerName: t('finance.expenseManagement.vendor'),
         minWidth: 150,
         cellRenderer: renderVendor,
         valueGetter: (e) => e.vendor_name || '—',
       },
       {
         field: 'payment_method',
-        headerName: 'Method',
+        headerName: t('finance.expenseManagement.method'),
         width: 140,
         filter: { type: 'select', options: METHOD_OPTIONS },
         valueGetter: (e) => labelize(e.payment_method),
       },
       {
         field: 'amount',
-        headerName: 'Gross',
+        headerName: t('finance.expenseManagement.gross'),
         width: 110,
         filter: { type: 'number' },
         valueGetter: (e) => `${currency}${Number(e.amount).toFixed(2)}`,
       },
       {
         field: 'refund_total',
-        headerName: 'Refund',
+        headerName: t('finance.common.refund'),
         sortable: false,
         width: 110,
         cellRenderer: renderRefund,
@@ -109,7 +111,7 @@ export default function ExpenseTable({
       },
       {
         field: 'net_amount',
-        headerName: 'Net',
+        headerName: t('finance.expenseManagement.net'),
         sortable: false,
         width: 110,
         cellRenderer: renderNet,
@@ -117,7 +119,7 @@ export default function ExpenseTable({
       },
       {
         field: 'created_at',
-        headerName: 'Created',
+        headerName: t('shell.common.created'),
         hide: true,
         width: 120,
         filter: { type: 'date' },

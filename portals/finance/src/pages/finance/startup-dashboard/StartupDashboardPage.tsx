@@ -7,6 +7,7 @@ import { FOUNDER_DASHBOARD, SAVE_FOUNDER_SETTING } from './queries';
 import type { FounderDashboardData, FounderMetric } from './types';
 import MetricGrid from './MetricGrid';
 import MetricDrawer, { type DrawerMode } from './MetricDrawer';
+import { useTranslation } from '@duncit/app-settings';
 
 const yearStart = () => {
   const d = new Date();
@@ -17,6 +18,7 @@ const yearStart = () => {
 const SECTION_HEIGHT = 5;
 
 export default function StartupDashboardPage() {
+  const { t } = useTranslation();
   const [from, setFrom] = useState<Date | null>(yearStart());
   const [to, setTo] = useState<Date | null>(new Date());
   const [active, setActive] = useState<{ metric: FounderMetric; mode: DrawerMode } | null>(null);
@@ -60,7 +62,7 @@ export default function StartupDashboardPage() {
           minH: 2,
           content: (
             <MetricGrid
-              title="Founder Overview"
+              title={t('finance.startupDashboard.founderOverview')}
               icon="insights"
               metrics={dashboard.top}
               highlight
@@ -111,7 +113,7 @@ export default function StartupDashboardPage() {
       </Box>
       <Stack direction="row" spacing={1.5}>
         <DatePicker
-          label="From"
+          label={t('finance.startupDashboard.from')}
           value={from}
           onChange={setFrom}
           slotProps={{ textField: { size: 'small' } }}

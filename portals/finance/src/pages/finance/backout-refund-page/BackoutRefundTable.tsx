@@ -11,6 +11,7 @@ import {
   REFUND_STATUS_COLORS,
   type BackoutRefundRequest,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const BACKOUT_STATUS_OPTIONS = (['IN_PROCESS', 'CANCELLED', 'SPOT_FILLED'] as const).map((s) => ({
   value: s,
@@ -65,6 +66,7 @@ export default function BackoutRefundTable({
   onRowClick,
   onRefund,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<BackoutRefundRequest>[]>(() => {
     // Refund processing is enabled ONLY for Spot Filled requests (spec) —
     // Backout In Process / Backout Cancelled rows render a plain dash.
@@ -77,7 +79,7 @@ export default function BackoutRefundTable({
         );
       }
       return (
-        <Tooltip title="Process refund">
+        <Tooltip title={t('finance.backoutRefund.processRefund')}>
           <Button size="small" color="warning" variant="outlined" onClick={() => onRefund(row)}>
             Refund
           </Button>
@@ -87,7 +89,7 @@ export default function BackoutRefundTable({
     return [
       {
         field: 'backout_no',
-        headerName: 'Backout ID',
+        headerName: t('finance.backoutRefund.backoutId'),
         minWidth: 160,
         filter: { type: 'text' },
         cellRenderer: renderBackoutNo,
@@ -95,7 +97,7 @@ export default function BackoutRefundTable({
       },
       {
         field: 'user_name',
-        headerName: 'Member',
+        headerName: t('finance.backoutRefund.member'),
         sortable: false,
         flex: 1,
         minWidth: 180,
@@ -104,14 +106,14 @@ export default function BackoutRefundTable({
       },
       {
         field: 'pod_title',
-        headerName: 'Pod',
+        headerName: t('finance.common.pod'),
         sortable: false,
         minWidth: 160,
         valueGetter: (row) => row.pod?.pod_title ?? '—',
       },
       {
         field: 'backout_status',
-        headerName: 'Status',
+        headerName: t('shell.common.status'),
         width: 170,
         filter: { type: 'select', options: BACKOUT_STATUS_OPTIONS },
         cellRenderer: renderBackoutStatus,
@@ -119,14 +121,14 @@ export default function BackoutRefundTable({
       },
       {
         field: 'created_at',
-        headerName: 'Backed out',
+        headerName: t('finance.backoutRefund.backedOut'),
         width: 170,
         filter: { type: 'date' },
         valueGetter: (row) => fmtDate(row.backed_out_at),
       },
       {
         field: 'payment_amount',
-        headerName: 'Amount',
+        headerName: t('finance.common.amount'),
         sortable: false,
         width: 110,
         valueGetter: (row) => money(sym, Number(row.payment_amount ?? 0)),
@@ -135,7 +137,7 @@ export default function BackoutRefundTable({
         // Hidden by default: most backouts spend no coins, so an always-on
         // column of zeroes would push the ones that matter off the screen.
         field: 'coins_refunded',
-        headerName: 'Coins back',
+        headerName: t('finance.backoutRefund.coinsBack'),
         sortable: false,
         hide: true,
         width: 110,
@@ -143,7 +145,7 @@ export default function BackoutRefundTable({
       },
       {
         field: 'refund_status',
-        headerName: 'Refund status',
+        headerName: t('finance.backoutRefund.refundStatus'),
         sortable: false,
         width: 150,
         cellRenderer: renderRefundStatus,
@@ -151,13 +153,13 @@ export default function BackoutRefundTable({
       },
       {
         field: 'joined_at',
-        headerName: 'Joined',
+        headerName: t('finance.backoutRefund.joined'),
         hide: true,
         sortable: false,
         width: 170,
         valueGetter: (row) => fmtDate(row.joined_at),
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 110, cellRenderer: renderActions },
     ];
   }, [sym, onRefund]);
 

@@ -65,7 +65,7 @@ export { WelcomeDashboard, type WelcomeDashboardProps } from './dashboard/Welcom
 // Test-only provider so portal tests that used local ColorModeContext shims keep working.
 export { ColorModeProvider, type ColorModeProviderProps } from './test/ColorModeProvider';
 export { ProfileLanguage } from './chrome/ProfileLanguage';
-export { SHELL_FALLBACK, SHELL_FALLBACK_FLAT } from './i18n/fallback';
+export { fallbackT, SHELL_FALLBACK, SHELL_FALLBACK_FLAT, type Translate } from './i18n/fallback';
 // Portals translate through the shell's wrapper so the bundled fallback is
 // always supplied — a portal importing @duncit/app-settings directly would have
 // to repeat that argument at every call site.

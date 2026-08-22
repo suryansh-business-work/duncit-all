@@ -6,6 +6,7 @@ import { QueryGuard } from '@duncit/ui';
 import BackoutRefundInfoCards from './BackoutRefundInfoCards';
 import BackoutTimeline from './BackoutTimeline';
 import { BACKOUT_REFUND_DETAIL, type BackoutRefundDetail } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface DetailData {
   backoutRefundRequest: BackoutRefundDetail | null;
@@ -13,6 +14,7 @@ interface DetailData {
 }
 
 export default function BackoutRefundDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<DetailData>(BACKOUT_REFUND_DETAIL, {
@@ -38,7 +40,7 @@ export default function BackoutRefundDetailPage() {
         return (
           <Box>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-              <IconButton aria-label="Back to Backout Refunds" onClick={() => navigate('/backout-refunds')}>
+              <IconButton aria-label={t('finance.backoutRefund.backToBackoutRefunds')} onClick={() => navigate('/backout-refunds')}>
                 <ArrowBackIcon />
               </IconButton>
               <Box sx={{ flex: 1 }}>

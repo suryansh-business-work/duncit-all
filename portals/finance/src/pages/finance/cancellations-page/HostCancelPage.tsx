@@ -10,10 +10,12 @@ import {
   POD_CANCELLATIONS,
   type PodCancellationRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Pods the host cancelled — reason, attendee refund status and the venue's
  * lost booking money, per pod. */
 export default function HostCancelPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const [selected, setSelected] = useState<PodCancellationRow | null>(null);
 
@@ -52,7 +54,7 @@ export default function HostCancelPage() {
         tableId="finance-cancellations-host"
         fetchRows={fetchRows}
         onRowClick={setSelected}
-        emptyText="No host-cancelled pods yet."
+        emptyText={t('finance.cancellations.noHostCancelledPodsYet')}
       />
       <CancellationDetailDialog row={selected} onClose={() => setSelected(null)} />
     </Box>

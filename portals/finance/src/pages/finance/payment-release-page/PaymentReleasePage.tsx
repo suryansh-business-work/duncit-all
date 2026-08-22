@@ -6,8 +6,10 @@ import { useApolloTableFetch } from '@duncit/table';
 import PaymentReleaseReviewForm, { toReviewInput, type PaymentReleaseReviewValues } from './payment-release-review';
 import PaymentReleaseTable from './PaymentReleaseTable';
 import { PAYMENT_RELEASE_REQUESTS_TABLE, REVIEW_PAYMENT_RELEASE, type PaymentReleaseRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function PaymentReleasePage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [reviewFor, setReviewFor] = useState<PaymentReleaseRow | null>(null);
@@ -40,8 +42,8 @@ export default function PaymentReleasePage() {
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
         <PaymentsIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={700}>Payment Release</Typography>
-          <Typography variant="body2" color="text.secondary">Approve venue billing and host payment release requests.</Typography>
+          <Typography variant="h5" fontWeight={700}>{t('shell.nav.paymentRelease')}</Typography>
+          <Typography variant="body2" color="text.secondary">{t('finance.paymentRelease.approveVenueBillingAndHostPayment')}</Typography>
         </Box>
       </Stack>
 

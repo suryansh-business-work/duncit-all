@@ -11,6 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 
 const MAX_REASON = 500; // WalletWithdrawal.reject_reason maxlength
 
@@ -43,6 +44,7 @@ export default function RejectWithdrawalDialog({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -65,14 +67,14 @@ export default function RejectWithdrawalDialog({
 
   return (
     <Dialog open={!!target} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Reject withdrawal</DialogTitle>
+      <DialogTitle>{t('finance.withdrawals.rejectWithdrawal')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ mb: 2 }}>
           Rejecting credits {target?.name}&apos;s wallet back. The request stays in the history
           with this reason.
         </Typography>
         <TextField
-          label="Reason"
+          label={t('finance.common.reason')}
           required
           multiline
           minRows={2}

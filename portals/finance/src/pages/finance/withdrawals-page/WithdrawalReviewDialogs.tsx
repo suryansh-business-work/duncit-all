@@ -5,6 +5,7 @@ import { payoutTarget } from './account-details';
 import type { WithdrawalRow } from './queries';
 import RejectWithdrawalDialog from './RejectWithdrawalDialog';
 import { roleLabel } from './roles';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   payTarget: WithdrawalRow | null;
@@ -36,6 +37,7 @@ export default function WithdrawalReviewDialogs({
   onConfirmPay,
   onSubmitReject,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Elements, not a joined string: ConfirmDialog takes a ReactNode and renders
   // it as HTML, where a "\n" collapses to a space.
   const payMessage = payTarget ? (
@@ -56,9 +58,9 @@ export default function WithdrawalReviewDialogs({
     <>
       <ConfirmDialog
         open={!!payTarget}
-        title="Mark withdrawal as paid"
+        title={t('finance.withdrawals.markWithdrawalAsPaid')}
         message={payMessage}
-        confirmLabel="Mark Paid"
+        confirmLabel={t('finance.withdrawals.markPaid')}
         busy={busy}
         onClose={onClosePay}
         onConfirm={onConfirmPay}

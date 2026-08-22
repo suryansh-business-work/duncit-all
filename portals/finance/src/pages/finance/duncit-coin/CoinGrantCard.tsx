@@ -18,10 +18,13 @@ import { notifySuccess } from '@duncit/dialogs';
 import CoinUserPicker from './CoinUserPicker';
 import { ADJUST_USER_COINS, type CoinUserOption } from './queries';
 import { BLANK_GRANT, coinGrantSchema, type CoinGrantForm } from './coin-grant.schema';
+import { useTranslation } from '@duncit/app-settings';
 
-const DIRECTIONS = [
-  { value: 'GRANT', label: 'Grant coins' },
-  { value: 'DEDUCT', label: 'Deduct coins' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const directions = (t: Translate) => [
+  { value: 'GRANT', label: t('finance.duncitCoin.grantCoins') },
+  { value: 'DEDUCT', label: t('finance.duncitCoin.deductCoins') },
 ] as const;
 
 interface Props {
@@ -38,6 +41,7 @@ interface Props {
  * behind them, so the row it writes has to explain itself.
  */
 export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<CoinUserOption | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adjust, { loading }] = useMutation(ADJUST_USER_COINS);
@@ -51,7 +55,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
   const apply = handleSubmit(async (values) => {
     setError(null);
     if (!user) {
-      setError('Choose the account this applies to.');
+      setError(t('finance.duncitCoin.chooseTheAccountThisAppliesTo'));
       return;
     }
     try {
@@ -101,8 +105,8 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
               name="direction"
               control={control}
               render={({ field }) => (
-                <TextField {...field} select label="Action" fullWidth size="small">
-                  {DIRECTIONS.map((d) => (
+                <TextField {...field} select label={t('finance.duncitCoin.action')} fullWidth size="small">
+                  {directions(t).map((d) => (
                     <MenuItem key={d.value} value={d.value}>
                       {d.label}
                     </MenuItem>
@@ -118,7 +122,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  label="Coins"
+                  label={t('finance.duncitCoin.coins')}
                   required
                   fullWidth
                   size="small"
@@ -139,7 +143,7 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  label="Reason"
+                  label={t('finance.common.reason')}
                   required
                   fullWidth
                   size="small"

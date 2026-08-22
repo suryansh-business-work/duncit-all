@@ -10,9 +10,11 @@ import {
   POD_CANCELLATIONS,
   type PodCancellationRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Pods cancelled from the venue's side (booking request declined). */
 export default function VenueCancelPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const [selected, setSelected] = useState<PodCancellationRow | null>(null);
 
@@ -52,7 +54,7 @@ export default function VenueCancelPage() {
         tableId="finance-cancellations-venue"
         fetchRows={fetchRows}
         onRowClick={setSelected}
-        emptyText="No venue-declined pods yet."
+        emptyText={t('finance.cancellations.noVenueDeclinedPodsYet')}
       />
       <CancellationDetailDialog row={selected} onClose={() => setSelected(null)} />
     </Box>

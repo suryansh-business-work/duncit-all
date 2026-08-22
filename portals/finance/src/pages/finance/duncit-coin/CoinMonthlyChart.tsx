@@ -12,6 +12,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { format, parse } from 'date-fns';
 import type { CoinMonthBucket } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -25,6 +26,7 @@ const monthLabel = (month: string): string =>
   format(parse(month, 'yyyy-MM', new Date()), 'MMM yy');
 
 export default function CoinMonthlyChart({ buckets, loading }: Readonly<Props>) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const hasData = buckets.some((b) => b.earned > 0 || b.redeemed > 0);
 
@@ -32,14 +34,14 @@ export default function CoinMonthlyChart({ buckets, loading }: Readonly<Props>) 
     labels: buckets.map((b) => monthLabel(b.month)),
     datasets: [
       {
-        label: 'Earned',
+        label: t('finance.duncitCoin.earned'),
         data: buckets.map((b) => b.earned),
         backgroundColor: '#2563eb',
         borderRadius: 6,
         maxBarThickness: 22,
       },
       {
-        label: 'Redeemed',
+        label: t('finance.duncitCoin.redeemed'),
         data: buckets.map((b) => b.redeemed),
         backgroundColor: '#d97706',
         borderRadius: 6,

@@ -13,6 +13,7 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   expense: any;
@@ -25,6 +26,7 @@ const fmtDate = (iso: string) => {
 };
 
 function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string; label: string; amount: number; onRemove?: () => void }>) {
+  const { t } = useTranslation();
   const credit = amount > 0;
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -41,7 +43,7 @@ function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string;
         {credit ? '+' : '−'}₹{Math.abs(amount).toFixed(2)}
       </Typography>
       {onRemove && (
-        <IconButton size="small" color="error" aria-label="Remove refund" onClick={onRemove}>
+        <IconButton size="small" color="error" aria-label={t('finance.expenseManagement.removeRefund')} onClick={onRemove}>
           <DeleteOutlineIcon fontSize="small" />
         </IconButton>
       )}
@@ -50,6 +52,7 @@ function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string;
 }
 
 export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [date, setDate] = useState<Date | null>(new Date());
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -80,7 +83,7 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
       </Stack>
 
       <Stack spacing={1.25} sx={{ pl: 0.5 }}>
-        <TimelineRow date={expense.date} label="Expense recorded" amount={-expense.amount} />
+        <TimelineRow date={expense.date} label={t('finance.expenseManagement.expenseRecorded')} amount={-expense.amount} />
         {(expense.refunds ?? []).map((r: any) => (
           <TimelineRow key={r.refund_id} date={r.date} label={r.note || 'Refund received'} amount={r.amount} onRemove={() => onRemove(r.refund_id)} />
         ))}
@@ -91,10 +94,10 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
         Record a refund (max ₹{remaining.toFixed(2)})
       </Typography>
       <Stack direction="row" spacing={1}>
-        <DatePicker label="Refund date" value={date} onChange={setDate} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-        <TextField label="Amount" required size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} sx={{ width: 160 }} />
+        <DatePicker label={t('finance.expenseManagement.refundDate')} value={date} onChange={setDate} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
+        <TextField label={t('finance.common.amount')} required size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} sx={{ width: 160 }} />
       </Stack>
-      <TextField label="Note" size="small" value={note} onChange={(e) => setNote(e.target.value)} fullWidth />
+      <TextField label={t('finance.expenseManagement.note')} size="small" value={note} onChange={(e) => setNote(e.target.value)} fullWidth />
       <Button variant="outlined" onClick={add} disabled={busy || remaining <= 0}>
         Add refund
       </Button>

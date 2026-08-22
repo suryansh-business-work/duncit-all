@@ -1,5 +1,6 @@
 import { Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import type { InvoiceField, InvoiceSettingsForm } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   value: InvoiceSettingsForm;
@@ -9,6 +10,7 @@ interface Props {
 
 /** Grouped MUI text fields for every invoice/ticket branding value. */
 export default function InvoiceBrandingForm({ value, onChange, emailError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (field: InvoiceField) => (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(field, e.target.value);
 
@@ -24,14 +26,14 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
           </Typography>
           <Stack spacing={2}>
             <TextField
-              label="Legal / business name"
+              label={t('finance.invoiceManagement.legalBusinessName')}
               value={value.business_name}
               onChange={set('business_name')}
               fullWidth
-              placeholder="e.g. Duncit Technologies Pvt. Ltd."
+              placeholder={t('finance.invoiceManagement.eGDuncitTechnologiesPvtLtd')}
             />
             <TextField
-              label="Business address"
+              label={t('finance.invoiceManagement.businessAddress')}
               value={value.business_address}
               onChange={set('business_address')}
               multiline
@@ -41,7 +43,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField label="GSTIN" value={value.business_gstin} onChange={set('business_gstin')} fullWidth />
               <TextField
-                label="Logo image URL"
+                label={t('finance.invoiceManagement.logoImageUrl')}
                 value={value.invoice_logo_url}
                 onChange={set('invoice_logo_url')}
                 fullWidth
@@ -60,20 +62,20 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Document heading"
+                label={t('finance.common.documentHeading')}
                 value={value.invoice_label}
                 onChange={set('invoice_label')}
                 sx={{ flex: 1 }}
-                placeholder="TAX INVOICE"
+                placeholder={t('finance.invoiceManagement.taxInvoice')}
               />
               <TextField
-                label="Currency symbol"
+                label={t('finance.invoiceManagement.currencySymbol')}
                 value={value.currency_symbol}
                 onChange={set('currency_symbol')}
                 sx={{ width: 140 }}
               />
               <TextField
-                label="Invoice prefix"
+                label={t('finance.invoiceManagement.invoicePrefix')}
                 value={value.invoice_prefix}
                 onChange={set('invoice_prefix')}
                 sx={{ width: 160 }}
@@ -82,7 +84,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
             <Divider flexItem />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Support email"
+                label={t('finance.invoiceManagement.supportEmail')}
                 value={value.invoice_support_email}
                 onChange={set('invoice_support_email')}
                 fullWidth
@@ -90,14 +92,14 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
                 helperText={emailError || ' '}
               />
               <TextField
-                label="Support phone"
+                label={t('finance.invoiceManagement.supportPhone')}
                 value={value.invoice_support_phone}
                 onChange={set('invoice_support_phone')}
                 fullWidth
               />
             </Stack>
             <TextField
-              label="Terms & conditions"
+              label={t('finance.common.termsAndConditions')}
               value={value.invoice_terms}
               onChange={set('invoice_terms')}
               multiline
@@ -105,7 +107,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
               fullWidth
             />
             <TextField
-              label="Footer note"
+              label={t('finance.common.footerNote')}
               value={value.invoice_footer_note}
               onChange={set('invoice_footer_note')}
               fullWidth

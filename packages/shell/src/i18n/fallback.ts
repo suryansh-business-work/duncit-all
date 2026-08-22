@@ -1,9 +1,11 @@
 import {
   allFallbackEntries,
+  createTranslator,
   flattenCatalogue,
   SHELL_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
+  type Translator,
 } from '@duncit/i18n';
 
 /**
@@ -43,3 +45,22 @@ export const SHELL_FALLBACK_FLAT = flattenCatalogue(SHELL_FALLBACK);
  * compiled into its build (rule 38).
  */
 export const ALL_FALLBACK_FLAT: FlatCatalogue = allFallbackEntries();
+
+/** The `t` a portal component receives from `useTranslation`. */
+export type Translate = Translator['t'];
+
+/**
+ * A provider-free translator over every shipped bundle.
+ *
+ * Zod schemas are built outside React, so a schema factory takes `t` from the
+ * form that renders it and follows the reader's language. This is what the
+ * module-level schema exports fall back to — they are parsed with no React tree
+ * around them, and must still produce real English messages rather than keys.
+ *
+ * The twin of mWeb's and the native app's `fallbackT`; one per surface family,
+ * not one per portal (rule 40).
+ */
+export const fallbackT: Translate = createTranslator({
+  locale: 'en-IN',
+  fallback: ALL_FALLBACK_FLAT,
+}).t;

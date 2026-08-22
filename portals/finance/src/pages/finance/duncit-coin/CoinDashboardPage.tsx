@@ -6,11 +6,13 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import CoinMonthlyChart from './CoinMonthlyChart';
 import CoinStatTiles from './CoinStatTiles';
 import { COIN_ADMIN_STATS, coinCount, type CoinAdminStats } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Window options for the distribution chart. The server clamps to 1..36. */
 const MONTH_RANGES = [6, 12, 24, 36];
 
 export default function CoinDashboardPage() {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const months = Number(params.get('months')) || 12;
 
@@ -71,7 +73,7 @@ export default function CoinDashboardPage() {
             <TextField
               select
               size="small"
-              label="Period"
+              label={t('finance.duncitCoin.period')}
               value={months}
               onChange={(e) => setParams({ months: e.target.value })}
               sx={{ minWidth: 180 }}

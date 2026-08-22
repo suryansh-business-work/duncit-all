@@ -14,6 +14,7 @@ import {
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { notifySuccess } from '@duncit/dialogs';
 import { INVOICE_TEMPLATES, KIND_META, UPDATE_INVOICE_TEMPLATE, type InvoiceKind } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   kind: InvoiceKind;
@@ -22,6 +23,7 @@ interface Props {
 const BLANK = { label: '', terms: '', footer: '', note: '' };
 
 export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery(INVOICE_TEMPLATES, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_TEMPLATE);
   const [form, setForm] = useState(BLANK);
@@ -76,10 +78,10 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
       <Card variant="outlined">
         <CardContent>
           <Stack spacing={2}>
-            <TextField label="Document heading" value={form.label} onChange={(e) => set('label')(e.target.value)} fullWidth placeholder={meta.title.toUpperCase()} />
-            <TextField label="Terms & conditions" value={form.terms} onChange={(e) => set('terms')(e.target.value)} multiline minRows={3} fullWidth />
-            <TextField label="Footer note" value={form.footer} onChange={(e) => set('footer')(e.target.value)} fullWidth />
-            <TextField label="Email note (covering message)" value={form.note} onChange={(e) => set('note')(e.target.value)} multiline minRows={2} fullWidth />
+            <TextField label={t('finance.common.documentHeading')} value={form.label} onChange={(e) => set('label')(e.target.value)} fullWidth placeholder={meta.title.toUpperCase()} />
+            <TextField label={t('finance.common.termsAndConditions')} value={form.terms} onChange={(e) => set('terms')(e.target.value)} multiline minRows={3} fullWidth />
+            <TextField label={t('finance.common.footerNote')} value={form.footer} onChange={(e) => set('footer')(e.target.value)} fullWidth />
+            <TextField label={t('finance.invoiceTemplate.emailNoteCoveringMessage')} value={form.note} onChange={(e) => set('note')(e.target.value)} multiline minRows={2} fullWidth />
           </Stack>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>
             Business identity (name, address, GSTIN, logo, currency) is shared — set it under Invoices → Business Identity.

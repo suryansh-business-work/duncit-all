@@ -5,8 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
 import ReleaseBreakdownLines from './ReleaseBreakdownLines';
 import type { PaymentReleaseReviewFormProps, PaymentReleaseReviewValues } from './payment-release-review.types';
+import { useTranslation } from '@duncit/app-settings';
+import { fallbackT, type Translate } from '@duncit/shell';
 
-export const paymentReleaseReviewSchema = (requestedAmount: number) =>
+export const paymentReleaseReviewSchema = (requestedAmount: number, t: Translate = fallbackT) =>
   z
     .object({
       status: z.enum(['APPROVED', 'REJECTED'], { required_error: 'Status is required' }),
@@ -20,7 +22,7 @@ export const paymentReleaseReviewSchema = (requestedAmount: number) =>
     .superRefine((values, ctx) => {
       const needsReason = values.status === 'REJECTED' || values.approval_type === 'PARTIAL';
       if (needsReason && !values.approval_reason) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['approval_reason'], message: 'Reason is required' });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['approval_reason'], message: t('finance.paymentRelease.reasonIsRequired') });
       }
     });
 
@@ -35,10 +37,11 @@ export function toReviewInput(values: PaymentReleaseReviewValues, requestedAmoun
 }
 
 export default function PaymentReleaseReviewForm({ request, busy, errorMessage, onClose, onSubmit }: Readonly<PaymentReleaseReviewFormProps>) {
+  const { t } = useTranslation();
   const requestedAmount = Number(request?.amount_requested || 0);
   const { control, handleSubmit, watch, setValue, reset } = useForm<PaymentReleaseReviewValues>({
     defaultValues: { status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' },
-    resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount)),
+    resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount, t)),
   });
   const status = watch('status');
   const approvalType = watch('approval_type');
@@ -51,7 +54,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
 
   return (
     <Dialog open={!!request} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Review Payment Release</DialogTitle>
+      <DialogTitle>{t('finance.paymentRelease.reviewPaymentRelease')}</DialogTitle>
       <form noValidate onSubmit={submit}>
         <DialogContent dividers>
           <Stack spacing={2}>
@@ -61,9 +64,9 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
               control={control}
               name="status"
               render={({ field }) => (
-                <TextField {...field} select label="Decision" fullWidth>
-                  <MenuItem value="APPROVED">Approve</MenuItem>
-                  <MenuItem value="REJECTED">Reject</MenuItem>
+                <TextField {...field} select label={t('finance.paymentRelease.decision')} fullWidth>
+                  <MenuItem value="APPROVED">{t('finance.paymentRelease.approve')}</MenuItem>
+                  <MenuItem value="REJECTED">{t('finance.paymentRelease.reject')}</MenuItem>
                 </TextField>
               )}
             />
@@ -74,7 +77,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
                 <TextField
                   {...field}
                   select
-                  label="Release type"
+                  label={t('finance.paymentRelease.releaseType')}
                   onChange={(event) => {
                     field.onChange(event);
                     if (event.target.value === 'FULL') {
@@ -84,8 +87,8 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
                   disabled={status === 'REJECTED'}
                   fullWidth
                 >
-                  <MenuItem value="FULL">Full Release</MenuItem>
-                  <MenuItem value="PARTIAL">Partial Release</MenuItem>
+                  <MenuItem value="FULL">{t('finance.paymentRelease.fullRelease')}</MenuItem>
+                  <MenuItem value="PARTIAL">{t('finance.paymentRelease.partialRelease')}</MenuItem>
                 </TextField>
               )}
             />
@@ -97,7 +100,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
                   {...field}
                   value={field.value}
                   onChange={(event) => field.onChange(event.target.value === '' ? '' : Number(event.target.value))}
-                  label="Approved amount"
+                  label={t('finance.paymentRelease.approvedAmount')}
                   type="number"
                   disabled={status === 'REJECTED' || approvalType === 'FULL'}
                   error={!!fieldState.error}
@@ -112,7 +115,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  label="Reason"
+                  label={t('finance.common.reason')}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message ?? 'Required for partial release or rejection'}
                   multiline
@@ -124,7 +127,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</Button>
         </DialogActions>
       </form>

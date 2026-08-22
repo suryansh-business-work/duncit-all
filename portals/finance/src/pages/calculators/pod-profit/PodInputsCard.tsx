@@ -3,6 +3,7 @@ import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import PercentSlider from './PercentSlider';
 import type { PodProfitInputs } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   inputs: PodProfitInputs;
@@ -10,16 +11,17 @@ interface Props {
 }
 
 export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
           <ReceiptLongIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={800}>Pod pricing</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>{t('finance.calculators.podPricing')}</Typography>
         </Stack>
         <Stack spacing={2}>
           <TextField
-            label="Ticket price per spot (GST-inclusive)"
+            label={t('finance.calculators.ticketPricePerSpotGstInclusive')}
             type="number"
             size="small"
             value={inputs.pod_amount}
@@ -30,7 +32,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             fullWidth
           />
           <TextField
-            label="No. of spots"
+            label={t('finance.calculators.noOfSpots')}
             type="number"
             size="small"
             value={inputs.no_of_spots}
@@ -47,7 +49,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             hint="Extracted from the GST-inclusive pod amount and remitted to the government."
           />
           <PercentSlider
-            label="Platform fee — Duncit income"
+            label={t('finance.calculators.platformFeeDuncitIncome')}
             value={inputs.platform_fee_percent}
             onChange={(value) => onChange('platform_fee_percent', value)}
             hint="Duncit's platform fee, charged on the net (post-GST) amount."

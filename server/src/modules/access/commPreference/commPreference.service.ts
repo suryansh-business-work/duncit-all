@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
+import { hasOtpTransport } from '@modules/platform/otp/otp.delivery';
 
 /**
  * Which channels an account will accept a one-time code on.
@@ -11,11 +12,21 @@ import { UserModel } from '@modules/access/user/user.model';
  * prove it is you", so it lives on the user document and every send path can
  * read it without a second lookup.
  *
- * The rule the whole file exists for: at least one channel that BOTH accepts
- * codes and can actually be reached must stay on. Not "one channel" — one
- * REACHABLE channel. WhatsApp cannot be somebody's remaining way to receive a
- * code when they have never given us a WhatsApp number, and a guard that
- * counted it would hand out the lockout it was written to prevent.
+ * The rule the whole file exists for: at least one channel that can actually
+ * DELIVER a code must stay on. Three things have to be true of it, and the
+ * guard was wrong until it checked all three:
+ *  - the switch is on;
+ *  - we hold an address or number for it — WhatsApp cannot be somebody's
+ *    remaining channel when they never gave us a WhatsApp number;
+ *  - a transport exists behind it. SMS and WhatsApp are STUBBED today
+ *    (`hasOtpTransport`), so counting them would let an account switch off
+ *    email codes and be left with two channels that deliver nothing — the
+ *    exact lockout this guard exists to prevent, passing its own check.
+ *
+ * `reachable` on the row still means only "we hold an address", because that
+ * is what the screen renders an "add your number" state from. Deliverability
+ * is the stricter question and only the guard asks it. Wiring a provider
+ * frees the switch on its own, with no edit here.
  */
 
 export const COMM_CHANNELS = ['EMAIL', 'WHATSAPP', 'SMS'] as const;
@@ -64,6 +75,16 @@ function destinationsOf(user: any): Record<CommChannel, string> {
   };
 }
 
+/**
+ * Could a code actually arrive on this channel, given what is wired?
+ *
+ * EMAIL is the platform transport and the only one the sign-in, password-reset
+ * and account-deletion codes use at all. The two phone mediums defer to
+ * `hasOtpTransport`, which lives next to the branch that would wire them.
+ */
+const deliverable = (channel: CommChannel): boolean =>
+  channel === 'EMAIL' || hasOtpTransport(channel);
+
 /** Stored switches, defaulting to on for a document written before the field. */
 function switchesOf(user: any): Record<CommChannel, boolean> {
   const stored = user?.communication?.otp_channels ?? {};
@@ -79,7 +100,7 @@ function sheetFrom(user: any): CommPreferenceSheet {
   const destinations = destinationsOf(user);
   const switches = switchesOf(user);
   const live = COMM_CHANNELS.filter(
-    (channel) => switches[channel] && destinations[channel].length > 0
+    (channel) => switches[channel] && destinations[channel].length > 0 && deliverable(channel)
   );
   const channels = COMM_CHANNELS.map((channel) => {
     const enabled = switches[channel];

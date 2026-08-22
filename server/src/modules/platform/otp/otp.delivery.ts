@@ -11,6 +11,24 @@ export interface OtpDeliveryInput {
 }
 
 /**
+ * Which phone mediums have a real transport behind them today.
+ *
+ * Sits beside `deliverOtp` and NOT in a config, because it must change in the
+ * same edit that wires a provider — the one branch below. Anything that has to
+ * reason about whether a code would actually arrive (rather than about whether
+ * we hold an address) asks here.
+ *
+ * Both are false: SMS has no provider on this platform at all, and the WhatsApp
+ * funnel only carries pre-approved AiSensy templates.
+ */
+const TRANSPORTS: Record<OtpMedium, boolean> = {
+  SMS: false,
+  WHATSAPP: false,
+};
+
+export const hasOtpTransport = (medium: OtpMedium): boolean => TRANSPORTS[medium] ?? false;
+
+/**
  * The ONE seam a one-time code leaves Duncit through.
  *
  * Nothing actually sends yet — SMS has no provider on this platform at all, and

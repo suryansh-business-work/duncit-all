@@ -38,15 +38,17 @@ const renderBody = (template: AisensyTemplate) => (
   </Typography>
 );
 
-const BASE_COLUMNS: DuncitColumn<AisensyTemplate>[] = [
-  { field: 'name', headerName: 'Template', minWidth: 220, flex: 1 },
-  { field: 'category', headerName: 'Category', width: 140 },
-  { field: 'language', headerName: 'Language', width: 120 },
-  { field: 'status', headerName: 'Status', width: 130, cellRenderer: renderStatus },
-  { field: 'param_count', headerName: 'Params', width: 100 },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const baseColumns = (t: Translate): DuncitColumn<AisensyTemplate>[] => [
+  { field: 'name', headerName: t('marketing.whatsappCampaigns.template'), minWidth: 220, flex: 1 },
+  { field: 'category', headerName: t('marketing.whatsappCampaigns.category'), width: 140 },
+  { field: 'language', headerName: t('marketing.common.language'), width: 120 },
+  { field: 'status', headerName: t('shell.common.status'), width: 130, cellRenderer: renderStatus },
+  { field: 'param_count', headerName: t('marketing.whatsappCampaigns.params'), width: 100 },
   {
     field: 'body',
-    headerName: 'Message',
+    headerName: t('marketing.whatsappCampaigns.message'),
     minWidth: 260,
     flex: 2,
     cellRenderer: renderBody,
@@ -58,14 +60,14 @@ interface RowActionDeps {
   onDelete: (template: AisensyTemplate) => void;
 }
 
-const buildColumns = ({
-  busy,
-  onDelete,
-}: Readonly<RowActionDeps>): DuncitColumn<AisensyTemplate>[] => [
-  ...BASE_COLUMNS,
+const buildColumns = (
+  { busy, onDelete }: Readonly<RowActionDeps>,
+  t: Translate,
+): DuncitColumn<AisensyTemplate>[] => [
+  ...baseColumns(t),
   {
     field: 'actions',
-    headerName: 'Actions',
+    headerName: t('shell.common.actions'),
     width: 100,
     sortable: false,
     cellRenderer: (template) => (
@@ -74,16 +76,16 @@ const buildColumns = ({
   },
 ];
 
-const factsFor = (template: AisensyTemplate): AisensyFact[] => [
-  { label: 'Category', value: template.category || EMPTY },
-  { label: 'Language', value: template.language || EMPTY },
+const factsFor = (template: AisensyTemplate, t: Translate): AisensyFact[] => [
+  { label: t('marketing.whatsappCampaigns.category'), value: template.category || EMPTY },
+  { label: t('marketing.common.language'), value: template.language || EMPTY },
   {
-    label: 'Parameters',
+    label: t('marketing.whatsappCampaigns.parameters'),
     value: paramsLabel(template.param_count),
     hint: 'A send must fill exactly that many',
   },
   {
-    label: 'Buttons',
+    label: t('marketing.whatsappCampaigns.buttons'),
     value: template.buttons.length > 0 ? template.buttons.join(', ') : 'None',
   },
 ];
@@ -136,8 +138,8 @@ export default function AisensyTemplates() {
   );
 
   const columns = useMemo(
-    () => buildColumns({ busy: drafts.deletingTemplate, onDelete }),
-    [drafts.deletingTemplate, onDelete]
+    () => buildColumns({ busy: drafts.deletingTemplate, onDelete }, t),
+    [t, drafts.deletingTemplate, onDelete]
   );
 
   const selected = templates.find((template) => templateRowId(template) === openId) ?? null;
@@ -163,7 +165,7 @@ export default function AisensyTemplates() {
         loading={loading}
         error={error}
         count={templates.length}
-        emptyText="AiSensy returned no templates for this project."
+        emptyText={t('marketing.whatsappCampaigns.aisensyReturnedNoTemplatesForThis')}
       >
         <DuncitTable<AisensyTemplate>
           tableId="marketing-aisensy-templates"
@@ -181,7 +183,7 @@ export default function AisensyTemplates() {
         title={selected?.name ?? null}
         status={selected?.status ?? ''}
         statusColors={AISENSY_TEMPLATE_STATUS_COLORS}
-        facts={selected ? factsFor(selected) : []}
+        facts={selected ? factsFor(selected, t) : []}
         template={selected}
         onClose={() => setOpenId(null)}
       />

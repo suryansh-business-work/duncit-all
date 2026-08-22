@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import { getAdColumns } from './columns';
 import type { AdRequestRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<AdRequestRow>;
@@ -12,7 +13,8 @@ interface Props {
 const getAdRowId = (row: AdRequestRow) => row.id;
 
 export default function AdsApprovalsTable({ fetchRows, refetchRef, onReview }: Readonly<Props>) {
-  const columns = useMemo(() => getAdColumns({ onReview }), [onReview]);
+  const { t } = useTranslation();
+  const columns = useMemo(() => getAdColumns({ onReview }, t), [t, onReview]);
 
   return (
     <DuncitTable<AdRequestRow>

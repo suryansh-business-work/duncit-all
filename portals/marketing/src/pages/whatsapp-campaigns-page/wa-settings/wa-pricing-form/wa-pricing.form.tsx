@@ -10,6 +10,7 @@ import {
   type WaPricingFormProps,
   type WaPricingValues,
 } from './wa-pricing.types';
+import { useTranslation } from '@duncit/app-settings';
 
 export { waPricingSchema };
 export { fromWaPricing, toUpdateWaPricingInput } from './wa-pricing.types';
@@ -61,6 +62,7 @@ export default function WaPricingForm({
   busy,
   onSubmit,
 }: Readonly<WaPricingFormProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, reset, watch, formState } = useForm<WaPricingValues>({
     defaultValues: initialValues,
     resolver: zodResolver(waPricingSchema),
@@ -95,7 +97,7 @@ export default function WaPricingForm({
           <RhfTextField
             control={control}
             name="currency_symbol"
-            label="Currency symbol"
+            label={t('marketing.common.currencySymbol')}
             hint="Printed in front of every cost on this page"
           />
         </Box>

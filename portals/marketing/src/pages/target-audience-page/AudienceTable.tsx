@@ -2,6 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { DuncitTable, type TableFetch, type TableFilterValue } from '@duncit/table';
 import { getAudienceColumns, type AudienceColumnDeps } from './columns';
 import type { AudienceRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<AudienceRow>;
@@ -21,7 +22,8 @@ export default function AudienceTable({
   columnDeps,
   externalFilters,
 }: Readonly<Props>) {
-  const columns = useMemo(() => getAudienceColumns(columnDeps), [columnDeps]);
+  const { t } = useTranslation();
+  const columns = useMemo(() => getAudienceColumns(columnDeps, t), [t, columnDeps]);
 
   return (
     <DuncitTable<AudienceRow>

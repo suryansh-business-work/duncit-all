@@ -19,8 +19,9 @@ import {
 import GroupIcon from '@mui/icons-material/Group';
 import MediaPickerField from '../../components/MediaPickerField';
 import { RhfTextField } from '@duncit/forms';
-import { reachOf, type AudienceListOption, type NotifForm, SCOPES } from './helpers';
+import { reachOf, type AudienceListOption, type NotifForm, scopes } from './helpers';
 import { notificationFormSchema } from './notification.form';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;
@@ -48,6 +49,7 @@ export default function NotificationFormDialog({
   audienceLists,
   totalUsers,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, setValue, watch, reset } = useForm<NotifForm>({
     defaultValues: form,
     resolver: zodResolver(notificationFormSchema),
@@ -74,25 +76,25 @@ export default function NotificationFormDialog({
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <form noValidate onSubmit={submit}>
-        <DialogTitle>New Notification</DialogTitle>
+        <DialogTitle>{t('marketing.notifications.newNotification')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {opError && <Alert severity="error">{opError}</Alert>}
-            <RhfTextField control={control} name="title" label="Title" required hint="3–120 characters" />
-            <RhfTextField control={control} name="body" label="Body" required multiline minRows={3} hint="5–1000 characters" />
+            <RhfTextField control={control} name="title" label={t('shell.common.title')} required hint="3–120 characters" />
+            <RhfTextField control={control} name="body" label={t('marketing.notifications.body')} required multiline minRows={3} hint="5–1000 characters" />
             <Controller
               control={control}
               name="image_url"
               render={({ field }) => (
                 <MediaPickerField
-                  label="Image URL (optional)"
+                  label={t('marketing.notifications.imageUrlOptional')}
                   value={field.value}
                   onChange={field.onChange}
                   folder="/notifications"
                 />
               )}
             />
-            <RhfTextField control={control} name="link_url" label="Link URL (optional, e.g. /pods/abc)" />
+            <RhfTextField control={control} name="link_url" label={t('marketing.notifications.linkUrlOptionalEGPods')} />
             <Controller
               control={control}
               name="silent"
@@ -109,7 +111,7 @@ export default function NotificationFormDialog({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Audience"
+                  label={t('marketing.common.audience')}
                   fullWidth
                   value={field.value}
                   onBlur={field.onBlur}
@@ -121,7 +123,7 @@ export default function NotificationFormDialog({
                     setValue('audience_list_id', '');
                   }}
                 >
-                  {SCOPES.map((option) => (
+                  {scopes(t).map((option) => (
                     <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                   ))}
                 </TextField>
@@ -151,7 +153,7 @@ export default function NotificationFormDialog({
                 render={({ field, fieldState }) => (
                   <TextField
                     select
-                    label="Audience list"
+                    label={t('marketing.common.audienceList')}
                     fullWidth
                     value={field.value}
                     onBlur={field.onBlur}
@@ -181,7 +183,7 @@ export default function NotificationFormDialog({
                 render={({ field, fieldState }) => (
                   <TextField
                     select
-                    label="Location"
+                    label={t('marketing.common.location')}
                     fullWidth
                     value={field.value}
                     onBlur={field.onBlur}
@@ -201,7 +203,7 @@ export default function NotificationFormDialog({
             )}
 
             {scope === 'ZONE' && (
-              <RhfTextField control={control} name="zone_name" label="Zone" select disabled={!locationId}>
+              <RhfTextField control={control} name="zone_name" label={t('marketing.common.zone')} select disabled={!locationId}>
                 {zones.map((zone) => (
                   <MenuItem key={zone.zone_name} value={zone.zone_name}>{zone.zone_name}</MenuItem>
                 ))}
@@ -215,7 +217,7 @@ export default function NotificationFormDialog({
                 render={({ field, fieldState }) => (
                   <TextField
                     select
-                    label="Users"
+                    label={t('marketing.notifications.users')}
                     fullWidth
                     value={field.value}
                     onBlur={field.onBlur}
@@ -240,7 +242,7 @@ export default function NotificationFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button type="button" onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Sending…' : 'Send Now'}</Button>
         </DialogActions>
       </form>

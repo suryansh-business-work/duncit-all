@@ -26,6 +26,7 @@ import {
 import CampaignMeta from './CampaignMeta';
 import RecipientTable from './RecipientTable';
 import SummaryTiles from './SummaryTiles';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   campaignId: string | null;
@@ -59,6 +60,7 @@ export default function WaCampaignDetailDialog({
   onDuplicate,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ waCampaign: WaCampaignRow }>(WA_CAMPAIGN, {
     variables: { campaign_id: campaignId },
     skip: !campaignId,
@@ -154,7 +156,7 @@ export default function WaCampaignDetailDialog({
             Duplicate
           </Button>
         </Stack>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

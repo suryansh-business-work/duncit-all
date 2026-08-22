@@ -3,6 +3,7 @@ import { Grid, Paper, Stack, Typography } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { AD_POSITIONS } from '../../../lib/ad-positions';
 import type { AdsPricingFormValues } from './ads-pricing.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * What each placement is called on the public rate card, and the line under it.
@@ -16,10 +17,11 @@ import type { AdsPricingFormValues } from './ads-pricing.types';
 export default function PlacementCopyFields({
   control,
 }: Readonly<{ control: Control<AdsPricingFormValues> }>) {
+  const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant="subtitle2">Rate card wording</Typography>
+        <Typography variant="subtitle2">{t('marketing.adsSettings.rateCardWording')}</Typography>
         <Typography variant="caption" color="text.secondary">
           What advertisers read on duncit.com. Leave a field empty to use the default.
         </Typography>

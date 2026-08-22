@@ -2,6 +2,9 @@ import { Chip, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { actionsColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { AudienceListRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const renderList = (row: AudienceListRow) => (
   <Stack spacing={0} sx={{ lineHeight: 1.3 }}>
@@ -43,11 +46,11 @@ interface ColumnDeps {
 export function getAudienceListColumns({
   formatDate,
   onDelete,
-}: Readonly<ColumnDeps>): DuncitColumn<AudienceListRow>[] {
+}: Readonly<ColumnDeps>, t: Translate): DuncitColumn<AudienceListRow>[] {
   return [
     {
       field: 'name',
-      headerName: 'List',
+      headerName: t('marketing.targetAudience.list'),
       minWidth: 260,
       flex: 1,
       cellRenderer: renderList,
@@ -55,14 +58,14 @@ export function getAudienceListColumns({
     },
     {
       field: 'owner',
-      headerName: 'Owner',
+      headerName: t('marketing.targetAudience.owner'),
       filter: { type: 'text' },
       minWidth: 160,
       valueGetter: (row) => row.owner,
     },
     {
       field: 'member_count',
-      headerName: 'People',
+      headerName: t('marketing.common.people'),
       sortable: false,
       width: 120,
       cellRenderer: renderMembers,
@@ -70,7 +73,7 @@ export function getAudienceListColumns({
     },
     {
       field: 'criteria',
-      headerName: 'Criteria',
+      headerName: t('marketing.targetAudience.criteria'),
       sortable: false,
       width: 130,
       cellRenderer: renderCriteria,
@@ -78,7 +81,7 @@ export function getAudienceListColumns({
     },
     dateColumn<AudienceListRow>({
       field: 'created_at',
-      headerName: 'Created',
+      headerName: t('shell.common.created'),
       hide: false,
       width: 160,
       formatDate,
@@ -86,7 +89,7 @@ export function getAudienceListColumns({
     actionsColumn<AudienceListRow>({
       width: 80,
       onDelete,
-      delete: { title: 'Delete list', icon: <DeleteOutlineIcon fontSize="small" /> },
+      delete: { title: t('marketing.targetAudience.deleteList'), icon: <DeleteOutlineIcon fontSize="small" /> },
     }),
   ];
 }

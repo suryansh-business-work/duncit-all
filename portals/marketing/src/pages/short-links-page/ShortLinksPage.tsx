@@ -17,6 +17,7 @@ import {
   type ShortLinkOptions,
   type ShortLinkRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: ShortLinkRow) => row.id;
 const NO_OPTIONS: ShortLinkOptions = { sources: [], mediums: [] };
@@ -26,6 +27,7 @@ const NO_CAMPAIGNS: CampaignChoice[] = [];
 /** Every duncit.com/<code> link, what it was made for, and how often it has
  * been followed. */
 export default function ShortLinksPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -62,8 +64,8 @@ export default function ShortLinksPage() {
         campaigns,
         onView: openLink,
         onDelete: setTarget,
-      }),
-    [campaigns, openLink, options],
+      }, t),
+    [t, campaigns, openLink, options],
   );
 
   const refresh = useCallback(() => refetchRef.current?.(), []);
@@ -131,12 +133,12 @@ export default function ShortLinksPage() {
       {target && (
         <ConfirmDialog
           open
-          title="Delete this short link?"
+          title={t('marketing.shortLinks.deleteThisShortLink')}
           message={
             error ??
             `“${target.label}” stops working immediately — anywhere it is already printed or posted will 404. Retire it instead if you only want to stop new traffic.`
           }
-          confirmLabel="Delete"
+          confirmLabel={t('shell.common.delete')}
           confirmColor="error"
           loading={deleting}
           busyLabel="Deleting…"

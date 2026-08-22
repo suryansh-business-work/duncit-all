@@ -21,6 +21,7 @@ import CampaignEngagement from './CampaignEngagement';
 import { CAMPAIGN_STATUS_COLORS, canDelete, canSend } from './helpers';
 import { MARKETING_CAMPAIGN, type MarketingCampaignDetail } from './queries';
 import type { CampaignAudienceList } from './marketing-campaign-form';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   campaignId: string | null;
@@ -43,6 +44,7 @@ export default function CampaignDetailsDialog({
   onSend,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ marketingCampaign: MarketingCampaignDetail }>(
     MARKETING_CAMPAIGN,
     { variables: { campaign_id: campaignId }, skip: !campaignId, fetchPolicy: 'cache-and-network' },
@@ -92,8 +94,8 @@ export default function CampaignDetailsDialog({
               </Typography>
               <CampaignHtmlFrame
                 html={campaign.rendered_html ?? ''}
-                title="Campaign email"
-                placeholder="This campaign has not been rendered yet."
+                title={t('marketing.marketingCampaigns.campaignEmail')}
+                placeholder={t('marketing.marketingCampaigns.thisCampaignHasNotBeenRendered')}
                 minHeight={380}
               />
             </Box>

@@ -16,11 +16,17 @@ import KpiCard from './KpiCard';
 import TopLinksCard from './TopLinksCard';
 import CampaignPerformanceCard from './CampaignPerformanceCard';
 import { MARKETING_DASHBOARD, type MarketingDashboard } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
-const header = (subtitle: string) => <PageHeader title="Dashboard" subtitle={subtitle} />;
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const header = (subtitle: string, t: Translate) => (
+  <PageHeader title={t('shell.nav.dashboard')} subtitle={subtitle} />
+);
 
 /** What marketing did, and what it earned. */
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { formatDate, formatDateTime } = useDateFormat();
   const { data, error } = useQuery<{ marketingDashboard: MarketingDashboard }>(
@@ -54,7 +60,7 @@ export default function DashboardPage() {
         'kpi-clicks',
         0,
         <KpiCard
-          label="Link clicks"
+          label={t('marketing.dashboard.linkClicks')}
           value={links.total_clicks.toLocaleString()}
           hint={`${links.unique_visitors.toLocaleString()} unique visitors`}
           icon={<LinkIcon />}
@@ -65,7 +71,7 @@ export default function DashboardPage() {
         'kpi-revenue',
         3,
         <KpiCard
-          label="Revenue from links"
+          label={t('marketing.dashboard.revenueFromLinks')}
           value={formatINR(links.revenue)}
           hint={`${links.conversions.toLocaleString()} paid · ${links.conversion_rate}% of clicks`}
           icon={<PaymentsIcon />}
@@ -76,7 +82,7 @@ export default function DashboardPage() {
         'kpi-emails',
         6,
         <KpiCard
-          label="Emails delivered"
+          label={t('marketing.dashboard.emailsDelivered')}
           value={campaigns.recipients.toLocaleString()}
           hint={`${campaigns.sent} campaigns · ${campaigns.open_rate}% opened`}
           icon={<EmailIcon />}
@@ -87,7 +93,7 @@ export default function DashboardPage() {
         'kpi-ads',
         9,
         <KpiCard
-          label="Live ads"
+          label={t('marketing.dashboard.liveAds')}
           value={ads.live.toLocaleString()}
           hint={ads.pending > 0 ? `${ads.pending} waiting for approval` : 'Nothing waiting for approval'}
           icon={<CampaignIcon />}
@@ -137,9 +143,9 @@ export default function DashboardPage() {
         minH: 3,
         content: (
           <BreakdownCard
-            title="Where clicks came from"
+            title={t('marketing.dashboard.whereClicksCameFrom')}
             rows={links.platforms}
-            emptyText="No clicks recorded yet."
+            emptyText={t('marketing.dashboard.noClicksRecordedYet')}
           />
         ),
       },
@@ -150,7 +156,7 @@ export default function DashboardPage() {
         minW: 3,
         minH: 3,
         content: (
-          <BreakdownCard title="Countries" rows={links.countries} emptyText="No clicks recorded yet." />
+          <BreakdownCard title={t('marketing.common.countries')} rows={links.countries} emptyText={t('marketing.dashboard.noClicksRecordedYet')} />
         ),
       },
       {
@@ -161,15 +167,15 @@ export default function DashboardPage() {
         minH: 3,
         content: (
           <BreakdownCard
-            title="What is set up"
+            title={t('marketing.dashboard.whatIsSetUp')}
             rows={[
-              { label: 'Active short links', count: links.active },
-              { label: 'Short links in total', count: links.total },
-              { label: 'Saved audience lists', count: audience.lists },
-              { label: 'Campaigns scheduled', count: campaigns.scheduled },
-              { label: 'Campaigns failed', count: campaigns.failed },
+              { label: t('marketing.dashboard.activeShortLinks'), count: links.active },
+              { label: t('marketing.dashboard.shortLinksInTotal'), count: links.total },
+              { label: t('marketing.dashboard.savedAudienceLists'), count: audience.lists },
+              { label: t('marketing.dashboard.campaignsScheduled'), count: campaigns.scheduled },
+              { label: t('marketing.dashboard.campaignsFailed'), count: campaigns.failed },
             ]}
-            emptyText="Nothing set up yet."
+            emptyText={t('marketing.dashboard.nothingSetUpYet')}
           />
         ),
       },
@@ -179,7 +185,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <Stack spacing={2}>
-        {header('Marketing at a glance')}
+        {header(t('marketing.dashboard.atAGlance'), t)}
         <Alert severity="error">{parseApiError(error, 'Could not load the dashboard')}</Alert>
       </Stack>
     );
@@ -188,7 +194,7 @@ export default function DashboardPage() {
   if (!board) {
     return (
       <Stack spacing={2}>
-        {header('Marketing at a glance')}
+        {header(t('marketing.dashboard.atAGlance'), t)}
         <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
         <Skeleton variant="rectangular" height={260} sx={{ borderRadius: 2 }} />
       </Stack>
@@ -199,7 +205,7 @@ export default function DashboardPage() {
     <Box>
       <DuncitDashboard
         dashboardId="marketing.overview"
-        header={header(`Marketing at a glance · last ${board.days} days`)}
+        header={header(t('marketing.dashboard.atAGlanceDays', { vars: { days: board.days } }), t)}
         widgets={widgets}
       />
     </Box>

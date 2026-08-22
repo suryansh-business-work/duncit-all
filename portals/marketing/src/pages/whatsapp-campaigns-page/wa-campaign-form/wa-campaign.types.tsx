@@ -69,21 +69,21 @@ export const waCampaignSchema = (t: Translator['t']) =>
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['audience_list_id'],
-          message: 'Pick the audience list to send to',
+          message: t('marketing.whatsappCampaigns.pickTheAudienceListToSend'),
         });
       }
       if (values.audience === 'SPECIFIC_USERS' && values.users.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['users'],
-          message: 'Pick at least one person to send to',
+          message: t('marketing.whatsappCampaigns.pickAtLeastOnePersonTo'),
         });
       }
       if (values.audience === 'MANUAL_NUMBERS' && values.contacts.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['contacts'],
-          message: 'Add at least one contact to send to',
+          message: t('marketing.whatsappCampaigns.addAtLeastOneContactTo'),
         });
       }
       // A time already gone would send immediately, which is not what picking a
@@ -92,7 +92,7 @@ export const waCampaignSchema = (t: Translator['t']) =>
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['scheduled_at'],
-          message: 'Pick a time in the future',
+          message: t('marketing.whatsappCampaigns.pickATimeInTheFuture'),
         });
       }
     });

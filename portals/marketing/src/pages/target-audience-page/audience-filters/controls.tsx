@@ -4,6 +4,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format, isValid, parseISO } from 'date-fns';
 import type { Option } from '../helpers';
 import type { AudienceFilterState, TriState } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 const SMALL = { size: 'small', fullWidth: true } as const;
 
@@ -31,6 +32,7 @@ export function MultiSelect({
   options,
   onChange,
 }: Readonly<{ label: string; options: Option[] } & Bound<string[]>>) {
+  const { t } = useTranslation();
   return (
     <TextField
       {...SMALL}
@@ -50,7 +52,7 @@ export function MultiSelect({
         ),
       }}
     >
-      {options.length === 0 && <MenuItem disabled>No options yet</MenuItem>}
+      {options.length === 0 && <MenuItem disabled>{t('marketing.targetAudience.noOptionsYet')}</MenuItem>}
       {options.map((o) => (
         <MenuItem key={o.value} value={o.value}>
           <Checkbox size="small" checked={value.includes(o.value)} />
@@ -67,6 +69,7 @@ export function SingleSelect({
   options,
   onChange,
 }: Readonly<{ label: string; options: Option[] } & Bound<string>>) {
+  const { t } = useTranslation();
   return (
     <TextField {...SMALL} select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
       <MenuItem value="">Any</MenuItem>
@@ -79,18 +82,21 @@ export function SingleSelect({
   );
 }
 
-const TRI_OPTIONS: Option[] = [
-  { value: 'yes', label: 'Yes' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const triOptions = (t: Translate): Option[] => [
+  { value: 'yes', label: t('marketing.targetAudience.yes') },
   { value: 'no', label: 'No' },
 ];
 
 /** Unset asks nothing at all, which is not the same as asking for "no". */
 export function TriStateSelect({ label, value, onChange }: Readonly<{ label: string } & Bound<TriState>>) {
+  const { t } = useTranslation();
   return (
     <SingleSelect
       label={label}
       value={value}
-      options={TRI_OPTIONS}
+      options={triOptions(t)}
       onChange={(v) => onChange(v as TriState)}
     />
   );

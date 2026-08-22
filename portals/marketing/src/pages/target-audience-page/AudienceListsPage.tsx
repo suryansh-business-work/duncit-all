@@ -10,11 +10,13 @@ import { parseApiError } from '@duncit/utils';
 import { getAudienceListColumns } from './audience-list-columns';
 import { AUDIENCE_LISTS_TABLE, DELETE_AUDIENCE_LIST } from './queries';
 import type { AudienceListRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: AudienceListRow) => row.id;
 
 /** The Target Audience landing page: the saved lists, and a way to make one. */
 export default function AudienceListsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
@@ -32,8 +34,8 @@ export default function AudienceListsPage() {
   const openList = useCallback((row: AudienceListRow) => navigate(`/audience/${row.id}`), [navigate]);
 
   const columns = useMemo(
-    () => getAudienceListColumns({ formatDate: formatDateTime, onDelete: setTarget }),
-    [formatDateTime],
+    () => getAudienceListColumns({ formatDate: formatDateTime, onDelete: setTarget }, t),
+    [t, formatDateTime],
   );
 
   const confirmDelete = async (list: AudienceListRow) => {
@@ -92,12 +94,12 @@ export default function AudienceListsPage() {
       {target && (
         <ConfirmDialog
           open
-          title="Delete this audience list?"
+          title={t('marketing.targetAudience.deleteThisAudienceList')}
           message={
             error ??
             `“${target.name}” will be removed. The people in it are not affected — a list only stores filters.`
           }
-          confirmLabel="Delete"
+          confirmLabel={t('shell.common.delete')}
           confirmColor="error"
           loading={deleting}
           busyLabel="Deleting…"

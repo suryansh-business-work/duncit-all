@@ -4,6 +4,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import MjmlAiButton from '../../../components/MjmlAiButton';
 import { formatMjml } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   value: string;
@@ -14,13 +15,14 @@ interface Props {
 }
 
 export default function CampaignMjmlEditor({ value, error, helperText, onChange, onVerify }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={0.75}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
-        <Typography variant="subtitle2" fontWeight={700}>MJML body</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t('marketing.marketingCampaigns.mjmlBody')}</Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button size="small" variant="outlined" startIcon={<FormatAlignLeftIcon />} onClick={() => onChange(formatMjml(value))}>Format</Button>
-          <Button size="small" variant="outlined" startIcon={<FactCheckIcon />} onClick={onVerify}>Verify</Button>
+          <Button size="small" variant="outlined" startIcon={<FormatAlignLeftIcon />} onClick={() => onChange(formatMjml(value))}>{t('marketing.marketingCampaigns.format')}</Button>
+          <Button size="small" variant="outlined" startIcon={<FactCheckIcon />} onClick={onVerify}>{t('marketing.marketingCampaigns.verify')}</Button>
           <MjmlAiButton currentMjml={value} onApply={onChange} />
         </Stack>
       </Stack>

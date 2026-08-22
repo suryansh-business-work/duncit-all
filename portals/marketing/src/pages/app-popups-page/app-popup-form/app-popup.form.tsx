@@ -16,9 +16,10 @@ export {
   blankAppPopupValues,
   toAppPopupInput,
   toAppPopupValues,
-  AUDIENCE_OPTIONS,
-  PLATFORM_OPTIONS,
+  audienceOptions,
+  platformOptions,
 } from './app-popup.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /** The image is the popup — everything else only decides who sees it and when. */
 export default function AppPopupForm({
@@ -30,9 +31,10 @@ export default function AppPopupForm({
   onCancel,
   onSubmit,
 }: Readonly<AppPopupFormProps>) {
+  const { t } = useTranslation();
   const { control, handleSubmit, formState } = useForm<AppPopupFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(appPopupSchema),
+    resolver: zodResolver(appPopupSchema(t)),
     mode: 'onChange',
   });
 
@@ -45,7 +47,7 @@ export default function AppPopupForm({
           <RhfTextField
             control={control}
             name="name"
-            label="Name"
+            label={t('shell.common.name')}
             required
             hint="Only you see this — it names the popup in this table"
           />
@@ -59,7 +61,7 @@ export default function AppPopupForm({
               <SingleImageUploadField
                 variant="avatar"
                 shape="square"
-                label="Popup image"
+                label={t('marketing.appPopups.popupImage')}
                 value={field.value}
                 onChange={field.onChange}
                 folder="/app-popups"

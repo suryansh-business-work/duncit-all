@@ -1,5 +1,6 @@
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { STATUS_FILTERS, type AdStoredStatus } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   status: '' | AdStoredStatus;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function AdsApprovalsToolbar({ status, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <ToggleButtonGroup
       size="small"
@@ -15,7 +17,7 @@ export default function AdsApprovalsToolbar({ status, onChange }: Readonly<Props
       onChange={(_e, value) => {
         if (value !== null) onChange(value as '' | AdStoredStatus);
       }}
-      aria-label="Filter by status"
+      aria-label={t('marketing.adsApprovals.filterByStatus')}
     >
       {STATUS_FILTERS.map((f) => (
         <ToggleButton key={f.label} value={f.value}>

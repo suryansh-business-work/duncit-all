@@ -90,6 +90,7 @@ export {
   policyAcceptanceMethodLabel,
   resolveLocale,
   SHELL_BUNDLE,
+  MARKETING_BUNDLE,
   SUPPORT_BUNDLE,
   TECH_BUNDLE,
   SURFACE_BUNDLES,

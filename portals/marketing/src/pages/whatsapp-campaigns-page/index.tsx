@@ -18,17 +18,20 @@ import {
   type WaCampaignRow,
   type WaCampaignVariable,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 type WaTab = 'dashboard' | 'campaigns' | 'templates' | 'logs' | 'settings';
 
 /* The order a question is usually asked in: what did this cost, what can I
    send, what do those templates say, what went out, and what does it cost. */
-const WA_TABS: DuncitTabItem<WaTab>[] = [
-  { value: 'dashboard', label: 'Dashboard' },
-  { value: 'campaigns', label: 'Campaigns' },
-  { value: 'templates', label: 'Templates' },
-  { value: 'logs', label: 'Logs' },
-  { value: 'settings', label: 'Settings' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const waTabs = (t: Translate): DuncitTabItem<WaTab>[] => [
+  { value: 'dashboard', label: t('shell.nav.dashboard') },
+  { value: 'campaigns', label: t('shell.nav.campaigns') },
+  { value: 'templates', label: t('shell.nav.templates') },
+  { value: 'logs', label: t('shell.nav.logs') },
+  { value: 'settings', label: t('shell.nav.settings') },
 ];
 
 interface SetupData {
@@ -47,8 +50,9 @@ interface SetupData {
  * not asked for here either; it comes from the Tech portal, server-side.
  */
 export default function WhatsappCampaignsPage() {
+  const { t } = useTranslation();
   const refetchRef = useRef<(() => void) | null>(null);
-  const tabs = useTabParam<WaTab>({ items: WA_TABS, fallback: 'dashboard' });
+  const tabs = useTabParam<WaTab>({ items: waTabs(t), fallback: 'dashboard' });
   const tab = tabs.value;
   const [formOpen, setFormOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);

@@ -2,6 +2,7 @@ import { dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { AudienceRow } from '../helpers';
 import { dash, renderPerson, renderPush, renderRoles, yesNo } from './cells';
 import type { AudienceColumnDeps } from './types';
+import { useTranslation } from '@duncit/app-settings';
 
 type Column = DuncitColumn<AudienceRow>;
 
@@ -11,10 +12,12 @@ type Column = DuncitColumn<AudienceRow>;
  */
 
 /** Who they are. */
-export const identityColumns = (): Column[] => [
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+export const identityColumns = (t: Translate): Column[] => [
   {
     field: 'first_name',
-    headerName: 'Person',
+    headerName: t('marketing.targetAudience.person'),
     minWidth: 220,
     flex: 1,
     cellRenderer: renderPerson,
@@ -22,33 +25,33 @@ export const identityColumns = (): Column[] => [
   },
   {
     field: 'phone',
-    headerName: 'Phone',
+    headerName: t('shell.common.phone'),
     sortable: false,
     minWidth: 130,
     valueGetter: (row) => dash(row.phone),
   },
   {
     field: 'age',
-    headerName: 'Age',
+    headerName: t('marketing.targetAudience.age'),
     width: 90,
     valueGetter: (row) => row.age ?? EM_DASH,
   },
 ];
 
 /** Where they are — the browse-location fields, not the postal address. */
-export const placeColumns = (): Column[] => [
-  { field: 'city', headerName: 'City', minWidth: 130, valueGetter: (row) => dash(row.city) },
-  { field: 'state', headerName: 'State', minWidth: 130, valueGetter: (row) => dash(row.state) },
+export const placeColumns = (t: Translate): Column[] => [
+  { field: 'city', headerName: t('marketing.common.city'), minWidth: 130, valueGetter: (row) => dash(row.city) },
+  { field: 'state', headerName: t('marketing.targetAudience.state'), minWidth: 130, valueGetter: (row) => dash(row.state) },
   {
     field: 'zone',
-    headerName: 'Zone',
+    headerName: t('marketing.common.zone'),
     minWidth: 130,
     hide: true,
     valueGetter: (row) => dash(row.zone),
   },
   {
     field: 'pincode',
-    headerName: 'Pincode',
+    headerName: t('marketing.targetAudience.pincode'),
     sortable: false,
     width: 120,
     hide: true,
@@ -56,7 +59,7 @@ export const placeColumns = (): Column[] => [
   },
   {
     field: 'country',
-    headerName: 'Country',
+    headerName: t('marketing.common.country'),
     sortable: false,
     minWidth: 120,
     hide: true,
@@ -65,10 +68,10 @@ export const placeColumns = (): Column[] => [
 ];
 
 /** How you can reach them. */
-export const reachColumns = (): Column[] => [
+export const reachColumns = (t: Translate): Column[] => [
   {
     field: 'push_platform',
-    headerName: 'Push reachable',
+    headerName: t('marketing.targetAudience.pushReachable'),
     sortable: false,
     minWidth: 160,
     cellRenderer: renderPush,
@@ -83,7 +86,7 @@ export const reachColumns = (): Column[] => [
   },
   {
     field: 'role',
-    headerName: 'Roles',
+    headerName: t('shell.nav.roles'),
     sortable: false,
     minWidth: 160,
     cellRenderer: renderRoles,
@@ -92,17 +95,17 @@ export const reachColumns = (): Column[] => [
 ];
 
 /** Rule 11: dates follow the admin-configured format, never a literal. */
-export const activityColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
+export const activityColumns = (deps: Readonly<AudienceColumnDeps>, t: Translate): Column[] => [
   dateColumn<AudienceRow>({
     field: 'last_login_at',
-    headerName: 'Last active',
+    headerName: t('marketing.targetAudience.lastActive'),
     hide: false,
     width: 160,
     formatDate: deps.formatDate,
   }),
   dateColumn<AudienceRow>({
     field: 'created_at',
-    headerName: 'Joined',
+    headerName: t('marketing.targetAudience.joined'),
     hide: false,
     width: 160,
     formatDate: deps.formatDate,

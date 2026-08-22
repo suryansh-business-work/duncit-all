@@ -2,6 +2,7 @@ import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { EM_DASH, actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import type { CampaignChoice, ShortLinkOption, ShortLinkRow } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Args {
   sources: ShortLinkOption[];
@@ -10,6 +11,8 @@ interface Args {
   onView: (row: ShortLinkRow) => void;
   onDelete: (row: ShortLinkRow) => void;
 }
+
+type Translate = ReturnType<typeof useTranslation>['t'];
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
@@ -55,14 +58,14 @@ export function getShortLinkColumns({
   campaigns,
   onView,
   onDelete,
-}: Readonly<Args>): DuncitColumn<ShortLinkRow>[] {
+}: Readonly<Args>, t: Translate): DuncitColumn<ShortLinkRow>[] {
   const toFilterOptions = (options: ShortLinkOption[]) =>
     options.map((option) => ({ value: option.value, label: option.label }));
 
   return [
     {
       field: 'label',
-      headerName: 'Link',
+      headerName: t('marketing.shortLinks.link'),
       flex: 1,
       minWidth: 220,
       cellRenderer: renderLink,
@@ -70,14 +73,14 @@ export function getShortLinkColumns({
     },
     {
       field: 'source',
-      headerName: 'Created for',
+      headerName: t('marketing.shortLinks.createdFor'),
       minWidth: 160,
       filter: { type: 'select', options: toFilterOptions(sources) },
       valueGetter: (row) => channelText(row, sources),
     },
     {
       field: 'medium',
-      headerName: 'Medium',
+      headerName: t('marketing.shortLinks.medium'),
       minWidth: 150,
       filter: { type: 'select', options: toFilterOptions(mediums) },
       valueGetter: (row) =>
@@ -87,7 +90,7 @@ export function getShortLinkColumns({
     },
     {
       field: 'utm_campaign',
-      headerName: 'Campaign',
+      headerName: t('marketing.common.campaign'),
       sortable: false,
       minWidth: 160,
       filter: {
@@ -99,17 +102,17 @@ export function getShortLinkColumns({
       },
       valueGetter: (row) => campaignText(row, campaigns),
     },
-    { field: 'click_count', headerName: 'Clicks', width: 110 },
+    { field: 'click_count', headerName: t('marketing.shortLinks.clicks'), width: 110 },
     dateColumn<ShortLinkRow>({
       field: 'last_clicked_at',
-      headerName: 'Last click',
+      headerName: t('marketing.shortLinks.lastClick'),
       hide: false,
       width: 170,
       format: DATE_TIME_FORMAT,
     }),
     {
       field: 'is_active',
-      headerName: 'Status',
+      headerName: t('shell.common.status'),
       width: 120,
       filter: { type: 'boolean' },
       cellRenderer: renderStatus,
@@ -119,10 +122,10 @@ export function getShortLinkColumns({
     actionsColumn<ShortLinkRow>({
       width: 120,
       onDelete,
-      delete: { title: 'Delete link' },
+      delete: { title: t('marketing.shortLinks.deleteLink') },
       renderExtra: (row) => (
-        <Tooltip title="Open link details">
-          <IconButton size="small" aria-label="Open link details" onClick={() => onView(row)}>
+        <Tooltip title={t('marketing.shortLinks.openLinkDetails')}>
+          <IconButton size="small" aria-label={t('marketing.shortLinks.openLinkDetails')} onClick={() => onView(row)}>
             <VisibilityOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>

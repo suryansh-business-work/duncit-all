@@ -1,5 +1,6 @@
 import { Card, CardContent, Stack, Typography } from '@mui/material';
 import type { WaCampaignRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface TileProps {
   label: string;
@@ -33,27 +34,28 @@ function Tile({ label, value, hint, color }: Readonly<TileProps>) {
  * those people, which is a different thing from AiSensy refusing a message.
  */
 export default function SummaryTiles({ campaign }: Readonly<{ campaign: WaCampaignRow }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
       <Tile
-        label="In the audience"
+        label={t('marketing.whatsappCampaigns.inTheAudience')}
         value={campaign.recipient_count}
         hint="Matched when the send ran"
       />
       <Tile
-        label="Sent"
+        label={t('marketing.common.sent')}
         value={campaign.sent_count}
         hint="AiSensy accepted the message"
         color="success.main"
       />
       <Tile
-        label="Skipped"
+        label={t('marketing.whatsappCampaigns.skipped')}
         value={campaign.skipped_count}
         hint="Nothing attempted — see why below"
         color="warning.main"
       />
       <Tile
-        label="Failed"
+        label={t('marketing.common.failed')}
         value={campaign.failed_count}
         hint="AiSensy refused the message"
         color="error.main"

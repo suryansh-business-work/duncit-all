@@ -30,6 +30,7 @@ import AppPopupForm, {
   type AppPopupFormValues,
 } from './app-popup-form';
 import AppPopupsTable from './AppPopupsTable';
+import { useTranslation } from '@duncit/app-settings';
 
 /**
  * App Popups — the full-screen image the app shows when it opens.
@@ -39,6 +40,7 @@ import AppPopupsTable from './AppPopupsTable';
  * without anything being dispatched.
  */
 export default function AppPopupsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const confirm = useConfirm();
@@ -87,10 +89,10 @@ export default function AppPopupsPage() {
       const input = toAppPopupInput(values);
       if (editing) {
         await updateMut({ variables: { id: editing.id, input } });
-        setToast('Popup updated');
+        setToast(t('marketing.appPopups.popupUpdated'));
       } else {
         await createMut({ variables: { input } });
-        setToast('Popup created');
+        setToast(t('marketing.appPopups.popupCreated'));
       }
       setOpen(false);
       refetchRef.current?.();
@@ -104,15 +106,15 @@ export default function AppPopupsPage() {
   const remove = useCallback(
     async (popup: AppPopupRow) => {
       const ok = await confirm({
-        title: 'Delete popup',
+        title: t('marketing.appPopups.deletePopup'),
         message: `Delete "${popup.name}"? It stops showing in the app immediately.`,
         destructive: true,
-        confirmLabel: 'Delete',
+        confirmLabel: t('shell.common.delete'),
       });
       if (!ok) return;
       try {
         await deleteMut({ variables: { id: popup.id } });
-        setToast('Deleted');
+        setToast(t('shell.common.deleted'));
         refetchRef.current?.();
       } catch (e) {
         notifyError(parseApiError(e));
@@ -126,7 +128,7 @@ export default function AppPopupsPage() {
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <PhoneIphoneIcon color="primary" />
-          <Typography variant="h5">App Popups</Typography>
+          <Typography variant="h5">{t('shell.nav.appPopups')}</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
           A full-screen image shown when the app opens. Each person sees a popup once — closing it

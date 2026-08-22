@@ -9,8 +9,10 @@ import AdsPricingForm, {
   type AdsPricingFormValues,
 } from './ads-pricing-form';
 import { AD_PRICING, UPDATE_AD_PRICING } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 export default function AdsSettingsPage() {
+  const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(AD_PRICING);
   const [updateMut] = useMutation(UPDATE_AD_PRICING);
   const [busy, setBusy] = useState(false);
@@ -30,7 +32,7 @@ export default function AdsSettingsPage() {
       await refetch();
     } catch (e) {
       /* v8 ignore next -- Apollo rejects with an Error carrying a message; the non-Error fallback is defensive */
-      setOpError(e instanceof Error ? e.message : 'Failed to update ad pricing');
+      setOpError(e instanceof Error ? e.message : t('marketing.adsSettings.failedToUpdateAdPricing'));
     } finally {
       setBusy(false);
     }

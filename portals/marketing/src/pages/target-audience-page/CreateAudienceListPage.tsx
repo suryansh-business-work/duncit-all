@@ -26,12 +26,14 @@ import {
   type AudienceFilterState,
 } from './audience-filters';
 import { AUDIENCE_LIST_OWNERS, CREATE_AUDIENCE_LIST } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const STEPS = ['Choose the audience', 'Name the list'];
 
 
 /** Two steps: define who is in the list, then say what the list is. */
 export default function CreateAudienceListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUserData();
   const [step, setStep] = useState(0);
@@ -89,7 +91,7 @@ export default function CreateAudienceListPage() {
             onBack={requestLeave}
             backAriaLabel="Back to audience lists"
             eyebrow="Target Audience"
-            title="Create list"
+            title={t('marketing.targetAudience.createList')}
           />
         </Box>
         {/* Actions live at the top: step 1 is a full-height table, and a Next
@@ -170,9 +172,9 @@ export default function CreateAudienceListPage() {
       {confirmingLeave && (
         <ConfirmDialog
           open
-          title="Leave without saving?"
+          title={t('marketing.targetAudience.leaveWithoutSaving')}
           message={`You have ${filterCount} filter${filterCount === 1 ? '' : 's'} applied. Leaving now discards them and no list is created.`}
-          confirmLabel="Discard filters"
+          confirmLabel={t('marketing.targetAudience.discardFilters')}
           confirmColor="error"
           onClose={() => setConfirmingLeave(false)}
           onConfirm={backToLists}

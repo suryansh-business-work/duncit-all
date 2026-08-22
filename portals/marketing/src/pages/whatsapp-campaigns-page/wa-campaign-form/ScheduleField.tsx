@@ -2,6 +2,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { FormControlLabel, Stack, Switch } from '@mui/material';
 import DateTimeField from '../../../components/DateTimeField';
 import type { WaCampaignValues } from './wa-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Switching the schedule on lands an hour from now — a sane, editable start
  * rather than an empty picker. */
@@ -11,6 +12,7 @@ const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOStri
 export default function ScheduleField({
   control,
 }: Readonly<{ control: Control<WaCampaignValues> }>) {
+  const { t } = useTranslation();
   return (
     <Controller
       control={control}
@@ -30,7 +32,7 @@ export default function ScheduleField({
           />
           {field.value ? (
             <DateTimeField
-              label="Send at"
+              label={t('marketing.whatsappCampaigns.sendAt')}
               value={field.value}
               onChange={field.onChange}
               minDateTime={new Date()}

@@ -15,6 +15,7 @@ import { formatINR } from '@duncit/utils';
 import { stepLabel } from './funnel-steps';
 import { locationOf } from './clickColumns';
 import type { ShortLinkJourneyRow } from '../queries';
+import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   journey: ShortLinkJourneyRow | null;
@@ -28,6 +29,7 @@ export default function JourneyTimelineDialog({
   formatDateTime,
   onClose,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (!journey) return null;
 
   const paid = journey.converted_amount;
@@ -57,13 +59,13 @@ export default function JourneyTimelineDialog({
               gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
             }}
           >
-            <InfoRow label="Came from" value={journey.platform} />
-            <InfoRow label="Location" value={locationOf(journey)} />
-            <InfoRow label="Device" value={journey.device_type} />
-            <InfoRow label="Clicked" value={formatDateTime(journey.clicked_at)} />
-            <InfoRow label="Got as far as" value={stepLabel(journey.furthest_step)} />
+            <InfoRow label={t('marketing.shortLinks.cameFrom')} value={journey.platform} />
+            <InfoRow label={t('marketing.common.location')} value={locationOf(journey)} />
+            <InfoRow label={t('marketing.shortLinks.device')} value={journey.device_type} />
+            <InfoRow label={t('marketing.common.clicked')} value={formatDateTime(journey.clicked_at)} />
+            <InfoRow label={t('marketing.shortLinks.gotAsFarAs')} value={stepLabel(journey.furthest_step)} />
             <InfoRow
-              label="Paid"
+              label={t('marketing.shortLinks.paid')}
               value={paid === null || paid === undefined ? EM_DASH : formatINR(paid)}
             />
           </Box>
@@ -127,7 +129,7 @@ export default function JourneyTimelineDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

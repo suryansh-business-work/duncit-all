@@ -3,6 +3,7 @@ import { Box, Grid, Link, Paper, Stack, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import { adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
 import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from './helpers';
+import { useTranslation } from '@duncit/app-settings';
 
 type FormatDateTime = (s: string) => string;
 
@@ -71,25 +72,26 @@ export default function ReviewDetails({
   request,
   formatDateTime,
 }: Readonly<{ request: AdRequestRow; formatDateTime: FormatDateTime }>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={2}>
       <MediaPreview request={request} />
       <BudgetCard request={request} />
       <Grid container spacing={1.5}>
-        <DetailItem label="Trace ID" value={request.trace_id} />
+        <DetailItem label={t('marketing.adsApprovals.traceId')} value={request.trace_id} />
         <DetailItem
-          label="Status"
+          label={t('shell.common.status')}
           value={<StatusChip status={request.status} colorMap={AD_STATUS_CHIP_COLORS} />}
         />
-        <DetailItem label="Submitted by" value={request.submitted_by_name || '—'} />
-        <DetailItem label="Position" value={adPositionLabel(request.position)} />
-        <DetailItem label="Media type" value={request.ad_type} />
+        <DetailItem label={t('marketing.adsApprovals.submittedBy2')} value={request.submitted_by_name || '—'} />
+        <DetailItem label={t('marketing.common.position')} value={adPositionLabel(request.position)} />
+        <DetailItem label={t('marketing.adsApprovals.mediaType')} value={request.ad_type} />
         <DetailItem
-          label="Schedule"
+          label={t('marketing.common.schedule')}
           value={`${formatDateTime(request.start_at)} → ${formatDateTime(request.end_at)}`}
         />
         <DetailItem
-          label="Redirect link"
+          label={t('marketing.adsApprovals.redirectLink')}
           value={
             request.redirect_url ? (
               <Link href={request.redirect_url} target="_blank" rel="noopener noreferrer">
@@ -100,10 +102,10 @@ export default function ReviewDetails({
             )
           }
         />
-        <DetailItem label="Target audience" value={request.target_audience || '—'} />
-        <DetailItem label="Requested at" value={formatDateTime(request.created_at)} />
+        <DetailItem label={t('marketing.common.targetAudience')} value={request.target_audience || '—'} />
+        <DetailItem label={t('marketing.adsApprovals.requestedAt')} value={formatDateTime(request.created_at)} />
         {request.reviewed_at && (
-          <DetailItem label="Reviewed at" value={formatDateTime(request.reviewed_at)} />
+          <DetailItem label={t('marketing.adsApprovals.reviewedAt')} value={formatDateTime(request.reviewed_at)} />
         )}
       </Grid>
       <Box>

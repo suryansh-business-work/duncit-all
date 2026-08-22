@@ -28,6 +28,7 @@ import {
   type ShortLinkRow,
   type ShortLinkStats,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 const getRowId = (row: ShortLinkClickRow) => row.id;
 const getJourneyRowId = (row: ShortLinkJourneyRow) => row.id;
@@ -36,6 +37,7 @@ const NOTHING_YET = 'No clicks recorded yet.';
 
 /** Everything one short link has done: who followed it, from where, on what. */
 export default function ShortLinkDetailPage() {
+  const { t } = useTranslation();
   const { linkId = '' } = useParams();
   const navigate = useNavigate();
   const client = useApolloClient();
@@ -71,8 +73,8 @@ export default function ShortLinkDetailPage() {
     [linkId],
   );
 
-  const columns = useMemo(() => getClickColumns(), []);
-  const journeyColumns = useMemo(() => getJourneyColumns(), []);
+  const columns = useMemo(() => getClickColumns(t), [t]);
+  const journeyColumns = useMemo(() => getJourneyColumns(t), [t]);
   const goBack = useCallback(() => navigate('/short-links'), [navigate]);
 
   const toggleActive = async (current: ShortLinkRow) => {
@@ -87,7 +89,7 @@ export default function ShortLinkDetailPage() {
   if (error) {
     return (
       <Box sx={{ p: 2 }}>
-        <BackHeader title="Short link" onBack={goBack} />
+        <BackHeader title={t('marketing.shortLinks.shortLink')} onBack={goBack} />
         <Alert severity="error">{parseApiError(error, 'Could not load this link')}</Alert>
       </Box>
     );
@@ -140,12 +142,12 @@ export default function ShortLinkDetailPage() {
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
             }}
           >
-            <BreakdownCard title="Came from" rows={summary.platforms} emptyText={NOTHING_YET} />
-            <BreakdownCard title="Country" rows={summary.countries} emptyText={NOTHING_YET} />
-            <BreakdownCard title="City" rows={summary.cities} emptyText={NOTHING_YET} />
-            <BreakdownCard title="Device" rows={summary.devices} emptyText={NOTHING_YET} />
-            <BreakdownCard title="Operating system" rows={summary.oses} emptyText={NOTHING_YET} />
-            <BreakdownCard title="Browser" rows={summary.browsers} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.shortLinks.cameFrom')} rows={summary.platforms} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.common.country')} rows={summary.countries} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.common.city')} rows={summary.cities} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.shortLinks.device')} rows={summary.devices} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.shortLinks.operatingSystem')} rows={summary.oses} emptyText={NOTHING_YET} />
+            <BreakdownCard title={t('marketing.shortLinks.browser')} rows={summary.browsers} emptyText={NOTHING_YET} />
           </Box>
 
           {funnel.data && <FunnelCard funnel={funnel.data.shortLinkFunnel} />}

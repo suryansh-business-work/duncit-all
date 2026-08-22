@@ -4,8 +4,8 @@ export {
   blankAppPopupValues,
   toAppPopupInput,
   toAppPopupValues,
-  AUDIENCE_OPTIONS,
-  PLATFORM_OPTIONS,
+  audienceOptions,
+  platformOptions,
 } from './app-popup.form';
 export type {
   AppPopupFormProps,

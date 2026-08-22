@@ -18,10 +18,12 @@ import {
   SEND_MARKETING_CAMPAIGN,
   type MarketingCampaignRow,
 } from './queries';
+import { useTranslation } from '@duncit/app-settings';
 
 /** Every campaign, with the two things you do to one: look at it, or remove
  * it. Creating happens on its own page — the MJML editor needs the width. */
 export default function MarketingCampaignsPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
@@ -126,9 +128,9 @@ export default function MarketingCampaignsPage() {
       {target && (
         <ConfirmDialog
           open
-          title="Delete this campaign?"
+          title={t('marketing.marketingCampaigns.deleteThisCampaign')}
           message={error ?? deleteWarningFor(target)}
-          confirmLabel="Delete"
+          confirmLabel={t('shell.common.delete')}
           confirmColor="error"
           loading={deleting}
           busyLabel="Deleting…"

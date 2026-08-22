@@ -124,6 +124,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
           value={details}
           onChangeText={setDetails}
           placeholder={t('contentReport.detailsPlaceholder')}
+          placeholderTextColor="$muted"
           minHeight={80}
         />
         {error ? (

@@ -3,6 +3,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import MediaRow from './MediaRow';
 import { requiredLabel } from './requiredLabel';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   label: string;
@@ -24,6 +25,7 @@ interface Props {
  * (admin/portal behaviour); without it, a newline textarea fallback.
  */
 export default function MediaField({ label, value, onChange, helperText, error, required, folder, onPickImage }: Readonly<Props>) {
+  const { t } = useTranslation();
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -89,7 +91,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
         >
           <ImageIcon sx={{ opacity: 0.5 }} />
           <Typography variant="caption" sx={{ display: 'block' }}>
-            No images yet. Click <b>Add image</b> to upload or pick from Pexels.
+            No images yet. Click <b>{t('clubForm.mediaField.addImage')}</b> to upload or pick from Pexels.
           </Typography>
         </Box>
       ) : (

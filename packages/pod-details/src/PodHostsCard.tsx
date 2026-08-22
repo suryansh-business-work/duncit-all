@@ -6,6 +6,7 @@ import { StatusChip } from '@duncit/ui';
 import SectionCard from './SectionCard';
 import { type AdminPodAttendeeRow } from './queries';
 import { usePodDetailsScope } from './scope';
+import { useTranslation } from './i18n/useTranslation';
 
 interface HostRowProps {
   userId: string;
@@ -20,6 +21,7 @@ interface HostRowProps {
 /** One host line: contact from the attendee list plus the approved host
  * profile (host number + status) when one exists. */
 function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const scopeDocs = usePodDetailsScope();
   const { data } = useQuery(scopeDocs.hostProfile, {
@@ -42,7 +44,7 @@ function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProp
           >
             {name}
           </Link>
-          {primary && <Chip icon={<StarIcon />} label="Primary" size="small" color="primary" variant="outlined" />}
+          {primary && <Chip icon={<StarIcon />} label={t('podDetailsPanel.podHostsCard.primary')} size="small" color="primary" variant="outlined" />}
           {profile && <StatusChip status={profile.status} />}
         </Stack>
         <Typography variant="caption" color="text.secondary" noWrap>
@@ -62,6 +64,7 @@ interface Props {
 
 /** Host details — every host on the pod with contact info and host profile. */
 export default function PodHostsCard({ pod, attendees }: Readonly<Props>) {
+  const { t } = useTranslation();
   const hostIds: string[] = pod.pod_hosts_id ?? [];
   const hostNames: string[] = pod.host_names ?? [];
   const contactByUser = new Map(attendees.map((row) => [row.user_id, row]));
@@ -69,7 +72,7 @@ export default function PodHostsCard({ pod, attendees }: Readonly<Props>) {
   return (
     <SectionCard
       icon={<StarIcon fontSize="small" />}
-      title="Hosts"
+      title={t('podDetailsPanel.podHostsCard.hosts')}
       badge={hostIds.length > 0 ? hostIds.length : undefined}
       empty={hostIds.length === 0 ? 'No hosts on this pod.' : null}
     >

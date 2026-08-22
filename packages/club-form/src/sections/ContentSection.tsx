@@ -3,9 +3,11 @@ import { useFormContext, useFormState } from 'react-hook-form';
 import BulletListField from '../components/BulletListField';
 import FaqListField from '../components/FaqListField';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Club Detail page content authored by admins (bullets + FAQs). */
 export default function ContentSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<ClubFormValues>();
   const { errors } = useFormState({ control });
 
@@ -13,7 +15,7 @@ export default function ContentSection() {
     <Stack spacing={2.5}>
       <BulletListField
         name="who_we_are"
-        label="Who We Are"
+        label={t('clubForm.contentSection.whoWeAre')}
         required
         helperText="Short intro lines about the club's identity — add at least one."
         error={errors.who_we_are?.message}
@@ -21,25 +23,25 @@ export default function ContentSection() {
       <Divider />
       <BulletListField
         name="what_we_do"
-        label="What We Do"
+        label={t('clubForm.contentSection.whatWeDo')}
         required
-        helperText="The activities/experiences the club runs — add at least one."
+        helperText={t('clubForm.contentSection.theActivitiesExperiencesTheClubRuns')}
         error={errors.what_we_do?.message}
       />
       <Divider />
       <BulletListField
         name="perks"
-        label="Perks"
+        label={t('clubForm.common.perks')}
         required
-        helperText="Benefits members get — add at least one."
+        helperText={t('clubForm.contentSection.benefitsMembersGetAddAtLeast')}
         error={errors.perks?.message}
       />
       <Divider />
       <BulletListField
         name="values"
-        label="Values"
+        label={t('clubForm.contentSection.values')}
         required
-        helperText="What the club stands for — add at least one."
+        helperText={t('clubForm.contentSection.whatTheClubStandsForAdd')}
         error={errors.values?.message}
       />
       <Divider />

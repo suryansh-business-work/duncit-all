@@ -70,6 +70,10 @@ describe('every module loads', () => {
   });
 
   it.each(modules)('loads %s', (relative) => {
+    // require, deliberately: the point is that evaluating the module THROWS or
+    // does not, and `import()` returns a promise, so a module that threw at
+    // import time would reject outside this expect and pass silently.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     expect(() => require(path.join(SRC, relative))).not.toThrow();
   });
 });

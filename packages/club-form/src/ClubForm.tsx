@@ -6,6 +6,7 @@ import { makeClubSchema } from './schema';
 import { ClubFormDataProvider } from './context';
 import ClubSections from './ClubSections';
 import type { ClubAdmin, ClubFormConfig, ClubFormData, ClubFormValues } from './types';
+import { useTranslation } from './i18n/useTranslation';
 
 export interface ClubFormProps {
   initialValues: ClubFormValues;
@@ -40,6 +41,7 @@ export default function ClubForm({
   onReady,
   preview,
 }: Readonly<ClubFormProps>) {
+  const { t } = useTranslation();
   const schema = useMemo(() => makeClubSchema(config), [config]);
   const methods = useForm<ClubFormValues>({
     resolver: zodResolver(schema),
@@ -77,7 +79,7 @@ export default function ClubForm({
       <ClubSections />
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('clubForm.common.cancel')}</Button>
         {!isEdit && (
           <Button
             variant="outlined"

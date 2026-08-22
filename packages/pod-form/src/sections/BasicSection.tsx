@@ -7,8 +7,10 @@ import HostsField from '../components/HostsField';
 import RhfTextField from '../components/RhfTextField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function BasicSection() {
+  const { t } = useTranslation();
   const { config, clubs, searchHosts } = usePodFormData();
   const { control, register, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
@@ -27,7 +29,7 @@ export default function BasicSection() {
       <RhfTextField
         control={control}
         name="pod_title"
-        label="Pod title"
+        label={t('podForm.basicSection.podTitle')}
         required
         hint="A URL-friendly slug is auto-generated from this title"
       />
@@ -39,18 +41,18 @@ export default function BasicSection() {
         onChange={(_, nextMode) => {
           if (nextMode) setValue('pod_mode', nextMode);
         }}
-        aria-label="Pod mode"
+        aria-label={t('podForm.basicSection.podMode')}
       >
-        <ToggleButton value="PHYSICAL" aria-label="Physical pod">
+        <ToggleButton value="PHYSICAL" aria-label={t('podForm.basicSection.physicalPod')}>
           <PlaceIcon fontSize="small" sx={{ mr: 1 }} /> Physical
         </ToggleButton>
-        <ToggleButton value="VIRTUAL" aria-label="Virtual pod">
+        <ToggleButton value="VIRTUAL" aria-label={t('podForm.basicSection.virtualPod')}>
           <VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual
         </ToggleButton>
       </ToggleButtonGroup>
       <TextField
         select
-        label="Club"
+        label={t('podForm.basicSection.club')}
         value={clubId}
         onChange={(event) => handleClubChange(event.target.value)}
         fullWidth
@@ -67,7 +69,7 @@ export default function BasicSection() {
       {config.showHosts && searchHosts && <HostsField />}
       {config.showHosts && !searchHosts && <HostSelectField />}
       <TextField
-        label="Hashtags (space or comma separated)"
+        label={t('podForm.basicSection.hashtagsSpaceOrCommaSeparated')}
         fullWidth
         placeholder="#cricket #weekend"
         {...register('pod_hashtag_text')}

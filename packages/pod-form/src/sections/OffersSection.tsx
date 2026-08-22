@@ -1,8 +1,10 @@
 import { Controller, useFormContext } from 'react-hook-form';
 import ChipArrayField from '../components/ChipArrayField';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function OffersSection() {
+  const { t } = useTranslation();
   const { control } = useFormContext<PodFormValues>();
   return (
     <Controller
@@ -10,11 +12,11 @@ export default function OffersSection() {
       name="what_this_pod_offers"
       render={({ field }) => (
         <ChipArrayField
-          label="Amenities & facilities"
+          label={t('podForm.offersSection.amenitiesAndFacilities')}
           value={field.value}
           onChange={field.onChange}
-          placeholder="e.g. Free WiFi, Parking, Pet Friendly"
-          helperText="Press Enter to add a chip. Keep each chip short."
+          placeholder={t('podForm.offersSection.eGFreeWifiParkingPet')}
+          helperText={t('podForm.offersSection.pressEnterToAddAChip')}
         />
       )}
     />

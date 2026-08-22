@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { payableSpots } from '@duncit/utils';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   amount: number;
@@ -12,6 +13,7 @@ interface Props {
 
 /** Live breakdown of platform fee + GST + per-person payout for a paid pod. */
 export default function PriceBreakdown({ amount, finance, productCost = 0, spots = 0 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const cur = finance.currency_symbol || '₹';
   const f = finance.platform_fee_pct / 100;
   const g = finance.gst_pct / 100;
@@ -39,7 +41,7 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
       }}
     >
       <Box>
-        <Typography variant="caption" color="text.secondary">User pays</Typography>
+        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.userPays')}</Typography>
         <Typography variant="body2" fontWeight={700}>{cur}{r(gross)}</Typography>
       </Box>
       <Box>
@@ -53,15 +55,15 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
         <Typography variant="body2">{cur}{r(gst)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">Payout before products</Typography>
+        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.payoutBeforeProducts')}</Typography>
         <Typography variant="body2" fontWeight={700}>{cur}{r(net)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">Product cost / payable spot</Typography>
+        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.productCostPayableSpot')}</Typography>
         <Typography variant="body2">{cur}{r(productShare)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">Final payout</Typography>
+        <Typography variant="caption" color="text.secondary">{t('podForm.priceBreakdown.finalPayout')}</Typography>
         <Typography variant="body2" fontWeight={700} color="primary.main">{cur}{r(finalPayout)}</Typography>
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ gridColumn: '1 / -1' }}>

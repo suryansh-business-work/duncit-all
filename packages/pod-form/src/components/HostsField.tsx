@@ -3,6 +3,7 @@ import { Autocomplete, Chip, CircularProgress, Stack, TextField, Typography } fr
 import { useFormContext, useWatch } from 'react-hook-form';
 import { usePodFormData } from '../context';
 import type { PodFormValues, PodHostOption } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 const hostLabel = (host: PodHostOption) => host.full_name || host.email || host.user_id;
 
@@ -13,6 +14,7 @@ const hostLabel = (host: PodHostOption) => host.full_name || host.email || host.
  * never drops a selected id — an unknown id keeps an id-labelled chip.
  */
 export default function HostsField() {
+  const { t } = useTranslation();
   const { config, users, searchHosts } = usePodFormData();
   const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const hostIds = useWatch({ control, name: 'pod_hosts_id' }) ?? [];
@@ -90,8 +92,8 @@ export default function HostsField() {
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Hosts"
-          placeholder="Search hosts…"
+          label={t('podForm.hostsField.hosts')}
+          placeholder={t('podForm.hostsField.searchHosts')}
           required={required}
           error={!!errors.pod_hosts_id}
           helperText={errors.pod_hosts_id?.message || requiredHint}

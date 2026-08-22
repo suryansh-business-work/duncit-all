@@ -31,6 +31,7 @@
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@duncit/app-settings": "workspace:*",
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
     "graphql": ">=16",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/app-settings": "workspace:*",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
     "@testing-library/dom": "^10.4.0",

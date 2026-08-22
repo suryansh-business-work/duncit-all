@@ -10,6 +10,7 @@
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@duncit/app-settings": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/app-settings": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@hookform/resolvers": "^3.9.1",

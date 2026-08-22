@@ -9,6 +9,7 @@ import {
   PreviewSection,
 } from './ClubPreviewSections';
 import type { ClubPreviewModel } from './club-preview-model';
+import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * The club page as a member opens it: hero media, the name block with its
@@ -17,6 +18,7 @@ import type { ClubPreviewModel } from './club-preview-model';
  * ClubPreviewCard for why it is rebuilt rather than imported.
  */
 export default function ClubPreviewDetails({ model }: Readonly<{ model: ClubPreviewModel }>) {
+  const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ borderRadius: '18px', overflow: 'hidden' }}>
       <PreviewMedia media={model.media[0]} title={model.name} height={190} />
@@ -44,31 +46,31 @@ export default function ClubPreviewDetails({ model }: Readonly<{ model: ClubPrev
         )}
 
         {model.whoWeAre.length > 0 && (
-          <PreviewSection title="Who we are">
+          <PreviewSection title={t('clubForm.preview.whoWeAre')}>
             <PreviewBullets items={model.whoWeAre} />
           </PreviewSection>
         )}
 
         {model.whatWeDo.length > 0 && (
-          <PreviewSection title="What we do">
+          <PreviewSection title={t('clubForm.preview.whatWeDo')}>
             <PreviewBullets items={model.whatWeDo} />
           </PreviewSection>
         )}
 
         {model.perks.length > 0 && (
-          <PreviewSection title="Perks">
+          <PreviewSection title={t('clubForm.common.perks')}>
             <PreviewBullets items={model.perks} />
           </PreviewSection>
         )}
 
         {model.values.length > 0 && (
-          <PreviewSection title="Our values">
+          <PreviewSection title={t('clubForm.preview.ourValues')}>
             <PreviewBullets items={model.values} />
           </PreviewSection>
         )}
 
         {model.moments.length > 0 && (
-          <PreviewSection title="Club moments">
+          <PreviewSection title={t('clubForm.common.clubMoments')}>
             <PreviewMomentsStrip>
               {model.moments.map((moment) => (
                 <Box
@@ -89,10 +91,10 @@ export default function ClubPreviewDetails({ model }: Readonly<{ model: ClubPrev
         )}
 
         {(model.communityLink || model.groupLink) && (
-          <PreviewSection title="Community">
+          <PreviewSection title={t('clubForm.preview.community')}>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {model.communityLink && <Chip size="small" label="Community link" variant="outlined" />}
-              {model.groupLink && <Chip size="small" label="Group link" variant="outlined" />}
+              {model.communityLink && <Chip size="small" label={t('clubForm.preview.communityLink')} variant="outlined" />}
+              {model.groupLink && <Chip size="small" label={t('clubForm.preview.groupLink')} variant="outlined" />}
             </Stack>
           </PreviewSection>
         )}

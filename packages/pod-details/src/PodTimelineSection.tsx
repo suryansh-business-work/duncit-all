@@ -7,6 +7,8 @@ import PodLifecycleStrip, { type LifecycleStep } from './PodLifecycleStrip';
 import PodActivityFeed from './PodActivityFeed';
 import { type PodAuditEntry } from './queries';
 import { usePodDetailsScope } from './scope';
+import { useTranslation } from './i18n/useTranslation';
+import type { Translate } from './i18n/useTranslation';
 
 const ACTION_COLORS: StatusColorMap = {
   CREATE: 'success',
@@ -20,18 +22,18 @@ const ACTION_COLORS: StatusColorMap = {
 };
 
 /** The three lifecycle steps and which of them this pod has reached. */
-function lifecycleOf(pod: any): LifecycleStep[] {
+function lifecycleOf(pod: any, t: Translate): LifecycleStep[] {
   const cancelled = Boolean(pod.is_deleted);
   const finished = cancelled || Boolean(pod.completed_at);
   const started = pod.pod_date_time && new Date(pod.pod_date_time).getTime() <= Date.now();
   const endedAt = cancelled ? pod.deleted_at : pod.completed_at;
 
   return [
-    { key: 'created', label: 'Created', when: pod.created_at, done: true },
-    { key: 'date', label: 'Pod date', when: pod.pod_date_time, done: Boolean(started) },
+    { key: 'created', label: t('podDetailsPanel.common.created'), when: pod.created_at, done: true },
+    { key: 'date', label: t('podDetailsPanel.podTimelineSection.podDate'), when: pod.pod_date_time, done: Boolean(started) },
     {
       key: 'end',
-      label: cancelled ? 'Cancelled' : 'Completed',
+      label: cancelled ? t('podDetailsPanel.common.cancelled') : t('podDetailsPanel.common.completed'),
       when: finished ? endedAt : null,
       done: finished,
       failed: cancelled,
@@ -46,6 +48,7 @@ interface Props {
 /** Lifecycle strip (Created → Pod date → Completed/Cancelled) + the pod's full
  * audit activity, including who cancelled it and why. */
 export default function PodTimelineSection({ pod }: Readonly<Props>) {
+  const { t } = useTranslation();
   const scopeDocs = usePodDetailsScope();
   const { data, loading, error } = useQuery(scopeDocs.auditTrail, {
     variables: { id: pod.id },
@@ -57,11 +60,11 @@ export default function PodTimelineSection({ pod }: Readonly<Props>) {
   return (
     <SectionCard
       icon={<TimelineIcon fontSize="small" />}
-      title="Timeline"
+      title={t('podDetailsPanel.podTimelineSection.timeline')}
       loading={loading && entries.length === 0}
     >
       <Stack spacing={2.5}>
-        <PodLifecycleStrip steps={lifecycleOf(pod)} />
+        <PodLifecycleStrip steps={lifecycleOf(pod, t)} />
 
         {pod.is_deleted && (
           <Alert severity="error">

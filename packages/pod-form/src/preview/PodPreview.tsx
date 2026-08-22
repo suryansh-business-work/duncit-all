@@ -5,6 +5,7 @@ import PodPreviewCard from './PodPreviewCard';
 import PodPreviewDetails from './PodPreviewDetails';
 import PreviewPane from './PreviewPane';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * Live member-side preview of the pod being written. Rendered INSIDE the form's
@@ -12,6 +13,7 @@ import type { PodFormValues } from '../types';
  * button will submit.
  */
 export default function PodPreview() {
+  const { t } = useTranslation();
   const data = usePodFormData();
   const { control, getValues } = useFormContext<PodFormValues>();
   // Subscribing to the whole form is the point: any field can change what the
@@ -22,11 +24,11 @@ export default function PodPreview() {
 
   return (
     <PreviewPane
-      title="Member preview"
+      title={t('podForm.preview.memberPreview')}
       hint="How this pod will look once it is live. Nothing here is saved yet."
       blocks={[
-        { id: 'card', label: 'In the pod list', node: <PodPreviewCard model={model} /> },
-        { id: 'details', label: 'On the pod page', node: <PodPreviewDetails model={model} /> },
+        { id: 'card', label: t('podForm.preview.inThePodList'), node: <PodPreviewCard model={model} /> },
+        { id: 'details', label: t('podForm.preview.onThePodPage'), node: <PodPreviewDetails model={model} /> },
       ]}
     />
   );

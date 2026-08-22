@@ -19,6 +19,7 @@ import {
 import RhfTextField from '../components/RhfTextField';
 import { useClubFormData } from '../context';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 const CATEGORY_HINT =
   'Venues auto-match to this club by location + category — pick the same Super & Sub the venues sit under.';
@@ -52,6 +53,7 @@ function categoryValueOf(
  * the pickers derive their full cascade value from those ids, keeping only the
  * levels the club does not store in local state. */
 export default function BasicSection() {
+  const { t } = useTranslation();
   const { config } = useClubFormData();
   const { control, setValue, getValues } = useFormContext<ClubFormValues>();
   const { errors } = useFormState({ control });
@@ -86,11 +88,11 @@ export default function BasicSection() {
 
   return (
     <Stack spacing={2}>
-      <RhfTextField control={control} name="club_name" label="Club name" required hint={slugHint} />
+      <RhfTextField control={control} name="club_name" label={t('clubForm.basicSection.clubName')} required hint={slugHint} />
       <RhfTextField
         control={control}
         name="club_description"
-        label="Description"
+        label={t('clubForm.common.description')}
         required
         multiline
         minRows={2}

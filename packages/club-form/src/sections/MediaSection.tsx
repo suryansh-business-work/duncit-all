@@ -3,9 +3,11 @@ import { Controller, useFormContext, useFormState } from 'react-hook-form';
 import MediaField from '../components/MediaField';
 import { useClubFormData } from '../context';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Feature media (≥1 image required) + club moments. */
 export default function MediaSection() {
+  const { t } = useTranslation();
   const { onPickImage } = useClubFormData();
   const { control } = useFormContext<ClubFormValues>();
   const { errors } = useFormState({ control });
@@ -17,14 +19,14 @@ export default function MediaSection() {
         name="feature_text"
         render={({ field }) => (
           <MediaField
-            label="Feature images & videos"
+            label={t('clubForm.mediaSection.featureImagesAndVideos')}
             value={field.value}
             onChange={field.onChange}
             folder="/clubs"
             required
             onPickImage={onPickImage}
             error={errors.feature_text?.message}
-            helperText="Cover/header media shown on the club page — at least one image is required."
+            helperText={t('clubForm.mediaSection.coverHeaderMediaShownOnThe')}
           />
         )}
       />
@@ -33,12 +35,12 @@ export default function MediaSection() {
         name="moments_text"
         render={({ field }) => (
           <MediaField
-            label="Club moments"
+            label={t('clubForm.common.clubMoments')}
             value={field.value}
             onChange={field.onChange}
             folder="/clubs/moments"
             onPickImage={onPickImage}
-            helperText="Past event photos."
+            helperText={t('clubForm.mediaSection.pastEventPhotos')}
           />
         )}
       />

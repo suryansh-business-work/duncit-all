@@ -5,6 +5,7 @@ import GoogleMapPreview from '../components/GoogleMapPreview';
 import VenueSlotField from '../slots/VenueSlotField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 const venueLabel = (venue: any) => {
   const place = [venue.locality, venue.city].filter(Boolean).join(', ');
@@ -12,6 +13,7 @@ const venueLabel = (venue: any) => {
 };
 
 export default function WhenWhereSection() {
+  const { t } = useTranslation();
   const { config, clubs, venues, getClubVenueIds } = usePodFormData();
   const { control, setValue, formState: { errors, defaultValues } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
@@ -68,7 +70,7 @@ export default function WhenWhereSection() {
     <Stack spacing={2}>
       <TextField
         select
-        label="Venue"
+        label={t('podForm.whenWhereSection.venue')}
         value={venueId}
         onChange={(event) => handleVenueChange(event.target.value)}
         fullWidth
@@ -108,8 +110,8 @@ export default function WhenWhereSection() {
             />
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <DateTimeField control={control} name="pod_date_time" label="Start date & time" minDateTime={now} required />
-            <DateTimeField control={control} name="pod_end_date_time" label="End date & time" minDateTime={endMin} />
+            <DateTimeField control={control} name="pod_date_time" label={t('podForm.common.startDateAndTime')} minDateTime={now} required />
+            <DateTimeField control={control} name="pod_end_date_time" label={t('podForm.common.endDateAndTime')} minDateTime={endMin} />
           </Stack>
         </>
       )}

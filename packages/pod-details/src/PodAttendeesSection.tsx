@@ -4,6 +4,7 @@ import { podParticipationActions, participationInputFrom } from '@duncit/utils';
 import AttendeeRow from './AttendeeRow';
 import SectionCard from './SectionCard';
 import type { AdminPodAttendeeRow } from './queries';
+import { useTranslation } from './i18n/useTranslation';
 
 const COLUMNS = ['', 'Attendee', 'Seats', 'Contact', 'Status', 'Source', 'Joined', 'Refund'];
 
@@ -39,10 +40,11 @@ export default function PodAttendeesSection({
   podDateTime,
   errorText,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <SectionCard
       icon={<PeopleAltIcon fontSize="small" />}
-      title="Attendees"
+      title={t('podDetailsPanel.podAttendeesSection.attendees')}
       badge={rows.length > 0 ? rows.length : undefined}
       loading={loading && rows.length === 0}
       error={errorText}

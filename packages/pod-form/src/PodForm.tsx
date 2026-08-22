@@ -17,6 +17,7 @@ import type {
   PodOption,
   SearchPodHosts,
 } from './types';
+import { useTranslation } from './i18n/useTranslation';
 
 export interface PodFormProps {
   initialValues: PodFormValues;
@@ -76,6 +77,7 @@ export default function PodForm({
   hideDraftOnEdit = false,
   preview,
 }: Readonly<PodFormProps>) {
+  const { t } = useTranslation();
   const schema = useMemo(() => makePodSchema(config), [config]);
   const submitMode = useRef<'publish' | 'draft'>('publish');
   const methods = useForm<PodFormValues>({
@@ -158,7 +160,7 @@ export default function PodForm({
         </Alert>
       )}
       <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('podForm.common.cancel')}</Button>
         {showDraft && (
           <Button
             variant="outlined"

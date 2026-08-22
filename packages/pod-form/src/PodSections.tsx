@@ -23,6 +23,8 @@ import PerksSection from './sections/PerksSection';
 import ProductsSection from './sections/ProductsSection';
 import PaymentSection from './sections/PaymentSection';
 import type { PodFormValues } from './types';
+import { useTranslation } from './i18n/useTranslation';
+import type { Translate } from './i18n/useTranslation';
 
 type SectionId = 'basic' | 'when' | 'meeting' | 'about' | 'offers' | 'perks' | 'products' | 'payment';
 interface SectionDef {
@@ -31,29 +33,30 @@ interface SectionDef {
   render: () => JSX.Element;
 }
 
-function buildSections(isVirtual: boolean, showProducts: boolean): SectionDef[] {
+function buildSections(isVirtual: boolean, showProducts: boolean, t: Translate): SectionDef[] {
   const list: SectionDef[] = [
-    { id: 'basic', label: 'Basic Information', render: () => <BasicSection /> },
+    { id: 'basic', label: t('podForm.podSections.basicInformation'), render: () => <BasicSection /> },
     isVirtual
-      ? { id: 'meeting', label: 'Meeting Details', render: () => <MeetingSection /> }
-      : { id: 'when', label: 'When, Where & Map', render: () => <WhenWhereSection /> },
-    { id: 'about', label: 'About this Pod', render: () => <AboutSection /> },
-    { id: 'offers', label: 'What This Pod Offers', render: () => <OffersSection /> },
-    { id: 'perks', label: 'Available Perks', render: () => <PerksSection /> },
+      ? { id: 'meeting', label: t('podForm.podSections.meetingDetails'), render: () => <MeetingSection /> }
+      : { id: 'when', label: t('podForm.podSections.whenWhereAndMap'), render: () => <WhenWhereSection /> },
+    { id: 'about', label: t('podForm.podSections.aboutThisPod'), render: () => <AboutSection /> },
+    { id: 'offers', label: t('podForm.podSections.whatThisPodOffers'), render: () => <OffersSection /> },
+    { id: 'perks', label: t('podForm.podSections.availablePerks'), render: () => <PerksSection /> },
   ];
   if (showProducts && !isVirtual) {
-    list.push({ id: 'products', label: 'Approved Products', render: () => <ProductsSection /> });
+    list.push({ id: 'products', label: t('podForm.podSections.approvedProducts'), render: () => <ProductsSection /> });
   }
-  list.push({ id: 'payment', label: 'Payment & Charges', render: () => <PaymentSection /> });
+  list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
   return list;
 }
 
 export default function PodSections() {
+  const { t } = useTranslation();
   const { config, onPickImage, onPickVideo } = usePodFormData();
   const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const isVirtual = podMode === 'VIRTUAL';
-  const sections = buildSections(isVirtual, config.showProducts).map((section, index) => ({
+  const sections = buildSections(isVirtual, config.showProducts, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
   }));
@@ -74,10 +77,10 @@ export default function PodSections() {
   return (
     <>
       <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
-        <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label="Expand all sections">
+        <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={expandAll} disabled={allOpen} aria-label={t('podForm.podSections.expandAllSections')}>
           Expand all
         </Button>
-        <Button size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label="Collapse all sections">
+        <Button size="small" startIcon={<UnfoldLessIcon />} onClick={collapseAll} disabled={expanded.size === 0} aria-label={t('podForm.podSections.collapseAllSections')}>
           Collapse all
         </Button>
       </Stack>
@@ -86,13 +89,13 @@ export default function PodSections() {
         name="media_text"
         render={({ field }) => (
           <MediaField
-            label="Images & videos"
+            label={t('podForm.podSections.imagesAndVideos')}
             value={field.value}
             onChange={field.onChange}
             onPickImage={onPickImage}
             required
             error={errors.media_text?.message}
-            helperText="Cover image first; rest become a gallery."
+            helperText={t('podForm.podSections.coverImageFirstRestBecomeA')}
           />
         )}
       />

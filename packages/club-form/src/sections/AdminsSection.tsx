@@ -6,6 +6,7 @@ import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useClubFormData } from '../context';
 import { CLUB_ADMIN_CANDIDATES } from '../queries';
 import type { ClubFormValues } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface UserOption {
   user_id: string;
@@ -21,6 +22,7 @@ const userLabel = (user: UserOption) => user.full_name || user.email || user.use
  * user replaces whoever was there. Seeds the labelled option from the club's
  * pre-assigned admin (initialAdmins) so it is named immediately. */
 export default function AdminsSection() {
+  const { t } = useTranslation();
   const { initialAdmins } = useClubFormData();
   const { control, setValue } = useFormContext<ClubFormValues>();
   const { errors } = useFormState({ control });
@@ -108,7 +110,7 @@ export default function AdminsSection() {
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <AdminPanelSettingsIcon fontSize="small" color="action" />
-        <Typography variant="subtitle2">Club Admin</Typography>
+        <Typography variant="subtitle2">{t('clubForm.common.clubAdmin')}</Typography>
       </Stack>
 
       <Alert severity="info">
@@ -160,8 +162,8 @@ export default function AdminsSection() {
             {...params}
             required
             error={!!error}
-            label="Assign Club Admin"
-            placeholder="Search Club Admin users…"
+            label={t('clubForm.adminsSection.assignClubAdmin')}
+            placeholder={t('clubForm.adminsSection.searchClubAdminUsers')}
             helperText={error ?? 'One user administers this club. Picking another replaces the current one.'}
             InputProps={{
               ...params.InputProps,

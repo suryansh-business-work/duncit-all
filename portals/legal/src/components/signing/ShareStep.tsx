@@ -1,11 +1,10 @@
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useTranslation } from '@duncit/shell';
+import { isEmail } from '@duncit/regex';
 
 /** Good enough to stop an obvious typo; the server checks it again. */
-const EMAIL_RE = /^\S+@\S+\.\S+$/;
-
-export const canShareTo = (address: string): boolean => EMAIL_RE.test(address.trim());
+export const canShareTo = (address: string): boolean => isEmail(address.trim());
 
 interface Props {
   to: string;

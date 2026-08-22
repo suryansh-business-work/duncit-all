@@ -21,7 +21,7 @@ const RICH_TEXT_ROLES = [
 ];
 const UNSAFE_TAG = /<(?:script|style|iframe|object|embed)\b/i;
 const UNSAFE_EVENT_HANDLER = /\son\w+\s*=/i;
-const UNSAFE_HREF_SCHEME = /\shref\s*=\s*["']?\s*(?:javascript|data|vbscript):/i;
+const UNSAFE_HREF_SCHEME = /\shref\s*=\s*(?:["']\s*)?(?:javascript|data|vbscript):/i;
 const isUnsafeRichText = (value: string) =>
   UNSAFE_TAG.test(value) || UNSAFE_EVENT_HANDLER.test(value) || UNSAFE_HREF_SCHEME.test(value);
 

@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types, type Document } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
+import { isEmailAddress } from '@utils/email';
 import { SIGNATURE_METHODS, type ISignatory, type SignatureMethod } from './signing.model';
 
 /**
@@ -179,9 +180,7 @@ export function signatoriesForPdf(signatories: Types.DocumentArray<ISignatory>) 
 /** Refuse an address the mail server would only bounce. */
 export function assertRecipient(to: string): string {
   const recipient = String(to ?? '').trim();
-  // Length first: the pattern backtracks quadratically on a long string that
-  // never matches, and `to` is unbounded user input. 254 is the RFC 5321 cap.
-  if (recipient.length > 254 || !/^\S+@\S+\.\S+$/.test(recipient)) {
+  if (!isEmailAddress(recipient)) {
     fail('BAD_USER_INPUT', 'Enter a valid email address');
   }
   return recipient;

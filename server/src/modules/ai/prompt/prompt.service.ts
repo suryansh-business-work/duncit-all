@@ -93,21 +93,38 @@ const derivedVariables = (content: string) =>
     example: '',
   }));
 
+/** The characters a key may not start or end with. */
+const KEY_EDGE = new Set(['-', '.']);
+
+/**
+ * Strip leading and trailing `-`/`.` in one linear pass.
+ *
+ * An anchored `[-.]+$` looks equivalent but is not: on a long run that
+ * never reaches the end of the string the engine retries from every start
+ * position, which costs quadratic time. Scanning the two ends is O(n) and says
+ * what it means.
+ */
+function trimKeyEdges(value: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && KEY_EDGE.has(value.charAt(start))) start += 1;
+  while (end > start && KEY_EDGE.has(value.charAt(end - 1))) end -= 1;
+  return value.slice(start, end);
+}
+
 /**
  * The public feed addresses a prompt by key, so an AI prompt needs one too —
  * given at creation or slugged from its name. Keys are lowercase, dot- and
  * dash-separated, which is the shape the catalogue already uses.
  */
 function slugKey(raw: string): string {
-  return raw
-    .trim()
-    .toLowerCase()
-    // One pass is enough: the run quantifier already collapses "a -- b" to "a-b".
-    .replaceAll(/[^a-z0-9.]+/g, '-')
-    // Two anchored passes rather than one alternation: the `g`-flagged
-    // alternation rescans the whole string and Sonar reads it as super-linear.
-    .replace(/^[-.]+/, '')
-    .replace(/[-.]+$/, '');
+  return trimKeyEdges(
+    raw
+      .trim()
+      .toLowerCase()
+      // One pass is enough: the run quantifier already collapses "a -- b" to "a-b".
+      .replaceAll(/[^a-z0-9.]+/g, '-'),
+  );
 }
 
 export interface AiPromptInput {

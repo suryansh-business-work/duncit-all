@@ -23,7 +23,6 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import {
-  sendPodCancelledEmail,
   sendPodRefundEmail,
   sendPodUpdatedEmail,
   sendVenueSlotRequestEmail,

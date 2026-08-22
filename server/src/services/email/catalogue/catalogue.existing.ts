@@ -245,10 +245,11 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   describeEmail({
     slug: 'pod-cancelled',
     name: 'Pod Cancelled (generic)',
-    description: 'The generic cancellation. The three who-cancelled variants — `user-pod-cancelled-by-host`/`-venue`/`-duncit` — carry the refund detail.',
+    description:
+      'Superseded by the three who-cancelled variants — `user-pod-cancelled-by-host`/`-venue`/`-duncit` — which name who cancelled and carry the refund figure and how long it takes. Kept so an existing row and its edits are not orphaned.',
     audience: 'USER',
     category: 'notification',
-    fires: 'A pod with members is cancelled',
+    fires: 'Nothing sends this any more — the who-cancelled variant does',
     subject: 'Pod cancelled — {{pod_title}}',
     footerNote: '',
     vars: [

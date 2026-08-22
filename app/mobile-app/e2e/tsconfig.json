@@ -3,5 +3,14 @@
   "compilerOptions": {
     "types": ["detox", "jest", "node"]
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts"],
+  // The base config excludes `e2e` so the app's own `tsc --noEmit` skips this
+  // Detox suite. An inherited relative `exclude` is resolved against the BASE
+  // config's directory, so that entry arrives here as `../e2e` — this very
+  // folder — and the config matched zero files (TS18003). Sonar reports a
+  // config it cannot resolve inputs for as an unparseable TSConfig, which is
+  // where "Failed to parse TSConfig file .../e2e/tsconfig.json" came from.
+  // Declaring `exclude` here replaces the inherited list instead of adding to
+  // it, so the suite is visible to this config again.
+  "exclude": ["node_modules"]
 }

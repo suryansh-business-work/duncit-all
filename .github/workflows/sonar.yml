@@ -258,6 +258,49 @@ jobs:
         with:
           fetch-depth: 0 # shallow clones hurt new-code relevancy
 
+      # -----------------------------------------------------------------------
+      # Dependencies. The JS/TS sensor builds its type graph from the tsconfigs
+      # it discovers, and an `extends` that names a PACKAGE — rather than a
+      # relative path — only resolves once that package is on disk. This job ran
+      # with no install at all, so those configs could not be parsed and every
+      # scan reported:
+      #
+      #   Failed to parse TSConfig file .../app/mobile-app/e2e/tsconfig.json.
+      #   At least one referenced/extended tsconfig.json was not found in the
+      #   project. Please run 'npm install' for a more complete analysis.
+      #
+      # Only two families are affected: app/mobile-app/tsconfig.json (extends
+      # `expo/tsconfig.base`, and e2e/tsconfig.json extends THAT — which is the
+      # file the warning names) and the Astro sites (`astro/tsconfigs/strict`).
+      # Everything else reaches tsconfig.base.json by relative path and always
+      # parsed. Without this the type-aware rules stay quiet over the app and
+      # the websites, so the issue list describes the checkout, not the code.
+      #
+      # Both installs are continue-on-error: a degraded type graph is exactly
+      # what we have today, so an install hiccup must not also cost us the scan.
+      - uses: pnpm/action-setup@v4.4.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        continue-on-error: true
+        run: pnpm install --frozen-lockfile
+
+      # The app is standalone (npm, outside the pnpm workspace), so its
+      # node_modules — and therefore `expo/tsconfig.base` — only exists after
+      # this. codegen runs for the reason coverage-mobile runs it: src/generated/
+      # is gitignored, so in a fresh checkout every `@/generated/graphql` import
+      # is unresolvable. The schema is read from the server sources already in
+      # the checkout, so no running server is needed.
+      - name: Install mobile app dependencies
+        continue-on-error: true
+        working-directory: app/mobile-app
+        run: |
+          npm ci
+          npm run codegen
+
       # One artifact per matrix group (lcov-server, lcov-mweb, …), merged into
       # one directory. The mobile artifact is named mobile-lcov on purpose so
       # this glob does not also sweep it in.

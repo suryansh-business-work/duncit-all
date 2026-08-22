@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.69.4",
+  "version": "1.69.5",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -22,7 +22,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "typecheck": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && tsc --noEmit && tsc --noEmit -p __tests__/e2e/tsconfig.json",
+    "typecheck": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && tsc --noEmit && tsc --noEmit -p __tests__/e2e/tsconfig.json && tsc --noEmit -p e2e/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

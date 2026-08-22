@@ -27,11 +27,16 @@ on:
         type: boolean
         default: false
 
-# A newer push supersedes an in-flight scan — no point burning ~30 min analysing
-# a commit that is already stale.
+# A scan takes ~30 minutes; staging takes a push every few minutes. Cancelling
+# the run in flight meant EVERY scan died before it could publish — of one
+# afternoon's 15 runs, 11 read `cancelled` and none succeeded, so the gate kept
+# serving a stale analysis and no fix could ever be seen by it. Queue instead:
+# GitHub holds at most ONE pending run per group and cancels the older pending
+# one, so a burst of pushes still costs one running + one queued scan — but the
+# run already half-way through is allowed to finish and publish.
 concurrency:
   group: sonar-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # ---------------------------------------------------------------------------

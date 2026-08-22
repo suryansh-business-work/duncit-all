@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { AuthMessagesCard } from '../account-page/comm-preference';
 import NoWhatsAppNumberCard from './NoWhatsAppNumberCard';
 import WhatsAppPreferenceSection from './WhatsAppPreferenceSection';
 import { useWhatsAppPreferences } from './useWhatsAppPreferences';
@@ -81,6 +82,8 @@ export default function WhatsAppPreferencePage() {
       {!reachable && <NoWhatsAppNumberCard />}
 
       {state.saveFailed && <Alert severity="error">{t('whatsappPreference.saveFailed')}</Alert>}
+
+      <AuthMessagesCard channel="WHATSAPP" />
 
       <WhatsAppPreferenceSection
         heading={t('whatsappPreference.optionalHeading')}

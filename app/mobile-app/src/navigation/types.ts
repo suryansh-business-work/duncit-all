@@ -22,7 +22,10 @@ export type RootStackParamList = {
   Profile: { verifyEmail?: boolean } | undefined;
   Account: undefined;
   AccountHealth: undefined;
-  /** Profile → Mail Preference, the twin of mWeb's /account/mail-preference. */
+  /** Profile Settings → Communication Preferences: the hub that lists the
+   * three channels. Twin of mWeb's /account/communication. */
+  CommPreference: undefined;
+  /** Communication Preferences → Mail, the twin of mWeb's /account/mail-preference. */
   MailPreference: undefined;
   /** Profile → WhatsApp Preference, mWeb's /account/whatsapp-preference. */
   WhatsAppPreference: undefined;

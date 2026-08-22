@@ -75,6 +75,7 @@ const FeedbackPage = lazy(() =>
 const GrievancePage = lazy(() =>
   import('../pages/support-hub').then((m) => ({ default: m.GrievancePage })),
 );
+const CommPreferencePage = lazy(() => import('../pages/comm-preference-page'));
 const MailPreferencePage = lazy(() => import('../pages/mail-preference-page'));
 const WhatsAppPreferencePage = lazy(() => import('../pages/whatsapp-preference-page'));
 const SmsPreferencePage = lazy(() => import('../pages/sms-preference-page'));
@@ -223,6 +224,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/support/chat" element={<Navigate to="/support/live" replace />} />
         <Route path="/bouncers" element={<Navigate to="/support" replace />} />
         <Route path="/account/health" element={withAuth(<AccountHealthPage />)} />
+        {/* The one door to the three channels — Profile Settings links here,
+            and each channel screen is a door off this one. */}
+        <Route path="/account/communication" element={withAuth(<CommPreferencePage />)} />
         <Route path="/account/mail-preference" element={withAuth(<MailPreferencePage />)} />
         {/* The one-click door out of an email. NOT auth-gated: the person
             clicking it is reading their inbox, and the signature in the link is

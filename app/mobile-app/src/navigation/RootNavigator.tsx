@@ -5,6 +5,7 @@ import { MainTabs } from '@/navigation/MainTabs';
 import { BookingScreen } from '@/screens/BookingScreen';
 import { AccountScreen } from '@/screens/AccountScreen';
 import { AccountHealthScreen } from '@/screens/AccountHealthScreen';
+import { CommPreferenceScreen } from '@/screens/CommPreferenceScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
 import { WhatsAppPreferenceScreen } from '@/screens/WhatsAppPreferenceScreen';
 import { SmsPreferenceScreen } from '@/screens/SmsPreferenceScreen';
@@ -145,6 +146,7 @@ export function RootNavigator() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Account" component={AccountScreen} />
       <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />
+      <Stack.Screen name="CommPreference" component={CommPreferenceScreen} />
       <Stack.Screen name="MailPreference" component={MailPreferenceScreen} />
       <Stack.Screen name="WhatsAppPreference" component={WhatsAppPreferenceScreen} />
       <Stack.Screen name="SmsPreference" component={SmsPreferenceScreen} />

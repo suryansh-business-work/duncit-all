@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { AuthMessagesCard } from '@/components/comm-preference';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
@@ -81,6 +82,8 @@ export function WhatsAppPreferenceScreen() {
           {t('whatsappPreference.saved')}
         </Text>
       ) : null}
+
+      <AuthMessagesCard channel="WHATSAPP" />
 
       <WhatsAppPreferenceSection
         heading={t('whatsappPreference.optionalHeading')}

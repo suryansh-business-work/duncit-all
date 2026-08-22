@@ -137,6 +137,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/live-chat', titleKey: 'mweb.meta.liveChat.title' },
   { pattern: '/bouncers', titleKey: 'mweb.meta.support.title' },
   { pattern: '/account/health', titleKey: 'mweb.meta.accountHealth.title' },
+  { pattern: '/account/communication', titleKey: 'mweb.meta.commPreference.title' },
   { pattern: '/account/mail-preference', titleKey: 'mweb.meta.mailPreference.title' },
   { pattern: '/unsubscribe', titleKey: 'mweb.meta.mailPreference.title' },
   {

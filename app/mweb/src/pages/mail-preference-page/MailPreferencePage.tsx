@@ -3,6 +3,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { AuthMessagesCard } from '../account-page/comm-preference';
 import MailPreferenceSection from './MailPreferenceSection';
 import { useMailPreferences, type MailPreferenceToken } from './useMailPreferences';
 
@@ -108,6 +109,10 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
       </Stack>
 
       {state.saveFailed && <Alert severity="error">{t('mailPreference.saveFailed')}</Alert>}
+
+      {/* Signed-in only: `/unsubscribe` is read by somebody in their inbox
+          who has no session, and the sheet this card writes needs one. */}
+      {!fromLink && <AuthMessagesCard channel="EMAIL" />}
 
       <MailPreferenceSection
         heading={t('mailPreference.optionalHeading')}

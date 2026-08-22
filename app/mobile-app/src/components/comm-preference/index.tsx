@@ -1,2 +1,3 @@
-export { CommunicationPreferencesSection } from './CommunicationPreferencesSection';
-export { ChannelPreferenceCard } from './ChannelPreferenceCard';
+export { AuthMessagesCard } from './AuthMessagesCard';
+export { ChannelLinkCard } from './ChannelLinkCard';
+export { CommPreferenceEntryCard } from './CommPreferenceEntryCard';

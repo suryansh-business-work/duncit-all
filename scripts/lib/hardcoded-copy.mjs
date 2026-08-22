@@ -99,7 +99,10 @@ const PATTERNS = [
     "g",
   ),
   // <Typography>Host details</Typography> — one line, starts with a capital.
-  /> ?([A-Z][A-Za-z][^<>{}\n]{3,}?) ?</g,
+  // The lookbehind drops `=>`: a TypeScript arrow return type (`() =>
+  // Promise<void>`) is the same three characters as a JSX text node, and is
+  // not copy anybody reads.
+  /(?<!=)> ?([A-Z][A-Za-z][^<>{}\n]{3,}?) ?</g,
 ];
 
 /**

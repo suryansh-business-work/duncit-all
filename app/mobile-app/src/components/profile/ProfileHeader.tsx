@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
+import { ProfileHandleLink } from '@/components/profile/ProfileHandleLink';
 import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
@@ -74,9 +75,10 @@ export function ProfileHeader({
               />
             ) : null}
           </XStack>
-          <Text fontSize={13} color="$muted" numberOfLines={1}>
-            {me.username ? `@${me.username}` : (me.email ?? '—')}
-          </Text>
+          {/* The handle is also the share link — tapping it copies
+              `/u/<handle>`, which is why it lives here and not in
+              settings (mWeb shows the same, rule 27). */}
+          <ProfileHandleLink username={me.username ?? null} fallback={me.email ?? '—'} />
         </YStack>
       </XStack>
 

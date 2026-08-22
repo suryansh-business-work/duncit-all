@@ -283,6 +283,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           value={comment}
           onChangeText={setComment}
           placeholder={t('mweb.common.shareYourExperienceOptional')}
+          placeholderTextColor="$muted"
           minHeight={60}
         />
         <ReviewPhotos images={images} upload={upload} settings={settings} primary={primary} />

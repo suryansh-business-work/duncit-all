@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { AuthMessagesCard } from '@/components/comm-preference';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
@@ -76,6 +77,8 @@ export function MailPreferenceScreen() {
           {savedMessage}
         </Text>
       ) : null}
+
+      <AuthMessagesCard channel="EMAIL" />
 
       <MailPreferenceSection
         heading={t('mailPreference.optionalHeading')}

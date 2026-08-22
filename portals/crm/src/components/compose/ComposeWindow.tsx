@@ -5,6 +5,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import CropSquareIcon from '@mui/icons-material/CropSquare';
 import FilterNoneIcon from '@mui/icons-material/FilterNone';
 import { useDraggable } from './useDraggable';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ interface Props {
  * usable while composing, exactly like Gmail's compose panel.
  */
 export default function ComposeWindow({ open, title, icon, onClose, actions, children }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const { offset, onPointerDown, reset } = useDraggable(!maximized);
@@ -90,7 +92,7 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
             {maximized ? <FilterNoneIcon fontSize="small" /> : <CropSquareIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Close">
+        <Tooltip title={t('shell.common.close')}>
           <IconButton size="small" sx={{ color: 'inherit' }} onClick={onClose} aria-label="close">
             <CloseIcon fontSize="small" />
           </IconButton>

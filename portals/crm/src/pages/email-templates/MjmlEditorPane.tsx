@@ -10,6 +10,7 @@ import ImageLibraryDialog from './ImageLibraryDialog';
 import { insertMjmlImage } from './insertMjmlImage';
 import { formatMjml } from '@duncit/utils';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   value: string;
@@ -22,19 +23,20 @@ interface Props {
 
 /** Left pane: Monaco MJML editor with Format / Verify / AI / Image-library actions. */
 export default function MjmlEditorPane({ value, onChange, onValidate, templateId, images, onImagesChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [libOpen, setLibOpen] = useState(false);
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
         <CodeIcon fontSize="small" />
-        <Typography variant="subtitle2" sx={{ flex: 1 }}>MJML source</Typography>
-        <Tooltip title="Format & tidy">
+        <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.mjmlSource')}</Typography>
+        <Tooltip title={t('crm.emailTemplates.formatAndTidy')}>
           <IconButton size="small" onClick={() => onChange(formatMjml(value))}><FormatAlignLeftIcon fontSize="small" /></IconButton>
         </Tooltip>
-        <Tooltip title="Verify MJML">
+        <Tooltip title={t('crm.emailTemplates.verifyMjml')}>
           <IconButton size="small" onClick={onValidate}><FactCheckIcon fontSize="small" /></IconButton>
         </Tooltip>
-        <Tooltip title="Image library">
+        <Tooltip title={t('crm.emailTemplates.imageLibrary')}>
           <IconButton size="small" onClick={() => setLibOpen(true)}><PhotoLibraryIcon fontSize="small" /></IconButton>
         </Tooltip>
         <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} />

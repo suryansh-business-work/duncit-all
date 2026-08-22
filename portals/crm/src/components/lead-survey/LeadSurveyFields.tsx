@@ -4,6 +4,7 @@ import { Alert, Snackbar, Stack } from '@mui/material';
 import { SAVE_LEAD_SURVEY_RESPONSE, type LeadSurveyAnswer, type LeadSurveyDef, type LeadSurveyEntity } from './queries';
 import SurveyStepper, { type SurveyAnswerInput } from './SurveyStepper';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: LeadSurveyEntity;
@@ -15,6 +16,7 @@ interface Props {
 
 /** Section-stepped survey fill inside CRM; appends a MANUAL entry on submit. */
 export default function LeadSurveyFields({ entity, leadId, survey, initialAnswers, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
   const [save, { loading: saving }] = useMutation(SAVE_LEAD_SURVEY_RESPONSE);
@@ -33,7 +35,7 @@ export default function LeadSurveyFields({ entity, leadId, survey, initialAnswer
   return (
     <Stack spacing={2}>
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
-      <SurveyStepper survey={survey} initialAnswers={initialAnswers} submitting={saving} onSubmit={onSubmit} submitLabel="Save survey" />
+      <SurveyStepper survey={survey} initialAnswers={initialAnswers} submitting={saving} onSubmit={onSubmit} submitLabel={t('crm.components.saveSurvey')} />
       <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack(null)} message={snack ?? ''} />
     </Stack>
   );

@@ -4,6 +4,7 @@ import { DuncitRichTextInput } from '@duncit/rich-text';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 import EmailContentSwitch, { type EmailContentType } from './EmailContentSwitch';
 import TemplateBodyPicker, { type TemplateBody } from './TemplateBodyPicker';
+import { useTranslation } from '@duncit/shell';
 
 export interface EmailPayload {
   subject: string;
@@ -29,6 +30,7 @@ const textToHtml = (s: string) => escapeHtml(s).replace(/\r?\n/g, '<br/>');
 
 /** Email body composer with a Template | Simple Text | Rich Text switch. */
 export default function EmailComposeFields({ entity, leadName, leadEmail, variableValues, defaultSubject, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [type, setType] = useState<EmailContentType>('text');
   const [subject, setSubject] = useState(defaultSubject);
   const [text, setText] = useState('');
@@ -53,14 +55,14 @@ export default function EmailComposeFields({ entity, leadName, leadEmail, variab
       <EmailContentSwitch value={type} onChange={setType} />
 
       {type !== 'template' && (
-        <TextField size="small" label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
+        <TextField size="small" label={t('crm.common.subject')} value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
       )}
 
       {type === 'template' && (
         <TemplateBodyPicker entity={entity} variableValues={variableValues} leadName={leadName} leadEmail={leadEmail} onChange={setTemplate} />
       )}
       {type === 'text' && (
-        <TextField size="small" label="Message" value={text} onChange={(e) => setText(e.target.value)} fullWidth multiline minRows={4} />
+        <TextField size="small" label={t('crm.components.message')} value={text} onChange={(e) => setText(e.target.value)} fullWidth multiline minRows={4} />
       )}
       {type === 'rich' && (
         <DuncitRichTextInput value={richHtml} onChange={(html) => setRichHtml(html)} aiContext="CRM lead email" />

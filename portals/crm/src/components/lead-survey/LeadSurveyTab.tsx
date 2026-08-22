@@ -23,6 +23,7 @@ import {
 import LeadSurveyFields from './LeadSurveyFields';
 import LeadSurveyEntriesTable from './LeadSurveyEntriesTable';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: LeadSurveyEntity;
@@ -31,6 +32,7 @@ interface Props {
 
 /** "Survey" tab on a venue/host lead: fill (stepper), share a link, and the full log. */
 export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [filling, setFilling] = useState(false);
   const [seed, setSeed] = useState<LeadSurveyAnswer[] | undefined>(undefined);
   const [snack, setSnack] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         Multiple categories — pick which survey to use:
       </Typography>
       {categories.length > 0 && (
-        <TextField select size="small" label="Category" value={categoryId || categories[0]?.id || ''} sx={{ minWidth: 180 }}
+        <TextField select size="small" label={t('crm.common.category')} value={categoryId || categories[0]?.id || ''} sx={{ minWidth: 180 }}
           onChange={(e) => { setCategoryId(e.target.value); setSubCategoryId(''); }}>
           {categories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
         </TextField>
@@ -89,7 +91,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
   return (
     <LeadDetailCard
       title={survey?.title || 'Survey'}
-      subtitle="Fill it as a stepper, share a public link, or click a row to fill/edit — every generation is logged."
+      subtitle={t('crm.components.fillItAsAStepperShare')}
       icon={<AssignmentIcon color="primary" />}
       action={survey && (
         <Stack direction="row" spacing={1}>
@@ -130,12 +132,12 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
       </Stack>
 
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
-        <DialogTitle>Delete survey entry?</DialogTitle>
-        <DialogContent><DialogContentText>This permanently removes this generation/response from the log.</DialogContentText></DialogContent>
+        <DialogTitle>{t('crm.components.deleteSurveyEntry')}</DialogTitle>
+        <DialogContent><DialogContentText>{t('crm.components.thisPermanentlyRemovesThisGenerationResponse')}</DialogContentText></DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)}>Cancel</Button>
+          <Button onClick={() => setConfirmDelete(null)}>{t('shell.common.cancel')}</Button>
           <Button color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); run(() => del({ variables: { entry_id: id } })); }}>
-            Delete
+            {t('shell.common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

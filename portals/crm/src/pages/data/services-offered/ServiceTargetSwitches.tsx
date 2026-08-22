@@ -1,4 +1,5 @@
 import { Alert, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   venue: boolean;
@@ -12,6 +13,7 @@ interface Props {
  * both. At least one side must stay on (enforced by the parent on submit).
  */
 export default function ServiceTargetSwitches({ venue, host, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const both = venue && host;
   return (
     <Stack spacing={0.5}>
@@ -21,19 +23,19 @@ export default function ServiceTargetSwitches({ venue, host, onChange }: Readonl
       <Stack direction="row" flexWrap="wrap" useFlexGap spacing={2}>
         <FormControlLabel
           control={<Switch checked={venue} onChange={(e) => onChange({ venue: e.target.checked, host })} />}
-          label="Venue"
+          label={t('crm.common.venue')}
         />
         <FormControlLabel
           control={<Switch checked={host} onChange={(e) => onChange({ venue, host: e.target.checked })} />}
-          label="Host"
+          label={t('crm.common.host')}
         />
         <FormControlLabel
           control={<Switch checked={both} onChange={(e) => onChange({ venue: e.target.checked, host: e.target.checked })} />}
-          label="Both"
+          label={t('crm.data.both')}
         />
       </Stack>
       {!venue && !host && (
-        <Alert severity="warning" sx={{ py: 0 }}>Turn on Venue, Host, or Both.</Alert>
+        <Alert severity="warning" sx={{ py: 0 }}>{t('crm.data.turnOnVenueHostOrBoth')}</Alert>
       )}
     </Stack>
   );

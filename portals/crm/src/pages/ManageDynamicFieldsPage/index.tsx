@@ -16,6 +16,7 @@ import { parseApiError } from '@duncit/utils';
 import DynamicFieldForm from './DynamicFieldForm';
 import DynamicFieldsTable from './DynamicFieldsTable';
 import { blankDraft, buildDynamicFieldInput, draftFromRow, type DraftState } from './dynamicFieldDraft';
+import { useTranslation } from '@duncit/shell';
 
 const refetchAfter = [
   { query: CRM_DYNAMIC_FIELDS, variables: { include_inactive: true } },
@@ -24,6 +25,7 @@ const refetchAfter = [
 ];
 
 export default function ManageDynamicFieldsPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ crmDynamicFields: CrmDynamicField[] }>(
     CRM_DYNAMIC_FIELDS,
     { variables: { include_inactive: true }, fetchPolicy: 'cache-and-network' }
@@ -161,13 +163,13 @@ export default function ManageDynamicFieldsPage() {
 
       <ConfirmDialog
         open={!!removing}
-        title="Delete dynamic field"
+        title={t('crm.managedynamicfieldspage.deleteDynamicField')}
         message={
           removing
             ? `Delete "${removing.label}"? Existing values on leads stay in the database but are no longer rendered.`
             : ''
         }
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleteState.loading}

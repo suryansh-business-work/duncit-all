@@ -15,6 +15,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import type { CrmDynamicFieldKind } from '../../api/crm.types';
 import DynamicFieldOptionsEditor from './DynamicFieldOptionsEditor';
 import { KIND_LABELS, type DraftState } from './dynamicFieldDraft';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   draft: DraftState;
@@ -27,6 +28,7 @@ interface Props {
 /** Create / edit form for a dynamic field. The storage key is auto-derived
  *  from the label (no Key input) and ordering is handled by the table. */
 export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSave }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (patch: Partial<DraftState>) => onChange({ ...draft, ...patch });
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
@@ -38,17 +40,17 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
           <TextField
             fullWidth
             size="small"
-            label="Label"
+            label={t('crm.managedynamicfieldspage.label')}
             required
             value={draft.label}
             onChange={(e) => set({ label: e.target.value })}
-            helperText="What the user sees on the form."
+            helperText={t('crm.managedynamicfieldspage.whatTheUserSeesOnThe')}
             inputProps={{ 'aria-label': 'dynamic-field-label' }}
           />
           <TextField
             size="small"
             select
-            label="Type"
+            label={t('shell.common.type')}
             value={draft.kind}
             onChange={(e) => set({ kind: e.target.value as CrmDynamicFieldKind })}
             sx={{ minWidth: 160 }}
@@ -65,30 +67,30 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
               exclusive
               value={draft.multi ? 'multi' : 'single'}
               onChange={(_, v) => v && set({ multi: v === 'multi' })}
-              aria-label="selection mode"
+              aria-label={t('crm.managedynamicfieldspage.selectionMode')}
             >
-              <ToggleButton value="single" aria-label="single select">Single</ToggleButton>
-              <ToggleButton value="multi" aria-label="multi select">Multiple</ToggleButton>
+              <ToggleButton value="single" aria-label={t('crm.managedynamicfieldspage.singleSelect')}>{t('crm.managedynamicfieldspage.single')}</ToggleButton>
+              <ToggleButton value="multi" aria-label={t('crm.managedynamicfieldspage.multiSelect')}>{t('crm.managedynamicfieldspage.multiple')}</ToggleButton>
             </ToggleButtonGroup>
           )}
         </Stack>
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
           <TextField
-            fullWidth size="small" label="Placeholder" value={draft.placeholder}
+            fullWidth size="small" label={t('crm.managedynamicfieldspage.placeholder')} value={draft.placeholder}
             onChange={(e) => set({ placeholder: e.target.value })}
             inputProps={{ 'aria-label': 'dynamic-field-placeholder' }}
           />
           <TextField
-            fullWidth size="small" label="Default value" value={draft.default_value}
+            fullWidth size="small" label={t('crm.managedynamicfieldspage.defaultValue')} value={draft.default_value}
             onChange={(e) => set({ default_value: e.target.value })}
             inputProps={{ 'aria-label': 'dynamic-field-default' }}
           />
         </Stack>
         <TextField
-          fullWidth size="small" label="Hint" value={draft.hint}
+          fullWidth size="small" label={t('crm.managedynamicfieldspage.hint')} value={draft.hint}
           onChange={(e) => set({ hint: e.target.value })}
-          helperText="Shown beneath the input as guidance."
+          helperText={t('crm.managedynamicfieldspage.shownBeneathTheInputAsGuidance')}
           inputProps={{ 'aria-label': 'dynamic-field-hint' }}
         />
 
@@ -99,29 +101,29 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
         <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
           <FormControlLabel
             control={<Checkbox checked={draft.applies_to_venue} onChange={(e) => set({ applies_to_venue: e.target.checked })} />}
-            label="Applies to Venue leads"
+            label={t('crm.managedynamicfieldspage.appliesToVenueLeads')}
           />
           <FormControlLabel
             control={<Checkbox checked={draft.applies_to_host} onChange={(e) => set({ applies_to_host: e.target.checked })} />}
-            label="Applies to Host leads"
+            label={t('crm.managedynamicfieldspage.appliesToHostLeads')}
           />
           <FormControlLabel
             control={<Checkbox checked={draft.applies_to_ecomm} onChange={(e) => set({ applies_to_ecomm: e.target.checked })} />}
-            label="Applies to Ecomm leads"
+            label={t('crm.managedynamicfieldspage.appliesToEcommLeads')}
           />
           <FormControlLabel
             control={<Checkbox checked={draft.required} onChange={(e) => set({ required: e.target.checked })} />}
-            label="Required"
+            label={t('crm.managedynamicfieldspage.required')}
           />
           <FormControlLabel
             control={<Switch checked={draft.is_active} onChange={(e) => set({ is_active: e.target.checked })} />}
-            label="Active"
+            label={t('crm.common.active')}
           />
         </Stack>
 
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
           <Button onClick={onCancel} disabled={busy}>
-            Cancel
+            {t('shell.common.cancel')}
           </Button>
           <Button variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={busy}>
             {busy ? 'Saving…' : 'Save field'}

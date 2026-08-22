@@ -1,6 +1,7 @@
 import { Card, CardContent, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { RANGE_LABELS, type DashboardRange, type DateWindow } from './dashboardConfig';
+import { useTranslation } from '@duncit/shell';
 
 const RANGE_ORDER: DashboardRange[] = ['today', 'week', 'month', 'year', 'all', 'custom'];
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function RangeFilter({ range, custom, onRangeChange, onCustomChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -26,7 +28,7 @@ export default function RangeFilter({ range, custom, onRangeChange, onCustomChan
             value={range}
             exclusive
             onChange={(_, next) => next && onRangeChange(next)}
-            aria-label="dashboard time range"
+            aria-label={t('crm.dashboard.dashboardTimeRange')}
             sx={{ flexWrap: 'wrap', '& .MuiToggleButton-root': { textTransform: 'none', fontWeight: 600 } }}
           >
             {RANGE_ORDER.map((r) => (
@@ -39,7 +41,7 @@ export default function RangeFilter({ range, custom, onRangeChange, onCustomChan
           {range === 'custom' && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
               <DatePicker
-                label="From"
+                label={t('crm.dashboard.from')}
                 value={custom.from ?? null}
                 onChange={(value) => onCustomChange({ ...custom, from: value ?? undefined })}
                 slotProps={{ textField: { size: 'small' } }}

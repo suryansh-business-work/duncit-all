@@ -6,9 +6,11 @@ import { useEmailTemplateEditor } from './useEmailTemplateEditor';
 import TemplateEditorPanel from './TemplateEditorPanel';
 import SendTestDialog from './SendTestDialog';
 import { ConfirmDialog } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/shell';
 
 /** CRM → Email Templates → editor (MJML source + live preview) for one template. */
 export default function EmailTemplateEditorPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const editor = useEmailTemplateEditor(id);
@@ -23,8 +25,8 @@ export default function EmailTemplateEditorPage() {
   if (!editor.draft) {
     return (
       <Stack spacing={2}>
-        <BackButton onClick={back} sx={{ alignSelf: 'flex-start' }}>Back to templates</BackButton>
-        <Alert severity="info">Template not found.</Alert>
+        <BackButton onClick={back} sx={{ alignSelf: 'flex-start' }}>{t('crm.emailTemplates.backToTemplates')}</BackButton>
+        <Alert severity="info">{t('crm.emailTemplates.templateNotFound')}</Alert>
       </Stack>
     );
   }
@@ -32,7 +34,7 @@ export default function EmailTemplateEditorPage() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0 }}>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-        <BackButton onClick={back}>Back to templates</BackButton>
+        <BackButton onClick={back}>{t('crm.emailTemplates.backToTemplates')}</BackButton>
         <Box sx={{ flex: 1 }} />
         <Typography variant="body2" color="text.secondary">
           <code>{editor.draft.slug}</code>
@@ -70,9 +72,9 @@ export default function EmailTemplateEditorPage() {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete template"
+        title={t('crm.emailTemplates.deleteTemplate')}
         message={`Delete "${editor.draft.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={editor.deleting}

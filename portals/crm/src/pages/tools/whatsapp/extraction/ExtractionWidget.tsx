@@ -20,6 +20,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { logs } from '@duncit/logs';
 import { useExtraction } from './ExtractionContext';
 import type { WaExtraction } from '../whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 const spin = keyframes`from { transform: rotate(0deg); } to { transform: rotate(360deg); }`;
 
@@ -93,8 +94,9 @@ function StatRow({ job }: Readonly<{ job: WaExtraction }>) {
 }
 
 function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open: boolean; onClose: () => void }>) {
+  const { t } = useTranslation();
   const rows: [string, number | string][] = [
-    ['Status', job.status],
+    [t('shell.common.status'), job.status],
     ['Communities', job.communities],
     ['Groups', job.groups],
     ['Contacts processed', `${job.processed} / ${job.total}`],
@@ -105,7 +107,7 @@ function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open:
   ];
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Extraction summary</DialogTitle>
+      <DialogTitle>{t('crm.tools.extractionSummary')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1}>
           {rows.map(([label, value]) => (
@@ -123,6 +125,7 @@ function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open:
 
 /** Global, minimizable extraction progress widget (bottom-right). */
 export default function ExtractionWidget() {
+  const { t } = useTranslation();
   const { job, open, setOpen, cancel } = useExtraction();
   const [hiddenId, setHiddenId] = useState<string | null>(null);
   const [details, setDetails] = useState(false);
@@ -150,10 +153,10 @@ export default function ExtractionWidget() {
         <Typography fontWeight={800} sx={{ flex: 1 }} noWrap>
           {title}
         </Typography>
-        <Tooltip title="Details">
+        <Tooltip title={t('crm.tools.details')}>
           <IconButton size="small" onClick={() => setDetails(true)}><InfoOutlinedIcon fontSize="small" /></IconButton>
         </Tooltip>
-        <Tooltip title="Minimize">
+        <Tooltip title={t('crm.tools.minimize')}>
           <IconButton size="small" onClick={() => setOpen(false)}><MinimizeIcon fontSize="small" /></IconButton>
         </Tooltip>
         <Tooltip title={running ? 'Cancel extraction' : 'Dismiss'}>

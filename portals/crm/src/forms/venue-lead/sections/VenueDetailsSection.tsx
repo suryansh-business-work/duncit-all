@@ -7,8 +7,10 @@ import FieldGrid from '../../fields/FieldGrid';
 import SuperCategoryField from '../../fields/SuperCategoryField';
 import CategorySelectors from '../../fields/CategorySelectors';
 import type { CrmOptionGroup } from '../../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
   const venueTypes = (useWatch({ control, name: 'venue_types' }) as string[]) ?? [];
   const showOther = venueTypes.includes('Other');
@@ -16,29 +18,29 @@ export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOp
     <Stack spacing={1.5}>
       <SuperCategoryField
         name="super_category_id"
-        label="Super Category"
+        label={t('crm.common.superCategory')}
         required
         hint="Which super category is this venue being added under? Managed via admin."
       />
       <CategorySelectors />
       <FieldGrid>
-        <FormField name="venue_name" label="Venue Name" required size="small" />
-        <SelectField name="space_type" label="Indoor / Outdoor / Both" options={config.space_types} />
+        <FormField name="venue_name" label={t('crm.forms.venueName')} required size="small" />
+        <SelectField name="space_type" label={t('crm.forms.indoorOutdoorBoth')} options={config.space_types} />
       </FieldGrid>
-      <MultiSelectField name="venue_types" label="Venue Type" options={config.venue_types} required />
+      <MultiSelectField name="venue_types" label={t('crm.forms.venueType')} options={config.venue_types} required />
       {showOther && (
         <FormField
           name="venue_type_other"
-          label="Other venue type — please specify"
+          label={t('crm.forms.otherVenueTypePleaseSpecify')}
           required
           size="small"
           hint="You selected Other; describe the venue type."
         />
       )}
-      <FormField name="venue_description" label="Venue Description" size="small" multiline minRows={2} />
+      <FormField name="venue_description" label={t('crm.forms.venueDescription')} size="small" multiline minRows={2} />
       <FieldGrid>
-        <FormField name="capacity_min" label="Capacity Min" size="small" inputProps={{ inputMode: 'numeric' }} />
-        <FormField name="capacity_max" label="Capacity Max" size="small" inputProps={{ inputMode: 'numeric' }} />
+        <FormField name="capacity_min" label={t('crm.forms.capacityMin')} size="small" inputProps={{ inputMode: 'numeric' }} />
+        <FormField name="capacity_max" label={t('crm.forms.capacityMax')} size="small" inputProps={{ inputMode: 'numeric' }} />
       </FieldGrid>
     </Stack>
   );

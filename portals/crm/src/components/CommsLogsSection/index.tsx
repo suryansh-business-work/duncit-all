@@ -6,6 +6,7 @@ import { COMMUNICATION_LOGS, REQUEST_COMMUNICATION_TRANSCRIPT, type Communicatio
 import { parseApiError } from '@duncit/utils';
 import { useCallSocket } from '../../hooks/useCallSocket';
 import LogRow from './LogRow';
+import { useTranslation } from '@duncit/shell';
 
 type Filter = 'ALL' | 'EMAIL' | 'CALL';
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function CommsLogsSection({ entityType, entityId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<Filter>('ALL');
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
   const { data, loading, error, refetch } = useQuery<{ communicationLogs: { items: CommunicationLogItem[]; total: number } }>(
@@ -76,7 +78,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <ForumIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" fontWeight={800}>Communication Log</Typography>
+            <Typography variant="h6" fontWeight={800}>{t('crm.components.communicationLog')}</Typography>
             <Typography variant="caption" color="text.secondary">
               Calls via Twilio, emails via SMTP. Transcripts are fetched from Servam AI for recorded calls.
             </Typography>

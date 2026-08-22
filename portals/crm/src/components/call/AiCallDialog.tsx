@@ -27,6 +27,7 @@ import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
 import { parseApiError } from '@duncit/utils';
 import { callStatusView } from './callStatusView';
 import CallStage from './CallStage';
+import { useTranslation } from '@duncit/shell';
 
 export interface AiCallLead {
   to: string;
@@ -48,6 +49,7 @@ interface Props {
  * socket so the dialog reflects RINGING → IN_PROGRESS → call over in real time.
  */
 export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [promptId, setPromptId] = useState('');
   const [voice, setVoice] = useState('');
   const [logId, setLogId] = useState<string | null>(null);
@@ -143,7 +145,7 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
               <TextField
                 select
                 size="small"
-                label="Static Content prompt"
+                label={t('crm.components.staticContentPrompt')}
                 value={promptId}
                 onChange={(e) => setPromptId(e.target.value)}
                 disabled={loading}
@@ -160,10 +162,10 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
               <TextField
                 select
                 size="small"
-                label="Servam voice"
+                label={t('crm.components.servamVoice')}
                 value={voice}
                 onChange={(e) => setVoice(e.target.value)}
-                helperText="Voice the AI agent speaks in"
+                helperText={t('crm.components.voiceTheAiAgentSpeaksIn')}
                 fullWidth
               >
                 {SERVAM_VOICES.map((v) => (
@@ -177,7 +179,7 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>{ended ? 'Close' : 'Cancel'}</Button>
+        <Button onClick={handleClose}>{ended ? t('shell.common.close') : t('shell.common.cancel')}</Button>
         {!placed && (
           <Button variant="contained" onClick={placeCall} disabled={!promptId || starting}>
             {starting ? 'Placing…' : 'Start AI call'}

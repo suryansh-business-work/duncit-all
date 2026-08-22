@@ -14,6 +14,7 @@ import {
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { AI_MJML } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   currentMjml: string;
@@ -24,6 +25,7 @@ interface Props {
 
 /** Generate or refine MJML from a natural-language prompt via aiCreateOrUpdateMjml. */
 export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
   return (
     <>
       {iconOnly ? (
-        <Tooltip title="Create / update with AI">
+        <Tooltip title={t('crm.emailTemplates.createUpdateWithAi')}>
           <IconButton size="small" color="secondary" onClick={(e) => setAnchorEl(e.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
           </IconButton>
@@ -68,11 +70,11 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         slotProps={{ paper: { sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
-          <Typography variant="subtitle2" fontWeight={700}>Create / update MJML with AI</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>{t('crm.emailTemplates.createUpdateMjmlWithAi')}</Typography>
           <TextField
             autoFocus
-            label="Prompt"
-            placeholder="A Diwali offer email with a hero image and a CTA button"
+            label={t('crm.emailTemplates.prompt')}
+            placeholder={t('crm.emailTemplates.aDiwaliOfferEmailWithA')}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             multiline
@@ -82,7 +84,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
           />
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>Cancel</Button>
+            <Button size="small" onClick={() => setAnchorEl(null)} disabled={loading}>{t('shell.common.cancel')}</Button>
             <Button
               size="small"
               variant="contained"

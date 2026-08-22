@@ -2,14 +2,18 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
 import { callPromptSchema, callPromptDefaults } from './call-prompt.schema';
-import { LANGUAGE_OPTIONS, type CallPromptFormProps, type CallPromptFormValues } from './call-prompt.types';
+import { languageOptions, type CallPromptFormProps, type CallPromptFormValues } from './call-prompt.types';
+import { useTranslation } from '@duncit/shell';
 
 /**
  * Create / edit form for a Static Content prompt. RHF + Zod with inline hints,
  * validation and error handling; MUI inputs only. The `context` field is the
  * reusable context block the AI agent speaks in during an AI Call.
  */
-export default function CallPromptForm({ defaultValues, submitting, submitLabel = 'Save', onSubmit, onCancel }: Readonly<CallPromptFormProps>) {
+export default function CallPromptForm({ defaultValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<CallPromptFormProps>) {
+  const { t } = useTranslation();
+  const submitLabelText = submitLabel ?? t('shell.common.save');
+
   const {
     control,
     handleSubmit,
@@ -30,7 +34,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel 
             <TextField
               {...field}
               size="small"
-              label="Name"
+              label={t('shell.common.name')}
               required
               fullWidth
               error={!!errors.name}
@@ -45,7 +49,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel 
             <TextField
               {...field}
               size="small"
-              label="Description"
+              label={t('shell.common.description')}
               fullWidth
               error={!!errors.description}
               helperText={errors.description?.message ?? 'Optional — what this prompt is for'}
@@ -60,12 +64,12 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel 
               {...field}
               select
               size="small"
-              label="Language"
+              label={t('crm.common.language')}
               fullWidth
               error={!!errors.language}
               helperText={errors.language?.message ?? 'Language the AI agent speaks'}
             >
-              {LANGUAGE_OPTIONS.map((opt) => (
+              {languageOptions(t).map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </MenuItem>
@@ -79,7 +83,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel 
           render={({ field }) => (
             <TextField
               {...field}
-              label="Static content"
+              label={t('crm.forms.staticContent')}
               required
               fullWidth
               multiline
@@ -95,14 +99,14 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel 
           render={({ field }) => (
             <FormControlLabel
               control={<Switch checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />}
-              label="Active"
+              label={t('crm.common.active')}
             />
           )}
         />
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           {onCancel && (
             <Button onClick={onCancel} disabled={submitting}>
-              Cancel
+              {t('shell.common.cancel')}
             </Button>
           )}
           <Button type="submit" variant="contained" disabled={submitting || !isValid}>

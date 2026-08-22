@@ -8,8 +8,10 @@ import { HostLeadForm, fromHostLead, toHostLeadInput, type HostLeadFormValues } 
 import { hostLeadInitialValues } from '../../forms/host-lead/host-lead.types';
 import { mergeAiPrefill } from '../../forms/aiPrefill';
 import type { HostLead } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export default function HostLeadEditorPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ export default function HostLeadEditorPage() {
   if (cfgLoading || (isEdit && leadLoading)) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
   }
-  if (isEdit && !lead) return <Alert severity="error">Host lead not found.</Alert>;
+  if (isEdit && !lead) return <Alert severity="error">{t('crm.hostLeads.hostLeadNotFound')}</Alert>;
 
   return (
     <Stack spacing={2}>

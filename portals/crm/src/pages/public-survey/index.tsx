@@ -6,9 +6,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SurveyStepper, { type SurveyAnswerInput } from '../../components/lead-survey/SurveyStepper';
 import { LEAD_SURVEY_BY_TOKEN, PUBLIC_BRANDING, SUBMIT_LEAD_SURVEY_BY_TOKEN, type PublicBranding, type PublicLeadSurvey } from './queries';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 /** Public, no-login survey fill page hosted by CRM (/s/:token). Open to anyone with the link. */
 export default function PublicSurveyPage() {
+  const { t } = useTranslation();
   const { token = '' } = useParams<{ token: string }>();
   const { data, loading, error } = useQuery<{ leadSurveyByToken: PublicLeadSurvey }>(LEAD_SURVEY_BY_TOKEN, {
     variables: { token },
@@ -49,7 +51,7 @@ export default function PublicSurveyPage() {
   );
 
   if (loading) return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
-  if (error || !survey) return shell(<Alert severity="error">This survey link is invalid or has been revoked.</Alert>);
+  if (error || !survey) return shell(<Alert severity="error">{t('crm.publicSurvey.thisSurveyLinkIsInvalidOr')}</Alert>);
   // Already submitted (either now, or on a previous visit) → don't show the form again.
   if (done || payload?.already_filled) {
     return shell(

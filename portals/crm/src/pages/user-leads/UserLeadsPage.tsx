@@ -16,11 +16,13 @@ import LeadsTable, { type LeadRow } from './LeadsTable';
 import CleanDataButton from './CleanDataButton';
 import { downloadBase64File, fileToBase64 } from '@duncit/utils';
 import { logs } from '@duncit/logs';
+import { useTranslation } from '@duncit/shell';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** WhatsApp Leads — dashboard + server-side searchable/sortable/paginated table. */
 export default function UserLeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,7 @@ export default function UserLeadsPage() {
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
         <PersonSearchIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>WhatsApp Leads</Typography>
+        <Typography variant="h5" fontWeight={800}>{t('shell.nav.whatsappLeads')}</Typography>
       </Stack>
 
       <LeadStatsBar reloadKey={reloadKey} />
@@ -106,8 +108,8 @@ export default function UserLeadsPage() {
         toolbarActions={
           <>
             <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New</Button>
-            <Button size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>Import</Button>
-            <Button size="small" startIcon={<DownloadIcon />} onClick={onExport}>Export</Button>
+            <Button size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>{t('crm.userLeads.import')}</Button>
+            <Button size="small" startIcon={<DownloadIcon />} onClick={onExport}>{t('crm.userLeads.export')}</Button>
             <CleanDataButton onCleaned={bumpAll} />
           </>
         }

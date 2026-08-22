@@ -23,6 +23,7 @@ import {
   WA_STATUS,
   type WaConnection,
 } from './whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLOR: Record<WaConnection['status'], 'success' | 'warning' | 'error' | 'default'> = {
   CONNECTED: 'success',
@@ -40,6 +41,7 @@ interface Props {
  * the QR. While CONNECTING it polls status + QR; on CONNECT it flips to a
  * connected summary. (bug WA-LeadGen P3) */
 export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [baseUrl, setBaseUrl] = useState(connection.base_url || 'https://open-wa-server.duncit.com');
   const [apiKey, setApiKey] = useState('');
   const connecting = connection.status === 'CONNECTING';
@@ -92,7 +94,7 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
           <Stack direction="row" spacing={1.5} alignItems="center">
             <WhatsAppIcon sx={{ color: '#25D366' }} />
             <Box sx={{ flex: 1 }}>
-              <Typography fontWeight={800}>Connected</Typography>
+              <Typography fontWeight={800}>{t('crm.tools.connected')}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {connection.phone ? `+${connection.phone}` : 'WhatsApp account linked'}
               </Typography>
@@ -117,20 +119,20 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
       <CardContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography fontWeight={800}>Gateway connection</Typography>
+            <Typography fontWeight={800}>{t('crm.tools.gatewayConnection')}</Typography>
             <Chip size="small" label={connection.status} color={STATUS_COLOR[connection.status]} />
           </Stack>
           {actionError && <Alert severity="error">{actionError}</Alert>}
           {!actionError && connection.last_error && <Alert severity="error">{connection.last_error}</Alert>}
           <TextField
-            label="Gateway URL"
+            label={t('crm.tools.gatewayUrl')}
             size="small"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             fullWidth
           />
           <TextField
-            label="API Key"
+            label={t('crm.tools.apiKey2')}
             size="small"
             type="password"
             value={apiKey}
@@ -161,13 +163,13 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 Open WhatsApp → Linked devices → Link a device, then scan:
               </Typography>
-              <Box component="img" src={qr} alt="WhatsApp QR" sx={{ width: 240, height: 240 }} />
+              <Box component="img" src={qr} alt={t('crm.tools.whatsappQr')} sx={{ width: 240, height: 240 }} />
             </Box>
           ) : null}
           {connecting && !qr ? (
             <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
               <CircularProgress size={20} />
-              <Typography variant="body2" color="text.secondary">Waiting for QR…</Typography>
+              <Typography variant="body2" color="text.secondary">{t('crm.tools.waitingForQr')}</Typography>
             </Stack>
           ) : null}
           <Button

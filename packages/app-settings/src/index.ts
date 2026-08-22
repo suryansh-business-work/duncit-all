@@ -68,6 +68,7 @@ export {
   AI_MONITORING_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  CRM_BUNDLE,
   DEVELOPERS_BUNDLE,
   allFallbackEntries,
   createTranslator,

@@ -5,6 +5,7 @@ import { LeadDetailCard } from '../LeadDetailCard';
 import ContactComposeDialog from '../ContactComposeDialog';
 import ContactCard from './ContactCard';
 import type { CrmContact } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
@@ -21,11 +22,12 @@ type Active = { mode: 'call' | 'email'; contact: CrmContact } | null;
  * behaviour as the hero contact actions.
  */
 export default function ContactsTab({ entity, leadId, leadName, contacts }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [active, setActive] = useState<Active>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   return (
-    <LeadDetailCard title="Contacts" icon={<ContactsIcon color="primary" />}>
+    <LeadDetailCard title={t('crm.common.contacts')} icon={<ContactsIcon color="primary" />}>
       <Stack sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 }}>
         {contacts.length === 0 && (
           <Typography variant="body2" color="text.secondary">

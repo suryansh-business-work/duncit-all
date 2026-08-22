@@ -4,6 +4,7 @@ import { useQuery } from '@apollo/client';
 import { Autocomplete, TextField } from '@mui/material';
 import { CRM_SERVICES_OFFERED, type CrmServiceOffered } from '../../api/data.gql';
 import type { CrmServiceOffered as LeadService } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   superName?: string;
@@ -27,6 +28,7 @@ export default function ServicesOfferedPicker({
   servicesName = 'services_offered',
   appliesTo,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, setValue } = useFormContext();
   const superId = (useWatch({ control, name: superName }) as string) || '';
   const categoryIds = (useWatch({ control, name: categoryName }) as string[]) ?? [];
@@ -80,7 +82,7 @@ export default function ServicesOfferedPicker({
       renderInput={(p) => (
         <TextField
           {...p}
-          label="Services Offered"
+          label={t('shell.nav.servicesOffered')}
           placeholder={selected.length ? '' : 'Loaded from your category selection'}
           helperText={
             titles.length === 0 && !loading

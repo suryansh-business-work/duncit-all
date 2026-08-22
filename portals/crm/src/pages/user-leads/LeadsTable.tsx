@@ -8,6 +8,7 @@ import {
   type DuncitColumn,
   type TableFetch,
 } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 
 export interface SourceRef {
   jid: string;
@@ -74,13 +75,14 @@ export default function LeadsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<LeadRow>[]>(
     () => [
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
-      { field: 'phone', headerName: 'Phone', minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
+      { field: 'phone', headerName: t('shell.common.phone'), minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
       {
         field: 'source_communities',
-        headerName: 'Community',
+        headerName: t('crm.common.community'),
         sortable: false,
         minWidth: 160,
         cellRenderer: renderCommunities,
@@ -88,7 +90,7 @@ export default function LeadsTable({
       },
       {
         field: 'source_groups',
-        headerName: 'Groups',
+        headerName: t('crm.common.groups'),
         sortable: false,
         minWidth: 160,
         cellRenderer: renderGroups,
@@ -96,7 +98,7 @@ export default function LeadsTable({
       },
       dateColumn<LeadRow>({
         field: 'imported_at',
-        headerName: 'Imported',
+        headerName: t('crm.userLeads.imported'),
         hide: false,
         filterable: false,
       }),

@@ -5,6 +5,7 @@ import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
 import { CHALLENGE_BUNDLE } from './bundles/challenge';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
+import { CRM_BUNDLE } from './bundles/crm';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
@@ -50,6 +51,7 @@ export {
   AI_MONITORING_BUNDLE,
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
+  CRM_BUNDLE,
   DEVELOPERS_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
@@ -76,6 +78,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   aiMonitoring: AI_MONITORING_BUNDLE,
   challenge: CHALLENGE_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
+  crm: CRM_BUNDLE,
   developers: DEVELOPERS_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,

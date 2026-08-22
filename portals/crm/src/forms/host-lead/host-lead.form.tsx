@@ -18,6 +18,7 @@ import HostBrandingSection from './sections/HostBrandingSection';
 import HostDynamicSection from './sections/HostDynamicSection';
 import HostTrackingSection from './sections/HostTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   config: CrmOptionGroup;
@@ -58,7 +59,10 @@ const SECTIONS = [
   },
 ];
 
-export default function HostLeadForm({ config, initialValues, submitting, submitLabel = 'Save host lead', onSubmit, onCancel }: Readonly<Props>) {
+export default function HostLeadForm({ config, initialValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
+
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<HostLeadFormValues>({
     resolver: zodResolver(hostLeadSchema, undefined, { raw: true }),
@@ -73,7 +77,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
     try {
       await onSubmit(values);
     } catch (error: any) {
-      setStatus(error?.message ?? 'Something went wrong');
+      setStatus(error?.message ?? t('crm.components.somethingWentWrong'));
     }
   });
 
@@ -101,7 +105,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
           <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
             {onCancel && (
               <Button onClick={onCancel} disabled={submitting}>
-                Cancel
+                {t('shell.common.cancel')}
               </Button>
             )}
             <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>

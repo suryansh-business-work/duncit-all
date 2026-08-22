@@ -31,6 +31,7 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import ManagedOptionEditRow, { type ManagedEditRow } from './ManagedOptionEditRow';
 import ManagedOptionRow from './ManagedOptionRow';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   group: CrmManagedOptionGroup;
@@ -43,6 +44,7 @@ const blank: ManagedEditRow = { name: '', sort_order: '0', is_active: true };
 
 /** Inline-editable flat list for one managed-option group (Amenity / Suitability). */
 export default function ManagedOptionList({ group, addLabel, placeholder, searchPlaceholder }: Readonly<Props>) {
+  const { t } = useTranslation();
   const queryVars = { group, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmManagedOptions: CrmManagedOption[] }>(CRM_MANAGED_OPTIONS, {
     variables: queryVars,
@@ -129,10 +131,10 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 80 }}>Order</TableCell>
+                <TableCell sx={{ width: 80 }}>{t('shell.common.order')}</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell sx={{ width: 90 }}>Active</TableCell>
-                <TableCell sx={{ width: 110 }} align="right">Actions</TableCell>
+                <TableCell sx={{ width: 90 }}>{t('crm.common.active')}</TableCell>
+                <TableCell sx={{ width: 110 }} align="right">{t('shell.common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -149,7 +151,7 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
               {rows.length > 0 && visible.length === 0 && !draft && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>No matches for your search.</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>{t('crm.data.noMatchesForYourSearch')}</Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -176,8 +178,8 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
       <ConfirmDialog
         open={!!removing}
         title={`Delete "${removing?.name ?? ''}"`}
-        message="Existing leads keep their entries — only this list is affected."
-        confirmLabel="Delete"
+        message={t('crm.data.existingLeadsKeepTheirEntriesOnly')}
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleteState.loading}

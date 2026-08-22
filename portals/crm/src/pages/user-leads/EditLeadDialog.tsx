@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { WA_UPDATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
 import type { LeadRow } from './LeadsTable';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   lead: LeadRow | null;
@@ -20,6 +21,7 @@ interface Props {
 
 /** Edit a single user lead (name + phone). Phone is re-validated server-side. */
 export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [update, { loading, error, reset }] = useMutation(WA_UPDATE_USER_LEAD);
@@ -43,11 +45,11 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
 
   return (
     <Dialog open={!!lead} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Edit user lead</DialogTitle>
+      <DialogTitle>{t('crm.userLeads.editUserLead')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <TextField
-            label="Phone (with country code)"
+            label={t('crm.userLeads.phoneWithCountryCode')}
             size="small"
             required
             value={phone}
@@ -58,7 +60,7 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
             autoFocus
           />
           <TextField
-            label="Name"
+            label={t('shell.common.name')}
             size="small"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -68,10 +70,10 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button variant="contained" onClick={submit} disabled={loading || !phone.trim()}>
-          {loading ? 'Saving…' : 'Save'}
+          {loading ? 'Saving…' : t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -3,12 +3,14 @@ import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { DELETE, EMAIL_TEMPLATE, RENDER, UPDATE, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTabParam } from '@duncit/tabs';
-import { PANE_TABS, type PaneTab } from './PreviewVariablesPane';
+import { useTranslation } from '@duncit/shell';
+import { paneTabs as buildPaneTabs, type PaneTab } from './PreviewVariablesPane';
 
 export type Snack = { kind: 'success' | 'error'; msg: string };
 
 /** State + actions for editing one CRM email template (loaded by template_id). */
 export function useEmailTemplateEditor(templateId: string) {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery<{ emailTemplate: EmailTemplate | null }>(EMAIL_TEMPLATE, {
     variables: { id: templateId },
     fetchPolicy: 'cache-and-network',
@@ -19,7 +21,7 @@ export function useEmailTemplateEditor(templateId: string) {
 
   const template = data?.emailTemplate ?? null;
   const [draft, setDraft] = useState<EmailTemplate | null>(null);
-  const paneTabs = useTabParam<PaneTab>({ items: PANE_TABS, fallback: 'preview' });
+  const paneTabs = useTabParam<PaneTab>({ items: buildPaneTabs(t), fallback: 'preview' });
   const tab = paneTabs.value;
   const setTab = paneTabs.onChange;
   const [previewHtml, setPreviewHtml] = useState('');

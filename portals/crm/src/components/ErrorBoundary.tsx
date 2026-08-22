@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Alert, AlertTitle, Box, Button, Stack } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { logs } from '@duncit/logs';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   children: ReactNode;
@@ -34,27 +35,34 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
-      return (
-        <Box sx={{ p: 3, maxWidth: 640, mx: 'auto' }}>
-          <Alert
-            severity="error"
-            action={
-              <Stack direction="row" spacing={1}>
-                <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={this.reset}>
-                  Try again
-                </Button>
-                <Button color="inherit" size="small" onClick={() => globalThis.location.reload()}>
-                  Reload
-                </Button>
-              </Stack>
-            }
-          >
-            <AlertTitle>Something went wrong</AlertTitle>
-            {this.state.error.message || 'An unexpected error occurred. Try again or reload the page.'}
-          </Alert>
-        </Box>
-      );
+      return <ErrorPanel error={this.state.error} onRetry={this.reset} />;
     }
     return this.props.children;
   }
+}
+
+/** The visible half of the boundary. A class cannot call useTranslation, so
+ *  everything a person reads is rendered from here instead. */
+function ErrorPanel({ error, onRetry }: Readonly<{ error: Error; onRetry: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <Box sx={{ p: 3, maxWidth: 640, mx: 'auto' }}>
+      <Alert
+        severity="error"
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={onRetry}>
+              {t('crm.components.tryAgain')}
+            </Button>
+            <Button color="inherit" size="small" onClick={() => globalThis.location.reload()}>
+              {t('crm.components.reload')}
+            </Button>
+          </Stack>
+        }
+      >
+        <AlertTitle>{t('crm.components.somethingWentWrong')}</AlertTitle>
+        {error.message || t('crm.components.unexpectedError')}
+      </Alert>
+    </Box>
+  );
 }

@@ -4,6 +4,7 @@ import MjmlEditorPane from './MjmlEditorPane';
 import PreviewVariablesPane from './PreviewVariablesPane';
 import EditorActionsBar from './EditorActionsBar';
 import AttachmentsSection from './AttachmentsSection';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   draft: EmailTemplate;
@@ -27,15 +28,16 @@ interface Props {
 }
 
 export default function TemplateEditorPanel(p: Readonly<Props>) {
+  const { t } = useTranslation();
   const { draft, setDraft } = p;
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
       <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-        <TextField size="small" label="Name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} sx={{ flex: '1 1 200px' }} />
-        <TextField size="small" label="Slug" value={draft.slug} disabled sx={{ flex: '1 1 160px' }} helperText="Used by code; cannot be edited." />
+        <TextField size="small" label={t('shell.common.name')} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} sx={{ flex: '1 1 200px' }} />
+        <TextField size="small" label={t('crm.emailTemplates.slug')} value={draft.slug} disabled sx={{ flex: '1 1 160px' }} helperText={t('crm.emailTemplates.usedByCodeCannotBeEdited')} />
         <TextField
           size="small"
-          label="Subject"
+          label={t('crm.common.subject')}
           value={draft.subject}
           onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
           sx={{ flex: '2 1 320px' }}

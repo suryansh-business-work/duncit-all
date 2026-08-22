@@ -9,6 +9,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { CrmServiceOfferedRow } from '../../../api/data.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<CrmServiceOfferedRow>;
@@ -22,9 +23,11 @@ const getServiceRowId = (s: CrmServiceOfferedRow) => s.id;
 
 const dash = (v?: string | null) => (v?.trim() ? v : '—');
 
-const targetLabel = (s: CrmServiceOfferedRow) => {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const targetLabel = (s: CrmServiceOfferedRow, t: Translate) => {
   if (s.applies_to_venue && s.applies_to_host) return 'Both';
-  if (s.applies_to_venue) return 'Venue';
+  if (s.applies_to_venue) return t('crm.common.venue');
   if (s.applies_to_host) return 'Host';
   return '—';
 };
@@ -35,8 +38,8 @@ const renderTitle = (s: CrmServiceOfferedRow) => (
   </Typography>
 );
 
-const renderTarget = (s: CrmServiceOfferedRow) => (
-  <Chip size="small" variant="outlined" color="primary" label={targetLabel(s)} />
+const renderTarget = (s: CrmServiceOfferedRow, t: Translate) => (
+  <Chip size="small" variant="outlined" color="primary" label={targetLabel(s, t)} />
 );
 
 /** Services Offered on the shared server-driven table — Title plus its Super → Category → Sub. */
@@ -47,17 +50,18 @@ export default function ServicesOfferedTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<CrmServiceOfferedRow>[]>(
     () => [
-      { field: 'title', headerName: 'Title', flex: 1, minWidth: 180, cellRenderer: renderTitle, valueGetter: (s) => s.title },
-      { field: 'super_category_name', headerName: 'Super Category', sortable: false, minWidth: 150, valueGetter: (s) => dash(s.super_category_name) },
-      { field: 'category_name', headerName: 'Category', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
-      { field: 'sub_category_name', headerName: 'Sub Category', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
-      { field: 'applies_to', headerName: 'Applies to', sortable: false, width: 110, cellRenderer: renderTarget, valueGetter: targetLabel },
-      { field: 'applies_to_venue', headerName: 'For Venue', filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
-      { field: 'applies_to_host', headerName: 'For Host', filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
+      { field: 'title', headerName: t('shell.common.title'), flex: 1, minWidth: 180, cellRenderer: renderTitle, valueGetter: (s) => s.title },
+      { field: 'super_category_name', headerName: t('crm.common.superCategory'), sortable: false, minWidth: 150, valueGetter: (s) => dash(s.super_category_name) },
+      { field: 'category_name', headerName: t('crm.common.category'), sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
+      { field: 'sub_category_name', headerName: t('crm.common.subCategory'), sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
+      { field: 'applies_to', headerName: t('crm.common.appliesTo'), sortable: false, width: 110, cellRenderer: (row: CrmServiceOfferedRow) => renderTarget(row, t), valueGetter: (row: CrmServiceOfferedRow) => targetLabel(row, t) },
+      { field: 'applies_to_venue', headerName: t('crm.data.forVenue'), filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
+      { field: 'applies_to_host', headerName: t('crm.data.forHost'), filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
       activeChipColumn<CrmServiceOfferedRow>(),
-      { field: 'sort_order', headerName: 'Sort', hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('crm.data.sort'), hide: true, width: 90 },
       dateColumn<CrmServiceOfferedRow>(),
       actionsColumn<CrmServiceOfferedRow>({
         onEdit,

@@ -3,6 +3,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
 import type { CrmContact } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   contact: CrmContact;
@@ -20,6 +21,7 @@ const Row = ({ icon, children }: { icon: React.ReactNode; children: React.ReactN
 
 /** One contact card with Call / WhatsApp / Email actions (call & email open the compose window). */
 export default function ContactCard({ contact, index, onCall, onEmail }: Readonly<Props>) {
+  const { t } = useTranslation();
   const waNumber = (contact.whatsapp_number || '').replace(/\D/g, '');
   return (
     <Card variant="outlined" sx={{ p: 1.5 }}>
@@ -34,12 +36,12 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
             </Typography>
           )}
         </Box>
-        {index === 0 && <Chip label="Primary" size="small" color="primary" />}
+        {index === 0 && <Chip label={t('crm.components.primary')} size="small" color="primary" />}
       </Stack>
       <Stack spacing={0.5}>
         {contact.mobile_number && (
           <Row icon={<PhoneIcon fontSize="small" color="action" />}>
-            <Tooltip title="Call (opens compose window)">
+            <Tooltip title={t('crm.components.callOpensComposeWindow')}>
               <Typography
                 component="button"
                 type="button"
@@ -68,7 +70,7 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
         )}
         {contact.email && (
           <Row icon={<EmailIcon fontSize="small" color="action" />}>
-            <Tooltip title="Email (opens compose window)">
+            <Tooltip title={t('crm.components.emailOpensComposeWindow')}>
               <Typography
                 component="button"
                 type="button"
@@ -85,14 +87,14 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Tooltip title={contact.mobile_number ? 'Call' : 'No number'}>
           <span>
-            <IconButton size="small" color="primary" disabled={!contact.mobile_number} onClick={() => onCall(contact)} aria-label="call contact">
+            <IconButton size="small" color="primary" disabled={!contact.mobile_number} onClick={() => onCall(contact)} aria-label={t('crm.components.callContact')}>
               <PhoneIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
         <Tooltip title={contact.email ? 'Email' : 'No email'}>
           <span>
-            <IconButton size="small" color="primary" disabled={!contact.email} onClick={() => onEmail(contact)} aria-label="email contact">
+            <IconButton size="small" color="primary" disabled={!contact.email} onClick={() => onEmail(contact)} aria-label={t('crm.components.emailContact')}>
               <EmailIcon fontSize="small" />
             </IconButton>
           </span>

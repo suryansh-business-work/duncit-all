@@ -5,6 +5,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import HandymanIcon from '@mui/icons-material/Handyman';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   venueCount: number;
@@ -38,18 +39,19 @@ export default function KpiCards({
   uniqueServices,
   loading,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const tiles: Tile[] = [
-    { label: 'Venue Leads', value: String(venueCount), icon: <LocationOnIcon fontSize="small" />, color: 'primary' },
-    { label: 'Host Leads', value: String(hostCount), icon: <GroupsIcon fontSize="small" />, color: 'info' },
-    { label: 'Total Leads', value: String(totalCount), icon: <AssessmentIcon fontSize="small" />, color: 'success' },
+    { label: t('shell.nav.venueLeads'), value: String(venueCount), icon: <LocationOnIcon fontSize="small" />, color: 'primary' },
+    { label: t('shell.nav.hostLeads'), value: String(hostCount), icon: <GroupsIcon fontSize="small" />, color: 'info' },
+    { label: t('crm.common.totalLeads'), value: String(totalCount), icon: <AssessmentIcon fontSize="small" />, color: 'success' },
     {
-      label: 'Won %',
+      label: t('crm.dashboard.won'),
       value: `${conversionRate.toFixed(0)}%`,
       icon: <TrendingUpIcon fontSize="small" />,
       color: 'warning',
     },
     {
-      label: 'Services Offered',
+      label: t('shell.nav.servicesOffered'),
       value: String(uniqueServices),
       icon: <HandymanIcon fontSize="small" />,
       color: 'secondary',

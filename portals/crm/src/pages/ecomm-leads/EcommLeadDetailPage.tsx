@@ -26,10 +26,12 @@ import LeadTabs from '../../components/LeadTabs';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import { buildEcommLeadTabs } from './ecommLeadTabs';
 import { formatDate as adminDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 export default function EcommLeadDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ ecommLead: EcommLead | null }>(ECOMM_LEAD, {
@@ -45,12 +47,12 @@ export default function EcommLeadDetailPage() {
   }
 
   const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
-  const tabs = buildEcommLeadTabs(lead);
+  const tabs = buildEcommLeadTabs(lead, t);
 
   return (
     <Stack spacing={2.5}>
       <Box>
-        <BackButton onClick={() => navigate('/ecomm-leads')}>Back to Ecomm Leads</BackButton>
+        <BackButton onClick={() => navigate('/ecomm-leads')}>{t('crm.ecommLeads.backToEcommLeads')}</BackButton>
       </Box>
 
       <Card
@@ -89,7 +91,7 @@ export default function EcommLeadDetailPage() {
               )}
             </Box>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`)}>
-              Edit
+              {t('shell.common.edit')}
             </Button>
           </Stack>
         </CardContent>
@@ -99,14 +101,14 @@ export default function EcommLeadDetailPage() {
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <LeadStatTile
-          label="Catalogue"
+          label={t('crm.ecommLeads.catalogue')}
           value={lead.catalog_size || '—'}
           hint={lead.price_range ? `Price range ${lead.price_range}` : 'Price range not set'}
           icon={<Inventory2Icon fontSize="small" />}
           accent="info"
         />
         <LeadStatTile
-          label="Services"
+          label={t('crm.common.services')}
           value={lead.services_offered.length}
           hint={
             lead.services_offered.length
@@ -120,14 +122,14 @@ export default function EcommLeadDetailPage() {
           accent="secondary"
         />
         <LeadStatTile
-          label="Monthly orders"
+          label={t('crm.ecommLeads.monthlyOrders')}
           value={lead.monthly_orders || '—'}
           hint={lead.fulfilment_mode ? `Fulfilment: ${lead.fulfilment_mode}` : 'Fulfilment not set'}
           icon={<ShoppingCartIcon fontSize="small" />}
           accent="primary"
         />
         <LeadStatTile
-          label="Next follow-up"
+          label={t('crm.common.nextFollowUp')}
           value={followUpLabel}
           hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
           icon={<EventAvailableIcon fontSize="small" />}

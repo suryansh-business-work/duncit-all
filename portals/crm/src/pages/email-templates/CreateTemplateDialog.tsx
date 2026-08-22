@@ -20,6 +20,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import { CREATE, STARTER_MJML, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import MjmlAiButton from './MjmlAiButton';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -29,15 +30,18 @@ interface Props {
 
 const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-const TARGETS: { value: EmailTemplateTarget; label: string; hint: string; icon: JSX.Element }[] = [
-  { value: 'VENUE', label: 'Venue lead emails', hint: 'Use venue lead variables (venue name, city, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'HOST', label: 'Host lead emails', hint: 'Use host lead variables (host name, organization, contact…).', icon: <GroupsIcon color="primary" /> },
-  { value: 'ECOMM', label: 'Ecomm lead emails', hint: 'Use ecomm lead variables (seller name, brand, contact…).', icon: <StorefrontIcon color="primary" /> },
-  { value: 'STATIC', label: 'Static / no variables', hint: 'A fixed template with no lead-specific variables.', icon: <DescriptionIcon color="primary" /> },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const targets = (t: Translate): { value: EmailTemplateTarget; label: string; hint: string; icon: JSX.Element }[] =>[
+  { value: 'VENUE', label: t('crm.emailTemplates.venueLeadEmails'), hint: 'Use venue lead variables (venue name, city, contact…).', icon: <StorefrontIcon color="primary" /> },
+  { value: 'HOST', label: t('crm.emailTemplates.hostLeadEmails'), hint: 'Use host lead variables (host name, organization, contact…).', icon: <GroupsIcon color="primary" /> },
+  { value: 'ECOMM', label: t('crm.emailTemplates.ecommLeadEmails'), hint: 'Use ecomm lead variables (seller name, brand, contact…).', icon: <StorefrontIcon color="primary" /> },
+  { value: 'STATIC', label: t('crm.emailTemplates.staticNoVariables'), hint: 'A fixed template with no lead-specific variables.', icon: <DescriptionIcon color="primary" /> },
 ];
 
 /** New CRM email template: first pick a target (card choice), then the basics. */
 export default function CreateTemplateDialog({ open, onClose, onCreated }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState<EmailTemplateTarget | null>(null);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -53,7 +57,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
   const submit = async () => {
     setError(null);
     if (!name.trim() || !effectiveSlug || !subject.trim() || !target) {
-      setError('Pick a type and fill name + subject.');
+      setError(t('crm.emailTemplates.pickATypeAndFillName'));
       return;
     }
     try {
@@ -67,27 +71,27 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
 
   return (
     <Dialog open={open} onClose={loading ? undefined : close} fullWidth maxWidth="sm">
-      <DialogTitle>New email template</DialogTitle>
+      <DialogTitle>{t('crm.emailTemplates.newEmailTemplate')}</DialogTitle>
       <DialogContent>
         {target ? (
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             {error && <Alert severity="error">{error}</Alert>}
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="caption" color="text.secondary">Type:</Typography>
-              <Typography variant="body2" fontWeight={700}>{TARGETS.find((t) => t.value === target)?.label}</Typography>
-              <Button size="small" onClick={() => setTarget(null)}>Change</Button>
+              <Typography variant="body2" fontWeight={700}>{targets(t).find((t) => t.value === target)?.label}</Typography>
+              <Button size="small" onClick={() => setTarget(null)}>{t('crm.emailTemplates.change')}</Button>
             </Stack>
-            <TextField size="small" label="Name" required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
-            <TextField size="small" label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText="Stable code key. Auto-derived from name if left blank." fullWidth />
-            <TextField size="small" label="Subject" required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
+            <TextField size="small" label={t('shell.common.name')} required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
+            <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
+            <TextField size="small" label={t('crm.common.subject')} required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
             <Stack direction="row" alignItems="center" spacing={1}>
-              <MjmlAiButton currentMjml={mjml} onApply={setMjml} label="Seed MJML with AI" />
+              <MjmlAiButton currentMjml={mjml} onApply={setMjml} label={t('crm.emailTemplates.seedMjmlWithAi')} />
             </Stack>
           </Stack>
         ) : (
           <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-            <Typography variant="body2" color="text.secondary">Who is this template for?</Typography>
-            {TARGETS.map((t) => (
+            <Typography variant="body2" color="text.secondary">{t('crm.emailTemplates.whoIsThisTemplateFor')}</Typography>
+            {targets(t).map((t) => (
               <Card key={t.value} variant="outlined">
                 <CardActionArea onClick={() => setTarget(t.value)} sx={{ p: 1.5 }}>
                   <Stack direction="row" spacing={1.5} alignItems="center">
@@ -104,7 +108,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={loading}>Cancel</Button>
+        <Button onClick={close} disabled={loading}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={submit} disabled={loading || !target || !name.trim() || !subject.trim()}>
           {loading ? 'Creating…' : 'Create'}
         </Button>

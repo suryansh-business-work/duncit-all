@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { CrmDynamicField } from '../../api/crm.types';
 import { KIND_LABELS, moveItem } from './dynamicFieldDraft';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   rows: CrmDynamicField[];
@@ -38,6 +39,7 @@ export default function DynamicFieldsTable({
   onToggleActive,
   onReorder,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const handleDrop = (to: number) => {
@@ -52,11 +54,11 @@ export default function DynamicFieldsTable({
       <TableHead>
         <TableRow>
           <TableCell sx={{ width: 44 }} />
-          <TableCell>Label</TableCell>
+          <TableCell>{t('crm.managedynamicfieldspage.label')}</TableCell>
           <TableCell sx={{ width: 150 }}>Type</TableCell>
-          <TableCell sx={{ width: 200 }}>Applies to</TableCell>
-          <TableCell sx={{ width: 100 }}>Active</TableCell>
-          <TableCell sx={{ width: 120 }} align="right">Actions</TableCell>
+          <TableCell sx={{ width: 200 }}>{t('crm.common.appliesTo')}</TableCell>
+          <TableCell sx={{ width: 100 }}>{t('crm.common.active')}</TableCell>
+          <TableCell sx={{ width: 120 }} align="right">{t('shell.common.actions')}</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -82,15 +84,15 @@ export default function DynamicFieldsTable({
             sx={{ cursor: !busy && !draftOpen ? 'grab' : 'default' }}
           >
             <TableCell>
-              <DragIndicatorIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label="drag to reorder" />
+              <DragIndicatorIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label={t('crm.managedynamicfieldspage.dragToReorder')} />
             </TableCell>
             <TableCell>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography variant="body2" fontWeight={600}>
                   {row.label}
                 </Typography>
-                {row.required && <Chip size="small" label="Required" color="warning" />}
-                {row.kind === 'select' && row.multi && <Chip size="small" label="Multi" variant="outlined" />}
+                {row.required && <Chip size="small" label={t('crm.managedynamicfieldspage.required')} color="warning" />}
+                {row.kind === 'select' && row.multi && <Chip size="small" label={t('crm.managedynamicfieldspage.multi')} variant="outlined" />}
               </Stack>
               {row.hint && (
                 <Typography variant="caption" color="text.secondary">
@@ -101,25 +103,25 @@ export default function DynamicFieldsTable({
             <TableCell>{KIND_LABELS[row.kind]}</TableCell>
             <TableCell>
               <Stack direction="row" spacing={0.5}>
-                {row.applies_to_venue && <Chip size="small" label="Venue" />}
-                {row.applies_to_host && <Chip size="small" label="Host" />}
-                {row.applies_to_ecomm && <Chip size="small" label="Ecomm" />}
+                {row.applies_to_venue && <Chip size="small" label={t('crm.common.venue')} />}
+                {row.applies_to_host && <Chip size="small" label={t('crm.common.host')} />}
+                {row.applies_to_ecomm && <Chip size="small" label={t('crm.common.ecomm')} />}
               </Stack>
             </TableCell>
             <TableCell>
               <Switch checked={row.is_active} onChange={() => onToggleActive(row)} disabled={busy} />
             </TableCell>
             <TableCell align="right">
-              <Tooltip title="Edit">
+              <Tooltip title={t('shell.common.edit')}>
                 <span>
-                  <IconButton aria-label="Edit" size="small" onClick={() => onEdit(row)} disabled={busy || draftOpen}>
+                  <IconButton aria-label={t('shell.common.edit')} size="small" onClick={() => onEdit(row)} disabled={busy || draftOpen}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </span>
               </Tooltip>
-              <Tooltip title="Delete">
+              <Tooltip title={t('shell.common.delete')}>
                 <span>
-                  <IconButton aria-label="Delete" size="small" color="error" onClick={() => onDelete(row)} disabled={busy || draftOpen}>
+                  <IconButton aria-label={t('shell.common.delete')} size="small" color="error" onClick={() => onDelete(row)} disabled={busy || draftOpen}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </span>

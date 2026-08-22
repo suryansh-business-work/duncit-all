@@ -19,44 +19,46 @@ import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
 import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
 const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
+  const { t } = useTranslation();
   const followUpLabel = leadDate(lead.next_follow_up_date) ?? '—';
   return (
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5}>
       <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0 }}>
-        <LeadDetailCard title="Seller details" icon={<StorefrontIcon color="primary" />}>
-          <LeadDetailRow label="Super category" value={lead.super_category?.name || '—'} />
-          <LeadDetailRow label="Brand" value={lead.brand_name || '—'} />
-          <LeadDetailRow label="Business type" value={lead.business_type || '—'} />
-          <LeadDetailRow label="Product categories" value={joinList(lead.product_categories)} />
-          <LeadDetailRow label="Catalogue size" value={lead.catalog_size || '—'} />
-          <LeadDetailRow label="Price range" value={lead.price_range || '—'} />
-          <LeadDetailRow label="Fulfilment" value={lead.fulfilment_mode || '—'} />
-          <LeadDetailRow label="Monthly orders" value={lead.monthly_orders || '—'} />
+        <LeadDetailCard title={t('crm.ecommLeads.sellerDetails')} icon={<StorefrontIcon color="primary" />}>
+          <LeadDetailRow label={t('crm.common.superCategory2')} value={lead.super_category?.name || '—'} />
+          <LeadDetailRow label={t('crm.common.brand')} value={lead.brand_name || '—'} />
+          <LeadDetailRow label={t('crm.ecommLeads.businessType')} value={lead.business_type || '—'} />
+          <LeadDetailRow label={t('crm.common.productCategories')} value={joinList(lead.product_categories)} />
+          <LeadDetailRow label={t('crm.ecommLeads.catalogueSize')} value={lead.catalog_size || '—'} />
+          <LeadDetailRow label={t('crm.ecommLeads.priceRange')} value={lead.price_range || '—'} />
+          <LeadDetailRow label={t('shell.nav.fulfilment')} value={lead.fulfilment_mode || '—'} />
+          <LeadDetailRow label={t('crm.ecommLeads.monthlyOrders')} value={lead.monthly_orders || '—'} />
         </LeadDetailCard>
 
-        <LeadDetailCard title="Location" icon={<LocationOnIcon color="primary" />}>
-          <LeadDetailRow label="City" value={lead.city || '—'} />
-          <LeadDetailRow label="Area" value={lead.area || '—'} />
+        <LeadDetailCard title={t('crm.common.location')} icon={<LocationOnIcon color="primary" />}>
+          <LeadDetailRow label={t('crm.common.city')} value={lead.city || '—'} />
+          <LeadDetailRow label={t('crm.common.area')} value={lead.area || '—'} />
         </LeadDetailCard>
 
-        <LeadDetailCard title="Tax & Online presence" icon={<LanguageIcon color="primary" />}>
-          <LeadDetailRow label="GST number" value={lead.gst_number || '—'} />
-          <LeadDetailRow label="GST applicable" value={lead.gst_applicable ? 'Yes' : 'No'} />
+        <LeadDetailCard title={t('crm.ecommLeads.taxAndOnlinePresence')} icon={<LanguageIcon color="primary" />}>
+          <LeadDetailRow label={t('crm.ecommLeads.gstNumber')} value={lead.gst_number || '—'} />
+          <LeadDetailRow label={t('crm.common.gstApplicable')} value={lead.gst_applicable ? 'Yes' : 'No'} />
           <LeadDetailRow
-            label="Website"
+            label={t('crm.common.website')}
             value={lead.website ? <ExternalLink variant="body2" href={lead.website} /> : '—'}
           />
           <LeadDetailRow
-            label="Instagram"
+            label={t('crm.common.instagram')}
             value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : '—'}
           />
-          <LeadDetailRow label="Marketplaces" value={joinList(lead.marketplace_links)} />
+          <LeadDetailRow label={t('crm.ecommLeads.marketplaces')} value={joinList(lead.marketplace_links)} />
         </LeadDetailCard>
       </Stack>
 
@@ -69,12 +71,12 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
                 Lead tracking
               </Typography>
             </Stack>
-            <LeadDetailRow label="Source" value={lead.lead_source || '—'} />
-            <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
+            <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
+            <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
             <LeadDetailRow label="Follow-up" value={followUpLabel} />
             <Divider sx={{ my: 1 }} />
-            <LeadDetailRow label="Created" value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
-            <LeadDetailRow label="Updated" value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
+            <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
+            <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
             {lead.notes && (
               <>
                 <Divider sx={{ my: 1 }} />
@@ -93,12 +95,14 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
   );
 }
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
 /** Tab definitions for the ecomm lead detail page. */
-export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
+export function buildEcommLeadTabs(lead: EcommLead, t: Translate): LeadTab[] {
   return [
     {
       value: 'overview',
-      label: 'Overview',
+      label: t('crm.common.overview'),
       icon: <StorefrontIcon fontSize="small" />,
       render: () => <OverviewTab lead={lead} />,
     },
@@ -122,7 +126,7 @@ export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
           : 'Catalogue managed via Manage Ecomm Services';
         return (
         <LeadDetailCard
-          title="Services offered"
+          title={t('crm.common.servicesOffered')}
           subtitle={servicesSubtitle}
           icon={<HandymanIcon color="primary" />}
         >
@@ -133,18 +137,18 @@ export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
     },
     {
       value: 'survey',
-      label: 'Survey',
+      label: t('crm.common.survey'),
       icon: <AssignmentIcon fontSize="small" />,
       render: () => <LeadSurveyTab entity="ECOMM_LEAD" leadId={lead.id} />,
     },
     {
       value: 'custom-fields',
-      label: 'Custom Fields',
+      label: t('crm.common.customFields2'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Custom fields"
-          subtitle="Admin-defined fields from Settings → Dynamic Fields."
+          title={t('crm.common.customFields')}
+          subtitle={t('crm.common.adminDefinedFieldsFromSettingsDynamic')}
         >
           <DynamicValuesView entity="ECOMM_LEAD" json={lead.dynamic_values_json} />
         </LeadDetailCard>
@@ -152,7 +156,7 @@ export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
     },
     {
       value: 'manual-logs',
-      label: 'Manual Logs',
+      label: t('crm.common.manualLogs'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <ManualLogsTab entityType="ECOMM_LEAD" entityId={lead.id} activities={lead.activity_log} />
@@ -160,7 +164,7 @@ export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
     },
     {
       value: 'communications',
-      label: 'Communications',
+      label: t('crm.common.communications'),
       icon: <ForumIcon fontSize="small" />,
       render: () => <CommsLogsSection entityType="ECOMM_LEAD" entityId={lead.id} />,
     },

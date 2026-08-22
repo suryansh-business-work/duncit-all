@@ -26,6 +26,7 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import ReminderFormDialog from './ReminderFormDialog';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD';
@@ -34,6 +35,7 @@ interface Props {
 
 /** Reminders tab for a lead — list + add/edit/done/delete, dated to-dos. */
 export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
+  const { t } = useTranslation();
   const variables = { filter: { entity_type: entity, lead_id: leadId } };
   const { data, loading, error } = useQuery<{ crmReminders: CrmReminder[] }>(CRM_REMINDERS, { variables, fetchPolicy: 'cache-and-network' });
   const refetchQueries = [{ query: CRM_REMINDERS, variables }];
@@ -51,16 +53,16 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
 
   return (
     <LeadDetailCard
-      title="Reminders"
-      subtitle="Dated to-dos for this lead. They also appear on the dashboard calendar."
-      action={<Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>Add reminder</Button>}
+      title={t('shell.nav.reminders')}
+      subtitle={t('crm.components.datedToDosForThisLead')}
+      action={<Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>{t('crm.components.addReminder')}</Button>}
     >
       {error && <Alert severity="error" sx={{ mb: 1 }}>{parseApiError(error)}</Alert>}
       {loading && reminders.length === 0 && (
         <Stack alignItems="center" sx={{ py: 3 }}><CircularProgress /></Stack>
       )}
       {!loading && reminders.length === 0 && (
-        <Typography variant="body2" color="text.secondary">No reminders yet.</Typography>
+        <Typography variant="body2" color="text.secondary">{t('crm.components.noRemindersYet')}</Typography>
       )}
       {reminders.length > 0 && (
         <Stack spacing={1}>
@@ -79,9 +81,9 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
                   {formatDateTime(r.due_at)}{r.notes ? ` · ${r.notes}` : ''}
                 </Typography>
               </Stack>
-              {r.status === 'DONE' && <Chip size="small" color="success" label="Done" />}
-              <IconButton size="small" onClick={() => openEdit(r)} aria-label="Edit reminder"><EditIcon fontSize="small" /></IconButton>
-              <IconButton size="small" color="error" onClick={() => setRemoving(r)} aria-label="Delete reminder"><DeleteIcon fontSize="small" /></IconButton>
+              {r.status === 'DONE' && <Chip size="small" color="success" label={t('crm.components.done')} />}
+              <IconButton size="small" onClick={() => openEdit(r)} aria-label={t('crm.components.editReminder')}><EditIcon fontSize="small" /></IconButton>
+              <IconButton size="small" color="error" onClick={() => setRemoving(r)} aria-label={t('crm.components.deleteReminder')}><DeleteIcon fontSize="small" /></IconButton>
             </Stack>
           ))}
         </Stack>
@@ -98,9 +100,9 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
       />
       <ConfirmDialog
         open={!!removing}
-        title="Delete reminder"
+        title={t('crm.components.deleteReminder')}
         message={`Delete "${removing?.title ?? ''}"?`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

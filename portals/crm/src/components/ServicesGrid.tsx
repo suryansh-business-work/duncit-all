@@ -1,6 +1,7 @@
 import { Box, Card, Chip, Stack, Typography } from '@mui/material';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import type { CrmServiceOffered } from '../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   services: CrmServiceOffered[];
@@ -15,6 +16,7 @@ const displayName = (s: CrmServiceOffered) =>
  * page's visual language so the section never feels broken.
  */
 export default function ServicesGrid({ services }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (services.length === 0) {
     return (
       <Stack
@@ -24,7 +26,7 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
         sx={{ color: 'text.secondary', py: 1 }}
       >
         <HandymanIcon fontSize="small" />
-        <Typography variant="body2">No services tagged yet.</Typography>
+        <Typography variant="body2">{t('crm.components.noServicesTaggedYet')}</Typography>
       </Stack>
     );
   }
@@ -44,7 +46,7 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
               <Typography variant="subtitle2" fontWeight={700} noWrap>
                 {name}
               </Typography>
-              {s.service === 'Other' && <Chip label="Custom" size="small" variant="outlined" />}
+              {s.service === 'Other' && <Chip label={t('crm.common.custom')} size="small" variant="outlined" />}
             </Stack>
             {s.description ? (
               <Typography variant="body2" color="text.secondary">

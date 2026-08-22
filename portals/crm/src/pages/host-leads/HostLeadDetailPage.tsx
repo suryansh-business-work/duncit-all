@@ -48,12 +48,14 @@ import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { hostVariableValues } from '../../config/leadVariables';
 import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
 const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
 export default function HostLeadDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [aiOpen, setAiOpen] = useState(false);
@@ -76,38 +78,38 @@ export default function HostLeadDetailPage() {
   const tabs: LeadTab[] = [
     {
       value: 'overview',
-      label: 'Overview',
+      label: t('crm.common.overview'),
       icon: <GroupsIcon fontSize="small" />,
       render: () => (
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5}>
           <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0 }}>
-            <LeadDetailCard title="Host details" icon={<GroupsIcon color="primary" />}>
-              <LeadDetailRow label="Super category" value={lead.super_category?.name || '—'} />
-              <LeadDetailRow label="Type" value={lead.host_type || '—'} />
-              <LeadDetailRow label="Organization" value={lead.organization_name || '—'} />
-              <LeadDetailRow label="Interests" value={joinList(lead.interests)} />
-              <LeadDetailRow label="Audience size" value={lead.expected_audience_size || '—'} />
-              <LeadDetailRow label="Frequency" value={lead.frequency || '—'} />
+            <LeadDetailCard title={t('crm.hostLeads.hostDetails')} icon={<GroupsIcon color="primary" />}>
+              <LeadDetailRow label={t('crm.common.superCategory2')} value={lead.super_category?.name || '—'} />
+              <LeadDetailRow label={t('shell.common.type')} value={lead.host_type || '—'} />
+              <LeadDetailRow label={t('crm.hostLeads.organization')} value={lead.organization_name || '—'} />
+              <LeadDetailRow label={t('crm.hostLeads.interests')} value={joinList(lead.interests)} />
+              <LeadDetailRow label={t('crm.hostLeads.audienceSize')} value={lead.expected_audience_size || '—'} />
+              <LeadDetailRow label={t('crm.common.frequency')} value={lead.frequency || '—'} />
             </LeadDetailCard>
 
-            <LeadDetailCard title="Location" icon={<LocationOnIcon color="primary" />}>
-              <LeadDetailRow label="City" value={lead.city || '—'} />
-              <LeadDetailRow label="Area" value={lead.area || '—'} />
+            <LeadDetailCard title={t('crm.common.location')} icon={<LocationOnIcon color="primary" />}>
+              <LeadDetailRow label={t('crm.common.city')} value={lead.city || '—'} />
+              <LeadDetailRow label={t('crm.common.area')} value={lead.area || '—'} />
             </LeadDetailCard>
 
-            <LeadDetailCard title="Social / Reach" icon={<InstagramIcon color="primary" />}>
+            <LeadDetailCard title={t('crm.hostLeads.socialReach')} icon={<InstagramIcon color="primary" />}>
               <LeadDetailRow
-                label="Instagram"
+                label={t('crm.common.instagram')}
                 value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : '—'}
               />
               <LeadDetailRow
-                label="Community link"
+                label={t('crm.hostLeads.communityLink')}
                 value={lead.community_link ? <ExternalLink variant="body2" href={lead.community_link} /> : '—'}
               />
-              <LeadDetailRow label="Community size" value={lead.community_size ?? '—'} />
-              <LeadDetailRow label="Previous events" value={lead.previous_events_hosted ? 'Yes' : 'No'} />
-              <LeadDetailRow label="Past attendees" value={lead.past_attendees ?? '—'} />
-              <LeadDetailRow label="Intent" value={joinList(lead.host_intent_scores)} />
+              <LeadDetailRow label={t('crm.hostLeads.communitySize')} value={lead.community_size ?? '—'} />
+              <LeadDetailRow label={t('crm.hostLeads.previousEvents')} value={lead.previous_events_hosted ? 'Yes' : 'No'} />
+              <LeadDetailRow label={t('crm.hostLeads.pastAttendees')} value={lead.past_attendees ?? '—'} />
+              <LeadDetailRow label={t('crm.hostLeads.intent')} value={joinList(lead.host_intent_scores)} />
             </LeadDetailCard>
           </Stack>
 
@@ -120,12 +122,12 @@ export default function HostLeadDetailPage() {
                     Lead tracking
                   </Typography>
                 </Stack>
-                <LeadDetailRow label="Source" value={lead.lead_source || '—'} />
-                <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
+                <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
+                <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
                 <LeadDetailRow label="Follow-up" value={followUpLabel} />
                 <Divider sx={{ my: 1 }} />
-                <LeadDetailRow label="Created" value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
-                <LeadDetailRow label="Updated" value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
+                <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
+                <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
                 {lead.notes && (
                   <>
                     <Divider sx={{ my: 1 }} />
@@ -155,17 +157,17 @@ export default function HostLeadDetailPage() {
 
     {
       value: 'plans',
-      label: 'Plans & Timeline',
+      label: t('crm.hostLeads.plansAndTimeline2'),
       icon: <EventIcon fontSize="small" />,
       render: () => (
-        <LeadDetailCard title="Plans & timeline" icon={<EventIcon color="primary" />}>
-          <LeadDetailRow label="Budget" value={lead.budget_range || '—'} />
-          <LeadDetailRow label="Revenue models" value={joinList(lead.revenue_models)} />
-          <LeadDetailRow label="Needs venue" value={lead.need_venue ? 'Yes' : 'No'} />
-          <LeadDetailRow label="Needs vendor" value={lead.need_vendor ? 'Yes' : 'No'} />
-          <LeadDetailRow label="Preferred date" value={preferredDate ?? '—'} />
-          <LeadDetailRow label="Preferred day" value={lead.preferred_day || '—'} />
-          <LeadDetailRow label="Preferred slot" value={lead.preferred_time_slot || '—'} />
+        <LeadDetailCard title={t('crm.hostLeads.plansAndTimeline')} icon={<EventIcon color="primary" />}>
+          <LeadDetailRow label={t('crm.hostLeads.budget')} value={lead.budget_range || '—'} />
+          <LeadDetailRow label={t('crm.hostLeads.revenueModels')} value={joinList(lead.revenue_models)} />
+          <LeadDetailRow label={t('crm.hostLeads.needsVenue')} value={lead.need_venue ? 'Yes' : 'No'} />
+          <LeadDetailRow label={t('crm.hostLeads.needsVendor')} value={lead.need_vendor ? 'Yes' : 'No'} />
+          <LeadDetailRow label={t('crm.hostLeads.preferredDate')} value={preferredDate ?? '—'} />
+          <LeadDetailRow label={t('crm.hostLeads.preferredDay')} value={lead.preferred_day || '—'} />
+          <LeadDetailRow label={t('crm.hostLeads.preferredSlot')} value={lead.preferred_time_slot || '—'} />
         </LeadDetailCard>
       ),
     },
@@ -176,7 +178,7 @@ export default function HostLeadDetailPage() {
       icon: <HandymanIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Services offered"
+          title={t('crm.common.servicesOffered')}
           subtitle={
             lead.services_offered.length
               ? `${lead.services_offered.length} service${servicesPlural} tagged`
@@ -191,33 +193,33 @@ export default function HostLeadDetailPage() {
 
     {
       value: 'survey',
-      label: 'Survey',
+      label: t('crm.common.survey'),
       icon: <AssignmentIcon fontSize="small" />,
       render: () => <LeadSurveyTab entity="HOST_LEAD" leadId={lead.id} />,
     },
 
     {
       value: 'website',
-      label: 'Website',
+      label: t('crm.common.website'),
       icon: <LanguageIcon fontSize="small" />,
       render: () => <WebsitePagesTab entity="HOST_LEAD" leadId={lead.id} website={lead.website} />,
     },
 
     {
       value: 'reminders',
-      label: 'Reminders',
+      label: t('shell.nav.reminders'),
       icon: <EventAvailableIcon fontSize="small" />,
       render: () => <RemindersTab entity="HOST_LEAD" leadId={lead.id} />,
     },
 
     {
       value: 'custom-fields',
-      label: 'Custom Fields',
+      label: t('crm.common.customFields2'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <LeadDetailCard
-          title="Custom fields"
-          subtitle="Admin-defined fields from Settings → Dynamic Fields."
+          title={t('crm.common.customFields')}
+          subtitle={t('crm.common.adminDefinedFieldsFromSettingsDynamic')}
         >
           <DynamicValuesView entity="HOST_LEAD" json={lead.dynamic_values_json} />
         </LeadDetailCard>
@@ -226,7 +228,7 @@ export default function HostLeadDetailPage() {
 
     {
       value: 'manual-logs',
-      label: 'Manual Logs',
+      label: t('crm.common.manualLogs'),
       icon: <EventNoteIcon fontSize="small" />,
       render: () => (
         <ManualLogsTab entityType="HOST_LEAD" entityId={lead.id} activities={lead.activity_log} />
@@ -235,7 +237,7 @@ export default function HostLeadDetailPage() {
 
     {
       value: 'communications',
-      label: 'Communications',
+      label: t('crm.common.communications'),
       icon: <ForumIcon fontSize="small" />,
       render: () => <CommsLogsSection entityType="HOST_LEAD" entityId={lead.id} />,
     },
@@ -245,7 +247,7 @@ export default function HostLeadDetailPage() {
     <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>
       {/* Back action above the title (per design spec). */}
       <Box>
-        <BackButton onClick={() => navigate('/host-leads')}>Back to Host Leads</BackButton>
+        <BackButton onClick={() => navigate('/host-leads')}>{t('crm.hostLeads.backToHostLeads')}</BackButton>
       </Box>
 
       <Card
@@ -309,10 +311,10 @@ export default function HostLeadDetailPage() {
               />
             </Box>
             <Button startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
-              Ask AI
+              {t('crm.components.askAi')}
             </Button>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
-              Edit
+              {t('shell.common.edit')}
             </Button>
           </Stack>
         </CardContent>
@@ -322,14 +324,14 @@ export default function HostLeadDetailPage() {
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <LeadStatTile
-          label="Audience"
+          label={t('crm.hostLeads.audience')}
           value={lead.expected_audience_size || '—'}
           hint={lead.frequency ? lead.frequency : 'Frequency not set'}
           icon={<GroupsIcon fontSize="small" />}
           accent="info"
         />
         <LeadStatTile
-          label="Services"
+          label={t('crm.common.services')}
           value={lead.services_offered.length}
           hint={
             lead.services_offered.length
@@ -343,7 +345,7 @@ export default function HostLeadDetailPage() {
           accent="secondary"
         />
         <LeadStatTile
-          label="Community"
+          label={t('crm.common.community')}
           value={lead.community_size ?? '—'}
           hint={
             lead.previous_events_hosted
@@ -354,7 +356,7 @@ export default function HostLeadDetailPage() {
           accent="primary"
         />
         <LeadStatTile
-          label="Next follow-up"
+          label={t('crm.common.nextFollowUp')}
           value={followUpLabel}
           hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
           icon={<EventAvailableIcon fontSize="small" />}

@@ -20,6 +20,7 @@ import {
 } from '../../../api/data.gql';
 import { parseApiError } from '@duncit/utils';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   service: CrmServiceOffered | null;
@@ -29,6 +30,7 @@ interface Props {
 
 /** Edit a single Service Offered title / active state. Hierarchy stays fixed. */
 export default function EditServiceOfferedDialog({ service, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [venue, setVenue] = useState(true);
@@ -51,7 +53,7 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
   const save = async () => {
     const trimmed = title.trim();
     if (!trimmed) {
-      setFormError('Title is required.');
+      setFormError(t('crm.components.titleIsRequired'));
       return;
     }
     if (!venue && !host) {
@@ -75,23 +77,23 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
 
   return (
     <Dialog open={!!service} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit Service Offered</DialogTitle>
+      <DialogTitle>{t('crm.data.editServiceOffered')}</DialogTitle>
       <DialogContent>
         {formError && <Alert severity="error" sx={{ mb: 1.5 }}>{formError}</Alert>}
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           <TextField
             size="small"
-            label="Title"
+            label={t('shell.common.title')}
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            helperText="Duplicate titles in the same category are blocked."
+            helperText={t('crm.data.duplicateTitlesInTheSameCategory')}
             fullWidth
             autoFocus
           />
           <FormControlLabel
             control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />}
-            label="Active"
+            label={t('crm.common.active')}
           />
           <Divider flexItem />
           <ServiceTargetSwitches
@@ -102,9 +104,9 @@ export default function EditServiceOfferedDialog({ service, onClose, onSaved }: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={save} disabled={loading || !title.trim() || (!venue && !host)}>
-          {loading ? 'Saving…' : 'Save'}
+          {loading ? 'Saving…' : t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

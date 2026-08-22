@@ -23,6 +23,7 @@ import VenueBrandingSection from './sections/VenueBrandingSection';
 import VenueDynamicSection from './sections/VenueDynamicSection';
 import VenueTrackingSection from './sections/VenueTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   config: CrmOptionGroup;
@@ -60,7 +61,10 @@ const SECTIONS = [
   },
 ];
 
-export default function VenueLeadForm({ config, initialValues, submitting, submitLabel = 'Save venue lead', onSubmit, onCancel }: Readonly<Props>) {
+export default function VenueLeadForm({ config, initialValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const submitLabelText = submitLabel ?? t('crm.forms.saveVenueLead');
+
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<VenueLeadFormValues>({
     resolver: zodResolver(venueLeadSchema, undefined, { raw: true }),
@@ -75,7 +79,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
     try {
       await onSubmit(values);
     } catch (error: any) {
-      setStatus(error?.message ?? 'Something went wrong');
+      setStatus(error?.message ?? t('crm.components.somethingWentWrong'));
     }
   });
 
@@ -103,7 +107,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
           <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
             {onCancel && (
               <Button onClick={onCancel} disabled={submitting}>
-                Cancel
+                {t('shell.common.cancel')}
               </Button>
             )}
             <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>

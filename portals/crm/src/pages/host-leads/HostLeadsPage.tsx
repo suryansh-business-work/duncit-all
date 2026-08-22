@@ -15,10 +15,12 @@ import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
 import { downloadBase64File, parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function HostLeadsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const { config } = useCrmConfig();
@@ -52,7 +54,7 @@ export default function HostLeadsPage() {
     if (!toDelete) return;
     try {
       await deleteLead({ variables: { id: toDelete.id } });
-      setToast('Host lead deleted');
+      setToast(t('crm.hostLeads.hostLeadDeleted'));
       setToDelete(null);
       refetchRef.current?.();
     } catch (err) {
@@ -80,8 +82,8 @@ export default function HostLeadsPage() {
   return (
     <Stack spacing={2.5}>
       <LeadsToolbar
-        title="Host Leads"
-        subtitle="Capture and qualify host and organizer leads."
+        title={t('shell.nav.hostLeads')}
+        subtitle={t('crm.hostLeads.captureAndQualifyHostAndOrganizer')}
         onManageServices={() => navigate('/host-leads/services')}
         manageServicesLabel="Manage Host Services"
         onFillWithAi={() => setShowAi(true)}
@@ -111,9 +113,9 @@ export default function HostLeadsPage() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title="Delete host lead"
+        title={t('crm.hostLeads.deleteHostLead')}
         message={`Delete "${toDelete?.host_name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}
@@ -124,7 +126,7 @@ export default function HostLeadsPage() {
       <FillWithAiDialog
         open={showAi}
         entity="HOST_LEAD"
-        title="Fill host leads with AI"
+        title={t('crm.hostLeads.fillHostLeadsWithAi')}
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
           setToast(`Created ${count} host lead${count === 1 ? '' : 's'}`);
@@ -135,7 +137,7 @@ export default function HostLeadsPage() {
       <ExcelImportDialog
         open={showImport}
         entity="HOST_LEAD"
-        title="Import host leads from Excel"
+        title={t('crm.hostLeads.importHostLeadsFromExcel')}
         onClose={() => setShowImport(false)}
         onImported={(result) => {
           setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);

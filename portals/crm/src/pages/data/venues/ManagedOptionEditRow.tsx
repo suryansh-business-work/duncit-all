@@ -1,6 +1,7 @@
 import { IconButton, Switch, TableCell, TableRow, TextField, Tooltip } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from '@duncit/shell';
 
 export interface ManagedEditRow {
   id?: string;
@@ -20,6 +21,7 @@ interface Props {
 
 /** The add / inline-edit row shared by the managed-option list table. */
 export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel, busy, placeholder }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <TableRow>
       <TableCell>
@@ -45,14 +47,14 @@ export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel
         <Switch checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} />
       </TableCell>
       <TableCell align="right">
-        <Tooltip title="Save">
+        <Tooltip title={t('shell.common.save')}>
           <span>
             <IconButton size="small" color="primary" onClick={onSave} disabled={busy}>
               <SaveIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title="Cancel">
+        <Tooltip title={t('shell.common.cancel')}>
           <span>
             <IconButton size="small" onClick={onCancel} disabled={busy}>
               <CloseIcon fontSize="small" />

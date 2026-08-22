@@ -13,6 +13,7 @@ import { BackHeader, InfoRow, QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 function Field({ label, value }: Readonly<{ label: string; value?: string | null }>) {
   return <InfoRow label={label} value={value || '—'} />;
@@ -21,6 +22,7 @@ function Field({ label, value }: Readonly<{ label: string; value?: string | null
 /** User Lead detail — mirrors the Venue/Host detail layout. Shows the imported
  * number, source WhatsApp account, and the communities/groups it came from. */
 export default function UserLeadDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(WA_USER_LEAD, { variables: { id } });
@@ -52,12 +54,12 @@ export default function UserLeadDetailPage() {
             </Stack>
             <Divider sx={{ my: 2 }} />
             <Stack spacing={1.5}>
-              <Field label="Source WhatsApp account" value={lead.source_account ? `+${lead.source_account}` : null} />
+              <Field label={t('crm.userLeads.sourceWhatsappAccount')} value={lead.source_account ? `+${lead.source_account}` : null} />
               <Field
-                label="Imported"
+                label={t('crm.userLeads.imported')}
                 value={lead.imported_at ? formatDateTime(lead.imported_at) : null}
               />
-              <Field label="Contact JID" value={lead.contact_jid} />
+              <Field label={t('crm.userLeads.contactJid')} value={lead.contact_jid} />
             </Stack>
           </CardContent>
         </Card>
@@ -99,7 +101,7 @@ export default function UserLeadDetailPage() {
         onBack={() => navigate(-1)}
         backAriaLabel="Go back"
         backSize="medium"
-        title="WhatsApp Lead"
+        title={t('crm.userLeads.whatsappLead')}
         titleVariant="h6"
         titleWeight={800}
         sx={{ mb: 2 }}

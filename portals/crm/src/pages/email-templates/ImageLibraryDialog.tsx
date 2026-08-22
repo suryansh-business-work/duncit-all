@@ -22,6 +22,7 @@ import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -36,6 +37,7 @@ interface Props {
 
 /** Per-template image library: upload (saved immediately), browse, copy or insert. */
 export default function ImageLibraryDialog({ open, templateId, images, onClose, onChangeImages, onInsert }: Readonly<Props>) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
   const onFile = async (file: File | null) => {
     if (!file) return;
     setError(null);
-    if (file.size > 8 * 1024 * 1024) { setError('Max 8MB. Compress and try again.'); return; }
+    if (file.size > 8 * 1024 * 1024) { setError(t('crm.emailTemplates.max8mbCompressAndTryAgain')); return; }
     setBusy(true);
     try {
       const { url } = await upload(file, { folder: 'crm/email-templates', fallbackMimeType: 'image/png' });
@@ -79,13 +81,13 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        Image library
+        {t('crm.emailTemplates.imageLibrary')}
         <AiMonitoringChip />
       </DialogTitle>
       <DialogContent dividers>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Uploaded images for this template. Use <b>Insert</b> to add an <code>&lt;mj-image&gt;</code>, or <b>Copy</b> the URL.
+            Uploaded images for this template. Use <b>{t('crm.emailTemplates.insert')}</b> to add an <code>&lt;mj-image&gt;</code>, or <b>Copy</b> the URL.
           </Typography>
           <Button variant="contained" size="small" startIcon={busy ? <CircularProgress size={14} color="inherit" /> : <UploadIcon />} onClick={() => inputRef.current?.click()} disabled={busy}>
             {busy ? 'Uploading…' : 'Upload'}
@@ -93,7 +95,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError(null)}>{error}</Alert>}
         {images.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No images yet. Click "Upload".</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>{t('crm.emailTemplates.noImagesYetClickUpload')}</Typography>
         ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
             {images.map((img) => (
@@ -107,7 +109,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
                     <IconButton size="small" onClick={() => copy(img.url)}><ContentCopyIcon fontSize="small" /></IconButton>
                   </Tooltip>
                   <Box sx={{ flex: 1 }} />
-                  <Tooltip title="Remove from library">
+                  <Tooltip title={t('crm.emailTemplates.removeFromLibrary')}>
                     <IconButton size="small" color="error" onClick={() => remove(img.url)}><DeleteIcon fontSize="small" /></IconButton>
                   </Tooltip>
                 </Stack>
@@ -118,7 +120,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
         <input ref={inputRef} type="file" accept="image/*" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

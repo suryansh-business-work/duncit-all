@@ -3,6 +3,7 @@ import { Box, Button, IconButton, Stack, TextField, Tooltip, Typography } from '
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { CrmDynamicFieldOption } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   options: CrmDynamicFieldOption[];
@@ -11,6 +12,7 @@ interface Props {
 
 /** Edit select options as `{ value, label }` rows — never as one-per-line text. */
 export default function DynamicFieldOptionsEditor({ options, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   // Stable per-row keys: option rows have no id and their fields are edited in
   // place, so a content-based key would remount the input and drop focus.
   const rowKeys = useRef<number[]>([]);
@@ -37,7 +39,7 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
           <Stack key={key} direction="row" spacing={1} alignItems="center">
             <TextField
               size="small"
-              label="Value"
+              label={t('crm.managedynamicfieldspage.value')}
               value={opt.value}
               onChange={(e) => update(index, { value: e.target.value })}
               inputProps={{ 'aria-label': `option-value-${index}` }}
@@ -45,13 +47,13 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
             />
             <TextField
               size="small"
-              label="Label"
+              label={t('crm.managedynamicfieldspage.label')}
               value={opt.label}
               onChange={(e) => update(index, { label: e.target.value })}
               inputProps={{ 'aria-label': `option-label-${index}` }}
               sx={{ flex: 1 }}
             />
-            <Tooltip title="Remove option">
+            <Tooltip title={t('crm.managedynamicfieldspage.removeOption')}>
               <IconButton size="small" color="error" aria-label={`remove-option-${index}`} onClick={() => remove(index)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>

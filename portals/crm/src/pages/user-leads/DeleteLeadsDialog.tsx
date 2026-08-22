@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 import { WA_DELETE_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   /** Ids to delete; the dialog is open whenever this is non-empty. */
@@ -18,6 +19,7 @@ interface Props {
 
 /** Confirm + run a database delete of one or many user leads (MUI, no window.confirm). */
 export default function DeleteLeadsDialog({ ids, onClose, onDeleted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [del, { loading }] = useMutation(WA_DELETE_USER_LEADS);
   const count = ids.length;
 
@@ -38,10 +40,10 @@ export default function DeleteLeadsDialog({ ids, onClose, onDeleted }: Readonly<
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {t('shell.common.cancel')}
         </Button>
         <Button color="error" variant="contained" onClick={run} disabled={loading}>
-          {loading ? 'Deleting…' : 'Delete'}
+          {loading ? 'Deleting…' : t('shell.common.delete')}
         </Button>
       </DialogActions>
     </Dialog>

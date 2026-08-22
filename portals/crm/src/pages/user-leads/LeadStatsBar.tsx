@@ -6,16 +6,20 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import { WA_LEAD_STATS, type WaLeadStats } from '../tools/whatsapp/whatsappQueries';
+import { useTranslation } from '@duncit/shell';
 
-const CARDS: { key: keyof WaLeadStats; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: 'total_leads', label: 'Total Leads', icon: <PersonSearchIcon />, color: '#0d9488' },
-  { key: 'total_communities', label: 'Communities', icon: <Diversity3Icon />, color: '#7c3aed' },
-  { key: 'total_groups', label: 'Groups', icon: <GroupsIcon />, color: '#2563eb' },
-  { key: 'total_contacts', label: 'Contacts', icon: <ContactsIcon />, color: '#db2777' },
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const cards = (t: Translate): { key: keyof WaLeadStats; label: string; icon: React.ReactNode; color: string }[] =>[
+  { key: 'total_leads', label: t('crm.common.totalLeads'), icon: <PersonSearchIcon />, color: '#0d9488' },
+  { key: 'total_communities', label: t('crm.common.communities'), icon: <Diversity3Icon />, color: '#7c3aed' },
+  { key: 'total_groups', label: t('crm.common.groups'), icon: <GroupsIcon />, color: '#2563eb' },
+  { key: 'total_contacts', label: t('crm.common.contacts'), icon: <ContactsIcon />, color: '#db2777' },
 ];
 
 /** Top-of-page dashboard counters. Refetches whenever `reloadKey` changes. */
 export default function LeadStatsBar({ reloadKey }: Readonly<{ reloadKey: number }>) {
+  const { t } = useTranslation();
   const { data, refetch } = useQuery<{ waLeadStats: WaLeadStats }>(WA_LEAD_STATS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -26,7 +30,7 @@ export default function LeadStatsBar({ reloadKey }: Readonly<{ reloadKey: number
 
   return (
     <Grid container spacing={1.5} sx={{ mb: 2 }}>
-      {CARDS.map((c) => (
+      {cards(t).map((c) => (
         <Grid key={c.key} item xs={6} md={3}>
           <Card variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ py: 1.5 }}>

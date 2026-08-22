@@ -1,18 +1,20 @@
 import { Stack } from '@mui/material';
 import ImageUploadField from '../../fields/ImageUploadField';
 import TagsField from '../../fields/TagsField';
+import { useTranslation } from '@duncit/shell';
 
 export default function VenueBrandingSection() {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.75}>
       <ImageUploadField
         name="logo_url"
-        label="Venue logo"
+        label={t('crm.forms.venueLogo')}
         shape="square"
         folder="crm/venue-logos"
-        helperText="Optional. PNG/JPG up to 8MB."
+        helperText={t('crm.forms.optionalPngJpgUpTo8mb')}
       />
-      <TagsField name="tags" label="Tags / labels" helperText="Optional — free-text labels for filtering and grouping." />
+      <TagsField name="tags" label={t('crm.forms.tagsLabels')} helperText={t('crm.forms.optionalFreeTextLabelsForFiltering')} />
     </Stack>
   );
 }

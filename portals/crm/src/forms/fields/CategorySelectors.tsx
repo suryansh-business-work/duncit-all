@@ -3,6 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { useQuery } from '@apollo/client';
 import { Autocomplete, Skeleton, Stack, TextField } from '@mui/material';
 import { CATEGORIES_BY_PARENT, CATEGORIES_BY_LEVEL, type CategoryOption } from '../../api/data.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   superName?: string;
@@ -21,6 +22,7 @@ export default function CategorySelectors({
   categoryName = 'category_ids',
   subName = 'sub_category_ids',
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control, setValue } = useFormContext();
   const superId = (useWatch({ control, name: superName }) as string) || '';
   const categoryIds = (useWatch({ control, name: categoryName }) as string[]) ?? [];
@@ -66,10 +68,10 @@ export default function CategorySelectors({
   if (!superId) return null;
 
   const renderCatInput = (p: object) => (
-    <TextField {...p} label="Category" placeholder={categoryIds.length ? '' : 'Select categories'} helperText="Optional · multiple" />
+    <TextField {...p} label={t('crm.common.category')} placeholder={categoryIds.length ? '' : 'Select categories'} helperText={t('crm.forms.optionalMultiple')} />
   );
   const renderSubInput = (p: object) => (
-    <TextField {...p} label="Sub Category" placeholder={subIds.length ? '' : 'Select sub-categories'} helperText="Optional · multiple" />
+    <TextField {...p} label={t('crm.common.subCategory')} placeholder={subIds.length ? '' : 'Select sub-categories'} helperText={t('crm.forms.optionalMultiple')} />
   );
 
   return (

@@ -17,6 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import type { CalEvent } from './useCalendarEvents';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   event: CalEvent | null;
@@ -30,6 +31,7 @@ const ENTITY_LABEL: Record<string, string> = { VENUE_LEAD: 'Venue lead', HOST_LE
 
 /** Side drawer showing a calendar event's details + a jump to its lead. */
 export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isReminder = event?.kind === 'reminder';
   const done = event?.status === 'DONE';
@@ -51,7 +53,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
             <Typography variant="subtitle1" fontWeight={800} sx={{ flex: 1 }}>
               {isReminder ? 'Reminder' : 'Follow-up'}
             </Typography>
-            <IconButton onClick={onClose} aria-label="Close"><CloseIcon /></IconButton>
+            <IconButton onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></IconButton>
           </Stack>
 
           <Stack spacing={1.5} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
@@ -59,7 +61,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Chip size="small" label={formatDateTime(event.date)} />
               <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity] ?? event.entity} />
-              {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : 'Pending'} />}
+              {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
             </Stack>
 
             <Divider />
@@ -90,7 +92,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
                   {done ? 'Mark pending' : 'Mark done'}
                 </Button>
                 <Button size="small" startIcon={<EditIcon />} onClick={() => onEdit(event)}>Edit</Button>
-                <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(event)}>Delete</Button>
+                <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(event)}>{t('shell.common.delete')}</Button>
               </Stack>
             )}
           </Stack>

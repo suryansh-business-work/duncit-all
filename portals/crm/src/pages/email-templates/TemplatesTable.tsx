@@ -9,6 +9,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { EmailTemplateRow } from '../../api/emailTemplates.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   fetchRows: TableFetch<EmailTemplateRow>;
@@ -20,14 +21,16 @@ interface Props {
 
 const getTemplateRowId = (t: EmailTemplateRow) => t.template_id;
 
-const TARGET_LABEL: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Ecomm', STATIC: 'Static' };
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-const TARGET_OPTIONS = [
-  { value: 'VENUE', label: 'Venue' },
-  { value: 'HOST', label: 'Host' },
-  { value: 'ECOMM', label: 'Ecomm' },
-  { value: 'STATIC', label: 'Static' },
-] as const;
+const targetLabel = (t: Translate): Record<string, string> => ({ VENUE: t('crm.common.venue'), HOST: 'Host', ECOMM: 'Ecomm', STATIC: 'Static' });
+
+const targetOptions = (t: Translate) => [
+  { value: 'VENUE', label: t('crm.common.venue') },
+  { value: 'HOST', label: t('crm.common.host') },
+  { value: 'ECOMM', label: t('crm.common.ecomm') },
+  { value: 'STATIC', label: t('crm.emailTemplates.static') },
+];
 
 const renderName = (t: EmailTemplateRow) => (
   <Typography variant="body2" fontWeight={700} component="span">
@@ -41,10 +44,10 @@ const renderSlug = (t: EmailTemplateRow) => (
   </Typography>
 );
 
-const targetValue = (t: EmailTemplateRow) => TARGET_LABEL[t.target] ?? t.target;
+const targetValue = (row: EmailTemplateRow, t: Translate) => targetLabel(t)[row.target] ?? row.target;
 
-const renderTarget = (t: EmailTemplateRow) => (
-  <Chip size="small" variant="outlined" color="primary" label={targetValue(t)} />
+const renderTarget = (row: EmailTemplateRow, t: Translate) => (
+  <Chip size="small" variant="outlined" color="primary" label={targetValue(row, t)} />
 );
 
 /** CRM email templates on the shared server-driven table; row click opens the editor. */
@@ -55,21 +58,22 @@ export default function TemplatesTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EmailTemplateRow>[]>(
     () => [
-      { field: 'name', headerName: 'Name', flex: 1, minWidth: 180, cellRenderer: renderName, valueGetter: (t) => t.name },
-      { field: 'slug', headerName: 'Slug', minWidth: 150, cellRenderer: renderSlug, valueGetter: (t) => t.slug },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 180, cellRenderer: renderName, valueGetter: (t) => t.name },
+      { field: 'slug', headerName: t('crm.emailTemplates.slug'), minWidth: 150, cellRenderer: renderSlug, valueGetter: (t) => t.slug },
       {
         field: 'target',
-        headerName: 'For',
-        filter: { type: 'select', options: TARGET_OPTIONS },
+        headerName: t('crm.emailTemplates.for'),
+        filter: { type: 'select', options: targetOptions(t) },
         width: 110,
-        cellRenderer: renderTarget,
-        valueGetter: targetValue,
+        cellRenderer: (row: EmailTemplateRow) => renderTarget(row, t),
+        valueGetter: (row: EmailTemplateRow) => targetValue(row, t),
       },
-      { field: 'subject', headerName: 'Subject', flex: 1, minWidth: 200, valueGetter: (t) => t.subject },
+      { field: 'subject', headerName: t('crm.common.subject'), flex: 1, minWidth: 200, valueGetter: (t) => t.subject },
       activeChipColumn<EmailTemplateRow>(),
-      dateColumn<EmailTemplateRow>({ field: 'updated_at', headerName: 'Updated', hide: false }),
+      dateColumn<EmailTemplateRow>({ field: 'updated_at', headerName: t('shell.common.updated'), hide: false }),
       dateColumn<EmailTemplateRow>(),
       actionsColumn<EmailTemplateRow>({
         onEdit,

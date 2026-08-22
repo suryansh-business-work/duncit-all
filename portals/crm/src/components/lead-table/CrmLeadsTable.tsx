@@ -2,11 +2,12 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import {
   buildLeadColumns,
-  LEAD_ENTITY_META,
+  leadEntityMeta,
   type CrmLeadEntity,
   type CrmLeadRowBase,
   type LeadFilterOption,
 } from './leadColumns';
+import { useTranslation } from '@duncit/shell';
 
 interface Props<T extends CrmLeadRowBase> {
   entity: CrmLeadEntity;
@@ -36,12 +37,13 @@ export default function CrmLeadsTable<T extends CrmLeadRowBase>({
   onEdit,
   onDelete,
 }: Readonly<Props<T>>) {
+  const { t } = useTranslation();
   const columns = useMemo(
     () =>
-      buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete }),
-    [entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete],
+      buildLeadColumns<T>({ entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t }),
+    [entity, statusOptions, priorityOptions, superCategoryOptions, onEdit, onDelete, t],
   );
-  const meta = LEAD_ENTITY_META[entity];
+  const meta = leadEntityMeta(t)[entity];
 
   return (
     <DuncitTable<T>

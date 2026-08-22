@@ -28,6 +28,7 @@ import ExternalLink from '../ExternalLink';
 import ScrapeDialog from './ScrapeDialog';
 import WebsitePagesTable from './WebsitePagesTable';
 import PageContentDialog from './PageContentDialog';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   entity: CrmEntityType;
@@ -37,6 +38,7 @@ interface Props {
 
 /** Website tab: scrape a lead's site into a saved page list, fetch per-page content. */
 export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Props>) {
+  const { t } = useTranslation();
   const variables = { entity_type: entity, lead_id: leadId };
   const { data, loading, error } = useQuery<{ crmWebsitePages: CrmWebsitePage[] }>(CRM_WEBSITE_PAGES, {
     variables,
@@ -110,7 +112,7 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
           <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
             <LanguageIcon color="primary" />
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={800}>Website</Typography>
+              <Typography variant="subtitle1" fontWeight={800}>{t('crm.common.website')}</Typography>
               <ExternalLink variant="body2" href={website} />
             </Box>
             <Chip size="small" variant="outlined" label={`${pages.length} page${pages.length === 1 ? '' : 's'} saved`} />
@@ -152,9 +154,9 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
       <PageContentDialog page={viewing} onClose={() => setViewing(null)} />
       <ConfirmDialog
         open={!!removing}
-        title="Delete page"
+        title={t('crm.components.deletePage')}
         message={`Remove "${removing?.url ?? ''}" from the saved pages?`}
-        confirmLabel="Delete"
+        confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"
         loading={deleting}

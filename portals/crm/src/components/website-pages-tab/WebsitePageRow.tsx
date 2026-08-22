@@ -10,6 +10,7 @@ import {
   type CrmWebsitePage,
 } from '../../api/websitePages.gql';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 const STATUS_COLOR: Record<CrmWebsitePage['status'], 'default' | 'success' | 'error'> = {
   DISCOVERED: 'default',
@@ -26,6 +27,7 @@ interface Props {
 
 /** One website-page row with its own "Fetch content" action + view/delete. */
 export default function WebsitePageRow({ page, onView, onDelete, onError }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [fetchContent, { loading }] = useMutation(FETCH_CRM_WEBSITE_PAGE_CONTENT);
   const fetched = page.status === 'FETCHED';
 
@@ -71,21 +73,21 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
         <Stack direction="row" justifyContent="flex-end" alignItems="center">
           <Tooltip title={fetched ? 'Re-fetch content' : 'Fetch content'}>
             <span>
-              <IconButton size="small" color="primary" onClick={run} disabled={loading} aria-label="Fetch content">
+              <IconButton size="small" color="primary" onClick={run} disabled={loading} aria-label={t('crm.components.fetchContent')}>
                 {loading ? <CircularProgress size={16} /> : fetchIcon}
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="View content">
+          <Tooltip title={t('crm.components.viewContent')}>
             <span>
-              <IconButton size="small" onClick={() => onView(page)} disabled={!page.content_text} aria-label="View content">
+              <IconButton size="small" onClick={() => onView(page)} disabled={!page.content_text} aria-label={t('crm.components.viewContent')}>
                 <ArticleIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Delete page">
+          <Tooltip title={t('crm.components.deletePage')}>
             <span>
-              <IconButton size="small" color="error" onClick={() => onDelete(page)} aria-label="Delete page">
+              <IconButton size="small" color="error" onClick={() => onDelete(page)} aria-label={t('crm.components.deletePage')}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </span>

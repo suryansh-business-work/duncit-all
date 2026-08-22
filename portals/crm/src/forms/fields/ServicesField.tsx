@@ -13,6 +13,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FormField } from '@duncit/forms';
 import type { CrmServiceOffered } from '../../api/crm.types';
+import { useTranslation } from '@duncit/shell';
 
 export const emptyService: CrmServiceOffered = {
   service: '',
@@ -40,6 +41,7 @@ function displayName(row: CrmServiceOffered): string {
  * custom_name: typedValue }` so dashboard aggregations still group cleanly.
  */
 export default function ServicesField({ name, options }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
   const rows = (useWatch({ control, name }) as CrmServiceOffered[]) ?? [];
@@ -107,9 +109,9 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
           <TextField
             {...params}
             size="small"
-            label="Services"
+            label={t('crm.common.services')}
             placeholder={rows.length ? 'Search to add more…' : 'Search and select services…'}
-            helperText="Type to search the catalogue. Press Enter on a custom name to add it as Other."
+            helperText={t('crm.forms.typeToSearchTheCataloguePress')}
           />
         )}
       />
@@ -127,24 +129,24 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
               <Card key={row.id} variant="outlined" sx={{ p: 1.5 }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} useFlexGap flexWrap="wrap">
                   <Chip label={label} color="primary" variant="outlined" size="small" sx={{ fontWeight: 600 }} />
-                  {current.service === 'Other' && <Chip label="Custom" size="small" variant="outlined" />}
+                  {current.service === 'Other' && <Chip label={t('crm.common.custom')} size="small" variant="outlined" />}
                   <Box sx={{ flex: 1 }} />
-                  <IconButton size="small" color="error" aria-label="remove service" onClick={() => remove(index)}>
+                  <IconButton size="small" color="error" aria-label={t('crm.forms.removeService')} onClick={() => remove(index)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
                 {current.service === 'Other' && (
                   <Box sx={{ mb: 1 }}>
-                    <FormField name={`${name}.${index}.custom_name`} label="Custom service name" size="small" />
+                    <FormField name={`${name}.${index}.custom_name`} label={t('crm.forms.customServiceName')} size="small" />
                   </Box>
                 )}
                 <FormField
                   name={`${name}.${index}.description`}
-                  label="Description"
+                  label={t('shell.common.description')}
                   size="small"
                   multiline
                   minRows={2}
-                  placeholder="What does this service include?"
+                  placeholder={t('crm.forms.whatDoesThisServiceInclude')}
                 />
               </Card>
             );

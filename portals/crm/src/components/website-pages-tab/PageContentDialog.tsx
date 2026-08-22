@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { CrmWebsitePage } from '../../api/websitePages.gql';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   page: CrmWebsitePage | null;
@@ -18,6 +19,7 @@ interface Props {
 
 /** Read-only viewer for a page's fetched title + extracted text. */
 export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!page} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 0.5 }}>
@@ -58,7 +60,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

@@ -1,6 +1,7 @@
 import { Controller, useFormContext } from 'react-hook-form';
 import { MenuItem, Skeleton, TextField } from '@mui/material';
 import { useSuperCategories } from '../../api/useSuperCategories';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   name: string;
@@ -16,10 +17,12 @@ interface Props {
  */
 export default function SuperCategoryField({
   name,
-  label = 'Super Category',
+  label,
   hint,
   required,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const labelText = label ?? t('crm.common.superCategory');
   const { control } = useFormContext();
   const { options, loading } = useSuperCategories();
 
@@ -38,7 +41,7 @@ export default function SuperCategoryField({
           select
           fullWidth
           size="small"
-          label={label}
+          label={labelText}
           required={required}
           {...field}
           value={field.value ?? ''}

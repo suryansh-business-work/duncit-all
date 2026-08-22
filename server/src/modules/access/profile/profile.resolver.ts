@@ -8,9 +8,16 @@ import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
 import type { GraphQLContext } from '@context';
 
-// A stable @handle for follow lists. There is no real username field yet, so we
-// derive one from the name plus a short id suffix (kept deterministic + unique).
-function deriveUsername(u: any): string {
+/**
+ * The @handle to render for a profile.
+ *
+ * Accounts now STORE one (profile.username, minted at signup). The derivation
+ * below is only what an account created before that field existed reads as
+ * until `migrate:usernames` has run — deterministic and unique because it
+ * ends in the id's own tail, so a follow list never shows two blank handles.
+ */
+function displayUsername(u: any): string {
+  if (u.username) return String(u.username);
   const base = String(u.first_name || u.full_name || 'user')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
@@ -36,7 +43,7 @@ function toPublicProfile(
   const requested = !isFollowing && hasRequested;
   return {
     user_id: u.user_id,
-    username: deriveUsername(u),
+    username: displayUsername(u),
     full_name: u.full_name ?? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
     first_name: u.first_name ?? null,
     last_name: u.last_name ?? null,
@@ -112,12 +119,18 @@ export const profileResolvers = {
     publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }, ctx: GraphQLContext) =>
       mapPublicProfiles(args.user_ids ?? [], ctx.user?.id ?? null),
     publicUserProfile: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
-      const u = await userService.getById(args.user_id).catch(() => null);
+      // Handle first, id second — see userService.getByHandle.
+      const u = await userService.getByHandle(args.user_id).catch(() => null);
       if (!u) return null;
       const viewerId = ctx.user?.id ?? null;
       const status = await userService.followStatus(viewerId, u.user_id);
       return toPublicProfile(u, viewerId, status === 'FOLLOWING', status === 'REQUESTED');
     },
+    usernameAvailability: async (
+      _p: unknown,
+      args: { username: string },
+      ctx: GraphQLContext
+    ) => userService.usernameAvailability(args.username, ctx.user?.id ?? null),
     followersOf: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       const ids = await userService.listFollowerUserIds(args.user_id);
       return mapPublicProfiles(ids, ctx.user?.id ?? null);
@@ -162,6 +175,15 @@ export const profileResolvers = {
       const current = data.dob ? await userService.me(ctx.user.id) : null;
       await assertEligibleDob(data.dob, current?.dob);
       return userService.updateMyProfile(ctx.user.id, data);
+    },
+    setMyUsername: async (_p: unknown, args: { username: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.setMyUsername(ctx.user.id, args.username);
     },
     updateMyProfileVisibility: async (
       _p: unknown,

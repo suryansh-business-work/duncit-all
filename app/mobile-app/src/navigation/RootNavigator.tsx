@@ -7,6 +7,7 @@ import { AccountScreen } from '@/screens/AccountScreen';
 import { AccountHealthScreen } from '@/screens/AccountHealthScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
 import { WhatsAppPreferenceScreen } from '@/screens/WhatsAppPreferenceScreen';
+import { SmsPreferenceScreen } from '@/screens/SmsPreferenceScreen';
 import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
 import { BecomeHostScreen } from '@/screens/BecomeHostScreen';
 import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
@@ -146,6 +147,7 @@ export function RootNavigator() {
       <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />
       <Stack.Screen name="MailPreference" component={MailPreferenceScreen} />
       <Stack.Screen name="WhatsAppPreference" component={WhatsAppPreferenceScreen} />
+      <Stack.Screen name="SmsPreference" component={SmsPreferenceScreen} />
       <Stack.Screen name="VenueHealth" component={VenueHealthScreen} />
       <Stack.Screen name="Saved" component={SavedScreen} />
       <Stack.Screen name="PodHistory" component={PodHistoryScreen} />

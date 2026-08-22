@@ -77,6 +77,7 @@ const GrievancePage = lazy(() =>
 );
 const MailPreferencePage = lazy(() => import('../pages/mail-preference-page'));
 const WhatsAppPreferencePage = lazy(() => import('../pages/whatsapp-preference-page'));
+const SmsPreferencePage = lazy(() => import('../pages/sms-preference-page'));
 const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
@@ -156,7 +157,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
             every other page, so an unread link parks in `?redirect` and opens
             straight after sign-in. */}
         <Route path="/pod/:podId/feedback" element={withAuth(<PodFeedbackPage />)} />
-        <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
+        <Route path="/u/:handle" element={withAuth(<PublicProfilePage />)} />
         <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />
         <Route path="/register-venue" element={<PartnerRedirect path="/register-venue" />} />
         <Route path="/survey/:kind" element={withAuth(<SurveyGatePage />)} />
@@ -231,6 +232,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
           path="/account/whatsapp-preference"
           element={withAuth(<WhatsAppPreferencePage />)}
         />
+        <Route path="/account/sms-preference" element={withAuth(<SmsPreferencePage />)} />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />

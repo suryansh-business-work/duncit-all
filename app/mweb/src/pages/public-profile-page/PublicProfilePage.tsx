@@ -72,10 +72,13 @@ const UNFOLLOW_USER = gql`
 
 export default function PublicProfilePage() {
   const { t } = useTranslation();
-  const { userId = '' } = useParams();
+  // `/u/:handle` carries the @username, and a raw user id for every link
+  // shared before handles existed. `publicUserProfile` resolves both, so the
+  // page passes it straight through.
+  const { handle = '' } = useParams();
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(PUBLIC_PROFILE, {
-    variables: { user_id: userId },
+    variables: { user_id: handle },
     fetchPolicy: 'cache-and-network',
   });
   const [follow, followState] = useMutation(FOLLOW_USER);

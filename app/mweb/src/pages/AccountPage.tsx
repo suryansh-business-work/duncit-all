@@ -26,8 +26,8 @@ import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
-import MailPreferenceCard from './account-page/MailPreferenceCard';
-import WhatsAppPreferenceCard from './account-page/WhatsAppPreferenceCard';
+import CommunicationPreferencesSection from './account-page/comm-preference';
+import UsernameForm from './account-page/username-form';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -37,6 +37,7 @@ const ME = gql`
   query MeProfile {
     me {
       user_id
+      username
       first_name
       last_name
       full_name
@@ -181,9 +182,11 @@ export default function AccountPage() {
 
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
+      <UsernameForm current={me.username ?? null} onSaved={() => refetch()} />
       <LanguageSection />
-      <MailPreferenceCard />
-      <WhatsAppPreferenceCard />
+      {/* Email, WhatsApp and SMS under one heading — each a door to its own
+          categories, each with its one-time-code switch inline. */}
+      <CommunicationPreferencesSection />
       <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog

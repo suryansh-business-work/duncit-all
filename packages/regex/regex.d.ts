@@ -56,3 +56,11 @@ export function isGstin(value: string): boolean;
 export function isPersonName(value: string): boolean;
 /** Referral-code shape check. Case-sensitive: upper-case before calling it. */
 export function isReferralCode(value: string): boolean;
+/**
+ * A Duncit @handle: lowercase letters, digits and single hyphens, 3–30
+ * characters, starting and ending on an alphanumeric. It goes into
+ * `duncit.com/u/<username>`, so anything needing percent-encoding is rejected.
+ */
+export const USERNAME: RegExp;
+/** Handle shape check. Lower-case before calling it — the pattern is strict. */
+export function isUsername(value: string): boolean;

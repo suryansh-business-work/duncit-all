@@ -61,6 +61,7 @@ export default function AccountProfileHeader({
             shareProfile(
               me.user_id,
               me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim(),
+              me.username,
             )
           }
         >

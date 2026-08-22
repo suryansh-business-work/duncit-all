@@ -17,6 +17,13 @@ export interface PageMeta {
   appName: string;
   defaultImageUrl: string | null;
   themeColor: string | null;
+  /**
+   * The path this page should be indexed under, when it is not the one
+   * that was requested. A profile answers to both its @handle and its raw
+   * id, and a crawler shown the same page at two URLs splits the ranking
+   * between them unless one names the other.
+   */
+  canonicalPath: string | null;
 }
 
 interface BrandingResult {
@@ -29,7 +36,12 @@ interface BrandingResult {
 }
 
 interface LinkPreviewResult {
-  linkPreview: { title: string; description: string | null; image_url: string | null } | null;
+  linkPreview: {
+    title: string;
+    description: string | null;
+    image_url: string | null;
+    canonical_path: string | null;
+  } | null;
 }
 
 const BRANDING_QUERY = /* GraphQL */ `
@@ -49,6 +61,7 @@ const LINK_PREVIEW_QUERY = /* GraphQL */ `
       title
       description
       image_url
+      canonical_path
     }
   }
 `;
@@ -90,6 +103,7 @@ const defaultMeta = ({ t, appName, defaultImageUrl, themeColor }: Defaults): Pag
   appName,
   defaultImageUrl,
   themeColor,
+  canonicalPath: null,
 });
 
 function staticMeta(route: StaticRoute, defaults: Defaults): PageMeta {
@@ -123,6 +137,7 @@ async function dynamicMeta(
     title,
     description: preview.description ?? t(route.descriptionKey),
     imageUrl: preview.image_url,
+    canonicalPath: preview.canonical_path,
   };
 }
 

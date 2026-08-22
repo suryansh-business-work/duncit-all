@@ -68,7 +68,9 @@
     "backfill:withdrawal-allocations:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-withdrawal-allocations.ts --dry-run",
     "backfill:withdrawal-allocations:local": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-withdrawal-allocations.ts --uri mongodb://127.0.0.1:27017/duncit-local",
     "backfill:withdrawal-allocations:local:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/backfill-withdrawal-allocations.ts --uri mongodb://127.0.0.1:27017/duncit-local --dry-run",
-    "check:prompts": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-prompt-catalog.ts"
+    "check:prompts": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-prompt-catalog.ts",
+    "migrate:usernames": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-usernames.ts",
+    "migrate:usernames:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-usernames.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

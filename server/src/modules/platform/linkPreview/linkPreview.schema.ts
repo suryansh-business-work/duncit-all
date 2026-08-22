@@ -18,6 +18,15 @@ export const linkPreviewTypeDefs = /* GraphQL */ `
     title: String!
     description: String
     image_url: String
+    """
+    The address this entity should be indexed under, when that is not
+    necessarily the address the request came in on.
+
+    A profile is reachable both as /u/<handle> and as /u/<id> — the same
+    page at two URLs, which is duplicate content until one of them names the
+    other as canonical. Null means "the requested path is already canonical".
+    """
+    canonical_path: String
   }
 
   extend type Query {

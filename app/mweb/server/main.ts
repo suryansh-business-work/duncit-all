@@ -55,6 +55,9 @@ async function pageMeta(path: string): Promise<PageMeta> {
       appName: t('mweb.meta.appName'),
       defaultImageUrl: null,
       themeColor: null,
+      // Nothing was resolved, so the requested path is all there is to
+      // point at — the renderer falls back to it.
+      canonicalPath: null,
     };
   }
 }

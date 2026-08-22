@@ -15,12 +15,17 @@ interface Props {
   onChanged?: () => void | Promise<void>;
 }
 
-/** The interactive profile avatar (items 9 + 12): story ring + tap-to-view/add,
- * long-press/pencil photo menu (View / Change / Remove), crop dialog and the
- * own-story viewer with a delete action. Shared by both profile headers. */
+/**
+ * The interactive profile avatar: story ring + tap-to-view, long-press/pencil
+ * photo menu (View / Change / Remove), crop dialog and the own-story viewer
+ * with a delete action. Shared by both profile headers.
+ *
+ * It does not post stories. That entrance lives on Home, with the rest of the
+ * status rail — see AvatarStoryButton for why it was taken off the photo.
+ */
 export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const a = useProfileAvatar(onChanged);
+  const a = useProfileAvatar(onChanged, !!photo);
   const deleteId = a.deleteId;
 
   return (
@@ -33,7 +38,6 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
         saving={a.saving}
         onPress={a.onAvatarPress}
         onLongPress={a.openMenu}
-        onAddStory={() => void a.addStory()}
         onEditPhoto={a.openMenu}
       />
 

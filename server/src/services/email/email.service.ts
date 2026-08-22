@@ -11,6 +11,7 @@ import { emailLogService } from '@modules/content/emailLog/emailLog.service';
 import type { EmailLogSource } from '@modules/content/emailLog/emailLog.model';
 import { mailPreferenceService } from '@modules/content/mailPreference/mailPreference.service';
 import { mailPreferenceUrl } from '@modules/content/mailPreference/mailPreference.token';
+import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
 import {
@@ -297,6 +298,16 @@ export async function sendEmail(opts: {
   // categories — codes, receipts, legal notices — never reach the database.
   if (!(await mailPreferenceService.allows(opts.to, category))) {
     return notSent(`Recipient opted out of ${category} email`, 'SKIPPED');
+  }
+
+  // The CHANNEL gate, which is a different axis from the category one above.
+  // `authentication` is a REQUIRED category — nobody may unsubscribe from
+  // their own codes — but Communication Preferences lets an account choose
+  // WHICH channel carries them, and that choice is refused server-side unless
+  // another reachable channel stays on (commPreference.service). Only this
+  // one category pays for the lookup.
+  if (category === 'authentication' && !(await commPreferenceService.allowsEmailOtp(opts.to))) {
+    return notSent('Recipient receives one-time codes on another channel', 'SKIPPED');
   }
 
   try {

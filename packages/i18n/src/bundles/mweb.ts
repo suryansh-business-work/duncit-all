@@ -287,6 +287,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       accountHealth: { title: 'Account health' },
       mailPreference: { title: 'Mail preferences' },
       whatsappPreference: { title: 'WhatsApp preferences' },
+      smsPreference: { title: 'SMS preferences' },
       signupSurvey: { title: 'Tell us about you' },
       signupWhatsapp: { title: 'WhatsApp updates' },
       signupReferral: { title: 'Referral code' },
@@ -318,6 +319,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
+      // Profile Settings > Username. The handle is what /u/<username> carries,
+      // so this section owns both the edit field and the link it produces.
+      username: {
+        title: 'Username',
+        subtitle: 'This is how people find and share your profile.',
+        label: 'Username',
+        placeholder: 'your-handle',
+        linkLabel: 'Your profile link',
+        checking: 'Checking availability…',
+        available: '{username} is available.',
+        current: 'This is your username.',
+        // The three refusals the server answers with. Keyed by its reason
+        // code, so the server ships codes and never English (rule 38).
+        taken: 'Someone already has that username.',
+        reserved: 'That username is reserved.',
+        format: 'Use 3–30 characters: lowercase letters, numbers and single hyphens.',
+        save: 'Save username',
+        saved: 'Username updated',
+        saveFailed: 'Could not save that username. Please try again.',
+        copyLink: 'Copy profile link',
+        linkCopied: 'Profile link copied',
+      },
       // Profile > Connected accounts. mWeb and native render the same section
       // (rule 27) over the same myConnectedAccounts query.
       connected: {
@@ -2730,6 +2753,41 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       productFeaturesAreNotAvailableRight: 'Product features are not available right now.',
       products: 'Products',
     },
+    commPreference: {
+      title: 'Communication Preferences',
+      subtitle: 'Where we message you, and where your one-time codes arrive.',
+      // Channel names. Rendered by the section AND by each channel's own
+      // screen, so they are named once.
+      email: 'Email',
+      whatsapp: 'WhatsApp',
+      sms: 'SMS',
+      emailHint: 'Choose which emails we send you',
+      whatsappHint: 'Choose which WhatsApp messages we send you',
+      smsHint: 'Choose which text messages we send you',
+      otpLabel: 'One-time codes',
+      otpHint: 'Codes that prove it is you when you sign in.',
+      // The switch is disabled rather than allowed to strand somebody — the
+      // same shape as Connected Accounts' only-way-in guard.
+      otpLocked: 'This is the only channel that can reach you, so codes stay on here.',
+      emailMissing: 'Add an email address to get codes here.',
+      whatsappMissing: 'Add a WhatsApp number to get codes here.',
+      smsMissing: 'Add a phone number to get codes here.',
+      saved: 'Preferences updated',
+      saveFailed: 'Could not change that. Please try again.',
+      loadFailed: 'Could not load your communication preferences.',
+    },
+    smsPreference: {
+      title: 'SMS Preference',
+      subtitle: 'These are the texts we send to {destination}.',
+      noNumber: 'Add a phone number to your account to receive texts.',
+      otpHeading: 'One-time codes',
+      otpBody: 'Codes that prove it is you — signing in, and marking attendance at a pod.',
+      // Said plainly rather than implied by an empty list: a screen with one
+      // switch on it reads as broken unless it says why.
+      onlyUse:
+        'One-time codes are the only texts Duncit sends today. There are no marketing or reminder texts to switch off.',
+      loadFailed: 'Could not load your SMS preferences.',
+    },
     profile: {
       aboutYourPet: 'About your pet',
       accountSettings: 'Account settings',
@@ -2773,6 +2831,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     profileAvatar: {
       changeProfilePhoto: 'Change profile photo',
+      viewYourStory: 'View your story',
       closePhoto: 'Close photo',
       profilePhoto: 'Profile photo',
       rotation: 'Rotation',

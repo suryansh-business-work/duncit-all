@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { useStatus } from '@/hooks/useStatus';
-import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useStatusStore } from '@/stores/status.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
@@ -11,9 +10,8 @@ import { fireAndForget } from '@/utils/fire-and-forget';
  * full-screen viewer, crop dialog, remove confirm, the own-story viewer and the
  * delete-story confirm. Keeps <ProfileAvatar/> declarative and under the line cap.
  */
-export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
+export function useProfileAvatar(onChanged?: () => void | Promise<void>, hasPhoto = false) {
   const { mine, refetch } = useStatus();
-  const { uploading, pickAndUpload } = useStatusUpload();
   const deleteStory = useStatusStore((s) => s.deleteStory);
   const { picked, saving, pick, upload, remove, cancelPick } = useProfilePhoto(onChanged);
 
@@ -25,16 +23,20 @@ export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
 
   const hasStory = !!mine && mine.slides.length > 0;
 
-  const addStory = async () => {
-    if (uploading) return;
-    await pickAndUpload();
-    await onChanged?.();
-  };
-
-  // Tap: view the active story, otherwise start adding one (item 12).
+  /**
+   * Tap the avatar: watch the live story if there is one, otherwise look at
+   * the photo full-size.
+   *
+   * It used to open the story picker when there was no story, which made the
+   * profile picture publish something. Posting a story is Home’s job now —
+   * this avatar only ever SHOWS. mWeb does exactly the same (rule 27).
+   */
   const onAvatarPress = () => {
-    if (hasStory) setStoryOpen(true);
-    else fireAndForget(addStory());
+    if (hasStory) {
+      setStoryOpen(true);
+      return;
+    }
+    if (hasPhoto) setViewerOpen(true);
   };
 
   const openMenu = () => setMenuOpen(true);
@@ -72,7 +74,6 @@ export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
   return {
     mine,
     hasStory,
-    uploading,
     picked,
     saving,
     menuOpen,
@@ -82,7 +83,6 @@ export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
     deleteId,
     onAvatarPress,
     openMenu,
-    addStory,
     viewPhoto,
     changePhoto,
     askRemove,

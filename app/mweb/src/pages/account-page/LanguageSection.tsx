@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { Alert, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Card,
+  CardContent,
+  CircularProgress,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -20,7 +28,7 @@ const SET_MY_LOCALE = gql`
  */
 export default function LanguageSection() {
   const { t, locale, locales, setLocale } = useTranslation();
-  const [save] = useMutation(SET_MY_LOCALE);
+  const [save, { loading: saving }] = useMutation(SET_MY_LOCALE);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,9 +51,12 @@ export default function LanguageSection() {
     <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {t('mweb.account.preferences')}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+              {t('mweb.account.preferences')}
+            </Typography>
+            {saving && <CircularProgress size={16} data-testid="language-saving" />}
+          </Stack>
           <LanguageSelect
             value={locale}
             options={locales}

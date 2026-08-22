@@ -91,6 +91,13 @@ const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
  */
 const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 
+/**
+ * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.
+ * Lowercase letters, digits and single hyphens, 3–30 characters, starting and
+ * ending on an alphanumeric. See regex.mjs for the full note.
+ */
+const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -108,6 +115,7 @@ module.exports = {
   GSTIN,
   PERSON_NAME,
   REFERRAL_CODE,
+  USERNAME,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
   isEmail: (v) => EMAIL.test(v),
@@ -120,4 +128,5 @@ module.exports = {
   isGstin: (v) => GSTIN.test(v),
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
+  isUsername: (v) => USERNAME.test(v),
 };

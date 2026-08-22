@@ -44,15 +44,6 @@ export const UPDATE_PROFILE_PHOTO = gql`
   }
 `;
 
-/** Publish a story from an uploaded image (item 12 — Add Story). */
-export const CREATE_STORY = gql`
-  mutation CreateStory($input: CreatePostInput!) {
-    createPost(input: $input) {
-      id
-    }
-  }
-`;
-
 /** Delete one of my own stories (item 12). */
 export const DELETE_STORY = gql`
   mutation DeleteStory($id: ID!) {

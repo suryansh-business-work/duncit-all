@@ -5,6 +5,7 @@ export const ProfileDocument = gql(`
   query MobileProfile {
     me {
       user_id
+      username
       first_name
       last_name
       full_name

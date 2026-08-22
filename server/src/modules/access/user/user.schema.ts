@@ -58,6 +58,12 @@ export const userTypeDefs = gql`
     first_name: String!
     last_name: String!
     full_name: String
+    """
+    The globally unique @handle this profile is shared as — what
+    /u/<username> carries. Null only on accounts created before handles
+    existed and not yet migrated; readers fall back to user_id for those.
+    """
+    username: String
 
     email: String
     is_email_verified: Boolean

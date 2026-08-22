@@ -20,6 +20,27 @@ export const profileTypeDefs = gql`
     address: PostalAddressInput
   }
 
+  """
+  Why a typed handle was refused. Codes rather than sentences: the client owns
+  the copy (rule 38), and this is answered on every keystroke.
+  """
+  enum UsernameRejection {
+    "Not 3-30 lowercase letters, numbers and single hyphens."
+    FORMAT
+    "One of the words the platform keeps for itself (admin, support, …)."
+    RESERVED
+    "Somebody else already has it."
+    TAKEN
+  }
+
+  type UsernameAvailability {
+    "What the server actually checked — trimmed and lower-cased."
+    username: String!
+    available: Boolean!
+    "Null when available."
+    reason: UsernameRejection
+  }
+
   type SavedPodState {
     pod_id: ID!
     saved: Boolean!
@@ -39,7 +60,12 @@ export const profileTypeDefs = gql`
 
   type PublicProfile {
     user_id: ID!
-    "Derived @handle (no real username field exists yet) for the follow lists."
+    """
+    The stored, globally unique @handle — what /u/<username> carries and
+    what the follow lists render. Accounts that predate the field fall back to
+    a handle derived from the name until the migrate:usernames script has run,
+    so this is never blank.
+    """
     username: String!
     full_name: String
     first_name: String
@@ -78,7 +104,18 @@ export const profileTypeDefs = gql`
     "The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort."
     mySavedPods(search: String, category_id: ID, sort: SavedPodSort): [Pod!]!
     publicUsersByIds(user_ids: [ID!]!): [PublicProfile!]!
+    """
+    One public profile. user_id accepts EITHER the @handle or a raw user id
+    — every link shared before handles existed carries an id, and those links
+    live in inboxes nobody can rewrite.
+    """
     publicUserProfile(user_id: ID!): PublicProfile
+    """
+    Is this @handle free for the signed-in account? Debounced from the
+    username field on Profile Settings; the save re-checks it anyway, because
+    two people can be typing the same handle at once.
+    """
+    usernameAvailability(username: String!): UsernameAvailability!
     "People who follow the given user (their public profiles)."
     followersOf(user_id: ID!): [PublicProfile!]!
     "People the given user follows (their public profiles)."
@@ -98,6 +135,8 @@ export const profileTypeDefs = gql`
   extend type Mutation {
     updateMyProfile(input: UpdateMyProfileInput!): User!
     updateMyProfileVisibility(visibility: ProfileVisibility!): User!
+    "Change the signed-in account's @handle. Rejects a taken or reserved one."
+    setMyUsername(username: String!): User!
     "Persist the user's selected header location (pass null to clear)."
     setMySelectedLocation(location_id: ID): User!
     "Persist the signed-in users language. Validated against active locales."

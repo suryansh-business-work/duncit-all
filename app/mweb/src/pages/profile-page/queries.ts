@@ -4,6 +4,7 @@ export const ME_AND_POSTS = gql`
   query MeAndMyPosts {
     me {
       user_id
+      username
       first_name
       last_name
       full_name

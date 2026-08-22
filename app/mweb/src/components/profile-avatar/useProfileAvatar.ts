@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
-  CREATE_STORY,
   DELETE_STORY,
   MY_STORIES,
   UPDATE_PROFILE_PHOTO,
@@ -31,14 +30,13 @@ function toBase64(file: File) {
  * menu, photo viewer, crop dialog, remove confirm, story viewer and delete-story
  * confirm. Loads the user's own active stories so the ring + viewer reflect them.
  */
-export function useProfileAvatar(onChanged?: () => void) {
+export function useProfileAvatar(onChanged?: () => void, hasPhoto = false) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const { data, refetch: refetchStories } = useQuery<{ myStories: Story[] }>(MY_STORIES, {
     fetchPolicy: 'cache-and-network',
   });
   const [uploadImage] = useMutation(UPLOAD_AVATAR_IMAGE);
   const [updatePhoto] = useMutation(UPDATE_PROFILE_PHOTO);
-  const [createStory] = useMutation(CREATE_STORY);
   const [deleteStory] = useMutation(DELETE_STORY);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -105,41 +103,20 @@ export function useProfileAvatar(onChanged?: () => void) {
     }
   };
 
-  const addStory = () => {
-    closeMenu();
-    storyFileRefClick();
-  };
-
-  const storyFileRef = useRef<HTMLInputElement | null>(null);
-  const storyFileRefClick = () => storyFileRef.current?.click();
-
-  const onStoryFileChange = async (file: File | null) => {
-    if (!file) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const base64 = await toBase64(file);
-      const mediaType = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
-      const uploaded = await uploadImage({
-        variables: { fileBase64: base64, fileName: file.name, mimeType: file.type, folder: '/posts' },
-      });
-      const url = uploaded.data?.uploadImageToImagekit?.url;
-      if (!url) throw new Error('Upload failed');
-      await createStory({
-        variables: { input: { image_url: url, caption: '', kind: 'STORY', media_type: mediaType } },
-      });
-      await refetchStories();
-      onChanged?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not post story.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
+  /**
+   * Tap the avatar: watch the live story if there is one, otherwise look at
+   * the photo full-size.
+   *
+   * It used to open the story picker when there was no story, which made the
+   * profile picture publish something. Posting a story is Home’s job now —
+   * this avatar only ever SHOWS.
+   */
   const onAvatarClick = () => {
-    if (hasStory) setStoryOpen(true);
-    else storyFileRefClick();
+    if (hasStory) {
+      setStoryOpen(true);
+      return;
+    }
+    if (hasPhoto) setViewerOpen(true);
   };
 
   const confirmDeleteStory = async (id: string) => {
@@ -152,7 +129,6 @@ export function useProfileAvatar(onChanged?: () => void) {
 
   return {
     fileRef,
-    storyFileRef,
     stories,
     hasStory,
     menuAnchor,
@@ -171,8 +147,6 @@ export function useProfileAvatar(onChanged?: () => void) {
     setCropSrc,
     confirmRemove,
     setRemoveOpen,
-    addStory,
-    onStoryFileChange,
     onAvatarClick,
     setViewerOpen,
     setStoryOpen,

@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
+import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { deliverOtp } from './otp.delivery';
 import {
   OTP_MEDIUMS,
@@ -140,8 +141,24 @@ export const otpService = {
 
   /** Issue a code and fan it out over every requested medium. */
   async request(input: Readonly<OtpRequestInput>): Promise<PhoneOtpRequestResult> {
-    const mediums = cleanMediums(input.mediums);
+    const asked = cleanMediums(input.mediums);
     const phone = normalizePhone(input.phone_extension, input.phone_number);
+
+    // Honour the CHANNEL preference of whoever owns the number, which at a pod
+    // door is the attendee rather than the host who pressed the button. A
+    // number with no account behind it keeps every medium the caller asked
+    // for. Refusing when nothing survives is deliberate: sending on a channel
+    // somebody switched off would make the switch a lie.
+    const allowed = new Set(
+      await commPreferenceService.allowedPhoneMediums(phone.phone_number, asked)
+    );
+    const mediums = asked.filter((medium) => allowed.has(medium));
+    if (mediums.length === 0) {
+      throw new GraphQLError(
+        'This number has switched off one-time codes on every channel we could use.',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
 
     // Re-asking replaces the previous code rather than stacking a second live
     // one, so "the last SMS" is always the only one that works.

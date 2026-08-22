@@ -58,6 +58,11 @@ import { UserContactActionModel } from './userContactAction.model';
 import { rbacService } from '@modules/access/role/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
+import {
+  checkUsername,
+  generateUsername,
+  normalizeUsername,
+} from './username';
 import { toPostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -690,6 +695,9 @@ async function toPublic(u: any) {
     assigned_city: profile.assigned_city ?? legacy.assigned_city ?? null,
     assigned_zones: meta.assigned_zones ?? legacy.assigned_zones ?? [],
     profile_photo: profile.profile_photo ?? legacy.profile_photo ?? null,
+    // Null only for accounts that predate the field and have not been
+    // migrated yet; every reader falls back to the id for those.
+    username: profile.username ?? null,
     bio: profile.bio ?? legacy.bio ?? null,
     // Dormant since the schema was written; now the users language choice.
     locale: profile.locale ?? 'en-IN',
@@ -824,7 +832,10 @@ function connectedAccountsOf(u: any) {
 }
 
 // Shape a CreateUserDTO / RegisterDTO into the nested storage layout.
-function shapeUserDoc(input: any, opts?: { passwordHash?: string; googleId?: string; emailVerified?: boolean }) {
+function shapeUserDoc(
+  input: any,
+  opts?: { passwordHash?: string; googleId?: string; emailVerified?: boolean; username?: string }
+) {
   const phoneNumber = String(input.phone_number || '').trim();
   if (phoneNumber && isPlaceholderPhone(phoneNumber)) {
     throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -851,6 +862,10 @@ function shapeUserDoc(input: any, opts?: { passwordHash?: string; googleId?: str
     profile: {
       first_name: input.first_name,
       last_name: input.last_name,
+      // Every account is created WITH a handle — see nextFreeUsername. It is
+      // omitted rather than nulled when absent so the partial unique index
+      // ignores the document instead of colliding every such row on null.
+      ...(opts?.username ? { username: opts.username } : {}),
       dob: input.dob ? new Date(input.dob) : undefined,
       country: input.country ?? 'India',
       city: input.city ?? undefined,
@@ -1004,6 +1019,36 @@ async function applyUserUpdate(user_id: string, set: Record<string, any>) {
   return updated;
 }
 
+/**
+ * A free @handle for a new account, or undefined when one cannot be minted.
+ *
+ * Never throws. A signup must not fail because the handle lookup did — the
+ * account is still perfectly usable addressed by its id, and the migration
+ * script picks up anything that slipped through.
+ */
+async function nextFreeUsername(
+  first: string | null | undefined,
+  last: string | null | undefined
+): Promise<string | undefined> {
+  try {
+    return await generateUsername(first, last, {
+      isTaken: async (candidate) =>
+        !!(await UserModel.exists({ 'profile.username': candidate })),
+    });
+  } catch (error) {
+    logs.server.warn('user.service', 'nextFreeUsername', { error });
+    return undefined;
+  }
+}
+
+/** The handle that is free for this account, or null when it is not. */
+async function usernameOwner(handle: string): Promise<string | null> {
+  const owner = await UserModel.findOne({ 'profile.username': handle })
+    .select('_id')
+    .lean();
+  return owner ? String(owner._id) : null;
+}
+
 export const userService = {
   // Backward-compat helper used by other modules. Returns the materialized
   // flat shape (toPublic) for a given doc.
@@ -1034,7 +1079,8 @@ export const userService = {
     const hashed = await bcrypt.hash(input.password, 10);
     let created: any;
     try {
-      const doc = shapeUserDoc(input, { passwordHash: hashed });
+      const username = await nextFreeUsername(input.first_name, input.last_name);
+      const doc = shapeUserDoc(input, { passwordHash: hashed, username });
       created = await UserModel.create(doc);
       await UserRoleModel.create({
         user_id: created._id,
@@ -1314,12 +1360,16 @@ export const userService = {
             );
           }
         }
+        const googleFirst = info.given_name || info.name?.split(' ')[0] || 'Google';
+        const googleLast =
+          info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User';
+        const googleUsername = await nextFreeUsername(googleFirst, googleLast);
         const docs = await UserModel.create(
           [
             shapeUserDoc(
               {
-                first_name: info.given_name || info.name?.split(' ')[0] || 'Google',
-                last_name: info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User',
+                first_name: googleFirst,
+                last_name: googleLast,
                 email,
                 phone_number: input.phone_number,
                 phone_extension: input.phone_extension,
@@ -1328,7 +1378,7 @@ export const userService = {
                 zone: input.zone ?? null,
                 profile_photo: info.picture || undefined,
               },
-              { googleId: info.sub, emailVerified: true }
+              { googleId: info.sub, emailVerified: true, username: googleUsername }
             ),
           ],
           { session }
@@ -2301,6 +2351,82 @@ export const userService = {
     return toPublic(updated);
   },
 
+  /**
+   * Resolve what sits in `/u/<handle>` — a username, or a raw user id.
+   *
+   * Both, deliberately and in that order: every link shared before handles
+   * existed carries an id, and those links are in inboxes and chat threads
+   * that nobody can go back and rewrite. The handle is tried first because it
+   * is the only one a person could have typed.
+   */
+  async getByHandle(handle: string) {
+    const clean = normalizeUsername(handle);
+    if (!clean) return null;
+    const byUsername = await UserModel.findOne({ 'profile.username': clean });
+    if (byUsername) return toPublic(byUsername);
+    if (!Types.ObjectId.isValid(handle)) return null;
+    return toPublic(await UserModel.findById(handle));
+  },
+
+  /**
+   * Can this account take this handle?
+   *
+   * Answers with a REASON rather than a sentence: the client renders the copy
+   * (rule 38), and the field is checked on every keystroke, so an English
+   * string would be shipped hundreds of times per edit for nothing.
+   *
+   * The viewer's OWN handle reads as available, so re-typing what you already
+   * have never renders as taken.
+   */
+  async usernameAvailability(raw: string, viewerId: string | null) {
+    const username = normalizeUsername(raw);
+    const rejection = checkUsername(username);
+    if (rejection) return { username, available: false, reason: rejection };
+    const ownerId = await usernameOwner(username);
+    if (!ownerId || ownerId === viewerId) {
+      return { username, available: true, reason: null };
+    }
+    return { username, available: false, reason: 'TAKEN' };
+  },
+
+  /**
+   * Change the signed-in account's handle.
+   *
+   * Re-validated here rather than trusted from the availability check: the two
+   * are separate round trips, and between them somebody else can take the
+   * handle. The unique index is what finally decides — the E11000 below is the
+   * race actually happening, not a defensive branch.
+   */
+  async setMyUsername(user_id: string, raw: string) {
+    const username = normalizeUsername(raw);
+    const rejection = checkUsername(username);
+    if (rejection === 'FORMAT') {
+      throw new GraphQLError(
+        'A username is 3-30 characters: lowercase letters, numbers and single hyphens.',
+        { extensions: { code: 'BAD_USER_INPUT', reason: 'FORMAT' } }
+      );
+    }
+    if (rejection === 'RESERVED') {
+      throw new GraphQLError('That username is reserved.', {
+        extensions: { code: 'BAD_USER_INPUT', reason: 'RESERVED' },
+      });
+    }
+    try {
+      const updated = await applyUserUpdate(user_id, { 'profile.username': username });
+      // The handle is on the session card and in every share link, so the
+      // other devices have to hear about it — the same reason the language
+      // switch publishes.
+      return publishSession(await toPublic(updated));
+    } catch (error: any) {
+      if (error?.code === 11000) {
+        throw new GraphQLError('That username is already taken.', {
+          extensions: { code: 'CONFLICT', reason: 'TAKEN' },
+        });
+      }
+      throw error;
+    }
+  },
+
   async updateMyProfileVisibility(user_id: string, visibility: 'PUBLIC' | 'PRIVATE') {
     if (visibility !== 'PUBLIC' && visibility !== 'PRIVATE') {
       throw new GraphQLError('Invalid visibility', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -2563,8 +2689,9 @@ export const userService = {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
     const hashed = await bcrypt.hash(input.password, 10);
+    const username = await nextFreeUsername(input.first_name, input.last_name);
     const created = await UserModel.create(
-      shapeUserDoc(input, { passwordHash: hashed })
+      shapeUserDoc(input, { passwordHash: hashed, username })
     );
     await replaceUserRoles(String(created._id), (input.roles ?? []) as string[], {
       assignedZones: ((input.assigned_zones ?? []) as string[]).filter(Boolean),
@@ -2782,6 +2909,7 @@ export const userService = {
           last_name: 'Admin',
           dob: new Date('1990-01-01'),
           country: 'India',
+          username: await nextFreeUsername('Super', 'Admin'),
         },
         metadata: {
           status: 'ACTIVE',

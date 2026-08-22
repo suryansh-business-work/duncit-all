@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -39,9 +40,12 @@ export function LanguageSection() {
 
   return (
     <YStack gap={10} testID="account-language-section">
-      <Text fontSize={14} fontWeight="700" color="$color">
-        {t('mweb.account.preferences')}
-      </Text>
+      <XStack alignItems="center" gap={8}>
+        <Text flex={1} fontSize={14} fontWeight="700" color="$color">
+          {t('mweb.account.preferences')}
+        </Text>
+        {saving ? <ActivityIndicator testID="language-saving" color={primary} /> : null}
+      </XStack>
       <Text fontSize={12} color="$muted">
         {t('mweb.common.languageHint')}
       </Text>

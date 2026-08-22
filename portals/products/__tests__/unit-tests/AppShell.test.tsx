@@ -15,7 +15,8 @@ vi.mock('@duncit/user-context', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/user-context')>()),
   useUserData: () => userMock.value,
 }));
-vi.mock('@duncit/app-settings', () => ({ useFeatureFlag: () => flag.value }));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()), useFeatureFlag: () => flag.value }));
 
 // Probe replacing the shared shell chrome to surface the adapter's computed props.
 const navProbe = vi.hoisted(() => ({ nav: [] as Array<{ to?: string }> }));

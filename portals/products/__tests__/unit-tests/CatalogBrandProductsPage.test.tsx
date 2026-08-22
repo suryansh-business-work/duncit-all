@@ -36,7 +36,8 @@ vi.mock('@apollo/client', async (io) => {
 });
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDate: () => '01 Jan 2026' }),
 }));
 vi.mock('@duncit/dialogs', async (io) => ({

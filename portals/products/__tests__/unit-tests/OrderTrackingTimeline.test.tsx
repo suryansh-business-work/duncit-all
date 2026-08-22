@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import OrderTrackingTimeline from '../../src/pages/orders/OrderTrackingTimeline';
 
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (v: unknown) => (v ? 'DT' : '') }),
 }));
 

@@ -9,7 +9,8 @@ import { ProductFormHarness } from './form-harness';
 import { renderWithProviders } from '../testkit';
 import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }),
 }));
 

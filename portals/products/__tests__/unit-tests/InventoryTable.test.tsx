@@ -5,7 +5,8 @@ import { makeInventoryProductRow } from '../mocks/inventory.mock';
 import type { InventoryProductRow } from '../../src/pages/inventory-page/queries';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDate: (v: unknown) => (v ? 'D' : '') }),
 }));
 vi.mock('@duncit/ui', () => ({

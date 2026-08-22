@@ -18,7 +18,8 @@ vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
   useNavigate: () => nav.fn,
 }));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (v: unknown) => (v ? 'DT' : '') }),
 }));
 vi.mock('@duncit/ui', () => ({

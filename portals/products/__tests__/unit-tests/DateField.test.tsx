@@ -10,7 +10,8 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   },
 }));
 // useDateFormat hits Apollo; stub it to a fixed format so DateField renders solo.
-vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }) }));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()), useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }) }));
 
 describe('DateField', () => {
   it('parses a valid ISO value into a Date and forwards the format', () => {

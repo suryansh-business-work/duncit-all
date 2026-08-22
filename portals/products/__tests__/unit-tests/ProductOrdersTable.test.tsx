@@ -4,7 +4,8 @@ import ProductOrdersTable from '../../src/pages/orders/ProductOrdersTable';
 import { makeProductOrderRow } from '../mocks/order.mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('@duncit/app-settings', () => ({
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
   useDateFormat: () => ({ formatDateTime: (v: unknown) => (v ? 'DT' : '') }),
 }));
 vi.mock('@duncit/ui', () => ({

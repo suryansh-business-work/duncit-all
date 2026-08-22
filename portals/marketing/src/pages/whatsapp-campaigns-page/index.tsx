@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+import WaAutomation from './wa-automation';
 import WaDashboard from './wa-dashboard';
 import WaLogs from './wa-logs';
 import WaSettings from './wa-settings';
@@ -20,16 +21,18 @@ import {
 } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
-type WaTab = 'dashboard' | 'campaigns' | 'templates' | 'logs' | 'settings';
+type WaTab = 'dashboard' | 'campaigns' | 'templates' | 'automation' | 'logs' | 'settings';
 
 /* The order a question is usually asked in: what did this cost, what can I
-   send, what do those templates say, what went out, and what does it cost. */
+   send, what do those templates say, what goes out without anybody sending it,
+   what actually went out, and what does it cost. */
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const waTabs = (t: Translate): DuncitTabItem<WaTab>[] => [
   { value: 'dashboard', label: t('shell.nav.dashboard') },
   { value: 'campaigns', label: t('shell.nav.campaigns') },
   { value: 'templates', label: t('shell.nav.templates') },
+  { value: 'automation', label: t('shell.nav.automation') },
   { value: 'logs', label: t('shell.nav.logs') },
   { value: 'settings', label: t('shell.nav.settings') },
 ];
@@ -126,6 +129,7 @@ export default function WhatsappCampaignsPage() {
         />
       )}
       {tab === 'templates' && <AisensyTemplates />}
+      {tab === 'automation' && <WaAutomation />}
       {tab === 'logs' && (
         <WaLogs
           audienceLists={data?.audienceLists ?? []}

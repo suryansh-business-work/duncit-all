@@ -5,6 +5,7 @@ import {
   VenueModel,
   type IVenue,
   type IVenueAutoExtend,
+  type IVenueCancellationPolicy,
   type IVenueRules,
   type IVenueSettings,
 } from './venue.model';
@@ -26,6 +27,7 @@ import {
   VENUE_SECURITY,
   VENUE_TYPES,
 } from './venue.constants';
+import { notifyEvent } from '@services/notify/notify.service';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -62,6 +64,19 @@ const toAutoExtendPub = (a?: Partial<IVenueAutoExtend> | null) => ({
   until: a?.until ?? '',
 });
 
+/** The venue's cancellation bands, widest window first — the order the owner
+ * reads them in: the tightest band that still covers the cancellation wins. */
+const toCancellationPub = (c?: Partial<IVenueCancellationPolicy> | null) => ({
+  reschedule_only: c?.reschedule_only ?? false,
+  tiers: [...(c?.tiers ?? [])]
+    .map((tier) => ({
+      hours_before: tier.hours_before,
+      charge_type: tier.charge_type,
+      value: tier.value,
+    }))
+    .sort((a, b) => b.hours_before - a.hours_before),
+});
+
 const toSettingsPub = (s?: IVenueSettings | null) => ({
   operating_hours: {
     open: s?.operating_hours?.open ?? '09:00',
@@ -71,6 +86,7 @@ const toSettingsPub = (s?: IVenueSettings | null) => ({
   holidays: [...(s?.holidays ?? [])].sort((a, b) => a.localeCompare(b)),
   rules: toRulesPub(s?.rules),
   auto_extend: toAutoExtendPub(s?.auto_extend),
+  cancellation: toCancellationPub(s?.cancellation),
 });
 
 function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
@@ -138,6 +154,40 @@ function normalizeHolidaysInput(input: unknown) {
   return [...new Set(hs)].sort((a, b) => a.localeCompare(b));
 }
 
+function normalizeCancellationInput(base: ReturnType<typeof toCancellationPub>, input: any) {
+  const next = { ...base };
+  if (input.reschedule_only !== undefined) next.reschedule_only = Boolean(input.reschedule_only);
+  if (input.tiers !== undefined) {
+    const tiers = (input.tiers as unknown[]).map((raw) => {
+      const tier = raw as { hours_before: unknown; charge_type: unknown; value: unknown };
+      const chargeType = String(tier.charge_type);
+      if (chargeType !== 'PERCENT' && chargeType !== 'AMOUNT') {
+        fail('BAD_USER_INPUT', 'cancellation charge_type must be PERCENT or AMOUNT');
+      }
+      const value = Number(tier.value);
+      // A percent above 100 would refund the venue more than the booking was
+      // worth, so the two charge kinds cannot share one ceiling.
+      const ceiling = chargeType === 'PERCENT' ? 100 : 1_000_000;
+      if (!Number.isFinite(value) || value < 0 || value > ceiling) {
+        fail('BAD_USER_INPUT', 'cancellation charge must be between 0 and ' + ceiling);
+      }
+      return {
+        hours_before: clampInt(tier.hours_before, 0, 8760, 0),
+        charge_type: chargeType as IVenueCancellationPolicy['tiers'][number]['charge_type'],
+        value,
+      };
+    });
+    // Two bands with the same window is a policy that cannot be read: the later
+    // one silently wins. Reject it rather than picking for the owner.
+    const windows = new Set(tiers.map((tier) => tier.hours_before));
+    if (windows.size !== tiers.length) {
+      fail('BAD_USER_INPUT', 'each cancellation band needs its own "hours before" window');
+    }
+    next.tiers = tiers.sort((a, b) => b.hours_before - a.hours_before);
+  }
+  return next;
+}
+
 function normalizeSettingsInput(current: IVenueSettings | undefined, input: any) {
   const base = toSettingsPub(current);
   const next = { ...base };
@@ -152,6 +202,9 @@ function normalizeSettingsInput(current: IVenueSettings | undefined, input: any)
   }
   if (input.rules) next.rules = normalizeRulesInput(base.rules, input.rules);
   if (input.auto_extend) next.auto_extend = normalizeAutoExtendInput(base.auto_extend, input.auto_extend);
+  if (input.cancellation) {
+    next.cancellation = normalizeCancellationInput(base.cancellation, input.cancellation);
+  }
   // Auto-extend can never promise further ahead than slots may be scheduled.
   next.auto_extend = {
     ...next.auto_extend,
@@ -770,11 +823,12 @@ export const venueService = {
     await v.save();
     await assignApprovedVenueRole(v.owner_user_id);
     if (!wasApproved) {
-      await whatsappService.send({
+      await notifyEvent({
         event: 'VENUE_NEW_REQUESTED',
         user: await waRecipient(v.owner_user_id),
         name: v.owner_name,
         params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
+        email: v.owner_email ?? '',
       });
     }
     return toPub(v);

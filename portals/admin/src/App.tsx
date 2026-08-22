@@ -38,7 +38,6 @@ import PodPlansPage from './pages/PodPlansPage';
 import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membership';
 import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
-import WhatsappPage from './pages/whatsapp-page';
 import { getToken } from './lib/session';
 
 /**
@@ -100,7 +99,6 @@ export default function App() {
                 <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
                 <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
                 <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />
-                <Route path="/whatsapp" element={<WhatsappPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />

@@ -9,7 +9,7 @@ import {
   type IProductOrder,
 } from './productOrder.model';
 import { InventoryProductModel, type IInventoryProduct } from '@modules/venues/inventory/inventory.model';
-import { sendProductOwnerWhatsApp } from '@modules/venues/inventory/inventory.service';
+import { notifyProductOwner } from '@modules/venues/inventory/inventory.service';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -168,7 +168,7 @@ async function buildLineItem(line: any, session?: ClientSession) {
 async function notifyStockOutIfEmptied(product: IInventoryProduct, qty: number) {
   const after = Number(product.inventory_count) || 0;
   if (after > 0 || after + qty <= 0) return;
-  await sendProductOwnerWhatsApp(product, 'ECOMM_STOCK_OUT', Math.max(0, after));
+  await notifyProductOwner(product, 'ECOMM_STOCK_OUT', Math.max(0, after));
 }
 
 /**

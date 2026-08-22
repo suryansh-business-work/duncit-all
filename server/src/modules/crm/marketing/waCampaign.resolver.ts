@@ -1,4 +1,5 @@
 import { waCampaignService } from './waCampaign.service';
+import { waLogService } from './waLog.service';
 import type { WaCampaignAudience } from './waCampaign.model';
 import type { ManualContact } from './waCampaign.recipients';
 import type { GraphQLContext } from '@context';
@@ -57,6 +58,10 @@ export const waCampaignResolvers = {
     waCampaignsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.table(args.query);
+    },
+    waLogs: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waLogService.table(args.query);
     },
     waCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);

@@ -7,7 +7,8 @@
     "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
-      "@docs/*": ["src/*"]
+      "@docs/*": ["src/*"],
+      "@duncit/docs-demos/examples/*": ["../packages/docs-demos/src/examples/*"]
     }
   }
 }

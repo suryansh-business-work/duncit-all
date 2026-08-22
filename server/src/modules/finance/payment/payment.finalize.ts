@@ -35,6 +35,7 @@ import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
 
 /**
  * What checkout does once the money is in — as one transaction, then the rest.
@@ -674,14 +675,16 @@ async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
     // `auth.phone` and `communication.whatsapp` are the only two paths a number
     // is resolved from — a projection without them skips the send in silence.
     UserModel.findById(payment.user_id)
-      .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+      .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
       .lean(),
     UserModel.findById((pod.pod_hosts_id ?? [])[0])
       .select('profile.first_name profile.last_name')
       .lean(),
   ]);
   const name = payment.user_name || fullName(buyer) || 'there';
-  const outcome = await whatsappService.send({
+  // Both channels. A failed payment is the one message a buyer MUST get — the
+  // seat is not held and they do not know it — and it was WhatsApp-only.
+  const { wa: outcome } = await notifyEvent({
     event: 'USER_PAYMENT_FAILED',
     // The payment, not the pod: a buyer whose second attempt also fails is owed
     // the news about that attempt too.
@@ -698,6 +701,7 @@ async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
       fullName(host) || 'A host',
       payment.payment_id,
     ],
+    email: payment.user_email,
   });
   if (outcome.status === 'SENT') return { refs: [outcome.message_id] };
   // A funnel FAILURE is worth another pass — the reconciler re-enters

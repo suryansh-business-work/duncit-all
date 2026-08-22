@@ -1,5 +1,6 @@
 import { localizationService } from "@modules/platform/localization/localization.service";
 import { UserModel } from "@modules/access/user/user.model";
+import { CATALOGUE_FALLBACK } from "./catalogue/catalogue.bundle";
 
 /**
  * Localized copy for MJML emails (CLAUDE.md rule 38).
@@ -16,6 +17,12 @@ import { UserModel } from "@modules/access/user/user.model";
 /** The email surface's LOCAL FALLBACK bundle — flat, like the runtime form.
  * Add a key here AND in Admin > Localization > Translations before using it. */
 export const EMAIL_FALLBACK: Record<string, string> = {
+  // The catalogue's two hundred keys — the headings, paragraphs, field labels,
+  // buttons and footer sentences of every email built from
+  // `@services/email/catalogue`. They live in their own file only so this one
+  // stays readable; the seeder and `serverTranslationSeed` read EMAIL_FALLBACK,
+  // so they are shipped and seeded exactly like the keys written out below.
+  ...CATALOGUE_FALLBACK,
   "email.common.greeting": "Hi",
   "email.common.regards": "Thanks",
   "email.common.supportNote":

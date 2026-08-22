@@ -133,6 +133,15 @@ export function catalogueKeys(repoRoot) {
 /** The server's own fallback bundle — its MJML email copy (CLAUDE.md rule 38). */
 export const EMAIL_BUNDLE_FILE = "server/src/services/email/email-i18n.ts";
 
+/**
+ * Records EMAIL_FALLBACK spreads in, by name -> the file that declares them.
+ * `serverEmailEntries` throws on a spread that is missing here rather than
+ * skipping it, so the next one cannot go unread the way the catalogue did.
+ */
+const EMAIL_SPREAD_FILES = {
+  CATALOGUE_FALLBACK: "server/src/services/email/catalogue/catalogue.bundle.ts",
+};
+
 /** Turns a backslash escape into the character it stands for. */
 function unescapeChar(char) {
   if (char === "n") return "\n";
@@ -161,16 +170,10 @@ function readLiteral(quote, rest) {
 }
 
 /**
- * The leaves of a FLAT `Record<string, string>` literal, e.g. the server's
- * EMAIL_FALLBACK.
- *
- * This one is still read line by line rather than evaluated: the file around it
- * is a module with imports and code of its own, so there is no literal to slice
- * out and run. It is safe from the nesting bug that forced `bundleEntries` to
- * change, because the shape is flat by construction — every key is one dotted,
- * double-quoted string — and the count check below still catches a shrink.
+ * The text inside a top-level `const <name> = { … }` literal, prettier-unwrapped
+ * so a key and its value sit on one line.
  */
-export function flatRecordEntries(source, name) {
+function recordBody(source, name) {
   const declared = source.indexOf(`const ${name}`);
   if (declared === -1) {
     throw new Error(`no \`const ${name}\` in the file — the bundle moved`);
@@ -181,19 +184,35 @@ export function flatRecordEntries(source, name) {
     throw new Error(`could not read the \`${name}\` object literal`);
   }
   // Same prettier unwrap as bundleEntries: `"key":` / newline / `"value",`.
-  const body = source
-    .slice(open + 1, close)
-    .replace(/:[ \t]*\r?\n[ \t]*/g, ": ");
+  return source.slice(open + 1, close).replace(/:[ \t]*\r?\n[ \t]*/g, ": ");
+}
+
+/**
+ * The leaves of a FLAT `Record<string, string>` literal, e.g. the server's
+ * EMAIL_FALLBACK.
+ *
+ * This one is still read line by line rather than evaluated: the file around it
+ * is a module with imports and code of its own, so there is no literal to slice
+ * out and run. It is safe from the nesting bug that forced `bundleEntries` to
+ * change, because the shape is flat by construction — every key is one dotted,
+ * quoted string — and the count check below still catches a shrink.
+ *
+ * Either quote is accepted for the key: EMAIL_FALLBACK writes them double, the
+ * catalogue bundle it spreads in writes them single, and a parser that insisted
+ * on one silently read the other as zero keys.
+ */
+export function flatRecordEntries(source, name) {
+  const body = recordBody(source, name);
 
   const entries = [];
   for (const raw of body.split("\n")) {
     const line = raw.trim();
     if (line.startsWith("//")) continue;
-    const leaf = /^"([^"]+)":\s*(['"`])([\s\S]*)$/.exec(line);
-    if (leaf) entries.push({ key: leaf[1], value: readLiteral(leaf[2], leaf[3]) });
+    const leaf = /^(['"])([^'"]+)\1:\s*(['"`])([\s\S]*)$/.exec(line);
+    if (leaf) entries.push({ key: leaf[2], value: readLiteral(leaf[3], leaf[4]) });
   }
 
-  const literals = body.match(/^[ \t]*"[^"]+":[ \t]*['"`]/gm) ?? [];
+  const literals = body.match(/^[ \t]*(['"])[^'"]+\1:[ \t]*['"`]/gm) ?? [];
   if (literals.length !== entries.length) {
     throw new Error(
       `parsed ${entries.length} keys from ${name} but it has ${literals.length} string entries — ` +
@@ -206,6 +225,13 @@ export function flatRecordEntries(source, name) {
   return entries;
 }
 
+/** The names a record spreads in, e.g. `...CATALOGUE_FALLBACK,`. */
+function spreadNames(source, name) {
+  return [...recordBody(source, name).matchAll(/^[ \t]*\.\.\.([A-Za-z0-9_$]+),/gm)].map(
+    (match) => match[1],
+  );
+}
+
 /**
  * Every key the SERVER ships copy for, read straight from its fallback bundle.
  *
@@ -214,12 +240,30 @@ export function flatRecordEntries(source, name) {
  * truth for what the platform's keys ARE.
  */
 export function serverEmailEntries(repoRoot) {
-  const path = join(repoRoot, EMAIL_BUNDLE_FILE);
-  let source;
-  try {
-    source = readFileSync(path, "utf8");
-  } catch {
-    throw new Error(`no server email bundle at ${path}`);
+  const read = (relPath) => {
+    const path = join(repoRoot, relPath);
+    try {
+      return readFileSync(path, "utf8");
+    } catch {
+      throw new Error(`no server email bundle at ${path}`);
+    }
+  };
+
+  const source = read(EMAIL_BUNDLE_FILE);
+  const entries = flatRecordEntries(source, "EMAIL_FALLBACK");
+
+  // The catalogue's copy is spread in from its own file, so read line by line a
+  // spread is not a leaf and its keys were simply invisible here — which the
+  // gate reported as "no bundle ships this key" for every one of them.
+  for (const spread of spreadNames(source, "EMAIL_FALLBACK")) {
+    const file = EMAIL_SPREAD_FILES[spread];
+    if (!file) {
+      throw new Error(
+        `EMAIL_FALLBACK spreads \`${spread}\`, but no file is mapped for it — ` +
+          `add it to EMAIL_SPREAD_FILES or its keys ship unseen`,
+      );
+    }
+    entries.push(...flatRecordEntries(read(file), spread));
   }
-  return flatRecordEntries(source, "EMAIL_FALLBACK");
+  return entries;
 }

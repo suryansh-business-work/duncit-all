@@ -42,6 +42,8 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       dateJoined2: 'Date Joined',
       payCommission: 'Pay commission',
       payCommission2: 'Pay Commission',
+      payCommissionHint:
+        'The cut this Club Admin is paid on every pod. Defaults to the {pct}% set in Finance → Default Deductions; change it here to override it for this Club Admin only.',
       previousNotes: 'Previous notes',
       request: 'Request',
       requiredToRejectOptionalWhenApproving: 'Required to reject; optional when approving.',
@@ -62,6 +64,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       city: 'City',
       clubAdmin: 'Club Admin',
       commission: 'Commission',
+      commissionRange: 'Enter a number between 0 and 100.',
       contact: 'Contact',
       coverImage: 'Cover image',
       file: 'File',
@@ -109,6 +112,8 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       productCategories: 'Product categories',
       products: 'Products',
       productSalesCommission: 'Product sales commission',
+      productSalesCommissionHint:
+        "Duncit's commission on this brand's product sales. Defaults to the {pct}% set in Finance → Default Deductions; change it here to override it for this brand only.",
       website: 'Website',
       noBrandsFound: 'No brands found.',
     },

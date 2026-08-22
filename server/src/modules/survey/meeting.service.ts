@@ -8,15 +8,12 @@ import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { aiValidateMeetingReason } from '@modules/moderation/moderation.ai';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { notifyEvent } from '@services/notify/notify.service';
+import { getUrlConfigs } from '../../config/url-configs';
 import {
-  sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
-  sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
   sendMeetingRescheduledEmail,
-  sendMeetingApprovedEmail,
-  sendMeetingRejectedEmail,
 } from '@services/email/email.service';
 
 /** Where a meeting notification deep-links to — the Earn surface holds the
@@ -299,28 +296,46 @@ async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
 
   // Every scenario below is about this one meeting, so the funnel's
   // (event, entity, number) index is what stops a repeated staff save re-sending.
+  //
+  // `notifyEvent` sends the WhatsApp message AND its email off ONE array of
+  // values. Three of these used to be a `sendMeeting*Email` call beside a
+  // `sendWa` call, each naming the same meeting in its own words — and the
+  // email half was the SAME template for all four partner kinds with the kind
+  // as a variable, while WhatsApp already kept sixteen campaigns. The email now
+  // matches: `host-onboarding-approved`, `venue-onboarding-approved` and so on,
+  // so the venue team can rewrite the venue rejection without touching the
+  // brand one. The generic `meeting-approved`/`meeting-rejected`/
+  // `meeting-scheduled`/`meeting-booked` templates are what they replaced.
   const waEvents = waEventsFor(doc.kind);
-  const sendWa = (waEvent: string, params: readonly string[]) =>
-    whatsappService.send({ event: waEvent, entityId: String(doc._id), user: who?.user, name, params });
+  const notify = (waEvent: string, params: readonly string[], vars?: Record<string, string>) =>
+    notifyEvent({
+      event: waEvent,
+      entityId: String(doc._id),
+      user: who?.user,
+      name,
+      params,
+      email: to,
+      vars,
+    });
 
   if (event === 'scheduled') {
     const adminTo = await onboardingAdminEmails();
     if (adminTo.length > 0) {
       await sendMeetingScheduledAdminEmail({ to: adminTo.join(','), name, email: to, kind: kindLabel, slot, link, notes });
     }
-    await sendMeetingScheduledEmail({ to, name, kind: kindLabel, slot, link, notes });
     const when = slotPartsTz(iso(doc.scheduled_at ?? doc.requested_at), offset);
-    await sendWa(waEvents.interview, [name, when.date, when.time, link]);
+    await notify(waEvents.interview, [name, when.date, when.time, link], { notes });
   } else if (event === 'rescheduled' || event === 'updated') {
+    // No per-party template for these two: nobody asked for one, and one
+    // reschedule notice reads the same whoever is being rescheduled.
     await sendMeetingRescheduledEmail({ to, name, kind: kindLabel, slot, link, notes, change: event });
   } else if (event === 'approved') {
-    await sendMeetingApprovedEmail({ to, name, kind: kindLabel });
     // The template's second value is the partner-portal login address, which is
-    // the same address the approval email just went to.
-    await sendWa(waEvents.approved, [name, to]);
+    // the same address this email is going to.
+    const { partnersUrl } = await getUrlConfigs();
+    await notify(waEvents.approved, [name, to], { portal_url: partnersUrl });
   } else {
-    await sendMeetingRejectedEmail({ to, name, kind: kindLabel });
-    await sendWa(waEvents.rejected, [name, doc.feedback ?? '']);
+    await notify(waEvents.rejected, [name, doc.feedback ?? '']);
   }
 }
 
@@ -520,16 +535,17 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
       notes: doc.notes || '',
     };
     if (kind === 'booked') {
-      await sendMeetingBookedEmail(opts);
       const when = slotPartsTz(at, offset);
       // A reschedule supersedes the row and books a fresh one, so the new
       // meeting id is a new entity and its confirmation is not a duplicate.
-      await whatsappService.send({
+      await notifyEvent({
         event: waEventsFor(doc.kind).booked,
         entityId: String(doc._id),
         user: who?.user,
         name: opts.name,
         params: [opts.name, when.date, when.time],
+        email: opts.to,
+        vars: { notes: opts.notes },
       });
     } else {
       await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });

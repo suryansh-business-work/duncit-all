@@ -24,6 +24,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
+    "@duncit/docs-demos": "workspace:*",
     "@duncit/errors": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",

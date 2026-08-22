@@ -10,6 +10,8 @@ import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -385,11 +387,17 @@ export const hostService = {
     await h.save();
     await assignApprovedHostRole(h.user_id);
     if (!wasApproved) {
-      await whatsappService.send({
+      // Both channels off one array of values: the WhatsApp campaign and the
+      // `host-onboarding-approved` email say the same thing about the same
+      // approval, so neither can drift from the other (rule 34).
+      const { partnersUrl } = await getUrlConfigs();
+      await notifyEvent({
         event: 'HOST_ONBOARDING_APPROVED',
         user: await waRecipient(h.user_id),
         name: h.full_name,
         params: [h.full_name, h.email],
+        email: h.email,
+        vars: { portal_url: partnersUrl },
       });
     }
     return toPub(h);

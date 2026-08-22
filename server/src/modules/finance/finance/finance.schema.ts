@@ -513,6 +513,18 @@ export const financeTypeDefs = /* GraphQL */ `
     will actually apply when the venue carries no override of its own.
     """
     defaultVenueCommissionPct: Float!
+    """
+    The same, for Club Admins — the Onboarding console's Review Club Admin
+    dialog seeds its Pay Commission field from this, so a reviewer opens on the
+    cut a club admin is actually paid when they carry no override of their own.
+    """
+    defaultClubAdminCommissionPct: Float!
+    """
+    The same, for product sales — the Onboarding console's Review Brand dialog
+    seeds its commission field from this whenever the brand has no override, so
+    the number on screen is the one the product invoice will charge.
+    """
+    defaultProductCommissionPct: Float!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
     paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
     # Live preview of the host/venue split for a pod given a venue bill.

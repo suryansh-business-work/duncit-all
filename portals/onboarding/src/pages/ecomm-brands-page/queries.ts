@@ -149,6 +149,15 @@ export const ADMIN_UPDATE_ECOMM_BRAND = gql`
   }
 `;
 
+/** Global default from Finance → Default Deductions. The Review dialog's
+ * commission field seeds from this whenever the brand has no override, so the
+ * number a reviewer sees is the one the product invoice will charge. */
+export const DEFAULT_PRODUCT_COMMISSION = gql`
+  query DefaultProductCommission {
+    defaultProductCommissionPct
+  }
+`;
+
 export const SET_BRAND_COMMISSION = gql`
   mutation SetBrandCommission($id: ID!, $product_commission_pct: Float!) {
     setBrandCommission(brand_doc_id: $id, product_commission_pct: $product_commission_pct) {

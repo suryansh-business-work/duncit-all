@@ -113,6 +113,15 @@ export const SET_CLUB_ADMIN_COMMISSION = gql`
   }
 `;
 
+/** Global default from Finance → Default Deductions. The Review dialog's Pay
+ * Commission field seeds from this whenever the Club Admin has no override, so
+ * the number a reviewer sees is the cut settlement will actually apply. */
+export const DEFAULT_CLUB_ADMIN_COMMISSION = gql`
+  query DefaultClubAdminCommission {
+    defaultClubAdminCommissionPct
+  }
+`;
+
 export const ASSIGN_CLUB_ADMIN_CLUBS = gql`
   mutation AssignClubAdminClubs($id: ID!, $club_ids: [ID!]!) {
     assignClubAdminClubs(id: $id, club_ids: $club_ids) {

@@ -18,6 +18,21 @@ import { join, relative } from "node:path";
  * covered by the translation-key gate; vendored trees are somebody else's. */
 export const SCAN_ROOTS = ["app", "packages", "portals", "website"];
 
+/**
+ * Trees whose "copy" is documentation, not product UI.
+ *
+ * `@duncit/docs-demos` is a corpus of worked examples: demo titles, the notes
+ * that explain what to look at, and mock data written to be read by whoever is
+ * about to change the package. It is the same kind of content as `docs-site`
+ * (already outside SCAN_ROOTS) and is deliberately English — translating a
+ * sentence that exists to explain a TypeScript signature would help nobody, and
+ * a ratchet that demands it is a ratchet somebody deletes.
+ *
+ * Paths, not directory names: a folder called `examples` anywhere else is still
+ * product code.
+ */
+const SKIP_PATH = ["packages/docs-demos"];
+
 const SKIP_DIR = new Set([
   "node_modules",
   "dist",
@@ -127,9 +142,11 @@ export function scanRepo(root) {
   const counts = {};
   for (const scanRoot of SCAN_ROOTS) {
     for (const file of sourceFiles(join(root, scanRoot))) {
+      const rel = relative(root, file).replaceAll("\\", "/");
+      if (SKIP_PATH.some((skip) => rel.startsWith(`${skip}/`))) continue;
       const hits = findInSource(readFileSync(file, "utf8"));
       if (hits.length === 0) continue;
-      counts[relative(root, file).replaceAll("\\", "/")] = hits.length;
+      counts[rel] = hits.length;
     }
   }
   return Object.fromEntries(

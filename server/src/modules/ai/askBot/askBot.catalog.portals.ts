@@ -273,7 +273,7 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'marketing', path: '/campaigns/email/new', label: 'New campaign', group: 'Campaigns',
     description: 'Write the MJML email beside a live rendered preview with variable chips and unknown-variable warnings, pick the audience list, then send it immediately or schedule it.' },
   { surface: 'marketing', path: '/campaigns/whatsapp', label: 'WhatsApp', group: 'Campaigns',
-    description: 'Send an approved AiSensy WhatsApp template to a Target Audience list, fire a test message, manage the campaign-name options, review past sends with their per-recipient results and retry or duplicate one, and browse the AiSensy Campaigns and Templates tabs.' },
+    description: 'Send an approved AiSensy WhatsApp template to a Target Audience list, fire a test message and manage the campaign-name options; browse the AiSensy Campaigns and Templates tabs; on Automation switch each message the platform sends by itself on or off, set a header asset and reconcile with AiSensy, or stop all WhatsApp with the kill switch; and on Logs read every send in one table — campaign sends and automatic messages together — opening a row for its recipients, its cost or why somebody was missed, and retrying, duplicating, cancelling or deleting a send from there.' },
   { surface: 'marketing', path: '/notifications', label: 'Notifications', group: 'Campaigns',
     description: 'Send a push and in-app notification to all users, a city or zone, an audience list, or specific users, and review or delete past sends with their delivered and failed counts.' },
   { surface: 'marketing', path: '/app-popups', label: 'App Popups', group: 'Campaigns',

@@ -108,6 +108,11 @@ async function chromeVars(to?: string): Promise<Record<string, string>> {
   return {
     support_email: supportEmail,
     website_url: websiteUrl,
+    // The app's own base URL, separately from the marketing site: a "open
+    // Duncit" button in a notification has to land in the product, and every
+    // template that wanted one was otherwise forced to take it as a caller
+    // variable that forty call sites would each have had to remember.
+    app_url: appUrl,
     app_name: brand.appName,
     year: String(new Date().getFullYear()),
     unsubscribe_url: mailPreferenceUrl(appUrl, to),

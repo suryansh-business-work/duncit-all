@@ -14,7 +14,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { UserModel } from '@modules/access/user/user.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { notifyEvent } from '@services/notify/notify.service';
 import { sendEmail } from '@services/email/email.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
@@ -748,23 +748,32 @@ export interface ProductWaSubject {
 }
 
 /**
- * WhatsApp the listing's owner about their own product. The approval and both
- * stock crossings name the same three things — recipient, product, brand — so
- * they resolve them once here; the point-of-sale decrement that empties a
- * product lives in productOrder.service and imports this rather than keeping a
- * second answer to "who owns this listing".
+ * Tell the listing's owner about their own product, on both channels.
+ *
+ * The approval and both stock crossings name the same three things —
+ * recipient, product, brand — so they resolve them once here; the
+ * point-of-sale decrement that empties a product lives in
+ * productOrder.service and imports this rather than keeping a second answer to
+ * "who owns this listing".
+ *
+ * It used to be WhatsApp only, which is why the name said so. Stock running out
+ * stops a product selling, and the person who can fix that is the one least
+ * likely to be watching WhatsApp — so `notifyEvent` sends
+ * `ecomm-product-added`, `ecomm-stock-low` and `ecomm-stock-out` off the same
+ * values.
  */
-export async function sendProductOwnerWhatsApp(
+export async function notifyProductOwner(
   product: ProductWaSubject,
   event: string,
   quantity: number
 ) {
   const ownerId = product.listing_submitted_by_id;
   if (!ownerId || !Types.ObjectId.isValid(ownerId)) return;
-  // The phone fields are selected explicitly: the funnel reads the number off
-  // this document, so a narrower projection skips every send silently.
+  // The phone AND address fields are selected explicitly: the funnel reads the
+  // number and `notifyEvent` reads the address off this document, so a narrower
+  // projection skips every send silently.
   const owner = await UserModel.findById(ownerId)
-    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
     .lean();
   if (!owner) return;
   const name =
@@ -773,7 +782,7 @@ export async function sendProductOwnerWhatsApp(
   const brand = product.brand_id
     ? await EcommBrandModel.findById(product.brand_id).select('brand_name').lean()
     : null;
-  await whatsappService.send({
+  await notifyEvent({
     event,
     entityId: String(product._id),
     user: owner,
@@ -805,7 +814,7 @@ async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: 
         product_id: String(doc._id),
       });
     });
-  await sendProductOwnerWhatsApp(doc, 'ECOMM_STOCK_LOW', afterAvailable);
+  await notifyProductOwner(doc, 'ECOMM_STOCK_LOW', afterAvailable);
 }
 
 /** Validate and apply the reviewer's commission override; a missing value
@@ -1367,7 +1376,7 @@ export const inventoryService = {
     await notifyListingReviewOutcome(doc, approved);
     // Only an approval puts the product on the shelf; a decline is not a
     // product added.
-    if (approved) await sendProductOwnerWhatsApp(doc, 'ECOMM_PRODUCT_ADDED', doc.inventory_count);
+    if (approved) await notifyProductOwner(doc, 'ECOMM_PRODUCT_ADDED', doc.inventory_count);
     return inventoryProductToPub(doc);
   },
 

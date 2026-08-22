@@ -46,6 +46,7 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
         { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
         { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
         { label: 'Pods', to: '/venues/pods', icon: 'orders' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/venues/settings', icon: 'settings' },
       ],
     },
   },

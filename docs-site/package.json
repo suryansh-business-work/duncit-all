@@ -15,6 +15,7 @@
     "@astrojs/mdx": "^4.3.0",
     "@astrojs/react": "^4.4.0",
     "@duncit/dialogs": "workspace:*",
+    "@duncit/docs-demos": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*",

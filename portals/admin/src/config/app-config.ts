@@ -91,7 +91,6 @@ export const appConfig = {
         { label: 'Something for you', labelKey: 'shell.nav.somethingForYou', to: '/something-for-you', icon: 'campaign' },
       ],
     },
-    { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/whatsapp', icon: 'whatsapp' },
     { label: 'Approvals', labelKey: 'shell.nav.approvals', to: '/approvals', icon: 'survey' },
     { label: 'Portal Access', labelKey: 'shell.nav.portalAccess', to: '/portal-access', icon: 'lock' },
     {
@@ -167,12 +166,6 @@ export const appConfig = {
     { label: 'Locations', labelKey: 'shell.nav.locations', to: '/locations', section: 'Catalog', sectionKey: 'shell.nav.catalog' },
     { label: 'Badges', labelKey: 'shell.nav.badges', to: '/badges', section: 'Engagement', sectionKey: 'shell.nav.engagement', keywords: ['achievement', 'reward'] },
     { label: 'Something for you', labelKey: 'shell.nav.somethingForYou', to: '/something-for-you', section: 'Engagement', sectionKey: 'shell.nav.engagement', keywords: ['home', 'rail', 'promo', 'cards'] },
-    {
-      label: 'WhatsApp', labelKey: 'shell.nav.whatsapp',
-      to: '/whatsapp',
-      section: 'WhatsApp', sectionKey: 'shell.nav.whatsapp',
-      keywords: ['whatsapp', 'aisensy', 'automation', 'scenario', 'template', 'campaign', 'message log'],
-    },
     { label: 'Approvals', labelKey: 'shell.nav.approvals', to: '/approvals', section: 'Approvals', sectionKey: 'shell.nav.approvals', keywords: ['approve', 'deny', 'requests'] },
     {
       label: 'Portal Access', labelKey: 'shell.nav.portalAccess',

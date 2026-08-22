@@ -251,16 +251,55 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
     errorButtonValue: 'Fill this in, or the button opens a link with {{n}} still in it',
     templateUnknown:
       'AiSensy could not be read, so this send could not be built from its template. Add the Project API credentials in the Tech portal to see the values, header asset and links it needs.',
-    // The logs tab's automatic-messages view. Column headers and the four
-    // status labels reuse adminWhatsapp.logCol* / status* — this bundle serves
-    // both portals, and two copies of "Sent to" is the drift rule 40 stops.
-    autoLogs: {
-      toggleCampaigns: 'Campaign sends',
-      toggleAutomatic: 'Automatic messages',
-      title: 'Automatic messages',
-      hint: 'The messages the platform sends on its own — every attempt, with why it was skipped or how it failed.',
-      empty: 'No automatic message has been attempted yet.',
-      search: 'Search scenario, campaign, number or reason',
+    // The ONE logs view. Campaign sends and the messages the platform sends by
+    // itself are the same record asked for in the same breath — "did this go
+    // out, and if not why" — so they are one table, and the columns that differ
+    // per kind live behind the row rather than as half-empty columns beside it.
+    // Column headers and the four status labels reuse adminWhatsapp.logCol* /
+    // status*: this bundle serves the automation board on the next tab too, and
+    // two copies of "Sent to" is the drift rule 40 stops.
+    logs: {
+      title: 'Everything that went out',
+      hint: 'Every WhatsApp send, whichever way it started — a campaign somebody sent, or a message the platform sent by itself. Open a row for who it reached and why anyone was missed.',
+      empty: 'Nothing has been sent on WhatsApp yet.',
+      search: 'Search a send, scenario, number or reason',
+      colKind: 'Kind',
+      colSend: 'Send',
+      colTo: 'Sent to',
+      colReach: 'Reached',
+      colCost: 'Cost',
+      kindCampaign: 'Campaign',
+      kindAutomatic: 'Automatic',
+      statusScheduled: 'Scheduled',
+      statusCancelled: 'Cancelled',
+      // Only ever shown when at least one of the two is non-zero.
+      reachHint: '{failed} failed · {skipped} skipped',
+      perMessage: '{rate}/msg',
+      noRate: 'No rate',
+      // The automatic half's detail. A campaign row opens the campaign detail
+      // it already had, so only this one is new.
+      detailTitle: 'Automatic message',
+      detailHint:
+        'One message the platform sent on its own. There is no campaign above it to retry — the scenario that fired it is on the Automation tab.',
+      detailGone: 'That message is no longer on record.',
+      // Delete lives in the campaign's own detail now — the table is a record
+      // to read, not a row of buttons to press by accident.
+      deleteMessage:
+        '“{name}” and its results will be removed. Messages already delivered are not recalled.',
+      deleting: 'Deleting…',
+      cancelSend: 'Cancel this send',
+      cancelOnlyScheduled: 'Only a scheduled send can be cancelled',
+      cancelling: 'Cancelling…',
+      deleteWhileSending: 'Sending right now — wait for it to finish',
+      // A retry never re-resolves the audience, so it can only ever mean the
+      // people this send already walked over and missed.
+      retryNone: 'Everyone was reached',
+      retryUnreached: 'Retry {count} not reached',
+      retrying: 'Retrying…',
+      downloadCsv: 'Download CSV',
+      building: 'Building…',
+      duplicate: 'Duplicate',
+      messageId: 'AiSensy message id',
     },
   },
 };

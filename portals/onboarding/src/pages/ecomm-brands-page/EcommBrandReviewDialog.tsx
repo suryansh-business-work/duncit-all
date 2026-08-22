@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -29,6 +29,9 @@ interface Props {
   onReject: () => void;
   onSaveCommission: (commissionPct: number) => void;
   savingCommission: boolean;
+  /** Finance → Default Deductions. Undefined until the query resolves — the
+   * commission field waits for it rather than seeding a misleading 0. */
+  defaultCommissionPct?: number;
 }
 
 const STATUS_COLOR: StatusColorMap = {
@@ -49,17 +52,36 @@ export default function EcommBrandReviewDialog({
   onReject,
   onSaveCommission,
   savingCommission,
+  defaultCommissionPct,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [commission, setCommission] = useState('0');
+  const [commission, setCommission] = useState('');
+  // What this brand's sales are charged today: its own override, or — because a
+  // stored 0 means "follow the global default" — Finance → Default Deductions.
+  const storedPct = Number(active?.product_commission_pct ?? 0);
+  const effectivePct = storedPct > 0 ? storedPct : defaultCommissionPct;
+
+  // Seed once per brand. Reseeding on every `active` identity change would wipe
+  // what the reviewer is typing when the parent merges a saved value back in.
+  const seededFor = useRef<string | null>(null);
   useEffect(() => {
-    setCommission(String(active?.product_commission_pct ?? 0));
-  }, [active]);
+    if (!active?.id) {
+      seededFor.current = null;
+      return;
+    }
+    if (seededFor.current === active.id || effectivePct === undefined) return;
+    seededFor.current = active.id;
+    setCommission(String(effectivePct));
+  }, [active, effectivePct]);
 
   const commissionValid = (() => {
     const n = Number(commission);
-    return Number.isFinite(n) && n >= 0 && n <= 100;
+    return commission.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 100;
   })();
+  // An untouched field holds the finance default, and saving that would pin this
+  // brand to today's number — cutting it out of every future change in Finance →
+  // Default Deductions. So saving is only offered once it actually moves.
+  const unchanged = commissionValid && Number(commission) === effectivePct;
   const saveCommission = () => {
     if (commissionValid) onSaveCommission(Number(commission));
   };
@@ -146,7 +168,12 @@ export default function EcommBrandReviewDialog({
 
           <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
             <Typography variant="subtitle2" fontWeight={800}>
-              Product sales commission %
+              {t('onboarding.ecommBrands.productSalesCommission')}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('onboarding.ecommBrands.productSalesCommissionHint', {
+                vars: { pct: defaultCommissionPct ?? '—' },
+              })}
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
               <TextField
@@ -156,7 +183,7 @@ export default function EcommBrandReviewDialog({
                 value={commission}
                 onChange={(e) => setCommission(e.target.value)}
                 error={!commissionValid}
-                helperText="applies to all this brand's product sales; 0 = inherit default"
+                helperText={commissionValid ? undefined : t('onboarding.common.commissionRange')}
                 inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Product sales commission percentage' }}
                 InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 fullWidth
@@ -165,7 +192,7 @@ export default function EcommBrandReviewDialog({
                 variant="outlined"
                 size="small"
                 onClick={saveCommission}
-                disabled={savingCommission || !commissionValid}
+                disabled={savingCommission || !commissionValid || unchanged}
                 sx={{ whiteSpace: 'nowrap', mb: 2.5 }}
               >
                 {savingCommission ? 'Saving…' : 'Save commission'}

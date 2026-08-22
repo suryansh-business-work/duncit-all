@@ -63,6 +63,27 @@ export interface IVenueAutoExtend {
   until: string; // optional 'YYYY-MM-DD' stop date ('' = open-ended)
 }
 
+/** Whether a cancellation charge is a share of the slot price or a flat sum. */
+export type VenueCancellationChargeType = 'PERCENT' | 'AMOUNT';
+
+/** One band of the venue's cancellation policy: cancelling anywhere INSIDE
+ * `hours_before` hours of the slot start costs `value` (a percent of the slot
+ * price, or a flat amount). The tightest matching band wins, so a booking
+ * cancelled outside every band is free. */
+export interface IVenueCancellationTier {
+  hours_before: number;
+  charge_type: VenueCancellationChargeType;
+  value: number;
+}
+
+/** What the venue owner charges for a late cancellation — or whether they take
+ * one at all. `reschedule_only` turns cancelling off entirely, which is why it
+ * makes the bands moot rather than being one more band. */
+export interface IVenueCancellationPolicy {
+  reschedule_only: boolean;
+  tiers: IVenueCancellationTier[];
+}
+
 /** Operating hours, weekly-off, holidays + booking rules. Drives the Recurring
  * Availability generator (skip offs/holidays, clamp to hours) and validation. */
 export interface IVenueSettings {
@@ -71,6 +92,7 @@ export interface IVenueSettings {
   holidays: string[]; // 'YYYY-MM-DD'
   rules: IVenueRules;
   auto_extend: IVenueAutoExtend;
+  cancellation: IVenueCancellationPolicy;
 }
 
 export interface IVenue extends Document {
@@ -187,6 +209,23 @@ const venueAutoExtendSchema = new Schema<IVenueAutoExtend>(
   { _id: false }
 );
 
+const venueCancellationTierSchema = new Schema<IVenueCancellationTier>(
+  {
+    hours_before: { type: Number, required: true, min: 0, max: 8760 },
+    charge_type: { type: String, enum: ['PERCENT', 'AMOUNT'], default: 'PERCENT' },
+    value: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
+const venueCancellationSchema = new Schema<IVenueCancellationPolicy>(
+  {
+    reschedule_only: { type: Boolean, default: false },
+    tiers: { type: [venueCancellationTierSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const venueSettingsSchema = new Schema<IVenueSettings>(
   {
     operating_hours: {
@@ -203,6 +242,7 @@ const venueSettingsSchema = new Schema<IVenueSettings>(
     holidays: { type: [String], default: [] },
     rules: { type: venueRulesSchema, default: () => ({}) },
     auto_extend: { type: venueAutoExtendSchema, default: () => ({}) },
+    cancellation: { type: venueCancellationSchema, default: () => ({}) },
   },
   { _id: false }
 );

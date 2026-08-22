@@ -11,6 +11,7 @@ import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
 import VenueAutoPodsPage from './pages/venue-auto-pods-page/VenueAutoPodsPage';
+import VenueSettingsPage from './pages/venue-settings-page/VenueSettingsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import HostPodsPage from './pages/host-pods-page/HostPodsPage';
@@ -65,6 +66,7 @@ export default function App() {
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
       <Route path="/venues/auto-pods" element={authed(<VenueAutoPodsPage />)} />
+      <Route path="/venues/settings" element={authed(<VenueSettingsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
       <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />

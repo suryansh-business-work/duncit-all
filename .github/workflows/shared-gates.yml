@@ -58,6 +58,14 @@ jobs:
       - name: Shipped keys match the bundles
         run: node scripts/generate-shipped-keys.mjs --check
 
+      # Every shared package ships a runnable demo the Tech portal renders under
+      # Package Documentation. The registry indexing them is generated, so a demo
+      # added without regenerating is a file nothing loads — an empty Live demos
+      # tab, which reads as "this package has nothing to show" rather than as a
+      # mistake. Same contract as the shipped-keys check above.
+      - name: Package demo registry matches the demos on disk
+        run: node scripts/generate-demo-registry.mjs --check
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each

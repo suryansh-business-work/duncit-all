@@ -9,6 +9,17 @@ import { SHIKI_THEMES } from './src/shiki-themes.mjs';
 // that breaks the moment a file moves. One alias instead.
 const docsSrc = fileURLToPath(new URL('./src', import.meta.url));
 
+// The Preview examples live in @duncit/docs-demos, next to the demo modules the
+// Tech portal renders, so an example exists once rather than once per reader.
+// This alias exists for ONE reason: a page imports each example twice — the
+// component, and its own source with `?raw` — and the query does not survive a
+// package exports-map lookup, so Rollup cannot resolve
+// `@duncit/docs-demos/examples/X.tsx?raw`. Aliasing the subpath to the file
+// keeps the specifier in the docs honest while letting the query through.
+const demoExamples = fileURLToPath(
+  new URL('../packages/docs-demos/src/examples', import.meta.url)
+);
+
 // Port 2500 keeps this clear of every app in scripts/kill-ports.mjs.
 export default defineConfig({
   server: { port: 2500, host: true },
@@ -25,7 +36,9 @@ export default defineConfig({
     // The MDX lives in packages/*/docs, outside this workspace, so Vite has to
     // be allowed to serve from the repo root in dev.
     server: { fs: { allow: ['..'] } },
-    resolve: { alias: { '@docs': docsSrc } },
+    // Longest prefix first: '@duncit/docs-demos/examples' must win before any
+    // broader entry could claim it.
+    resolve: { alias: { '@duncit/docs-demos/examples': demoExamples, '@docs': docsSrc } },
     // Astro pre-renders every island in Node. Left external, `@mui/icons-material/X`
     // resolves to its CJS build and the default import arrives as `{ default: … }`,
     // which React rejects with "Element type is invalid". Bundling the MUI/emotion

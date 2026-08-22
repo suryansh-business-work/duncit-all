@@ -1,7 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   isProjectApiConfigured,
   listCampaigns,
@@ -25,24 +24,6 @@ import { WaMessageLogModel } from './waMessageLog.model';
 
 /** `bulkWrite` will not cast a string id the way `updateOne` does. */
 const actorId = (id?: string | null) => (id ? new Types.ObjectId(id) : null);
-
-const LOG_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['event_key', 'campaign', 'destination', 'reason'],
-  sortFields: {
-    event_key: 'event_key',
-    status: 'status',
-    destination: 'destination',
-    created_at: 'created_at',
-  },
-  filterFields: {
-    status: { type: 'enum' },
-    event_key: { type: 'string' },
-    category: { type: 'enum' },
-    audience: { type: 'enum' },
-    created_at: { type: 'date' },
-  },
-  defaultSort: { created_at: -1 },
-};
 
 /** Why this scenario cannot send right now, or '' when it can. */
 function blockerFor(
@@ -240,36 +221,34 @@ export const whatsappAdminService = {
     return this.scenarios();
   },
 
-  /** Every attempt, newest first — the answer to "why didn't they get it?". */
-  async logsTable(input?: TableQueryInput | null) {
-    const { docs, total, page, page_size } = await runTableQuery(
-      WaMessageLogModel,
-      {},
-      input,
-      LOG_TABLE_CONFIG
-    );
+  /**
+   * One attempt in full — the detail view behind a row of the merged log.
+   *
+   * The list itself is `waLogService`, which spans campaign sends too; this
+   * reads the fields that list has no column for (the values sent, the id
+   * AiSensy returned, how long it took) and so exists only per row.
+   */
+  async logById(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await WaMessageLogModel.findById(id).lean();
+    if (!doc) return null;
     return {
-      rows: docs.map((doc: any) => ({
-        id: String(doc._id),
-        event_key: doc.event_key,
-        campaign: doc.campaign,
-        category: doc.category,
-        audience: doc.audience,
-        entity_id: doc.entity_id ?? '',
-        recipient_user_id: doc.recipient_user_id ? String(doc.recipient_user_id) : null,
-        destination: doc.destination ?? '',
-        status: doc.status,
-        reason: doc.reason ?? '',
-        params: doc.params ?? [],
-        submitted_message_id: doc.submitted_message_id ?? '',
-        template_category: doc.template_category ?? '',
-        msg_rate: doc.msg_rate ?? 0,
-        duration_ms: doc.duration_ms ?? 0,
-        created_at: doc.created_at?.toISOString() ?? null,
-      })),
-      total,
-      page,
-      page_size,
+      id: String(doc._id),
+      event_key: doc.event_key,
+      campaign: doc.campaign,
+      category: doc.category,
+      audience: doc.audience,
+      entity_id: doc.entity_id ?? '',
+      recipient_user_id: doc.recipient_user_id ? String(doc.recipient_user_id) : null,
+      destination: doc.destination ?? '',
+      status: doc.status,
+      reason: doc.reason ?? '',
+      params: doc.params ?? [],
+      submitted_message_id: doc.submitted_message_id ?? '',
+      template_category: doc.template_category ?? '',
+      msg_rate: doc.msg_rate ?? 0,
+      duration_ms: doc.duration_ms ?? 0,
+      created_at: doc.created_at?.toISOString() ?? null,
     };
   },
 };

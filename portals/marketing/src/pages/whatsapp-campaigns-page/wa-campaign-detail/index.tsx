@@ -10,9 +10,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DownloadIcon from '@mui/icons-material/Download';
-import ReplayIcon from '@mui/icons-material/Replay';
 import { notifyError } from '@duncit/dialogs';
 import { StatusChip } from '@duncit/ui';
 import { downloadTextFile, parseApiError } from '@duncit/utils';
@@ -24,6 +21,7 @@ import {
   type WaCampaignRow,
 } from '../queries';
 import CampaignMeta from './CampaignMeta';
+import DetailActions from './DetailActions';
 import RecipientTable from './RecipientTable';
 import SummaryTiles from './SummaryTiles';
 import { useTranslation } from '@duncit/app-settings';
@@ -35,8 +33,13 @@ interface Props {
   /** The symbol the rate card is kept in. */
   currency: string;
   retrying: boolean;
+  cancelling: boolean;
   /** Re-attempt only the people this campaign did not reach. */
   onRetry: (campaign: WaCampaignRow) => void;
+  /** Calls off a scheduled send before its hour. */
+  onCancel: (campaign: WaCampaignRow) => void;
+  /** Hands the campaign to the confirmation the page owns. */
+  onDelete: (campaign: WaCampaignRow) => void;
   /** Start a new send prefilled from this one. */
   onDuplicate: (campaign: WaCampaignRow) => void;
   onClose: () => void;
@@ -46,17 +49,21 @@ interface Props {
  * What one send did: the counters, what it was sent with, and every person it
  * walked over with the reason it did or did not reach them.
  *
- * The template is named rather than drawn here: what it says today is under
- * Templates, live from AiSensy, while this dialog is the record of one run —
- * the category and rate it froze, and per person the message id AiSensy
- * returned or the reason it refused.
+ * This is what a CAMPAIGN row of the merged log opens; an automatic message
+ * opens its own, much smaller, detail beside it. The template is named rather
+ * than drawn here: what it says today is under Templates, live from AiSensy,
+ * while this dialog is the record of one run — the category and rate it froze,
+ * and per person the message id AiSensy returned or the reason it refused.
  */
 export default function WaCampaignDetailDialog({
   campaignId,
   audienceLists,
   currency,
   retrying,
+  cancelling,
   onRetry,
+  onCancel,
+  onDelete,
   onDuplicate,
   onClose,
 }: Readonly<Props>) {
@@ -84,14 +91,7 @@ export default function WaCampaignDetailDialog({
     }
   };
 
-  const unreached = (campaign?.failed_count ?? 0) + (campaign?.skipped_count ?? 0);
-  let retryLabel = 'Everyone was reached';
-  if (unreached > 0) retryLabel = `Retry ${unreached.toLocaleString()} not reached`;
-  if (retrying) retryLabel = 'Retrying…';
-  const audienceText = [
-    campaign ? labelFor(WA_AUDIENCE_LABELS, campaign.audience) : '',
-    listName,
-  ]
+  const audienceText = [campaign ? labelFor(WA_AUDIENCE_LABELS, campaign.audience) : '', listName]
     .filter(Boolean)
     .join(' · ');
 
@@ -131,31 +131,17 @@ export default function WaCampaignDetailDialog({
         )}
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>
-        <Stack direction="row" spacing={1}>
-          {/* Only the people it did not reach — the audience is not re-resolved,
-              so a retry can never widen who the campaign touched. */}
-          <Button
-            startIcon={<ReplayIcon />}
-            disabled={!unreached || retrying}
-            onClick={() => campaign && onRetry(campaign)}
-          >
-            {retryLabel}
-          </Button>
-          <Button
-            startIcon={<DownloadIcon />}
-            disabled={!campaign || exporting}
-            onClick={exportCsv}
-          >
-            {exporting ? 'Building…' : 'Download CSV'}
-          </Button>
-          <Button
-            startIcon={<ContentCopyIcon />}
-            disabled={!campaign}
-            onClick={() => campaign && onDuplicate(campaign)}
-          >
-            Duplicate
-          </Button>
-        </Stack>
+        <DetailActions
+          campaign={campaign}
+          retrying={retrying}
+          cancelling={cancelling}
+          exporting={exporting}
+          onRetry={onRetry}
+          onCancel={onCancel}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          onExportCsv={exportCsv}
+        />
         <Button onClick={onClose}>{t('shell.common.close')}</Button>
       </DialogActions>
     </Dialog>

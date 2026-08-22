@@ -7,7 +7,7 @@ import '@fontsource/open-sans/700.css';
 import '@fontsource/open-sans/800.css';
 import { mountPortal } from '@duncit/shell';
 import { logs } from '@duncit/logs';
-import { ADMIN_BUNDLE, flattenCatalogue, WHATSAPP_BUNDLE } from '@duncit/app-settings';
+import { ADMIN_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { appConfig } from './config/app-config';
 import { apolloClient } from './apollo';
@@ -28,14 +28,9 @@ mountPortal({
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.admin,
-  // The WhatsApp console names a scenario row with the SAME category sentences
-  // mWeb and the native app render on WhatsApp Preference (rule 40) — one
-  // bundle, three surfaces, so `reminder` cannot be called two different things.
-  // ADMIN_BUNDLE layers this console's own copy over it.
-  i18nFallback: {
-    ...flattenCatalogue(WHATSAPP_BUNDLE),
-    ...flattenCatalogue(ADMIN_BUNDLE),
-  },
+  // This portal's OWN namespace, layered over the shell chrome's. The WhatsApp
+  // console lives in Marketing now, so the whatsapp namespace is loaded there.
+  i18nFallback: flattenCatalogue(ADMIN_BUNDLE),
   loadUser,
   wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   extras: <NotifyHost />,

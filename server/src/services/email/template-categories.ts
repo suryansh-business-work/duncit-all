@@ -1,4 +1,5 @@
 import type { EmailCategory } from './email.provider';
+import { CATALOGUE_CATEGORIES, CATALOGUE_FOOTER_NOTES } from './catalogue';
 
 /**
  * Which header/footer fragment wraps each template.
@@ -94,11 +95,22 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   legal: ['grievance-received', 'policy-acceptance', 'policy-updated'],
 };
 
-export const TEMPLATE_CATEGORIES: Record<string, EmailCategory> = Object.fromEntries(
-  Object.entries(BY_CATEGORY).flatMap(([category, slugs]) =>
-    slugs.map((slug) => [slug, category as EmailCategory])
-  )
-);
+/**
+ * The catalogue's rows come first so the lists above still WIN.
+ *
+ * They agree today, and the assertion that they keep agreeing is a unit test
+ * rather than a precedence rule — but if one of them ever drifts, this file is
+ * the one somebody edited on purpose while looking at the nine categories side
+ * by side, so it is the one that should decide.
+ */
+export const TEMPLATE_CATEGORIES: Record<string, EmailCategory> = {
+  ...CATALOGUE_CATEGORIES,
+  ...Object.fromEntries(
+    Object.entries(BY_CATEGORY).flatMap(([category, slugs]) =>
+      slugs.map((slug) => [slug, category as EmailCategory])
+    )
+  ),
+};
 
 /**
  * Each template's own "you're receiving this because…" line.
@@ -114,6 +126,12 @@ export const TEMPLATE_CATEGORIES: Record<string, EmailCategory> = Object.fromEnt
  * no reason line, and the category's generic note is used instead.
  */
 export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
+  // The catalogue's rows first, for the same reason as above: every sentence
+  // written out below was lifted off a template that already shipped, and a
+  // hand-written line beats a generated one when the two disagree. A catalogue
+  // row describing one of THOSE templates carries a blank note and is filtered
+  // out before it gets here, so nothing below is ever overwritten with ''.
+  ...CATALOGUE_FOOTER_NOTES,
   'account-deletion-otp': "You're receiving this because you use Duncit.",
   'admin-access-granted': "You're receiving this because your Duncit account was granted admin access.",
   'admin-access-revoked': "You're receiving this because your Duncit admin access changed.",

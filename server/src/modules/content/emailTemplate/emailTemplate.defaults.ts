@@ -1,3 +1,15 @@
+import {
+  CATALOGUE_TEMPLATE_DEFAULTS,
+  LIVE,
+  PAUSED,
+  callout,
+  detailRows,
+  intro,
+  note,
+  shell,
+  type Tone,
+} from '@services/email/catalogue';
+
 /**
  * The templates that ship WITHOUT an on-disk MJML file (CLAUDE.md rule 28).
  *
@@ -29,86 +41,14 @@ export interface TemplateDefault {
   mjml: string;
 }
 
-/** The tint of the one callout each of these bodies carries. */
-interface Tone {
-  bg: string;
-  border: string;
-  label: string;
-  value: string;
-}
-
-const LIVE: Tone = { bg: '#ecfdf5', border: '#10b981', label: '#047857', value: '#065f46' };
-const PAUSED: Tone = { bg: '#fffbeb', border: '#f59e0b', label: '#b45309', value: '#92400e' };
-
-const HEAD_ATTRS = `    <mj-attributes>
-      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
-      <mj-text color="#222222" font-size="14px" line-height="22px" />
-      <mj-button background-color="#F82C2E" color="#ffffff" border-radius="8px" font-weight="700" />
-    </mj-attributes>`;
-
 /**
- * The document around a body. The header and footer are NOT here — the
- * category's fragment injects those inside `<mj-body>` at render time, and a
- * body that drew its own would double the logo.
+ * The MJML pieces below are the SHARED builders, not copies.
+ *
+ * They moved to `@services/email/catalogue/mjml` when the catalogue started
+ * assembling sixty more bodies out of the same parts — two sets of them would
+ * be two places to change a padding value, and only one of them would get
+ * changed (rule 34).
  */
-function shell(titleKey: string, body: string): string {
-  return `<mjml>
-  <mj-head>
-    <mj-title>{{t:${titleKey}}}</mj-title>
-${HEAD_ATTRS}
-  </mj-head>
-  <mj-body background-color="#f4f4f4">
-${body}
-  </mj-body>
-</mjml>
-`;
-}
-
-/** The white card every body opens with: heading, greeting, one paragraph. */
-function intro(titleKey: string, bodyKey: string, nameVar: string): string {
-  return `    <mj-section background-color="#ffffff" padding="24px 20px 8px 20px">
-      <mj-column>
-        <mj-text font-size="22px" font-weight="bold" color="#222222">{{t:${titleKey}}}</mj-text>
-        <mj-text color="#555555">{{t:email.common.greeting}} {{${nameVar}}},</mj-text>
-        <mj-text color="#555555">{{t:${bodyKey}}}</mj-text>
-      </mj-column>
-    </mj-section>`;
-}
-
-/** The tinted strip naming the thing this email is about. */
-function callout(tone: Tone, labelKey: string, valueVar: string): string {
-  return `    <mj-section background-color="${tone.bg}" padding="16px 20px" border-left="4px solid ${tone.border}">
-      <mj-column>
-        <mj-text font-size="12px" font-weight="bold" color="${tone.label}" text-transform="uppercase" letter-spacing="0.5px">{{t:${labelKey}}}</mj-text>
-        <mj-text font-size="18px" font-weight="bold" color="${tone.value}">{{${valueVar}}}</mj-text>
-      </mj-column>
-    </mj-section>`;
-}
-
-/** The quiet closing line under the callout. */
-function note(helpKey: string): string {
-  return `    <mj-section background-color="#ffffff" padding="12px 20px 24px 20px">
-      <mj-column>
-        <mj-text font-size="13px" color="#888888">{{t:${helpKey}}}</mj-text>
-      </mj-column>
-    </mj-section>`;
-}
-
-/** The record's own details under the callout, as label/value lines. */
-function detailRows(rows: readonly { labelKey: string; valueVar: string }[]): string {
-  const lines = rows
-    .map(
-      (row) =>
-        `        <mj-text color="#555555"><span style="color:#888888">{{t:${row.labelKey}}}</span> <strong>{{${row.valueVar}}}</strong></mj-text>`
-    )
-    .join('\n');
-  return `    <mj-section background-color="#ffffff" padding="8px 20px">
-      <mj-column>
-${lines}
-      </mj-column>
-    </mj-section>`;
-}
-
 /**
  * Account and listing status emails share one shape. The entity's label and
  * the two lines of copy are all that differ, so keeping the layout here avoids
@@ -376,4 +316,9 @@ export const TEMPLATE_DEFAULTS: TemplateDefault[] = [
   POLICY_ACCEPTANCE,
   POLICY_UPDATED,
   ...STATUS_TEMPLATES,
+  // The catalogue's own bodies — every email that mirrors a WhatsApp scenario,
+  // plus the security, ads and refund ones that have no WhatsApp twin. They are
+  // appended rather than merged so the five above stay the code that is easiest
+  // to read when somebody wants to see what a body looks like.
+  ...CATALOGUE_TEMPLATE_DEFAULTS,
 ];

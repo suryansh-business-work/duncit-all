@@ -9,6 +9,7 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { logs } from '@observability/log';
+import { notifyEvent } from '@services/notify/notify.service';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -311,11 +312,12 @@ export const ecommBrandService = {
     await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
     if (!wasApproved) {
       const categories = (brand.product_categories ?? []).join(', ');
-      await whatsappService.send({
+      await notifyEvent({
         event: 'ECOMM_BRAND_ADDED',
         user: await waRecipient(brand.owner_user_id),
         name: brand.contact_person,
         params: [brand.contact_person, brand.brand_name, categories],
+        email: brand.contact_email ?? '',
       });
     }
     return toPub(brand);

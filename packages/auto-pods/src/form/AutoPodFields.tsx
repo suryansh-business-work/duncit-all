@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import type { Control } from 'react-hook-form';
+import type { ReactElement, ReactNode } from 'react';
+import { Controller, type Control } from 'react-hook-form';
 import Alert from '@mui/material/Alert';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
@@ -13,15 +13,34 @@ export interface AutoPodOccurrence {
   label: string;
 }
 
+/** What the surface's own upload field is handed. `value` is the newline-joined
+ * URL list `parseMediaLines` reads, which is exactly what `MediaListField`
+ * speaks — the picker writes the paths so nobody can type a broken one. */
+export interface AutoPodMediaFieldProps {
+  value: string;
+  onChange: (next: string) => void;
+  label: string;
+  helperText: string;
+  error?: string;
+  /** Upload destination for the surface's picker. */
+  folder: string;
+}
+
 export interface AutoPodFieldsProps {
   control: Control<AutoPodFormValues>;
   t: (key: string) => string;
   occurrences: readonly AutoPodOccurrence[];
   /** What replaces the category picker — the Admin cascade, or a club's fixed one. */
   categoryField: ReactNode;
+  /** The surface's ImageKit upload field — see `AutoPodMediaFieldProps`. */
+  renderMediaField: (props: Readonly<AutoPodMediaFieldProps>) => ReactElement;
   /** The line above the fields explaining what the author does NOT pick. */
   hint: string;
 }
+
+/** Where an Auto Pod template's images are uploaded, so they sit beside every
+ * other pod image rather than in whatever folder each console defaults to. */
+const MEDIA_FOLDER = '/auto-pods';
 
 /**
  * Every input of the Auto Pod template, hoisted out of the dialog so neither
@@ -33,6 +52,7 @@ export default function AutoPodFields({
   t,
   occurrences,
   categoryField,
+  renderMediaField,
   hint,
 }: Readonly<AutoPodFieldsProps>) {
   return (
@@ -55,14 +75,19 @@ export default function AutoPodFields({
         multiline
         minRows={2}
       />
-      <RhfTextField
+      <Controller
         control={control}
         name="media"
-        label={t('admin.autoPods.fieldMedia')}
-        hint={t('admin.autoPods.fieldMediaHint')}
-        multiline
-        minRows={2}
-        required
+        render={({ field, fieldState }) =>
+          renderMediaField({
+            value: field.value,
+            onChange: field.onChange,
+            label: t('admin.autoPods.fieldMedia'),
+            helperText: t('admin.autoPods.fieldMediaHint'),
+            error: fieldState.error?.message,
+            folder: MEDIA_FOLDER,
+          })
+        }
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <RhfTextField

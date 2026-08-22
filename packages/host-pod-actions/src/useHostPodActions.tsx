@@ -11,6 +11,8 @@ import type { HostPodForComplete, HostPodTarget, ScanTarget } from './types';
 /** Props for one row's `<HostPodActionsMenu>`, minus the ones it owns itself. */
 export interface HostPodMenuHandlers {
   podTitle: string;
+  /** The venue refused this pod's slot — the attendee-facing actions are gone. */
+  venueRejected: boolean;
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
@@ -56,6 +58,7 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
 
   const menuHandlers = (pod: HostPodTarget): HostPodMenuHandlers => ({
     podTitle: pod.pod_title,
+    venueRejected: isVenueRejected(pod.venue_approval_status),
     onScan: () => setScanPod({ id: pod.id, pod_title: pod.pod_title }),
     onComplete: () =>
       setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id }),

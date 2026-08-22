@@ -120,6 +120,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
       <PodActionsSheet
         open={!!actionsPod}
         podTitle={actionsPod?.pod_title ?? ''}
+        venueRejected={isVenueRejected(actionsPod?.venue_approval_status)}
         onClose={() => setActionsPod(null)}
         onScan={() => {
           if (actionsPod) setScanPod({ id: actionsPod.id, pod_title: actionsPod.pod_title });

@@ -9,6 +9,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   open: boolean;
   podTitle: string;
+  /**
+   * The venue refused this pod's slot, so it never ran and never sold a seat.
+   * Scanning tickets, marking attendance, completing it and asking guests to
+   * rate it are all meaningless then — the host resubmits or cancels instead.
+   */
+  venueRejected: boolean;
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
@@ -28,6 +34,7 @@ interface Props {
 export function PodActionsSheet({
   open,
   podTitle,
+  venueRejected,
   onClose,
   onScan,
   onSeeAttendance,
@@ -43,6 +50,9 @@ export function PodActionsSheet({
   const { t } = useTranslation();
   const { color: ink, danger, primary, success, warning } = useThemeColors();
 
+  // The actions that only make sense for a pod that actually gets to run.
+  const showAttendeeActions = !venueRejected;
+
   return (
     // Eight rows are ~430px before any chrome — enough to be clipped in
     // landscape on any phone, which is why this is capped and scrollable now.
@@ -55,20 +65,24 @@ export function PodActionsSheet({
       closeLabel="Close"
     >
       <YStack gap={10}>
-        <ActionRow
-          testID="pod-action-scan"
-          icon="qr-code-scanner"
-          label={t('mweb.hostManage.scanAttendeeEventTickets')}
-          tint={primary}
-          onPress={onScan}
-        />
-        <ActionRow
-          testID="pod-action-attendance"
-          icon="fact-check"
-          label={t('mweb.attendance.menuItem')}
-          tint={success}
-          onPress={onSeeAttendance}
-        />
+        {showAttendeeActions ? (
+          <ActionRow
+            testID="pod-action-scan"
+            icon="qr-code-scanner"
+            label={t('mweb.hostManage.scanAttendeeEventTickets')}
+            tint={primary}
+            onPress={onScan}
+          />
+        ) : null}
+        {showAttendeeActions ? (
+          <ActionRow
+            testID="pod-action-attendance"
+            icon="fact-check"
+            label={t('mweb.attendance.menuItem')}
+            tint={success}
+            onPress={onSeeAttendance}
+          />
+        ) : null}
         <ActionRow
           testID="pod-action-slot-request"
           icon="pending-actions"
@@ -76,13 +90,15 @@ export function PodActionsSheet({
           tint={warning}
           onPress={onSlotRequest}
         />
-        <ActionRow
-          testID="pod-action-complete"
-          icon="task-alt"
-          label={t('mweb.hostManage.completePod')}
-          tint={success}
-          onPress={onComplete}
-        />
+        {showAttendeeActions ? (
+          <ActionRow
+            testID="pod-action-complete"
+            icon="task-alt"
+            label={t('mweb.hostManage.completePod')}
+            tint={success}
+            onPress={onComplete}
+          />
+        ) : null}
         <ActionRow
           testID="pod-action-edit"
           icon="edit"
@@ -92,11 +108,13 @@ export function PodActionsSheet({
         />
         {/* The rating link: tapping the row opens the form, and the two
                     icons beside it hand the link to the people who came. */}
-        <FeedbackLinkRow
-          onOpen={onOpenFeedback}
-          onShare={onShareFeedback}
-          onCopy={onCopyFeedback}
-        />
+        {showAttendeeActions ? (
+          <FeedbackLinkRow
+            onOpen={onOpenFeedback}
+            onShare={onShareFeedback}
+            onCopy={onCopyFeedback}
+          />
+        ) : null}
         <ActionRow
           testID="pod-action-club-admin"
           icon="support-agent"

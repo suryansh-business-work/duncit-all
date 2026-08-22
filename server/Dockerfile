@@ -53,6 +53,12 @@ ENV NODE_ENV=production
 RUN apk add --no-cache ffmpeg
 ENV FFMPEG_PATH=/usr/bin/ffmpeg
 
+# The Tech portal's Server > Terminal suggests `docker ps`, `docker logs` and
+# the host-path reads that go through a throwaway container, and none of them
+# resolve without the CLI: the app itself talks to the daemon over the mounted
+# socket in plain HTTP, so nothing else in the image needs this binary.
+RUN apk add --no-cache docker-cli
+
 COPY --from=builder /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml ./
 COPY --from=builder /repo/server/package.json ./server/
 COPY --from=builder /repo/app/mweb/package.json ./app/mweb/

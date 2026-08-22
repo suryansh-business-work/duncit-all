@@ -90,4 +90,10 @@ globalThis.IntersectionObserver ??= IntersectionObserverStub as never;
 if (!Element.prototype.scrollTo) {
   Element.prototype.scrollTo = vi.fn();
 }
-globalThis.scrollTo ??= vi.fn() as never;
+// NOT `??=`: jsdom DEFINES window.scrollTo, as a stub that throws
+// "Not implemented: window.scrollTo". A nullish assignment therefore keeps the
+// throwing one, and any page that scrolls on mount dies mid-render — so the
+// half of it below the scroll never runs. Overwrite unconditionally.
+globalThis.scrollTo = vi.fn() as never;
+globalThis.scrollBy = vi.fn() as never;
+window.scrollTo = vi.fn() as never;

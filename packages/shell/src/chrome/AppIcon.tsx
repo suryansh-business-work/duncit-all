@@ -7,6 +7,7 @@ import AndroidIcon from '@mui/icons-material/Android';
 import AppleIcon from '@mui/icons-material/Apple';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import ArticleIcon from '@mui/icons-material/Article';
+import BackupIcon from '@mui/icons-material/Backup';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import BugReportIcon from '@mui/icons-material/BugReport';
@@ -21,6 +22,7 @@ import ContactsIcon from '@mui/icons-material/Contacts';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DnsIcon from '@mui/icons-material/Dns';
+import StorageIcon from '@mui/icons-material/Storage';
 import EmailIcon from '@mui/icons-material/Email';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -93,6 +95,8 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   dashboard: DashboardIcon,
   description: DescriptionIcon,
   dns: DnsIcon,
+  storage: StorageIcon,
+  backup: BackupIcon,
   docker: ViewInArIcon,
   document: DescriptionIcon,
   email: EmailIcon,

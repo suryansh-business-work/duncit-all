@@ -47,6 +47,7 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
+COPY packages/forms/package.json ./packages/forms/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -56,6 +57,9 @@ COPY packages/logs ./packages/logs
 # @duncit/utils source — the layout imports the short-link capture from it.
 COPY packages/user-core ./packages/user-core
 COPY packages/utils ./packages/utils
+# The localization runtime + the shared RHF/MUI field the report form renders.
+COPY packages/i18n ./packages/i18n
+COPY packages/forms ./packages/forms
 ARG VITE_SERVER_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build

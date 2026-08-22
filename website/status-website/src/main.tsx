@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { SERVER_BASE } from './config/server';
+import { TranslationProvider } from './i18n';
 import App from './App';
 
 // Ship console errors to SignOz (via the server /logs ingest).
@@ -29,6 +30,10 @@ if (!rootElement) throw new Error('Root element #root not found');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    {/* Localization wraps the whole tree: the loading skeleton and the report
+        form both render copy before any status data has arrived. */}
+    <TranslationProvider>
+      <App />
+    </TranslationProvider>
   </StrictMode>,
 );

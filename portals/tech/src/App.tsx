@@ -21,10 +21,12 @@ import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
+import DbBackupsPage from './pages/database/backups';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import MailAutomationPage from './pages/mail-automation';
+import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -69,8 +71,16 @@ export default function App() {
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />
         <Route path="/server/terminal" element={authed(<TerminalPage />)} />
-        <Route path="/server/data-clone" element={authed(<DataClonePage />)} />
+        {/* Database. Data Clone moved here from /server; the old path still
+            resolves so a bookmark or a pasted link keeps working. */}
+        <Route path="/database" element={<Navigate to="/database/backups" replace />} />
+        <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
+        <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
+        <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
+        {/* What people reported by hand on status.duncit.com — the breakage the
+            probes on that page cannot see. */}
+        <Route path="/status-reports" element={authed(<StatusReportsPage />)} />
         <Route path="/app-builds" element={<Navigate to="/app-builds/android" replace />} />
         {/* Keyed per platform: the two routes render the same component shape, so
             without a key React reconciles in place and the table would keep the

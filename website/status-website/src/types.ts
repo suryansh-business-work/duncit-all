@@ -145,3 +145,22 @@ export interface Branding {
   logo_url?: string;
   primary_color?: string;
 }
+
+/** What the reporter is seeing — mirrors the server's StatusReportImpact enum. */
+export type StatusReportImpact =
+  | 'CANNOT_ACCESS'
+  | 'ERRORS'
+  | 'SLOW'
+  | 'LOGIN'
+  | 'PAYMENT'
+  | 'OTHER';
+
+/** Payload of the public `submitStatusReport` mutation. */
+export interface StatusReportInput {
+  service_key: string;
+  impact: StatusReportImpact;
+  name: string;
+  email: string;
+  page_url: string;
+  message: string;
+}

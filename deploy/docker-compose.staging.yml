@@ -24,6 +24,9 @@ services:
       # Explicit for the same reason as prod: the image's final WORKDIR is
       # /app/server, so the cwd-relative default would miss the bind mount.
       APP_BUILDS_DIR: /app/app-builds
+      # Same reasoning as APP_BUILDS_DIR: the image WORKDIR is /app/server, so the
+      # cwd-relative default would resolve inside the app instead of the mount.
+      DB_BACKUPS_DIR: /app/db-backups
     ports:
       - "127.0.0.1:2101:2001"
     volumes:
@@ -33,6 +36,11 @@ services:
       # CI build artifacts (APK/IPA) — same as prod, on the staging stack's own
       # directory so the two never share a file.
       - /opt/duncit-staging/app-builds:/app/app-builds
+      # Database backup archives. On the host rather than in the container so a
+      # redeploy cannot take the backups with it. NOT served by nginx, unlike
+      # app-builds above — an archive is the whole database in one file, so the
+      # only way out is the server's signed-link route.
+      - /opt/duncit-staging/db-backups:/app/db-backups
     networks:
       - default
       - signoz-net

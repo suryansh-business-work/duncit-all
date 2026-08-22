@@ -16,6 +16,12 @@ export interface StatusData {
   summary: SummaryResponse | null;
   incidents: Incident[] | null;
   loading: boolean;
+  /**
+   * A fetch is in flight. True during the first load AND during every 60s
+   * refresh, so the page can say it is working rather than showing figures that
+   * are quietly a minute old.
+   */
+  refreshing: boolean;
   error: string | null;
   lastUpdated: Date | null;
 }
@@ -28,9 +34,21 @@ export function useStatusData(): StatusData {
   const [incidents, setIncidents] = useState<Incident[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [pending, setPending] = useState(0);
 
   useEffect(() => {
     const ctrl = new AbortController();
+    // Counted rather than a boolean: three loaders overlap on the first paint
+    // and again whenever a 60s tick lands on a 5min one, and the first to
+    // finish would otherwise clear a bar the other two are still earning.
+    const track = async (run: () => Promise<void>) => {
+      setPending((count) => count + 1);
+      try {
+        await run();
+      } finally {
+        setPending((count) => count - 1);
+      }
+    };
 
     const loadServices = async () => {
       try {
@@ -62,14 +80,14 @@ export function useStatusData(): StatusData {
       }
     };
 
-    loadServices().catch(() => undefined);
-    loadSummary().catch(() => undefined);
-    loadIncidents().catch(() => undefined);
-    const summaryTimer = setInterval(() => loadSummary().catch(() => undefined), SUMMARY_REFRESH_MS);
-    const incidentsTimer = setInterval(
-      () => loadIncidents().catch(() => undefined),
-      INCIDENTS_REFRESH_MS
-    );
+    const refreshSummary = () => track(loadSummary).catch(() => undefined);
+    const refreshIncidents = () => track(loadIncidents).catch(() => undefined);
+
+    track(loadServices).catch(() => undefined);
+    refreshSummary();
+    refreshIncidents();
+    const summaryTimer = setInterval(refreshSummary, SUMMARY_REFRESH_MS);
+    const incidentsTimer = setInterval(refreshIncidents, INCIDENTS_REFRESH_MS);
 
     return () => {
       ctrl.abort();
@@ -84,6 +102,7 @@ export function useStatusData(): StatusData {
     summary,
     incidents,
     loading: groups === null && error === null,
+    refreshing: pending > 0,
     error,
     lastUpdated,
   };

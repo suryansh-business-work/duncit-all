@@ -19,6 +19,9 @@ services:
       # WORKDIR is /app/server, so the default would resolve inside the app
       # rather than onto the bind mount below.
       APP_BUILDS_DIR: /app/app-builds
+      # Same reasoning as APP_BUILDS_DIR: the image WORKDIR is /app/server, so the
+      # cwd-relative default would resolve inside the app instead of the mount.
+      DB_BACKUPS_DIR: /app/db-backups
     ports:
       - "127.0.0.1:2001:2001"
     volumes:
@@ -30,6 +33,11 @@ services:
       # anything over 20 MiB, which a release APK always is — so they live on
       # the host and nginx serves them straight from this directory.
       - /opt/duncit/app-builds:/app/app-builds
+      # Database backup archives. On the host rather than in the container so a
+      # redeploy cannot take the backups with it. NOT served by nginx, unlike
+      # app-builds above — an archive is the whole database in one file, so the
+      # only way out is the server's signed-link route.
+      - /opt/duncit/db-backups:/app/db-backups
     networks:
       - default
       - signoz-net

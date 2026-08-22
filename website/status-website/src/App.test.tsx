@@ -46,6 +46,7 @@ const data = (over: Partial<StatusData>): StatusData => ({
   summary: null,
   incidents: null,
   loading: false,
+  refreshing: false,
   error: null,
   lastUpdated: null,
   ...over,

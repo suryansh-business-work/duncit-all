@@ -5,6 +5,7 @@ import { grievanceTicketFieldCopy } from '@duncit/i18n';
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { RequiredMark } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GrievanceTicketEmpty } from './GrievanceTicketEmpty';
@@ -56,6 +57,7 @@ export function GrievanceTicketField({ control, options, loading }: Readonly<Pro
           <YStack gap={4}>
             <Text fontSize={11.5} fontWeight="600" color="$muted">
               {copy.label}
+              <RequiredMark required testID="grievance-support_ticket_ref" />
             </Text>
             <XStack
               testID="grievance-support_ticket_ref"

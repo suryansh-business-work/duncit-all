@@ -6,6 +6,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ShareIcon from '@mui/icons-material/Share';
 import FollowListDialog from '../../components/FollowListDialog';
 import ProfileAvatar from '../../components/profile-avatar';
+import ProfileHandleLink from './ProfileHandleLink';
 import { shareProfile } from '../../utils/share';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -94,9 +95,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               <VerifiedIcon color="primary" sx={{ fontSize: 20 }} titleAccess="Email verified" />
             )}
           </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
-            {me.username ? `@${me.username}` : (me.email ?? `@${me.user_id}`)}
-          </Typography>
+          {/* The handle is also the share link — tapping it copies
+              `/u/<handle>`, which is why it lives here and not in
+              settings (native shows the same, rule 27). */}
+          <ProfileHandleLink
+            username={me.username ?? null}
+            fallback={me.email ?? `@${me.user_id}`}
+          />
           {me.bio && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25, whiteSpace: 'pre-wrap' }}>
               {me.bio}

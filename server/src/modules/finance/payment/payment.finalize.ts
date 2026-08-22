@@ -30,7 +30,6 @@ import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.m
 import { productOrderService } from '@modules/commerce/productOrder/productOrder.service';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';

@@ -14,7 +14,6 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';

@@ -7,8 +7,15 @@
   "gitignore": true,
   "absolute": false,
   "silent": true,
-  "format": ["typescript", "tsx", "javascript", "jsx"],
-  "reporters": ["json"],
+  "format": [
+    "typescript",
+    "tsx",
+    "javascript",
+    "jsx"
+  ],
+  "reporters": [
+    "json"
+  ],
   "ignore": [
     "**/node_modules/**",
     "**/dist/**",
@@ -29,6 +36,11 @@
     "**/*.spec.*",
     "**/*.cy.*",
     "**/*.stories.*",
+    "**/*.config.ts",
+    "**/*.config.js",
+    "**/*.config.mjs",
+    "**/*.config.cjs",
+    "**/vitest.setup.ts",
     "portals/crm/open-wa-server/**",
     "packages/docs-demos/**",
     "server/src/modules/ai/askBot/askBot.catalog.*.ts"

@@ -45,6 +45,8 @@ export default function PackageUpdatesPage() {
   const report = data?.techPackageUpdates;
   const packages = report?.packages ?? NO_PACKAGES;
   const groups = useMemo(() => groupDependencies(packages), [packages]);
+  /** Changes exactly when a sweep produced a new answer — see the tables below. */
+  const sweepKey = report?.checkedAt ?? 'pending';
 
   const items = useMemo(
     () => [
@@ -109,10 +111,14 @@ export default function PackageUpdatesPage() {
             <Stack spacing={2.5}>
               <ReportSummary report={report} />
               <DuncitTabs {...tabs} />
+              {/* Keyed by the sweep: a table holds the page it last fetched, and
+                  a re-check replaces every row at once. Remounting on a new
+                  answer is what swaps them, and it cannot loop the way an
+                  effect watching an array's identity can. */}
               {tabs.value === 'packages' ? (
-                <PackagesTable packages={packages} onOpen={setOpenPkg} />
+                <PackagesTable key={sweepKey} packages={packages} onOpen={setOpenPkg} />
               ) : (
-                <DependenciesTable groups={groups} />
+                <DependenciesTable key={sweepKey} groups={groups} />
               )}
             </Stack>
           )

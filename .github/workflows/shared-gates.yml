@@ -66,6 +66,15 @@ jobs:
       - name: Package demo registry matches the demos on disk
         run: node scripts/generate-demo-registry.mjs --check
 
+      # The Tech portal's Package Updates console compares every package.json in
+      # the repo against the registry, and the server reads that list from a
+      # GENERATED copy — its Docker image holds only the manifests pnpm install
+      # needed, so a runtime walk would report on a third of the tree and look
+      # complete doing it. A stale copy reports yesterday's dependencies as if
+      # they were today's, which is worse than reporting nothing.
+      - name: Package manifest matches the package.json files on disk
+        run: node scripts/generate-package-manifest.mjs --check
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each

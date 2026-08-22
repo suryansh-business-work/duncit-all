@@ -250,6 +250,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@vitest/coverage-v8", range: "^1.6.1", kind: "devDependencies" },
       { name: "husky", range: "^9.1.6", kind: "devDependencies" },
+      { name: "jscpd", range: "4.0.5", kind: "devDependencies" },
       { name: "lint-staged", range: "^15.2.10", kind: "devDependencies" },
       { name: "typescript", range: "^5.4.5", kind: "devDependencies" },
       { name: "vitest", range: "^1.6.1", kind: "devDependencies" },

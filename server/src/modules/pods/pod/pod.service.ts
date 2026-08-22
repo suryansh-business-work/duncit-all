@@ -658,23 +658,16 @@ async function refundAndNotifyCancellation(
   // sending again would double-notify every attendee and payer.
   if (!won) return null;
 
-  // Best-effort after the delete commits: cancellation + refund emails.
+  // Best-effort after the delete commits: the payers' refund records.
+  //
+  // The CANCELLATION email is not here any more. It used to be one generic
+  // `pod-cancelled` to everybody; `notifyPodCancellation` below now sends
+  // `user-pod-cancelled-by-host` / `-venue` / `-duncit` instead — the same
+  // audience, but naming who cancelled, the refund and how long it takes, off
+  // the array the WhatsApp message was already built from. Sending both would
+  // put two cancellation emails in front of every attendee.
   try {
     await Promise.allSettled([
-      ...audience.map((user) => {
-        const refund = refundedByUser.get(user.user_id);
-        const refundLine = refund
-          ? `Your payment of ${refund.currency_symbol}${refund.total} will be refunded.`
-          : '';
-        return sendPodCancelledEmail({
-          to: user.email,
-          name: user.name,
-          pod_title: podTitle,
-          when,
-          reason,
-          refund_line: refundLine,
-        });
-      }),
       ...payments.map((payment) =>
         sendPodRefundEmail({
           to: payment.user_email,
@@ -696,6 +689,10 @@ async function refundAndNotifyCancellation(
 
   return payments.length;
 }
+
+/** The refund as an email prints it: with its currency, or as a dash. */
+const refundLabel = (refund?: { total: number; currency_symbol: string }): string =>
+  refund && refund.total > 0 ? `${refund.currency_symbol}${refund.total}` : '—';
 
 /**
  * The same cancellation over WhatsApp, one attendee at a time — AiSensy
@@ -740,6 +737,9 @@ async function whatsappPodCancellation(
         podLink,
         String(financeSettings.refund_processing_days),
       ],
+      // The EMAIL renders the figure on its own, with no symbol printed around
+      // it, so it needs one — and "nothing to refund" reads better than "0".
+      vars: { refund_amount: refundLabel(refundedByUser.get(attendee.user_id)) },
     }))
   );
 }

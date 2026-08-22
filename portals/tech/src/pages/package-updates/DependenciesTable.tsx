@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MenuItem, TextField, Typography } from '@mui/material';
-import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, clientTableFetch, type DuncitColumn, type TableFilterValue } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import UpdateTypeChip from './UpdateTypeChip';
 import {
@@ -48,7 +48,6 @@ const renderUsedIn = (row: DependencyGroup) => (
  */
 export default function DependenciesTable({ groups }: Readonly<{ groups: readonly DependencyGroup[] }>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const [type, setType] = useState<UpdateType | typeof ALL>(ALL);
   const noLatest = t('tech.packageUpdates.notPublished');
 
@@ -59,11 +58,17 @@ export default function DependenciesTable({ groups }: Readonly<{ groups: readonl
 
   const fetchRows = useMemo(() => clientTableFetch(filtered, dependencySearchText), [filtered]);
 
-  // The report arrives after the table mounts, and changing the filter builds a
-  // new list — the table only re-reads when it is told to.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
+  /**
+   * The filter is applied to the ROWS above, not by the fetch — a client-side
+   * fetch ignores query filters by design. This declares it to the table anyway
+   * because that is what makes the table re-read and drop back to page 1; a
+   * change it is never told about would leave it showing page 4 of a list that
+   * no longer has one.
+   */
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () => [{ field: 'updateType', op: 'eq', value: type }],
+    [type],
+  );
 
   const columns = useMemo<DuncitColumn<DependencyGroup>[]>(
     () => [
@@ -127,7 +132,7 @@ export default function DependenciesTable({ groups }: Readonly<{ groups: readonl
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      refetchRef={refetchRef}
+      externalFilters={externalFilters}
       toolbarActions={filterControl}
       emptyText={t('tech.packageUpdates.noDependencies')}
       searchPlaceholder={t('tech.packageUpdates.searchDependencies')}

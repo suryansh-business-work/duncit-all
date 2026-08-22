@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import {
   Button,
   Dialog,
@@ -55,18 +55,13 @@ interface Props {
  */
 export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const noLatest = t('tech.packageUpdates.notPublished');
 
-  const rows = useMemo(
-    () => (pkg ? [...pkg.dependencies].sort(compareBySeverity) : []),
-    [pkg],
-  );
+  // The dialog's children unmount on close, so every open is a fresh mount and
+  // the table reads the manifest it was opened for. There is no second manifest
+  // to switch to without closing this one.
+  const rows = useMemo(() => (pkg ? [...pkg.dependencies].sort(compareBySeverity) : []), [pkg]);
   const fetchRows = useMemo(() => clientTableFetch(rows, dependencyRowSearchText), [rows]);
-
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   const columns = useMemo<DuncitColumn<DependencyUpdate>[]>(
     () => [
@@ -123,7 +118,6 @@ export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
           columns={columns}
           fetchRows={fetchRows}
           getRowId={getRowId}
-          refetchRef={refetchRef}
           emptyText={t('tech.packageUpdates.noDependencies')}
           searchPlaceholder={t('tech.packageUpdates.searchDependencies')}
         />

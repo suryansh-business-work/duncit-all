@@ -11,7 +11,6 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';

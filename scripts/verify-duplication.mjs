@@ -41,13 +41,13 @@ const summaryPath = args.find((a) => a.startsWith("--summary="))?.slice(10);
  * the backstop that catches a spread thin enough to slip under every single
  * workspace's own number. Lower it as the backlog is paid down.
  */
-const HEADROOM_PERCENT = 0.5;
+const HEADROOM_PERCENT = 0.25;
 
 const readBaseline = () => JSON.parse(readFileSync(BASELINE, "utf8"));
 
 function writeBaseline(result) {
   const baseline = {
-    maxPercent: Number((result.total.percent + HEADROOM_PERCENT).toFixed(2)),
+    maxPercent: Math.ceil((result.total.percent + HEADROOM_PERCENT) * 10) / 10,
     areas: result.areas,
   };
   writeFileSync(BASELINE, `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
@@ -126,6 +126,14 @@ function summaryMarkdown(result, baseline, rows, overCeiling) {
   }
 
   head.push(
+    "<details><summary>Measured duplicated lines per workspace</summary>",
+    "",
+    "```json",
+    JSON.stringify(result.areas, null, 2),
+    "```",
+    "",
+    "</details>",
+    "",
     "Move the shared logic into a `@duncit/*` package (CLAUDE.md rule 40 has the map of",
     "which package owns what; `server/src` consolidates internally instead). If the code",
     "genuinely moved rather than multiplied, re-run `pnpm dup:update` and commit the",

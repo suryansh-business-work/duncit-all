@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
@@ -50,20 +50,11 @@ interface Props {
  */
 export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
-  const refetchRef = useRef<(() => void) | null>(null);
   const privateLabel = t('tech.packageUpdates.privateManifest');
 
-  const fetchRows = useMemo(
-    () => clientTableFetch(packages, packageSearchText),
-    [packages],
-  );
-
-  // The report arrives after the table mounts, and the table holds its own copy
-  // of the last page it fetched — without this it would keep showing the empty
-  // one it was born with.
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
+  // The table reads this once, on mount. A new sweep remounts it by key rather
+  // than pushing rows in — see the `key` the page gives this component.
+  const fetchRows = useMemo(() => clientTableFetch(packages, packageSearchText), [packages]);
 
   const columns = useMemo<DuncitColumn<PackageUpdate>[]>(
     () => [
@@ -116,7 +107,6 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      refetchRef={refetchRef}
       onRowClick={onOpen}
       defaultSort={{ field: 'outdated', dir: 'desc' }}
       emptyText={t('tech.packageUpdates.noManifests')}

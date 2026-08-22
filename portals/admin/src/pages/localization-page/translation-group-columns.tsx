@@ -1,7 +1,6 @@
 import { Chip, Stack, Typography } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import { translatedFor, type LocaleRow, type TranslationGroupRow } from './queries';
-import { useTranslation } from '@duncit/shell';
 
 /** Complete, untouched, or somewhere in between — the three states worth a colour. */
 function completenessColor(translated: number, total: number): string {

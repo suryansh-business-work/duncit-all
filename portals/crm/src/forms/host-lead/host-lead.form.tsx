@@ -109,7 +109,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
               </Button>
             )}
             <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>
-              {submitting ? 'Saving…' : submitLabel}
+              {submitting ? 'Saving…' : submitLabelText}
             </Button>
           </Stack>
         </Stack>

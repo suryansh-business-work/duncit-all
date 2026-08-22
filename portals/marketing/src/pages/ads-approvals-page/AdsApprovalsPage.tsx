@@ -3,14 +3,13 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { useApolloTableFetch } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
 import { ADS_TABLE, REVIEW_AD_REQUEST } from './queries';
 import type { AdRequestRow, AdStoredStatus } from './helpers';
 import AdsApprovalsToolbar from './AdsApprovalsToolbar';
 import AdsApprovalsTable from './AdsApprovalsTable';
 import ReviewDialog from './ReviewDialog';
-import { useTranslation } from '@duncit/app-settings';
 
 export default function AdsApprovalsPage() {
   const { t } = useTranslation();

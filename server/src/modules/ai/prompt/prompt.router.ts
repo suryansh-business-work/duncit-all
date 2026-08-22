@@ -124,7 +124,7 @@ export function buildAiPromptFeedRouter(): Router {
       const prompt = await aiPromptService.getByKey(key);
       // An inactive prompt is 404 rather than 403: whether a key exists at all
       // is not something an unauthenticated caller should be able to probe.
-      if (!prompt || !prompt.is_active) {
+      if (!prompt?.is_active) {
         sendJson(res, 404, { error: 'NOT_FOUND', message: `No active prompt named "${key}".` });
         return;
       }

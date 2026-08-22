@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { SurveyAnswers } from '../../../components/survey-answers';
 import HostReviewCategories from './HostReviewCategories';
@@ -19,7 +19,6 @@ import HostReviewDetails from './HostReviewDetails';
 import HostReviewDocuments from './HostReviewDocuments';
 import type { HostRow } from '../queries';
 import type { HostCategoryValue } from '../../../forms/host';
-import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: HostRow | null;

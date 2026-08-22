@@ -10,8 +10,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EnvEntry } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 

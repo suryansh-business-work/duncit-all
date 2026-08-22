@@ -4,8 +4,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import HostRequestRowActions from './HostRequestRowActions';
 import { STATUS_OPTIONS, type HostRequest } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',

@@ -13,7 +13,6 @@ import { useTranslation } from '@duncit/app-settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: string; percent?: number }>) {
-  const { t } = useTranslation();
   return (
     <StatCard
       {...props}

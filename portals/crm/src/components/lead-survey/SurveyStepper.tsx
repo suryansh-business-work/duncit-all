@@ -80,7 +80,7 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
       <Stack direction="row" spacing={1.5} justifyContent="space-between">
         <Button disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</Button>
         {isLast ? (
-          <Button variant="contained" onClick={submit} disabled={submitting}>{submitting ? 'Saving…' : submitLabel}</Button>
+          <Button variant="contained" onClick={submit} disabled={submitting}>{submitting ? 'Saving…' : submitLabelText}</Button>
         ) : (
           <Button variant="contained" onClick={next} disabled={submitting}>Next</Button>
         )}

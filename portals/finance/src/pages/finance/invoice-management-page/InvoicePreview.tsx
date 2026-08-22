@@ -2,8 +2,7 @@ import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { InfoRow } from '@duncit/ui';
 import type { InvoiceSettingsForm } from './types';
-import { formatDate } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDate, useTranslation } from '@duncit/app-settings';
 
 const ACCENT = '#ff4f73';
 // GST-inclusive sample matching the settlement engine: the customer pays 1000

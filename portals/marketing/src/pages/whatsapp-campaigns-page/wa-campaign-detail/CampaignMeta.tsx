@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { categoryLabel, waMoney, waRate } from '../helpers';
 import type { WaCampaignRow } from '../queries';
-import { useTranslation } from '@duncit/app-settings';
 
 /** One label/value line. Hoisted so it isn't redefined each render (S6478). */
 function MetaRow({ label, children }: Readonly<{ label: string; children: ReactNode }>) {

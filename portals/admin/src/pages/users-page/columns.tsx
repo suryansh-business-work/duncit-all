@@ -8,7 +8,6 @@ import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { initials, loginMeta, STATUS_OPTIONS } from './helpers';
 import type { UserRow } from './queries';
-import { useTranslation } from '@duncit/shell';
 
 const STATUS_FILTER_OPTIONS = STATUS_OPTIONS.filter(Boolean).map((s) => ({ value: s, label: s }));
 const providerOptions = (t: ColumnDeps['t']) => [

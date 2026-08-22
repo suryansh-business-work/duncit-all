@@ -3,8 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { InfoRow } from '@duncit/ui';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 

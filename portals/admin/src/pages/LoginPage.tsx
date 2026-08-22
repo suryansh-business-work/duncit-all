@@ -1,9 +1,8 @@
 import { Divider, Stack } from '@mui/material';
-import { PortalLoginPage } from '@duncit/shell';
+import { PortalLoginPage, useTranslation } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import SendAdminCredentials from '../components/SendAdminCredentials';
-import { useTranslation } from '@duncit/shell';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 

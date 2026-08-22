@@ -3,12 +3,11 @@ import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Chip, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { BackHeader, QueryGuard } from '@duncit/ui';
 import AudienceTable from './AudienceTable';
 import { AUDIENCE_LIST, AUDIENCE_TABLE } from './queries';
 import type { AudienceListRow, AudienceRow } from './helpers';
-import { useTranslation } from '@duncit/app-settings';
 
 /** The stored criteria, back in the shape the table sends to the server. */
 const toFilters = (list?: AudienceListRow | null): TableFilterValue[] =>

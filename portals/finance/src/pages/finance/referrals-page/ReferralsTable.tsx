@@ -1,8 +1,7 @@
 import { Chip } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ReferralRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 interface Props {
   fetchRows: TableFetch<ReferralRow>;

@@ -20,7 +20,7 @@ const submitSchema = yup.object({
   service_key: yup.string().trim().max(60).default(''),
   impact: yup
     .string()
-    .oneOf(STATUS_REPORT_IMPACTS as readonly string[])
+    .oneOf(STATUS_REPORT_IMPACTS)
     .default('OTHER'),
   name: yup.string().trim().required('Name is required').max(120),
   email: yup.string().trim().required('Email is required').email('Invalid email').max(160),

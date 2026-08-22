@@ -4,8 +4,7 @@ import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting, SurveyKind } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLOR: StatusColorMap = {
   REQUESTED: 'default',

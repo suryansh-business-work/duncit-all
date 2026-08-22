@@ -1,6 +1,12 @@
 import { Text, YStack } from 'tamagui';
 import type { PodContentViolation } from '@duncit/utils';
 
+/** One refusal line: the rule broken, plus the quoted evidence when the check returned any. */
+const violationLine = (violation: PodContentViolation) => {
+  const evidence = violation.evidence ? ` (“${violation.evidence}”)` : '';
+  return `• ${violation.message}${evidence}`;
+};
+
 interface Props {
   violations: PodContentViolation[];
   title: string;
@@ -31,7 +37,7 @@ export function ContentCheckNotice({ violations, title }: Readonly<Props>) {
           fontSize={12}
           color="$color"
         >
-          {`• ${violation.message}${violation.evidence ? ` (“${violation.evidence}”)` : ''}`}
+          {violationLine(violation)}
         </Text>
       ))}
     </YStack>

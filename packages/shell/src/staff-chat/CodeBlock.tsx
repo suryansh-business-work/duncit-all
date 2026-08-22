@@ -31,7 +31,7 @@ const KEYWORDS = [
 
 // Capture groups 1–4 are, in order, the four kinds above — `paint` maps them onto COLOR.
 const TOKENS = new RegExp(
-  `(${COMMENT.source})|(${STRING.source})|(${NUMBER.source})|\\b(${KEYWORDS.join('|')})\\b`,
+  String.raw`(${COMMENT.source})|(${STRING.source})|(${NUMBER.source})|\b(${KEYWORDS.join('|')})\b`,
   'g',
 );
 

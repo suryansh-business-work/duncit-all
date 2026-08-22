@@ -111,7 +111,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
               </Button>
             )}
             <Button type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>
-              {submitting ? 'Saving…' : submitLabel}
+              {submitting ? 'Saving…' : submitLabelText}
             </Button>
           </Stack>
         </Stack>

@@ -12,8 +12,7 @@ import {
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { formatDate } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDate, useTranslation } from '@duncit/app-settings';
 
 interface Props {
   expense: any;

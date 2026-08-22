@@ -24,6 +24,22 @@ const ROLE_COLOR: Record<WithdrawerRole, ChipColor> = {
 
 const getPodRowId = (row: PodWithdrawalGroup) => row.pod_id;
 
+const renderRequestedFrom = (t: Translator['t']) => (row: PodWithdrawalGroup) => (
+  <RequestedFromCell roles={row.requested_from} t={t} />
+);
+
+const renderStatus = (t: Translator['t']) => (row: PodWithdrawalGroup) => (
+  <Chip
+    size="small"
+    color={row.status === 'APPROVED' ? 'success' : 'warning'}
+    label={
+      row.status === 'APPROVED'
+        ? t('finance.withdrawals.statusApproved')
+        : t('finance.withdrawals.statusPending')
+    }
+  />
+);
+
 /** Pod Title — the pod the withdrawals were earned on. */
 const renderPodTitle = (row: PodWithdrawalGroup) => (
   <Typography variant="body2" fontWeight={700} component="span">
@@ -92,24 +108,14 @@ export default function PodWithdrawalsTable({
         // server has no path to sort or filter it — the page-level Role filter
         // is how this column is narrowed.
         sortable: false,
-        cellRenderer: (row: PodWithdrawalGroup) => <RequestedFromCell roles={row.requested_from} t={t} />,
+        cellRenderer: renderRequestedFrom(t),
         valueGetter: (row) => row.requested_from.map((role) => translatedRoleLabel(t, role)).join(', '),
       },
       {
         field: 'status',
         headerName: t('finance.withdrawals.colStatus'),
         width: 160,
-        cellRenderer: (row: PodWithdrawalGroup) => (
-          <Chip
-            size="small"
-            color={row.status === 'APPROVED' ? 'success' : 'warning'}
-            label={
-              row.status === 'APPROVED'
-                ? t('finance.withdrawals.statusApproved')
-                : t('finance.withdrawals.statusPending')
-            }
-          />
-        ),
+        cellRenderer: renderStatus(t),
         valueGetter: (row) => row.status,
       },
     ],

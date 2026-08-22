@@ -5,8 +5,7 @@ import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import MeetingRowActions from './MeetingRowActions';
 import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',

@@ -25,8 +25,7 @@ import {
   type HolidayType,
   type MeetingHoliday,
 } from './queries';
-import { formatDate } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDate, useTranslation } from '@duncit/app-settings';
 
 const TYPE_OPTIONS = Object.keys(HOLIDAY_TYPE_LABELS) as HolidayType[];
 

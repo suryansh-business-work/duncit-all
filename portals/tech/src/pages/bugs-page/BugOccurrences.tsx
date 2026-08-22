@@ -13,8 +13,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ENV_COLOR, userLabel } from '../../components/telemetry-identity';
 import { BUG_OCCURRENCES, type BugOccurrence } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 function Mono({ label, value }: Readonly<{ label: string; value: string }>) {
   return (

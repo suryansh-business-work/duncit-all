@@ -1,6 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
-import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   label: string;
@@ -22,7 +21,6 @@ export default function ChipArrayField({
   max = 20,
   error,
 }: Readonly<Props>) {
-  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
 
   const commit = () => {

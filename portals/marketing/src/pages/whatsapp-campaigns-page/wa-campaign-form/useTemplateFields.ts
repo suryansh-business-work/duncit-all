@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import type { FieldValues, Path, UseFormGetValues, UseFormSetValue } from 'react-hook-form';
+import type {
+  FieldValues,
+  Path,
+  PathValue,
+  UseFormGetValues,
+  UseFormSetValue,
+} from 'react-hook-form';
 import type { AisensyCampaign, AisensyTemplate } from '../queries';
 import { dynamicButtons, type TemplateFieldValues } from './template-fields';
 
@@ -54,7 +60,7 @@ export function useTemplateFields<T extends FieldValues>({
 
   useEffect(() => {
     const set = (name: string, value: unknown) => {
-      setValue(name as Path<T>, value as never, { shouldValidate: true });
+      setValue(name as Path<T>, value as PathValue<T, Path<T>>, { shouldValidate: true });
     };
     // The asset follows the CAMPAIGN, which AiSensy can answer for even when its
     // template cannot be read. Its own asset is the prefill, so the common case

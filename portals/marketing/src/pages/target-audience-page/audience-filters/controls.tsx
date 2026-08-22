@@ -69,7 +69,6 @@ export function SingleSelect({
   options,
   onChange,
 }: Readonly<{ label: string; options: Option[] } & Bound<string>>) {
-  const { t } = useTranslation();
   return (
     <TextField {...SMALL} select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
       <MenuItem value="">Any</MenuItem>

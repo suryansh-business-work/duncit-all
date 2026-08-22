@@ -7,8 +7,7 @@ import HostEarningsCard from './HostEarningsCard';
 import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
 import WaterfallAccordions from './WaterfallAccordions';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
   const { t } = useTranslation();

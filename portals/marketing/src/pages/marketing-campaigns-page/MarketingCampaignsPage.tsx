@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import CampaignTable from './CampaignTable';
@@ -18,7 +18,6 @@ import {
   SEND_MARKETING_CAMPAIGN,
   type MarketingCampaignRow,
 } from './queries';
-import { useTranslation } from '@duncit/app-settings';
 
 /** Every campaign, with the two things you do to one: look at it, or remove
  * it. Creating happens on its own page — the MJML editor needs the width. */

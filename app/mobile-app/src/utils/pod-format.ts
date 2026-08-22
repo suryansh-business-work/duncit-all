@@ -26,9 +26,10 @@ export function podPriceLabel(pod: HomePod, t: Translate = fallbackT): string {
   return pod.pod_type === 'FREE' ? t('mweb.podDetails.free') : `₹${pod.pod_amount}`;
 }
 
-/** "Free" / "Paid" from the pod type. */
-export function podTypeLabel(type: string): string {
-  return type === 'FREE' ? 'Free' : 'Paid'; // TODO(i18n)
+/** "Free" / "Paid" from the pod type. `t` comes from the rendering screen so
+ * the word follows the reader's language; the bundled English is the default. */
+export function podTypeLabel(type: string, t: Translate = fallbackT): string {
+  return type === 'FREE' ? t('mweb.createPod.free') : t('mweb.common.paid');
 }
 
 /** "label · detail" from the optional place fields. */

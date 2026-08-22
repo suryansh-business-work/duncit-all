@@ -2,8 +2,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack }
 import { DetailBlock as Mono, DetailField as Field } from '../../components/DetailField';
 import { userLabel } from '../../components/telemetry-identity';
 import { parseIssueData, type ErrorLogRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 /** Everything one captured server-operation failure knows about itself. */
 export default function ErrorLogDetailDialog({

@@ -16,8 +16,7 @@ import {
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import AssignClubsSection from './AssignClubsSection';
 import { categoryPath, isActiveClubAdmin, type ClubAdminRow } from './queries';
-import { formatDate } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDate, useTranslation } from '@duncit/app-settings';
 
 interface Props {
   active: ClubAdminRow | null;

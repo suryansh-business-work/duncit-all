@@ -16,8 +16,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { QueryGuard } from '@duncit/ui';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const APP_SETTINGS = gql`
   query AppSettingsExpiry {

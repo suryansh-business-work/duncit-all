@@ -110,7 +110,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
             </Button>
           )}
           <Button type="submit" variant="contained" disabled={submitting || !isValid}>
-            {submitting ? 'Saving…' : submitLabel}
+            {submitting ? 'Saving…' : submitLabelText}
           </Button>
         </Stack>
       </Stack>

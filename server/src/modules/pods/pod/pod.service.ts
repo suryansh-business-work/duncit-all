@@ -422,7 +422,10 @@ async function assertEditContentClean(
       to: attempted[String(field)] ?? '',
     })),
     note: violations
-      .map((v) => `${v.field}: ${v.message}${v.evidence ? ` ("${v.evidence}")` : ''}`)
+      .map((v) => {
+        const evidence = v.evidence ? ` ("${v.evidence}")` : '';
+        return `${v.field}: ${v.message}${evidence}`;
+      })
       .join(' · '),
   });
   throw moderationService.podRejection(violations);

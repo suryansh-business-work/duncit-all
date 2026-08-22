@@ -2,8 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip } from '@mui/material';
 import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SurveyRow } from './queries';
-import { formatDateTime } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/app-settings';
+import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 // The list is already scoped to a single kind, so the scope label omits it.
 type Translate = ReturnType<typeof useTranslation>['t'];

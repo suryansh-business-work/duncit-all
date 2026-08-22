@@ -1,13 +1,12 @@
 import { useQuery } from '@apollo/client';
 import { useUserData } from '@duncit/user-context';
-import { AppIcon } from '@duncit/shell';
+import { AppIcon, useTranslation } from '@duncit/shell';
 import { PageHeader, StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { WEBSITE_CONTENT, type WebsiteContentItem } from '../content/queries';
 import { NEWSLETTER_SUBSCRIBERS, type Subscriber } from '../newsletter/queries';
 import { CONTACT_SUBMISSIONS, type ContactSubmission } from '../contact-submissions/queries';
 import { FAQ_SUBMISSIONS, type FaqSubmission } from '../faq-submissions/queries';
-import { useTranslation } from '@duncit/shell';
 
 const STAT_CARD_SX = { borderRadius: 3, height: '100%' } as const;
 const STAT_SKELETON = { width: 60, height: 48 } as const;

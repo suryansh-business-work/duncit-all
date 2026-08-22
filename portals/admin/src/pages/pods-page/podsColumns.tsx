@@ -16,7 +16,6 @@ import {
   statusValue,
   typeValue,
 } from './podsColumns.values';
-import { useTranslation } from '@duncit/shell';
 
 const renderCover = (p: PodRow) => {
   const first = p.pod_images_and_videos?.[0];

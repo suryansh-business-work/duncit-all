@@ -6,6 +6,7 @@ const developmentUrls = {
   adminUrl: 'http://localhost:2002',
   mwebUrl: 'http://localhost:2003',
   partnersUrl: 'http://localhost:2005',
+  adsUrl: 'http://localhost:2006',
   websiteUrl: 'http://localhost:2000',
   techUrl: 'http://localhost:2009',
   supportEmail: 'support@duncit.local',
@@ -18,6 +19,7 @@ const productionUrls = {
   adminUrl: 'https://admin.duncit.com',
   mwebUrl: 'https://mweb.duncit.com',
   partnersUrl: 'https://partners-app.duncit.com',
+  adsUrl: 'https://ads.duncit.com',
   websiteUrl: 'https://duncit.com',
   techUrl: 'https://tech.duncit.com',
   supportEmail: 'support@duncit.com',
@@ -46,6 +48,9 @@ export async function getUrlConfigs() {
     mwebUrl,
     appUrl: mwebUrl,
     partnersUrl: await configValue('PARTNERS_APP_URL', defaults.partnersUrl),
+    // Where an advertiser submits and tracks an ad — the console the three ad
+    // decision emails link back to.
+    adsUrl: await configValue('ADS_URL', defaults.adsUrl),
     websiteUrl: await configValue('PUBLIC_SITE_URL', defaults.websiteUrl),
     // Where the Gmail OAuth callback returns the operator to. A fixed,
     // server-side value on purpose: taking the return address from the request

@@ -11,6 +11,12 @@ import { defineEmail, v, type EmailDef, type EmailVar } from './catalogue.types'
  * are in that event's `params` order so `notifyEvent` fills both channels off
  * the one array the call site already builds.
  *
+ * There is also no `host-category-added`, even though `HOST_CATEGORY_REQUESTED`
+ * is a WhatsApp campaign: the only thing that fires it is a host request being
+ * approved, and `host-request-approved` already emails the host at that exact
+ * moment naming the category. Two emails one second apart saying the same thing
+ * is not two pieces of news.
+ *
  * There is deliberately NO `host-payment-sent` / `venue-payment-sent` /
  * `club-admin-payment-sent` / `ecomm-payment-sent` here, even though the
  * WhatsApp catalogue keeps four payout campaigns. `payout-statement` already
@@ -95,31 +101,6 @@ const PUBLISHED_ROWS = [
 ] as const;
 
 export const HOST_EMAILS: readonly EmailDef[] = [
-  defineEmail({
-    slug: 'host-category-added',
-    name: 'Host: New Category Added',
-    description: 'The host, when a new hosting category is granted to them.',
-    audience: 'HOST',
-    category: 'notification',
-    fires: 'An admin approves a host’s request for a new category',
-    waEvent: 'HOST_CATEGORY_REQUESTED',
-    subject: 'You can now host {{category}} pods',
-    footerNote: FOOTER.host,
-    vars: [
-      v('name', 'The host’s first name.', 'Meera'),
-      v('category', 'The category they may now host in.', 'Badminton'),
-    ],
-    body: {
-      copyKey: 'email.hostCategoryAdded',
-      nameVar: 'name',
-      tone: LIVE,
-      calloutLabelKey: LABEL.category,
-      calloutVar: 'category',
-      ctaKey: CTA.openPartners,
-      ctaVar: 'app_url',
-    },
-  }),
-
   defineEmail({
     slug: 'host-slot-approved',
     name: 'Host: Venue Slot Approved',

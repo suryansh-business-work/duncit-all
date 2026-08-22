@@ -4,7 +4,6 @@ import { PodModel } from './pod.model';
 import { normalizeSeats, podSeatsTaken } from './pod.seats';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';

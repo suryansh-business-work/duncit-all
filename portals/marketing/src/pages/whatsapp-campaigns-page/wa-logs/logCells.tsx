@@ -32,7 +32,9 @@ interface KindProps {
 
 /** What started this send, in one word. */
 export function KindCell({ row, labels }: Readonly<KindProps>) {
-  return <StatusChip status={row.kind} label={labels[row.kind] ?? row.kind} colorMap={KIND_COLORS} />;
+  return (
+    <StatusChip status={row.kind} label={labels[row.kind] ?? row.kind} colorMap={KIND_COLORS} />
+  );
 }
 
 /**

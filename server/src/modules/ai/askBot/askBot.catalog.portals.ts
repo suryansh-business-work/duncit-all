@@ -124,6 +124,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Check whether the AiSensy WhatsApp API key is configured and send a live WhatsApp template campaign as a test with your own parameters.' },
   { surface: 'tech', path: '/package-docs', label: 'Package Documentation',
     description: 'Browse and search the documentation for every shared @duncit/* package, read straight from each package\'s own docs/index.mdx.' },
+  { surface: 'tech', path: '/package-updates', label: 'Package Updates',
+    description: 'Compare every package.json in the repo against the npm registry — the declared range beside the newest published version, classified as a major, minor or patch bump — read either by manifest or by dependency name, and re-checked on demand.' },
   { surface: 'tech', path: '/profile', label: 'Profile',
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
 

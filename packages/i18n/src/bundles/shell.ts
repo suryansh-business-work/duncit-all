@@ -366,6 +366,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       openai: 'OpenAI',
       orders: 'Orders',
       packageDocumentation: 'Package Documentation',
+      packageUpdates: 'Package Updates',
       partnerFaqs: 'Partner FAQs',
       partners: 'Partners',
       paymentLogs: 'Payment Logs',

@@ -35,3 +35,8 @@ sonar-issues.md
 # Never committed: the fingerprints are per signing key, and a stale one makes
 # Android cache a FAILED verification.
 app/mweb/public/.well-known/
+
+# Local duplication report (pnpm dup:report). The gate writes its CI copy to a
+# temp dir; only scripts/duplication-baseline.json is committed.
+duplication-report.md
+.jscpd/

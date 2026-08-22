@@ -254,3 +254,73 @@ Consequences for anything below that targets the native app:
 - Several of these are behaviour changes, not refactors, and must be called out
   in their PRs: the portal mutation-retry fix, and any surface that starts
   honouring the admin-configured date format.
+
+---
+
+## 6. The gate — new duplication is now caught automatically
+
+Everything above was measured by hand, twice, months apart. That is how a
+55-cluster backlog happens: the copies land one at a time, each one looks small
+in review, and nobody re-measures until somebody writes another audit.
+
+`jscpd` now measures it on every push and every PR, in the **Duplicate code
+gate** job of [.github/workflows/shared-gates.yml](../.github/workflows/shared-gates.yml).
+
+**The agreed threshold is a ratchet, not a clean-slate rule.** A gate that
+demanded zero duplication on a tree with ~19,000 duplicated lines would be red
+for months and get switched off — the same reasoning that shaped the
+hardcoded-copy ratchet next to it. So:
+
+- **Per workspace:** every workspace (`portals/finance`, `packages/shell`,
+  `app/mweb`, `server`, …) keeps the duplicated lines it has today and may never
+  gain one. Adding a copy to any workspace fails the build.
+- **Repo-wide:** a percentage ceiling on top, set just above where the tree sits
+  now, catching duplication spread too thin to move any single workspace's
+  number.
+
+**Where the tree sits today (2026-08-23, `staging`):** **10,397 duplicated lines
+— 1.59% of 653,558**, and the agreed ceiling is **1.9%**. That is a smaller
+figure than the audit's ~19,000 because the detector counts each duplicated line
+once and skips tests, configs and generated code; the audit counted whole
+clusters including scaffolding. The two measure different things on purpose —
+the audit tells you *what to go fix*, the gate tells you *not to add more*.
+
+The single biggest holders are `server` (3,811), `app/mweb` (2,965),
+`app/mobile-app` (2,643) and `portals/crm` (1,231) — the same shape the audit
+found, with the mWeb/native twin pair (rule 27) and the server boundary on top.
+Per-workspace figures sum to more than the repo total because both halves of a
+cross-workspace clone are counted against their own workspace, which is the
+point: neither side gets to add the copy.
+
+Both ceilings live in [scripts/duplication-baseline.json](../scripts/duplication-baseline.json).
+The numbers are meant to go **down**: after deleting a duplicate, run
+`pnpm dup:update` and commit the lower baseline in the same PR. A diff that
+*raises* a number is precisely what review should stop.
+
+```bash
+pnpm dup           # check (what CI runs)
+pnpm dup:report    # check + write duplication-report.md
+pnpm dup:update    # re-measure and lower the ceiling after paying debt
+```
+
+**On a PR the gate posts its report as a comment** — total duplication, which
+workspaces grew, and the largest clone pairs behind the growth, with file and
+line ranges. One sticky comment per PR, rewritten on each push rather than
+stacked.
+
+**The measurement is staged, not read off your working tree.** The detector runs
+against a temp copy built from `git ls-files` (tracked plus untracked-not-ignored,
+which is exactly what a fresh checkout holds) with every file rewritten to LF.
+Both halves matter: with `core.autocrlf=true` a Windows checkout is CRLF, every line
+carries an extra token, and fragments fall either side of the token threshold
+differently than they do on the Linux runner — the first run of this gate
+measured 10,397 lines locally and 10,606 on CI for the very same commit. A
+checked-in baseline is worthless if it only holds on one OS.
+
+**What it does not look at:** tests, `e2e`, `__tests__`, `*.stories.*`,
+generated code, `packages/docs-demos` (worked examples repeat by design), the
+vendored `portals/crm/open-wa-server`, and the Ask Bot page catalogue — a data
+table whose rows are *supposed* to be identical, already excluded from Sonar's
+CPD for the same reason. Detector settings are in
+[.jscpd.json](../.jscpd.json): 10 lines / 90 tokens minimum, so a shared import
+block is not a finding but a copied component or helper is.

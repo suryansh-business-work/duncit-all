@@ -29,8 +29,6 @@ interface TicketStep {
   fires: string;
   description: string;
   waEvent?: string;
-  /** The rating link, for the two that ask how it went. */
-  feedback?: boolean;
 }
 
 /**
@@ -125,10 +123,11 @@ export const SUPPORT_EMAILS: readonly EmailDef[] = [
   defineEmail({
     slug: 'support-feedback',
     name: 'Support: Feedback',
-    description: 'The person whose ticket was closed, asking how the support itself went.',
+    description:
+      'The person whose ticket was closed, asking how the support itself went. CLOSED rather than RESOLVED: a resolved ticket still invites a reply, and asking for a rating while somebody may still be waiting on us is asking the wrong question.',
     audience: 'SUPPORT',
     category: 'marketing',
-    fires: 'A support ticket is closed and its reopen window has passed',
+    fires: 'A support ticket is moved to CLOSED',
     subject: 'How did we do on {{ticket_no}}?',
     footerNote: FOOTER.support,
     vars: [
@@ -320,20 +319,21 @@ export const COMMERCE_EMAILS: readonly EmailDef[] = [
 
   defineEmail({
     slug: 'order-refund',
-    name: 'Order Refund',
-    description: 'The shopper, when a Pod Shop order is refunded. The pod’s own refund email is `pod-refund`.',
+    name: 'Payment Refund',
+    description:
+      'The payer, when an operator refunds a payment from Finance — a shop order, a gift card, or a booking reversed by hand. The pod-cancellation flow has its own `pod-refund`.',
     audience: 'USER',
     category: 'billing',
-    fires: 'A product order is refunded',
+    fires: 'A SUCCESS payment is moved to REFUNDED from Finance',
     subject: 'Refund initiated — {{order_no}}',
     footerNote: FOOTER.account,
     vars: [
       v('name', 'The shopper’s first name.', 'Aarav'),
-      v('order_no', 'The order’s reference.', 'DUN-ORD-771'),
+      v('order_no', 'The invoice number, or the payment id when there is none.', 'DUN-INV-2026-000412'),
       v('amount', 'The refund, pre-formatted with its currency.', '₹899'),
       v('reason', 'Why it was refunded, in the operator’s words.', 'Item out of stock'),
       v('refund_days', 'Working days the refund takes to land.', '5-7'),
-      v('order_url', 'Deep link to the order.', 'https://duncit.com/shop/orders/DUN-ORD-771'),
+      v('order_url', 'Where the payer can see what was refunded.', 'https://duncit.com'),
     ],
     body: {
       copyKey: 'email.orderRefund',

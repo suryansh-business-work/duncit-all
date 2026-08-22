@@ -11,8 +11,7 @@ import {
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
-import { sendHtmlEmail } from '@services/email/email.service';
+import { sendEmail, sendHtmlEmail } from '@services/email/email.service';
 import {
   buildTranscriptArtifact,
   type TranscriptData,
@@ -21,7 +20,6 @@ import {
 import { paginateDocs, paginateDocsRanked, supportSearchRegex } from '@modules/support/support.pagination';
 import { notifyEvent } from '@services/notify/notify.service';
 import { logs } from '@observability/log';
-import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 
 const TICKET_SORTABLE = new Set([

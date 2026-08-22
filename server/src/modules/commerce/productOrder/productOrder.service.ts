@@ -14,10 +14,10 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { notifyEach } from '@services/notify/notify.service';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const newOrderNo = () =>
@@ -374,14 +374,15 @@ async function requestBrandFeedback(order: IProductOrder) {
     productsByOwner.set(ownerId, names);
   }
   if (productsByOwner.size === 0) return;
-  // The phone fields are selected explicitly: the funnel reads the number off
-  // these documents, so a narrower projection skips every send silently.
+  // The phone AND address fields are selected explicitly: the funnel reads the
+  // number and `notifyEvent` reads the address off these documents, so a
+  // narrower projection skips every send silently.
   const owners = await UserModel.find({ _id: { $in: [...productsByOwner.keys()] } })
-    .select('profile.first_name profile.last_name auth.phone communication.whatsapp')
+    .select('profile.first_name profile.last_name auth.email auth.phone communication.whatsapp')
     .lean();
   const { mwebUrl } = await getUrlConfigs();
   const feedbackUrl = `${mwebUrl.replace(/\/+$/, '')}/support/feedback`;
-  await whatsappService.sendEach(
+  await notifyEach(
     owners.map((owner) => {
       const name = `${owner.profile?.first_name ?? ''} ${owner.profile?.last_name ?? ''}`.trim();
       return {
@@ -390,6 +391,7 @@ async function requestBrandFeedback(order: IProductOrder) {
         user: owner,
         name,
         params: [name, (productsByOwner.get(String(owner._id)) ?? []).join(', '), feedbackUrl],
+        vars: { feedback_url: feedbackUrl },
       };
     })
   );

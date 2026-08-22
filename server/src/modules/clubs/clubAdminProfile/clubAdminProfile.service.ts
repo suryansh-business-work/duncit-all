@@ -5,7 +5,6 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { UserModel } from '@modules/access/user/user.model';
-import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 import { notifyEvent } from '@services/notify/notify.service';

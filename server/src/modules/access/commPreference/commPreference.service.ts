@@ -55,7 +55,7 @@ export interface CommPreferenceSheet {
 const badInput = (message: string) =>
   new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 
-const trimmed = (value: unknown): string => String(value ?? '').trim();
+const trimmed = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 /** Where each channel would actually deliver, or '' when it could not. */
 function destinationsOf(user: any): Record<CommChannel, string> {

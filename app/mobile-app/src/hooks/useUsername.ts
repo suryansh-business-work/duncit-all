@@ -50,7 +50,7 @@ export function useUsernameCheck(value: string, current: string | null): Check {
           setCheck({
             checking: false,
             available: answer.available,
-            reason: (answer.reason as UsernameRejection | null) ?? null,
+            reason: answer.reason ?? null,
           });
         })
         .catch((error) => {

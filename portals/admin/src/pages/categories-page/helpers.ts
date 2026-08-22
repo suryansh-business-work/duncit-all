@@ -45,6 +45,9 @@ export function buildUpdateInput(
     media,
     sort_order: form.sort_order,
     is_active: form.is_active,
+    // Gift card artwork is offered on every level, so it travels on every save.
+    gift_card_image_front: form.gift_card_image_front,
+    gift_card_image_back: form.gift_card_image_back,
   };
   // Co-hosting is a SUB-category concept and the server rejects it elsewhere.
   if (level === 'SUB') {
@@ -76,6 +79,8 @@ export function buildCreateInput(
     description: form.description,
     media,
     sort_order: form.sort_order,
+    gift_card_image_front: form.gift_card_image_front,
+    gift_card_image_back: form.gift_card_image_back,
   };
   if (level === 'SUB') {
     return {

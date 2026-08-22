@@ -12,6 +12,9 @@ export interface GiftCardThemeChoice {
   scope_category_id: string | null;
   scope_name: string;
   scope_image_url: string;
+  /** The category's uploaded card faces; empty keeps the gradient card. */
+  scope_image_front_url: string;
+  scope_image_back_url: string;
 }
 
 interface Props {
@@ -40,6 +43,8 @@ const SHOP_CHOICE: GiftCardThemeChoice = {
   scope_category_id: null,
   scope_name: '',
   scope_image_url: '',
+  scope_image_front_url: '',
+  scope_image_back_url: '',
 };
 
 const CARD_WIDTH = 210;
@@ -60,6 +65,8 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
         scope_category_id: cat.id,
         scope_name: cat.name,
         scope_image_url: cat.icon ?? '',
+        scope_image_front_url: cat.gift_card_image_front,
+        scope_image_back_url: cat.gift_card_image_back,
       }));
   } else {
     choices = [SHOP_CHOICE];
@@ -128,7 +135,14 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
               padding={2}
               pressStyle={{ opacity: 0.85 }}
             >
-              <GiftCardVisual theme={choice} imageUrl={choice.scope_image_url} caption={caption} />
+              <GiftCardVisual
+                compact
+                theme={choice}
+                imageUrl={choice.scope_image_url}
+                artworkFrontUrl={choice.scope_image_front_url}
+                artworkBackUrl={choice.scope_image_back_url}
+                caption={caption}
+              />
             </YStack>
           );
         })}

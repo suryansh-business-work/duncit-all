@@ -47,6 +47,10 @@ export interface IGiftCard extends Document {
    * so a live-only lookup would dangle. SHOP cards store '' and clients t() it. */
   scope_name: string;
   scope_image_url: string;
+  /** The category's uploaded card artwork, frozen at purchase. Empty means the
+   * category had none, and every surface renders the gradient card instead. */
+  scope_image_front_url: string;
+  scope_image_back_url: string;
   initial_amount: number;
   /** Equals initial_amount until redeemed, then 0 — kept so the ledger's
    * balance_after chain audits on its own. */
@@ -109,6 +113,8 @@ const giftCardSchema = new Schema<IGiftCard>(
     scope_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     scope_name: { type: String, default: '', trim: true },
     scope_image_url: { type: String, default: '', trim: true },
+    scope_image_front_url: { type: String, default: '', trim: true },
+    scope_image_back_url: { type: String, default: '', trim: true },
     initial_amount: { type: Number, required: true, min: 1 },
     balance: { type: Number, required: true, min: 0 },
     status: { type: String, enum: ['ACTIVE', 'REDEEMED'], default: 'ACTIVE' },

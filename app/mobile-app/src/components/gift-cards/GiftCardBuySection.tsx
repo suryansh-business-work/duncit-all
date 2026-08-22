@@ -70,6 +70,8 @@ export function GiftCardBuySection({
       scope_category_id: theme.scope_category_id,
       scope_name: theme.scope_name,
       scope_image_url: theme.scope_image_url,
+      scope_image_front_url: theme.scope_image_front_url,
+      scope_image_back_url: theme.scope_image_back_url,
       amount,
       recipient_email: forGift ? trimmedEmail : '',
       recipient_name: forGift ? name.trim() : '',

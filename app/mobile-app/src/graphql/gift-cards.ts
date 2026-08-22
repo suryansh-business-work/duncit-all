@@ -14,6 +14,26 @@ export const MobileGiftCardSettingsDocument = gql(`
   }
 `);
 
+/**
+ * The category tree the theme picker is built from — mWeb's
+ * GIFT_CARD_CATEGORIES. Its own document rather than the search screen's
+ * category query, because only the gift card cares about the card artwork.
+ */
+export const MobileGiftCardCategoriesDocument = gql(`
+  query MobileGiftCardCategories {
+    categories {
+      id
+      name
+      slug
+      icon
+      level
+      parent_id
+      gift_card_image_front
+      gift_card_image_back
+    }
+  }
+`);
+
 /** The caller's cards — held or redeemed by them, and the ones they gifted
  * away. mWeb's MY_GIFT_CARDS. */
 export const MobileMyGiftCardsDocument = gql(`
@@ -26,6 +46,8 @@ export const MobileMyGiftCardsDocument = gql(`
         scope_category_id
         scope_name
         scope_image_url
+        scope_image_front_url
+        scope_image_back_url
         initial_amount
         balance
         status
@@ -45,6 +67,8 @@ export const MobileMyGiftCardsDocument = gql(`
         scope_category_id
         scope_name
         scope_image_url
+        scope_image_front_url
+        scope_image_back_url
         initial_amount
         balance
         status
@@ -71,6 +95,8 @@ export const MobileGiftCardByCodeDocument = gql(`
       scope_category_id
       scope_name
       scope_image_url
+      scope_image_front_url
+      scope_image_back_url
       initial_amount
       balance
       status
@@ -100,6 +126,8 @@ export const MobileRedeemGiftCardDocument = gql(`
         scope_category_id
         scope_name
         scope_image_url
+        scope_image_front_url
+        scope_image_back_url
         initial_amount
         balance
         status

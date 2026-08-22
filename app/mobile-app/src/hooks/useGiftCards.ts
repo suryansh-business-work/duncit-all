@@ -2,14 +2,19 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobilePublicFinanceDocument } from '@/graphql/checkout';
-import { MobileGiftCardSettingsDocument, MobileMyGiftCardsDocument } from '@/graphql/gift-cards';
-import { SearchCategoriesDocument } from '@/graphql/search';
+import {
+  MobileGiftCardCategoriesDocument,
+  MobileGiftCardSettingsDocument,
+  MobileMyGiftCardsDocument,
+} from '@/graphql/gift-cards';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export type GiftCardSettings = ResultOf<
   typeof MobileGiftCardSettingsDocument
 >['publicGiftCardSettings'];
-export type GiftCardCategory = ResultOf<typeof SearchCategoriesDocument>['categories'][number];
+export type GiftCardCategory = ResultOf<
+  typeof MobileGiftCardCategoriesDocument
+>['categories'][number];
 export type MyGiftCards = ResultOf<typeof MobileMyGiftCardsDocument>['myGiftCards'];
 export type GiftCard = MyGiftCards['owned'][number];
 
@@ -52,7 +57,7 @@ export function useGiftCards() {
       graphqlRequest(MobileGiftCardSettingsDocument, undefined, { auth: true }).then(
         (d) => active && setSettings(d.publicGiftCardSettings),
       ),
-      graphqlRequest(SearchCategoriesDocument, undefined, { auth: true }).then(
+      graphqlRequest(MobileGiftCardCategoriesDocument, undefined, { auth: true }).then(
         (d) => active && setCategories(d.categories),
       ),
     ])

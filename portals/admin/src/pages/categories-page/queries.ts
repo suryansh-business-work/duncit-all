@@ -30,6 +30,8 @@ export const CATEGORIES = gql`
         width
         height
       }
+      gift_card_image_front
+      gift_card_image_back
       updated_at
     }
   }
@@ -82,6 +84,8 @@ export interface CatItem {
   min_pax: number;
   icon_layout_mweb?: CategoryIconLayout | null;
   icon_layout_native?: CategoryIconLayout | null;
+  gift_card_image_front: string;
+  gift_card_image_back: string;
 }
 
 export interface FormState {
@@ -104,6 +108,10 @@ export interface FormState {
   icon_layout_mweb: CategoryIconLayout | null;
   /** CATEGORY-level only; null until configured. */
   icon_layout_native: CategoryIconLayout | null;
+  /** The two faces of this category's gift card. Empty = no artwork, and the
+   * apps render their generated gradient card instead. Every level may set it. */
+  gift_card_image_front: string;
+  gift_card_image_back: string;
 }
 
 export const blankForm: FormState = {
@@ -119,4 +127,6 @@ export const blankForm: FormState = {
   min_pax: 0,
   icon_layout_mweb: null,
   icon_layout_native: null,
+  gift_card_image_front: '',
+  gift_card_image_back: '',
 };

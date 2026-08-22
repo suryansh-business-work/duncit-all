@@ -75,6 +75,8 @@ const toPub = (d: any) => {
     min_pax: d.min_pax ?? MIN_PAX_FLOOR,
     icon_layout_mweb: layoutToPub(d.icon_layout_mweb),
     icon_layout_native: layoutToPub(d.icon_layout_native),
+    gift_card_image_front: d.gift_card_image_front ?? '',
+    gift_card_image_back: d.gift_card_image_back ?? '',
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -211,6 +213,8 @@ export const categoryService = {
     min_pax?: number;
     icon_layout_mweb?: IconLayoutInput | null;
     icon_layout_native?: IconLayoutInput | null;
+    gift_card_image_front?: string | null;
+    gift_card_image_back?: string | null;
   }) {
     const parent = input.parent_id ? await CategoryModel.findById(input.parent_id) : null;
     if (input.parent_id && !parent) notFound();
@@ -241,6 +245,8 @@ export const categoryService = {
       min_pax: input.min_pax ?? MIN_PAX_FLOOR,
       icon_layout_mweb: toIconLayout(input.icon_layout_mweb),
       icon_layout_native: toIconLayout(input.icon_layout_native),
+      gift_card_image_front: (input.gift_card_image_front ?? '').trim(),
+      gift_card_image_back: (input.gift_card_image_back ?? '').trim(),
     });
     return toPub(doc);
   },
@@ -259,6 +265,8 @@ export const categoryService = {
       min_pax?: number;
       icon_layout_mweb?: IconLayoutInput | null;
       icon_layout_native?: IconLayoutInput | null;
+      gift_card_image_front?: string | null;
+      gift_card_image_back?: string | null;
     }
   ) {
     const doc = await CategoryModel.findById(id);
@@ -283,6 +291,12 @@ export const categoryService = {
     }
     if (input.icon_layout_native !== undefined) {
       doc.icon_layout_native = toIconLayout(input.icon_layout_native);
+    }
+    if (input.gift_card_image_front !== undefined) {
+      doc.gift_card_image_front = (input.gift_card_image_front ?? '').trim();
+    }
+    if (input.gift_card_image_back !== undefined) {
+      doc.gift_card_image_back = (input.gift_card_image_back ?? '').trim();
     }
     await doc.save();
     return toPub(doc);

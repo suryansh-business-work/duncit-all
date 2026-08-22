@@ -7,6 +7,13 @@ import {
   type PaymentStepKey,
   type PaymentStepStatus,
 } from './payment.model';
+import {
+  DEFERRED_STEP_KEYS,
+  POD_STEP_KEYS,
+  STEP_ORDER,
+  isDeferredStep,
+  withPairedSteps,
+} from './payment.steps';
 import { invoiceDataForPayment } from './payment.invoice';
 import { withTransaction } from '@utils/mongoTransaction';
 import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/finance.model';
@@ -45,48 +52,8 @@ import { logs } from '@observability/log';
  * step, and safe to re-run until it lands.
  */
 
-/** Execution order — the audit trail reads top to bottom in this order. */
-const STEP_ORDER: PaymentStepKey[] = [
-  'PAYMENT_CAPTURED',
-  'INVOICE_NUMBER',
-  'SEATS_CLAIMED',
-  'MEMBERSHIP',
-  'TICKET',
-  'LEADERBOARD_POINTS',
-  'PRODUCT_ORDERS',
-  'STOCK_ADJUSTED',
-  'GIFT_CARD_ISSUED',
-  'COUPON_REDEEMED',
-  'COINS_REDEEMED',
-  'COINS_EARNED',
-  'BACKOUT_FILL',
-  'LINK_ATTRIBUTION',
-  'TICKET_EMAIL',
-  'INVOICE_PDF',
-  'RECEIPT_EMAIL',
-  'GIFT_CARD_EMAIL',
-  'SHIPMENT',
-  'PAYMENT_FAILED_NOTICE',
-];
-
-/** The pod leg's steps — all skipped together on a payment with no pod. */
-const POD_STEP_KEYS: PaymentStepKey[] = [
-  'SEATS_CLAIMED',
-  'MEMBERSHIP',
-  'TICKET',
-  'LEADERBOARD_POINTS',
-];
-
-/** Deferred steps, seeded PENDING by the core so the audit lists what it owes. */
-const DEFERRED_STEP_KEYS: PaymentStepKey[] = [
-  'BACKOUT_FILL',
-  'LINK_ATTRIBUTION',
-  'TICKET_EMAIL',
-  'INVOICE_PDF',
-  'RECEIPT_EMAIL',
-  'GIFT_CARD_EMAIL',
-  'SHIPMENT',
-];
+/* The execution order, the pod leg's keys and the deferred keys live in
+ * `payment.steps.ts`, which the audit service reads from the same source. */
 
 /**
  * How long one phase-2 run may hold the payment. The fire-and-forget run and the
@@ -478,6 +445,12 @@ interface DeferredContext {
   steps: IPaymentStep[];
   methodLabel: string;
   failed: boolean;
+  /**
+   * The steps this run is allowed to touch, or null for "everything still
+   * owed". Finance re-running ONE row from the detail page must not also post
+   * the receipt or book the courier as a side effect of pressing it.
+   */
+  only: Set<PaymentStepKey> | null;
 }
 
 interface StepOutcome {
@@ -496,6 +469,9 @@ function markStepFailed(ctx: DeferredContext, key: PaymentStepKey, error: unknow
   });
 }
 
+/** Whether this run is meant to touch a given step. */
+const inScope = (ctx: DeferredContext, key: PaymentStepKey) => !ctx.only || ctx.only.has(key);
+
 /** Run one deferred step, recording whatever happened. A step already DONE is
  * skipped, so a retry only redoes what the payment still owes. */
 async function guardStep(
@@ -503,6 +479,7 @@ async function guardStep(
   key: PaymentStepKey,
   run: () => Promise<StepOutcome>
 ): Promise<void> {
+  if (!inScope(ctx, key)) return;
   if (isDone(ctx.steps, key)) return;
   try {
     const outcome = await run();
@@ -648,6 +625,9 @@ async function sendReceipt(ctx: DeferredContext, pdf: Buffer): Promise<void> {
  * regenerates the PDF rather than posting an empty one.
  */
 async function emailReceipt(ctx: DeferredContext): Promise<void> {
+  // The pair is widened by `withPairedSteps` before the run, so asking for
+  // either one puts both in scope and this single check covers them.
+  if (!inScope(ctx, 'RECEIPT_EMAIL')) return;
   if (isDone(ctx.steps, 'RECEIPT_EMAIL')) return;
   let pdf: Buffer;
   try {
@@ -774,6 +754,83 @@ function capturedMethod(payment: IPayment): string {
   return captured?.detail || payment.gateway || 'Gateway';
 }
 
+/* ------------------------------------------------------------------ *
+ * Re-running what did not land — Finance's retry
+ * ------------------------------------------------------------------ */
+
+/** A deferred step that has neither landed nor been ruled out. SKIPPED is a
+ * decision ("this payment has no pod"), not an omission, so it is settled. */
+const isOwed = (steps: IPaymentStep[], key: PaymentStepKey): boolean => {
+  const step = steps.find((s) => s.key === key);
+  return !step || (step.status !== 'DONE' && step.status !== 'SKIPPED');
+};
+
+/** Does the payment still owe ANY deferred work? The COMPLETE gate. */
+const stillOwed = (steps: IPaymentStep[]): boolean =>
+  DEFERRED_STEP_KEYS.some((key) => isOwed(steps, key));
+
+const outstandingDeferred = (
+  steps: IPaymentStep[],
+  candidates: readonly PaymentStepKey[]
+): PaymentStepKey[] => candidates.filter((key) => isOwed(steps, key));
+
+/**
+ * The caller's step selection, checked against the steps that CAN be re-run on
+ * their own. Anything else — a core step, a typo — is refused rather than
+ * silently dropped: a retry button that reports success while having run
+ * nothing is worse than one that says the row cannot be retried.
+ */
+function normalizeRetryKeys(keys?: readonly string[]): PaymentStepKey[] | null {
+  if (!keys || keys.length === 0) return null;
+  const unknown = keys.filter((key) => !isDeferredStep(key));
+  if (unknown.length > 0) {
+    throw new GraphQLError(`These steps cannot be re-run on their own: ${unknown.join(', ')}`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return withPairedSteps(keys.filter(isDeferredStep));
+}
+
+const RETRY_DETAIL = 'Re-run requested from Finance';
+
+/**
+ * Put the chosen steps back to PENDING and hand the payment to phase 2 again.
+ *
+ * The state goes back to CORE_DONE because that is the only state
+ * `runSideEffects` will claim, and the lease is released so the retry does not
+ * have to wait out a run that has already finished. The reconciler's attempt
+ * budget is cleared with them: it gave up on this payment, and a human asking
+ * again is the reason to start counting over.
+ */
+async function reopenSteps(paymentDocId: string, keys: readonly PaymentStepKey[]): Promise<void> {
+  const payment = await PaymentModel.findById(paymentDocId).select('steps');
+  if (!payment) return;
+  let steps = (payment.steps ?? []).map(toPlainStep);
+  for (const key of keys) {
+    steps = recordStep(steps, key, 'PENDING', RETRY_DETAIL);
+  }
+  await PaymentModel.updateOne(
+    { _id: paymentDocId },
+    {
+      $set: {
+        steps,
+        finalize_state: 'CORE_DONE',
+        finalized_at: null,
+        side_effects_lease_at: null,
+        side_effect_attempts: 0,
+      },
+    }
+  );
+}
+
+/** The same budget reset for the core re-run, which rewrites the steps itself. */
+const resetRetryBudget = (paymentDocId: string) =>
+  PaymentModel.updateOne(
+    { _id: paymentDocId },
+    { $set: { side_effects_lease_at: null, side_effect_attempts: 0 } },
+    { timestamps: false }
+  );
+
 export const paymentFinalizer = {
   /**
    * Idempotent. Phase 1 = the ACID core (one transaction). Phase 2 = the side
@@ -813,10 +870,17 @@ export const paymentFinalizer = {
     }
   },
 
-  /** Phase 2 only. Safe to re-run any number of times — every step that already
+  /**
+   * Phase 2 only. Safe to re-run any number of times — every step that already
    * landed is skipped, and a step that fails leaves the payment at CORE_DONE for
-   * the reconciler to pick up again. */
-  async runSideEffects(paymentDocId: string): Promise<void> {
+   * the reconciler to pick up again.
+   *
+   * `only` narrows the run to named steps, which is what Finance's row-level
+   * retry sends. The payment still only reaches COMPLETE once NOTHING deferred
+   * is outstanding, so re-running one row out of three failures leaves the other
+   * two visible instead of quietly declaring the payment finished.
+   */
+  async runSideEffects(paymentDocId: string, only?: readonly PaymentStepKey[]): Promise<void> {
     // Claim the payment before touching a third party. Only a committed core has
     // side effects to run (NOT_STARTED and FAILED have no booking behind them,
     // COMPLETE is already done) — and only ONE runner may hold it, or the
@@ -841,6 +905,7 @@ export const paymentFinalizer = {
       steps: (payment.steps ?? []).map(toPlainStep),
       methodLabel: capturedMethod(payment),
       failed: false,
+      only: only ? new Set(only) : null,
     };
 
     await guardStep(ctx, 'BACKOUT_FILL', () => fillBackouts(ctx));
@@ -853,10 +918,77 @@ export const paymentFinalizer = {
     // The run is over, so the lease goes back: a step that failed should be
     // retried on the reconciler's next sweep, not after the lease ages out.
     const set: Record<string, unknown> = { steps: ctx.steps, side_effects_lease_at: null };
-    if (!ctx.failed) {
+    if (!ctx.failed && !stillOwed(ctx.steps)) {
       set.finalize_state = 'COMPLETE';
       set.finalized_at = new Date();
     }
     await PaymentModel.updateOne({ _id: payment._id }, { $set: set });
+  },
+
+  /**
+   * Re-run the checkout work that did not land, at Finance's request.
+   *
+   * Two different repairs behind one entry point, because which one applies is
+   * a fact about the payment rather than a choice the caller should make:
+   *
+   *  - the core never committed, so there is no booking at all → re-run the
+   *    whole finalization. Every leg guards its own replay (an existing
+   *    membership is reused, the coin debit and the gift card are keyed on the
+   *    payment id), so a second pass repairs rather than duplicates.
+   *  - the core committed and a deferred step failed → re-run just those steps,
+   *    which is the same work the reconciler does, on demand.
+   *
+   * `stepKeys` picks individual rows; omit it to re-run everything still owed.
+   * The reconciler's attempt budget is reset either way: a human asking again
+   * is exactly the signal that the thing it gave up on is worth another try.
+   */
+  async retry(paymentDocId: string, stepKeys?: readonly string[]): Promise<void> {
+    const payment = await PaymentModel.findById(paymentDocId);
+    if (!payment) {
+      throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    // The money went back. Nothing here should keep working for it — least of
+    // all the core, which would claim a seat against a refunded charge.
+    //
+    // Note this does NOT check for SUCCESS: a payment whose core rolled back is
+    // still PENDING, because the promotion to SUCCESS happens INSIDE that
+    // transaction. Capture is proven by `finalize_state` instead — FAILED is
+    // only ever written after the gateway confirmed the charge.
+    if (payment.status === 'REFUNDED') {
+      throw new GraphQLError('This payment has been refunded — there is nothing to re-run', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const requested = normalizeRetryKeys(stepKeys);
+
+    // FAILED and only FAILED is the whole-core repair. `markFinalizeFailed`
+    // refuses to stamp it over a core that committed, so it genuinely means
+    // nothing was written — whereas NOT_STARTED is also what every payment
+    // settled before this field existed reads, and re-running the core over one
+    // of those would write its product orders twice and take the stock again.
+    if (payment.finalize_state === 'FAILED') {
+      await resetRetryBudget(paymentDocId);
+      await this.finalizePayment(paymentDocId, capturedMethod(payment));
+      await this.runSideEffects(paymentDocId);
+      return;
+    }
+    if (payment.finalize_state !== 'CORE_DONE' && payment.finalize_state !== 'COMPLETE') {
+      throw new GraphQLError(
+        'This payment was settled before checkout recorded its steps — there is nothing here to re-run',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
+
+    const recorded = (payment.steps ?? []).map(toPlainStep);
+    // No steps at all is a payment that predates step tracking, not one owing
+    // seven pieces of work — the same reading the audit page takes.
+    const owed = recorded.length === 0 ? [] : outstandingDeferred(recorded, requested ?? DEFERRED_STEP_KEYS);
+    if (owed.length === 0) {
+      throw new GraphQLError('Nothing on this payment is waiting to be re-run', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    await reopenSteps(paymentDocId, owed);
+    await this.runSideEffects(paymentDocId, owed);
   },
 };

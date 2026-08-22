@@ -3414,6 +3414,9 @@ importers:
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table
+      '@duncit/tabs':
+        specifier: workspace:*
+        version: link:../../packages/tabs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme

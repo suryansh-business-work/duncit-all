@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { Card, CardContent, Typography } from '@mui/material';
 import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
+import SectionBlock from './SectionBlock';
+import { useTableRefresh } from './useTableRefresh';
 import { money, staticTableFetch, type PaymentProductOrderLine } from './queries';
 
 const getOrderRowId = (order: PaymentProductOrderLine) => order.id;
@@ -43,22 +44,20 @@ export default function ProductOrdersTable({ orders, currencySymbol }: Readonly<
   const { t } = useTranslation();
   const fetchRows = useMemo(() => staticTableFetch(orders, orderSearchText), [orders]);
   const columns = useMemo(() => buildColumns(currencySymbol, t), [currencySymbol, t]);
+  // A shipment retry writes the AWB onto these rows — see useTableRefresh.
+  const refetchRef = useTableRefresh(orders);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
-      <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-          {t('finance.payment.ordersTitle')}
-        </Typography>
-        <DuncitTable<PaymentProductOrderLine>
-          tableId="finance-payment-product-orders"
-          columns={columns}
-          fetchRows={fetchRows}
-          getRowId={getOrderRowId}
-          emptyText={t('finance.payment.ordersEmpty')}
-          searchPlaceholder={t('finance.payment.ordersSearch')}
-        />
-      </CardContent>
-    </Card>
+    <SectionBlock title={t('finance.payment.ordersTitle')}>
+      <DuncitTable<PaymentProductOrderLine>
+        tableId="finance-payment-product-orders"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getOrderRowId}
+        refetchRef={refetchRef}
+        emptyText={t('finance.payment.ordersEmpty')}
+        searchPlaceholder={t('finance.payment.ordersSearch')}
+      />
+    </SectionBlock>
   );
 }

@@ -87,6 +87,18 @@ export const paymentTypeDefs = /* GraphQL */ `
     FAILED
   }
 
+  """
+  Which part of checkout a step or artifact belongs to — one per thing a
+  checkout can buy, plus the PAYMENT work every checkout does whatever it bought.
+  The Finance detail page draws a tab per purchase kind.
+  """
+  enum PaymentSegment {
+    PAYMENT
+    POD
+    PRODUCT
+    GIFT_CARD
+  }
+
   "One step of the post-payment finalization pipeline, in execution order."
   type PaymentStep {
     key: String!
@@ -98,6 +110,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Ids of the documents this step created."
     refs: [String!]!
     at: String
+    segment: PaymentSegment!
+    "True when Finance can re-run this step on its own from the detail page."
+    can_retry: Boolean!
   }
 
   "A thing checkout was supposed to create, verified by reading it back from the database."
@@ -112,6 +127,24 @@ export const paymentTypeDefs = /* GraphQL */ `
     refs: [String!]!
     "Set when the artifact is not applicable to this payment (e.g. no products bought)."
     not_applicable: Boolean!
+    segment: PaymentSegment!
+    "The pipeline step that would re-create this row; null when only re-running the whole booking core would."
+    retry_key: String
+  }
+
+  "The gift card a GIFT_CARD payment bought, read back by its payment id."
+  type PaymentGiftCard {
+    id: ID!
+    code: String!
+    recipient_name: String!
+    "Empty on a self-purchase — the buyer is the recipient."
+    recipient_email: String!
+    scope_name: String!
+    initial_amount: Float!
+    balance: Float!
+    status: String!
+    expires_at: String
+    redeemed_at: String
   }
 
   "One Duncit Coin ledger movement caused by this payment."
@@ -173,6 +206,11 @@ export const paymentTypeDefs = /* GraphQL */ `
     coupon: PaymentCouponInfo
     pod_booking: PaymentPodBooking
     product_orders: [PaymentProductOrderLine!]!
+    gift_card: PaymentGiftCard
+    "True when the money landed but the booking core never did — the one state where the whole finalization can be re-run."
+    can_retry_finalize: Boolean!
+    "Every deferred step still owed. What the page's Retry all sends."
+    retryable_step_keys: [String!]!
     "Gross before coupon + coins, taken from the frozen checkout metadata."
     original_total: Float!
     "Coins spent on this payment (1 coin = 1 rupee off the gross)."
@@ -456,6 +494,14 @@ export const paymentTypeDefs = /* GraphQL */ `
     createRazorpayOrder(input: RazorpayOrderInput!): RazorpayOrder!
     verifyRazorpayPayment(input: VerifyRazorpayInput!): Payment!
     refundPayment(payment_doc_id: ID!, reason: String): Payment!
+    """
+    Re-run the checkout work that did not land, and answer with the fresh audit.
+
+    Omit step_keys to re-run everything the payment still owes; pass one to
+    re-run a single row. A payment whose booking core never committed is re-run
+    whole instead — every leg guards its own replay, so nothing is created twice.
+    """
+    retryPaymentSteps(payment_doc_id: ID!, step_keys: [String!]): PaymentDetail!
     "Standalone product-cart checkout via the dummy gateway."
     dummyProductCheckout(input: DummyProductCheckoutInput!): Payment!
     "Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment)."

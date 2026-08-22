@@ -4,6 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { STATUS_COLORS } from '../payment-logs-page/helpers';
+import RetryAllButton from './RetryAllButton';
 import type { PaymentDetail } from './queries';
 
 interface FinalizeWarning {
@@ -29,11 +30,19 @@ const FINALIZE_WARNINGS: Record<string, FinalizeWarning> = {
 
 interface Props {
   detail: PaymentDetail;
+  busyKey: string | null;
+  onRetryAll: () => void;
   formatDateTime: DateFormatter['formatDateTime'];
 }
 
-/** Identity line + the loud states: refund-required and a stalled/failed finalize. */
-export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly<Props>) {
+/** Identity line + the loud states: refund-required and a stalled/failed
+ * finalize, with the one button that answers both. */
+export default function PaymentDetailHeader({
+  detail,
+  busyKey,
+  onRetryAll,
+  formatDateTime,
+}: Readonly<Props>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const p = detail.payment;
@@ -42,11 +51,11 @@ export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly
 
   return (
     <Box sx={{ mb: 3 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
         <IconButton aria-label={t('finance.payment.backToLogs')} onClick={() => navigate('/payment-logs')}>
           <ArrowBackIcon />
         </IconButton>
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 240 }}>
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
             <Typography variant="h5" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
               {p.payment_id}
@@ -57,6 +66,7 @@ export default function PaymentDetailHeader({ detail, formatDateTime }: Readonly
             {p.invoice_no ?? t('finance.payment.noInvoiceNumber')} · {p.gateway} · {paidAt}
           </Typography>
         </Box>
+        <RetryAllButton detail={detail} busyKey={busyKey} onRetryAll={onRetryAll} />
       </Stack>
 
       {detail.needs_refund && (

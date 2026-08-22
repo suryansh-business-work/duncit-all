@@ -217,9 +217,6 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'Your club admin access has been restored. The pods assigned to you are back in your console.',
 
   // --- Host, running ---------------------------------------------------------
-  'email.hostCategoryAdded.title': 'You can host a new category',
-  'email.hostCategoryAdded.body':
-    'Your request to host in a new category has been approved. It is available the next time you create a pod.',
   'email.hostSlotApproved.title': 'Your slot was approved',
   'email.hostSlotApproved.body':
     'The venue has approved the slot you asked for, so the pod below can go ahead at that time. Nothing else is needed from you.',

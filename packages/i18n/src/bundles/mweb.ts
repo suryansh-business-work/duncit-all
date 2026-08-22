@@ -285,6 +285,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       ticket: { title: 'Ticket' },
       liveChat: { title: 'Live chat' },
       accountHealth: { title: 'Account health' },
+      commPreference: { title: 'Communication preferences' },
       mailPreference: { title: 'Mail preferences' },
       whatsappPreference: { title: 'WhatsApp preferences' },
       smsPreference: { title: 'SMS preferences' },
@@ -319,25 +320,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     account: {
       preferences: 'Preferences',
-      // Profile Settings > Username. The handle is what /u/<username> carries,
-      // so this section owns both the edit field and the link it produces.
+      // The @handle is minted by the server and never typed, so the only copy
+      // left is on the button that copies the link it produces — and that
+      // button lives on the PROFILE, beside the handle, not in settings.
       username: {
-        title: 'Username',
-        subtitle: 'This is how people find and share your profile.',
-        label: 'Username',
-        placeholder: 'your-handle',
-        linkLabel: 'Your profile link',
-        checking: 'Checking availability…',
-        available: '{username} is available.',
-        current: 'This is your username.',
-        // The three refusals the server answers with. Keyed by its reason
-        // code, so the server ships codes and never English (rule 38).
-        taken: 'Someone already has that username.',
-        reserved: 'That username is reserved.',
-        format: 'Use 3–30 characters: lowercase letters, numbers and single hyphens.',
-        save: 'Save username',
-        saved: 'Username updated',
-        saveFailed: 'Could not save that username. Please try again.',
         copyLink: 'Copy profile link',
         linkCopied: 'Profile link copied',
       },
@@ -2758,7 +2744,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     commPreference: {
       title: 'Communication Preferences',
-      subtitle: 'Where we message you, and where your one-time codes arrive.',
+      // The line under the single row in Profile Settings, and the line under
+      // the hub's own heading. Two places, two sentences: the row says what is
+      // behind it, the hub says what the reader is about to choose.
+      entryHint: 'Email, WhatsApp and SMS',
+      blurb: 'Pick a channel to choose what Duncit sends you there.',
       // Channel names. Rendered by the section AND by each channel's own
       // screen, so they are named once.
       email: 'Email',
@@ -2767,14 +2757,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       emailHint: 'Choose which emails we send you',
       whatsappHint: 'Choose which WhatsApp messages we send you',
       smsHint: 'Choose which text messages we send you',
-      otpLabel: 'One-time codes',
-      otpHint: 'Codes that prove it is you when you sign in.',
+      // "Authentication messages", not "one-time codes": the reader is being
+      // asked where a security message may reach them, and half of them have
+      // never called the six digits inside it a code.
+      authTitle: 'Authentication messages',
+      authBody:
+        'The messages that prove it is you — signing in, and marking attendance at a pod.',
+      authSentTo: 'Sent to {destination}.',
       // The switch is disabled rather than allowed to strand somebody — the
       // same shape as Connected Accounts' only-way-in guard.
-      otpLocked: 'This is the only channel that can reach you, so codes stay on here.',
-      emailMissing: 'Add an email address to get codes here.',
-      whatsappMissing: 'Add a WhatsApp number to get codes here.',
-      smsMissing: 'Add a phone number to get codes here.',
+      authLocked:
+        'This is the only channel that can reach you, so authentication messages stay on here.',
+      // The hub's one-line summary per channel.
+      authOn: 'Authentication messages on',
+      authOff: 'Authentication messages off',
+      emailMissing: 'Add an email address to get messages here.',
+      whatsappMissing: 'Add a WhatsApp number to get messages here.',
+      smsMissing: 'Add a phone number to get messages here.',
       saved: 'Preferences updated',
       saveFailed: 'Could not change that. Please try again.',
       loadFailed: 'Could not load your communication preferences.',
@@ -2783,12 +2782,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       title: 'SMS Preference',
       subtitle: 'These are the texts we send to {destination}.',
       noNumber: 'Add a phone number to your account to receive texts.',
-      otpHeading: 'One-time codes',
-      otpBody: 'Codes that prove it is you — signing in, and marking attendance at a pod.',
       // Said plainly rather than implied by an empty list: a screen with one
       // switch on it reads as broken unless it says why.
-      onlyUse:
-        'One-time codes are the only texts Duncit sends today. There are no marketing or reminder texts to switch off.',
+      authOnly:
+        'Authentication messages are the only texts Duncit sends today. There are no marketing or reminder texts to switch off.',
       loadFailed: 'Could not load your SMS preferences.',
     },
     profile: {

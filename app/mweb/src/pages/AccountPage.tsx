@@ -26,8 +26,7 @@ import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
-import CommunicationPreferencesSection from './account-page/comm-preference';
-import UsernameForm from './account-page/username-form';
+import CommPreferenceEntryCard from './account-page/comm-preference';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -182,11 +181,12 @@ export default function AccountPage() {
 
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
-      <UsernameForm current={me.username ?? null} onSaved={() => refetch()} />
       <LanguageSection />
-      {/* Email, WhatsApp and SMS under one heading — each a door to its own
-          categories, each with its one-time-code switch inline. */}
-      <CommunicationPreferencesSection />
+      {/* One row, not three cards: the channels and every switch on them
+          live behind it, on /account/communication. The @handle is minted
+          by the server and is shown — with the link it produces — on the
+          profile itself, which is where somebody goes to share it. */}
+      <CommPreferenceEntryCard />
       <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog

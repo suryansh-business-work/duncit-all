@@ -318,9 +318,13 @@ export {
   type PodAttendanceLabels,
 } from './pod-attendance-copy';
 export {
+  authMessageCardState,
   buildCommPreferenceLabels,
+  commChannelSummary,
   commRowState,
+  findCommChannel,
   COMM_CHANNELS,
+  type AuthMessageCardState,
   type CommChannel,
   type CommChannelLabels,
   type CommChannelState,
@@ -330,16 +334,8 @@ export {
 } from './comm-preference';
 export {
   buildUsernameLabels,
-  canSaveUsername,
-  isUsernameError,
-  normalizeUsername,
   profileUrl,
-  usernameStatus,
-  USERNAME_PATTERN,
   type UsernameLabels,
-  type UsernameRejection,
-  type UsernameStatus,
-  type UsernameStatusInput,
   type UsernameTranslate,
 } from './username';
 export {

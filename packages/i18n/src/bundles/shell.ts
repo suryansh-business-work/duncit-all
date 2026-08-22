@@ -49,6 +49,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       description: 'Description',
       updated: 'Updated',
       type: 'Type',
+      // Whether a record is switched on. Generic on purpose: Legal, Products
+      // and Partners all render the same two words against a boolean, and one
+      // translator decision should cover every one of them (rule 40).
+      active: 'Active',
+      inactive: 'Inactive',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,

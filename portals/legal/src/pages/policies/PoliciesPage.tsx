@@ -3,12 +3,26 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
+import { notifySuccess } from '@duncit/dialogs';
 import { PageHeader } from '@duncit/ui';
-import { CREATE_POLICY, DELETE_POLICY, POLICIES_TABLE, UPDATE_POLICY, type Policy } from '../../graphql/policies';
+import { parseApiError } from '@duncit/utils';
+import {
+  CREATE_POLICY,
+  DELETE_POLICY,
+  NOTIFY_POLICY_ACCEPTED_USERS,
+  POLICIES_TABLE,
+  UPDATE_POLICY,
+  type Policy,
+} from '../../graphql/policies';
 import { slugify } from '../../lib/slug';
 import PoliciesTable from './PoliciesTable';
-import PolicyFormDialog, { EMPTY_POLICY_FORM, type PolicyFormState } from './PolicyFormDialog';
+import PolicyFormDialog, {
+  EMPTY_POLICY_FORM,
+  EMPTY_POLICY_ROW,
+  type PolicyFormState,
+} from './PolicyFormDialog';
+import PolicyVersionsDialog from './PolicyVersionsDialog';
+import PolicyConfirmDialogs from './PolicyConfirmDialogs';
 import { useTranslation } from '@duncit/shell';
 
 export default function PoliciesPage() {
@@ -23,35 +37,29 @@ export default function PoliciesPage() {
   const [form, setForm] = useState<PolicyFormState>(EMPTY_POLICY_FORM);
   const [slugTouched, setSlugTouched] = useState(false);
   const [delTarget, setDelTarget] = useState<Policy | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<Policy | null>(null);
+  const [notifyTarget, setNotifyTarget] = useState<Policy | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [createMut, { loading: creating }] = useMutation(CREATE_POLICY);
   const [updateMut, { loading: updating }] = useMutation(UPDATE_POLICY);
   const [deleteMut] = useMutation(DELETE_POLICY);
+  const [notifyMut, { loading: notifying }] = useMutation(NOTIFY_POLICY_ACCEPTED_USERS);
   const saving = creating || updating;
 
   const openNew = () => {
     setIsNew(true);
-    setEditing({
-      id: '',
-      // Blank until the server mints it on insert — the same contract every
-      // entity id carries.
-      policy_no: '',
-      slug: '',
-      title: '',
-      policy_type: '',
-      content: '',
-      is_active: true,
-      sort_order: 0,
-      updated_at: '',
-    });
+    setEditing({ ...EMPTY_POLICY_ROW });
     setForm({ ...EMPTY_POLICY_FORM });
     setSlugTouched(false);
     setError(null);
   };
+
   const openEdit = (p: Policy) => {
     setIsNew(false);
     setEditing(p);
+    // The notify tick resets on every open. A mail to everyone who ever signed
+    // up must not go out because somebody left a box as they found it.
     setForm({
       slug: p.slug,
       title: p.title,
@@ -59,6 +67,8 @@ export default function PoliciesPage() {
       content: p.content || '',
       is_active: p.is_active,
       sort_order: p.sort_order,
+      notify_accepted_users: false,
+      notify_summary: '',
     });
     setSlugTouched(true);
     setError(null);
@@ -73,6 +83,15 @@ export default function PoliciesPage() {
     setForm((f) => ({ ...f, ...patch }));
   };
 
+  /** Say how many people were written to, so a send is never silent. */
+  const reportNotified = (people: number) => {
+    if (people > 0) {
+      notifySuccess(t('legal.policies.notify.sent', { vars: { people: String(people) } }));
+      return;
+    }
+    notifySuccess(t('legal.policies.notify.sentNone'));
+  };
+
   const submit = async () => {
     setError(null);
     if (!form.title.trim()) return setError(t('legal.policies.titleRequired'));
@@ -85,19 +104,21 @@ export default function PoliciesPage() {
       content: form.content,
       is_active: form.is_active,
       sort_order: Number(form.sort_order) || 0,
+      notify_accepted_users: form.notify_accepted_users,
+      notify_summary: form.notify_summary.trim(),
     };
     try {
       if (isNew) {
         await createMut({ variables: { input } });
-        notifySuccess('Policy created');
+        notifySuccess(t('legal.policies.created'));
       } else {
         await updateMut({ variables: { id: editing!.id, input } });
-        notifySuccess('Policy updated');
+        notifySuccess(t('legal.policies.updated'));
       }
       setEditing(null);
       refetchRef.current?.();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(parseApiError(e));
     }
   };
 
@@ -105,8 +126,17 @@ export default function PoliciesPage() {
     /* v8 ignore next -- the confirm dialog only opens once a target is set */
     if (!delTarget) return;
     await deleteMut({ variables: { id: delTarget.id } });
-    notifySuccess('Policy deleted');
+    notifySuccess(t('legal.policies.deleted'));
     setDelTarget(null);
+    refetchRef.current?.();
+  };
+
+  const doNotify = async () => {
+    /* v8 ignore next -- the confirm dialog only opens once a target is set */
+    if (!notifyTarget) return;
+    const res = await notifyMut({ variables: { id: notifyTarget.id, summary: '' } });
+    reportNotified(res.data?.notifyPolicyAcceptedUsers ?? 0);
+    setNotifyTarget(null);
     refetchRef.current?.();
   };
 
@@ -119,9 +149,11 @@ export default function PoliciesPage() {
         refetchRef={refetchRef}
         onEdit={openEdit}
         onRemove={setDelTarget}
+        onHistory={setHistoryTarget}
+        onNotify={setNotifyTarget}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-            New Policy
+            {t('legal.policies.create')}
           </Button>
         }
       />
@@ -129,7 +161,7 @@ export default function PoliciesPage() {
       <PolicyFormDialog
         open={!!editing}
         isNew={isNew}
-        editingTitle={editing?.title ?? ''}
+        editing={editing}
         form={form}
         error={error}
         saving={saving}
@@ -139,14 +171,16 @@ export default function PoliciesPage() {
         onSubmit={submit}
       />
 
-      <ConfirmDialog
-        open={!!delTarget}
-        title={t('legal.policies.deleteTitle')}
-        message={`This permanently deletes “${delTarget?.title}”.`}
-        confirmLabel={t('shell.common.delete')}
-        destructive
-        onConfirm={doDelete}
-        onClose={() => setDelTarget(null)}
+      <PolicyVersionsDialog policy={historyTarget} onClose={() => setHistoryTarget(null)} />
+
+      <PolicyConfirmDialogs
+        deleteTarget={delTarget}
+        notifyTarget={notifyTarget}
+        notifying={notifying}
+        onDeleteConfirm={doDelete}
+        onDeleteClose={() => setDelTarget(null)}
+        onNotifyConfirm={doNotify}
+        onNotifyClose={() => setNotifyTarget(null)}
       />
     </Stack>
   );

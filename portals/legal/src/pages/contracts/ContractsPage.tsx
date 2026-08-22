@@ -16,6 +16,8 @@ import {
 } from '../../graphql/contracts';
 import ContractsTable from './ContractsTable';
 import ContractFormDialog, { EMPTY_CONTRACT_FORM, type ContractFormState } from './ContractFormDialog';
+import { SignWorkflowDialog } from '../../components/signing';
+import { CONTRACT_SIGNING_OPS } from '../../graphql/signing';
 import { useTranslation } from '@duncit/shell';
 
 /** `<input type="date">` wants YYYY-MM-DD; the API speaks ISO. */
@@ -39,6 +41,7 @@ export default function ContractsPage() {
   /** View opens the same dialog with everything locked — one screen, two doors. */
   const [readOnly, setReadOnly] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<Contract | null>(null);
+  const [signTarget, setSignTarget] = useState<Contract | null>(null);
 
   const [createMut, { loading: creating }] = useMutation(CREATE_CONTRACT);
   const [updateMut, { loading: updating }] = useMutation(UPDATE_CONTRACT);
@@ -92,10 +95,10 @@ export default function ContractsPage() {
     try {
       if (isNew) {
         await createMut({ variables: { input } });
-        notifySuccess('Contract created');
+        notifySuccess(t('legal.contracts.created'));
       } else if (editing) {
         await updateMut({ variables: { id: editing.id, input } });
-        notifySuccess('Contract updated');
+        notifySuccess(t('legal.contracts.updated'));
       }
       setOpen(false);
       refresh();
@@ -108,7 +111,7 @@ export default function ContractsPage() {
     if (!archiveTarget) return;
     try {
       await archiveMut({ variables: { id: archiveTarget.id } });
-      notifySuccess('Contract archived');
+      notifySuccess(t('legal.contracts.archived'));
     } finally {
       setArchiveTarget(null);
       refresh();
@@ -129,9 +132,10 @@ export default function ContractsPage() {
         onView={(c) => openContract(c, 'view')}
         onEdit={(c) => openContract(c, 'edit')}
         onArchive={setArchiveTarget}
+        onSign={setSignTarget}
         toolbarActions={
           <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-            Add Contract
+            {t('legal.contracts.add')}
           </Button>
         }
       />
@@ -148,6 +152,21 @@ export default function ContractsPage() {
         onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
         onClose={() => setOpen(false)}
         onSubmit={submit}
+      />
+
+      <SignWorkflowDialog
+        record={
+          signTarget
+            ? {
+                id: signTarget.id,
+                title: signTarget.title,
+                signing_status: signTarget.signing_status,
+              }
+            : null
+        }
+        ops={CONTRACT_SIGNING_OPS}
+        onClose={() => setSignTarget(null)}
+        onSigned={refresh}
       />
 
       <ConfirmDialog

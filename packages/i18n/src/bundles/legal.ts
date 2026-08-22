@@ -63,10 +63,17 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       colId: 'Contract ID',
       colCounterparty: 'Counterparty',
       colLastUpdated: 'Last updated',
+      colSigning: 'Signing',
       counterparty: 'Counterparty',
       counterpartyHint: 'Who the contract is with',
       effectiveFrom: 'Effective from',
       effectiveTo: 'Effective to',
+      add: 'Add Contract',
+      created: 'Contract created',
+      updated: 'Contract updated',
+      archived: 'Contract archived',
+      alreadyArchived: 'Already archived',
+      search: 'Search contract ID, title or counterparty',
     },
 
     documents: {
@@ -91,8 +98,19 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       deleteTitle: 'Delete document?',
       saveFailed: 'Could not save the document.',
       titleRequired: 'Title is required.',
+      search: 'Search document ID, name, type or description',
+      // Switching a document off hides it without deleting it — and works on a
+      // signed one, because a signature locks the wording, not the shelf.
+      activeHint: 'Off hides this document from the app. Nothing is deleted, and a signed document can still be taken down.',
+      activated: 'Document is now active',
+      deactivated: 'Document is now inactive',
     },
 
+    /**
+     * The signing workflow — one set of copy for documents AND contracts,
+     * because one dialog now drives both (rule 40). A word that named only one
+     * of them would be wrong on the other half of the screens that render it.
+     */
     sign: {
       fullName: 'Full name',
       designation: 'Designation',
@@ -104,6 +122,32 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       stepDone: 'Done',
       sendTo: 'Send to',
       message: 'Message (optional)',
+
+      signed: 'Signed',
+      unsigned: 'Unsigned',
+      untitled: 'Untitled',
+      action: 'Sign',
+      viewSigned: 'View the signed copy',
+      locked: 'Signed — locked to edits',
+      allRequired:
+        'Every field is required — a signature without a name, a role and a date is not evidence of anything.',
+      noInlinePdf: 'Your browser cannot display PDFs inline. Download it to read it.',
+      viewerHint: 'Use the viewer’s own controls to zoom and move between pages.',
+      lockedNotice: 'This is signed and locked. It can no longer be edited.',
+      shareHeading: 'Send it on',
+      sharePlaceholder: 'name@company.com',
+      sending: 'Sending…',
+      sendEmail: 'Email',
+      sentTo: 'Sent to {email}',
+      downloadSigned: 'Download the signed copy',
+      downloadUnsigned: 'Download the draft',
+      toSignature: 'Signature',
+      back: 'Back',
+      signing: 'Signing…',
+      signAction: 'Sign it',
+      signedToast: 'Signed',
+      noMethods:
+        'Every signing method is switched off for this platform. An admin can turn one back on from the feature flags.',
     },
 
     grievance: {
@@ -148,6 +192,57 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       slugHint: 'lowercase letters, numbers and dashes',
       sortOrder: 'Sort order',
       content: 'Content',
+      colVersions: 'Wordings',
+      active: 'Active (visible in app)',
+      hidden: 'Hidden',
+      create: 'New Policy',
+      createTitle: 'New policy',
+      editTitle: 'Edit · {title}',
+      created: 'Policy created',
+      updated: 'Policy updated',
+      deleted: 'Policy deleted',
+      deleteMessage: 'This permanently deletes “{title}”, its wording history and nothing else. The acceptance records stay.',
+      search: 'Search policy ID, title or slug',
+
+      // Telling everyone who already accepted that the wording changed. A tick,
+      // never automatic: a typo fix in a heading is not a reason to write to
+      // everybody who has ever signed up.
+      notify: {
+        label: 'Email everyone who has accepted this policy',
+        hint: 'Sends only if the content actually changes. A title or sort-order edit sends nothing.',
+        recipients: 'This would reach {people} people who have accepted it.',
+        recipientsNone: 'Nobody has accepted this policy yet, so there is nobody to tell.',
+        recipientsLoading: 'Counting who has accepted it…',
+        summaryLabel: 'What changed (optional)',
+        summaryHint: 'Shown in the email above the link. Leave it blank to send the notice on its own.',
+        lastSent: 'Last sent {when} to {people} people.',
+        neverSent: 'No change notice has been sent for this policy.',
+        sendNow: 'Send the notice now',
+        sendNowHint:
+          'Sends the same email without editing anything — for when the decision to tell people comes afterwards.',
+        sendTitle: 'Send the change notice?',
+        sendMessage:
+          'This emails everyone who has accepted “{title}” that its wording has changed. It cannot be unsent.',
+        sent: 'Notice sent to {people} people.',
+        sentNone: 'Nobody has accepted this policy yet, so no notice was sent.',
+      },
+
+      // Every wording a policy has had. Written before each edit is applied, so
+      // the acceptance log can be read back to the exact words behind its hash.
+      versions: {
+        action: 'History',
+        title: 'Wording history · {title}',
+        subtitle:
+          'Every wording this policy has had, newest first. A snapshot is taken before each edit, so an acceptance can always be read back to the words behind it.',
+        empty: 'No wording history yet — this is the original.',
+        versionLabel: 'Version {no}',
+        current: 'In force now',
+        by: 'Edited by {name}',
+        unknownEditor: 'Editor not recorded',
+        read: 'Read',
+        contentEmpty: 'This version has no content.',
+        loadFailed: 'Could not load the wording history.',
+      },
     },
   },
 };

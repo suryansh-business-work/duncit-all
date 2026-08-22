@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import DrawIcon from '@mui/icons-material/Draw';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import {
@@ -27,6 +28,8 @@ interface Props {
   onView: (contract: Contract) => void;
   onEdit: (contract: Contract) => void;
   onArchive: (contract: Contract) => void;
+  /** Open the signing workflow — preview, sign, then send it on. */
+  onSign: (contract: Contract) => void;
 }
 
 const getRowId = (c: Contract) => c.id;
@@ -68,28 +71,65 @@ export default function ContractsTable({
   onView,
   onEdit,
   onArchive,
+  onSign,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<Contract>[]>(() => {
+    const signedLabel = (c: Contract) =>
+      c.signing_status === 'SIGNED' ? t('legal.sign.signed') : t('legal.sign.unsigned');
+
+    // The one thing an operator scans this column for: is it executed yet.
+    const renderSigning = (c: Contract) => {
+      const signed = c.signing_status === 'SIGNED';
+      return (
+        <Chip
+          size="small"
+          variant={signed ? 'filled' : 'outlined'}
+          color={signed ? 'success' : 'default'}
+          label={signedLabel(c)}
+        />
+      );
+    };
+
+    const editTooltip = (c: Contract) =>
+      c.is_locked ? t('legal.sign.locked') : t('shell.common.edit');
+    const signTooltip = (c: Contract) =>
+      c.signing_status === 'SIGNED' ? t('legal.sign.viewSigned') : t('legal.sign.action');
+    const archiveTooltip = (c: Contract) =>
+      c.status === 'ARCHIVED' ? t('legal.contracts.alreadyArchived') : t('legal.contracts.archive');
+
     const renderActions = (c: Contract) => (
       <>
         <Tooltip title={t('shell.common.view')}>
-          <IconButton size="small" onClick={() => onView(c)}>
+          <IconButton size="small" aria-label={t('shell.common.view')} onClick={() => onView(c)}>
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('shell.common.edit')}>
-          <IconButton size="small" onClick={() => onEdit(c)}>
-            <EditIcon fontSize="small" />
+        {/* A disabled button fires no events, so the tooltip needs a live
+            wrapper to say why it cannot be pressed. */}
+        <Tooltip title={editTooltip(c)}>
+          <span>
+            <IconButton
+              size="small"
+              disabled={c.is_locked}
+              aria-label={t('shell.common.edit')}
+              onClick={() => onEdit(c)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title={signTooltip(c)}>
+          <IconButton size="small" aria-label={t('legal.sign.action')} onClick={() => onSign(c)}>
+            <DrawIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={c.status === 'ARCHIVED' ? 'Already archived' : 'Archive'}>
-          {/* A disabled button fires no events, so the tooltip needs a live
-              wrapper to say why it cannot be pressed. */}
+        <Tooltip title={archiveTooltip(c)}>
           <span>
             <IconButton
               size="small"
               disabled={c.status === 'ARCHIVED'}
+              aria-label={t('legal.contracts.archive')}
               onClick={() => onArchive(c)}
             >
               <ArchiveIcon fontSize="small" />
@@ -120,6 +160,15 @@ export default function ContractsTable({
         cellRenderer: renderStatus,
         valueGetter: (c) => contractStatusLabel(c.status),
       },
+      // Derived from signed_at, so it is not in the server's sort allowlist.
+      {
+        field: 'signing_status',
+        headerName: t('legal.contracts.colSigning'),
+        width: 120,
+        sortable: false,
+        cellRenderer: renderSigning,
+        valueGetter: signedLabel,
+      },
       { field: 'counterparty', headerName: t('legal.contracts.colCounterparty'), minWidth: 180, filter: { type: 'text' } },
       dateColumn<Contract>({
         field: 'updated_at',
@@ -134,9 +183,9 @@ export default function ContractsTable({
         minWidth: 180,
         formatDate: formatDateTime,
       }),
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 140, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 180, cellRenderer: renderActions },
     ];
-  }, [formatDateTime, onView, onEdit, onArchive]);
+  }, [formatDateTime, onView, onEdit, onArchive, onSign, t]);
 
   return (
     <DuncitTable<Contract>
@@ -147,7 +196,7 @@ export default function ContractsTable({
       toolbarActions={toolbarActions}
       emptyText={t('legal.contracts.empty')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
-      searchPlaceholder="Search contract ID, title or counterparty"
+      searchPlaceholder={t('legal.contracts.search')}
       refetchRef={refetchRef}
     />
   );

@@ -132,6 +132,14 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
   extend type Mutation {
     createLegalDocument(input: CreateLegalDocumentInput!): LegalDocument!
     updateLegalDocument(id: ID!, input: UpdateLegalDocumentInput!): LegalDocument!
+    """
+    Show or hide a document without editing it.
+
+    Works on a SIGNED document, unlike updateLegalDocument: taking something
+    down is the remedy for a signed document that turns out to be wrong, so the
+    signature lock must not block it.
+    """
+    setLegalDocumentActive(id: ID!, is_active: Boolean!): LegalDocument!
     deleteLegalDocument(id: ID!): Boolean!
     cloneLegalDocument(id: ID!): LegalDocument!
     "Sign as the acting user. Locks the contract once nobody is left to sign."

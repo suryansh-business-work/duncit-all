@@ -102,6 +102,25 @@ export const UPDATE_LEGAL_DOCUMENT = gql`
   ${LEGAL_DOCUMENT_FIELDS}
 `;
 
+/**
+ * Show or hide a document without editing it.
+ *
+ * A mutation of its own rather than a field on the update input, because the
+ * server refuses `updateLegalDocument` on a SIGNED document — and taking one
+ * down is exactly the remedy you reach for when something signed turns out to
+ * be wrong.
+ */
+export const SET_LEGAL_DOCUMENT_ACTIVE = gql`
+  mutation SetLegalDocumentActive($id: ID!, $isActive: Boolean!) {
+    setLegalDocumentActive(id: $id, is_active: $isActive) {
+      id
+      is_active
+      updated_by_name
+      updated_at
+    }
+  }
+`;
+
 export const DELETE_LEGAL_DOCUMENT = gql`
   mutation DeleteLegalDocument($id: ID!) {
     deleteLegalDocument(id: $id)

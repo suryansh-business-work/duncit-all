@@ -90,6 +90,43 @@ async function loadAcceptors(ids: readonly string[]): Promise<Map<string, Accept
   );
 }
 
+/**
+ * How far back the "everything else this person accepted" panel reads.
+ *
+ * A cap rather than the whole trail: the panel is context beside the row being
+ * inspected, and an account with hundreds of rows would push the row itself off
+ * the screen. The log table itself is where the complete set is read.
+ */
+const USER_ACCEPTANCE_LIMIT = 50;
+
+/**
+ * The accepting account as it reads TODAY — name, address, phone, standing.
+ *
+ * Separate from {@link loadAcceptors}, which answers the same question for a
+ * whole page in two fields: this is the one-row read behind a detail panel, and
+ * it is the only place that needs to say whether the account still exists.
+ */
+async function loadAccount(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) return null;
+  const user: any = await UserModel.findById(userId)
+    .select(
+      'auth.email auth.phone.number auth.phone.extension profile.first_name profile.last_name metadata.status metadata.deleted_at created_at'
+    )
+    .lean();
+  if (!user) return null;
+  const extension = user.auth?.phone?.extension ?? '';
+  const number = user.auth?.phone?.number ?? '';
+  return {
+    id: String(user._id),
+    name: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim(),
+    email: user.auth?.email ?? '',
+    phone: number ? `${extension} ${number}`.trim() : '',
+    status: user.metadata?.status ?? '',
+    is_deleted: !!user.metadata?.deleted_at,
+    created_at: user.created_at?.toISOString?.() ?? '',
+  };
+}
+
 const toRow = (a: IPolicyAcceptance, acceptors: Map<string, Acceptor>) => {
   const acceptor = acceptors.get(String(a.user_id)) ?? BLANK_ACCEPTOR;
   return {
@@ -285,6 +322,56 @@ export const policyAcceptanceService = {
         userId: input.user_id,
       })
     );
+  },
+
+  /**
+   * Everything behind ONE row of the acceptance log.
+   *
+   * A row on its own answers "who, what, when" and nothing else — the wording
+   * it points at is a bare sha256, and the person is an id. This assembles the
+   * whole picture in one round trip: the account as it reads today, the policy
+   * as it reads today, the exact version they agreed to (matched on that hash),
+   * the full wording history so a later edit is visible as one, this account's
+   * trail through THIS policy, and what else they have accepted.
+   *
+   * Null policy and null version are both normal and both meaningful. A policy
+   * can be hard-deleted, and a version can predate the day this system started
+   * keeping history — saying "the wording is no longer on file" is honest; a
+   * blank panel is not.
+   */
+  async detail(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Acceptance not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const row = await PolicyAcceptanceModel.findById(id);
+    if (!row) {
+      throw new GraphQLError('Acceptance not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+
+    const userId = String(row.user_id);
+    const policyId = String(row.policy_id);
+    const [acceptors, account, policy, policyHistory, userAcceptances] = await Promise.all([
+      loadAcceptors([userId]),
+      loadAccount(userId),
+      Types.ObjectId.isValid(policyId) ? PolicyModel.findById(policyId) : null,
+      PolicyAcceptanceModel.find({ user_id: row.user_id, policy_id: row.policy_id }).sort({
+        accepted_at: -1,
+      }),
+      PolicyAcceptanceModel.find({ user_id: row.user_id })
+        .sort({ accepted_at: -1 })
+        .limit(USER_ACCEPTANCE_LIMIT),
+    ]);
+
+    const versions = policy ? await policyService.versions(policyId) : [];
+    return {
+      acceptance: toRow(row, acceptors),
+      account,
+      policy: policy ? policyToPub(policy) : null,
+      accepted_version: versions.find((v) => v.content_hash === row.content_hash) ?? null,
+      versions,
+      policy_history: policyHistory.map((doc) => toRow(doc, acceptors)),
+      user_acceptances: userAcceptances.map((doc) => toRow(doc, acceptors)),
+    };
   },
 
   /** One page of the Legal portal's acceptance log. */

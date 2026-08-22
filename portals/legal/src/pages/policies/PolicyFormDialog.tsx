@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import PolicyTypeSelect from '../../components/PolicyTypeSelect';
+import type { Policy } from '../../graphql/policies';
+import PolicyNotifyField from './PolicyNotifyField';
 import { useTranslation } from '@duncit/shell';
 
 export interface PolicyFormState {
@@ -24,6 +26,15 @@ export interface PolicyFormState {
   content: string;
   is_active: boolean;
   sort_order: number;
+  /**
+   * Email everyone who has already accepted this policy that it changed.
+   *
+   * Off on every open, deliberately: a mail to everyone who ever signed up is
+   * not something anyone should send by leaving a box as they found it.
+   */
+  notify_accepted_users: boolean;
+  /** Legal's own note on what changed, shown in that email. */
+  notify_summary: string;
 }
 
 export const EMPTY_POLICY_FORM: PolicyFormState = {
@@ -33,12 +44,43 @@ export const EMPTY_POLICY_FORM: PolicyFormState = {
   content: '',
   is_active: true,
   sort_order: 0,
+  notify_accepted_users: false,
+  notify_summary: '',
+};
+
+/**
+ * The row shape a brand-new policy stands in as until the server writes it.
+ *
+ * `policy_no` and `content_hash` are blank on purpose: both are minted on
+ * insert, and a placeholder for either would be a value somebody could quote
+ * that never existed.
+ */
+export const EMPTY_POLICY_ROW: Policy = {
+  id: '',
+  policy_no: '',
+  slug: '',
+  title: '',
+  policy_type: '',
+  content: '',
+  is_active: true,
+  sort_order: 0,
+  version_count: 1,
+  content_hash: '',
+  last_notified_at: null,
+  last_notified_count: 0,
+  updated_at: '',
 };
 
 interface Props {
   open: boolean;
   isNew: boolean;
-  editingTitle: string;
+  /**
+   * The row being edited — its id, its title and what it has already been
+   * notified about. `EMPTY_POLICY_ROW` stands in while creating, which is why
+   * the notify field is hidden then: nobody can have accepted a policy that
+   * does not exist yet.
+   */
+  editing: Policy | null;
   form: PolicyFormState;
   error: string | null;
   saving: boolean;
@@ -51,7 +93,7 @@ interface Props {
 export default function PolicyFormDialog({
   open,
   isNew,
-  editingTitle,
+  editing,
   form,
   error,
   saving,
@@ -61,9 +103,13 @@ export default function PolicyFormDialog({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const heading = isNew
+    ? t('legal.policies.createTitle')
+    : t('legal.policies.editTitle', { vars: { title: editing?.title ?? '' } });
+  const activeLabel = form.is_active ? t('legal.policies.active') : t('legal.policies.hidden');
   return (
     <Dialog open={open} onClose={() => !saving && onClose()} fullWidth maxWidth="md">
-      <DialogTitle>{isNew ? 'New Policy' : `Edit · ${editingTitle}`}</DialogTitle>
+      <DialogTitle>{heading}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -93,7 +139,7 @@ export default function PolicyFormDialog({
             />
             <FormControlLabel
               control={<Switch checked={form.is_active} onChange={(e) => onChange({ is_active: e.target.checked })} />}
-              label={form.is_active ? 'Active (visible in app)' : 'Hidden'}
+              label={activeLabel}
             />
           </Stack>
           <Box>
@@ -105,12 +151,26 @@ export default function PolicyFormDialog({
               aiContext="legal policy"
             />
           </Box>
+          {/* Only when editing: a policy that does not exist yet cannot have
+              been accepted, so there is nobody the tick could write to. */}
+          {!isNew && (
+            <PolicyNotifyField
+              policyId={editing?.id ?? ''}
+              checked={form.notify_accepted_users}
+              summary={form.notify_summary}
+              disabled={saving}
+              lastNotifiedAt={editing?.last_notified_at ?? null}
+              lastNotifiedCount={editing?.last_notified_count ?? 0}
+              onCheckedChange={(notify_accepted_users) => onChange({ notify_accepted_users })}
+              onSummaryChange={(notify_summary) => onChange({ notify_summary })}
+            />
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>{t('shell.common.cancel')}</Button>
         <Button variant="contained" onClick={onSubmit} disabled={saving}>
-          {isNew ? 'Create' : 'Save changes'}
+          {t('shell.common.save')}
         </Button>
       </DialogActions>
     </Dialog>

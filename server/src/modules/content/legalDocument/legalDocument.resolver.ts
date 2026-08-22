@@ -58,6 +58,14 @@ export const legalDocumentResolvers = {
       const user = requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.update(user.id, args.id, args.input);
     },
+    setLegalDocumentActive: (
+      _p: unknown,
+      args: { id: string; is_active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.setActive(user.id, args.id, args.is_active);
+    },
     deleteLegalDocument: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.remove(args.id);

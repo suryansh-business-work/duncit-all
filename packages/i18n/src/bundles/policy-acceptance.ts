@@ -67,5 +67,68 @@ export const POLICY_ACCEPTANCE_BUNDLE: NestedCatalogue = {
       googleSignup: 'Google signup',
       later: 'Accepted later',
     },
+
+    // Everything behind ONE row, opened by clicking it. A row on its own is a
+    // sha256 and a user id; this is the screen that turns those into an answer.
+    detail: {
+      title: 'Acceptance record',
+      subtitle: 'Everything on file about this one acceptance.',
+      loadFailed: 'Could not load this acceptance record.',
+      openHint:
+        'Open any row for its full record — the exact wording that was accepted, the person as their account reads today, and everything else they have agreed to.',
+
+      sectionAcceptance: 'This acceptance',
+      sectionAccount: 'The person',
+      sectionPolicy: 'The policy',
+      sectionVersions: 'Wording history',
+      sectionPolicyHistory: 'Their trail through this policy',
+      sectionUserHistory: 'Everything else they have accepted',
+
+      acceptanceId: 'Record ID',
+      acceptedAt: 'Accepted at',
+      method: 'Accepted via',
+      surface: 'Surface',
+      policyUpdatedAt: 'Policy last edited',
+      contentHash: 'Wording fingerprint',
+      contentHashHint:
+        'The sha256 of the exact words they agreed to. It is what ties this record to a wording, and what makes a later edit visible as one.',
+
+      accountId: 'Account ID',
+      accountName: 'Name',
+      accountEmail: 'Email',
+      accountPhone: 'Phone',
+      accountStatus: 'Account status',
+      accountCreated: 'Account created',
+      accountDeleted:
+        'This account has been deleted. Its acceptance records stay — that is the point of keeping them.',
+      accountMissing:
+        'This account has been erased. What they accepted, and when, is still on the record below.',
+
+      policyNo: 'Policy no.',
+      policySlug: 'Slug',
+      policyType: 'Policy type',
+      policyActive: 'Active',
+      policyVersions: 'Wordings on file',
+      policyUpdated: 'Last edited',
+      policyMissing:
+        'This policy has since been deleted. Everything shown is the copy written onto the record at the moment they accepted, which is why it still reads correctly.',
+      policyIsCurrent: 'They accepted the wording still in force.',
+      policyIsStale: 'The policy has been edited since. They agreed to an earlier wording.',
+
+      versionLabel: 'Version {no}',
+      versionCurrent: 'In force now',
+      versionAccepted: 'They accepted this',
+      versionBy: 'Edited by {name}',
+      versionUnknownEditor: 'Editor not recorded',
+      versionMissing:
+        'The exact wording behind this record is not on file — it predates version history. The fingerprint above is still the record of what was agreed.',
+      noVersions: 'No wording history yet.',
+      readWording: 'Read this wording',
+      wordingEmpty: 'This version has no content.',
+
+      noPolicyHistory: 'This is their only acceptance of this policy.',
+      noUserHistory: 'They have accepted nothing else.',
+      historyCapped: 'Showing their 50 most recent acceptances. The table above holds them all.',
+    },
   },
 };

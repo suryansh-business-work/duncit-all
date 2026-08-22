@@ -24,7 +24,8 @@ import {
 import DocumentTypeSelect from '../../components/DocumentTypeSelect';
 import DocumentsTable from './DocumentsTable';
 import EditDocumentDialog from './EditDocumentDialog';
-import SignContractDialog from './SignContractDialog';
+import { SignWorkflowDialog } from '../../components/signing';
+import { DOCUMENT_SIGNING_OPS } from '../../graphql/signing';
 import { useTranslation } from '@duncit/shell';
 
 export default function DocumentsListPage() {
@@ -91,8 +92,16 @@ export default function DocumentsListPage() {
         onSaved={() => refetchRef.current?.()}
       />
 
-      <SignContractDialog
-        doc={signing}
+      {/* A document calls its title `name`; the shared dialog asks for `title`,
+          so the mapping happens here rather than the workflow branching on what
+          it is looking at. */}
+      <SignWorkflowDialog
+        record={
+          signing
+            ? { id: signing.id, title: signing.name, signing_status: signing.signing_status }
+            : null
+        }
+        ops={DOCUMENT_SIGNING_OPS}
         onClose={() => setSigning(null)}
         onSigned={() => refetchRef.current?.()}
       />

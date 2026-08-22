@@ -1,6 +1,20 @@
 import { gql } from '@apollo/client';
 
 export type ContractStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'ARCHIVED';
+export type SigningStatus = 'UNSIGNED' | 'SIGNED';
+export type SignatureMethod = 'DRAW' | 'TYPE' | 'UPLOAD';
+
+/** One person who must sign, and their signature once they have. */
+export interface ContractSignatory {
+  id: string;
+  full_name: string;
+  designation: string;
+  email: string;
+  initials: string;
+  signature_image: string;
+  signature_method: SignatureMethod | null;
+  signed_at: string | null;
+}
 
 export interface Contract {
   id: string;
@@ -13,6 +27,12 @@ export interface Contract {
   counterparty: string;
   effective_from: string | null;
   effective_to: string | null;
+  /** UNSIGNED until every required signatory has signed. */
+  signing_status: SigningStatus;
+  signed_at: string | null;
+  /** A signed contract is closed to edits — the lock IS the signature. */
+  is_locked: boolean;
+  signatories: ContractSignatory[];
   created_by_name: string;
   updated_by_name: string;
   created_at: string;
@@ -30,6 +50,19 @@ const CONTRACT_FIELDS = gql`
     counterparty
     effective_from
     effective_to
+    signing_status
+    signed_at
+    is_locked
+    signatories {
+      id
+      full_name
+      designation
+      email
+      initials
+      signature_image
+      signature_method
+      signed_at
+    }
     created_by_name
     updated_by_name
     created_at
@@ -79,6 +112,31 @@ export const ARCHIVE_CONTRACT = gql`
 export const DELETE_CONTRACT = gql`
   mutation DeleteLegalContract($id: ID!) {
     deleteContract(id: $id)
+  }
+`;
+
+/** The contract as a PDF — unsigned before signing, signed after. */
+export const CONTRACT_PDF = gql`
+  query LegalContractPdf($id: ID!) {
+    contractPdfBase64(id: $id)
+  }
+`;
+
+export const SIGN_CONTRACT = gql`
+  mutation SignLegalContract($id: ID!, $input: SignContractInput!) {
+    signContract(id: $id, input: $input) {
+      id
+      status
+      signing_status
+      signed_at
+      is_locked
+    }
+  }
+`;
+
+export const SHARE_CONTRACT = gql`
+  mutation ShareLegalContract($id: ID!, $to: String!, $message: String) {
+    shareContract(id: $id, to: $to, message: $message)
   }
 `;
 
